@@ -1,0 +1,85 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/eqr-logo/*"
+  to = "/images/brand/eqr-logo/:splat"
+  status = 301
+
+[[redirects]]
+  from = "/branded-logos/*"
+  to = "/images/brand/logos/:splat"
+  status = 301
+
+[[redirects]]
+  from = "/placeholder.svg"
+  to = "/images/ui/placeholder.svg"
+  status = 301
+
+[[redirects]]
+  from = "/us.svg"
+  to = "/images/maps/us.svg"
+  status = 301
+
+[[redirects]]
+  from = "/icons/:file.png"
+  to = "/images/brand/icons/:file.png"
+  status = 301
+
+[[redirects]]
+  from = "/icons/:file.svg"
+  to = "/images/equipment/:file.svg"
+  status = 301
+
+[[redirects]]
+  from = "/*"
+  to = "/app-shell.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=(self)"
+
+# Prevent indexing of authenticated/dynamic routes
+[[headers]]
+  for = "/dashboard/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/auth*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/invitation/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/qr/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/debug-*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+# Environment variables for Netlify
+# Set these in your Netlify dashboard under Site Settings > Environment Variables
+# VITE_SUPABASE_URL
+# VITE_SUPABASE_ANON_KEY  
+# VITE_STRIPE_PUBLISHABLE_KEY
+# VITE_GOOGLE_MAPS_API_KEY

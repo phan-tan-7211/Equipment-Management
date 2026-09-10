@@ -1,0 +1,304 @@
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { useEquipmentList, useEquipmentSummaries } from '@/features/equipment/hooks/useEquipment';
+import type { EquipmentListFilters } from '@/features/equipment/services/EquipmentService';
+import { useTeamMembership } from '@/features/teams/hooks/useTeamMembership';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { isOrgAdminRole } from '@/features/teams/utils/teamAccessScope';
+import type { EquipmentViewMode } from '@/features/equipment/components/EquipmentCard';
+import {
+  DEFAULT_EQUIPMENT_CARD_PAGE_SIZE,
+  DEFAULT_EQUIPMENT_TABLE_PAGE_SIZE,
+  EQUIPMENT_CARD_PAGE_SIZE_OPTIONS,
+  EQUIPMENT_TABLE_PAGE_SIZE_OPTIONS,
+} from '@/features/equipment/utils/equipmentListPagination';
+
+export interface EquipmentFilters {
+  search: string;
+  status: string;
+  manufacturer: string;
+  location: string;
+  team: string;
+  maintenanceDateFrom: string;
+  maintenanceDateTo: string;
+  installationDateFrom: string;
+  installationDateTo: string;
+  warrantyExpiring: boolean;
+}
+
+export interface SortConfig {
+  field: string;
+  direction: 'asc' | 'desc';
+}
+
+const initialFilters: EquipmentFilters = {
+  search: '',
+  status: 'all',
+  manufacturer: 'all',
+  location: 'all',
+  team: 'all',
+  maintenanceDateFrom: '',
+  maintenanceDateTo: '',
+  installationDateFrom: '',
+  installationDateTo: '',
+  warrantyExpiring: false
+};
+
+const initialSort: SortConfig = {
+  field: 'name',
+  direction: 'asc'
+};
+
+/**
+ * Equipment list state: filters, sort, pagination — all driven server-side
+ * via `useEquipmentList`. The previous implementation pulled the entire
+ * org into the browser and filtered/sorted/paginated in `useMemo`, which
+ * shipped megabytes of unused rows on Slow 4G; this version ships only
+ * the rows the page is rendering.
+ *
+ * Filter dropdown options (manufacturers, locations) are derived from the
+ * lightweight `useEquipmentSummaries` projection, which is also the source of
+ * list totals. Summaries use the same
+ * team-scoped RBAC inputs as the paginated list so non-admin users never
+ * receive org-wide equipment rows in option lists. Both queries cache
+ * independently of the paginated rows so toggling filters does not
+ * re-fetch the option lists.
+ */
+export const useEquipmentFiltering = (
+  organizationId?: string,
+  viewMode: EquipmentViewMode = 'grid',
+) => {
+  const [filters, setFilters] = useState<EquipmentFilters>(initialFilters);
+  const [sortConfig, setSortConfig] = useState<SortConfig>(initialSort);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [cardPage, setCardPage] = useState(1);
+  const [tablePage, setTablePage] = useState(1);
+  const [cardPageSize, setCardPageSize] = useState(DEFAULT_EQUIPMENT_CARD_PAGE_SIZE);
+  const [tablePageSize, setTablePageSize] = useState(DEFAULT_EQUIPMENT_TABLE_PAGE_SIZE);
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
+
+  const currentPage = viewMode === 'table' ? tablePage : cardPage;
+  const pageSize = viewMode === 'table' ? tablePageSize : cardPageSize;
+  const pageSizeOptions =
+    viewMode === 'table' ? EQUIPMENT_TABLE_PAGE_SIZE_OPTIONS : EQUIPMENT_CARD_PAGE_SIZE_OPTIONS;
+
+  const resetPagination = useCallback(() => {
+    setCardPage(1);
+    setTablePage(1);
+  }, []);
+
+  // Refs mirror latest filter/sort state so callbacks stay stable (no
+  // `currentPage` in deps) while still detecting true no-ops.
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+  const sortConfigRef = useRef(sortConfig);
+  sortConfigRef.current = sortConfig;
+
+  // Derive RBAC inputs for the server-side query so team-scoped users only
+  // see equipment on their teams (mirrors the app-layer gate in the non-
+  // paginated path). isOrgAdmin = true skips the team filter entirely.
+  const { currentOrganization } = useOrganization();
+  const { getUserTeamIds, isLoading: teamMembershipsLoading } = useTeamMembership();
+  const isOrgAdmin = isOrgAdminRole(currentOrganization?.userRole);
+  const rbacUserTeamIds = isOrgAdmin ? undefined : getUserTeamIds();
+  // Avoid the empty-team short-circuit while session teams are still loading
+  // (cache hydrate may temporarily expose teamMemberships: []).
+  const rbacReady = isOrgAdmin || !teamMembershipsLoading;
+
+
+  // Server-side filtered + paginated rows. Filter shape is normalized so
+  // the service can map `'all'` / `'unassigned'` sentinels and synthetic
+  // `'out_of_service'` directly to PostgREST predicates.
+  const serverFilters: EquipmentListFilters = useMemo(
+    () => ({
+      search: filters.search || undefined,
+      status:
+        filters.status === 'all'
+          ? undefined
+          : (filters.status as EquipmentListFilters['status']),
+      manufacturer: filters.manufacturer === 'all' ? undefined : filters.manufacturer,
+      location: filters.location === 'all' ? undefined : filters.location,
+      team: filters.team === 'all' ? undefined : filters.team,
+      maintenanceDateFrom: filters.maintenanceDateFrom || undefined,
+      maintenanceDateTo: filters.maintenanceDateTo || undefined,
+      installationDateFrom: filters.installationDateFrom || undefined,
+      installationDateTo: filters.installationDateTo || undefined,
+      warrantyExpiring: filters.warrantyExpiring || undefined,
+      isOrgAdmin,
+      userTeamIds: rbacUserTeamIds,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filters, isOrgAdmin, rbacUserTeamIds?.join(',')],
+  );
+
+  const listQuery = useEquipmentList(organizationId, serverFilters, {
+    page: currentPage,
+    pageSize,
+    sortField: sortConfig.field,
+    sortDirection: sortConfig.direction,
+  }, { enabled: rbacReady });
+
+  // Lightweight org-wide summary used for filter dropdown options and
+  // "X of N" totals. The query is cheap enough to keep separate from the
+  // paginated list — PMs and dropdowns share the same cache entry.
+  const summariesQuery = useEquipmentSummaries(organizationId, {
+    userTeamIds: rbacUserTeamIds,
+    isOrgAdmin,
+    enabled: rbacReady,
+  });
+
+  const equipment = useMemo(
+    () => summariesQuery.data ?? [],
+    [summariesQuery.data],
+  );
+  const paginatedEquipment = useMemo(
+    () => listQuery.data?.data ?? [],
+    [listQuery.data],
+  );
+  const totalFilteredCount = listQuery.data?.count ?? 0;
+  const isLoading =
+    !rbacReady ||
+    listQuery.isLoading ||
+    (summariesQuery.isLoading && !summariesQuery.data);
+
+  // Filter option sources. Filter empty strings so the Radix Select doesn't
+  // crash on an empty value.
+  const filterOptions = useMemo(() => {
+    const manufacturers = [...new Set(equipment.map(item => item.manufacturer ?? ''))]
+      .filter(m => m && m.trim() !== '')
+      .sort();
+    const locations = [...new Set(equipment.map(item => item.location ?? ''))]
+      .filter(l => l && l.trim() !== '')
+      .sort();
+    return { manufacturers, locations } as const;
+  }, [equipment]);
+
+  // For consumers that previously read `filteredAndSortedEquipment` to
+  // count the filtered total, route them through the server count.
+  const filteredAndSortedEquipment = paginatedEquipment;
+
+  const applyQuickFilter = useCallback((type: string) => {
+    if (activeQuickFilter === type) {
+      setFilters(initialFilters);
+      setSortConfig(initialSort);
+      setActiveQuickFilter(null);
+      resetPagination();
+      return;
+    }
+
+    setFilters(initialFilters);
+    setSortConfig(initialSort);
+
+    switch (type) {
+      case 'maintenance-due':
+        setFilters(prev => ({ ...prev, status: 'maintenance' }));
+        break;
+      case 'warranty-expiring':
+        setFilters(prev => ({ ...prev, warrantyExpiring: true }));
+        break;
+      case 'recently-added':
+        setSortConfig({ field: 'created_at', direction: 'desc' });
+        break;
+      case 'active-only':
+        setFilters(prev => ({ ...prev, status: 'active' }));
+        break;
+    }
+    setActiveQuickFilter(type);
+    resetPagination();
+  }, [activeQuickFilter, resetPagination]);
+
+  const updateFilter = useCallback(
+    (key: keyof EquipmentFilters, value: EquipmentFilters[keyof EquipmentFilters]) => {
+      if (filtersRef.current[key] === value) return;
+      setFilters(prev => ({ ...prev, [key]: value }));
+      setActiveQuickFilter(null);
+      resetPagination();
+    },
+    [resetPagination],
+  );
+
+  const updateSort = useCallback((field: string, direction?: 'asc' | 'desc') => {
+    const prev = sortConfigRef.current;
+    const nextDirection =
+      direction ?? (prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc');
+    if (prev.field === field && prev.direction === nextDirection) return;
+    setSortConfig({ field, direction: nextDirection });
+    resetPagination();
+  }, [resetPagination]);
+
+  const clearFilters = useCallback(() => {
+    setFilters(initialFilters);
+    setSortConfig(initialSort);
+    setActiveQuickFilter(null);
+    resetPagination();
+  }, [resetPagination]);
+
+  const hasActiveFilters = useMemo(() => {
+    return Object.entries(filters).some(([key, value]) => {
+      if (key === 'search' || key === 'maintenanceDateFrom' || key === 'maintenanceDateTo' ||
+          key === 'installationDateFrom' || key === 'installationDateTo') {
+        return value !== '';
+      }
+      if (key === 'warrantyExpiring') {
+        return value === true;
+      }
+      return value !== 'all';
+    });
+  }, [filters]);
+
+  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / pageSize));
+
+  const setCurrentPage = useCallback(
+    (page: number) => {
+      if (viewMode === 'table') {
+        setTablePage(page);
+        return;
+      }
+      setCardPage(page);
+    },
+    [viewMode],
+  );
+
+  const setPageSize = useCallback(
+    (size: number) => {
+      if (viewMode === 'table') {
+        setTablePageSize(size);
+        return;
+      }
+      setCardPageSize(size);
+    },
+    [viewMode],
+  );
+
+  return {
+    filters,
+    sortConfig,
+    showAdvancedFilters,
+    filteredAndSortedEquipment,
+    paginatedEquipment,
+    filterOptions,
+    isLoading,
+    hasActiveFilters,
+    activeQuickFilter,
+    equipment,
+    currentPage,
+    pageSize,
+    cardPage,
+    tablePage,
+    cardPageSize,
+    tablePageSize,
+    pageSizeOptions,
+    totalPages,
+    totalFilteredCount,
+    updateFilter,
+    updateSort,
+    clearFilters,
+    applyQuickFilter,
+    setCurrentPage,
+    setPageSize,
+    setCardPage,
+    setTablePage,
+    setCardPageSize,
+    setTablePageSize,
+    setShowAdvancedFilters,
+  };
+};

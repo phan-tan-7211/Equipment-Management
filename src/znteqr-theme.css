@@ -1,0 +1,30 @@
+/* ZNTEQR brand theme override
+   Primary brand blue: #155EEF / rgb(21, 94, 239)
+   Loaded after index.css so existing components inherit the new brand color
+   without changing semantic status colors (success/warning/destructive). */
+
+@layer base {
+  :root {
+    --primary: 220 87% 51%;
+    --primary-foreground: 0 0% 100%;
+
+    --ring: 220 87% 51%;
+
+    --brand: 220 87% 51%;
+    --brand-foreground: 0 0% 100%;
+
+    --sidebar-primary: 220 87% 51%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 220 87% 51%;
+
+    /* Keep charts varied, but remove the old purple brand accent. */
+    --chart-5: 220 87% 51%;
+
+    /* Brand shadows follow ZNTEQR blue. */
+    --shadow-primary: 0 4px 14px -3px hsl(220 87% 51% / 0.34);
+    --shadow-primary-lg: 0 10px 25px -5px hsl(220 87% 51% / 0.4);
+
+    /* Construction/brand accent no longer uses purple. */
+    --construction-stripe-2: hsl(220 87% 51%);
+  }
+}

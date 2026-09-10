@@ -1,0 +1,452 @@
+import { useCallback, useMemo, useState, useRef, useContext } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { logger } from '@/utils/logger';
+import { SettingsContext } from '@/contexts/settings-context';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { supabase } from '@/integrations/supabase/client';
+import { getWorkOrderNotesWithImages } from '@/features/work-orders/services/workOrderNotesService';
+import { getWorkOrderCosts } from '@/features/work-orders/services/workOrderCostsService';
+import { 
+  generateWorkOrderPDF,
+  generateWorkOrderPDFBlob,
+  type WorkOrderPDFData,
+  type WorkOrderForPDF,
+  type EquipmentForPDF,
+  type WorkOrderPDFQRCodes,
+  type WorkOrderPDFPageIdentity,
+} from '@/features/work-orders/services/workOrderReportPDFService';
+import { generateFieldWorksheetPDF } from '@/features/work-orders/services/workOrderFieldWorksheetPDFService';
+import type { PreventativeMaintenance } from '@/features/pm-templates/services/preventativeMaintenanceService';
+import { SERVICE_REPORT_EXPORT_POLICY, FIELD_WORKSHEET_EXPORT_POLICY } from '@/features/work-orders/constants/workOrderExportPolicy';
+import { invalidateWorkOrderExportArtifacts } from '@/features/work-orders/utils/invalidateWorkOrderExportArtifacts';
+import { showGoogleDriveExportSuccessToast } from '@/features/work-orders/utils/googleWorkspaceExportSuccessToast';
+import { handleGoogleWorkspaceExportError } from '@/features/work-orders/utils/googleWorkspaceExportToasts';
+import { useAppToast } from '@/hooks/useAppToast';
+import { getInvokeErrorPayload } from '@/services/google-workspace/invokeError';
+import { equipmentQRPath, workOrderQRPath, qrFullUrl, buildQRAsset } from '@/utils/qr';
+import {
+  displayUrlForStoredPrivateImage,
+  resolveImageDisplayUrl,
+} from '@/services/imageUploadService';
+
+/** Response from the upload-to-google-drive edge function */
+interface GoogleDriveUploadResponse {
+  id: string;
+  name: string;
+  mimeType: string;
+  webViewLink?: string;
+  webContentLink?: string;
+  replacedPrevious?: boolean;
+  warnings?: string[];
+}
+
+interface GoogleDriveUploadInvokeResponse extends GoogleDriveUploadResponse {
+  error?: string;
+  code?: string;
+}
+
+export interface UseWorkOrderPDFOptions {
+  workOrder: WorkOrderForPDF;
+  equipment?: EquipmentForPDF | null;
+  pmData?: PreventativeMaintenance | null;
+  organizationName?: string;
+  /** Explicit organization ID for exports when context may lag route data */
+  organizationId?: string;
+  /** Team ID for fetching team branding on printed worksheets */
+  teamId?: string | null;
+}
+
+/** Options passed to downloadPDF function */
+export interface DownloadPDFOptions {
+  /** Include cost items in the PDF (default: false for customer-facing docs) */
+  includeCosts?: boolean;
+}
+
+export interface UseWorkOrderPDFReturn {
+  /** Generate and download the PDF. Accepts optional options for customization. */
+  downloadPDF: (options?: DownloadPDFOptions) => Promise<void>;
+  /** Generate the PDF and upload it to Google Drive. Requires Google Workspace connection. */
+  saveToDrive: (options?: DownloadPDFOptions) => Promise<void>;
+  /** Generate and download a printable field worksheet for technicians. */
+  downloadFieldWorksheet: () => Promise<void>;
+  /** Whether PDF generation/download is in progress */
+  isGenerating: boolean;
+  /** Whether Google Drive upload is in progress */
+  isSavingToDrive: boolean;
+  /** Whether field worksheet generation is in progress */
+  isGeneratingWorksheet: boolean;
+}
+
+/**
+ * Hook to handle work order PDF generation with data fetching
+ * 
+ * This hook aggregates notes and costs data, then generates a comprehensive PDF.
+ * It handles loading states and error handling automatically.
+ * 
+ * Note: The PDF is customer-facing by default:
+ * - Only public notes are included
+ * - Costs are excluded unless explicitly requested via includeCosts option
+ */
+export const useWorkOrderPDF = (options: UseWorkOrderPDFOptions): UseWorkOrderPDFReturn => {
+  const { 
+    workOrder, 
+    equipment, 
+    pmData, 
+    organizationName,
+    organizationId: organizationIdOverride,
+    teamId,
+  } = options;
+  
+  const { currentOrganization, organizationId: contextOrganizationId } = useOrganization();
+  const { toast } = useAppToast();
+  const queryClient = useQueryClient();
+  const settingsContext = useContext(SettingsContext);
+  const { settings: fallbackSettings } = useUserSettings();
+  const settings = settingsContext?.settings ?? fallbackSettings;
+  const organizationId = organizationIdOverride ?? contextOrganizationId ?? undefined;
+  const exportDateSettings = useMemo(
+    () =>
+      ({
+        timezone: settings.timezone,
+        dateFormat: settings.dateFormat,
+      }) as const,
+    [settings.timezone, settings.dateFormat],
+  );
+  
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSavingToDrive, setIsSavingToDrive] = useState(false);
+  const [isGeneratingWorksheet, setIsGeneratingWorksheet] = useState(false);
+  
+  // Use refs for the re-entry guards to avoid stale closure issues.
+  // The refs always have the current value, unlike state captured in callback closure.
+  // Note: The refs are reset in the finally blocks after operations complete/fail.
+  const isGeneratingRef = useRef(false);
+  const isSavingToDriveRef = useRef(false);
+  const isGeneratingWorksheetRef = useRef(false);
+
+  const fetchCustomerName = useCallback(async (): Promise<string | null> => {
+    if (!equipment?.customerId || !organizationId) {
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from('customers')
+      .select('name')
+      .eq('id', equipment.customerId)
+      .eq('organization_id', organizationId)
+      .maybeSingle();
+
+    if (error) {
+      logger.warn('Failed to fetch customer name for service report PDF', {
+        equipmentId: equipment.id,
+        customerId: equipment.customerId,
+        error,
+      });
+      return null;
+    }
+
+    return data?.name ?? null;
+  }, [equipment?.customerId, equipment?.id, organizationId]);
+
+  const buildQRCodes = useCallback(async (): Promise<WorkOrderPDFQRCodes | undefined> => {
+    try {
+      const woUrl = qrFullUrl(workOrderQRPath(workOrder.id));
+      const woAssetPromise = buildQRAsset(woUrl);
+
+      const eqAssetPromise = equipment?.id
+        ? buildQRAsset(qrFullUrl(equipmentQRPath(equipment.id)))
+        : Promise.resolve(undefined);
+
+      const [woAsset, eqAsset] = await Promise.all([woAssetPromise, eqAssetPromise]);
+      return { workOrder: woAsset, equipment: eqAsset };
+    } catch (err) {
+      logger.warn('Failed to generate QR codes for PDF:', err);
+      return undefined;
+    }
+  }, [workOrder.id, equipment?.id]);
+
+  const buildPageIdentity = useCallback((): WorkOrderPDFPageIdentity => {
+    const shortId = workOrder.id.length <= 8
+      ? workOrder.id.toUpperCase()
+      : `${workOrder.id.slice(0, 4)}...${workOrder.id.slice(-4)}`.toUpperCase();
+
+    const titleSnippet = workOrder.title.length > 40
+      ? `${workOrder.title.slice(0, 37)}...`
+      : workOrder.title;
+
+    const workOrderLabel = `WO-${shortId}: ${titleSnippet}`;
+
+    let equipmentLabel: string | undefined;
+    if (equipment) {
+      const parts = [equipment.name];
+      if (equipment.serial_number) parts.push(`S/N: ${equipment.serial_number}`);
+      equipmentLabel = parts.join(' - ');
+    }
+
+    return { workOrderLabel, equipmentLabel };
+  }, [workOrder.id, workOrder.title, equipment]);
+
+  const buildPdfData = useCallback(async (includeCosts: boolean): Promise<WorkOrderPDFData> => {
+    if (!organizationId) {
+      throw new Error('Organization ID is required');
+    }
+
+    const notesPromise = getWorkOrderNotesWithImages(workOrder.id, organizationId).catch(err => {
+      logger.warn('Failed to fetch notes for PDF:', err);
+      return [];
+    });
+
+    const costsPromise = includeCosts
+      ? getWorkOrderCosts(workOrder.id, organizationId).catch(err => {
+          logger.warn('Failed to fetch costs for PDF:', err);
+          return [];
+        })
+      : Promise.resolve([]);
+
+    const customerNamePromise = fetchCustomerName();
+    const qrCodesPromise = buildQRCodes();
+
+    const [notes, costs, customerName, qrCodes] = await Promise.all([
+      notesPromise,
+      costsPromise,
+      customerNamePromise,
+      qrCodesPromise,
+    ]);
+
+    const equipmentWithCustomer = equipment
+      ? {
+          ...equipment,
+          customerName: equipment.customerName ?? customerName ?? undefined,
+        }
+      : null;
+
+    const pageIdentity = buildPageIdentity();
+
+    return {
+      workOrder,
+      equipment: equipmentWithCustomer,
+      organizationName,
+      notes,
+      costs,
+      pmData,
+      includeCosts,
+      qrCodes,
+      pageIdentity,
+      exportDateSettings,
+    };
+  }, [equipment, exportDateSettings, fetchCustomerName, organizationName, organizationId, pmData, workOrder, buildQRCodes, buildPageIdentity]);
+
+  const downloadPDF = useCallback(async (downloadOptions?: DownloadPDFOptions) => {
+    // Use ref for guard check to prevent race conditions from rapid clicks.
+    // This blocks re-entry until the finally block resets the ref.
+    if (isGeneratingRef.current) return;
+    
+    const { includeCosts = false } = downloadOptions || {};
+    
+    // Update both ref (for guard) and state (for UI)
+    isGeneratingRef.current = true;
+    setIsGenerating(true);
+    
+    try {
+      const pdfData = await buildPdfData(includeCosts);
+
+      // Generate and download the PDF
+      await generateWorkOrderPDF(pdfData);
+      
+      toast({
+        title: 'Download Complete',
+        description: `${SERVICE_REPORT_EXPORT_POLICY.exportName} downloaded successfully`,
+        variant: 'success',
+      });
+    } catch (error) {
+      logger.error('Error generating work order PDF:', error);
+      toast({
+        title: 'Export Failed',
+        description: 'Failed to generate PDF. Please try again.',
+        variant: 'error',
+      });
+      // Re-throw so callers know the operation failed (e.g., to keep dialog open for retry)
+      throw error;
+    } finally {
+      isGeneratingRef.current = false;
+      setIsGenerating(false);
+    }
+  }, [buildPdfData, toast]);
+
+  const saveToDrive = useCallback(async (downloadOptions?: DownloadPDFOptions) => {
+    if (isSavingToDriveRef.current) {
+      throw new Error('Save to Drive is already in progress');
+    }
+    
+    const { includeCosts = false } = downloadOptions || {};
+    
+    isSavingToDriveRef.current = true;
+    setIsSavingToDrive(true);
+    
+    try {
+      const pdfData = await buildPdfData(includeCosts);
+      const { blob, filename } = await generateWorkOrderPDFBlob(pdfData);
+      
+      const contentBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result;
+          if (typeof result === 'string') {
+            const [, base64] = result.split(',', 2);
+            if (base64) {
+              resolve(base64);
+            } else {
+              reject(new Error('Failed to extract base64 content from PDF data URL'));
+            }
+          } else {
+            reject(new Error('Failed to read PDF blob as base64'));
+          }
+        };
+        reader.onerror = () => {
+          reject(reader.error ?? new Error('Failed to read PDF blob as base64'));
+        };
+        reader.readAsDataURL(blob);
+      });
+
+      if (!organizationId) {
+        throw new Error('Organization ID is required');
+      }
+
+      const { data, error: invokeError } = await supabase.functions.invoke<GoogleDriveUploadInvokeResponse>(
+        'upload-to-google-drive',
+        {
+          body: {
+            organizationId,
+            filename,
+            contentBase64,
+            mimeType: 'application/pdf',
+            workOrderId: workOrder.id,
+          },
+        },
+      );
+
+      if (invokeError) {
+        const errorPayload = await getInvokeErrorPayload(
+          invokeError as Error & { context?: unknown },
+        );
+        const typedError = new Error(
+          errorPayload?.error || invokeError.message || 'Failed to save PDF to Google Drive',
+        ) as Error & { code?: string };
+        if (errorPayload?.code) {
+          typedError.code = errorPayload.code;
+        }
+        throw typedError;
+      }
+
+      if (!data || data.error) {
+        const typedError = new Error(data?.error || 'Failed to save PDF to Google Drive') as Error & {
+          code?: string;
+        };
+        typedError.code = data?.code;
+        throw typedError;
+      }
+
+      const webViewLink = data.webViewLink ?? `https://drive.google.com/file/d/${data.id}/view`;
+      invalidateWorkOrderExportArtifacts(queryClient, organizationId, workOrder.id);
+
+      const desc = data.replacedPrevious
+        ? `${SERVICE_REPORT_EXPORT_POLICY.exportName} updated in your organization Drive folder.`
+        : `${SERVICE_REPORT_EXPORT_POLICY.exportName} saved to your organization Drive folder.`;
+      showGoogleDriveExportSuccessToast(desc, webViewLink);
+
+      if (data.warnings?.length) {
+        toast({
+          title: 'Export Saved With Warnings',
+          description: data.warnings.join(' '),
+          variant: 'warning',
+        });
+      }
+    } catch (error) {
+      logger.error('Error saving PDF to Google Drive:', error);
+      if (handleGoogleWorkspaceExportError(toast, error as Error & { code?: string }, 'PDF')) {
+        throw error;
+      }
+      toast({
+        title: 'Export Failed',
+        description:
+          error instanceof Error ? error.message : 'Failed to save PDF to Google Drive. Please try again.',
+        variant: 'error',
+      });
+      throw error;
+    } finally {
+      isSavingToDriveRef.current = false;
+      setIsSavingToDrive(false);
+    }
+  }, [buildPdfData, organizationId, workOrder.id, toast, queryClient]);
+
+  const downloadFieldWorksheet = useCallback(async () => {
+    if (isGeneratingWorksheetRef.current) return;
+
+    isGeneratingWorksheetRef.current = true;
+    setIsGeneratingWorksheet(true);
+
+    try {
+      const orgLogoUrl = currentOrganization?.logo ?? null;
+
+      let teamImgUrl: string | null = null;
+      if (teamId && organizationId) {
+        const { data } = await supabase
+          .from('teams')
+          .select('image_url')
+          .eq('id', teamId)
+          .eq('organization_id', organizationId)
+          .maybeSingle();
+        teamImgUrl = data?.image_url
+          ? displayUrlForStoredPrivateImage(
+              await resolveImageDisplayUrl('team-images', data.image_url),
+              data.image_url,
+            )
+          : null;
+      }
+
+      const qrCodes = await buildQRCodes();
+      const pageIdentity = buildPageIdentity();
+
+      const worksheetData: WorkOrderPDFData = {
+        workOrder,
+        equipment: equipment ? { ...equipment } : null,
+        organizationName,
+        pmData,
+        organizationLogoUrl: orgLogoUrl,
+        teamImageUrl: teamImgUrl,
+        qrCodes,
+        pageIdentity,
+        exportDateSettings,
+      };
+
+      await generateFieldWorksheetPDF(worksheetData);
+
+      toast({
+        title: 'Download Complete',
+        description: `${FIELD_WORKSHEET_EXPORT_POLICY.exportName} downloaded successfully`,
+        variant: 'success',
+      });
+    } catch (error) {
+      logger.error('Error generating field worksheet PDF:', error);
+      toast({
+        title: 'Export Failed',
+        description: 'Failed to generate field worksheet. Please try again.',
+        variant: 'error',
+      });
+      throw error;
+    } finally {
+      isGeneratingWorksheetRef.current = false;
+      setIsGeneratingWorksheet(false);
+    }
+  }, [equipment, exportDateSettings, organizationName, pmData, workOrder, currentOrganization, teamId, organizationId, buildQRCodes, buildPageIdentity, toast]);
+
+  return {
+    downloadPDF,
+    saveToDrive,
+    downloadFieldWorksheet,
+    isGenerating,
+    isSavingToDrive,
+    isGeneratingWorksheet,
+  };
+};

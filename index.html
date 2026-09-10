@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b63ce" />
+    <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
+
+    <title>ZNTEQR | Equipment Management & Maintenance</title>
+    <meta name="description" content="ZNTEQR is a QR-based equipment management and maintenance application for equipment records, work orders, preventive maintenance, teams and inventory." />
+    <meta name="author" content="Phan Tan" />
+    <link rel="canonical" href="https://placeholder.invalid/" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" href="/favicon.ico" />
+
+    <!-- Supabase connection hints -->
+    <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin />
+    <link rel="dns-prefetch" href="%VITE_SUPABASE_URL%" />
+
+    <meta property="og:title" content="ZNTEQR | Equipment Management & Maintenance" />
+    <meta property="og:description" content="QR-based equipment management, maintenance, work orders and inventory in one application." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://placeholder.invalid/" />
+    <meta property="og:image" content="/images/brand/icons/ZNTEQR-Icon-512.png" />
+    <meta property="og:image:alt" content="ZNTEQR equipment management logo" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="ZNTEQR | Equipment Management & Maintenance" />
+    <meta name="twitter:description" content="QR-based equipment management, maintenance, work orders and inventory in one application." />
+    <meta name="twitter:image" content="/images/brand/icons/ZNTEQR-Icon-512.png" />
+
+    <style>
+      html, body {
+        min-height: 100%;
+        background: #0a0a0a;
+        color: #fafafa;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      #root {
+        min-height: 100vh;
+      }
+    </style>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "ZNTEQR",
+      "description": "QR-based equipment management and maintenance application for equipment records, work orders, preventive maintenance, teams and inventory.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web"
+    }
+    </script>
+  </head>
+
+  <body>
+    <noscript>
+      <div style="font-family:system-ui,sans-serif;max-width:42rem;margin:2rem auto;padding:0 1rem;line-height:1.5;color:#fafafa;background:#0a0a0a;">
+        <p><strong>ZNTEQR</strong> requires JavaScript for the full application.</p>
+        <p>ZNTEQR provides QR-based equipment management, maintenance history, work orders and inventory.</p>
+      </div>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

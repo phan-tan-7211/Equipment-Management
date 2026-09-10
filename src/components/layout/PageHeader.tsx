@@ -1,0 +1,151 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { ChevronRight } from 'lucide-react';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+
+export interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface PageHeaderProps {
+  title: string;
+  description?: string;
+  /** Optional meta content (badges, labels) displayed inline with title on desktop, below on mobile */
+  meta?: React.ReactNode;
+  /** Optional mobile/desktop back link shown above breadcrumbs/title */
+  backLink?: {
+    label: string;
+    href: string;
+  };
+  breadcrumbs?: BreadcrumbItem[];
+  actions?: React.ReactNode;
+  className?: string;
+  /** Hide the description on mobile to save vertical space */
+  hideDescriptionOnMobile?: boolean;
+  /** Show meta badges inline with the title on mobile (default: below title) */
+  inlineMetaOnMobile?: boolean;
+  /** Vertical gap between breadcrumbs and title row.
+   *  'default' = space-y-4 everywhere.
+   *  'compact' = space-y-4 on mobile, space-y-2 on lg+. Ideal for detail pages with breadcrumbs. */
+  density?: 'default' | 'compact';
+  /** Optional inline styles for shared-element transitions (e.g. view-transition-name). */
+  titleStyle?: React.CSSProperties;
+  descriptionStyle?: React.CSSProperties;
+}
+
+const densityClasses = {
+  default: 'space-y-4',
+  compact: 'space-y-4 lg:space-y-2',
+} as const;
+
+const PageHeader: React.FC<PageHeaderProps> = ({
+  title,
+  description,
+  meta,
+  backLink,
+  breadcrumbs,
+  actions,
+  className,
+  hideDescriptionOnMobile = false,
+  inlineMetaOnMobile = false,
+  density = 'default',
+  titleStyle,
+  descriptionStyle,
+}) => {
+  useDocumentTitle(title);
+
+  return (
+    <div className={cn(densityClasses[density], className)}>
+      {backLink && (
+        <div className="flex items-center">
+          <Link
+            to={backLink.href}
+            className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <span aria-hidden="true">←</span>
+            <span>{backLink.label}</span>
+          </Link>
+        </div>
+      )}
+
+      {/* Breadcrumbs */}
+      {breadcrumbs && breadcrumbs.length > 0 && (
+        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground" aria-label="Breadcrumb">
+          {breadcrumbs.map((item, index) => (
+            <div key={`${item.label}-${index}`} className="flex items-center gap-1.5">
+              {index > 0 && (
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
+              )}
+              {item.href ? (
+                <Link
+                  to={item.href}
+                  className="hover:text-foreground hover:underline underline-offset-4 decoration-muted-foreground/40 transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <span className="text-foreground font-medium truncate max-w-[20ch] sm:max-w-none" aria-current="page" title={item.label}>
+                  {item.label}
+                </span>
+              )}
+            </div>
+          ))}
+        </nav>
+      )}
+
+      {/* Header content - responsive layout: stacks on mobile, side-by-side on larger screens */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-1">
+          {/* Title row with inline meta on desktop */}
+          <div className="flex flex-wrap items-center gap-2">
+            <h1
+              className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+              data-route-heading="true"
+              tabIndex={-1}
+              style={titleStyle}
+            >
+              {title}
+            </h1>
+            {/* Meta badges/labels - inline with title on desktop (and mobile when inlineMetaOnMobile) */}
+            {meta && (
+              <div className={cn('flex items-center gap-2', !inlineMetaOnMobile && 'hidden sm:flex')}>
+                {meta}
+              </div>
+            )}
+          </div>
+          
+          {/* Meta badges/labels - below title on mobile unless inlineMetaOnMobile */}
+          {meta && !inlineMetaOnMobile && (
+            <div className="flex items-center gap-2 sm:hidden">
+              {meta}
+            </div>
+          )}
+          
+          {description && (
+            <p
+              className={cn(
+                "text-sm text-muted-foreground line-clamp-2",
+                hideDescriptionOnMobile && "hidden md:block"
+              )}
+              style={descriptionStyle}
+            >
+              {description}
+            </p>
+          )}
+        </div>
+        
+        {/* Actions - full width on mobile, auto on larger screens */}
+        {actions && (
+          <div className="flex items-center gap-2 shrink-0">
+            {actions}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default PageHeader;
+

@@ -1,0 +1,416 @@
+import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
+import type {
+  CustomerRow,
+  CustomerInsert,
+  CustomerUpdate,
+  ExternalContactRow,
+  ExternalContactInsert,
+  ExternalContactListRow,
+} from '@/features/teams/types/team';
+import type { QBODerivedContact, QuickBooksCustomerRecord } from '@/services/quickbooks/types';
+
+/** @deprecated Use QuickBooksCustomerRecord from @/services/quickbooks/types */
+export type QBCustomerPayload = QuickBooksCustomerRecord;
+
+// ============================================
+// Customer Account CRUD
+// ============================================
+
+export async function getCustomersByOrg(organizationId: string): Promise<CustomerRow[]> {
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*')
+    .eq('organization_id', organizationId)
+    .order('name');
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getCustomerById(customerId: string, organizationId?: string): Promise<CustomerRow | null> {
+  let query = supabase
+    .from('customers')
+    .select('*')
+    .eq('id', customerId);
+
+  if (organizationId) {
+    query = query.eq('organization_id', organizationId);
+  }
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function createCustomer(customer: CustomerInsert): Promise<CustomerRow> {
+  const { data, error } = await supabase
+    .from('customers')
+    .insert(customer)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateCustomer(customerId: string, updates: CustomerUpdate, organizationId?: string): Promise<CustomerRow> {
+  let query = supabase
+    .from('customers')
+    .update(updates)
+    .eq('id', customerId);
+
+  if (organizationId) {
+    query = query.eq('organization_id', organizationId);
+  }
+
+  const { data, error } = await query.select().single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function linkTeamToCustomer(teamId: string, customerId: string | null, organizationId?: string): Promise<void> {
+  let query = supabase
+    .from('teams')
+    .update({ customer_id: customerId })
+    .eq('id', teamId);
+
+  if (organizationId) {
+    query = query.eq('organization_id', organizationId);
+  }
+
+  const { data, error } = await query
+    .select('id, customer_id')
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data || data.customer_id !== customerId) {
+    throw new Error('Team customer account link could not be saved. Confirm you can manage this team and try again.');
+  }
+}
+
+// ============================================
+// QuickBooks → Customer Import / Refresh
+// ============================================
+
+function qbAddrToJson(addr?: QuickBooksCustomerRecord['BillAddr']): Record<string, string> | null {
+  if (!addr) return null;
+  return {
+    line1: addr.Line1 ?? '',
+    city: addr.City ?? '',
+    state: addr.State ?? '',
+    country: addr.Country ?? '',
+    postal_code: addr.PostalCode ?? '',
+  };
+}
+
+/** Slim QBO debug snapshot per contact row (avoid storing the full customer payload N times). */
+function buildQuickBooksContactSourcePayload(
+  qb: QuickBooksCustomerRecord,
+  contact: QBODerivedContact
+): NonNullable<ExternalContactInsert['source_payload']> {
+  const payload: Json = {
+    Id: qb.Id,
+    DisplayName: qb.DisplayName,
+    sourceField: contact.sourceField,
+    name: contact.name,
+    role: contact.role,
+    email: contact.email ?? null,
+    phone: contact.phone ?? null,
+  };
+
+  return payload;
+}
+
+/**
+ * Upsert QBO-sourced external contacts for a customer.
+ * Inserts or updates one row per sourceField, then deletes stale QBO rows
+ * whose sourceField is no longer present in the latest QBO payload.
+ * Manual contacts (source = 'manual') are never touched.
+ *
+ * When qb.contacts is undefined the function returns immediately, preserving
+ * any previously-synced QBO rows.  Pass contacts: [] to explicitly clear them.
+ */
+export async function replaceQuickBooksExternalContacts(
+  organizationId: string,
+  customerId: string,
+  qb: QBCustomerPayload
+): Promise<void> {
+  // Preserve existing QBO contact rows when the caller did not supply contacts.
+  if (qb.contacts === undefined) return;
+
+  // Validate that the customer belongs to the stated organization before mutating.
+  const owner = await getCustomerById(customerId, organizationId);
+  if (!owner) {
+    throw new Error(`Customer ${customerId} not found in organization ${organizationId}`);
+  }
+
+  const syncedAt = new Date().toISOString();
+  const contacts = qb.contacts;
+
+  if (contacts.length > 0) {
+    const rows: ExternalContactInsert[] = contacts.map((c) => ({
+      customer_id: customerId,
+      name: c.name,
+      email: c.email ?? null,
+      phone: c.phone ?? null,
+      role: c.role,
+      notes: null,
+      source: 'quickbooks',
+      source_external_id: qb.Id,
+      source_field: c.sourceField,
+      last_synced_at: syncedAt,
+      source_payload: buildQuickBooksContactSourcePayload(qb, c),
+    }));
+
+    const { error: upsertError } = await supabase
+      .from('external_customer_contacts')
+      .upsert(rows, {
+        onConflict: 'customer_id,source,source_field',
+        ignoreDuplicates: false,
+      });
+
+    if (upsertError) throw upsertError;
+  }
+
+  // Delete stale QBO-sourced rows whose sourceField is no longer present
+  const activeFields = contacts.map((c) => c.sourceField);
+  let deleteQuery = supabase
+    .from('external_customer_contacts')
+    .delete()
+    .eq('customer_id', customerId)
+    .eq('source', 'quickbooks');
+
+  if (activeFields.length > 0) {
+    deleteQuery = deleteQuery.not('source_field', 'in', `(${activeFields.map((f) => `"${f}"`).join(',')})`);
+  }
+
+  const { error: deleteError } = await deleteQuery;
+  if (deleteError) throw deleteError;
+}
+
+/**
+ * Import a QuickBooks customer as a new EquipQR customer account.
+ * Returns the created customer row.
+ */
+export async function importCustomerFromQB(
+  organizationId: string,
+  qb: QBCustomerPayload
+): Promise<CustomerRow> {
+  const syncedAt = new Date().toISOString();
+  const insert: CustomerInsert = {
+    organization_id: organizationId,
+    name: qb.DisplayName,
+    status: 'active',
+    email: qb.Email ?? null,
+    phone: qb.Phone ?? null,
+    billing_address: qbAddrToJson(qb.BillAddr),
+    shipping_address: qbAddrToJson(qb.ShipAddr),
+    quickbooks_customer_id: qb.Id,
+    quickbooks_display_name: qb.DisplayName,
+    quickbooks_synced_at: syncedAt,
+    is_tax_exempt: qb.Taxable === undefined ? null : qb.Taxable === false,
+    quickbooks_tax_status_synced_at: qb.Taxable === undefined ? null : syncedAt,
+  };
+
+  const customer = await createCustomer(insert);
+  try {
+    await replaceQuickBooksExternalContacts(organizationId, customer.id, qb);
+  } catch (syncErr) {
+    const syncMessage =
+      syncErr instanceof Error
+        ? syncErr.message
+        : syncErr && typeof syncErr === 'object' && 'message' in syncErr
+          ? String((syncErr as { message: unknown }).message)
+          : String(syncErr);
+    const { error: rollbackError } = await supabase
+      .from('customers')
+      .delete()
+      .eq('id', customer.id)
+      .eq('organization_id', organizationId);
+
+    if (rollbackError) {
+      throw Object.assign(
+        new Error(
+          `${syncMessage} (Cleanup of the partially imported customer also failed: ${rollbackError.message})`
+        ),
+        { cause: syncErr }
+      );
+    }
+    throw syncErr instanceof Error
+      ? syncErr
+      : Object.assign(new Error(syncMessage), { cause: syncErr });
+  }
+  return customer;
+}
+
+/**
+ * Refresh QB-sourced fields on an existing customer without overwriting
+ * EquipQR-only fields (name, notes, account_owner_id, status).
+ */
+/**
+ * Point an existing customer account at a different QuickBooks customer and
+ * merge the latest QB-sourced fields and contacts.
+ */
+export async function remapCustomerFromQB(
+  organizationId: string,
+  customerId: string,
+  qb: QBCustomerPayload
+): Promise<CustomerRow> {
+  const syncedAt = new Date().toISOString();
+  const updates: CustomerUpdate = {
+    quickbooks_customer_id: qb.Id,
+    quickbooks_display_name: qb.DisplayName,
+    email: qb.Email ?? null,
+    phone: qb.Phone ?? null,
+    billing_address: qbAddrToJson(qb.BillAddr),
+    shipping_address: qbAddrToJson(qb.ShipAddr),
+    quickbooks_synced_at: syncedAt,
+    is_tax_exempt: qb.Taxable === undefined ? null : qb.Taxable === false,
+    quickbooks_tax_status_synced_at: qb.Taxable === undefined ? null : syncedAt,
+  };
+
+  const customer = await updateCustomer(customerId, updates, organizationId);
+  await replaceQuickBooksExternalContacts(organizationId, customerId, qb);
+  return customer;
+}
+
+export async function refreshCustomerFromQB(
+  organizationId: string,
+  customerId: string,
+  qb: QBCustomerPayload
+): Promise<CustomerRow> {
+  const syncedAt = new Date().toISOString();
+  const updates: CustomerUpdate = {
+    email: qb.Email ?? null,
+    phone: qb.Phone ?? null,
+    billing_address: qbAddrToJson(qb.BillAddr),
+    shipping_address: qbAddrToJson(qb.ShipAddr),
+    quickbooks_display_name: qb.DisplayName,
+    quickbooks_synced_at: syncedAt,
+    is_tax_exempt: qb.Taxable === undefined ? null : qb.Taxable === false,
+    quickbooks_tax_status_synced_at: qb.Taxable === undefined ? null : syncedAt,
+  };
+
+  const customer = await updateCustomer(customerId, updates, organizationId);
+  await replaceQuickBooksExternalContacts(organizationId, customerId, qb);
+  return customer;
+}
+
+// ============================================
+// External Customer Contacts CRUD
+// ============================================
+
+/** List rows for UI — excludes `source_payload` (debug-only, can be large). */
+export async function getExternalContacts(customerId: string): Promise<ExternalContactListRow[]> {
+  const { data, error } = await supabase
+    .from('external_customer_contacts')
+    .select(
+      'id, customer_id, name, email, phone, role, notes, source, source_external_id, source_field, last_synced_at, created_at, updated_at'
+    )
+    .eq('customer_id', customerId)
+    .order('name');
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export type ExternalContactFieldsInput = {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  role: string | null;
+  notes: string | null;
+};
+
+export async function createExternalContact(
+  organizationId: string,
+  contact: ExternalContactInsert
+): Promise<ExternalContactRow> {
+  const { data, error } = await supabase.rpc('create_manual_external_customer_contact', {
+    p_organization_id: organizationId,
+    p_customer_id: contact.customer_id,
+    p_name: contact.name,
+    p_email: contact.email ?? undefined,
+    p_phone: contact.phone ?? undefined,
+    p_role: contact.role ?? undefined,
+    p_notes: contact.notes ?? undefined,
+  });
+
+  if (error) throw error;
+  return data as ExternalContactRow;
+}
+
+export async function updateExternalContact(
+  organizationId: string,
+  contactId: string,
+  fields: ExternalContactFieldsInput
+): Promise<ExternalContactRow> {
+  const { data, error } = await supabase.rpc('update_manual_external_customer_contact', {
+    p_organization_id: organizationId,
+    p_contact_id: contactId,
+    p_name: fields.name,
+    p_email: fields.email ?? '',
+    p_phone: fields.phone ?? '',
+    p_role: fields.role ?? '',
+    p_notes: fields.notes ?? '',
+  });
+
+  if (error) throw error;
+  return data as ExternalContactRow;
+}
+
+export async function deleteExternalContact(organizationId: string, contactId: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_manual_external_customer_contact', {
+    p_organization_id: organizationId,
+    p_contact_id: contactId,
+  });
+
+  if (error) throw error;
+}
+
+// ============================================
+// QuickBooks Customer ID Resolution
+// ============================================
+
+/**
+ * Resolve the QuickBooks customer ID for a team.
+ * Primary path: team → customer account → quickbooks_customer_id.
+ * Fallback: legacy quickbooks_team_customers mapping table.
+ */
+export async function resolveQuickBooksCustomerId(
+  organizationId: string,
+  teamId: string
+): Promise<string | null> {
+  const { data: team } = await supabase
+    .from('teams')
+    .select('customer_id')
+    .eq('id', teamId)
+    .eq('organization_id', organizationId)
+    .maybeSingle();
+
+  if (team?.customer_id) {
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('quickbooks_customer_id')
+      .eq('id', team.customer_id)
+      .eq('organization_id', organizationId)
+      .maybeSingle();
+
+    if (customer?.quickbooks_customer_id) {
+      return customer.quickbooks_customer_id;
+    }
+  }
+
+  // Fallback: legacy mapping table
+  const { data: mapping } = await supabase
+    .from('quickbooks_team_customers')
+    .select('quickbooks_customer_id')
+    .eq('organization_id', organizationId)
+    .eq('team_id', teamId)
+    .maybeSingle();
+
+  return mapping?.quickbooks_customer_id ?? null;
+}

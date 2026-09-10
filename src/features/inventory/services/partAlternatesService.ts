@@ -1,0 +1,746 @@
+import { logger } from '@/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
+import { requireAuthUserIdFromClaims } from '@/lib/authClaims';
+import type { 
+  AlternateGroupMemberDetail,
+  AlternatePartResult, 
+  MakeModelCompatiblePart,
+  PartAlternateGroup,
+  PartIdentifier,
+  PartIdentifierType,
+  VerificationStatus
+} from '@/features/inventory/types/inventory';
+
+// ============================================
+// Lookup Alternates by Part Number
+// ============================================
+
+/**
+ * Determines if an error represents a request cancellation/abort.
+ * Only treats errors as cancellations when a signal was provided (to avoid false positives).
+ * 
+ * @param error - The error to check (Error instance or plain object)
+ * @param signal - Optional AbortSignal that was used for the request
+ * @returns true if the error represents a cancellation
+ */
+function isCancellation(error: unknown, signal?: AbortSignal): boolean {
+  // If no signal was provided, don't treat any error as a cancellation
+  // (to avoid silently swallowing real errors that happen to contain "abort" or "cancel")
+  if (!signal) {
+    return false;
+  }
+
+  // If signal was aborted, it's definitely a cancellation
+  if (signal.aborted) {
+    return true;
+  }
+
+  // Only check error message content when signal exists (to avoid false positives)
+  // Extract error name and message
+  const name = typeof error === 'object' && error !== null && 'name' in error
+    ? (error as { name?: unknown }).name
+    : error instanceof Error
+      ? error.name
+      : undefined;
+
+  const msg = typeof error === 'object' && error !== null && 'message' in error
+    ? String((error as { message?: unknown }).message ?? '')
+    : error instanceof Error
+      ? (error.message ?? '')
+      : '';
+
+  const lower = msg.toLowerCase();
+
+  // Check for well-known cancellation types
+  // These checks only run when signal is present, preventing false positives
+  return (
+    name === 'AbortError' ||
+    lower.includes('abort') ||
+    lower.includes('cancel')
+  );
+}
+
+/**
+ * Look up alternate/interchangeable parts by part number.
+ * Searches part_identifiers and inventory_items (by SKU/external_id),
+ * then returns all members of matching alternate groups with stock info.
+ * 
+ * @param organizationId - Organization ID for access control
+ * @param partNumber - Part number to search for
+ * @param signal - Optional AbortSignal for request cancellation
+ * @returns Array of alternate parts with inventory and group info
+ */
+export const getAlternatesForPartNumber = async (
+  organizationId: string,
+  partNumber: string,
+  signal?: AbortSignal
+): Promise<AlternatePartResult[]> => {
+  try {
+    if (!partNumber.trim()) {
+      return [];
+    }
+
+    // Check if already aborted before making request
+    if (signal?.aborted) {
+      return [];
+    }
+
+    const { data, error } = await supabase.rpc('get_alternates_for_part_number', {
+      p_organization_id: organizationId,
+      p_part_number: partNumber.trim()
+    }, { signal });
+
+    // If request was aborted, return empty result silently
+    if (signal?.aborted) {
+      return [];
+    }
+
+    if (error) {
+      // Handle permission errors
+      if (error.code === '42501') {
+        throw new Error('Access denied');
+      }
+      // Silently ignore abort errors (request cancelled due to new search)
+      // Only treat as cancellation if signal was provided
+      if (isCancellation(error, signal)) {
+        return [];
+      }
+      throw error;
+    }
+
+    return (data || []) as AlternatePartResult[];
+  } catch (error) {
+    // Silently handle abort/cancellation errors - these are expected when user types fast.
+    // Only treat as cancellation if signal was provided (to avoid silently swallowing real errors)
+    if (isCancellation(error, signal)) {
+      return [];
+    }
+    // Only log actual errors, not cancellations
+    logger.error('Error looking up alternates for part number:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// Lookup Alternates for Inventory Item
+// ============================================
+
+/**
+ * Get all alternate parts for a given inventory item.
+ * 
+ * @param organizationId - Organization ID for access control
+ * @param inventoryItemId - Inventory item to find alternates for
+ * @returns Array of alternate parts
+ */
+export const getAlternatesForInventoryItem = async (
+  organizationId: string,
+  inventoryItemId: string
+): Promise<AlternatePartResult[]> => {
+  try {
+    const { data, error } = await supabase.rpc('get_alternates_for_inventory_item', {
+      p_organization_id: organizationId,
+      p_inventory_item_id: inventoryItemId
+    });
+
+    if (error) {
+      if (error.code === '42501') {
+        throw new Error('Access denied');
+      }
+      throw error;
+    }
+
+    return (data || []) as AlternatePartResult[];
+  } catch (error) {
+    logger.error('Error looking up alternates for inventory item:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// Lookup Compatible Parts by Make/Model
+// ============================================
+
+/**
+ * Get compatible parts for a given manufacturer and optional model.
+ * Does NOT require an equipment record - works with ad-hoc lookups.
+ * 
+ * @param organizationId - Organization ID for access control
+ * @param manufacturer - Equipment manufacturer
+ * @param model - Optional equipment model
+ * @returns Array of compatible parts from rule-based matching
+ */
+export const getCompatiblePartsForMakeModel = async (
+  organizationId: string,
+  manufacturer: string,
+  model?: string
+): Promise<MakeModelCompatiblePart[]> => {
+  try {
+    if (!manufacturer.trim()) {
+      return [];
+    }
+
+    const { data, error } = await supabase.rpc('get_compatible_parts_for_make_model', {
+      p_organization_id: organizationId,
+      p_manufacturer: manufacturer.trim(),
+      p_model: model?.trim() || null
+    });
+
+    if (error) {
+      if (error.code === '42501') {
+        throw new Error('Access denied');
+      }
+      throw error;
+    }
+
+    return (data || []) as MakeModelCompatiblePart[];
+  } catch (error) {
+    logger.error('Error looking up compatible parts for make/model:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// Alternate Group Management
+// ============================================
+
+/**
+ * Create a new alternate group.
+ */
+export const createAlternateGroup = async (
+  organizationId: string,
+  data: {
+    name: string;
+    description?: string;
+    status?: VerificationStatus;
+    notes?: string;
+    evidence_url?: string;
+  }
+): Promise<PartAlternateGroup> => {
+  try {
+    const userId = await requireAuthUserIdFromClaims();
+
+    const { data: group, error } = await supabase
+      .from('part_alternate_groups')
+      .insert({
+        organization_id: organizationId,
+        name: data.name,
+        description: data.description || null,
+        status: data.status || 'unverified',
+        notes: data.notes || null,
+        evidence_url: data.evidence_url || null,
+        created_by: userId
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return group as PartAlternateGroup;
+  } catch (error) {
+    logger.error('Error creating alternate group:', error);
+    throw error;
+  }
+};
+
+/**
+ * Type definitions for joined data from Supabase queries
+ */
+interface PartIdentifierJoin {
+  identifier_type?: string;
+  raw_value?: string;
+  manufacturer?: string;
+}
+
+interface InventoryItemJoin {
+  name?: string;
+  sku?: string;
+  quantity_on_hand?: number;
+  low_stock_threshold?: number;
+  default_unit_cost?: number | null;
+  location?: string | null;
+}
+
+interface PartGroupMemberRow {
+  id: string;
+  group_id: string;
+  part_identifier_id: string | null;
+  inventory_item_id: string | null;
+  is_primary: boolean;
+  notes: string | null;
+  created_at: string;
+  part_identifiers: PartIdentifierJoin | null;
+  inventory_items: InventoryItemJoin | null;
+}
+
+interface PartGroupMemberListRow {
+  id: string;
+  inventory_item_id: string | null;
+  part_identifier_id: string | null;
+  is_primary: boolean;
+  created_at: string;
+  part_identifiers: PartIdentifierJoin | null;
+  inventory_items: InventoryItemJoin | null;
+}
+
+function mapMemberRowToSummary(member: PartGroupMemberListRow) {
+  const inventoryName = member.inventory_items?.name?.trim();
+  if (inventoryName) {
+    return {
+      id: member.id,
+      name: inventoryName,
+      sku: member.inventory_items?.sku?.trim() || null,
+    };
+  }
+
+  const identifierValue = member.part_identifiers?.raw_value?.trim();
+  return {
+    id: member.id,
+    name: identifierValue || 'Unknown part',
+    sku: null,
+  };
+}
+
+function mapMemberRowToDetail(member: PartGroupMemberListRow): AlternateGroupMemberDetail {
+  const invItem = member.inventory_items;
+  const partIdent = member.part_identifiers;
+  const inventoryName = invItem?.name?.trim();
+  const hasInventory = Boolean(inventoryName);
+
+  return {
+    id: member.id,
+    is_primary: member.is_primary,
+    member_type: hasInventory ? 'inventory' : 'identifier',
+    inventory_item_id: member.inventory_item_id,
+    item_name: inventoryName || null,
+    item_sku: invItem?.sku?.trim() || null,
+    quantity_on_hand: hasInventory ? (invItem?.quantity_on_hand ?? 0) : null,
+    low_stock_threshold: hasInventory ? (invItem?.low_stock_threshold ?? 0) : null,
+    default_unit_cost: hasInventory ? (invItem?.default_unit_cost ?? null) : null,
+    location: hasInventory ? (invItem?.location?.trim() || null) : null,
+    identifier_type: (partIdent?.identifier_type as PartIdentifierType | undefined) || null,
+    identifier_value: partIdent?.raw_value?.trim() || null,
+    identifier_manufacturer: partIdent?.manufacturer?.trim() || null,
+  };
+}
+
+/**
+ * Member of an alternate group with full details.
+ */
+export interface AlternateGroupMember {
+  id: string;
+  group_id: string;
+  part_identifier_id: string | null;
+  inventory_item_id: string | null;
+  is_primary: boolean;
+  notes: string | null;
+  created_at: string;
+  // Joined from part_identifiers
+  identifier_type?: PartIdentifierType | null;
+  identifier_value?: string | null;
+  identifier_manufacturer?: string | null;
+  // Joined from inventory_items
+  inventory_name?: string | null;
+  inventory_sku?: string | null;
+  quantity_on_hand?: number;
+}
+
+/**
+ * Alternate group with its members.
+ */
+export interface AlternateGroupWithMembers extends PartAlternateGroup {
+  members: AlternateGroupMember[];
+}
+
+/**
+ * Get an alternate group by ID with its members.
+ */
+export const getAlternateGroupById = async (
+  organizationId: string,
+  groupId: string
+): Promise<AlternateGroupWithMembers | null> => {
+  try {
+    // Get the group
+    const { data: group, error: groupError } = await supabase
+      .from('part_alternate_groups')
+      .select('*')
+      .eq('id', groupId)
+      .eq('organization_id', organizationId)
+      .single();
+
+    if (groupError) {
+      if (groupError.code === 'PGRST116') return null; // Not found
+      throw groupError;
+    }
+
+    // Get members with joined data
+    const { data: members, error: membersError } = await supabase
+      .from('part_alternate_group_members')
+      .select(`
+        id,
+        group_id,
+        part_identifier_id,
+        inventory_item_id,
+        is_primary,
+        notes,
+        created_at,
+        part_identifiers (
+          identifier_type,
+          raw_value,
+          manufacturer
+        ),
+        inventory_items (
+          name,
+          sku,
+          quantity_on_hand
+        )
+      `)
+      .eq('group_id', groupId)
+      .order('is_primary', { ascending: false })
+      .order('created_at', { ascending: true });
+
+    if (membersError) throw membersError;
+
+    // Transform members to flat structure
+    const transformedMembers: AlternateGroupMember[] = (members as PartGroupMemberRow[] || []).map((m) => {
+      const partIdent: PartIdentifierJoin | null = m.part_identifiers;
+      const invItem: InventoryItemJoin | null = m.inventory_items;
+      
+      return {
+        id: m.id,
+        group_id: m.group_id,
+        part_identifier_id: m.part_identifier_id,
+        inventory_item_id: m.inventory_item_id,
+        is_primary: m.is_primary,
+        notes: m.notes,
+        created_at: m.created_at,
+        identifier_type: (partIdent?.identifier_type as PartIdentifierType | undefined) || null,
+        identifier_value: partIdent?.raw_value || null,
+        identifier_manufacturer: partIdent?.manufacturer || null,
+        inventory_name: invItem?.name || null,
+        inventory_sku: invItem?.sku || null,
+        quantity_on_hand: invItem?.quantity_on_hand ?? 0,
+      };
+    });
+
+    return {
+      ...(group as PartAlternateGroup),
+      members: transformedMembers,
+    };
+  } catch (error) {
+    logger.error('Error fetching alternate group:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update an alternate group.
+ */
+export const updateAlternateGroup = async (
+  organizationId: string,
+  groupId: string,
+  data: Partial<{
+    name: string;
+    description: string;
+    status: VerificationStatus;
+    notes: string;
+    evidence_url: string;
+  }>
+): Promise<PartAlternateGroup> => {
+  try {
+    const userId = data.status === 'verified' ? await requireAuthUserIdFromClaims() : null;
+    const updateData: Record<string, unknown> = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.description !== undefined) updateData.description = data.description || null;
+    if (data.status !== undefined) {
+      updateData.status = data.status;
+      // If marking as verified, set verified_by and verified_at
+      if (data.status === 'verified') {
+        updateData.verified_by = userId;
+        updateData.verified_at = new Date().toISOString();
+      }
+    }
+    if (data.notes !== undefined) updateData.notes = data.notes || null;
+    if (data.evidence_url !== undefined) updateData.evidence_url = data.evidence_url || null;
+
+    const { data: group, error } = await supabase
+      .from('part_alternate_groups')
+      .update(updateData)
+      .eq('id', groupId)
+      .eq('organization_id', organizationId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return group as PartAlternateGroup;
+  } catch (error) {
+    logger.error('Error updating alternate group:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete an alternate group.
+ */
+export const deleteAlternateGroup = async (
+  organizationId: string,
+  groupId: string
+): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('part_alternate_groups')
+      .delete()
+      .eq('id', groupId)
+      .eq('organization_id', organizationId);
+
+    if (error) throw error;
+  } catch (error) {
+    logger.error('Error deleting alternate group:', error);
+    throw error;
+  }
+};
+
+/**
+ * Remove a member from an alternate group.
+ */
+export const removeGroupMember = async (memberId: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('part_alternate_group_members')
+      .delete()
+      .eq('id', memberId);
+
+    if (error) throw error;
+  } catch (error) {
+    logger.error('Error removing group member:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all alternate groups for an organization.
+ */
+export const getAlternateGroups = async (
+  organizationId: string
+): Promise<PartAlternateGroup[]> => {
+  try {
+    const { data: groups, error } = await supabase
+      .from('part_alternate_groups')
+      .select(`
+        *,
+        part_alternate_group_members (
+          id,
+          inventory_item_id,
+          part_identifier_id,
+          is_primary,
+          created_at,
+          part_identifiers (
+            identifier_type,
+            raw_value,
+            manufacturer
+          ),
+          inventory_items (
+            name,
+            sku,
+            quantity_on_hand,
+            low_stock_threshold,
+            default_unit_cost,
+            location
+          )
+        )
+      `)
+      .eq('organization_id', organizationId)
+      .order('name');
+
+    if (error) throw error;
+    type GroupWithMembers = PartAlternateGroup & {
+      part_alternate_group_members?: PartGroupMemberListRow[];
+    };
+
+    return ((groups || []) as GroupWithMembers[]).map((group) => {
+      const rawMembers = group.part_alternate_group_members ?? [];
+      const sortedMembers = [...rawMembers].sort((a, b) => {
+        if (a.is_primary !== b.is_primary) {
+          return a.is_primary ? -1 : 1;
+        }
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+      const memberSummaries = sortedMembers.map(mapMemberRowToSummary);
+      const memberDetails = sortedMembers.map(mapMemberRowToDetail);
+      const { part_alternate_group_members: _members, ...groupFields } = group;
+
+      return {
+        ...groupFields,
+        member_count: memberSummaries.length,
+        member_summaries: memberSummaries,
+        member_details: memberDetails,
+      };
+    });
+  } catch (error) {
+    logger.error('Error fetching alternate groups:', error);
+    throw error;
+  }
+};
+
+/**
+ * Add a part identifier to an alternate group.
+ */
+export const addIdentifierToGroup = async (
+  groupId: string,
+  identifierId: string
+): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('part_alternate_group_members')
+      .insert({
+        group_id: groupId,
+        part_identifier_id: identifierId
+      });
+
+    if (error && error.code !== '23505') throw error;
+  } catch (error) {
+    logger.error('Error adding identifier to group:', error);
+    throw error;
+  }
+};
+
+/**
+ * Add an inventory item directly to an alternate group.
+ */
+export const addInventoryItemToGroup = async (
+  groupId: string,
+  inventoryItemId: string,
+  isPrimary: boolean = false
+): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('part_alternate_group_members')
+      .insert({
+        group_id: groupId,
+        inventory_item_id: inventoryItemId,
+        is_primary: isPrimary
+      });
+
+    if (error && error.code !== '23505') throw error;
+  } catch (error) {
+    logger.error('Error adding inventory item to group:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// Inventory Group Membership Counts
+// ============================================
+
+/**
+ * Returns a map of inventoryItemId -> number of alternate groups
+ * the item belongs to within the given organization.
+ */
+export const getInventoryGroupMembershipCounts = async (
+  organizationId: string
+): Promise<Record<string, number>> => {
+  try {
+    // Fetch all group IDs for this org (one org-scoped query)
+    const { data: groups, error: groupsError } = await supabase
+      .from('part_alternate_groups')
+      .select('id')
+      .eq('organization_id', organizationId);
+
+    if (groupsError) throw groupsError;
+    if (!groups || groups.length === 0) return {};
+
+    const groupIds = groups.map((g) => g.id);
+
+    const { data: memberships, error: membershipsError } = await supabase
+      .from('part_alternate_group_members')
+      .select('inventory_item_id')
+      .in('group_id', groupIds)
+      .not('inventory_item_id', 'is', null);
+
+    if (membershipsError) throw membershipsError;
+
+    const counts: Record<string, number> = {};
+    for (const row of memberships ?? []) {
+      if (row.inventory_item_id) {
+        counts[row.inventory_item_id] = (counts[row.inventory_item_id] ?? 0) + 1;
+      }
+    }
+    return counts;
+  } catch (error) {
+    logger.error('Error fetching inventory group membership counts:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// Part Identifier Management
+// ============================================
+
+/**
+ * Create a new part identifier.
+ */
+export const createPartIdentifier = async (
+  organizationId: string,
+  data: {
+    identifier_type: PartIdentifierType;
+    raw_value: string;
+    manufacturer?: string;
+    inventory_item_id?: string;
+    notes?: string;
+  }
+): Promise<PartIdentifier> => {
+  try {
+    const userId = await requireAuthUserIdFromClaims();
+
+    const { data: identifier, error } = await supabase
+      .from('part_identifiers')
+      .insert({
+        organization_id: organizationId,
+        identifier_type: data.identifier_type,
+        raw_value: data.raw_value.trim(),
+        norm_value: data.raw_value.trim().toLowerCase(),
+        manufacturer: data.manufacturer || null,
+        inventory_item_id: data.inventory_item_id || null,
+        notes: data.notes || null,
+        created_by: userId
+      })
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error('This part number already exists');
+      }
+      throw error;
+    }
+    return identifier as PartIdentifier;
+  } catch (error) {
+    logger.error('Error creating part identifier:', error);
+    throw error;
+  }
+};
+
+/**
+ * Search for part identifiers by value.
+ */
+export const searchPartIdentifiers = async (
+  organizationId: string,
+  searchTerm: string
+): Promise<PartIdentifier[]> => {
+  try {
+    const normValue = searchTerm.trim().toLowerCase();
+    if (!normValue) return [];
+
+    const { data, error } = await supabase
+      .from('part_identifiers')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .ilike('norm_value', `%${normValue}%`)
+      .order('raw_value')
+      .limit(50);
+
+    if (error) throw error;
+    return (data || []) as PartIdentifier[];
+  } catch (error) {
+    logger.error('Error searching part identifiers:', error);
+    throw error;
+  }
+};

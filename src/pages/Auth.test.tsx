@@ -1,0 +1,432 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@vitest-harness/utils/test-utils';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { User } from '@supabase/supabase-js';
+import Auth from './Auth';
+import * as useAuthModule from '@/hooks/useAuth';
+
+const mockAuthenticatedUser: User = {
+  id: 'user-1',
+  email: 'test@test.com',
+  aud: 'authenticated',
+  created_at: '2024-01-01T00:00:00Z',
+  app_metadata: {},
+  user_metadata: {},
+};
+
+const mockErrorToast = vi.hoisted(() => vi.fn());
+const mockSuccessToast = vi.hoisted(() => vi.fn());
+const mockLocation = vi.hoisted(() => ({ search: '' }));
+
+// Mock hooks
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: vi.fn(() => ({
+    user: null,
+    signInWithGoogle: vi.fn(() => Promise.resolve({ error: null })),
+    isLoading: false
+  }))
+}));
+
+vi.mock('@/hooks/useAppToast', () => ({
+  useAppToast: () => ({
+    error: mockErrorToast,
+    success: mockSuccessToast,
+    info: vi.fn(),
+    warning: vi.fn(),
+    toast: vi.fn(),
+  }),
+}));
+
+vi.mock('@/hooks/useMFA', () => ({
+  useMFA: () => ({
+    factors: [],
+    currentLevel: null,
+    nextLevel: null,
+    isEnrolled: false,
+    isVerified: false,
+    needsVerification: false,
+    isLoading: false,
+    enrollTOTP: vi.fn(),
+    verifyTOTP: vi.fn(),
+    unenrollFactor: vi.fn(),
+    challengeAndVerify: vi.fn(),
+    refreshMFAStatus: vi.fn(),
+  }),
+}));
+
+// Mock components
+vi.mock('@/components/auth/SignUpForm', () => ({
+  default: ({
+    onSuccess,
+    onError,
+    onGoogleSignUp,
+  }: {
+    onSuccess: (msg: string, email?: string) => void;
+    onError: (msg: string) => void;
+    onGoogleSignUp: (organizationName: string) => void;
+  }) => (
+    <form aria-label="Sign up form">
+      <button type="button" onClick={() => onGoogleSignUp('Fleet Co')}>Sign up with Google</button>
+      <button type="button" onClick={() => onSuccess('Account created', 'viralarchitect@yahoo.com')}>Submit SignUp</button>
+      <button type="button" onClick={() => onSuccess('Legal acceptance recorded successfully.')}>Retry Acceptance Success</button>
+      <button type="button" onClick={() => onError('Signup failed')}>Trigger SignUp Error</button>
+    </form>
+  )
+}));
+
+vi.mock('@/components/auth/SignInForm', () => ({
+  default: ({
+    onError,
+    onGoogleSignIn,
+  }: {
+    onError: (msg: string) => void;
+    onGoogleSignIn: () => void;
+  }) => (
+    <form aria-label="Sign in form">
+      <button type="button" onClick={onGoogleSignIn}>Login with Google</button>
+      <button type="button" onClick={() => onError('Invalid credentials')}>Trigger SignIn Error</button>
+    </form>
+  )
+}));
+
+vi.mock('@/components/layout/LegalFooter', () => ({
+  default: () => <div data-testid="legal-footer">Legal Footer</div>
+}));
+
+vi.mock('@/components/ui/Logo', () => ({
+  default: () => <div data-testid="logo">Logo</div>
+}));
+
+// Mock react-router hooks
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+    useLocation: () => mockLocation
+  };
+});
+
+describe('Auth Page', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessionStorage.clear();
+    mockLocation.search = '';
+  });
+
+  describe('Core Rendering', () => {
+    it('renders sign-in title and description by default', () => {
+      render(<Auth />);
+
+      expect(screen.getByText('Sign in to EquipQR')).toBeInTheDocument();
+      expect(screen.getByText('Sign in to your account to get started')).toBeInTheDocument();
+    });
+
+    it('renders logo component', () => {
+      render(<Auth />);
+
+      expect(screen.getByTestId('logo')).toBeInTheDocument();
+    });
+
+    it('does not render tabs', () => {
+      render(<Auth />);
+
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    });
+
+    it('renders legal footer', () => {
+      render(<Auth />);
+
+      expect(screen.getByTestId('legal-footer')).toBeInTheDocument();
+    });
+
+    it('renders Google sign in button', () => {
+      render(<Auth />);
+
+      expect(screen.getByRole('button', { name: /login with google/i })).toBeInTheDocument();
+    });
+  });
+
+  describe('Mode switcher', () => {
+    it('shows signin form by default', () => {
+      render(<Auth />);
+
+      expect(screen.getByRole('form', { name: /sign in form/i })).toBeInTheDocument();
+      expect(screen.queryByRole('form', { name: /sign up form/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /create an account/i })).toBeInTheDocument();
+    });
+
+    it('switches to signup from the secondary action', () => {
+      render(<Auth />);
+
+      fireEvent.click(screen.getByRole('button', { name: /create an account/i }));
+
+      expect(screen.getByRole('form', { name: /sign up form/i })).toBeInTheDocument();
+      expect(screen.queryByRole('form', { name: /sign in form/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /create your organization/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign up with google/i })).toBeInTheDocument();
+    });
+
+    it('opens signup from legacy tab query param', () => {
+      mockLocation.search = '?tab=signup';
+      render(<Auth />);
+
+      expect(screen.getByRole('form', { name: /sign up form/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /create your organization/i })).toBeInTheDocument();
+    });
+
+    it('opens signup from mode query param', () => {
+      mockLocation.search = '?mode=signup';
+      render(<Auth />);
+
+      expect(screen.getByRole('form', { name: /sign up form/i })).toBeInTheDocument();
+    });
+
+    it('falls back to a valid tab when mode is present but invalid', () => {
+      mockLocation.search = '?mode=foo&tab=signup';
+      render(<Auth />);
+
+      expect(screen.getByRole('form', { name: /sign up form/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /create your organization/i })).toBeInTheDocument();
+    });
+
+    it('forces signup when invitation params are present', () => {
+      mockLocation.search = '?tab=signin&invitedOrgId=org-1&invitedOrgName=Acme';
+      render(<Auth />);
+
+      expect(screen.getByRole('form', { name: /sign up form/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /create your organization/i })).toBeInTheDocument();
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('displays error message from signin form', async () => {
+      render(<Auth />);
+
+      const errorButton = screen.getByText('Trigger SignIn Error');
+      fireEvent.click(errorButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Success Handling', () => {
+    it('shows a dedicated check-your-email confirmation after signup succeeds', async () => {
+      mockLocation.search = '?tab=signup';
+      render(<Auth />);
+
+      fireEvent.click(screen.getByText('Submit SignUp'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /check your email/i })).toBeInTheDocument();
+        expect(screen.getByText('viralarchitect@yahoo.com')).toBeInTheDocument();
+        expect(screen.getByText('Account created')).toBeInTheDocument();
+      });
+      expect(screen.queryByRole('form', { name: /sign up form/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /open email inbox/i })).toHaveAttribute('href', 'https://mail.yahoo.com/');
+      expect(screen.getByRole('link', { name: /open email inbox/i })).toHaveAttribute('rel', 'noopener noreferrer');
+      expect(mockSuccessToast).toHaveBeenCalledWith({
+        title: 'Check your email',
+        description: 'Account created',
+        duration: 10000,
+      });
+    });
+
+    it('returns to sign-in mode after email verification', async () => {
+      mockLocation.search = '?tab=signup';
+      render(<Auth />);
+
+      fireEvent.click(screen.getByText('Submit SignUp'));
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /check your email/i })).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /i verified my email - sign in/i }));
+
+      expect(mockNavigate).toHaveBeenCalledWith('/auth?mode=signin', { replace: true });
+    });
+
+    it('shows a generic success toast for non-signup success without email confirmation page', async () => {
+      mockLocation.search = '?tab=signup';
+      render(<Auth />);
+
+      fireEvent.click(screen.getByText('Retry Acceptance Success'));
+
+      await waitFor(() => {
+        expect(mockSuccessToast).toHaveBeenCalledWith({
+          title: 'Success',
+          description: 'Legal acceptance recorded successfully.',
+          duration: 10000,
+        });
+      });
+      expect(screen.queryByRole('heading', { name: /check your email/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('form', { name: /sign up form/i })).toBeInTheDocument();
+    });
+  });
+
+  describe('Loading State', () => {
+    it('shows loading spinner when auth is loading', () => {
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: null,
+        signInWithGoogle: vi.fn(),
+        isLoading: true,
+        session: null,
+        signUp: vi.fn(),
+        signIn: vi.fn(),
+        signOut: vi.fn()
+      });
+
+      render(<Auth />);
+
+      // The loader should be present
+      const spinner = document.querySelector('.animate-spin');
+      expect(spinner).toBeInTheDocument();
+    });
+  });
+
+  describe('Authenticated User Redirect', () => {
+    it('navigates to home when user is already authenticated', async () => {
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: mockAuthenticatedUser,
+        signInWithGoogle: vi.fn(),
+        isLoading: false,
+        session: null,
+        signUp: vi.fn(),
+        signIn: vi.fn(),
+        signOut: vi.fn()
+      });
+
+      render(<Auth />);
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+      });
+    });
+  });
+
+  describe('QR Scan Flow', () => {
+    it('shows QR scan message when coming from QR scan', () => {
+      sessionStorage.setItem('pendingRedirect', '/equipment/123?qr=true');
+
+      render(<Auth />);
+
+      expect(screen.getByText('Sign in to continue')).toBeInTheDocument();
+      expect(screen.getByText('Complete sign in to view scanned equipment')).toBeInTheDocument();
+    });
+
+    it('restores QR prompt from OAuth next query param (#1322)', async () => {
+      // sessionStorage cleared in beforeEach — only `?next=` seeds the destination.
+      mockLocation.search = `?next=${encodeURIComponent('/qr/equipment/abc-123?qr=true')}`;
+
+      render(<Auth />);
+
+      expect(
+        await screen.findByText('Complete sign in to view scanned equipment'),
+      ).toBeInTheDocument();
+    });
+
+    it('ignores unsafe OAuth next query param', () => {
+      mockLocation.search = '?next=https%3A%2F%2Fevil.com';
+
+      render(<Auth />);
+
+      expect(
+        screen.queryByText('Complete sign in to view scanned equipment'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('clears QR prompt when search no longer has a QR destination', async () => {
+      mockLocation.search = `?next=${encodeURIComponent('/qr/equipment/abc-123?qr=true')}`;
+      const { rerender } = render(<Auth />);
+
+      expect(
+        await screen.findByText('Complete sign in to view scanned equipment'),
+      ).toBeInTheDocument();
+
+      mockLocation.search = '?tab=signin';
+      sessionStorage.clear();
+      rerender(<Auth />);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText('Complete sign in to view scanned equipment'),
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Google Sign In', () => {
+    it('calls signInWithGoogle when Google button is clicked', async () => {
+      const mockSignInWithGoogle = vi.fn(() => Promise.resolve({ error: null }));
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: null,
+        signInWithGoogle: mockSignInWithGoogle,
+        isLoading: false,
+        session: null,
+        signUp: vi.fn(),
+        signIn: vi.fn(),
+        signOut: vi.fn()
+      });
+
+      render(<Auth />);
+
+      const googleButton = screen.getByRole('button', { name: /login with google/i });
+      fireEvent.click(googleButton);
+
+      await waitFor(() => {
+        expect(mockSignInWithGoogle).toHaveBeenCalled();
+      });
+    });
+
+    it('displays error when Google sign in fails', async () => {
+      const mockSignInWithGoogle = vi.fn(() =>
+        Promise.resolve({ error: new Error('Google auth failed') }),
+      );
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: null,
+        signInWithGoogle: mockSignInWithGoogle,
+        isLoading: false,
+        session: null,
+        signUp: vi.fn(),
+        signIn: vi.fn(),
+        signOut: vi.fn()
+      });
+
+      render(<Auth />);
+
+      const googleButton = screen.getByRole('button', { name: /login with google/i });
+      fireEvent.click(googleButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Google auth failed')).toBeInTheDocument();
+      });
+    });
+
+    it('passes the signup organization name into Google OAuth', async () => {
+      const mockSignInWithGoogle = vi.fn(() => Promise.resolve({ error: null }));
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: null,
+        signInWithGoogle: mockSignInWithGoogle,
+        isLoading: false,
+        session: null,
+        signUp: vi.fn(),
+        signIn: vi.fn(),
+        signOut: vi.fn()
+      });
+
+      mockLocation.search = '?mode=signup';
+      render(<Auth />);
+
+      fireEvent.click(screen.getByRole('button', { name: /sign up with google/i }));
+
+      await waitFor(() => {
+        expect(mockSignInWithGoogle).toHaveBeenCalledWith({ organizationName: 'Fleet Co' });
+      });
+    });
+  });
+});
+

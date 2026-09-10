@@ -1,0 +1,73 @@
+name: Export Database Schema
+
+# Exports production Supabase schema + RLS reference artifacts for agents/reviewers.
+# Reference-only: does not modify migrations or apply schema changes.
+#
+# PREVIEW_DATABASE_URL (GitHub secret name unchanged) should point at the production
+# pooler after #1033 cutover — see docs/ops/preview-architecture-migration.md.
+#
+# Artifacts:
+# - supabase/schema.sql (public, storage, auth, pgmq_public)
+# - supabase/rls-policies.sql (RLS table posture + policy inventory)
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'supabase/schema.sql'
+      - 'supabase/rls-policies.sql'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  export-schema:
+    name: Export Schema from Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.actor != 'github-actions[bot]'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520
+        with:
+          version: 2.72.8
+
+      - name: Export schema and RLS baseline from production project
+        id: export-schema
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::warning::PREVIEW_DATABASE_URL is not configured. Skipping schema export."
+            echo "exported=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ ! "$DATABASE_URL" =~ ^postgres(ql)?:// ]]; then
+            echo "::warning::PREVIEW_DATABASE_URL is not a valid Postgres URI. Skipping schema export."
+            echo "exported=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          chmod +x dev/export-schema-baseline.sh
+          ./dev/export-schema-baseline.sh
+          echo "exported=true" >> "$GITHUB_OUTPUT"
+        env:
+          DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
+
+      - name: Commit schema artifacts if changed
+        if: steps.export-schema.outputs.exported == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add supabase/schema.sql supabase/rls-policies.sql
+          if git diff --cached --quiet; then
+            echo "No schema baseline changes detected"
+          else
+            git commit -m "chore: update schema and RLS baseline [skip ci]"
+            git push
+            echo "Schema baseline changes committed and pushed"
+          fi
