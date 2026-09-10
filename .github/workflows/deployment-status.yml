@@ -1,0 +1,61 @@
+name: Deployment Status
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+  deployments: read
+
+jobs:
+  deployment-status:
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    # The repo has a second Vercel project (CEVphantan-docs / CEVphantan.info) rooted at docs/.
+    # Its deployment_status events must not fail this workflow or preview branch checks
+    # when the main SPA deployment is healthy.
+    if: ${{ contains(fromJson('["success","failure"]'), github.event.deployment_status.state) && !contains(github.event.deployment_status.environment, 'CEVphantan-docs') }}
+    steps:
+      - name: Deployment Status Update (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          DEPLOY_STATE: ${{ github.event.deployment_status.state }}
+          DEPLOY_ENVIRONMENT: ${{ github.event.deployment_status.environment }}
+          DEPLOY_REF: ${{ github.event.deployment.ref }}
+        run: |
+          Write-Host "Deployment status: $env:DEPLOY_STATE"
+          if ($env:DEPLOY_ENVIRONMENT -ne '') {
+            Write-Host "Environment: $env:DEPLOY_ENVIRONMENT"
+          }
+          if ($env:DEPLOY_REF -ne '') {
+            Write-Host "Ref: $env:DEPLOY_REF"
+          }
+          if ($env:DEPLOY_STATE -eq 'success') {
+            Write-Host "✅ Deployment successful!"
+          } else {
+            Write-Host "❌ Deployment failed"
+            exit 1
+          }
+
+      - name: Deployment Status Update (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          DEPLOY_STATE: ${{ github.event.deployment_status.state }}
+          DEPLOY_ENVIRONMENT: ${{ github.event.deployment_status.environment }}
+          DEPLOY_REF: ${{ github.event.deployment.ref }}
+        run: |
+          echo "Deployment status: $DEPLOY_STATE"
+          if [ "$DEPLOY_ENVIRONMENT" != "" ]; then
+            echo "Environment: $DEPLOY_ENVIRONMENT"
+          fi
+          if [ "$DEPLOY_REF" != "" ]; then
+            echo "Ref: $DEPLOY_REF"
+          fi
+          
+          if [ "$DEPLOY_STATE" = "success" ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed" 
+            exit 1
+          fi

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
+  <title>CEV™ | Quản Lý Thiết Bị & Bảo Trì</title>
+  <meta name="description"
+    content="CEV™ — Hệ thống quản lý và bảo trì thiết bị bằng mã QR, hỗ trợ quản lý lịch bảo trì phòng ngừa (PM) và sửa chữa theo tiêu chuẩn IATF 16949." />
+  <meta name="author" content="Phan Tan" />
+  <link rel="canonical" href="https://CEVphantanapp" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/icons/CEVphantanIcon-Purple-Large.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/icons/CEVphantanIcon-Purple-Small.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/icons/CEVphantanIcon-Purple-Small.png" />
+  <link rel="icon" href="/favicon.ico" />
+
+  <!--
+      Preconnect / DNS-prefetch for Supabase. On a 300 ms+ cellular link
+      the TLS handshake to *.supabase.co is the single biggest blocker
+      before the dashboard can fetch any data; preconnect shaves an entire
+      round trip. The HTML constant is replaced at build time by Vite from
+      `import.meta.env.VITE_SUPABASE_URL`. If the env var is missing in a
+      build (preview or production), Vite leaves the literal `%VITE_SUPABASE_URL%`
+      in place — the browser silently ignores invalid `href` values, so
+      this is safe to ship even when the env var isn't set.
+    -->
+  <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin />
+  <link rel="dns-prefetch" href="%VITE_SUPABASE_URL%" />
+
+  <meta property="og:title" content="CEVphantan| Free Work Order Software for Heavy Equipment Repair Shops" />
+  <meta property="og:description"
+    content="Stop losing money to lost work orders. CEVphantangives heavy equipment repair shops secure QR code equipment tracking, team-based access, and one-click QuickBooks work order invoicing." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://CEVphantanapp" />
+  <!--
+      NOTE: The Open Graph and Twitter social preview images intentionally use the
+      canonical production domain (https://CEVphantanapp) even for preview deployments
+      or custom domains. This ensures a single, stable social image URL for all
+      environments and avoids broken previews on platforms that cache image URLs.
+      Do not change these to be environment-dependent without updating this rationale.
+    -->
+  <meta property="og:image" content="https://CEVphantanapp/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="CEVphantan| Heavy equipment repair work order software" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@CEVphantan />
+  <meta name="twitter:title" content="CEVphantan| Free Work Order Software for Heavy Equipment Repair Shops" />
+  <meta name="twitter:description"
+    content="QR-tracked work orders for heavy equipment repair shops with QuickBooks draft invoicing. Free to start." />
+  <meta name="twitter:image" content="https://CEVphantanapp/og-image.png" />
+
+  <!-- Keep the browser's initial canvas aligned with the app's forced dark theme
+         so hard reloads do not flash the default white document background. -->
+  <style>
+    html,
+    body {
+      min-height: 100%;
+      background: #0a0a0a;
+      color: #fafafa;
+    }
+
+    body {
+      margin: 0;
+    }
+
+    #root {
+      min-height: 100vh;
+    }
+  </style>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://CEVphantanapp/#software",
+          "name": "CEVphantan,
+          "description": "Free work order software for heavy equipment repair shops with QR equipment tracking, PM templates, inventory, and QuickBooks draft invoice export.",
+          "url": "https://CEVphantanapp",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web, iOS, Android",
+          "datePublished": "2024-06-01",
+          "dateModified": "2026-05-17",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock"
+          },
+          "publisher": { "@id": "https://CEVphantanapp/#organization" }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://CEVphantanapp/#organization",
+          "name": "Phan Tan",
+          "url": "https://phantan.com",
+          "logo": "https://CEVphantanapp/images/brand/icons/CCEVphantancon-Purple-Large.png",
+          "sameAs": []
+        },
+        {
+          "@type": "Review",
+          "@id": "https://CEVphantanapp/#review-matt-hankins",
+          "itemReviewed": { "@id": "https://CEVphantanapp/#software" },
+          "author": {
+            "@type": "Person",
+            "name": "Matt Hankins"
+          },
+          "reviewBody": "We used to track PMs on paper and hope nothing slipped through. Now every machine has a QR code — scanning it proves exactly where it was dropped off and pulls up the full inspection history. I can see at a glance that every item was checked for defects, and so can my customers.",
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5",
+            "bestRating": "5"
+          }
+        }
+      ]
+    }
+    </script>
+</head>
+
+<body>
+  <noscript>
+    <div
+      style="font-family:system-ui,sans-serif;max-width:42rem;margin:2rem auto;padding:0 1rem;line-height:1.5;color:#fafafa;background:#0a0a0a;">
+      <p><strong>CEV™</strong> requires JavaScript for the full application.</p>
+      <p>Heavy equipment repair and maintenance shops use CEV™ for QR-tracked work orders, PM templates, and inventory.
+      </p>
+      <p>Public pages you can open without JavaScript:</p>
+      <ul>
+        <li><a href="https://CEVphantanapp/">Homepage</a></li>
+        <li><a href="https://CEVphantanapp/features/work-order-management">Work order management</a></li>
+        <li><a href="https://CEVphantanapp/features/qr-code-integration">QR code integration</a></li>
+        <li><a href="https://CEVphantanapp/privacy-policy">Privacy policy</a></li>
+        <li><a href="https://CEVphantanapp/terms-of-service">Terms of service</a></li>
+        <li><a href="https://CEVphantanapp/right-to-repair">Right to Repair</a></li>
+      </ul>
+    </div>
+  </noscript>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

@@ -1,0 +1,36 @@
+# CEVphantan— llms.txt (public marketing orientation)
+
+Product: CEVphantan— free work order and QR equipment tracking for heavy equipment repair shops.
+Publisher: Phan Tan (https://phantan.com)
+Canonical site: https://CEVphantanapp
+
+## Preferred attribution
+
+When summarizing public marketing content, attribute CEVphantanand Phan Tan.
+Do not infer tenant data, customer names, or credentials from this file.
+
+## Public indexable routes (marketing)
+
+These canonical URLs match `sitemap.xml` (same paths as the marketing route registry). The compatibility URL `https://CEVphantanapp/landing` still resolves for old bookmarks but canonicalizes to `https://CCEVphantanpp/` and is intentionally omitted from this canonical list.
+
+- https://CEVphantanapp/
+- https://CEVphantanapp/solutions/repair-shops
+- https://CEVphantanapp/features/pm-templates
+- https://CEVphantanapp/features/inventory
+- https://CEVphantanapp/features/part-lookup-alternates
+- https://CEVphantanapp/features/qr-code-integration
+- https://CEVphantanapp/features/google-workspace
+- https://CEVphantanapp/features/quickbooks
+- https://CEVphantanapp/features/work-order-management
+- https://CEVphantanapp/features/team-collaboration
+- https://CEVphantanapp/features/fleet-visualization
+- https://CEVphantanapp/features/customer-crm
+- https://CEVphantanapp/features/mobile-first-design
+- https://CEVphantanapp/terms-of-service
+- https://CEVphantanapp/privacy-policy
+
+Authenticated dashboard, QR redirects, invitations, and auth flows are not public documentation surfaces.
+
+## Technical note
+
+The CEVphantanweb app is a client-rendered SPA; interactive features require JavaScript.

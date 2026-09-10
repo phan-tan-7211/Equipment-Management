@@ -1,0 +1,602 @@
+import React, { useState } from 'react';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useSimplifiedOrganizationRestrictions } from '@/features/organization/hooks/useSimplifiedOrganizationRestrictions';
+import { usePMTemplates, useClonePMTemplate, useDeletePMTemplate } from '@/features/pm-templates/hooks/usePMTemplates';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Plus, Copy, Edit, Trash2, Wrench, Users, Shield, Globe, Lock, Settings2, Search, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+import { PMTemplateEquipmentAssignmentMenu } from '@/features/pm-templates/components/PMTemplateEquipmentAssignmentMenu';
+import { PMTemplateRulesDialog } from '@/features/pm-templates/components/PMTemplateRulesDialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import Page from '@/components/layout/Page';
+
+// Enhanced Template Card Component
+interface TemplateCardProps {
+  template: {
+    id: string;
+    name: string;
+    description?: string | null;
+    organization_id: string | null;
+    is_protected: boolean;
+    interval_value?: number | null;
+    interval_type?: 'days' | 'hours' | null;
+    sections: { name: string; count: number }[];
+    itemCount: number;
+  };
+  isOrgTemplate: boolean;
+  isAdmin: boolean;
+  canCreateCustomTemplates: boolean;
+  onEdit: (templateId: string) => void;
+  onClone: (templateId: string) => void;
+  onDelete: (templateId: string) => void;
+  onConfigureRules: (templateId: string) => void;
+}
+
+const TemplateCard: React.FC<TemplateCardProps> = ({ 
+  template, 
+  isOrgTemplate, 
+  isAdmin,
+  canCreateCustomTemplates,
+  onEdit, 
+  onClone, 
+  onDelete,
+  onConfigureRules
+}) => {
+  // Use the already-processed summary data
+  const sections = template.sections || [];
+  const totalItems = template.itemCount || 0;
+
+  const canEdit = isAdmin && isOrgTemplate && !template.is_protected && canCreateCustomTemplates;
+  const canDelete = isAdmin && isOrgTemplate && !template.is_protected && canCreateCustomTemplates;
+  const canClone = canCreateCustomTemplates;
+
+  const navigate = useNavigate();
+  const handleView = () => navigate(`/dashboard/pm-templates/${template.id}`);
+
+  const sectionCount = sections.length;
+  const intervalLabel =
+    template.interval_value && template.interval_type
+      ? `Every ${template.interval_value} ${template.interval_type === 'hours' ? 'hrs' : 'days'}`
+      : null;
+  const summaryParts = [
+    `${sectionCount} section${sectionCount === 1 ? '' : 's'}`,
+    `${totalItems} item${totalItems === 1 ? '' : 's'}`,
+    intervalLabel,
+  ].filter(Boolean);
+
+  const showStarterBadge = !isOrgTemplate;
+  const showProtectedBadge = template.is_protected;
+  const showTemplateBadges = showStarterBadge || showProtectedBadge;
+
+  return (
+    <Card className="h-full flex flex-col hover:bg-muted/50 transition-colors">
+      <CardHeader
+        className="cursor-pointer pb-3"
+        role="button"
+        tabIndex={0}
+        onClick={handleView}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleView();
+          }
+        }}
+        aria-label={`Open details for template ${template.name}`}
+      >
+        <div className="space-y-2">
+          <CardTitle className="min-w-0 text-base leading-tight line-clamp-2 break-words">
+            {template.name}
+          </CardTitle>
+          {showTemplateBadges && (
+            <div className="flex flex-wrap items-center gap-1">
+              {showStarterBadge && (
+              <Badge className="text-xs">
+                <Globe className="w-3 h-3 mr-1" />
+                CEV.PhanTan
+              </Badge>
+              )}
+              {showProtectedBadge && (
+                <Badge variant="outline" className="text-xs">
+                  <Shield className="w-3 h-3 mr-1" />
+                  Protected
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
+
+        {template.description && (
+          <p className="text-sm text-muted-foreground line-clamp-2 mt-1.5">
+            {template.description}
+          </p>
+        )}
+
+        <p className="text-xs text-muted-foreground mt-2">{summaryParts.join(' · ')}</p>
+      </CardHeader>
+
+      <CardContent className="pt-0">
+        <div className="flex flex-col gap-2">
+          <PMTemplateEquipmentAssignmentMenu
+            templateId={template.id}
+            templateName={template.name}
+            fullWidthTrigger
+          />
+          <p className="text-xs text-muted-foreground text-center px-1">
+            {isOrgTemplate
+              ? 'Bulk-set as the default PM template on selected equipment'
+              : 'Ready to use — assign directly, no clone needed'}
+          </p>
+          
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onClone(template.id)}
+              className="flex-1"
+              disabled={!canClone}
+              title={!canClone ? 'Custom PM templates require user licenses' : ''}
+            >
+              {!canClone && <Lock className="mr-1 h-3 w-3" />}
+              <Copy className="mr-1 h-3 w-3" />
+              Clone
+            </Button>
+            
+            {canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(template.id)}
+                className="flex-1"
+                aria-label={`Edit template ${template.name}`}
+              >
+                <Edit className="mr-1 h-3 w-3" />
+                Edit
+              </Button>
+            )}
+
+            {!isOrgTemplate && isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onConfigureRules(template.id)}
+                className="flex-1"
+                aria-label={`Configure compatibility rules for ${template.name}`}
+              >
+                <Settings2 className="mr-1 h-3 w-3" />
+                Rules
+              </Button>
+            )}
+            
+            {canDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="min-h-11 min-w-11 md:min-h-0 md:min-w-0 px-2"
+                    aria-label={`Delete template ${template.name}`}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Template</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{template.name}"? This action cannot be undone.
+                      {!isOrgTemplate && " Global templates cannot be deleted."}
+                      {template.is_protected && " Protected templates cannot be deleted."}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => onDelete(template.id)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+interface CollapsibleTemplateSectionProps {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  count: number;
+  defaultOpen: boolean;
+  forceOpen?: boolean;
+  children: React.ReactNode;
+}
+
+const CollapsibleTemplateSection: React.FC<CollapsibleTemplateSectionProps> = ({
+  title,
+  description,
+  icon,
+  count,
+  defaultOpen,
+  forceOpen = false,
+  children,
+}) => {
+  const [open, setOpen] = useState(defaultOpen);
+  const isOpen = forceOpen || open;
+  const contentId = `${title.toLowerCase().replace(/\s+/g, '-')}-content`;
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setOpen}>
+      <h2>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="group flex w-full items-start justify-between gap-3 rounded-md text-left -mx-2 px-2 py-1 hover:bg-muted/50 transition-colors"
+            aria-expanded={isOpen}
+            aria-controls={contentId}
+          >
+            <span className="min-w-0 flex-1">
+              <span className="flex flex-wrap items-center gap-2 text-xl font-semibold">
+                {icon}
+                {title}
+                <Badge variant="secondary" className="font-normal">
+                  {count}
+                </Badge>
+              </span>
+              <span className="mt-1 block text-sm font-normal text-muted-foreground">
+                {description}
+              </span>
+            </span>
+            <ChevronDown
+              className={cn(
+                'mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform',
+                isOpen && 'rotate-180',
+              )}
+              aria-hidden
+            />
+          </button>
+        </CollapsibleTrigger>
+      </h2>
+      <CollapsibleContent id={contentId}>
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {children}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
+
+const PMTemplates = () => {
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const { currentOrganization } = useOrganization();
+  const { hasRole } = usePermissions();
+  const { restrictions } = useSimplifiedOrganizationRestrictions();
+  const { data: templates, isLoading } = usePMTemplates();
+
+  const [cloneDialogOpen, setCloneDialogOpen] = useState<string | null>(null);
+  const [cloneName, setCloneName] = useState('');
+  const [rulesDialogTemplate, setRulesDialogTemplate] = useState<{ id: string; name: string } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Mutations
+  const cloneTemplateMutation = useClonePMTemplate();
+  const deleteTemplateMutation = useDeletePMTemplate();
+
+  // Only org admins can access this page
+  const isAdmin = hasRole(['owner', 'admin']);
+  const canCreateCustomTemplates = restrictions.canCreateCustomPMTemplates;
+
+  if (!currentOrganization) {
+    return (
+      <Page maxWidth="7xl" padding="responsive">
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold">PM Templates</h1>
+            <p className="text-muted-foreground">
+              Please select an organization to manage PM templates.
+            </p>
+          </div>
+        </div>
+      </Page>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <Page maxWidth="7xl" padding="responsive">
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold">PM Templates</h1>
+            <p className="text-muted-foreground">
+              You need administrator permissions to access this page.
+            </p>
+          </div>
+        </div>
+      </Page>
+    );
+  }
+
+  const handleCreateTemplate = () => {
+    navigate('/dashboard/pm-templates/new');
+  };
+
+  const handleEditTemplate = (templateId: string) => {
+    navigate(`/dashboard/pm-templates/${templateId}/edit`);
+  };
+
+  const handleCloneTemplate = (templateId: string) => {
+    const template = templates?.find(t => t.id === templateId);
+    setCloneName(template ? `${template.name} (Copy)` : '');
+    setCloneDialogOpen(templateId);
+  };
+
+  const handleConfirmClone = () => {
+    if (cloneDialogOpen && cloneName.trim()) {
+      cloneTemplateMutation.mutate(
+        { sourceId: cloneDialogOpen, newName: cloneName.trim() },
+        {
+          onSuccess: () => {
+            setCloneDialogOpen(null);
+            setCloneName('');
+          }
+        }
+      );
+    }
+  };
+
+  const handleDeleteTemplate = (templateId: string) => {
+    deleteTemplateMutation.mutate(templateId);
+  };
+
+  const handleConfigureRules = (templateId: string) => {
+    const template = templates?.find(t => t.id === templateId);
+    if (template) {
+      setRulesDialogTemplate({ id: template.id, name: template.name });
+    }
+  };
+
+  const handleCloseRulesDialog = () => {
+    setRulesDialogTemplate(null);
+  };
+
+  // Separate templates into global and organization-specific, with search filtering
+  const filterBySearch = (t: { name: string; description?: string | null }) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return t.name.toLowerCase().includes(q) || (t.description?.toLowerCase().includes(q) ?? false);
+  };
+
+  const globalTemplates = templates?.filter(t => !t.organization_id).filter(filterBySearch) || [];
+  const orgTemplates = templates?.filter(t => t.organization_id === currentOrganization?.id).filter(filterBySearch) || [];
+  const hasVisibleOrgTemplates =
+    (templates?.some((t) => t.organization_id === currentOrganization.id) ?? false) &&
+    canCreateCustomTemplates;
+  const searchForcesOpen = Boolean(searchQuery.trim());
+  
+  const showUpgradeMessage = !canCreateCustomTemplates && isAdmin;
+
+  const showMobileFab = isMobile && isAdmin && canCreateCustomTemplates;
+
+  return (
+    <Page maxWidth="7xl" padding="responsive">
+      <div className={cn('space-y-6', showMobileFab && 'pb-28')}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">PM Templates</h1>
+            <p className="text-muted-foreground mt-1">
+              <span className="hidden sm:inline">
+                Manage PM checklist templates and assign them as the default on equipment in bulk.
+              </span>
+              <span className="sm:hidden">Manage PM templates and assign them to equipment.</span>
+            </p>
+          </div>
+          {isAdmin && (
+            <Button 
+              onClick={handleCreateTemplate}
+              disabled={!canCreateCustomTemplates}
+              title={!canCreateCustomTemplates ? 'Custom PM templates require user licenses' : ''}
+              className="hidden sm:inline-flex"
+            >
+              {!canCreateCustomTemplates && <Lock className="mr-2 h-4 w-4" />}
+              <Plus className="mr-2 h-4 w-4" />
+              New Template
+            </Button>
+          )}
+        </div>
+
+      {showUpgradeMessage && (
+        <Alert>
+          <Lock className="h-4 w-4" />
+          <AlertDescription>
+            Custom PM templates require user licenses. You can still use global templates like the Forklift PM checklist. 
+            <strong> Purchase user licenses to create, edit, and clone custom PM templates.</strong>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Search */}
+      {!isLoading && templates && templates.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search templates..."
+            className="pl-9"
+          />
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="space-y-2 pb-3">
+                <div className="h-5 bg-muted rounded w-3/4"></div>
+                <div className="h-4 bg-muted rounded w-full"></div>
+                <div className="h-3 bg-muted rounded w-1/2"></div>
+              </CardHeader>
+              <CardContent className="space-y-2 pt-0">
+                <div className="h-9 bg-muted rounded"></div>
+                <div className="h-9 bg-muted rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (templates && (globalTemplates.length > 0 || orgTemplates.length > 0)) ? (
+        <div className="space-y-8">
+          {/* Global Templates */}
+          {globalTemplates.length > 0 && (
+            <CollapsibleTemplateSection
+              title="CEV.PhanTan Templates"
+              description="Best-in-class PM checklists included with CEV.PhanTan for heavy equipment, machinery, and vehicles. Assign them to equipment directly — clone only when you want to customize."
+              icon={<Globe className="h-5 w-5" aria-hidden />}
+              count={globalTemplates.length}
+              defaultOpen={!hasVisibleOrgTemplates}
+              forceOpen={searchForcesOpen}
+            >
+              {globalTemplates.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  isOrgTemplate={false}
+                  isAdmin={isAdmin}
+                  canCreateCustomTemplates={canCreateCustomTemplates}
+                  onEdit={handleEditTemplate}
+                  onClone={handleCloneTemplate}
+                  onDelete={handleDeleteTemplate}
+                  onConfigureRules={handleConfigureRules}
+                />
+              ))}
+            </CollapsibleTemplateSection>
+          )}
+
+          {/* Organization Templates */}
+          {orgTemplates.length > 0 && canCreateCustomTemplates && (
+            <CollapsibleTemplateSection
+              title="Organization Templates"
+              description="Custom templates created by your organization."
+              icon={<Users className="h-5 w-5" aria-hidden />}
+              count={orgTemplates.length}
+              defaultOpen
+              forceOpen={searchForcesOpen}
+            >
+              {orgTemplates.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  isOrgTemplate={true}
+                  isAdmin={isAdmin}
+                  canCreateCustomTemplates={canCreateCustomTemplates}
+                  onEdit={handleEditTemplate}
+                  onClone={handleCloneTemplate}
+                  onDelete={handleDeleteTemplate}
+                  onConfigureRules={handleConfigureRules}
+                />
+              ))}
+            </CollapsibleTemplateSection>
+          )}
+        </div>
+      ) : (
+        <Card className="text-center py-12">
+          <CardContent>
+            <Wrench className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Templates Available</h3>
+            <p className="text-muted-foreground mb-6">
+              {canCreateCustomTemplates 
+                ? 'Create your first PM checklist template to get started.'
+                : 'Purchase user licenses to create custom PM templates, or use the available global templates.'}
+            </p>
+            {isAdmin && canCreateCustomTemplates && (
+              <Button onClick={handleCreateTemplate}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Template
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Clone Template Dialog */}
+      <Dialog open={!!cloneDialogOpen} onOpenChange={(open) => !open && setCloneDialogOpen(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Clone Template</DialogTitle>
+            <DialogDescription>
+              Create a copy of this template that you can customize for your organization.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="clone-name">New Template Name</Label>
+              <Input
+                id="clone-name"
+                value={cloneName}
+                onChange={(e) => setCloneName(e.target.value)}
+                placeholder="Enter name for cloned template"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCloneDialogOpen(null)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmClone}
+              disabled={!cloneName.trim() || cloneTemplateMutation.isPending}
+            >
+              {cloneTemplateMutation.isPending ? 'Cloning...' : 'Clone Template'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Configure Rules Dialog */}
+      {rulesDialogTemplate && (
+        <PMTemplateRulesDialog
+          templateId={rulesDialogTemplate.id}
+          templateName={rulesDialogTemplate.name}
+          open={!!rulesDialogTemplate}
+          onClose={handleCloseRulesDialog}
+        />
+      )}
+
+      {showMobileFab && (
+        <Button
+          type="button"
+          size="icon"
+          onClick={handleCreateTemplate}
+          aria-label="New template"
+          className={cn(
+            'fixed bottom-19.5 right-4 z-fixed h-14 w-14 rounded-full shadow-elevation-3',
+            'touch-manipulation transition-transform duration-100 active:scale-[0.97]',
+            'motion-reduce:active:scale-100',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+          )}
+        >
+          <Plus className="h-6 w-6" aria-hidden />
+        </Button>
+      )}
+      </div>
+    </Page>
+  );
+};
+
+export default PMTemplates;
+

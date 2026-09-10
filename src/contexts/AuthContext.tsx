@@ -1,0 +1,296 @@
+﻿
+import React, { createContext, useState, useEffect } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
+import {
+  buildGoogleOAuthRedirectTo,
+  clearPendingRedirect,
+  getPendingRedirect,
+  toSameOriginPath,
+} from '@/utils/redirectValidation';
+import { schedulePendingTermsAcceptanceFlush } from '@/lib/termsAcceptanceRecording';
+import { clearOfflineBlobsForUser } from '@/services/offlineBlobStore';
+import {
+  applyPendingSignupOrganizationName,
+  clearPendingSignupOrganizationName,
+  setPendingSignupOrganizationName,
+} from '@/services/pendingSignupOrganization';
+
+/**
+ * Throttle duration for applying pending admin grants.
+ * 1 hour = 60 minutes * 60 seconds * 1000 milliseconds
+ */
+const ADMIN_GRANTS_THROTTLE_MS = 60 * 60 * 1000;
+
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  isLoading: boolean;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithGoogle: (options?: { organizationName?: string }) => Promise<{ error: Error | null }>;
+  signOut: () => Promise<void>;
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    logger.debug('AuthProvider - Setting up auth listener');
+
+    // Failsafe if INITIAL_SESSION never arrives (storage/init failure).
+    // Keep this after the listener so a normal bootstrap clears it first.
+    const bootstrapTimeoutMs = 8_000;
+    const bootstrapTimeoutId = window.setTimeout(() => {
+      setIsLoading((stillLoading) => {
+        if (stillLoading) {
+          logger.warn('Auth bootstrap timeout â€” clearing loading without INITIAL_SESSION');
+        }
+        return false;
+      });
+    }, bootstrapTimeoutMs);
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (import.meta.env.DEV) {
+          logger.debug('Auth state change', {
+            event,
+            user: session?.user?.email || 'none',
+            timestamp: new Date().toISOString()
+          });
+        }
+        
+        // Distinguish between different types of auth events
+        const isTokenRefresh = event === 'TOKEN_REFRESHED';
+        const isSignIn = event === 'SIGNED_IN';
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+        window.clearTimeout(bootstrapTimeoutId);
+
+        if (
+          session?.user &&
+          (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')
+        ) {
+          schedulePendingTermsAcceptanceFlush(session.user);
+          void applyPendingSignupOrganizationName(session.user);
+        }
+
+        // Handle post-login redirect for QR code scans (only for actual sign-ins)
+        if (isSignIn && session?.user) {
+          const pendingRedirect = getPendingRedirect();
+          if (pendingRedirect) {
+            clearPendingRedirect();
+            // Validate + rebuild via URL parser before location assignment
+            const safePath = toSameOriginPath(pendingRedirect);
+            // Use setTimeout to ensure the redirect happens after state updates
+            setTimeout(() => {
+              window.location.assign(safePath);
+            }, 100);
+          }
+
+          // Apply pending admin grants for Google-verified users.
+          // Note: The handle_new_user trigger also calls this for NEW users, but this
+          // client-side call is needed for EXISTING users who may have pending grants
+          // that were created after their initial sign-up. The RPC is idempotent.
+          // 
+          // We use localStorage (not sessionStorage) for cross-window/tab persistence:
+          // - localStorage persists across browser windows and restarts
+          // - Timestamp check (1 hour) prevents excessive calls while ensuring grants
+          //   are eventually applied for users who haven't logged in recently
+          // The RPC is lightweight and idempotent, so occasional duplicate calls are acceptable.
+          // Note: The cache key only includes user_id (not organization_id) because
+          // apply_pending_admin_grants_for_user applies grants for the user across ALL
+          // organizations they belong to, so organization context isn't needed.
+          const adminGrantsCacheKey = `CEVPhanTan_admin_grants_${session.user.id}`;
+          // Throttle key is strictly necessary (RPC rate limiting), not a UI preference.
+          const lastAppliedStr = localStorage.getItem(adminGrantsCacheKey);
+          const lastAppliedAt = lastAppliedStr ? parseInt(lastAppliedStr, 10) : 0;
+          const shouldApplyGrants = Date.now() - lastAppliedAt > ADMIN_GRANTS_THROTTLE_MS;
+
+          if (shouldApplyGrants) {
+            // Defer the RPC until the supabase-js client has had a chance to
+            // attach the new session's JWT to its internal fetch wrapper.
+            // Calling immediately can race the auth state update and produce
+            // a request whose Authorization header still reflects the
+            // previous (or empty) session, causing the SQL self-only guard
+            // to mismatch and surface as an HTTP 400. We:
+            //   1) await getSession() to confirm the JWT is attached and
+            //      that its user matches the event payload, then
+            //   2) queueMicrotask the RPC so it dispatches on the next tick.
+            const userIdAtSignIn = session.user.id;
+            queueMicrotask(() => {
+              supabase.auth.getSession()
+                .then(({ data: { session: liveSession } }) => {
+                  if (!liveSession?.access_token || liveSession.user?.id !== userIdAtSignIn) {
+                    // Session is not yet (or no longer) consistent with the
+                    // SIGNED_IN payload. Skip silently â€” the next sign-in or
+                    // cache miss will retry. Avoid noisy console output.
+                    return;
+                  }
+
+                  supabase.rpc('apply_pending_admin_grants_for_user', {
+                    p_user_id: userIdAtSignIn,
+                  })
+                    .then(() => {
+                      localStorage.setItem(adminGrantsCacheKey, String(Date.now()));
+                    })
+                    .catch((error) => {
+                      if (import.meta.env.DEV) {
+                        logger.warn('Failed to apply pending admin grants', error);
+                      }
+                    });
+                })
+                .catch((error) => {
+                  // Swallow getSession() rejections so they don't surface as
+                  // unhandled promise rejections (which would defeat the
+                  // console-quieting purpose of this whole code path). The
+                  // next SIGNED_IN event will retry the grants application.
+                  if (import.meta.env.DEV) {
+                    logger.warn('Deferred getSession() failed; skipping admin grants', error);
+                  }
+                });
+            });
+          }
+        }
+
+        // Don't trigger session refresh for token refreshes - this is normal
+        if (isTokenRefresh) {
+          // Token refreshed - maintaining current session state
+        }
+      }
+    );
+
+    // Bootstrap from onAuthStateChange only â€” the SDK emits INITIAL_SESSION
+    // after storage init. A parallel getSession() raced that callback and could
+    // leave non-deterministic session / isLoading state on cold load.
+    return () => {
+      window.clearTimeout(bootstrapTimeoutId);
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const signUp = async (
+    email: string,
+    password: string,
+    name: string,
+  ): Promise<{ error: Error | null }> => {
+    const redirectUrl = `${window.location.origin}/`;
+    const trimmedEmail = email.trim();
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      return { error: new Error('Full name is required') };
+    }
+
+    const { error } = await supabase.auth.signUp({
+      email: trimmedEmail,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          name: trimmedName
+        }
+      }
+    });
+    
+    return { error };
+  };
+
+  const signIn = async (email: string, password: string) => {
+    clearPendingSignupOrganizationName();
+    setIsLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      setIsLoading(false);
+    }
+    
+    return { error };
+  };
+
+  const signInWithGoogle = async (options?: { organizationName?: string }) => {
+    const organizationName = options?.organizationName?.trim();
+    if (organizationName) {
+      setPendingSignupOrganizationName(organizationName);
+    } else {
+      clearPendingSignupOrganizationName();
+    }
+
+    const redirectTo = buildGoogleOAuthRedirectTo(
+      window.location.origin,
+      getPendingRedirect(),
+    );
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+      },
+    });
+
+    return { error };
+  };
+
+  const signOut = async () => {
+    const userId = user?.id;
+    try {
+      // Let Supabase handle all auth storage cleanup
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        logger.warn('Server-side logout failed', error);
+        // Continue with cleanup even if server logout fails
+      }
+    } catch (error) {
+      logger.error('Exception during logout', error);
+    } finally {
+      // Clear application-specific storage
+      try {
+        clearPendingRedirect();
+        clearPendingSignupOrganizationName();
+        // Clear admin grants cache keys from localStorage (they start with CEVPhanTan_admin_grants_)
+        Object.keys(localStorage)
+          .filter(key => key.startsWith('CEVPhanTan_admin_grants_'))
+          .forEach(key => localStorage.removeItem(key));
+      } catch (storageError) {
+        logger.warn('Error clearing storage', storageError);
+      }
+      
+      // Reset local state
+      setUser(null);
+      setSession(null);
+
+      if (userId) {
+        void clearOfflineBlobsForUser(userId);
+      }
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      isLoading, 
+      signUp, 
+      signIn, 
+      signInWithGoogle,
+      signOut 
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+

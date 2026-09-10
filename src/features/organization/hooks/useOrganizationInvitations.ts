@@ -1,0 +1,330 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
+import { getAuthClaims } from '@/lib/authClaims';
+import { logInvitationMutationFailure } from '@/features/organization/utils/logInvitationMutationFailure';
+import { logInvitationMutationSuccess } from '@/features/organization/utils/logInvitationMutationSuccess';
+import {
+  fetchInvitationEmailContext,
+  sendInvitationEmail,
+} from '@/features/organization/utils/invitationEmailDelivery';
+import { resolveInvitationInviterMaps } from '@/features/organization/utils/invitationInviterMaps';
+import { assertCanManageInvitation } from '@/features/organization/utils/invitationMutationHelpers';
+
+export interface OrganizationInvitation {
+  id: string;
+  email: string;
+  role: 'admin' | 'member';
+  status: 'pending' | 'accepted' | 'declined' | 'expired';
+  message?: string;
+  invitedBy: string;
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt?: string;
+  inviterName?: string;
+  slot_reserved?: boolean;
+  slot_purchase_id?: string;
+  declined_at?: string;
+  expired_at?: string;
+}
+
+export interface CreateInvitationData {
+  email: string;
+  role: 'admin' | 'member';
+  message?: string;
+  reserveSlot?: boolean;
+}
+
+export const useOrganizationInvitations = (organizationId: string) => {
+  return useQuery({
+    queryKey: ['organization-invitations', organizationId],
+    queryFn: async (): Promise<OrganizationInvitation[]> => {
+      if (!organizationId) return [];
+
+      const claims = await getAuthClaims();
+      if (!claims) throw new Error('User not authenticated');
+
+      const startTime = performance.now();
+      
+      try {
+        // Use the atomic function that eliminates circular dependencies
+        const { data: invitationsData, error } = await supabase.rpc('get_invitations_atomic', {
+          user_uuid: claims.sub,
+          org_id: organizationId
+        });
+
+        if (error) {
+          logger.error('Error fetching invitations', error);
+          throw error;
+        }
+
+        const invitations = invitationsData || [];
+        const { inviterIdMap, inviterNameMap } = await resolveInvitationInviterMaps(
+          organizationId,
+          invitations.map((i) => i.id),
+        );
+
+        await logInvitationMutationSuccess('get_invitations', startTime);
+
+        return invitations.map(invitation => ({
+          id: invitation.id,
+          email: invitation.email,
+          role: invitation.role as 'admin' | 'member',
+          status: invitation.status as 'pending' | 'accepted' | 'declined' | 'expired',
+          message: invitation.message || undefined,
+          invitedBy: inviterIdMap[invitation.id] ?? '',
+          createdAt: invitation.created_at,
+          expiresAt: invitation.expires_at,
+          acceptedAt: invitation.accepted_at || undefined,
+          inviterName: inviterNameMap[invitation.id] || 'Unknown',
+          slot_reserved: invitation.slot_reserved || false,
+          slot_purchase_id: invitation.slot_purchase_id || undefined,
+          declined_at: invitation.declined_at || undefined,
+          expired_at: invitation.expired_at || undefined
+        }));
+      } catch (error) {
+        await logInvitationMutationFailure('get_invitations', startTime, error, 'Failed to fetch invitations');
+        throw error;
+      }
+    },
+    enabled: !!organizationId,
+    staleTime: 30 * 1000, // 30 seconds
+  });
+};
+
+// Optimized invitation creation without retry logic or client-side validation
+
+export const useCreateInvitation = (organizationId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (requestData: CreateInvitationData) => {
+      if (!organizationId) throw new Error('No organization ID provided');
+
+      const claims = await getAuthClaims();
+      if (!claims) throw new Error('User not authenticated');
+
+      const startTime = performance.now();
+      
+      try {
+        // Use the atomic function that eliminates circular dependencies
+        if (import.meta.env.DEV) {
+          logger.debug('[INVITATION] Creating invitation', {
+            email: requestData.email,
+            organizationId
+          });
+        }
+        
+        const { data: invitationId, error } = await supabase.rpc('create_invitation_atomic', {
+          p_organization_id: organizationId,
+          p_email: requestData.email.toLowerCase().trim(),
+          p_role: requestData.role,
+          p_message: requestData.message || undefined,
+          p_invited_by: claims.sub
+        });
+
+        if (error) {
+          if (import.meta.env.DEV) {
+            logger.error('[INVITATION] Creation error', error);
+          }
+          throw error;
+        }
+
+        const executionTime = performance.now() - startTime;
+        if (import.meta.env.DEV) {
+          logger.debug('[INVITATION] Creation completed', {
+            durationMs: executionTime,
+            invitationId
+          });
+        }
+
+        await logInvitationMutationSuccess('create_invitation', startTime);
+
+        // Get the created invitation data for return
+        const { data: createdRows, error: fetchError } = await supabase
+          .from('organization_invitations')
+          .select('id, organization_id, email, role, status, expires_at, accepted_at, created_at, invitation_token')
+          .eq('id', invitationId)
+          .eq('organization_id', organizationId);
+
+        const createdInvitation = Array.isArray(createdRows) ? createdRows[0] : createdRows;
+
+        if (fetchError) {
+          if (import.meta.env.DEV) {
+            logger.error('[INVITATION] Fetch created invitation error', fetchError);
+          }
+          throw fetchError;
+        }
+
+        if (!createdInvitation) {
+          throw new Error('Failed to load created invitation');
+        }
+
+        // Reserve slot if requested (non-blocking)
+        if (requestData.reserveSlot) {
+          (async () => {
+            try {
+              const { error: reserveError } = await supabase.rpc('reserve_slot_for_invitation', {
+                org_id: organizationId,
+                invitation_id: createdInvitation.id
+              });
+              
+              if (reserveError && import.meta.env.DEV) {
+                logger.warn('[INVITATION] Failed to reserve slot', reserveError);
+              }
+            } catch (reserveError) {
+              if (import.meta.env.DEV) {
+                logger.warn('[INVITATION] Slot reservation error', reserveError);
+              }
+            }
+          })();
+        }
+
+        const emailContext = await fetchInvitationEmailContext(organizationId, claims.sub);
+        try {
+          await sendInvitationEmail(
+            {
+              invitationId: createdInvitation.id,
+              email: requestData.email,
+              role: requestData.role,
+              message: requestData.message,
+            },
+            emailContext,
+          );
+        } catch (emailError) {
+          logger.error('[INVITATION] Failed to send invitation email', emailError);
+          throw Object.assign(new Error('INVITATION_EMAIL_SEND_FAILED'), { cause: emailError });
+        }
+
+        if (import.meta.env.DEV) {
+          logger.info('[INVITATION] Email sent successfully', { email: requestData.email });
+        }
+
+        if (import.meta.env.DEV) {
+          logger.info('[INVITATION] Successfully created invitation', {
+            invitationId: createdInvitation.id,
+            email: requestData.email
+          });
+        }
+        return createdInvitation;
+        
+      } catch (error) {
+        await logInvitationMutationFailure('create_invitation', startTime, error, 'Failed to create invitation');
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization-invitations', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['slot-availability', organizationId] });
+      toast.success('Invitation sent successfully');
+    },
+    onError: (error: Error) => {
+      logger.error('Error creating invitation', error);
+      
+      // Handle specific error types from the optimized function
+      if (error.message?.includes('PERMISSION_DENIED')) {
+        toast.error('You do not have permission to invite members');
+      } else if (error.message?.includes('DUPLICATE_INVITATION')) {
+        toast.error('An invitation to this email already exists');
+      } else if (error.message?.includes('INVITATION_EMAIL_SEND_FAILED')) {
+        queryClient.invalidateQueries({ queryKey: ['organization-invitations', organizationId] });
+        queryClient.invalidateQueries({ queryKey: ['slot-availability', organizationId] });
+        toast.error(
+          'Invitation was created but the email could not be sent. Use Resend after checking the address.'
+        );
+      } else if (error.message?.includes('INVITATION_ERROR')) {
+        toast.error('Failed to send invitation - please try again');
+      } else {
+        toast.error('Failed to send invitation');
+      }
+    }
+  });
+};
+
+export const useResendInvitation = (organizationId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (invitationId: string) => {
+      const { sub } = await assertCanManageInvitation(organizationId, invitationId, 'resend');
+
+      const { data, error } = await supabase
+        .from('organization_invitations')
+        .update({
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+          status: 'pending'
+        })
+        .eq('id', invitationId)
+        .eq('organization_id', organizationId)
+        .select('id, organization_id, email, role, status, expires_at, accepted_at, updated_at, message');
+
+      const updatedInvitation = Array.isArray(data) ? data[0] : data;
+
+      if (error) throw error;
+      if (!updatedInvitation) {
+        throw new Error('Invitation not found');
+      }
+
+      const emailContext = await fetchInvitationEmailContext(organizationId, sub);
+      try {
+        await sendInvitationEmail(
+          {
+            invitationId: updatedInvitation.id,
+            email: updatedInvitation.email,
+            role: updatedInvitation.role,
+            message: updatedInvitation.message,
+          },
+          emailContext,
+        );
+      } catch {
+        throw new Error('Failed to send invitation email');
+      }
+
+      return updatedInvitation;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization-invitations', organizationId] });
+      toast.success('Invitation resent successfully');
+    },
+    onError: (error) => {
+      logger.error('Error resending invitation', error);
+      if (error instanceof Error && error.message === 'Failed to send invitation email') {
+        toast.error('Invitation was updated but the email could not be sent');
+      } else {
+        toast.error('Failed to resend invitation');
+      }
+    }
+  });
+};
+
+export const useCancelInvitation = (organizationId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (invitationId: string) => {
+      await assertCanManageInvitation(organizationId, invitationId, 'cancel');
+
+      const { data, error } = await supabase
+        .from('organization_invitations')
+        .update({ status: 'expired', expired_at: new Date().toISOString() })
+        .eq('id', invitationId)
+        .eq('organization_id', organizationId)
+        .select('id, organization_id, email, role, status, expired_at, updated_at');
+
+      const cancelledInvitation = Array.isArray(data) ? data[0] : data;
+
+      if (error) throw error;
+      return cancelledInvitation;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization-invitations', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['slot-availability', organizationId] });
+      toast.success('Invitation cancelled successfully');
+    },
+    onError: (error) => {
+      logger.error('Error cancelling invitation', error);
+      toast.error('Failed to cancel invitation');
+    }
+  });
+};

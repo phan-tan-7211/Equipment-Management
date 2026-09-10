@@ -1,0 +1,35 @@
+{
+  "recommendations": [
+    // ── Linting & Formatting ──────────────────────────────────────────────
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+
+    // ── Tailwind CSS ──────────────────────────────────────────────────────
+    "bradlc.vscode-tailwindcss",
+
+    // ── React / HTML Authoring ────────────────────────────────────────────
+    "formulahendry.auto-rename-tag",
+
+    // ── Path Resolution ───────────────────────────────────────────────────
+    "christian-kohler.path-intellisense",
+
+    // ── Error Diagnostics ─────────────────────────────────────────────────
+    "usernamehw.errorlens",
+
+    // ── TODO / Code Annotations ───────────────────────────────────────────
+    "Gruntfuggly.todo-tree",
+
+    // ── Testing ───────────────────────────────────────────────────────────
+    "vitest.explorer",
+    "ms-playwright.playwright",
+
+    // ── Supabase ──────────────────────────────────────────────────────────
+    "Supabase.vscode-supabase-extension",
+
+    // ── HTTP / API Client ─────────────────────────────────────────────────
+    "rangav.vscode-thunder-client",
+
+    // ── Markdown ──────────────────────────────────────────────────────────
+    "yzhang.markdown-all-in-one"
+  ]
+}

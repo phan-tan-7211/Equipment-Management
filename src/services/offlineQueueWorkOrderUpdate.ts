@@ -1,0 +1,201 @@
+import { supabase } from '@/integrations/supabase/client';
+import {
+  buildWorkOrderUpdatePayload,
+  type WorkOrderTableUpdate,
+} from '@/features/work-orders/utils/workOrderUpdatePayload';
+import type { UpdateWorkOrderData } from '@/features/work-orders/hooks/useWorkOrderUpdate';
+import { logger } from '@/utils/logger';
+import type { WorkOrderServerSnapshot } from './offlineQueueService';
+
+export const WORK_ORDER_UPDATE_FIELD_MAP: Record<string, keyof WorkOrderServerSnapshot> = {
+  title: 'title',
+  description: 'description',
+  priority: 'priority',
+  dueDate: 'due_date',
+  dueDateHasTime: 'due_date_has_time',
+  estimatedHours: 'estimated_hours',
+  hasPM: 'has_pm',
+};
+
+type WorkOrderMergeRow = {
+  updated_at: string;
+  title: string | null;
+  description: string | null;
+  priority: string | null;
+  due_date: string | null;
+  due_date_has_time: boolean | null;
+  estimated_hours: number | null;
+  has_pm: boolean | null;
+};
+
+export interface WorkOrderUpdateConflictInfo {
+  workOrderId: string;
+  type: 'field_conflict';
+  details: string;
+}
+
+export interface WorkOrderUpdateSyncResult {
+  success: boolean;
+  conflict?: WorkOrderUpdateConflictInfo;
+}
+
+export function serverChangedWorkOrderField(
+  current: WorkOrderMergeRow,
+  dbCol: keyof WorkOrderServerSnapshot,
+  serverSnapshot?: WorkOrderServerSnapshot,
+): boolean {
+  if (serverSnapshot && dbCol in serverSnapshot) {
+    return String(current[dbCol] ?? '') !== String(serverSnapshot[dbCol] ?? '');
+  }
+
+  return true;
+}
+
+export function normalizeOfflineFieldValue(field: string, ourValue: unknown): unknown {
+  return field === 'dueDate' || field === 'estimatedHours' ? (ourValue || null) : ourValue;
+}
+
+function applyMergedSnapshotValue(
+  target: WorkOrderTableUpdate,
+  dbCol: keyof WorkOrderServerSnapshot,
+  value: unknown,
+): void {
+  switch (dbCol) {
+    case 'title':
+      target.title = value as WorkOrderTableUpdate['title'];
+      return;
+    case 'description':
+      target.description = value as WorkOrderTableUpdate['description'];
+      return;
+    case 'priority':
+      target.priority = value as WorkOrderTableUpdate['priority'];
+      return;
+    case 'due_date':
+      target.due_date = value as WorkOrderTableUpdate['due_date'];
+      return;
+    case 'due_date_has_time':
+      target.due_date_has_time = value as WorkOrderTableUpdate['due_date_has_time'];
+      return;
+    case 'estimated_hours':
+      target.estimated_hours = value as WorkOrderTableUpdate['estimated_hours'];
+      return;
+    case 'has_pm':
+      target.has_pm = value as WorkOrderTableUpdate['has_pm'];
+      return;
+    default: {
+      const _exhaustive: never = dbCol;
+      return _exhaustive;
+    }
+  }
+}
+
+export function buildFieldLevelWorkOrderMerge(
+  current: WorkOrderMergeRow,
+  data: UpdateWorkOrderData,
+  changedFields: string[],
+  serverSnapshot: WorkOrderServerSnapshot | undefined,
+  workOrderId: string,
+): { safeUpdate: WorkOrderTableUpdate; conflictingFields: string[] } {
+  const safeUpdate: WorkOrderTableUpdate = {};
+  const conflictingFields: string[] = [];
+
+  for (const field of changedFields) {
+    const dbCol = WORK_ORDER_UPDATE_FIELD_MAP[field];
+    if (!dbCol) continue;
+
+    const ourValue = (data as Record<string, unknown>)[field];
+    if (ourValue === undefined) continue;
+
+    if (serverChangedWorkOrderField(current, dbCol, serverSnapshot)) {
+      conflictingFields.push(field);
+      logger.info(
+        `Field-level conflict on WO ${workOrderId}.${field}: ` +
+          `keeping server value "${current[dbCol]}", discarding offline value "${ourValue}"`,
+      );
+      continue;
+    }
+
+    applyMergedSnapshotValue(safeUpdate, dbCol, normalizeOfflineFieldValue(field, ourValue));
+  }
+
+  return { safeUpdate, conflictingFields };
+}
+
+export async function syncWorkOrderOfflineUpdate(
+  organizationId: string,
+  workOrderId: string,
+  data: UpdateWorkOrderData,
+  options?: {
+    changedFields?: string[];
+    serverUpdatedAt?: string;
+    serverSnapshot?: WorkOrderServerSnapshot;
+  },
+): Promise<WorkOrderUpdateSyncResult> {
+  if (!organizationId) {
+    throw new Error('Organization ID required');
+  }
+
+  const { changedFields, serverUpdatedAt, serverSnapshot } = options ?? {};
+
+  if (serverUpdatedAt && changedFields && changedFields.length > 0) {
+    const { data: current, error: fetchErr } = await supabase
+      .from('work_orders')
+      .select('updated_at, title, description, priority, due_date, due_date_has_time, estimated_hours, has_pm')
+      .eq('id', workOrderId)
+      .eq('organization_id', organizationId)
+      .single();
+
+    if (fetchErr) throw fetchErr;
+
+    if (current && current.updated_at !== serverUpdatedAt) {
+      logger.info(`Conflict detected for WO ${workOrderId}: server updated_at differs`, {
+        serverUpdatedAt,
+        currentUpdatedAt: current.updated_at,
+      });
+
+      const { safeUpdate, conflictingFields } = buildFieldLevelWorkOrderMerge(
+        current,
+        data,
+        changedFields,
+        serverSnapshot,
+        workOrderId,
+      );
+
+      if (Object.keys(safeUpdate).length > 0) {
+        safeUpdate.updated_at = new Date().toISOString();
+        const { error } = await supabase
+          .from('work_orders')
+          .update(safeUpdate)
+          .eq('id', workOrderId)
+          .eq('organization_id', organizationId);
+
+        if (error) throw error;
+      }
+
+      if (conflictingFields.length > 0) {
+        return {
+          success: true,
+          conflict: {
+            workOrderId,
+            type: 'field_conflict',
+            details: `Server-side changes won for: ${conflictingFields.join(', ')}. Your offline edits to these fields were discarded.`,
+          },
+        };
+      }
+
+      return { success: true };
+    }
+  }
+
+  const updateData = buildWorkOrderUpdatePayload(data);
+  const { error } = await supabase
+    .from('work_orders')
+    .update(updateData)
+    .eq('id', workOrderId)
+    .eq('organization_id', organizationId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { success: true };
+}

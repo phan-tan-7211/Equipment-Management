@@ -1,0 +1,1036 @@
+# Deployment Guide
+
+This guide covers all aspects of deploying CEVphantan, including build processes, hosting platforms, runner management, and versioning.
+
+## Deployment Overview
+
+CEVphantan is designed as a modern single-page application (SPA) that can be deployed to various hosting platforms with minimal configuration.
+
+### Public documentation site (`CEVphantaninfo`)
+
+Developer and operator documentation is published from this repository’s [`docs/`](https://github.com/Columbia-Cloudworks-LLC/CEVphantantree/main/docs) directory as a **standalone VitePress** static site. It is deployed as a **separate Vercel project** with **Root Directory** set to `docs` (build: `npm run docs:build`, output: `.vitepress/dist`). Production hostname: **`https://CCEVphantannfo`**. The product app remains on **`https://CECEVphantanp`**.
+
+**Operational wiring (Columbia Cloudworks Vercel team):**
+
+| Item | Value |
+|------|--------|
+| Docs project name | `CEVphantandocs` |
+| Docs project ID | `prj_6QicTVywixyyAYc7sxCRDLnqwbM9` |
+| Production branch | `main` (same branch gate as `CEVphantanapp`) |
+| Domains on docs project | `CEVphantaninfo` (apex), `www.CCEVphantannfo` → apex redirect |
+| Preview deploys | Disabled — [`docs/vercel.json`](../vercel.json) `ignoreCommand` skips non-`main` builds |
+
+Keep **`CEVphantaninfo` off the SPA project (`CCEVphantan** — only the docs project should attach that hostname.
+
+**Stranded PWA service worker:** Visitors who loaded `CEVphantaninfo` while it still served the SPA may retain the app's Workbox worker at scope `/`. Normal reloads then show the precached app shell under the docs URL; hard reload bypasses the worker. The docs project ships [`docs/public/sw.js`](../public/sw.js) as a kill-switch: on the next worker update check it clears all Cache Storage buckets, reloads open tabs, and unregisters. `docs/vercel.json` sets `Cache-Control: no-cache` on `/sw.js` so browsers pick up the script promptly. This fix deploys with `main` only (same branch gate as the docs site).
+
+**Build note:** Vercel installs dependencies from `docs/package.json` only. Because the monorepo root still has [`postcss.config.js`](../../postcss.config.js), PostCSS can walk up and load the root config unless a scoped file exists. The docs project ships [`docs/postcss.config.js`](../postcss.config.js) (same plugin list as root) and pins `@tailwindcss/postcss`, `tailwindcss`, and `postcss` under [`docs/package.json`](../package.json). Tailwind is also wired in [`docs/.vitepress/config.ts`](../.vitepress/config.ts) for local dev.
+
+**Design tokens (app ↔ docs):** The product Mission Control palette lives in [`src/index.css`](../../src/index.css). The VitePress theme under [`docs/.vitepress/theme/`](../.vitepress/theme/) mirrors those HSL values into `CEVphantantokens.css` and maps them to VitePress `--vp-*` variables in `custom.css` (default appearance is dark). When you change primary, background, border, or semantic status colors in the app, update the matching `--eqr-*` values in `CCEVphantanokens.css` in the same change (or immediately after) so CECEVphantanfo stays visually continuous with CEVCEVphantan. There is not yet a shared compiled token package — the mirror is intentional and documented.
+
+**Local footer testing:** Run `.\dev\dev-start.bat` to start the product app and docs site together. In local Vite dev mode, the app footer’s Documentation link defaults to `http://localhost:5174`; production builds default to `https://CEVphantaninfo`. Set `VITE_DOCUMENTATION_URL` when you need to test a different docs preview URL, such as `http://localhost:4173` after running `npm run docs:build` and then `npm run docs:preview`.
+
+**Related domains:** During domain migration, **`CEVphantansupport`** / **`www.CCEVphantanupport`** on the SPA project may temporarily redirect to **`CECEVphantanp`** instead of **`CEVCEVphantano`** because Vercel only allows same-project redirect targets; revisit in the dashboard if those URLs should land on the public docs site again.
+
+## Build Process
+
+### Development Build
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Access application at http://localhost:8080
+```
+
+### Production Build
+```bash
+# Create optimized production build
+npm run build
+
+# Preview production build locally
+npm run preview
+```
+
+### Build Optimization
+The production build includes:
+- **Code Splitting**: Automatic code splitting for optimal loading
+- **Tree Shaking**: Remove unused code from final bundle
+- **Asset Optimization**: Compress images, CSS, and JavaScript
+- **Caching**: Long-term caching headers for static assets
+
+## Environment Configuration
+
+### Environment Variables
+Create environment files for different deployment stages:
+
+#### `.env.local` (Development)
+```env
+# Supabase Configuration
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Optional Development Settings
+VITE_APP_TITLE=CEVphantan Development
+VITE_ENABLE_DEVTOOLS=true
+VITE_LOG_LEVEL=debug
+```
+
+#### `.env.production` (Production)
+```env
+# Supabase Configuration (Required)
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Optional Production Settings
+VITE_APP_TITLE=CEVphantan
+VITE_ENABLE_DEVTOOLS=false
+VITE_LOG_LEVEL=error
+VITE_SENTRY_DSN=your-sentry-dsn
+
+# Optional Service Integrations
+VITE_GOOGLE_MAPS_API_KEY=your_maps_key
+```
+
+### Configuration Management
+```typescript
+// src/lib/config.ts
+export const config = {
+  app: {
+    title: import.meta.env.VITE_APP_TITLE || 'CEVphantan',
+    version: import.meta.env.VITE_APP_VERSION || '1.0.0',
+  },
+  supabase: {
+    url: import.meta.env.VITE_SUPABASE_URL,
+    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  },
+  services: {
+    stripe: {
+      publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY,
+    },
+    maps: {
+      apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    },
+  },
+  features: {
+    enableDevTools: import.meta.env.VITE_ENABLE_DEVTOOLS === 'true',
+    enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true',
+  },
+};
+```
+
+### Cloud Agent Preview Access Verification
+
+Cloud Agents can verify browser access without relying on local Supabase or
+Docker. The check starts local Vite, maps the Cloud Agent `SUPABASE_URL` and
+`SUPABASE_ANON_KEY` secrets into the client-visible `VITE_*` variables in the
+child process only, registers a generated test account, clears the browser
+session, logs back in with that generated account, and confirms both flows reach
+`/dashboard`.
+
+Required Cloud Agent environment secrets:
+
+| Variable | Purpose |
+|---|---|
+| `SUPABASE_URL` | Preview Supabase project URL. Host-only values are normalized to HTTPS by the script. |
+| `SUPABASE_ANON_KEY` | Preview Supabase anonymous/public key. |
+
+The script also reports whether `PREVIEW_LOGIN_EMAIL` and
+`PREVIEW_LOGIN_PASSWORD` are present, but the verification uses a generated test
+account so it does not depend on those credentials being valid.
+
+**Prerequisite:** Playwright must have downloaded the Chromium browser binary (Cloud Agent runners without it exit with a missing-binary error). After `npm ci`, install Chromium once:
+
+```bash
+npx playwright install chromium
+```
+
+Run:
+
+```bash
+npm run verify:preview-access
+```
+
+The script intentionally prints only status markers such as `[set]`, `[yes]`,
+`[created]`, and HTTP status codes. It must not print email addresses,
+passwords, Supabase keys, or session tokens.
+
+## Hosting Platforms
+
+CEVphantan is hosted on Vercel. The `main` branch promotes to `CCEVphantanpp` after
+**Production Release Readiness** runs **`vercel promote`**. **`preview.CEVphantanapp`**
+is the stable pre-production hostname bound to git branch **`preview`** (integration
+train) — Vercel Preview deploys on merges/pushes to that branch. SSL, CDN, and custom
+domain routing are managed in the Vercel dashboard.
+
+See **`docs/ops/git-and-deploy.md`** for the authoritative git/deploy loop.
+
+### Vercel Deployment
+```bash
+# From repo root (CLI version pinned in npm script — no global install required)
+npm ci
+
+# Preview deploy (pinned CLI major/minor line; bump with releases if needed)
+npx --yes vercel@51.6.1
+
+# Production deploy (same as npm run deploy:vercel)
+npx --yes vercel@51.6.1 --prod
+```
+
+#### `vercel.json` Configuration
+The project includes a complete `vercel.json` configuration file with:
+- **Build Configuration**: Uses Vite framework with `npm run build`
+- **SPA Routing**: Non-static app routes rewritten to the empty SPA shell (`dist/app-shell.html`); marketing routes served from prerendered `index.html` files. Vercel (`vercel.json` + `cleanUrls`) rewrites extensionless paths to `/app-shell`; Netlify (`netlify.toml`, `public/_redirects`) targets `/app-shell.html` because that host lacks Vercel cleanUrls behavior.
+- **Security Headers**: X-Content-Type-Options, X-Frame-Options, Referrer-Policy
+- **Performance Headers**: Long-term caching for static assets
+- **Branch Deployment**: Automatic Preview deployments for PRs; Production builds on `main` (promoted automatically by Production Release Readiness)
+
+> **Adding a new domain alias?** When you bring a new Vercel alias / custom domain online (e.g. `preview.CEVphantanapp`, a new branch URL, or a tenant subdomain), the upstream Google Maps API key's HTTP-referrer allowlist must also be widened or the Fleet Map will fail at runtime with `RefererNotAllowedMapError`. See [Google Maps API key — HTTP referrer allowlist](./supabase-branch-secrets.md#google-maps-api-key--http-referrer-allowlist).
+
+#### Environment Variables Setup
+Configure these environment variables in your Vercel project dashboard:
+
+**Required:**
+- `VITE_SUPABASE_URL`: Your Supabase project URL
+- `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+
+**Optional:**
+- `VITE_APP_VERSION`: Application version (defaults to 'dev')
+- `VITE_STRIPE_PUBLISHABLE_KEY`: Stripe integration key
+- `VITE_GOOGLE_MAPS_API_KEY`: Google Maps API key
+- `VITE_GOOGLE_WORKSPACE_CLIENT_ID`: Shared Google OAuth web client ID (Workspace sync + Picker token flow)
+- `VITE_GOOGLE_PICKER_API_KEY`: Google Picker browser key
+- `VITE_GOOGLE_PICKER_APP_ID`: Google Cloud project number (Picker App ID)
+- `VITE_GOOGLE_PICKER_CLIENT_ID`: Not used (do not set; Picker reuses `VITE_GOOGLE_WORKSPACE_CLIENT_ID`)
+
+> **Important**: Vercel env vars are build-time only (`VITE_*` prefix). Edge Function runtime secrets (e.g., `GOOGLE_MAPS_BROWSER_KEY`, OAuth secrets) must be set in the **Supabase Dashboard**, not Vercel. See [Secrets Checklist](#secrets-checklist) below.
+
+#### Branch Configuration
+- **Production**: merges to `main` trigger Vercel production-environment builds for **CEVphantanapp**. Traffic stays on the prior deployment until **Production Release Readiness** runs `vercel promote` after migrations and schema drift pass.
+- **Preview / integration**: merges and pushes to git **`preview`** deploy to **`preview.CEVphantanapp`** (branch-bound custom domain). Feature PRs also get commit-specific `*.vercel.app` URLs. There is no `preview-domain-alias.yml` fast-forward from `main`.
+
+See `docs/ops/git-and-deploy.md` and `docs/ops/preview-architecture-migration.md` (#1033 history, #1282 train restore).
+
+### Production release readiness (Supabase + Vercel gate)
+
+Pushes to `main` run **Production Release Readiness** (`.github/workflows/production-release-readiness.yml`). This workflow:
+
+1. Applies pending SQL migrations to the **production** Supabase project (`supabase link` + `supabase db push --include-all`).
+2. Re-runs the schema drift script in **strict** mode so `schema_migrations` matches `supabase/migrations/` by name.
+3. Polls the Vercel API until the **READY** deployment for the same `github.sha` on `main` exists for the SPA project (`prj_P9hRun4B2OdGy8ACCnb0f7jNG6UA`).
+4. Runs `vercel promote` for that deployment so **CEVphantanapp** serves the new build without a manual dashboard step.
+5. Deploys **all** Supabase Edge Functions to production (`supabase functions deploy`), including `verify_jwt` settings from `supabase/config.toml` — runs **after** promote so an earlier workflow failure cannot leave edge functions ahead of the live frontend.
+
+When this workflow is green, production traffic should already match the merged commit.
+
+**GitHub / 1Password:** `OP_SERVICE_ACCOUNT_TOKEN` must remain a repo-level secret. The workflow loads:
+
+| Variable | 1Password reference |
+|----------|---------------------|
+| `SUPABASE_ACCESS_TOKEN` | `op://CEVphantanAgents/supabase-write/SUPABASE_ACCESS_TOKEN` |
+| `SUPABASE_DB_PASSWORD` | `op://CEVphantanAgents/supabase-write/prod_db_password` |
+| `VERCEL_TOKEN` | `op://CEVphantanAgents/vercel-write/VERCEL_TOKEN` |
+
+Keep these database passwords on the `supabase-write` item in sync with **Supabase Dashboard → Project Settings → Database** (the Postgres password) for each project:
+
+| 1Password field | Supabase project | Typical use |
+|-----------------|------------------|-------------|
+| `prod_db_password` | Production (`ymxkzronkhwxzcdcbnwq`) | **Production Release Readiness** maps this to `SUPABASE_DB_PASSWORD` for `supabase link` / `db push` after merge to `main`. |
+| `preview_db_password` | Reserved for the persistent preview branch target | Populate only when the cutover in `docs/ops/preview-persistent-branch.md` is implemented. Do not reuse retired branch `olsdirkvvfegvclbpgrg`. |
+
+Release PRs (`preview` → `main`) run **Schema Drift Check** as a **hard gate** that blocks merge when any of the following conditions exist:
+
+- **Pending local migrations** - a local `supabase/migrations/*.sql` file whose migration _name_ is absent from production `schema_migrations`. The SQL has not run on production.
+- **Version mismatches** - production `schema_migrations` rows whose _version_ timestamp has no matching local file, but the migration _name_ does exist locally under a different timestamp. This happens when migrations are applied through Supabase MCP `apply_migration` or the Dashboard, which record a wall-clock timestamp instead of the file timestamp. `supabase db push --include-all` fails with "Remote migration versions not found in local migrations directory" until repaired with `supabase migration repair --status reverted <versions>` followed by `supabase db push --include-all --yes`.
+- **Orphan remote versions** - production rows that have no matching local file by either version or name. Operator must create a placeholder file or revert the entry before the release gate clears.
+
+After merge, **Production Release Readiness** applies any remaining SQL via `supabase db push --include-all`, then re-runs the script in strict mode (which catches all three categories). The schema drift script and its classification helpers live in `.github/scripts/check-schema-drift.js` and `.github/scripts/schema-drift-lib.js`; the library is covered by `.github/scripts/schema-drift-lib.test.js` (run with `node --test .github/scripts/schema-drift-lib.test.js`).
+
+### Secrets Checklist
+
+CEVphantanruns on **two independent platforms** — Vercel (frontend build) and Supabase (backend / Edge Functions). Each has its own secrets store. Redeploying one does **not** update the other.
+
+When rotating keys or deploying a new environment, verify secrets in **both** dashboards:
+
+#### Vercel Environment Variables (build-time, `VITE_*` prefix)
+
+| Variable | Purpose |
+|---|---|
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous/public key |
+| `VITE_HCAPTCHA_SITEKEY` | hCaptcha public site key |
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps API key (build-time fallback) |
+| `VITE_GOOGLE_WORKSPACE_CLIENT_ID` | Shared Google OAuth client ID for Workspace OAuth and browser Picker token flow |
+| `VITE_GOOGLE_PICKER_API_KEY` | Google Picker browser API key (referrer-restricted) |
+| `VITE_GOOGLE_PICKER_APP_ID` | Google Cloud project number for Picker |
+
+#### Supabase Edge Function Secrets (runtime, set in Supabase Dashboard)
+
+| Secret | Used By | Purpose |
+|---|---|---|
+| `GOOGLE_MAPS_BROWSER_KEY` | `public-google-maps-key` | Served to browser at runtime for Maps JS API |
+| `GOOGLE_MAPS_SERVER_KEY` | `places-autocomplete`, `geocode-location` | Server-side Places/Geocoding API calls |
+| `INTUIT_CLIENT_ID` / `INTUIT_CLIENT_SECRET` | `quickbooks-oauth-callback` | QuickBooks OAuth |
+| `GOOGLE_WORKSPACE_CLIENT_ID` / `GOOGLE_WORKSPACE_CLIENT_SECRET` | `google-workspace-oauth-callback` | Google Workspace OAuth |
+| `TOKEN_ENCRYPTION_KEY` / `KDF_SALT` | `_shared/crypto.ts` | OAuth token encryption |
+| `RESEND_API_KEY` | `send-invitation-email` | Email delivery |
+| `GITHUB_PAT` / `GITHUB_WEBHOOK_SECRET` | `create-ticket`, `github-issue-webhook` | Bug reporting |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | `send-push-notification` | Web Push |
+| `PRODUCTION_URL` | `send-invitation-email` | Invite link base URL |
+
+### Google Picker Setup (Google Cloud Console)
+
+For the Google Docs destination chooser in Organization Settings:
+
+Policy: use one shared Google OAuth Web client for both Workspace callback and Picker browser token flow. Do not provision a dedicated Picker OAuth client ID.
+
+1. Open the same Google Cloud project used by Google Workspace OAuth.
+2. Confirm these APIs are enabled:
+   - Google Drive API
+   - Google Docs API (executive packet `batchUpdate` calls)
+   - Google Sheets API (existing packet-to-sheets export)
+   - Admin SDK API (existing directory sync)
+3. Create a browser API key:
+   - Google Cloud Console -> APIs & Services -> Credentials -> Create Credentials -> API key
+   - Restrict to HTTP referrers (for example localhost dev URL, preview.CEVphantanapp, CCEVphantanpp)
+   - Restrict API usage to Google Drive API
+4. Reuse the existing **Google Workspace Web application** OAuth client ID for browser token flow:
+   - Add Authorized JavaScript origins: localhost dev URL, `https://preview.CEVphantanapp`, `https://CCEVphantanpp`
+   - Keep Authorized redirect URIs for Workspace callback, including `/functions/v1/google-workspace-oauth-callback`
+5. Set the browser key as `VITE_GOOGLE_PICKER_API_KEY` in Vercel/local `.env`.
+6. Copy the project number from Project Settings and set it as `VITE_GOOGLE_PICKER_APP_ID`.
+7. Set OAuth client ID as `VITE_GOOGLE_WORKSPACE_CLIENT_ID` (single shared client path).
+8. If present, remove `VITE_GOOGLE_PICKER_CLIENT_ID` from Vercel and any setup docs/scripts.
+
+### Google Workspace Scope Matrix
+
+CEVphantanuses these scopes for Google Workspace features:
+
+| Scope | Used for | Source |
+|---|---|---|
+| `https://www.googleapis.com/auth/admin.directory.user.readonly` | Workspace user directory sync/import | `src/services/google-workspace/auth.ts` |
+| `https://www.googleapis.com/auth/spreadsheets` | Internal packet export to Google Sheets | `src/services/google-workspace/auth.ts` |
+| `https://www.googleapis.com/auth/drive.file` | Save PDFs and create Google Docs artifacts in Drive | `src/services/google-workspace/auth.ts` |
+| `https://www.googleapis.com/auth/drive.readonly` | Picker browsing/selection in browser UI | `src/services/google-workspace/auth.ts` |
+| `https://www.googleapis.com/auth/documents` | Format Google Docs executive packets via `batchUpdate` | `src/services/google-workspace/auth.ts` |
+
+**Incremental consent:** Connect/onboarding requests directory scopes first; export scopes are requested in context via Finish authorization or Grant Drive permissions (`consentMode: 'export'` in `src/services/google-workspace/auth.ts`).
+
+### Google Cross-Account Protection (RISC)
+
+Production receiver URL:
+
+`https://supabase.CEVphantanapp/functions/v1/google-risc-receiver`
+
+Register this endpoint in **Google Cloud Console → Google Auth Platform → Project Checkup → Cross-Account Protection** for the **CEVphantanGoogle Workspace OAuth** client (`GOOGLE_WORKSPACE_CLIENT_ID` on edge). Google sends Security Event Tokens (`application/secevent+jwt`) without Supabase JWTs; the edge function validates signatures against Google JWKS and disconnects affected Workspace credentials on revocation events.
+
+Expected verification signal after registration: Google posts a RISC **verification** event and Project Checkup marks Cross-Account Protection as configured (may take a re-scan after deploy).
+
+> **Workspace OAuth audit logs**: Failures in the Workspace OAuth flow (consent, token exchange, Admin SDK directory reads) are captured by the Workspace tenant, not the `CEVphantanprod` Cloud project. To make those logs queryable via Cloud Logging at the org tier, see [`docs/ops/observability.md`](observability.md) — it documents the Admin Console toggle, the org-level `gcloud logging read` queries, and the IAM grants required for agent-driven verification.
+> **Common mistake**: Setting a secret in Vercel when it should be in Supabase (or vice versa). The `GOOGLE_MAPS_BROWSER_KEY` is a frequent offender — it is served by a Supabase Edge Function at runtime, not baked into the Vercel build.
+
+### Netlify Deployment
+```bash
+# Install Netlify CLI
+npm install -g netlify-cli
+
+# Build and deploy
+npm run build
+netlify deploy --prod --dir=dist
+```
+
+#### `netlify.toml` Configuration
+```toml
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/app-shell.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+```
+
+> **Netlify vs Vercel:** Netlify has no `cleanUrls` equivalent, so the catch-all redirect must target the literal build artifact `/app-shell.html`. Vercel uses `cleanUrls: true` and rewrites extensionless paths to `/app-shell`. Marketing routes are prerendered to per-route `index.html` files on both hosts; only authenticated/app routes fall through to the empty SPA shell.
+
+### AWS S3 + CloudFront
+```bash
+# Build application
+npm run build
+
+# Sync to S3 bucket
+aws s3 sync dist/ s3://your-bucket-name --delete
+
+# Invalidate CloudFront cache
+aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
+```
+
+## Runner Management
+
+### Quick Switch Between Runner Types
+
+- Switch to self-hosted (Windows):
+```powershell
+pwsh -File dev/switch-runner-type.ps1 -RunnerType self-hosted
+```
+
+- Switch to GitHub-hosted (Ubuntu):
+```powershell
+pwsh -File dev/switch-runner-type.ps1 -RunnerType github-hosted
+```
+
+Then commit and push the workflow changes.
+
+#### Notes
+- Security scans remain on GitHub-hosted for isolation.
+- Windows steps use PowerShell; Unix steps use Bash.
+- Toggle by editing `USE_SELF_HOSTED` in workflows or using the script.
+
+## Self-Hosted Runner Setup
+
+### Overview
+
+This guide explains the hybrid approach implemented for using your self-hosted GitHub Actions runner alongside GitHub-hosted runners for optimal performance and security.
+
+### Current Configuration
+
+#### **Hybrid Runner Strategy**
+
+| Job | Runner Type | Reason |
+|-----|-------------|--------|
+| **lint-and-typecheck** | `self-hosted` | Fast linting and type checking |
+| **test** | `self-hosted` | Faster test execution with Node.js matrix |
+| **security** | `ubuntu-latest` | **Security isolation on GitHub-hosted** |
+| **build** | `self-hosted` | Faster builds with better resources |
+| **quality-gates** | `self-hosted` | Final checks and bundle analysis |
+| **versioning** | `self-hosted` | Simple git operations |
+| **deployment** | `self-hosted` | Notification and version tracking |
+
+### Benefits of This Approach
+
+#### **Performance Benefits**
+- ⚡ **Faster Builds**: Your local machine likely has more CPU/RAM than GitHub's standard runners
+- 🚀 **Reduced Queue Times**: No waiting for GitHub-hosted runners to become available
+- 💾 **Better Caching**: Persistent cache between runs on your local machine
+- 🔄 **Parallel Execution**: Multiple jobs can run simultaneously on your machine
+
+#### **Cost Benefits**
+- 💰 **No GitHub Actions Minutes**: Self-hosted jobs don't consume your GitHub Actions quota
+- 📊 **Unlimited Usage**: No monthly limits on self-hosted runner usage
+
+#### **Security Benefits**
+- 🔒 **Security Isolation**: Critical security scans still run on GitHub-hosted runners
+- 🛡️ **Controlled Environment**: You maintain full control over the runner environment
+
+### Self-Hosted Runner Requirements
+
+#### **Minimum System Requirements**
+- **OS**: Windows 10/11 (based on your setup)
+- **RAM**: 8GB minimum, 16GB recommended
+- **Storage**: 50GB free space for builds and cache
+- **CPU**: 4 cores minimum, 8 cores recommended
+
+#### **Required Software**
+- **Node.js**: Versions 18.x and 20.x
+- **Git**: Latest version
+- **PowerShell**: For Windows compatibility
+- **Build Tools**: Visual Studio Build Tools (for native dependencies)
+
+### Setup Instructions
+
+#### **1. Install Required Software**
+
+```powershell
+# Install Node.js 18.x and 20.x using Node Version Manager (nvm-windows)
+# Download from: https://github.com/coreybutler/nvm-windows
+
+# Install Node.js 18.x
+nvm install 18.20.4
+nvm use 18.20.4
+
+# Install Node.js 20.x
+nvm install 20.11.1
+nvm use 20.11.1
+
+# Install Git (if not already installed)
+winget install Git.Git
+
+# Install Visual Studio Build Tools (for native dependencies)
+winget install Microsoft.VisualStudio.2022.BuildTools
+```
+
+#### **2. Configure Runner Environment**
+
+```powershell
+# Set up npm cache location for better performance
+npm config set cache "C:\npm-cache" --global
+
+# Set up environment variables
+[Environment]::SetEnvironmentVariable("NODE_OPTIONS", "--max-old-space-size=4096", "Machine")
+[Environment]::SetEnvironmentVariable("CI", "true", "Machine")
+```
+
+#### **3. Runner Maintenance Script**
+
+Create a maintenance script to keep your runner optimized:
+
+```powershell
+# Create runner-maintenance.ps1
+@"
+# GitHub Actions Runner Maintenance Script
+
+Write-Host "🧹 Cleaning up GitHub Actions runner..."
+
+# Clean up old workflow runs (keep last 10)
+Get-ChildItem -Path "C:\action-runners\_work" -Directory | 
+    Sort-Object CreationTime -Descending | 
+    Select-Object -Skip 10 | 
+    Remove-Item -Recurse -Force
+
+# Clean up npm cache if it gets too large (>5GB)
+$npmCacheSize = (Get-ChildItem -Path "C:\npm-cache" -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB
+if ($npmCacheSize -gt 5) {
+    Write-Host "📦 NPM cache is $([math]::Round($npmCacheSize, 2))GB, cleaning up..."
+    npm cache clean --force
+}
+
+# Clean up temp files
+Get-ChildItem -Path $env:TEMP -Name "github-actions*" -Directory | 
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
+Write-Host "✅ Runner maintenance completed!"
+"@ | Out-File -FilePath "C:\action-runners\runner-maintenance.ps1" -Encoding UTF8
+```
+
+#### **4. Scheduled Maintenance**
+
+Set up a Windows Task Scheduler task to run maintenance weekly:
+
+```powershell
+# Create scheduled task for weekly maintenance
+$action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-File C:\action-runners\runner-maintenance.ps1"
+$trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 2AM
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+Register-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -TaskName "GitHub Actions Runner Maintenance"
+```
+
+### Monitoring and Troubleshooting
+
+#### **Runner Status Monitoring**
+
+Create a simple monitoring script:
+
+```powershell
+# Create runner-status.ps1
+@"
+# GitHub Actions Runner Status Check
+
+Write-Host "🔍 Checking GitHub Actions runner status..."
+
+# Check if runner service is running
+$runnerService = Get-Service -Name "actions.runner.*" -ErrorAction SilentlyContinue
+if ($runnerService) {
+    Write-Host "✅ Runner service status: $($runnerService.Status)"
+} else {
+    Write-Host "❌ Runner service not found"
+}
+
+# Check disk space
+$disk = Get-WmiObject -Class Win32_LogicalDisk -Filter "DeviceID='C:'"
+$freeSpaceGB = [math]::Round($disk.FreeSpace / 1GB, 2)
+$totalSpaceGB = [math]::Round($disk.Size / 1GB, 2)
+
+Write-Host "💾 Disk space: $freeSpaceGB GB free of $totalSpaceGB GB total"
+
+if ($freeSpaceGB -lt 10) {
+    Write-Host "⚠️  Warning: Less than 10GB free space remaining"
+}
+
+# Check Node.js versions
+Write-Host "📦 Node.js versions:"
+node --version
+npm --version
+
+# Check recent workflow runs
+$workflowRuns = Get-ChildItem -Path "C:\action-runners\_work" -Directory | 
+    Sort-Object CreationTime -Descending | 
+    Select-Object -First 5
+
+Write-Host "📋 Recent workflow runs:"
+$workflowRuns | ForEach-Object {
+    Write-Host "  - $($_.Name) ($($_.CreationTime.ToString('yyyy-MM-dd HH:mm')))"
+}
+"@ | Out-File -FilePath "C:\action-runners\runner-status.ps1" -Encoding UTF8
+```
+
+#### **Common Issues and Solutions**
+
+**Issue: Runner Not Picking Up Jobs**
+```powershell
+# Restart the runner service
+Restart-Service -Name "actions.runner.*"
+
+# Or restart the runner manually
+cd C:\action-runners
+.\run.cmd
+```
+
+**Issue: Out of Disk Space**
+```powershell
+# Clean up old workflow runs
+Get-ChildItem -Path "C:\action-runners\_work" -Directory | 
+    Where-Object { $_.CreationTime -lt (Get-Date).AddDays(-7) } | 
+    Remove-Item -Recurse -Force
+
+# Clean npm cache
+npm cache clean --force
+```
+
+**Issue: Node.js Version Conflicts**
+```powershell
+# Use nvm to switch Node.js versions
+nvm use 20.11.1  # For most jobs
+nvm use 18.20.4  # For Node.js 18.x matrix jobs
+```
+
+### Security Considerations
+
+#### **Runner Security Best Practices**
+1. **Keep Runner Updated**: Regularly update the runner software
+2. **Monitor Access**: Only trusted repositories should use the runner
+3. **Network Security**: Use firewall rules to restrict runner network access
+4. **Regular Maintenance**: Clean up old builds and temporary files
+5. **Backup Configuration**: Keep runner configuration backed up
+
+#### **Environment Isolation**
+- The runner has access to your local environment
+- Keep sensitive data out of the runner directory
+- Use GitHub Secrets for sensitive information
+- Regularly audit runner logs
+
+### Performance Optimization
+
+#### **Cache Optimization**
+```powershell
+# Set up persistent npm cache
+npm config set cache "C:\npm-cache" --global
+
+# Set up build cache directory
+[Environment]::SetEnvironmentVariable("BUILD_CACHE_DIR", "C:\build-cache", "Machine")
+```
+
+#### **Resource Monitoring**
+```powershell
+# Monitor CPU and memory usage during builds
+Get-Process -Name "node" | Select-Object ProcessName, CPU, WorkingSet
+```
+
+### Expected Performance Improvements
+
+With your self-hosted runner, you should see:
+
+- **Build Time**: 30-50% faster builds
+- **Test Execution**: 40-60% faster test runs
+- **Queue Time**: Near-zero queue time for self-hosted jobs
+- **Cache Performance**: 70-80% faster dependency installation
+
+### Rollback Plan
+
+If you need to revert to GitHub-hosted runners:
+
+1. **Update workflow files**: Change `runs-on: self-hosted` back to `runs-on: ubuntu-latest`
+2. **Remove runner**: Stop and remove the self-hosted runner service
+3. **Clean up**: Remove the runner directory and configuration
+
+## Versioning System
+
+`package.json` is the source of truth for the shipped app version. Feature PRs into `preview` do not bump it. `/release` chooses one SemVer, empties `[Unreleased]`, and pushes the bump onto `preview` before the promote PR to `main`. Changelog bullets follow `.cursor/rules/changelog.mdc`. See [`git-and-deploy.md`](./git-and-deploy.md).
+
+### How It Works
+
+#### Version Format
+- **Format**: `MAJOR.MINOR.PATCH` (e.g., `1.12.3`)
+- **Tag Format**: `vMAJOR.MINOR.PATCH` (e.g., `v1.12.3`)
+- **Source of Truth**: the `version` field in `package.json` after a promote
+
+### Automatic Version Tagging
+
+The tagging system is automated after promote:
+
+1. **`/release`** bumps `package.json` on the `preview` tip and opens `preview` → `main`.
+2. **`version-tag.yml`** runs on push to `main` when `package.json` changes. It reads the version, creates annotated tag `v{version}` if missing, and skips if the tag already exists.
+3. **Build integration**:
+   - CI workflows read the version from `package.json`
+   - Exposes as `VITE_APP_VERSION` during build
+   - The app displays the version in the footer
+
+### Semantic Versioning Guidelines
+
+- **Major** (X.0.0): Only when the user requests a breaking customer-visible change
+- **Minor** (X.Y.0): New customer-visible capability or meaningful workflow expansion
+- **Patch** (X.Y.Z): Fixes, security without product-shape change, batched dependencies, small UX corrections
+- Do not cut a patch for a single Dependabot bump
+
+### Workflow
+
+#### To Release a New Version
+
+Run **`/release`** (or the promote path in [`git-and-deploy.md`](./git-and-deploy.md)). Do not bump `package.json` on a feature PR into `preview`.
+
+After the promote lands on `main`, `version-tag.yml` creates `vX.Y.Z` if that tag does not already exist.
+
+### Local Development
+
+For local development, the version will show as `dev` if no `VITE_APP_VERSION` is set. The build process reads from `package.json` as a fallback.
+
+### Manual Tag Management
+
+#### Rollback a Version
+
+If you need to undo a version:
+
+```bash
+# Delete tag locally and remotely
+git tag -d vX.Y.Z
+git push origin --delete vX.Y.Z
+
+# Revert package.json version change
+git revert <commit-sha>
+git push origin main
+```
+
+#### Emergency Manual Tag Creation
+
+If the auto-tagging workflow fails, you can create a tag manually:
+
+```bash
+# Ensure package.json has the correct version
+# Then create and push tag
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
+```
+
+### Troubleshooting
+
+#### Tag not created after version change
+
+- Check if workflow ran: Go to Actions tab and look for "Auto Version Tag" workflow
+- Verify `package.json` was actually changed in the commit
+- Check workflow logs for errors
+- Ensure workflow has `contents: write` permission
+
+#### Version not showing in deployed app
+
+- Verify `package.json` has the correct version
+- Check CI logs: Ensure version was read from `package.json` during build
+- Verify `VITE_APP_VERSION` was set during build
+
+#### Version in footer shows "dev"
+
+- Expected in local development without `VITE_APP_VERSION` env var
+- In production: Check that build read version from `package.json`
+
+#### Duplicate tag error
+
+- The workflow checks if a tag exists before creating it
+- If you see this error, the tag already exists for that version
+- Either use a different version number or delete the existing tag first
+
+### Version Display
+
+The version is displayed in the footer of all pages in the format: `© 2024 CEVphantan v1.2.3 by COLUMBIA CLOUDWORKS LLC`
+
+### Files Involved
+
+- `package.json` - **Source of truth** for version number
+- `.github/workflows/version-tag.yml` - Auto-tagging workflow (creates tags when version changes)
+- `.github/workflows/ci.yml` - Reads version from `package.json` during build
+- `.github/workflows/deploy.yml` - Reads version from `package.json` for deployment notifications
+- `src/components/layout/LegalFooter.tsx` - Version display in UI
+- `src/lib/version.ts` - Version constant with fallback chain (`VITE_APP_VERSION` → `package.json` → `"dev"`)
+- `vite.config.ts` - Reads from `package.json` as fallback for `__APP_VERSION__` constant
+
+## Performance Optimization
+
+### Bundle Analysis
+```bash
+# Analyze bundle size
+npm run build -- --analyze
+
+# Or use bundle analyzer
+npm install -g webpack-bundle-analyzer
+npx webpack-bundle-analyzer dist/assets
+```
+
+### Performance Monitoring
+```typescript
+// src/lib/performance.ts
+export const trackPerformance = () => {
+  // Core Web Vitals
+  import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+    getCLS(console.log);
+    getFID(console.log);
+    getFCP(console.log);
+    getLCP(console.log);
+    getTTFB(console.log);
+  });
+};
+
+// Initialize in main.tsx
+if (import.meta.env.PROD) {
+  trackPerformance();
+}
+```
+
+### Caching Strategy
+```typescript
+// Service Worker for caching (optional)
+// src/sw.ts
+const CACHE_NAME = 'CEVphantanv1';
+const urlsToCache = [
+  '/',
+  '/static/css/main.css',
+  '/static/js/main.js',
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(urlsToCache))
+  );
+});
+```
+
+## Security Configuration
+
+### Content Security Policy
+```html
+<!-- Use the exact Content-Security-Policy value from `vercel.json` -->
+<meta http-equiv="Content-Security-Policy" content="(see vercel.json -> headers -> Content-Security-Policy -> value)">
+```
+
+### HTTPS Configuration
+Ensure all deployments use HTTPS:
+- **Development**: Use `http://localhost:8080` for local development
+- **Production**: Configure SSL certificates on hosting platform
+- **API Calls**: Ensure all API endpoints use HTTPS
+
+## Database Integration
+
+### Supabase Integration (Recommended)
+CEVphantan is designed to work with Supabase for backend functionality:
+
+1. **Connect Supabase**: Configure project credentials via Vercel environment variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`)
+2. **Database Setup**: Create tables for equipment, work orders, teams
+3. **Authentication**: Configure Supabase Auth for user management
+4. **Real-time Updates**: Enable real-time subscriptions for live data
+
+### Supabase Branch Configuration
+
+CEVphantanuses Supabase branching for **ephemeral PR validation** and, today, a
+single production project for cloud runtime:
+
+- **Production:** `ymxkzronkhwxzcdcbnwq` — API `https://supabase.CEVphantanapp`
+- **Current live preview app:** still uses the production project above
+- **Approved target preview backend:** a new persistent dataless branch for
+  `preview.CEVphantanapp` (not yet cut over; see
+  `docs/ops/preview-persistent-branch.md`)
+- **Ephemeral PR branches:** Auto-created when `supabase/**` changes on a PR
+- **Retired persistent preview branch:** `olsdirkvvfegvclbpgrg` — decommission after #1033 cutover
+
+`preview.CEVphantanapp` (Vercel Preview) currently uses
+**`VITE_SUPABASE_URL=https://supabase.CEVphantanapp`** from
+`app-env-preview-public`, not the retired `olsdirk` project URL. The approved
+replacement is the persistent preview branch above, once its cutover checklist
+is implemented.
+
+See `docs/ops/preview-persistent-branch.md`,
+`docs/ops/preview-architecture-migration.md`, and
+`docs/ops/supabase-branch-secrets.md`.
+
+### Supabase Configuration
+CEVphantan uses Supabase for all backend functionality. Ensure proper configuration:
+
+```typescript
+// src/integrations/supabase/client.ts
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing required Supabase environment variables');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
+  }
+});
+```
+
+#### Database Migrations
+
+> **⚠️ IMPORTANT: Local-First Development Workflow**
+> All database migrations must be developed and tested locally before deploying to production.
+
+**Standard workflow:**
+
+1. **Develop and test locally** (REQUIRED):
+   ```bash
+   # Create migration
+   npx supabase migration new your_migration_name
+   
+   # Test locally with complete database reset
+   npx supabase db reset
+   npx supabase db diff
+   ```
+
+2. **Deploy to production** (only after local testing succeeds):
+   ```bash
+   # Deploy to production
+   npx supabase db push --linked
+   ```
+
+**Local development commands:**
+```bash
+# Apply migrations to local database
+npx supabase db push
+
+# Reset local database and apply all migrations (primary testing method)
+npx supabase db reset
+```
+
+> **Note**: Supabase CLI is included as a dev dependency. Always use `npx supabase` commands. Do NOT install globally. See [Local Supabase Development Guide](./local-supabase-development.md) for detailed setup instructions.
+
+## Monitoring and Logging
+
+### Error Tracking
+```typescript
+// src/lib/error-tracking.ts
+interface ErrorEvent {
+  message: string;
+  stack?: string;
+  url: string;
+  timestamp: Date;
+  userAgent: string;
+}
+
+export const trackError = (error: Error, context?: Record<string, any>) => {
+  const errorEvent: ErrorEvent = {
+    message: error.message,
+    stack: error.stack,
+    url: window.location.href,
+    timestamp: new Date(),
+    userAgent: navigator.userAgent,
+  };
+  
+  // Send to error tracking service
+  console.error('Application Error:', errorEvent, context);
+};
+```
+
+### Analytics Integration
+```typescript
+// src/lib/analytics.ts
+export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
+  if (config.features.enableAnalytics) {
+    // Google Analytics 4
+    gtag('event', eventName, properties);
+    
+    // Or custom analytics
+    fetch('/api/analytics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: eventName, properties, timestamp: Date.now() }),
+    });
+  }
+};
+```
+
+## Maintenance and Updates
+
+### Automated Deployments
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+    - name: Install dependencies
+      run: npm ci
+    - name: Run tests
+      run: npm test
+    - name: Build application
+      run: npm run build
+    - name: Deploy to hosting
+      run: npm run deploy
+```
+
+### Health Checks
+```typescript
+// src/lib/health-check.ts
+export const performHealthCheck = async () => {
+  const checks = [
+    { name: 'API Connection', check: () => fetch('/api/health') },
+    { name: 'Database', check: () => fetch('/api/db-health') },
+    { name: 'Authentication', check: () => fetch('/api/auth/status') },
+  ];
+  
+  const results = await Promise.allSettled(
+    checks.map(async ({ name, check }) => {
+      try {
+        const response = await check();
+        return { name, status: response.ok ? 'healthy' : 'unhealthy' };
+      } catch (error) {
+        return { name, status: 'error', error: error.message };
+      }
+    })
+  );
+  
+  return results;
+};
+```
+
+## Supabase Auth Connection Allocation
+
+The Auth server's DB connection strategy should use **percentage-based allocation**
+rather than an absolute connection count. This allows the connection pool to scale
+automatically when the Supabase instance is resized.
+
+| Setting | Value | Where |
+|---|---|---|
+| Auth DB Connection Strategy | Percentage-based | Supabase Dashboard > Project Settings > Auth |
+
+**Changed April 2026**: switched from absolute `10` connections to percentage-based.
+The Supabase performance advisor flags absolute allocation because resizing the
+instance without updating the number manually leaves Auth underprovisioned. With
+percentage-based allocation the pool scales proportionally.
+
+This deployment guide provides comprehensive instructions for deploying CEVphantan to various platforms while maintaining optimal performance, security, and reliability.
+

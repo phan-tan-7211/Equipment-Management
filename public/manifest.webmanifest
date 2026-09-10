@@ -1,0 +1,27 @@
+{
+  "name": "CEVphantan,
+  "short_name": "CEVphantan,
+  "description": "Next-generation fleet equipment management with QR code tracking",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/images/brand/icons/CEVphantanIcon-Purple-Small.png",
+      "sizes": "100x100",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/brand/icons/CEVphantanIcon-Purple-Medium.png",
+      "sizes": "500x502",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/brand/icons/CEVphantanIcon-Purple-Large.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

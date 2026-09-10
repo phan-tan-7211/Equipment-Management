@@ -1,0 +1,742 @@
+// fallow-ignore-file code-duplication
+// Duplication rationale: Field worksheet PDF shares layout blocks with report PDF
+import type jsPDF from 'jspdf';
+import { logger } from '@/utils/logger';
+import { formatStatus, formatPriority } from '@/features/work-orders/utils/workOrderHelpers';
+import type { UserSettings } from '@/types/settings';
+import { formatDate as formatDateTz } from '@/utils/dateFormatter';
+import type { PMChecklistItem, PreventativeMaintenance } from '@/features/pm-templates/services/preventativeMaintenanceService';
+import type {
+  WorkOrderForPDF,
+  EquipmentForPDF,
+  WorkOrderPDFData,
+  WorkOrderExportDateSettings,
+} from './workOrderReportPDFService';
+import {
+  applyWorkOrderPdfPageChrome,
+  formatWorkOrderIdForPdf,
+  type WorkOrderPdfPageLayout,
+} from './workOrderPdfChrome';
+import { WorkOrderPdfTextLayout } from './workOrderPdfTextLayout';
+
+const CONDITION_LEGEND = [
+  { value: 1, label: 'OK' },
+  { value: 6, label: 'N/A' },
+  { value: 2, label: 'Adjusted' },
+  { value: 3, label: 'Recommend Repairs' },
+  { value: 4, label: 'Immediate Repairs' },
+  { value: 5, label: 'Unsafe' },
+] as const;
+
+interface PreloadedImage {
+  data: string;
+  format: 'JPEG' | 'PNG';
+  width: number;
+  height: number;
+}
+
+/**
+ * Generates a handwriting-friendly PDF worksheet for field technicians.
+ *
+ * Layout:
+ *   Page 1      — Header (with org logo / team image), WO details, equipment, description
+ *   PM Summary  — Compact one-page reference list of all checklist items
+ *   PM Detail   — Each item gets a checkbox, condition boxes, and 5 blank writing lines
+ *   Labor       — Full page of labor entry rows (Tech / Hours / Date / Task)
+ *   Parts       — Full page of parts/materials rows (Part / Qty / Part#)
+ *   Notes Page  — Full page of blank ruled lines with signature block at the bottom
+ */
+export class WorkOrderFieldWorksheetPDFGenerator {
+  private doc!: jsPDF;
+  private textLayout!: WorkOrderPdfTextLayout;
+  private readonly lineHeight = 6;
+  private readonly writeLineHeight = 8;
+  private readonly pageHeight = 252;
+  private readonly margin = 15;
+  private readonly pageWidth = 210;
+  private readonly contentWidth: number;
+  private readonly footerY = 255;
+  private readonly qrSize = 20;
+  private exportDateSettings!: WorkOrderExportDateSettings;
+
+  private pdfFormatDate(date: Date | string | null | undefined): string {
+    if (date === null || date === undefined) return '—';
+    return formatDateTz(date, this.exportDateSettings as UserSettings);
+  }
+
+  private constructor() {
+    this.contentWidth = this.pageWidth - 2 * this.margin;
+  }
+
+  private async init(): Promise<void> {
+    const { default: jsPDF } = await import('jspdf');
+    this.doc = new jsPDF();
+    this.textLayout = new WorkOrderPdfTextLayout(this.doc, {
+      margin: this.margin,
+      pageHeight: this.pageHeight,
+      lineHeight: this.lineHeight,
+      pageWidth: this.pageWidth,
+      contentWidth: this.contentWidth,
+    });
+  }
+
+  static async create(): Promise<WorkOrderFieldWorksheetPDFGenerator> {
+    const instance = new WorkOrderFieldWorksheetPDFGenerator();
+    await instance.init();
+    return instance;
+  }
+
+  // ===================== UTILITY METHODS =====================
+
+  private addSectionHeader(title: string): void {
+    this.textLayout.checkPageBreak(15);
+    this.textLayout.yPosition += 3;
+    this.doc.setFillColor(240, 240, 240);
+    this.doc.rect(this.margin, this.textLayout.yPosition - 4.5, this.contentWidth, 7, 'F');
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(0, 0, 0);
+    this.doc.text(title.toUpperCase(), this.margin + 2, this.textLayout.yPosition);
+    this.textLayout.yPosition += 6;
+  }
+
+  private addSeparator(): void {
+    this.textLayout.yPosition += 2;
+    this.textLayout.checkPageBreak(6);
+    this.doc.setDrawColor(180, 180, 180);
+    this.doc.setLineWidth(0.3);
+    this.doc.line(this.margin, this.textLayout.yPosition, this.pageWidth - this.margin, this.textLayout.yPosition);
+    this.textLayout.yPosition += 4;
+  }
+
+  private addWriteLines(count: number, x: number = this.margin, width?: number): void {
+    const lineWidth = width ?? this.contentWidth;
+    this.doc.setDrawColor(200, 200, 200);
+    this.doc.setLineWidth(0.2);
+    for (let i = 0; i < count; i++) {
+      this.textLayout.checkPageBreak(this.writeLineHeight);
+      this.doc.line(x, this.textLayout.yPosition, x + lineWidth, this.textLayout.yPosition);
+      this.textLayout.yPosition += this.writeLineHeight;
+    }
+  }
+
+  private addLabeledField(label: string, x: number, lineEndX: number, y?: number): void {
+    const drawY = y ?? this.textLayout.yPosition;
+    this.doc.setFontSize(8);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(0, 0, 0);
+    this.doc.text(label, x, drawY);
+    const labelWidth = this.doc.getTextWidth(label) + 1;
+    this.doc.setDrawColor(180, 180, 180);
+    this.doc.setLineWidth(0.3);
+    this.doc.line(x + labelWidth, drawY, lineEndX, drawY);
+  }
+
+  private getPageLayout(): WorkOrderPdfPageLayout {
+    return {
+      margin: this.margin,
+      pageWidth: this.pageWidth,
+      footerY: this.footerY,
+      qrSize: this.qrSize,
+    };
+  }
+
+  // ===================== IMAGE HANDLING =====================
+
+  private async fetchImageAsBase64(url: string): Promise<{ data: string; format: 'JPEG' | 'PNG' } | null> {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return null;
+
+      const blob = await response.blob();
+      const contentType = blob.type.toLowerCase();
+      if (!contentType) return null;
+
+      let format: 'JPEG' | 'PNG';
+      if (contentType.includes('png')) format = 'PNG';
+      else if (contentType.includes('jpeg') || contentType.includes('jpg')) format = 'JPEG';
+      else return null;
+
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve({ data: reader.result as string, format });
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  private async preloadImage(url: string): Promise<PreloadedImage | null> {
+    const imageData = await this.fetchImageAsBase64(url);
+    if (!imageData) return null;
+
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ ...imageData, width: img.width, height: img.height });
+      img.onerror = () => resolve(null);
+      img.src = imageData.data;
+    });
+  }
+
+  private embedImage(
+    image: PreloadedImage,
+    maxWidth: number,
+    maxHeight: number,
+    align: 'left' | 'center' | 'right' = 'center',
+    y?: number
+  ): { width: number; height: number } {
+    const aspectRatio = image.width / image.height;
+    let w = maxWidth;
+    let h = w / aspectRatio;
+    if (h > maxHeight) {
+      h = maxHeight;
+      w = h * aspectRatio;
+    }
+
+    let x: number;
+    switch (align) {
+      case 'left': x = this.margin; break;
+      case 'right': x = this.pageWidth - this.margin - w; break;
+      default: x = (this.pageWidth - w) / 2; break;
+    }
+
+    const drawY = y ?? this.textLayout.yPosition;
+
+    try {
+      this.doc.addImage(image.data, image.format, x, drawY, w, h);
+    } catch {
+      logger.warn('Failed to embed branding image in worksheet');
+    }
+
+    return { width: w, height: h };
+  }
+
+  // ===================== PAGE SECTIONS =====================
+
+  private generateHeader(
+    workOrder: WorkOrderForPDF,
+    organizationName?: string,
+    orgLogo?: PreloadedImage | null,
+    teamImage?: PreloadedImage | null
+  ): void {
+    // Team image in top-right corner (drawn first so header text doesn't overlap)
+    if (teamImage) {
+      this.embedImage(teamImage, 22, 16, 'right', this.textLayout.yPosition);
+    }
+
+    // Organization logo centered
+    if (orgLogo) {
+      const { height } = this.embedImage(orgLogo, 50, 18, 'center');
+      this.textLayout.yPosition += height + 3;
+    }
+
+    if (organizationName) {
+      this.doc.setFontSize(14);
+      this.doc.setFont('helvetica', 'bold');
+      const orgWidth = this.doc.getTextWidth(organizationName);
+      this.doc.text(organizationName, (this.pageWidth - orgWidth) / 2, this.textLayout.yPosition);
+      this.textLayout.yPosition += 7;
+    }
+
+    this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    const subtitle = 'FIELD WORKSHEET';
+    const subtitleWidth = this.doc.getTextWidth(subtitle);
+    this.doc.text(subtitle, (this.pageWidth - subtitleWidth) / 2, this.textLayout.yPosition);
+    this.textLayout.yPosition += 7;
+
+    this.doc.setFontSize(11);
+    this.doc.setFont('helvetica', 'bold');
+    const titleLines = this.doc.splitTextToSize(workOrder.title, this.contentWidth - 20);
+    for (const line of titleLines) {
+      const lineWidth = this.doc.getTextWidth(line);
+      this.doc.text(line, (this.pageWidth - lineWidth) / 2, this.textLayout.yPosition);
+      this.textLayout.yPosition += 6;
+    }
+
+    this.doc.setFontSize(9);
+    this.doc.setFont('helvetica', 'normal');
+    const statusLine = `WO: ${formatWorkOrderIdForPdf(workOrder.id)}  |  ${formatStatus(workOrder.status)}  |  Generated: ${this.pdfFormatDate(new Date())}`;
+    const statusWidth = this.doc.getTextWidth(statusLine);
+    this.doc.text(statusLine, (this.pageWidth - statusWidth) / 2, this.textLayout.yPosition);
+    this.textLayout.yPosition += 4;
+
+    this.addSeparator();
+  }
+
+  private generateDetailsSection(workOrder: WorkOrderForPDF): void {
+    this.addSectionHeader('Work Order Details');
+
+    const col1x = this.margin + 2;
+    const col2x = this.margin + this.contentWidth / 2;
+
+    this.textLayout.addText(`Created: ${this.pdfFormatDate(workOrder.created_date)}`, col1x, 9);
+    this.textLayout.yPosition -= this.lineHeight;
+    this.textLayout.addText(`Due: ${this.pdfFormatDate(workOrder.due_date)}`, col2x, 9);
+
+    this.textLayout.addText(`Priority: ${formatPriority(workOrder.priority)}`, col1x, 9);
+    this.textLayout.yPosition -= this.lineHeight;
+    const assignee = workOrder.assigneeName || workOrder.assignee_name || 'Unassigned';
+    this.textLayout.addText(`Assigned To: ${assignee}`, col2x, 9);
+
+    if (workOrder.teamName) {
+      this.textLayout.addText(`Team: ${workOrder.teamName}`, col1x, 9);
+    }
+    if (workOrder.estimated_hours) {
+      if (!workOrder.teamName) {
+        this.textLayout.addText(`Est. Hours: ${workOrder.estimated_hours}`, col1x, 9);
+      } else {
+        this.textLayout.yPosition -= this.lineHeight;
+        this.textLayout.addText(`Est. Hours: ${workOrder.estimated_hours}`, col2x, 9);
+      }
+    }
+
+    this.textLayout.yPosition += 2;
+  }
+
+  private generateEquipmentSection(equipment: EquipmentForPDF): void {
+    this.addSectionHeader('Equipment');
+
+    const col1x = this.margin + 2;
+    const col2x = this.margin + this.contentWidth / 2;
+
+    this.textLayout.addText(equipment.name, col1x, 10, 'bold');
+
+    if (equipment.manufacturer || equipment.model) {
+      if (equipment.manufacturer) {
+        this.textLayout.addText(`Mfr: ${equipment.manufacturer}`, col1x, 9);
+        if (equipment.model) {
+          this.textLayout.yPosition -= this.lineHeight;
+          this.textLayout.addText(`Model: ${equipment.model}`, col2x, 9);
+        }
+      } else if (equipment.model) {
+        this.textLayout.addText(`Model: ${equipment.model}`, col1x, 9);
+      }
+    }
+
+    if (equipment.serial_number) {
+      this.textLayout.addText(`S/N: ${equipment.serial_number}`, col1x, 9);
+    }
+
+    if (equipment.location) {
+      this.textLayout.addText(`Location: ${equipment.location}`, col1x, 9);
+    }
+
+    this.textLayout.yPosition += 2;
+  }
+
+  private generateDescriptionSection(description: string): void {
+    this.addSectionHeader('Description');
+    if (description) {
+      this.textLayout.addMultilineText(description, this.margin + 2, this.contentWidth - 4, 9);
+    } else {
+      this.textLayout.addText('No description provided.', this.margin + 2, 9);
+    }
+    this.textLayout.yPosition += 2;
+  }
+
+  // ===================== PM CHECKLIST =====================
+
+  private generateConditionLegend(): void {
+    this.textLayout.checkPageBreak(16);
+    this.doc.setDrawColor(100, 100, 100);
+    this.doc.setLineWidth(0.4);
+    this.doc.setFillColor(250, 250, 245);
+    this.doc.rect(this.margin, this.textLayout.yPosition - 3, this.contentWidth, 12, 'FD');
+
+    this.doc.setFontSize(7);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(0, 0, 0);
+    this.doc.text('CONDITION SCALE:', this.margin + 3, this.textLayout.yPosition);
+
+    this.doc.setFont('helvetica', 'normal');
+    const legendText = CONDITION_LEGEND.map(c => `${c.value} = ${c.label}`).join('   |   ');
+    this.doc.text(legendText, this.margin + 3, this.textLayout.yPosition + 5);
+
+    this.textLayout.yPosition += 14;
+  }
+
+  private drawPmChecklistSectionHeader(
+    section: string,
+    options: { pageBreakMin: number; yAdvance: number },
+  ): void {
+    this.textLayout.checkPageBreak(options.pageBreakMin);
+    this.doc.setFillColor(235, 235, 235);
+    this.doc.rect(this.margin, this.textLayout.yPosition - 3.5, this.contentWidth, 6, 'F');
+    this.doc.setFontSize(9);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(0, 0, 0);
+    this.doc.text(section, this.margin + 2, this.textLayout.yPosition);
+    this.textLayout.yPosition += options.yAdvance;
+  }
+
+  private getConditionBoxesWidth(): number {
+    const boxSize = 5;
+    const gap = 3;
+    return CONDITION_LEGEND.length * boxSize + (CONDITION_LEGEND.length - 1) * gap;
+  }
+
+  private getConditionBoxesX(): number {
+    return this.pageWidth - this.margin - this.getConditionBoxesWidth() - 4;
+  }
+
+  private drawConditionBoxes(x: number, y: number): void {
+    const boxSize = 5;
+    const gap = 3;
+    this.doc.setDrawColor(120, 120, 120);
+    this.doc.setLineWidth(0.3);
+    this.doc.setFontSize(7);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setTextColor(80, 80, 80);
+
+    for (let i = 0; i < CONDITION_LEGEND.length; i++) {
+      const condition = CONDITION_LEGEND[i];
+      const bx = x + i * (boxSize + gap);
+      this.doc.rect(bx, y - boxSize + 1, boxSize, boxSize);
+      const numStr = String(condition.value);
+      const numWidth = this.doc.getTextWidth(numStr);
+      this.doc.text(numStr, bx + (boxSize - numWidth) / 2, y - 0.5);
+    }
+
+    this.doc.setTextColor(0, 0, 0);
+  }
+
+  private parsePMChecklist(pmData: PreventativeMaintenance): PMChecklistItem[] {
+    try {
+      const rawData = pmData.checklist_data;
+      if (typeof rawData === 'string') return JSON.parse(rawData);
+      if (Array.isArray(rawData)) return rawData as unknown as PMChecklistItem[];
+    } catch (error) {
+      logger.error('Error parsing PM checklist data for worksheet:', error);
+    }
+    return [];
+  }
+
+  /**
+   * Compact summary page: every item on one line with condition boxes.
+   * Serves as a quick-reference checklist the technician can scan at a glance.
+   */
+  private generatePMSummaryPage(checklist: PMChecklistItem[]): void {
+    this.doc.addPage();
+    this.textLayout.yPosition = 20;
+
+    this.addSectionHeader('PM Checklist \u2014 Summary');
+    this.generateConditionLegend();
+
+    const sections = Array.from(new Set(checklist.map(item => item.section)));
+
+    for (const section of sections) {
+      this.drawPmChecklistSectionHeader(section, { pageBreakMin: 16, yAdvance: 5 });
+
+      const sectionItems = checklist.filter(item => item.section === section);
+
+      for (const item of sectionItems) {
+        this.textLayout.checkPageBreak(10);
+
+        this.doc.setDrawColor(120, 120, 120);
+        this.doc.setLineWidth(0.3);
+        this.doc.rect(this.margin + 2, this.textLayout.yPosition - 3.5, 4, 4);
+
+        this.doc.setFontSize(8);
+        this.doc.setFont('helvetica', 'normal');
+        this.doc.setTextColor(0, 0, 0);
+
+        const maxTitleWidth = this.contentWidth - this.getConditionBoxesWidth() - 14;
+        const truncatedTitle = this.doc.splitTextToSize(item.title, maxTitleWidth)[0] ?? item.title;
+        this.doc.text(truncatedTitle, this.margin + 8, this.textLayout.yPosition);
+
+        this.drawConditionBoxes(this.getConditionBoxesX(), this.textLayout.yPosition);
+
+        this.textLayout.yPosition += 6;
+      }
+
+      this.textLayout.yPosition += 1;
+    }
+  }
+
+  /**
+   * Detail pages: each item gets a title, condition boxes, and 5 blank
+   * writing lines so the technician has room for handwritten observations.
+   */
+  private generatePMDetailPages(checklist: PMChecklistItem[]): void {
+    this.doc.addPage();
+    this.textLayout.yPosition = 20;
+
+    this.addSectionHeader('PM Checklist \u2014 Detail');
+    this.generateConditionLegend();
+
+    const sections = Array.from(new Set(checklist.map(item => item.section)));
+    const notesLineCount = 5;
+    const itemHeight = 10 + 7 + notesLineCount * this.writeLineHeight + 4;
+
+    for (const section of sections) {
+      this.drawPmChecklistSectionHeader(section, { pageBreakMin: itemHeight + 8, yAdvance: 6 });
+
+      const sectionItems = checklist.filter(item => item.section === section);
+
+      for (const item of sectionItems) {
+        this.textLayout.checkPageBreak(itemHeight);
+
+        // Checkbox + title
+        this.doc.setDrawColor(120, 120, 120);
+        this.doc.setLineWidth(0.3);
+        this.doc.rect(this.margin + 2, this.textLayout.yPosition - 3.5, 4, 4);
+
+        this.doc.setFontSize(9);
+        this.doc.setFont('helvetica', 'normal');
+        this.doc.setTextColor(0, 0, 0);
+
+        const titleLines = this.doc.splitTextToSize(item.title, this.contentWidth - 12);
+        for (const titleLine of titleLines) {
+          this.doc.text(titleLine, this.margin + 8, this.textLayout.yPosition);
+          this.textLayout.yPosition += 5;
+        }
+
+        // Condition boxes
+        const conditionX = this.margin + 8;
+        this.doc.setFontSize(7);
+        this.doc.setFont('helvetica', 'bold');
+        this.doc.setTextColor(0, 0, 0);
+        this.doc.text('Condition:', conditionX, this.textLayout.yPosition);
+        this.drawConditionBoxes(conditionX + 18, this.textLayout.yPosition);
+        this.textLayout.yPosition += 7;
+
+        // 5 blank writing lines
+        this.addWriteLines(notesLineCount, this.margin + 8, this.contentWidth - 12);
+
+        this.textLayout.yPosition += 4;
+      }
+
+      this.textLayout.yPosition += 2;
+    }
+
+    // General PM notes
+    this.textLayout.checkPageBreak(35);
+    this.doc.setFontSize(9);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(0, 0, 0);
+    this.doc.text('General PM Notes:', this.margin + 2, this.textLayout.yPosition);
+    this.textLayout.yPosition += 5;
+    this.addWriteLines(3, this.margin + 2, this.contentWidth - 4);
+  }
+
+  private generatePMChecklistSection(pmData: PreventativeMaintenance): void {
+    const checklist = this.parsePMChecklist(pmData);
+
+    if (checklist.length === 0) {
+      this.textLayout.addText('No checklist items configured.', this.margin, 10);
+      return;
+    }
+
+    this.generatePMSummaryPage(checklist);
+    this.generatePMDetailPages(checklist);
+  }
+
+  // ===================== FIELD NOTES (dedicated pages) =====================
+
+  /**
+   * Full dedicated page of labor entry rows (Tech / Hours / Date + Task).
+   * Fills the printable area so the page is useful edge-to-edge on paper.
+   */
+  private generateLaborSummaryPage(): void {
+    this.doc.addPage();
+    this.textLayout.yPosition = 20;
+
+    this.addSectionHeader('Labor Summary');
+
+    const rowHeight = 15;
+    const availableHeight = this.pageHeight - this.textLayout.yPosition;
+    const rowCount = Math.floor(availableHeight / rowHeight);
+
+    for (let i = 0; i < rowCount; i++) {
+      const y = this.textLayout.yPosition;
+      const col1 = this.margin + 2;
+      const col2 = this.margin + 60;
+      const col3 = this.margin + 110;
+
+      this.addLabeledField('Tech:', col1, col1 + 50, y);
+      this.addLabeledField('Hours:', col2, col2 + 40, y);
+      this.addLabeledField('Date:', col3, this.pageWidth - this.margin, y);
+
+      this.textLayout.yPosition = y + 7;
+      this.addLabeledField('Task:', col1, this.pageWidth - this.margin, this.textLayout.yPosition);
+      this.textLayout.yPosition += 8;
+    }
+  }
+
+  /**
+   * Full dedicated page of parts/materials rows (Part / Qty / Part#).
+   * Fills the printable area so the page is useful edge-to-edge on paper.
+   */
+  private generatePartsMaterialsPage(): void {
+    this.doc.addPage();
+    this.textLayout.yPosition = 20;
+
+    this.addSectionHeader('Parts / Materials Used');
+
+    const rowHeight = this.writeLineHeight;
+    const availableHeight = this.pageHeight - this.textLayout.yPosition;
+    const rowCount = Math.floor(availableHeight / rowHeight);
+
+    for (let i = 0; i < rowCount; i++) {
+      const y = this.textLayout.yPosition;
+      const partEnd = this.margin + 95;
+      const qtyEnd = this.margin + 125;
+
+      this.addLabeledField('Part:', this.margin + 2, partEnd, y);
+      this.addLabeledField('Qty:', partEnd + 3, qtyEnd, y);
+      this.addLabeledField('Part#:', qtyEnd + 3, this.pageWidth - this.margin, y);
+
+      this.textLayout.yPosition = y + rowHeight;
+    }
+  }
+
+  // ===================== NOTES + SIGNATURE PAGE =====================
+
+  /**
+   * Dedicated full-page notes area with a signature and certification block
+   * anchored at the bottom. Layout order: half-width signature line with
+   * date signed on the same row, technician printed name, certification
+   * attestation, then a divider followed by re-entry fields for office use.
+   *
+   * When a technician is assigned to the work order their display name is
+   * prefilled on the printed name line; otherwise the line is left blank
+   * for manual entry.
+   */
+  private generateNotesPage(workOrder: WorkOrderForPDF): void {
+    this.doc.addPage();
+    this.textLayout.yPosition = 20;
+
+    this.addSectionHeader('Notes');
+
+    // Reserve space at the bottom for the certification/signature block + re-entry footer.
+    const signatureBlockHeight = 58;
+    const availableForLines = this.pageHeight - this.textLayout.yPosition - signatureBlockHeight;
+    const lineCount = Math.floor(availableForLines / this.writeLineHeight);
+
+    this.addWriteLines(lineCount, this.margin + 2, this.contentWidth - 4);
+
+    // ── Signature line + Date ──
+    this.textLayout.yPosition += 4;
+    const sigLineEnd = this.margin + this.contentWidth * 0.5;
+    this.doc.setDrawColor(60, 60, 60);
+    this.doc.setLineWidth(0.5);
+    this.doc.line(this.margin + 2, this.textLayout.yPosition, sigLineEnd, this.textLayout.yPosition);
+
+    const dateStartX = sigLineEnd + 12;
+    this.addLabeledField('Date Signed:', dateStartX, this.pageWidth - this.margin, this.textLayout.yPosition);
+
+    this.doc.setFontSize(7);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setTextColor(100, 100, 100);
+    this.doc.text('Technician Signature', this.margin + 2, this.textLayout.yPosition + 4);
+    this.doc.setTextColor(0, 0, 0);
+    this.textLayout.yPosition += 8;
+
+    // ── Printed Name ──
+    const assigneeName = workOrder.assigneeName ?? workOrder.assignee_name ?? null;
+
+    if (assigneeName) {
+      this.doc.setFontSize(8);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text('Technician Printed Name:', this.margin + 2, this.textLayout.yPosition);
+      const labelWidth = this.doc.getTextWidth('Technician Printed Name:') + 2;
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.text(assigneeName, this.margin + 2 + labelWidth, this.textLayout.yPosition);
+    } else {
+      this.addLabeledField('Technician Printed Name:', this.margin + 2, sigLineEnd, this.textLayout.yPosition);
+    }
+    this.textLayout.yPosition += 6;
+
+    // ── Certification attestation ──
+    this.doc.setFontSize(6.5);
+    this.doc.setFont('helvetica', 'italic');
+    this.doc.setTextColor(80, 80, 80);
+    this.doc.text(
+      'I certify that the foregoing work and observations are accurate to the best of my knowledge.',
+      this.margin + 2,
+      this.textLayout.yPosition,
+    );
+    this.doc.setTextColor(0, 0, 0);
+    this.textLayout.yPosition += 6;
+
+    // ── Divider before re-entry section ──
+    this.doc.setDrawColor(180, 180, 180);
+    this.doc.setLineWidth(0.3);
+    this.doc.line(this.margin, this.textLayout.yPosition, this.pageWidth - this.margin, this.textLayout.yPosition);
+    this.textLayout.yPosition += 12;
+
+    // ── Re-entry fields (same line, wider split for more writing room) ──
+    this.doc.setFontSize(7);
+    this.doc.setFont('helvetica', 'italic');
+    this.doc.setTextColor(120, 120, 120);
+
+    const reentryNameEnd = this.margin + this.contentWidth * 0.6;
+    this.addLabeledField('Entered into CEV.PhanTan By:', this.margin + 2, reentryNameEnd, this.textLayout.yPosition);
+    this.addLabeledField('Entry Date:', reentryNameEnd + 4, this.pageWidth - this.margin, this.textLayout.yPosition);
+
+    this.doc.setTextColor(0, 0, 0);
+  }
+
+  // ===================== PUBLIC API =====================
+
+  public async generateWorksheet(data: WorkOrderPDFData): Promise<jsPDF> {
+    const { workOrder, equipment, organizationName, pmData, exportDateSettings } = data;
+    this.exportDateSettings = exportDateSettings;
+
+    // Pre-load branding images (fail silently — text-only fallback)
+    const [orgLogo, teamImage] = await Promise.all([
+      data.organizationLogoUrl ? this.preloadImage(data.organizationLogoUrl) : Promise.resolve(null),
+      data.teamImageUrl ? this.preloadImage(data.teamImageUrl) : Promise.resolve(null),
+    ]);
+
+    // Page 1 — cover
+    this.generateHeader(workOrder, organizationName, orgLogo, teamImage);
+    this.generateDetailsSection(workOrder);
+
+    if (equipment) {
+      this.generateEquipmentSection(equipment);
+    }
+
+    this.generateDescriptionSection(workOrder.description);
+
+    // PM Checklist — summary page then detail pages
+    if (pmData && workOrder.has_pm) {
+      this.generatePMChecklistSection(pmData);
+    }
+
+    // Dedicated pages for labor and parts
+    this.generateLaborSummaryPage();
+    this.generatePartsMaterialsPage();
+
+    // Final page — blank ruled lines + signature
+    this.generateNotesPage(workOrder);
+    applyWorkOrderPdfPageChrome(this.doc, this.getPageLayout(), data, 'fieldWorksheet');
+
+    return this.doc;
+  }
+
+  public static async generateAndDownload(data: WorkOrderPDFData): Promise<void> {
+    try {
+      const generator = await WorkOrderFieldWorksheetPDFGenerator.create();
+      const pdf = await generator.generateWorksheet(data);
+
+      const safeTitle = data.workOrder.title
+        .replace(/[^a-z0-9]/gi, '-')
+        .replace(/-+/g, '-')
+        .slice(0, 50);
+      const dateStr = new Date().toISOString().split('T')[0];
+      const filename = `FieldWorksheet-${safeTitle}-${dateStr}.pdf`;
+
+      pdf.save(filename);
+    } catch (error) {
+      logger.error('Error generating field worksheet PDF:', error);
+      throw error;
+    }
+  }
+}
+
+export const generateFieldWorksheetPDF = WorkOrderFieldWorksheetPDFGenerator.generateAndDownload;
+

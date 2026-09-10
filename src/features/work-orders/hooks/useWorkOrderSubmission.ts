@@ -1,0 +1,137 @@
+
+
+import { useAsyncOperation } from '@/hooks/useAsyncOperation';
+import { useCreateWorkOrder } from '@/features/work-orders/hooks/useWorkOrderCreation';
+import { useUpdateWorkOrder, UpdateWorkOrderData } from '@/features/work-orders/hooks/useWorkOrderUpdate';
+import { useCreateHistoricalWorkOrder, HistoricalWorkOrderData } from '@/features/work-orders/hooks/useHistoricalWorkOrders';
+import type { WorkOrder as EnhancedWorkOrder } from '@/features/work-orders/types/workOrder';
+import { WorkOrderFormData } from './useWorkOrderForm';
+import { parseDue, persistDue } from '@/features/work-orders/calendar';
+import { buildCreateWorkOrderData } from '@/features/work-orders/utils/buildCreateWorkOrderData';
+import { dateToISOString } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+import {
+  synthesizeDefaultTimeline,
+} from '@/features/work-orders/utils/historicalTimeline';
+
+interface UseWorkOrderSubmissionProps {
+  workOrder?: EnhancedWorkOrder;
+  onSubmit?: (data: WorkOrderFormData) => void;
+  onSuccess: () => void;
+  /** Photos to attach after online work order create (create mode only) */
+  creationImages?: File[];
+}
+
+export const useWorkOrderSubmission = ({
+  workOrder,
+  onSubmit,
+  onSuccess,
+  creationImages = [],
+}: UseWorkOrderSubmissionProps) => {
+  
+  const navigate = useNavigate();
+  const isEditMode = !!workOrder;
+
+  // Always call hooks in the same order to avoid hook order violations
+  const createWorkOrderMutation = useCreateWorkOrder();
+  const updateWorkOrderMutation = useUpdateWorkOrder();
+  const createHistoricalWorkOrderMutation = useCreateHistoricalWorkOrder({
+    onSuccess: (createdWorkOrder) => {
+      navigate(`/dashboard/work-orders/${createdWorkOrder.id}`);
+      onSuccess();
+    }
+  });
+
+  const { execute: submitForm, isLoading: isSubmitting } = useAsyncOperation<
+    void,
+    [data: WorkOrderFormData]
+  >(
+    async (data) => {
+      const persistedDue = persistDue(parseDue({
+        dueDate: data.dueDate,
+        dueDateHasTime: data.dueDateHasTime,
+      }));
+
+      if (onSubmit) {
+        await onSubmit(data);
+        onSuccess();
+      } else if (isEditMode && workOrder) {
+        // Update existing work order
+        const updateData: UpdateWorkOrderData = {
+          title: data.title,
+          description: data.description,
+          priority: data.priority,
+          dueDate: persistedDue.dueDate ?? undefined,
+          dueDateHasTime: persistedDue.dueDateHasTime,
+          estimatedHours: data.estimatedHours || undefined,
+          hasPM: data.hasPM,
+        };
+        
+        await updateWorkOrderMutation.mutateAsync({
+          workOrderId: workOrder.id,
+          data: updateData
+        });
+        onSuccess();
+      } else if (data.isHistorical) {
+        // Create historical work order - handle UUID fields properly
+        const timelineEvents = data.historicalTimelineEvents && data.historicalTimelineEvents.length > 0
+          ? data.historicalTimelineEvents
+          : (data.historicalStartDate && data.status
+            ? synthesizeDefaultTimeline({
+                startDate: data.historicalStartDate,
+                finalStatus: data.status,
+                completedDate:
+                  data.status === 'completed' || data.status === 'cancelled'
+                    ? data.completedDate ?? null
+                    : null,
+                assigneeId: data.assigneeId ?? null,
+              })
+            : undefined);
+
+        const historicalData: HistoricalWorkOrderData = {
+          equipmentId: data.equipmentId,
+          title: data.title,
+          description: data.description,
+          priority: data.priority,
+          status: timelineEvents?.[timelineEvents.length - 1]?.newStatus ?? data.status ?? 'accepted',
+          historicalStartDate: dateToISOString(data.historicalStartDate) || '',
+          historicalNotes: data.historicalNotes || '',
+          // Simplified assignment: just pass the assigneeId (null = unassigned)
+          assigneeId: data.assigneeId || undefined,
+          teamId: undefined, // Work orders are not assigned to teams
+          dueDate: persistedDue.dueDate ?? undefined,
+          dueDateHasTime: persistedDue.dueDateHasTime,
+          completedDate: dateToISOString(data.completedDate) || undefined,
+          hasPM: data.hasPM || false,
+          pmStatus: 'pending',
+          pmCompletionDate: undefined,
+          pmNotes: '',
+          pmChecklistData: [],
+          timelineEvents,
+        };
+        
+        await createHistoricalWorkOrderMutation.mutateAsync(historicalData);
+        // Navigation and success handled by the hook's onSuccess callback
+      } else {
+        // Create new regular work order - handle UUID fields properly
+        const result = await createWorkOrderMutation.mutateAsync(
+          buildCreateWorkOrderData(data, creationImages),
+        );
+        // Close the dialog for offline queued creates (navigate stays on same page
+        // so dialog won't unmount by itself). For online creates the hook navigates
+        // to the new work order detail page which unmounts the dialog automatically.
+        if (result.queuedOffline) {
+          onSuccess();
+        }
+      }
+    }
+  );
+
+  const isLoading = isSubmitting || createWorkOrderMutation.isPending || updateWorkOrderMutation.isPending || createHistoricalWorkOrderMutation.isPending;
+
+  return {
+    submitForm,
+    isLoading,
+    isEditMode,
+  };
+};

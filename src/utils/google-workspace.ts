@@ -1,0 +1,127 @@
+/**
+ * Google Workspace utility functions.
+ * Shared logic for determining Google user status and onboarding requirements.
+ */
+
+import type { User } from '@supabase/supabase-js';
+
+/**
+ * Default consumer Google domains that don't support Workspace features.
+ * Users with these domains are personal accounts, not Workspace accounts.
+ */
+const DEFAULT_CONSUMER_GOOGLE_DOMAINS = [
+  'gmail.com',
+  'googlemail.com',
+] as const;
+
+/**
+ * Reads Node-style `process.env` when present (SSR, Edge, Vitest) without
+ * referencing the `process` global type (browser TS program excludes Node).
+ */
+function getNodeProcessEnv(): Record<string, string | undefined> | undefined {
+  const proc = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
+  return proc?.env;
+}
+
+/**
+ * Checks if code is running in a Node.js/server environment where process.env is available.
+ * In browser contexts, process is undefined and this returns false.
+ *
+ * @returns true if running in a server environment with process.env available, false otherwise
+ */
+function isServerEnvironment(): boolean {
+  return getNodeProcessEnv() !== undefined;
+}
+
+/**
+ * Load consumer Google domains, optionally extending with environment configuration.
+ * 
+ * Known regional variants (e.g., gmail.co.uk, googlemail.de) are intentionally excluded
+ * from defaults because:
+ * 1. Google has largely consolidated these to gmail.com
+ * 2. Historical regional variants are rare in practice
+ * 3. If encountered, they can be added via CONSUMER_GOOGLE_DOMAINS environment variable
+ * 
+ * **Environment Variable Extension (Server-Side Only)**:
+ * You can extend this list at runtime by setting a comma-separated list of
+ * domains in the CONSUMER_GOOGLE_DOMAINS environment variable (e.g.,
+ * "gmail.co.uk,googlemail.de"). These will be merged with the defaults.
+ * 
+ * **IMPORTANT - Server-Side Only**: The `process.env.CONSUMER_GOOGLE_DOMAINS` check
+ * only works in Node.js/server-side environments (Edge Functions, server-side rendering).
+ * In browser contexts (Vite builds), `process.env` is undefined and this environment
+ * variable extension will NOT work - only the default domains will apply.
+ * 
+ * **This function works in both browser and server environments.** The environment variable
+ * extension (`process.env.CONSUMER_GOOGLE_DOMAINS`) only works in server-side contexts
+ * (Edge Functions, SSR) where `process.env` is available. When bundled for the browser by Vite,
+ * `process.env` is not available at runtime, so only the default domains will be used regardless
+ * of environment variable settings.
+ * 
+ * For browser-based customization, consider:
+ * - Build-time configuration via Vite's `import.meta.env` (not `process.env`)
+ * - A server endpoint that returns the domain list
+ * - Updating the DEFAULT_CONSUMER_GOOGLE_DOMAINS array directly in code
+ */
+function loadConsumerGoogleDomains(): readonly string[] {
+  let configuredDomains: string[] = [];
+
+  // Allow deployments to extend the default list via environment variable.
+  // NOTE: This only works in Node.js/server-side environments (Edge Functions, SSR).
+  // In browser contexts (Vite builds), process.env is undefined and this block is skipped,
+  // meaning only DEFAULT_CONSUMER_GOOGLE_DOMAINS will be used.
+  if (isServerEnvironment()) {
+    const envValue = getNodeProcessEnv()?.CONSUMER_GOOGLE_DOMAINS;
+
+    if (envValue) {
+      const parsed = envValue
+        .split(',')
+        .map((domain) => domain.toLowerCase().trim())
+        .filter((domain) => domain.length > 0);
+
+      // Keep configured domains as-is; final deduplication on the combined array is sufficient
+      configuredDomains = parsed;
+    }
+  }
+
+  const combined = [
+    ...DEFAULT_CONSUMER_GOOGLE_DOMAINS,
+    ...configuredDomains,
+  ];
+
+  // Deduplicate while preserving order (in case defaults overlap with configured)
+  return Array.from(new Set(combined));
+}
+
+/**
+ * Consumer Google domains that don't support Workspace features.
+ * 
+ * Users with these domains are personal accounts, not Workspace accounts.
+ * This list can be extended at runtime via the CONSUMER_GOOGLE_DOMAINS environment variable,
+ * which should be a comma-separated list of domains (e.g., 'gmail.co.uk,googlemail.de').
+ * 
+ * @example
+ * // In production, extend via environment variable:
+ * // CONSUMER_GOOGLE_DOMAINS='gmail.co.uk,googlemail.de'
+ */
+export const CONSUMER_GOOGLE_DOMAINS = loadConsumerGoogleDomains();
+
+/**
+ * Check if an email domain is a consumer Google domain (not a Workspace domain).
+ */
+export function isConsumerGoogleDomain(domain: string | undefined | null): boolean {
+  if (!domain) return false;
+  const normalizedDomain = domain.toLowerCase().trim();
+  return CONSUMER_GOOGLE_DOMAINS.includes(normalizedDomain);
+}
+
+/**
+ * Check if a user authenticated via Google OAuth.
+ */
+export function isGoogleUser(user: User | null): boolean {
+  if (!user) return false;
+  const metadata = user.app_metadata || {};
+  const provider = metadata.provider as string | undefined;
+  const providers = (metadata.providers as string[]) || [];
+  return provider === 'google' || providers.includes('google');
+}

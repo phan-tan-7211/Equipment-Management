@@ -1,0 +1,155 @@
+// fallow-ignore-file code-duplication
+// Duplication rationale: Repository queries share org-scoped filter prelude
+import {
+  getOrganizationTeamsOptimized,
+  getTeamMembersOptimized,
+  getTeamMembersByTeamIdsOptimized,
+  getTeamByIdOptimized,
+  addTeamMember,
+  updateTeamMemberRole,
+  createTeamWithCreator as createTeamWithCreatorService,
+  deleteTeam as deleteTeamService,
+  updateTeam as updateTeamService
+} from '@/features/teams/services/teamService';
+import type { 
+  Team,
+  TeamWithMembers,
+  TeamMember,
+  TeamMemberInsert,
+  TeamMemberRole,
+  TeamInsert,
+  TeamUpdate
+} from '@/features/teams/types/team';
+
+function toTeamWithMembers(
+  team: Team,
+  members: TeamWithMembers['members'],
+): TeamWithMembers {
+  return {
+    ...team,
+    members,
+    member_count: team.member_count,
+    team_lead_id: team.team_lead_id ?? null,
+    preferred_view: team.preferred_view ?? 'internal',
+    override_equipment_location: team.override_equipment_location ?? false,
+    image_url: team.image_url ?? null,
+    customer_id: team.customer_id ?? null,
+    location_address: team.location_address ?? null,
+    location_city: team.location_city ?? null,
+    location_state: team.location_state ?? null,
+    location_country: team.location_country ?? null,
+    location_lat: team.location_lat ?? null,
+    location_lng: team.location_lng ?? null,
+  };
+}
+
+/**
+ * Unified Team Repository using optimized queries for better performance
+ * Provides a single interface for all team-related operations
+ */
+class TeamRepository {
+  /**
+   * Get teams by organization ID using optimized query with member counts
+   * Converts OptimizedTeam to TeamWithMembers format for compatibility
+   */
+  static async getTeamsByOrg(orgId: string): Promise<TeamWithMembers[]> {
+    const optimizedTeams = await getOrganizationTeamsOptimized(orgId);
+
+    if (optimizedTeams.length === 0) return [];
+
+    // Single batched member query keyed by team_id, instead of N parallel
+    // `getTeamMembersOptimized` calls. Cuts the team-list page from N+1
+    // round-trips to 2 on Slow 4G.
+    const teamIds = optimizedTeams.map((team) => team.id);
+    const membersByTeamId = await getTeamMembersByTeamIdsOptimized(orgId, teamIds);
+
+    return optimizedTeams.map((team) => {
+      const members = membersByTeamId.get(team.id) ?? [];
+      const formattedMembers = members.map((member) => ({
+        id: member.id,
+        team_id: member.team_id,
+        user_id: member.user_id,
+        role: member.role as TeamMemberRole,
+        joined_date: member.joined_date,
+        profiles: {
+          name: member.user_name || 'Unknown User',
+          email: member.user_email || 'No email',
+        },
+      }));
+
+      return toTeamWithMembers(team, formattedMembers);
+    });
+  }
+
+  /**
+   * Get team by ID with members
+   */
+  static async getTeamById(teamId: string, organizationId: string): Promise<TeamWithMembers | null> {
+    const team = await getTeamByIdOptimized(teamId, organizationId);
+    if (!team) return null;
+
+    const members = await getTeamMembersOptimized(teamId);
+    const formattedMembers = members.map(member => ({
+      id: member.id,
+      team_id: member.team_id,
+      user_id: member.user_id,
+      role: member.role as TeamMemberRole,
+      joined_date: member.joined_date,
+      profiles: {
+        name: member.user_name || 'Unknown User',
+        email: member.user_email || 'No email'
+      }
+    }));
+
+    return toTeamWithMembers(team, formattedMembers);
+  }
+
+  /**
+   * Get team members with profile information using optimized query
+   */
+  static async getTeamMembers(teamId: string): Promise<TeamMember[]> {
+    return getTeamMembersOptimized(teamId);
+  }
+
+  /**
+   * Add a member to a team with specified role
+   */
+  static async addMember(teamId: string, userId: string, role: TeamMemberRole) {
+    const memberData: TeamMemberInsert = {
+      team_id: teamId,
+      user_id: userId,
+      role: role
+    };
+    return addTeamMember(memberData);
+  }
+
+  /**
+   * Update a team member's role
+   */
+  static async updateMemberRole(teamId: string, userId: string, role: TeamMemberRole) {
+    return updateTeamMemberRole(teamId, userId, role);
+  }
+
+  /**
+   * Create a team with creator as manager
+   */
+  static async createTeamWithCreator(teamData: TeamInsert, creatorId: string) {
+    return createTeamWithCreatorService(teamData, creatorId);
+  }
+
+  /**
+   * Delete a team
+   */
+  static async deleteTeam(teamId: string, organizationId: string): Promise<void> {
+    return deleteTeamService(teamId, organizationId);
+  }
+
+  /**
+   * Update team information
+   */
+  static async updateTeam(teamId: string, updates: TeamUpdate, organizationId: string) {
+    return updateTeamService(teamId, updates, organizationId);
+  }
+}
+
+export default TeamRepository;

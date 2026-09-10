@@ -1,0 +1,239 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Bug } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+
+/**
+ * Test users from Supabase seed data / cloud preview quick-login seed.
+ * All use password: password123
+ *
+ * ⚠️ SECURITY WARNING ⚠️
+ * These credentials only work against non-production test Auth.
+ * This component is rendered only when either:
+ * - `import.meta.env.DEV === true` (local dev), or
+ * - `import.meta.env.VITE_PREVIEW_QUICK_LOGIN === 'true'` (preview-only cutover flag)
+ *
+ * In production builds (Vite), both env reads are statically replaced. When the
+ * preview flag is unset, the chrome stays hidden and the import boundary in
+ * `SignInForm.tsx` remains tree-shake friendly for production bundles.
+ *
+ * @see https://vitejs.dev/guide/env-and-mode.html#production-replacement
+ */
+export const DEV_USERS = [
+  // Apex Construction Company
+  { email: 'owner@apex.test', name: 'Alex Apex', role: 'Owner', org: 'Apex Construction' },
+  { email: 'admin@apex.test', name: 'Amanda Admin', role: 'Admin', org: 'Apex Construction' },
+  { email: 'tech@apex.test', name: 'Tom Technician', role: 'Technician', org: 'Apex Construction' },
+  { email: 'viewer@apex.test', name: 'Vera Viewer', role: 'Viewer', org: 'Apex Construction' },
+  // Metro Equipment Services
+  { email: 'owner@metro.test', name: 'Marcus Metro', role: 'Owner', org: 'Metro Equipment' },
+  { email: 'tech@metro.test', name: 'Mike Mechanic', role: 'Technician', org: 'Metro Equipment' },
+  // Valley Landscaping (Free tier)
+  { email: 'owner@valley.test', name: 'Victor Valley', role: 'Owner', org: 'Valley Landscaping (Free)' },
+  // Industrial Rentals Corp
+  { email: 'owner@industrial.test', name: 'Irene Industrial', role: 'Owner', org: 'Industrial Rentals' },
+  // Fresh onboarding org (no teams/equipment)
+  { email: 'owner@freshstart.test', name: 'Fresh Start Owner', role: 'Owner', org: 'Fresh Start Equipment' },
+  // Multi-org user
+  { email: 'multi@CEV.PhanTan.test', name: 'Multi Org User', role: 'Member', org: 'ALL Organizations' },
+  // Pending invitation signup (personal org only until accept)
+  {
+    email: 'e2e.invitee.pending@apex.test',
+    name: 'E2E Pending Invitee',
+    role: 'Owner',
+    org: 'Invitee Personal Workspace',
+  },
+] as const;
+
+type DevQuickLoginUser = (typeof DEV_USERS)[number];
+type DevQuickLoginGroup = {
+  label: string;
+  users: readonly DevQuickLoginUser[];
+};
+
+const USER_GROUP_DEFINITIONS = [
+  { label: 'Apex Construction (Premium)', org: 'Apex Construction' },
+  { label: 'Metro Equipment (Premium)', org: 'Metro Equipment' },
+  { label: 'Valley Landscaping (Free Tier)', org: 'Valley Landscaping (Free)' },
+  { label: 'Industrial Rentals (Premium)', org: 'Industrial Rentals' },
+  { label: 'Fresh Start (Onboarding)', org: 'Fresh Start Equipment' },
+  { label: 'Multi-Org Testing', org: 'ALL Organizations' },
+  { label: 'Invitation Signup (E2E)', org: 'Invitee Personal Workspace' },
+] as const satisfies ReadonlyArray<{
+  label: string;
+  org: DevQuickLoginUser['org'];
+}>;
+
+const PREVIEW_QA_USER_EMAILS = new Set([
+  'owner@apex.test',
+  'tech@apex.test',
+  'viewer@apex.test',
+  'owner@metro.test',
+] as const);
+
+const buildUserGroups = (users: readonly DevQuickLoginUser[]): DevQuickLoginGroup[] =>
+  USER_GROUP_DEFINITIONS.map(({ label, org }) => ({
+    label,
+    users: users.filter((user) => user.org === org),
+  })).filter((group) => group.users.length > 0);
+
+// Use env var if available, fallback to default for convenience
+// In .env.local: VITE_DEV_TEST_PASSWORD=password123
+const DEV_PASSWORD = import.meta.env.VITE_DEV_TEST_PASSWORD ?? 'password123';
+
+// Group users by organization for the dropdown.
+export const USER_GROUPS = buildUserGroups(DEV_USERS);
+
+export const PREVIEW_QA_USERS = DEV_USERS.filter(
+  (user) => PREVIEW_QA_USER_EMAILS.has(user.email) && user.role !== 'Member'
+);
+
+export const PREVIEW_QA_USER_GROUPS = buildUserGroups(PREVIEW_QA_USERS);
+
+export const getQuickLoginUserGroups = ({
+  isDev,
+  isPreviewQuickLoginEnabled,
+}: {
+  isDev: boolean;
+  isPreviewQuickLoginEnabled: boolean;
+}): DevQuickLoginGroup[] => {
+  if (!isDev && isPreviewQuickLoginEnabled) {
+    return PREVIEW_QA_USER_GROUPS;
+  }
+
+  return USER_GROUPS;
+};
+
+const DEV_QUICK_LOGIN_ENABLED =
+  import.meta.env.DEV || import.meta.env.VITE_PREVIEW_QUICK_LOGIN === 'true';
+
+/**
+ * Development-only quick login component.
+ * Allows selecting a test user from a dropdown to instantly sign in.
+ * This component is tree-shaken out of production builds.
+ */
+interface DevQuickLoginProps {
+  /** Surfaces failures in the main auth card (and toast via parent). */
+  onAuthFailure?: (message: string) => void;
+}
+
+const DevQuickLogin: React.FC<DevQuickLoginProps> = ({ onAuthFailure }) => {
+  const { signIn } = useAuth();
+  const [selectedEmail, setSelectedEmail] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const userGroups = getQuickLoginUserGroups({
+    isDev: import.meta.env.DEV,
+    isPreviewQuickLoginEnabled: import.meta.env.VITE_PREVIEW_QUICK_LOGIN === 'true',
+  });
+  const visibleUsers = userGroups.flatMap((group) => group.users);
+
+  if (!DEV_QUICK_LOGIN_ENABLED) {
+    return null;
+  }
+
+  const handleQuickLogin = async () => {
+    if (!selectedEmail || isLoading) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error: signInError } = await signIn(selectedEmail, DEV_PASSWORD);
+      if (signInError) {
+        setError(signInError.message);
+        onAuthFailure?.(signInError.message);
+      }
+    } catch (err) {
+      // Log detailed error for developers in development only, show generic message in UI
+      if (import.meta.env.DEV) {
+        console.error(
+          'DevQuickLogin sign-in failed. Make sure you have run `npx supabase db reset` to seed the database.',
+          err
+        );
+      }
+      const msg = 'Authentication failed. Please try again.';
+      setError(msg);
+      onAuthFailure?.(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const selectedUser = visibleUsers.find((user) => user.email === selectedEmail);
+
+  return (
+    <div className="rounded-lg border-2 border-dashed border-warning/50 bg-warning/10 p-4 dark:border-warning/50 dark:bg-warning/15">
+      <div className="mb-3 flex items-center gap-2 text-sm font-medium text-warning dark:text-warning">
+        <Bug className="h-4 w-4" />
+        <span>Dev Quick Login</span>
+      </div>
+
+      <div className="space-y-3">
+        <Select value={selectedEmail} onValueChange={setSelectedEmail}>
+          <SelectTrigger className="w-full bg-background" aria-label="Select a test account">
+            <SelectValue placeholder="Select a test account..." />
+          </SelectTrigger>
+          <SelectContent>
+            {userGroups.map((group) => (
+              <SelectGroup key={group.label}>
+                <SelectLabel>{group.label}</SelectLabel>
+                {group.users.map((user) => (
+                  <SelectItem key={user.email} value={user.email}>
+                    <span className="flex items-center gap-2">
+                      <span className="font-medium">{user.name}</span>
+                      <span className="text-muted-foreground">({user.role})</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {selectedUser && (
+          <p className="text-xs text-muted-foreground">
+            Logging in as <strong>{selectedUser.email}</strong>
+          </p>
+        )}
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full border-warning/50 hover:bg-warning/20 dark:border-warning/50 dark:hover:bg-warning/25"
+          onClick={handleQuickLogin}
+          disabled={!selectedEmail || isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Signing in...
+            </>
+          ) : (
+            'Quick Login'
+          )}
+        </Button>
+
+        {error && (
+          <Alert variant="destructive" className="mt-2">
+            <AlertDescription className="text-xs">{error}</AlertDescription>
+          </Alert>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default DevQuickLogin;
+
+

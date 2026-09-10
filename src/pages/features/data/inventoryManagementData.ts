@@ -1,0 +1,142 @@
+import {
+  PackageCheck,
+  AlertTriangle,
+  Link2,
+  ListChecks,
+  History,
+  Settings2,
+  Warehouse,
+} from 'lucide-react';
+import { landingImage } from '@/lib/landingImage';
+import type { Benefit, Capability, FeaturePageContent, ImageScreenshot, Step } from './featurePageTypes';
+
+export type { Benefit, Capability, Step } from './featurePageTypes';
+export type Screenshot = ImageScreenshot;
+
+export const heroIcon = Warehouse;
+
+export const content: FeaturePageContent = {
+  benefitsTitle: 'Parts on hand before the job starts',
+  benefitsDescription:
+    'Track stock, receipts, and issues. Link parts to machines so techs pull the right item on the work order.',
+  capabilitiesTitle: 'What inventory tracks',
+  capabilitiesDescription:
+    'Catalog, transactions, compatibility, and low-stock alerts in one place.',
+  stepsTitle: 'How it works',
+  stepsDescription:
+    'Receive parts, issue them on a work order, and reorder when stock drops.',
+  stepsClassName: 'bg-muted/30',
+  showcaseTitle: 'Parts inventory',
+  showcaseDescription: 'Stock levels, thresholds, and transaction history on each item.',
+  ctaTitle: 'Add the first parts',
+  ctaDescription:
+    'Create a free account and start tracking stock on the next job.',
+  ctaPrimaryText: 'Add the first parts',
+};
+
+export const capabilities: Capability[] = [
+  {
+    name: 'Parts Catalog',
+    description: 'Maintain a central catalog of parts and supplies with part numbers, descriptions, and preferred vendors.',
+    icon: ListChecks,
+  },
+  {
+    name: 'Transaction History',
+    description: 'Track every receipt, issue, and adjustment with a full audit trail. Know who moved what and when.',
+    icon: History,
+  },
+  {
+    name: 'Compatibility Rules',
+    description: 'Define which parts fit which equipment. Link inventory items to specific makes, models, or equipment types.',
+    icon: Link2,
+  },
+  {
+    name: 'Low Stock Alerts',
+    description: 'Set minimum quantities and get notified when stock falls below threshold. Reorder before the next job stalls.',
+    icon: AlertTriangle,
+  },
+  {
+    name: 'Equipment Linking',
+    description: 'Associate inventory items with equipment for quick lookup during work orders and PM tasks.',
+    icon: Settings2,
+  },
+];
+
+export const benefits: Benefit[] = [
+  {
+    icon: PackageCheck,
+    iconColor: 'success',
+    title: 'What is on the shelf',
+    subtitle: 'Receipts, issues, and current qty',
+    description:
+      'Track quantities across locations with every receipt, issue, and adjustment recorded. View current stock at a glance and drill into transaction history for any item.',
+    benefits: ['Live quantity updates', 'Transaction audit trail', 'Multi-location support'],
+    benefitColor: 'success',
+  },
+  {
+    icon: AlertTriangle,
+    iconColor: 'warning',
+    title: 'Low Stock Alerts',
+    subtitle: 'Reorder before the job stalls',
+    description:
+      'Set minimum quantities per item and get notified when stock falls below threshold. Reorder before downtime. Hook the alert into your replenishment workflow.',
+    benefits: ['Custom thresholds', 'In-app notifications', 'Reorder visibility'],
+    benefitColor: 'warning',
+  },
+  {
+    icon: Link2,
+    iconColor: 'info',
+    title: 'Which parts fit this machine',
+    subtitle: 'Link parts to equipment',
+    description:
+      'Define which parts fit which equipment via compatibility rules. Technicians see only relevant inventory when working on a unit, and work orders can consume linked parts with one click.',
+    benefits: ['Make/model rules', 'Equipment-specific parts', 'Work order integration'],
+    benefitColor: 'info',
+  },
+];
+
+export const steps: Step[] = [
+  {
+    number: 1,
+    title: 'Add Inventory Items',
+    description:
+      'Create items with part numbers, descriptions, and optional min/max quantities. Organize with categories or custom fields to match your catalog structure.',
+  },
+  {
+    number: 2,
+    title: 'Record Transactions',
+    description:
+      'Log receipts when stock arrives, issues when parts are used, and adjustments for counts or corrections. Every change is tracked with timestamp and user.',
+  },
+  {
+    number: 3,
+    title: 'Link to Equipment',
+    description:
+      'Define compatibility rules so the right parts show up for each equipment type. Use Part Lookup and alternates when creating work orders to pull from inventory quickly.',
+  },
+  {
+    number: 4,
+    title: 'Stay Ahead of Stockouts',
+    description:
+      'Rely on low-stock alerts to reorder before you run out. View dashboards and reports to analyze usage patterns and plan replenishment.',
+  },
+];
+
+export const showcases: Screenshot[] = [
+  {
+    kind: 'image',
+    imageUrl: landingImage('inventory-list-2026-04.webp'),
+    imageAlt: 'Inventory list view showing parts with stock levels, SKUs, and low stock indicators',
+    title: 'Inventory List View',
+    description:
+      'Browse all inventory items with part numbers, descriptions, current stock levels, and low-stock indicators. Filter, sort, and search to find what you need quickly.',
+  },
+  {
+    kind: 'image',
+    imageUrl: landingImage('inventory-item-detail-2026-04.webp'),
+    imageAlt: 'Inventory item detail page showing stock quantity, threshold, unit cost, and transaction history tabs',
+    title: 'Item Detail & Stock Information',
+    description:
+      'Open any item to see full details: quantity on hand, low stock threshold, unit cost, compatibility rules, and a complete transaction history. Adjust stock and add receipts from one place.',
+  },
+];

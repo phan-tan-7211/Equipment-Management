@@ -1,0 +1,166 @@
+import { test, expect } from '@playwright/test';
+import { evidenceScreenshot, evidencePause } from './shared/evidence-helpers';
+import { startDocsDistCspServer, type DocsCspServer } from './shared/docs-csp-server';
+
+/**
+ * Issue #1147 — CEV.PhanTan.info served a front page whose links, theme toggle,
+ * and hero button did nothing because the production CSP (script-src 'self')
+ * blocked the inline scripts VitePress needs to hydrate. The site also had no
+ * CEV.PhanTan branding (no nav logo, no hero logo, favicon 404).
+ *
+ * Issue #1158 — the sha256-hash CSP from #1147 drifted as soon as any doc page
+ * changed (VitePress regenerates its inline __VP_HASH_MAP__ bootstrap), because
+ * Vercel serves headers from the committed vercel.json, not the build output.
+ * The build now externalizes all inline scripts to /assets/inline.*.js
+ * (dev/docs/externalize-docs-inline-scripts.mjs) so the CSP stays a static
+ * script-src 'self' that can never drift.
+ *
+ * Issue #1358 — VitePress theme mirrors Mission Control tokens from the app,
+ * force-dark appearance (no light toggle), CEV.PhanTan (+ Docs) wordmark, and
+ * Open App as a primary CTA so the help center reads as the same product family.
+ *
+ * This spec serves the built docs through the exact CSP shipped in
+ * docs/vercel.json and proves hydration, navigation, branding assets, and
+ * #1358 design-system alignment under that policy.
+ */
+test.describe.serial('Help Center CSP hydration and branding @pr-evidence', () => {
+  let docsServer: DocsCspServer;
+  const cspViolations: string[] = [];
+
+  test.beforeAll(async () => {
+    docsServer = await startDocsDistCspServer();
+  });
+
+  test.afterAll(async () => {
+    await docsServer?.close();
+  });
+
+  test('homepage hydrates under production CSP with CEV.PhanTan branding', async ({ page }) => {
+    page.on('console', (message) => {
+      if (message.type() === 'error' && /content security policy/i.test(message.text())) {
+        cspViolations.push(message.text());
+      }
+    });
+
+    await page.goto(`${docsServer.baseUrl}/`);
+
+    // Hydration proof: VitePress site data (an inline script the old CSP
+    // blocked) must be present and the Vue app must have mounted.
+    await page.waitForFunction(() => {
+      const app = document.querySelector('#app') as (Element & { __vue_app__?: unknown }) | null;
+      return Boolean(app?.__vue_app__);
+    });
+
+    // Branding proof: nav logo + hero logo render from /eqr-logo/icon.svg.
+    const navLogo = page.locator('.VPNavBarTitle img.logo');
+    await expect(navLogo).toBeVisible();
+    await expect(navLogo).toHaveAttribute('src', /eqr-logo\/icon\.svg/);
+    await expect(page.locator('.VPHero .VPImage')).toBeVisible();
+
+    // #1358 — product wordmark (CEV.PhanTan), not "CEV.PhanTan Help" as primary title.
+    await expect(page.locator('.VPNavBarTitle .title')).toContainText('CEV.PhanTan');
+    await expect(page.locator('.VPHero .name')).toHaveText(/CEV.PhanTan/i);
+    await expect(page.locator('html')).toHaveClass(/dark/);
+
+    // Assert the source Mission Control token (stable HSL components).
+    const eqrPrimary = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--eqr-primary').trim(),
+    );
+    expect(eqrPrimary).toBe('258 100% 81%');
+
+    // Brand button resolves --vp-c-brand-1 / --eqr-primary (browser HSL→RGB may vary slightly).
+    const brandColors = await page.locator('.VPButton.brand').first().evaluate((el) => {
+      const actual = getComputedStyle(el).backgroundColor;
+      const primary = getComputedStyle(document.documentElement)
+        .getPropertyValue('--eqr-primary')
+        .trim();
+      const probe = document.createElement('div');
+      probe.style.backgroundColor = `hsl(${primary})`;
+      document.body.appendChild(probe);
+      const expected = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return { actual, expected };
+    });
+    expect(brandColors.actual).toBe(brandColors.expected);
+
+    // Open App CTA uses primary button treatment (desktop menu or mobile screen).
+    const openAppDesktop = page.locator('.VPNavBarMenuLink[href^="https://CEV.PhanTan.app"]');
+    const openAppMobile = page.locator('.VPNavScreenMenuLink[href^="https://CEV.PhanTan.app"]');
+    if (await openAppDesktop.isVisible()) {
+      await expect(openAppDesktop).toHaveCSS('font-weight', /^(600|bold)$/);
+    } else {
+      await page.locator('.VPNavBarHamburger').click();
+      await expect(openAppMobile).toBeVisible();
+      await expect(openAppMobile).toHaveCSS('font-weight', /^(600|bold)$/);
+      // Close the screen so later homepage screenshots stay clean.
+      await page.locator('.VPNavBarHamburger').click();
+    }
+
+    await evidencePause(page, 600);
+    const brand = page.getByRole('link', { name: /CEV.PhanTan/i }).first();
+    await expect(brand).toBeVisible();
+    await evidenceScreenshot(page, '01-homepage-branded-and-hydrated', { target: brand });
+
+    expect(cspViolations).toEqual([]);
+  });
+
+  test('favicon and logo assets are served', async ({ request }) => {
+    const favicon = await request.get(`${docsServer.baseUrl}/favicon.ico`);
+    expect(favicon.status()).toBe(200);
+
+    const logo = await request.get(`${docsServer.baseUrl}/eqr-logo/icon.svg`);
+    expect(logo.status()).toBe(200);
+    expect(logo.headers()['content-type']).toContain('image/svg+xml');
+  });
+
+  test('feature cards, hero button, and force-dark chrome work under production CSP', async ({
+    page,
+  }) => {
+    await page.goto(`${docsServer.baseUrl}/`);
+
+    // "Get oriented" feature card — the exact dead link from issue #1147.
+    // VPFeature cards compute an empty accessible name, so target by href.
+    await page.locator('a.VPFeature[href="/support/start-here/"]').click();
+    await expect(page).toHaveURL(/\/support\/start-here\/$/);
+    await expect(page.getByRole('heading', { name: /start here/i }).first()).toBeVisible();
+    await evidencePause(page, 600);
+    await evidenceScreenshot(page, '02-get-oriented-card-navigates', {
+      target: page.getByRole('heading', { name: /start here/i }).first(),
+    });
+
+    // Hero call-to-action from the homepage.
+    await page.goto(`${docsServer.baseUrl}/`);
+    await page.getByRole('link', { name: 'Browse Help Center' }).click();
+    await expect(page).toHaveURL(/\/support\/$/);
+    await expect(
+      page.getByRole('heading', { name: /CEV.PhanTan help center/i }).first(),
+    ).toBeVisible();
+    await evidencePause(page, 600);
+    await evidenceScreenshot(page, '03-browse-help-center-navigates', {
+      target: page.getByRole('heading', { name: /CEV.PhanTan help center/i }).first(),
+    });
+
+    // force-dark: appearance switch is not offered (Mission Control is dark-only).
+    await expect(page.locator('.VPSwitchAppearance')).toHaveCount(0);
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    const helpCenterHeading = page
+      .getByRole('heading', { name: /CEV.PhanTan help center/i })
+      .first();
+    await expect(helpCenterHeading).toBeVisible();
+    await evidencePause(page, 600);
+    await evidenceScreenshot(page, '04-force-dark-no-appearance-toggle', {
+      target: helpCenterHeading,
+    });
+
+    // #1358 — article chrome (sidebar + doc) under Mission Control tokens.
+    await page.goto(`${docsServer.baseUrl}/support/start-here/`);
+    const startHereHeading = page.getByRole('heading', { name: /start here/i }).first();
+    await expect(startHereHeading).toBeVisible();
+    await expect(page.locator('.VPSidebar')).toBeVisible();
+    await evidencePause(page, 600);
+    await evidenceScreenshot(page, '05-article-chrome-mission-control', {
+      target: startHereHeading,
+    });
+  });
+});
+

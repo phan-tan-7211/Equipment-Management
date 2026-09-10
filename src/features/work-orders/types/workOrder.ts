@@ -1,0 +1,349 @@
+/**
+ * Work Order Types - Consolidated type definitions
+ * 
+ * This file serves as the single source of truth for work order types.
+ * Import from here instead of defining types locally in components/hooks.
+ */
+
+import { Tables } from '@/integrations/supabase/types';
+import type { EffectiveLocation } from '@/utils/effectiveLocation';
+
+// ============================================
+// Core Status and Priority Types
+// ============================================
+
+export type WorkOrderStatus = 'submitted' | 'accepted' | 'assigned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled';
+export type WorkOrderPriority = 'low' | 'medium' | 'high';
+const QUICKBOOKS_INVOICE_STATUSES = [
+  'draft',
+  'sent',
+  'viewed',
+  'paid',
+  'partially_paid',
+  'overdue',
+  'voided',
+] as const;
+export type QuickBooksInvoiceStatus = (typeof QUICKBOOKS_INVOICE_STATUSES)[number];
+
+const QUICKBOOKS_INVOICE_STATUS_SET: ReadonlySet<string> = new Set(QUICKBOOKS_INVOICE_STATUSES);
+
+export function isQuickBooksInvoiceStatus(
+  status: string | null | undefined,
+): status is QuickBooksInvoiceStatus {
+  return typeof status === 'string' && QUICKBOOKS_INVOICE_STATUS_SET.has(status);
+}
+
+export function toQuickBooksInvoiceStatus(
+  status: string | null | undefined,
+): QuickBooksInvoiceStatus | null {
+  return isQuickBooksInvoiceStatus(status) ? status : null;
+}
+
+// ============================================
+// Base Database Type
+// ============================================
+
+/**
+ * Work order row as stored in the database (snake_case)
+ * This is the raw Supabase table type.
+ */
+export type WorkOrderRow = Tables<'work_orders'>;
+
+// ============================================
+// Primary Work Order Type (Unified)
+// ============================================
+
+/**
+ * WorkOrder - The primary unified type for work orders.
+ * 
+ * Extends the database row type with computed fields from joins.
+ * Use this type throughout the application for work order data.
+ * 
+ * Base fields (snake_case from database):
+ * - id, title, description, equipment_id, organization_id
+ * - priority, status, assignee_id, assignee_name, team_id
+ * - created_by, created_by_admin, created_by_name, created_date
+ * - due_date, estimated_hours, completed_date, acceptance_date
+ * - updated_at, is_historical, historical_start_date, historical_notes
+ * - has_pm, pm_required
+ * 
+ * Computed fields (camelCase from joins):
+ * - assigneeName, teamName, equipmentName
+ * - equipmentTeamId, equipmentTeamName, createdByName
+ */
+/**
+ * Subset of the equipment row exposed on `WorkOrder.equipment` via the
+ * embedded join in `WORK_ORDER_SELECT`. Mirrors `Tables<'equipment'>` for the
+ * fields work-order detail consumers actually read, so they don't have to fan
+ * out a second `useEquipmentById` round-trip just to display them on Slow 4G.
+ */
+export interface WorkOrderEmbeddedEquipment {
+  id: string;
+  organization_id: string;
+  name: string;
+  manufacturer: string | null;
+  model: string | null;
+  serial_number: string | null;
+  status: 'active' | 'maintenance' | 'inactive';
+  working_hours: number | null;
+  image_url: string | null;
+  team_id: string | null;
+  location: string | null;
+  customer_id: string | null;
+  default_pm_template_id: string | null;
+  custom_attributes: Record<string, unknown> | null;
+  use_team_location: boolean | null;
+  last_known_location: { latitude?: number; longitude?: number; name?: string } | null;
+  assigned_location_lat: number | null;
+  assigned_location_lng: number | null;
+  assigned_location_street: string | null;
+  assigned_location_city: string | null;
+  assigned_location_state: string | null;
+  assigned_location_country: string | null;
+  team: {
+    id: string;
+    name: string;
+    description?: string;
+    override_equipment_location?: boolean;
+    location_lat?: number | null;
+    location_lng?: number | null;
+    location_address?: string | null;
+    location_city?: string | null;
+    location_state?: string | null;
+    location_country?: string | null;
+  } | null;
+}
+
+export interface WorkOrder extends WorkOrderRow {
+  quickbooksInvoiceId?: string | null;
+  quickbooksInvoiceNumber?: string | null;
+  quickbooksInvoiceEnvironment?: 'sandbox' | 'production' | null;
+  invoiceStatus?: QuickBooksInvoiceStatus | null;
+  invoiceSentAt?: string | null;
+  invoicePaidAt?: string | null;
+  invoiceBalanceCents?: number | null;
+  invoiceDueDate?: string | null;
+  invoiceLastSyncedAt?: string | null;
+  // Computed fields from joins (camelCase for React conventions)
+  assigneeName?: string;
+  teamName?: string;
+  equipmentName?: string;
+  equipmentManufacturer?: string;
+  equipmentModel?: string;
+  equipmentSerialNumber?: string;
+  equipmentWorkingHours?: number | null;
+  equipmentImageUrl?: string | null;
+  equipmentTeamId?: string;
+  equipmentTeamName?: string;
+  createdByName?: string;
+  createdByAvatarUrl?: string | null;
+  // Assignment object for component compatibility
+  assignedTo?: { id: string; name: string; avatarUrl?: string | null } | null;
+  // Resolved location from hierarchy (scan > manual assignment > legacy > team fallback)
+  effectiveLocation?: EffectiveLocation | null;
+  // Team details from equipment join
+  team?: {
+    id: string;
+    name: string;
+    description?: string;
+    location_address?: string | null;
+    location_city?: string | null;
+    location_state?: string | null;
+    location_country?: string | null;
+    location_lat?: number | null;
+    location_lng?: number | null;
+  } | null;
+  /** Embedded equipment record from the work-order join. */
+  equipment?: WorkOrderEmbeddedEquipment | null;
+}
+
+/**
+ * @deprecated Use WorkOrder instead
+ * Alias for backward compatibility with components using EnhancedWorkOrder
+ */
+export type EnhancedWorkOrder = WorkOrder;
+
+/**
+ * @deprecated Use WorkOrder instead
+ * Alias for backward compatibility
+ */
+export type EnhancedWorkOrderData = WorkOrder;
+
+// ============================================
+// Filter Types (Service Layer)
+// ============================================
+
+/**
+ * Filters for querying work orders via WorkOrderService
+ */
+export interface WorkOrderServiceFilters {
+  status?: WorkOrder['status'] | 'all';
+  priority?: WorkOrder['priority'] | 'all';
+  assigneeId?: string | 'unassigned' | 'all';
+  teamId?: string | 'all';
+  equipmentId?: string;
+  dueDateFilter?: 'overdue' | 'today' | 'this_week';
+  invoiceFilter?: 'paid' | 'unpaid' | 'overdue' | 'not_exported' | 'all';
+  search?: string;
+  // Team-based access control
+  userTeamIds?: string[];
+  isOrgAdmin?: boolean;
+}
+
+// ============================================
+// Filter Types (UI Layer)
+// ============================================
+
+/**
+ * UI filter state for work order list components
+ */
+export interface WorkOrderFilters {
+  searchQuery: string;
+  statusFilter: string;
+  assigneeFilter: string;
+  teamFilter: string;
+  priorityFilter: string;
+  dueDateFilter: string;
+  invoiceFilter: string;
+}
+
+// ============================================
+// Work Order Data Types (UI-Normalized)
+// ============================================
+
+/**
+ * Normalized work order data for UI components
+ * Uses camelCase for consistency with React conventions
+ * 
+ * Use this when you need a camelCase-only representation,
+ * otherwise prefer using WorkOrder directly.
+ */
+export interface WorkOrderData {
+  id: string;
+  title: string;
+  description: string;
+  equipmentId: string;
+  organizationId: string;
+  priority: WorkOrderPriority;
+  status: WorkOrderStatus;
+  assigneeId?: string;
+  assigneeName?: string;
+  teamId?: string;
+  teamName?: string;
+  createdDate: string;
+  /** @deprecated Use createdDate instead */
+  created_date: string;
+  dueDate?: string;
+  estimatedHours?: number;
+  completedDate?: string;
+  equipmentName?: string;
+  equipmentManufacturer?: string;
+  equipmentModel?: string;
+  equipmentSerialNumber?: string;
+  equipmentWorkingHours?: number | null;
+  equipmentImageUrl?: string | null;
+  createdByName?: string;
+  createdBy?: string;
+  equipmentTeamId?: string;
+  equipmentTeamName?: string;
+  hasPM?: boolean;
+  pmRequired?: boolean;
+  isHistorical?: boolean;
+  quickbooksInvoiceId?: string | null;
+  quickbooksInvoiceNumber?: string | null;
+  quickbooksInvoiceEnvironment?: 'sandbox' | 'production' | null;
+  invoiceStatus?: QuickBooksInvoiceStatus | null;
+  invoiceSentAt?: string | null;
+  invoicePaidAt?: string | null;
+  invoiceBalanceCents?: number | null;
+  invoiceDueDate?: string | null;
+  invoiceLastSyncedAt?: string | null;
+  quickbooks_invoice_id?: string | null;
+  invoice_status?: QuickBooksInvoiceStatus | null;
+}
+
+// ============================================
+// Create/Update Data Types
+// ============================================
+
+export interface WorkOrderCreateData {
+  title: string;
+  description: string;
+  equipment_id: string;
+  priority: WorkOrder['priority'];
+  status?: WorkOrder['status'];
+  assignee_id?: string;
+  team_id?: string;
+  due_date?: string;
+  due_date_has_time?: boolean;
+  estimated_hours?: number;
+  created_by: string;
+  is_historical?: boolean;
+  historical_start_date?: string;
+  historical_notes?: string;
+  has_pm?: boolean;
+}
+
+export interface WorkOrderUpdateData {
+  title?: string;
+  description?: string;
+  equipment_id?: string;
+  priority?: WorkOrder['priority'];
+  status?: WorkOrder['status'];
+  assignee_id?: string | null;
+  team_id?: string | null;
+  due_date?: string | null;
+  due_date_has_time?: boolean;
+  estimated_hours?: number | null;
+  completed_date?: string | null;
+}
+
+// ============================================
+// UI State Types
+// ============================================
+
+export interface WorkOrderAcceptanceModalState {
+  open: boolean;
+  workOrder: WorkOrderData | null;
+}
+
+// ============================================
+// Note Types
+// ============================================
+
+export interface WorkOrderNote {
+  id: string;
+  work_order_id: string;
+  author_id: string;
+  content: string;
+  hours_worked: number;
+  is_private: boolean;
+  created_at: string;
+  updated_at: string;
+  author_name?: string;
+  images?: WorkOrderImage[];
+}
+
+export interface WorkOrderNoteCreateData {
+  content: string;
+  hours_worked?: number;
+  is_private?: boolean;
+}
+
+// ============================================
+// Image Types
+// ============================================
+
+export interface WorkOrderImage {
+  id: string;
+  work_order_id: string;
+  note_id?: string | null;
+  file_name: string;
+  file_url: string;
+  file_size?: number | null;
+  mime_type?: string | null;
+  description?: string | null;
+  uploaded_by: string;
+  created_at: string;
+  uploaded_by_name?: string;
+}

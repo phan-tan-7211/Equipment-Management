@@ -1,0 +1,129 @@
+name: Production Release Readiness
+
+# After a merge to `main`, applies pending Supabase migrations to the production
+# project, verifies production schema_migrations alignment (strict drift check),
+# waits until the Vercel deployment for the same commit is READY, promotes
+# that deployment so CEVphantan.app serves the new build, then deploys Edge
+# Functions last so an earlier failure cannot leave production edge ahead of
+# the promoted frontend.
+#
+# Required 1Password fields (CEVphantan Agents vault), loaded via OP_SERVICE_ACCOUNT_TOKEN:
+#   - supabase-write / SUPABASE_ACCESS_TOKEN
+#   - supabase-write / prod_db_password  (production DB password for `supabase link`)
+#   - vercel-write / VERCEL_TOKEN         (Vercel token for deployment polling + promote)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SUPABASE_PROJECT_REF: ymxkzronkhwxzcdcbnwq
+
+jobs:
+  production-release-readiness:
+    name: Migrate, verify schema, promote Vercel, deploy edge
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24'
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520
+        with:
+          version: 2.72.8
+
+      - name: Load release secrets from 1Password
+        uses: ./.github/actions/load-1p-secrets
+        with:
+          required: 'true'
+        env:
+          SUPABASE_ACCESS_TOKEN: op://CEVphantan Agents/supabase-write/SUPABASE_ACCESS_TOKEN
+          SUPABASE_DB_PASSWORD: op://CEVphantan Agents/supabase-write/prod_db_password
+          VERCEL_TOKEN: op://CEVphantan Agents/vercel-write/VERCEL_TOKEN
+
+      - name: Verify secrets resolved
+        shell: bash
+        run: |
+          set -euo pipefail
+          fail=0
+          for var in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD VERCEL_TOKEN; do
+            val="${!var:-}"
+            if [[ -z "$val" ]] || [[ "$val" == op://* ]]; then
+              echo "::error title=production-release-readiness::$var is empty or unresolved — check 1Password item fields and OP_SERVICE_ACCOUNT_TOKEN."
+              fail=1
+            fi
+          done
+          if [[ "$fail" -ne 0 ]]; then
+            exit 1
+          fi
+
+      - name: Apply migrations to production
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "::notice::Linking production Supabase project..."
+          supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+          echo "::notice::Pushing migrations (include-all)..."
+          supabase db push --include-all --yes
+
+      - name: Strict production schema drift check
+        env:
+          GITHUB_EVENT_NAME: workflow_dispatch
+          GITHUB_BASE_REF: ''
+          SCHEMA_DRIFT_STRICT: 'true'
+        run: node .github/scripts/check-schema-drift.js
+
+      - name: Wait for Vercel deployment (main, READY)
+        id: wait_vercel
+        env:
+          VERCEL_TEAM_ID: team_78VeGDURoofThjZNJOKEBpP5
+          VERCEL_PROJECT_ID: prj_P9hRun4B2OdGy8ACCnb0f7jNG6UA
+          GITHUB_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node dev/release/wait-for-vercel-deployment.mjs >> "$GITHUB_OUTPUT"
+
+      - name: Promote Vercel deployment to production
+        env:
+          VERCEL_TEAM_ID: team_78VeGDURoofThjZNJOKEBpP5
+          VERCEL_PROJECT_ID: prj_P9hRun4B2OdGy8ACCnb0f7jNG6UA
+          VERCEL_DEPLOYMENT_URL: ${{ steps.wait_vercel.outputs.deployment_url }}
+          VERCEL_DEPLOYMENT_ID: ${{ steps.wait_vercel.outputs.deployment_id }}
+          GITHUB_SHA: ${{ github.sha }}
+          VERCEL_PROMOTE_TIMEOUT: 5m
+        run: node dev/release/promote-vercel-production.mjs
+
+      - name: Deploy edge functions to production
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "::notice::Deploying Edge Functions to production ($SUPABASE_PROJECT_REF)..."
+          supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Release readiness summary
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "## Production release readiness"
+            echo ""
+            echo "- **Supabase:** migrations applied; strict schema drift check passed; Edge Functions deployed."
+            echo "- **Vercel:** main deployment READY and **promoted to production** (\`CEVphantan.app\`)."
+            echo "- **Deployment:** ${{ steps.wait_vercel.outputs.deployment_url }}"
+            echo ""
+            echo "No manual Vercel dashboard promote or \`supabase functions deploy\` is required when this workflow succeeds."
+          } >> "$GITHUB_STEP_SUMMARY"

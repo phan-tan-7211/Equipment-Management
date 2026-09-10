@@ -1,0 +1,240 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import AssetQRCodeDisplay from '@/components/common/AssetQRCodeDisplay';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ExternalLink } from '@/components/ui/external-link';
+import { OPERATOR_DAILY_CHECK_INS_DOCS_URL } from '@/lib/documentationUrl';
+import { usePermissions } from '@/hooks/usePermissions';
+import {
+  useEquipmentOperatorCheckinAssignments,
+  useOperatorCheckinToken,
+  useRotateOperatorCheckinToken,
+} from '@/features/operator-check-ins/hooks/useOperatorCheckinSettings';
+import { equipmentQRPath, operatorCheckInQRPath, qrFullUrl } from '@/utils/qr';
+
+const EQUIPMENT_VARIANT = 'equipment';
+export type EquipmentQRVariant = typeof EQUIPMENT_VARIANT | `assignment:${string}`;
+type QRVariant = EquipmentQRVariant;
+
+function isAssignmentVariant(variant: QRVariant): variant is `assignment:${string}` {
+  return variant.startsWith('assignment:');
+}
+
+function assignmentIdFromVariant(variant: QRVariant): string | null {
+  return isAssignmentVariant(variant) ? variant.slice('assignment:'.length) : null;
+}
+
+interface QRCodeDisplayProps {
+  open: boolean;
+  onClose: () => void;
+  equipmentId: string;
+  equipmentName?: string;
+  /** When provided the generated QR URL includes `?org=<id>` so the scan
+   *  landing page can perform a single-org lookup instead of a cross-org scan. */
+  organizationId?: string;
+  /** When set, opens the dialog on this QR variant (e.g. after assigning check-in). */
+  initialVariant?: QRVariant;
+}
+
+const EQUIPMENT_QR_INSTRUCTIONS = [
+  'Copy the URL and paste it into your preferred QR app if that is how you generate printable codes',
+  'Or download the PNG/JPG image and print it from your computer or phone',
+  'Print this QR code and attach it to the equipment where technicians can scan it',
+  "Scans open this equipment's details and are logged automatically",
+];
+
+const OPERATOR_CHECKIN_QR_INSTRUCTIONS = [
+  'Print this QR code and place it on the vehicle or equipment for daily operator check-ins',
+  'Operators scan with their phone — no login required',
+  'Each submission is recorded in the daily check-in ledger',
+  'This QR code is separate from the authenticated equipment scan QR',
+];
+
+const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
+  open,
+  onClose,
+  equipmentId,
+  equipmentName,
+  organizationId,
+  initialVariant = EQUIPMENT_VARIANT,
+}) => {
+  const { data: assignments = [], isLoading: assignmentsLoading } = useEquipmentOperatorCheckinAssignments(
+    equipmentId,
+    organizationId,
+    { enabled: open },
+  );
+  const [variant, setVariant] = useState<QRVariant>(initialVariant);
+
+  const enabledAssignments = useMemo(
+    () => assignments.filter((assignment) => assignment.enabled),
+    [assignments],
+  );
+
+  useEffect(() => {
+    if (open) {
+      setVariant(initialVariant);
+    }
+  }, [open, equipmentId, initialVariant]);
+
+  useEffect(() => {
+    if (!open || assignmentsLoading) return;
+    const selectedAssignmentId = assignmentIdFromVariant(variant);
+    if (selectedAssignmentId) {
+      const stillValid = enabledAssignments.some((assignment) => assignment.id === selectedAssignmentId);
+      if (!stillValid) {
+        setVariant(EQUIPMENT_VARIANT);
+      }
+    }
+  }, [open, variant, enabledAssignments, assignmentsLoading]);
+
+  const selectedAssignmentId = assignmentIdFromVariant(variant);
+  const selectedAssignment = enabledAssignments.find((assignment) => assignment.id === selectedAssignmentId);
+  const { data: storedToken = null, isLoading: isTokenLoading } = useOperatorCheckinToken(
+    selectedAssignment?.id,
+    selectedAssignment?.organization_id,
+    { enabled: open },
+  );
+
+  const { hasRole } = usePermissions();
+  // Owners/admins mint the replacement link right here instead of being sent
+  // hunting for the equipment-details actions menu (#1179). The rotate RPC
+  // enforces the same role server-side.
+  const canGenerateCheckinLink = hasRole(['owner', 'admin']);
+  const rotateTokenMutation = useRotateOperatorCheckinToken(equipmentId, organizationId ?? '');
+
+  const handleGenerateCheckinLink = async () => {
+    if (!selectedAssignment) return;
+    if (!canGenerateCheckinLink) {
+      toast.error('Only organization owners and admins can generate QR links.');
+      return;
+    }
+    try {
+      await rotateTokenMutation.mutateAsync(selectedAssignment.id);
+      toast.success('QR link generated. Print or share the code below.');
+    } catch {
+      toast.error('Unable to generate QR link.');
+    }
+  };
+
+  const activeConfig = useMemo(() => {
+    if (selectedAssignment) {
+      const checklistName = selectedAssignment.template?.name ?? 'Daily check-in';
+      return {
+        title: `${checklistName} QR Code`,
+        // Panel is suppressed until the persisted token resolves, so the
+        // equipment path is never rendered for an assignment variant.
+        qrCodeUrl: storedToken ? qrFullUrl(operatorCheckInQRPath(storedToken)) : '',
+        qrImageAlt: `${checklistName} QR for ${equipmentName ?? equipmentId}`,
+        defaultFilenameStem: `${equipmentName ?? equipmentId}-${checklistName}`.replace(/\s+/g, '-'),
+        instructionBullets: OPERATOR_CHECKIN_QR_INSTRUCTIONS,
+      };
+    }
+
+    return {
+      title: 'Equipment QR Code',
+      qrCodeUrl: qrFullUrl(equipmentQRPath(equipmentId, organizationId)),
+      qrImageAlt: 'Equipment QR Code',
+      defaultFilenameStem: `equipment-${equipmentId}`,
+      instructionBullets: EQUIPMENT_QR_INSTRUCTIONS,
+    };
+  }, [
+    selectedAssignment,
+    storedToken,
+    equipmentId,
+    equipmentName,
+    organizationId,
+  ]);
+
+  const showMissingTokenNotice = Boolean(selectedAssignment && !storedToken && !isTokenLoading);
+  const hasAssignmentOptions = enabledAssignments.length > 0;
+  const isDailyCheckinVariant = isAssignmentVariant(variant);
+
+  return (
+    <AssetQRCodeDisplay
+      open={open}
+      onClose={onClose}
+      entityId={equipmentId}
+      entityName={equipmentName}
+      title={activeConfig.title}
+      resourceLabel="equipment"
+      qrCodeUrl={activeConfig.qrCodeUrl}
+      qrImageAlt={activeConfig.qrImageAlt}
+      defaultFilenameStem={activeConfig.defaultFilenameStem}
+      instructionBullets={activeConfig.instructionBullets}
+      imageLoading="lazy"
+      headerExtra={
+        hasAssignmentOptions ? (
+          <div className="space-y-3 pb-2">
+            <div className="space-y-2">
+              <Label htmlFor="equipment-qr-variant">QR code type</Label>
+              <Select value={variant} onValueChange={(value) => setVariant(value as QRVariant)}>
+                <SelectTrigger id="equipment-qr-variant">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={EQUIPMENT_VARIANT}>Equipment scan (authenticated)</SelectItem>
+                  {enabledAssignments.map((assignment) => (
+                    <SelectItem key={assignment.id} value={`assignment:${assignment.id}`}>
+                      Daily check-in: {assignment.template?.name ?? 'Checklist'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {showMissingTokenNotice && (
+              <Alert>
+                <AlertDescription className="space-y-2">
+                  {canGenerateCheckinLink ? (
+                    <>
+                      <p>
+                        No stored QR link for{' '}
+                        <strong>{selectedAssignment?.template?.name ?? 'this checklist'}</strong>.
+                        Generate one now — this replaces any previously printed QR codes for this
+                        checklist.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={rotateTokenMutation.isPending}
+                        onClick={() => void handleGenerateCheckinLink()}
+                      >
+                        {rotateTokenMutation.isPending ? 'Generating…' : 'Generate QR link'}
+                      </Button>
+                    </>
+                  ) : (
+                    <p>
+                      The QR link for{' '}
+                      <strong>{selectedAssignment?.template?.name ?? 'this checklist'}</strong> is not
+                      available here. Ask an organization owner or admin to generate a new link (this
+                      replaces any previously printed QR codes for this checklist).
+                    </p>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+            {isDailyCheckinVariant && !showMissingTokenNotice && (
+              <p className="text-sm text-muted-foreground">
+                <ExternalLink href={OPERATOR_DAILY_CHECK_INS_DOCS_URL} className="text-sm">
+                  Daily check-in QR placement and printing guide
+                </ExternalLink>
+              </p>
+            )}
+          </div>
+        ) : undefined
+      }
+      suppressQrPanel={Boolean(selectedAssignment && (isTokenLoading || !storedToken))}
+    />
+  );
+};
+
+export default QRCodeDisplay;

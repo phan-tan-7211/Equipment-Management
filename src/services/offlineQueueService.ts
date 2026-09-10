@@ -1,0 +1,796 @@
+﻿/**
+ * Offline Queue Service
+ *
+ * Persists failed work order mutations to localStorage so they can be
+ * retried when the device comes back online.
+ *
+ * Scope: work order create, update, and status-change operations.
+ * Images / binary data are explicitly excluded (see containsBinaryData guard).
+ *
+ * @see https://github.com/Columbia-Cloudworks-LLC/CEV.PhanTan/issues/536
+ */
+
+import { logger } from '@/utils/logger';
+import { toast } from 'sonner';
+import type { CreateWorkOrderData } from '@/features/work-orders/hooks/useWorkOrderCreation';
+import type { UpdateWorkOrderData } from '@/features/work-orders/hooks/useWorkOrderUpdate';
+import type { WorkOrderStatus } from '@/features/work-orders/types/workOrder';
+import type {
+  QuickEquipmentCreateData,
+  EquipmentCreateData,
+  EquipmentUpdateData,
+} from '@/features/equipment/services/EquipmentService';
+import type { UpdateWorkingHoursData } from '@/features/equipment/services/equipmentWorkingHoursService';
+import type { PMChecklistItem } from '@/features/pm-templates/services/preventativeMaintenanceService';
+import {
+  rewriteQueueItemsPlaceholders,
+  type PlaceholderRemap,
+} from './offlineQueuePlaceholders';
+import { collectImageRefIds } from './offlineQueueImageRefs';
+
+// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const STORAGE_KEY_PREFIX = 'CEVPhanTan_offline_queue';
+const MAX_ITEMS = 50;
+const MAX_ITEM_SIZE_BYTES = 50 * 1024; // 50 KB per item
+const MAX_QUEUE_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB total budget
+
+// â”€â”€â”€ Custom Error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+export class OfflineQueuePayloadError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'OfflineQueuePayloadError';
+  }
+}
+
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+export type OfflineQueueItemType =
+  | 'work_order_create'
+  | 'work_order_update'
+  | 'work_order_status'
+  | 'work_order_note'
+  | 'equipment_create'
+  | 'equipment_create_full'
+  | 'equipment_update'
+  | 'equipment_hours'
+  | 'equipment_note'
+  | 'pm_init'
+  | 'pm_update'
+  | 'pm_delete';
+
+export type OfflineQueueItemStatus = 'pending' | 'processing' | 'failed';
+
+/** Metadata pointer to a blob in offlineBlobStore â€” never embed binary in JSON. */
+export interface OfflineQueueImageRef {
+  blobKey: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+}
+
+interface OfflineQueueItemBase {
+  id: string;
+  type: OfflineQueueItemType;
+  organizationId: string;
+  userId: string;
+  timestamp: number;
+  retryCount: number;
+  maxRetries: number;
+  status: OfflineQueueItemStatus;
+  payloadSizeBytes: number;
+  lastError?: string;
+  /**
+   * Server equipment id after a successful equipment_create* replay. Stored
+   * outside payload so persistence is not subject to payload size limits.
+   */
+  syncedEquipmentId?: string;
+}
+
+/** Queued work-order create payload â€” images stored as blob refs, not File[]. */
+export type OfflineQueuedWorkOrderCreatePayload = Omit<CreateWorkOrderData, 'images'> & {
+  imageRefs?: OfflineQueueImageRef[];
+  /** Set after server create succeeds so retries skip duplicate creates. */
+  syncedWorkOrderId?: string;
+  /** Set after creation photos upload succeeds during replay. */
+  creationImagesSynced?: boolean;
+};
+
+export interface OfflineQueueCreateItem extends OfflineQueueItemBase {
+  type: 'work_order_create';
+  payload: OfflineQueuedWorkOrderCreatePayload;
+}
+
+/** Field values captured from the server at the moment the user opened the edit form. */
+export interface WorkOrderServerSnapshot {
+  title?: string | null;
+  description?: string | null;
+  priority?: string | null;
+  due_date?: string | null;
+  due_date_has_time?: boolean | null;
+  estimated_hours?: number | null;
+  has_pm?: boolean | null;
+}
+
+export interface OfflineQueueUpdateItem extends OfflineQueueItemBase {
+  type: 'work_order_update';
+  payload: {
+    workOrderId: string;
+    data: UpdateWorkOrderData;
+    /** Which fields the user changed â€” used for field-level conflict resolution. */
+    changedFields?: string[];
+    /** Snapshot of the work order's updated_at when the edit was made. */
+    serverUpdatedAt?: string;
+    /**
+     * Field values at the moment the user began editing (the "base" in a 3-way merge).
+     * Required for true field-level conflict detection: if a field's current server value
+     * differs from serverSnapshot[field], the server changed it while we were offline.
+     */
+    serverSnapshot?: WorkOrderServerSnapshot;
+  };
+}
+
+export interface OfflineQueueStatusItem extends OfflineQueueItemBase {
+  type: 'work_order_status';
+  payload: {
+    workOrderId: string;
+    newStatus: WorkOrderStatus;
+    /** Snapshot of the work order's updated_at when the status change was made. */
+    serverUpdatedAt?: string;
+  };
+}
+
+export interface OfflineQueueWorkOrderNoteItem extends OfflineQueueItemBase {
+  type: 'work_order_note';
+  payload: {
+    workOrderId: string;
+    content: string;
+    hoursWorked?: number;
+    machineHours?: number;
+    isPrivate?: boolean;
+    imageRefs?: OfflineQueueImageRef[];
+  };
+}
+
+export interface OfflineQueueEquipmentCreateItem extends OfflineQueueItemBase {
+  type: 'equipment_create';
+  payload: QuickEquipmentCreateData;
+}
+
+export interface OfflineQueueEquipmentCreateFullItem extends OfflineQueueItemBase {
+  type: 'equipment_create_full';
+  payload: EquipmentCreateData;
+}
+
+export interface OfflineQueueEquipmentUpdateItem extends OfflineQueueItemBase {
+  type: 'equipment_update';
+  payload: {
+    equipmentId: string;
+    data: EquipmentUpdateData;
+    /** Which fields the user changed â€” used for field-level conflict resolution. */
+    changedFields?: string[];
+    /** Snapshot of equipment updated_at when the edit was made. */
+    serverUpdatedAt?: string;
+  };
+}
+
+export interface OfflineQueueEquipmentHoursItem extends OfflineQueueItemBase {
+  type: 'equipment_hours';
+  payload: UpdateWorkingHoursData;
+}
+
+export interface OfflineQueueEquipmentNoteItem extends OfflineQueueItemBase {
+  type: 'equipment_note';
+  payload: {
+    equipmentId: string;
+    content: string;
+    hoursWorked?: number;
+    machineHours?: number;
+    isPrivate?: boolean;
+    imageRefs?: OfflineQueueImageRef[];
+  };
+}
+
+/**
+ * Initialize a PM record on the server when a queued work order with
+ * `hasPM: true` finally syncs OR when the user opens an existing online
+ * work order while offline and we need to seed a PM stub locally.
+ *
+ * `workOrderId` must be a server UUID. Placeholder IDs (`offline-*`) are
+ * rejected by the offline-aware layer because the `work_order_create`
+ * handler is responsible for PM init when the parent work order syncs.
+ */
+export interface OfflineQueuePMInitItem extends OfflineQueueItemBase {
+  type: 'pm_init';
+  payload: {
+    workOrderId: string;
+    equipmentId: string;
+    /** Optional template id to seed checklist data from. */
+    templateId?: string;
+    /** Optional explicit checklist data; falls back to template / default. */
+    checklistData?: PMChecklistItem[];
+    notes?: string;
+  };
+}
+
+/**
+ * Update a PM record offline. Carries the full latest checklist + notes the
+ * user has so the processor can replay the change once online. Conflict
+ * resolution: server-wins on `status` transitions; field-level last-write-
+ * wins on the checklist payload via `serverUpdatedAt`.
+ *
+ * `pmId` may be `offline-<queue-item-id>` if the PM was queued for
+ * initialisation in the same offline session â€” the processor resolves the
+ * placeholder before applying the update.
+ */
+export interface OfflineQueuePMUpdateItem extends OfflineQueueItemBase {
+  type: 'pm_update';
+  payload: {
+    pmId: string;
+    /**
+     * Snapshot of `pm.updated_at` when the user began editing offline.
+     * Used by the processor to detect a server-side change while we were
+     * offline and choose the appropriate merge strategy.
+     */
+    serverUpdatedAt?: string;
+    checklistData?: PMChecklistItem[];
+    notes?: string;
+    status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+    /** When set, replay updates `preventative_maintenance.template_id` (e.g. template swap). */
+    templateId?: string;
+    /** Set when status transitions to/from completed. */
+    completedAt?: string | null;
+    completedBy?: string | null;
+  };
+}
+
+/**
+ * Delete a PM record while offline. Used when a user disables PM on a work
+ * order and the mutation must replay later in FIFO order after the queued
+ * work_order_update.
+ */
+export interface OfflineQueuePMDeleteItem extends OfflineQueueItemBase {
+  type: 'pm_delete';
+  payload: {
+    pmId: string;
+  };
+}
+
+export type OfflineQueueItem =
+  | OfflineQueueCreateItem
+  | OfflineQueueUpdateItem
+  | OfflineQueueStatusItem
+  | OfflineQueueWorkOrderNoteItem
+  | OfflineQueueEquipmentCreateItem
+  | OfflineQueueEquipmentCreateFullItem
+  | OfflineQueueEquipmentUpdateItem
+  | OfflineQueueEquipmentHoursItem
+  | OfflineQueueEquipmentNoteItem
+  | OfflineQueuePMInitItem
+  | OfflineQueuePMUpdateItem
+  | OfflineQueuePMDeleteItem;
+
+/** The shape callers pass to enqueue â€” id, retryCount, status etc. are generated. */
+export type OfflineQueueEnqueueInput = {
+  type: OfflineQueueItemType;
+  payload: OfflineQueueItem['payload'];
+  organizationId: string;
+  userId: string;
+};
+
+interface OfflineQueueCompactionState {
+  compacted: OfflineQueueItem[];
+  updateMap: Map<string, OfflineQueueUpdateItem>;
+  statusMap: Map<string, OfflineQueueStatusItem>;
+  equipmentUpdateMap: Map<string, OfflineQueueEquipmentUpdateItem>;
+  equipmentHoursMap: Map<string, OfflineQueueEquipmentHoursItem>;
+  pmUpdateMap: Map<string, OfflineQueuePMUpdateItem>;
+}
+
+function createCompactionState(): OfflineQueueCompactionState {
+  return {
+    compacted: [],
+    updateMap: new Map(),
+    statusMap: new Map(),
+    equipmentUpdateMap: new Map(),
+    equipmentHoursMap: new Map(),
+    pmUpdateMap: new Map(),
+  };
+}
+
+function cloneQueueItem<TItem extends OfflineQueueItem>(item: TItem): TItem {
+  return JSON.parse(JSON.stringify(item)) as TItem;
+}
+
+function mergeChangedFields(
+  existingFields: string[] | undefined,
+  incomingFields: string[] | undefined,
+): string[] {
+  return [...new Set([...(existingFields || []), ...(incomingFields || [])])];
+}
+
+function compactWorkOrderUpdate(
+  updateMap: Map<string, OfflineQueueUpdateItem>,
+  updateItem: OfflineQueueUpdateItem,
+): void {
+  const existing = updateMap.get(updateItem.payload.workOrderId);
+
+  if (!existing) {
+    updateMap.set(updateItem.payload.workOrderId, cloneQueueItem(updateItem));
+    return;
+  }
+
+  // Keep the earliest serverUpdatedAt: it is the true 3-way merge baseline.
+  const serverSnapshot = {
+    ...(updateItem.payload.serverSnapshot ?? {}),
+    ...(existing.payload.serverSnapshot ?? {}),
+  };
+
+  existing.payload = {
+    ...existing.payload,
+    data: { ...existing.payload.data, ...updateItem.payload.data },
+    changedFields: mergeChangedFields(
+      existing.payload.changedFields,
+      updateItem.payload.changedFields,
+    ),
+    serverUpdatedAt: existing.payload.serverUpdatedAt ?? updateItem.payload.serverUpdatedAt,
+    serverSnapshot: Object.keys(serverSnapshot).length > 0 ? serverSnapshot : undefined,
+  };
+  existing.timestamp = updateItem.timestamp;
+}
+
+function compactEquipmentUpdate(
+  equipmentUpdateMap: Map<string, OfflineQueueEquipmentUpdateItem>,
+  eqUpdateItem: OfflineQueueEquipmentUpdateItem,
+): void {
+  const existing = equipmentUpdateMap.get(eqUpdateItem.payload.equipmentId);
+
+  if (!existing) {
+    equipmentUpdateMap.set(eqUpdateItem.payload.equipmentId, cloneQueueItem(eqUpdateItem));
+    return;
+  }
+
+  existing.payload = {
+    ...existing.payload,
+    data: { ...existing.payload.data, ...eqUpdateItem.payload.data },
+    changedFields: mergeChangedFields(
+      existing.payload.changedFields,
+      eqUpdateItem.payload.changedFields,
+    ),
+  };
+  existing.timestamp = eqUpdateItem.timestamp;
+}
+
+function preferDefined<TValue>(
+  incoming: TValue | undefined,
+  existing: TValue | undefined,
+): TValue | undefined {
+  return incoming !== undefined ? incoming : existing;
+}
+
+function compactPmUpdate(
+  pmUpdateMap: Map<string, OfflineQueuePMUpdateItem>,
+  pmUpdateItem: OfflineQueuePMUpdateItem,
+): void {
+  const existing = pmUpdateMap.get(pmUpdateItem.payload.pmId);
+
+  if (!existing) {
+    pmUpdateMap.set(pmUpdateItem.payload.pmId, cloneQueueItem(pmUpdateItem));
+    return;
+  }
+
+  existing.payload = {
+    ...existing.payload,
+    checklistData: preferDefined(
+      pmUpdateItem.payload.checklistData,
+      existing.payload.checklistData,
+    ),
+    notes: preferDefined(pmUpdateItem.payload.notes, existing.payload.notes),
+    status: preferDefined(pmUpdateItem.payload.status, existing.payload.status),
+    templateId: preferDefined(pmUpdateItem.payload.templateId, existing.payload.templateId),
+    completedAt: preferDefined(pmUpdateItem.payload.completedAt, existing.payload.completedAt),
+    completedBy: preferDefined(pmUpdateItem.payload.completedBy, existing.payload.completedBy),
+    serverUpdatedAt: existing.payload.serverUpdatedAt ?? pmUpdateItem.payload.serverUpdatedAt,
+  };
+  existing.timestamp = pmUpdateItem.timestamp;
+}
+
+function compactQueueItem(item: OfflineQueueItem, state: OfflineQueueCompactionState): void {
+  switch (item.type) {
+    case 'work_order_create':
+      state.compacted.push(item);
+      break;
+    case 'work_order_update':
+      compactWorkOrderUpdate(state.updateMap, item);
+      break;
+    case 'work_order_status':
+      state.statusMap.set(item.payload.workOrderId, item);
+      break;
+    case 'equipment_update':
+      compactEquipmentUpdate(state.equipmentUpdateMap, item);
+      break;
+    case 'equipment_hours':
+      state.equipmentHoursMap.set(item.payload.equipmentId, item);
+      break;
+    case 'pm_update':
+      compactPmUpdate(state.pmUpdateMap, item);
+      break;
+    default:
+      state.compacted.push(item);
+      break;
+  }
+}
+
+function buildCompactedQueue(state: OfflineQueueCompactionState): OfflineQueueItem[] {
+  return [
+    ...state.compacted,
+    ...state.updateMap.values(),
+    ...state.statusMap.values(),
+    ...state.equipmentUpdateMap.values(),
+    ...state.equipmentHoursMap.values(),
+    ...state.pmUpdateMap.values(),
+  ].sort((a, b) => a.timestamp - b.timestamp);
+}
+
+// â”€â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+export class OfflineQueueService {
+  private storageKey: string;
+
+  constructor(userId: string, orgId: string) {
+    this.storageKey = `${STORAGE_KEY_PREFIX}_${userId}_${orgId}`;
+  }
+
+  // â”€â”€ Read operations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+  /** Return all queue items (any status). */
+  getAll(): OfflineQueueItem[] {
+    try {
+      const raw = localStorage.getItem(this.storageKey);
+      if (!raw) return [];
+      return JSON.parse(raw) as OfflineQueueItem[];
+    } catch {
+      logger.error('Failed to read offline queue from localStorage');
+      return [];
+    }
+  }
+
+  /**
+   * Pending, failed, and total counts from a single localStorage read.
+   * Prefer this when a caller needs more than one count.
+   */
+  getCounts(): { pending: number; failed: number; total: number } {
+    const queue = this.getAll();
+    let pending = 0;
+    let failed = 0;
+    for (const item of queue) {
+      if (item.status === 'pending') pending += 1;
+      else if (item.status === 'failed') failed += 1;
+    }
+    return { pending, failed, total: queue.length };
+  }
+
+  /** Number of items with status === 'pending'. */
+  getPendingCount(): number {
+    return this.getCounts().pending;
+  }
+
+  /** Number of items with status === 'failed'. */
+  getFailedCount(): number {
+    return this.getCounts().failed;
+  }
+
+  /** Total item count regardless of status. */
+  getCount(): number {
+    return this.getCounts().total;
+  }
+
+  /** First pending item (FIFO). */
+  peek(): OfflineQueueItem | undefined {
+    return this.getAll().find(i => i.status === 'pending');
+  }
+
+  /** Items that have exhausted their retries. */
+  getFailedItems(): OfflineQueueItem[] {
+    return this.getAll().filter(i => i.status === 'failed');
+  }
+
+  // â”€â”€ Write operations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+  /** Add an item to the queue. Throws OfflineQueuePayloadError on validation failure. */
+  enqueue(input: OfflineQueueEnqueueInput): OfflineQueueItem {
+    const serialized = JSON.stringify(input.payload);
+    const sizeBytes = new Blob([serialized]).size;
+
+    // Guard: binary / base64 data
+    if (OfflineQueueService.containsBinaryData(serialized)) {
+      logger.warn('Blocked offline queue item containing binary data');
+      toast.error('Cannot save offline', {
+        description: 'This item contains file data that cannot be saved locally.',
+      });
+      throw new OfflineQueuePayloadError('Payload contains binary data');
+    }
+
+    // Guard: single-item size
+    if (sizeBytes > MAX_ITEM_SIZE_BYTES) {
+      logger.warn(`Offline queue item too large: ${sizeBytes} bytes (limit: ${MAX_ITEM_SIZE_BYTES})`);
+      toast.error('Cannot save offline', {
+        description: 'This item is too large to save locally. Try again when online.',
+      });
+      throw new OfflineQueuePayloadError(`Payload exceeds ${MAX_ITEM_SIZE_BYTES / 1024}KB limit`);
+    }
+
+    const currentQueue = this.getAll();
+
+    // Dedupe: an accidental double-submit of the same equipment create (same
+    // type + identical payload) while offline should not queue two rows. We
+    // match on the serialized payload so a deliberately different second record
+    // (even one sharing a serial number) is still queued â€” serials are not
+    // unique. Only pending/processing items are considered.
+    if (input.type === 'equipment_create' || input.type === 'equipment_create_full') {
+      const existingDuplicate = currentQueue.find(
+        qi =>
+          qi.type === input.type &&
+          (qi.status === 'pending' || qi.status === 'processing') &&
+          JSON.stringify(qi.payload) === serialized,
+      );
+      if (existingDuplicate) {
+        logger.info('Skipping duplicate offline equipment create enqueue', {
+          queueItemId: existingDuplicate.id,
+          type: input.type,
+        });
+        return existingDuplicate;
+      }
+    }
+
+    // Guard: total queue storage budget
+    const currentTotalSize = currentQueue.reduce((sum, qi) => sum + qi.payloadSizeBytes, 0);
+    if (currentTotalSize + sizeBytes > MAX_QUEUE_SIZE_BYTES) {
+      logger.warn('Offline queue storage budget exceeded');
+      toast.error('Offline queue full', {
+        description: 'Clear synced items or wait for connection to free space.',
+      });
+      throw new OfflineQueuePayloadError('Queue storage budget exceeded');
+    }
+
+    // FIFO eviction if at item-count cap
+    const queue = [...currentQueue];
+    if (queue.length >= MAX_ITEMS) {
+      const oldestPendingIdx = queue.findIndex(qi => qi.status === 'pending');
+      if (oldestPendingIdx !== -1) {
+        queue.splice(oldestPendingIdx, 1);
+        toast.warning('Oldest offline item removed to make room for new item.');
+      }
+    }
+
+    const fullItem: OfflineQueueItem = {
+      ...input,
+      id: crypto.randomUUID(),
+      retryCount: 0,
+      maxRetries: 5,
+      status: 'pending',
+      payloadSizeBytes: sizeBytes,
+      timestamp: Date.now(),
+    } as OfflineQueueItem;
+
+    queue.push(fullItem);
+    this.persist(queue);
+
+    return fullItem;
+  }
+
+  /** Remove a single item by id. */
+  remove(id: string): void {
+    const queue = this.getAll().filter(i => i.id !== id);
+    this.persist(queue);
+  }
+
+  /**
+   * Atomically remove a processed item and append follow-up items in the same
+   * localStorage write. This prevents a race where the original item is gone
+   * but the follow-ups were never persisted (e.g. quota exceeded between two
+   * separate calls). If any follow-up fails validation the entire operation is
+   * aborted and the original item stays in the queue so the processor can
+   * retry on the next sync cycle.
+   */
+  replaceWithFollowUps(removeId: string, followUps: OfflineQueueEnqueueInput[]): OfflineQueueItem[] {
+    const current = this.getAll();
+    const remaining = current.filter(i => i.id !== removeId);
+
+    // Build and validate each follow-up item before touching storage.
+    const followUpItems: OfflineQueueItem[] = [];
+    for (const input of followUps) {
+      const serialized = JSON.stringify(input.payload);
+      const sizeBytes = new Blob([serialized]).size;
+
+      if (OfflineQueueService.containsBinaryData(serialized)) {
+        throw new OfflineQueuePayloadError('Follow-up payload contains binary data');
+      }
+      if (sizeBytes > MAX_ITEM_SIZE_BYTES) {
+        throw new OfflineQueuePayloadError(`Follow-up payload exceeds ${MAX_ITEM_SIZE_BYTES / 1024}KB limit`);
+      }
+
+      followUpItems.push({
+        ...input,
+        id: crypto.randomUUID(),
+        retryCount: 0,
+        maxRetries: 5,
+        status: 'pending' as const,
+        payloadSizeBytes: sizeBytes,
+        timestamp: Date.now(),
+      } as OfflineQueueItem);
+    }
+
+    this.persist([...remaining, ...followUpItems]);
+    return followUpItems;
+  }
+
+  /** Remove all items. */
+  clear(): void {
+    try {
+      localStorage.removeItem(this.storageKey);
+    } catch {
+      logger.error('Failed to clear offline queue');
+    }
+  }
+
+  /** Mark an item as processing / pending / failed. */
+  updateStatus(id: string, status: OfflineQueueItemStatus, lastError?: string): void {
+    const queue = this.getAll().map(i => {
+      if (i.id !== id) return i;
+      return { ...i, status, lastError: lastError ?? i.lastError };
+    });
+    this.persist(queue);
+  }
+
+  /** Increment retryCount and keep status as 'pending' for the next sync attempt. */
+  updateRetry(id: string, retryCount: number, lastError?: string): void {
+    const queue = this.getAll().map(i => {
+      if (i.id !== id) return i;
+      return { ...i, retryCount, status: 'pending' as const, lastError: lastError ?? i.lastError };
+    });
+    this.persist(queue);
+  }
+
+  /**
+   * Update the payload of an existing queue item (e.g. editing a queued create before sync).
+   * Merges `updates` into the existing payload â€” does NOT replace it entirely.
+   * Returns true if the item was found and updated.
+   */
+  /**
+   * Persist the server equipment id for an equipment create queue item without
+   * touching payload bytes (avoids MAX_ITEM_SIZE_BYTES failures).
+   */
+  updateSyncedEquipmentId(id: string, serverEquipmentId: string): boolean {
+    const queue = this.getAll();
+    const idx = queue.findIndex(i => i.id === id);
+    if (idx === -1) return false;
+
+    queue[idx] = {
+      ...queue[idx],
+      syncedEquipmentId: serverEquipmentId,
+    };
+    this.persist(queue);
+    return true;
+  }
+
+  updatePayload(id: string, updates: Record<string, unknown>): boolean {
+    const queue = this.getAll();
+    const idx = queue.findIndex(i => i.id === id);
+    if (idx === -1) return false;
+
+    const item = queue[idx];
+    const mergedPayload = { ...item.payload, ...updates };
+    const serialized = JSON.stringify(mergedPayload);
+    const sizeBytes = new Blob([serialized]).size;
+
+    if (sizeBytes > MAX_ITEM_SIZE_BYTES) {
+      logger.warn(`updatePayload: merged payload too large (${sizeBytes} bytes)`);
+      return false;
+    }
+
+    queue[idx] = {
+      ...item,
+      payload: mergedPayload,
+      payloadSizeBytes: sizeBytes,
+      timestamp: Date.now(), // bump timestamp so it re-sorts on next compact
+    } as OfflineQueueItem;
+
+    this.persist(queue);
+    return true;
+  }
+
+  /**
+   * Get a single queue item by ID. Returns undefined if not found.
+   */
+  getById(id: string): OfflineQueueItem | undefined {
+    return this.getAll().find(i => i.id === id);
+  }
+
+  /**
+   * Compact the queue for efficient syncing.
+   * - Multiple updates to the same workOrderId are merged into one (latest values per field).
+   * - Updates to a queued create (same equipmentId + title match) are folded into the create payload.
+   * - Multiple status changes to the same workOrderId keep only the latest.
+   *
+   * Call this before processAll() to reduce network round-trips after an all-day offline session.
+   */
+  compact(): void {
+    const queue = this.getAll();
+    if (queue.length <= 1) return;
+
+    // PM updates collapse by pmId so a 50-item checklist edit session yields
+    // one network call. PM inits are NOT compacted because each binds to a
+    // distinct work-order/equipment pair.
+    const state = createCompactionState();
+    queue.forEach(item => compactQueueItem(item, state));
+    this.persist(buildCompactedQueue(state));
+  }
+
+  /** Reset all failed items back to pending so they can be retried. */
+  retryFailedItems(): void {
+    const queue = this.getAll().map(i => {
+      if (i.status !== 'failed') return i;
+      return { ...i, status: 'pending' as const, retryCount: 0, lastError: undefined };
+    });
+    this.persist(queue);
+  }
+
+  /**
+   * Rewrite placeholder ids in all pending/processing/failed queue items after
+   * a parent create syncs. Persists immediately so remaps survive tab close.
+   */
+  applyPlaceholderRemap(remap: PlaceholderRemap): void {
+    const queue = this.getAll();
+    if (queue.length === 0) return;
+    const rewritten = rewriteQueueItemsPlaceholders(queue, remap);
+    this.persist(rewritten);
+  }
+
+  /** Collect image blob keys referenced by a queue item (for cleanup). */
+  static collectImageRefsFromItem(item: OfflineQueueItem): string[] {
+    const payload = item.payload as Record<string, unknown>;
+    const refs = payload.imageRefs;
+    if (!Array.isArray(refs)) return [];
+    return collectImageRefIds(
+      refs.filter((ref): ref is OfflineQueueImageRef => {
+        return (
+          ref !== null &&
+          typeof ref === 'object' &&
+          typeof (ref as OfflineQueueImageRef).blobKey === 'string'
+        );
+      }),
+    );
+  }
+
+  // â”€â”€ Internals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+  private persist(queue: OfflineQueueItem[]): void {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(queue));
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        logger.error('localStorage quota exceeded during offline queue write');
+        toast.error('Device storage full', {
+          description: 'Cannot save offline. Free storage and try again.',
+        });
+        throw new OfflineQueuePayloadError('localStorage quota exceeded');
+      }
+      throw e;
+    }
+  }
+
+  /**
+   * Heuristic: detect base64 image data or data URIs.
+   * Made static so it can be tested independently.
+   */
+  static containsBinaryData(serialized: string): boolean {
+    // data URIs: data:image/..., data:application/octet-stream
+    if (/data:[a-z]+\/[a-z0-9.+-]+;base64,/i.test(serialized)) return true;
+    // Large contiguous base64-like blocks (>10 KB of chars)
+    if (/[A-Za-z0-9+/=]{10000,}/.test(serialized)) return true;
+    return false;
+  }
+}
+

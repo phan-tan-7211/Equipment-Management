@@ -1,0 +1,388 @@
+// fallow-ignore-file code-duplication
+// Duplication rationale: Fleet location resolution parallels generic effectiveLocation with team context
+import { supabase } from '@/integrations/supabase/client';
+import { parseLatLng } from '@/utils/geoUtils';
+import { parseLastKnownLocation, resolveEquipmentCoordinates, type FleetMapSource } from '@/utils/effectiveLocation';
+import { logger } from '@/utils/logger';
+import type { EquipmentLocation } from '@/features/fleet-map/types/locations';
+
+export type { EquipmentLocation };
+
+export interface TeamFleetOption {
+  id: string;
+  name: string;
+  description: string | null;
+  equipmentCount: number;
+  hasLocationData: boolean;
+  /** Team HQ location coordinates (if set) */
+  location_lat?: number | null;
+  location_lng?: number | null;
+  location_address?: string | null;
+  location_city?: string | null;
+  location_state?: string | null;
+  location_country?: string | null;
+}
+
+/** Team row returned by `getAccessibleTeams` before equipment counts are joined. */
+type AccessibleTeamRow = Pick<
+  TeamFleetOption,
+  | 'id'
+  | 'name'
+  | 'description'
+  | 'location_lat'
+  | 'location_lng'
+  | 'location_address'
+  | 'location_city'
+  | 'location_state'
+  | 'location_country'
+>;
+
+export interface TeamEquipmentData {
+  teamId: string;
+  teamName: string;
+  equipment: EquipmentLocation[];
+  equipmentCount: number;
+  locatedCount: number;
+}
+
+export interface TeamFleetData {
+  teams: TeamFleetOption[];
+  teamEquipmentData: TeamEquipmentData[];
+  hasLocationData: boolean;
+  totalEquipmentCount: number;
+  totalLocatedCount: number;
+}
+
+/**
+ * Get teams that the user has access to based on their role and team memberships
+ */
+export const getAccessibleTeams = async (
+  organizationId: string, 
+  userTeamIds: string[], 
+  isOrgAdmin: boolean
+): Promise<AccessibleTeamRow[]> => {
+  try {
+    let query = supabase
+      .from('teams')
+      .select('id, name, description, location_lat, location_lng, location_address, location_city, location_state, location_country')
+      .eq('organization_id', organizationId);
+    
+    // Non-admin users only see teams they're members of
+    if (!isOrgAdmin && userTeamIds.length > 0) {
+      query = query.in('id', userTeamIds);
+    } else if (!isOrgAdmin && userTeamIds.length === 0) {
+      // Users with no team memberships see no teams
+      return [];
+    }
+    
+    const { data: teams, error } = await query.order('name');
+    
+    if (error) {
+      logger.error('Error fetching accessible teams', error);
+      throw error;
+    }
+    
+    return teams || [];
+  } catch (error) {
+    logger.error('Error in getAccessibleTeams', error);
+    throw error;
+  }
+};
+
+/**
+ * Get equipment with location data for specific teams
+ */
+export const getTeamEquipmentWithLocations = async (
+  organizationId: string,
+  teamIds: string[]
+): Promise<TeamEquipmentData[]> => {
+  try {
+    // Get all equipment in the organization (team-assigned + unassigned)
+    let queryBuilder = supabase
+      .from('equipment')
+      .select(`
+        id,
+        name,
+        manufacturer,
+        model,
+        serial_number,
+        location,
+        working_hours,
+        last_maintenance,
+        image_url,
+        updated_at,
+        team_id,
+        last_known_location,
+        assigned_location_lat,
+        assigned_location_lng,
+        assigned_location_street,
+        assigned_location_city,
+        assigned_location_state,
+        assigned_location_country,
+        teams:team_id (
+          id,
+          name,
+          location_lat,
+          location_lng,
+          location_address,
+          location_city,
+          location_state,
+          location_country,
+          override_equipment_location
+        )
+      `)
+      .eq('organization_id', organizationId);
+
+    // Filter by team IDs + unassigned, or just unassigned if no teams
+    if (teamIds.length > 0) {
+      queryBuilder = queryBuilder.or(`team_id.in.(${teamIds.join(',')}),team_id.is.null`);
+    } else {
+      queryBuilder = queryBuilder.is('team_id', null);
+    }
+
+    const { data: equipment, error } = await queryBuilder;
+
+    if (error) {
+      logger.error('Error fetching team equipment', error);
+      throw error;
+    }
+
+    if (!equipment || equipment.length === 0) {
+      return [];
+    }
+
+    // Process equipment to find location data.
+    //
+    // Slow 4G perf note: previously this loop issued ONE `scans` query per
+    // equipment row that lacked coordinates (O(n) network round-trips on the
+    // critical fleet map render). The new flow runs a single tenant-scoped RPC
+    // that returns at most one latest scan row per candidate equipment id.
+    const teamEquipmentMap = new Map<string, TeamEquipmentData>();
+
+    // First pass: resolve coords from scan / assigned address / legacy text /
+    // team fallback for every row, and collect ids that still need a scan lookup.
+    type ResolvedRow = {
+      item: (typeof equipment)[number];
+      teamId: string;
+      teamName: string;
+      coords: { lat: number; lng: number } | null;
+      source: FleetMapSource;
+      formatted_address?: string;
+      location_updated_at?: string;
+    };
+
+    const resolved: ResolvedRow[] = [];
+    const scanCandidates: string[] = [];
+
+    for (const item of equipment) {
+      const teamId = item.team_id || 'unassigned';
+      const teamName = item.teams?.name || 'Unassigned';
+
+      if (!teamEquipmentMap.has(teamId)) {
+        teamEquipmentMap.set(teamId, {
+          teamId,
+          teamName,
+          equipment: [],
+          equipmentCount: 0,
+          locatedCount: 0,
+        });
+      }
+      teamEquipmentMap.get(teamId)!.equipmentCount++;
+
+      const team = item.teams;
+      const lastScan = parseLastKnownLocation(item.last_known_location);
+      const resolvedCoords = resolveEquipmentCoordinates({
+        team: team
+          ? {
+              override_equipment_location: team.override_equipment_location,
+              location_lat: team.location_lat,
+              location_lng: team.location_lng,
+              location_address: team.location_address,
+              location_city: team.location_city,
+              location_state: team.location_state,
+              location_country: team.location_country,
+            }
+          : undefined,
+        equipment: {
+          assigned_location_lat: item.assigned_location_lat,
+          assigned_location_lng: item.assigned_location_lng,
+          assigned_location_street: item.assigned_location_street,
+          assigned_location_city: item.assigned_location_city,
+          assigned_location_state: item.assigned_location_state,
+          assigned_location_country: item.assigned_location_country,
+          locationText: item.location,
+          updatedAt: item.updated_at,
+        },
+        lastScan,
+        parseLegacy: parseLatLng,
+      });
+
+      const coords = resolvedCoords?.coords ?? null;
+      const source: FleetMapSource = resolvedCoords?.source ?? 'manual';
+      const formatted_address = resolvedCoords?.formattedAddress;
+      const location_updated_at = resolvedCoords?.updatedAt;
+
+      // Last Scan fallback — defer to batched query below.
+      if (!coords) {
+        scanCandidates.push(item.id);
+      }
+
+      resolved.push({ item, teamId, teamName, coords, source, formatted_address, location_updated_at });
+    }
+
+    // Single bounded scan lookup for everything that fell through to "last scan".
+    const latestScanByEquipmentId = new Map<string, { location: string; scanned_at: string }>();
+    if (scanCandidates.length > 0) {
+      try {
+        const { data: scans, error: scansError } = await supabase
+          .rpc('latest_scans_for_equipment_ids', {
+            p_organization_id: organizationId,
+            p_equipment_ids: scanCandidates,
+          });
+
+        if (scansError) {
+          logger.error('Failed to batch-fetch scan locations', scansError);
+        } else {
+          for (const scan of scans || []) {
+            if (!scan.location) continue;
+            latestScanByEquipmentId.set(scan.equipment_id, {
+              location: scan.location,
+              scanned_at: scan.scanned_at,
+            });
+          }
+        }
+      } catch (error) {
+        logger.error('Unexpected error in batched scan fetch', error);
+      }
+    }
+
+    // Second pass: assemble the final per-team output, attaching scan-source
+    // coords for any item that still lacks them.
+    for (const row of resolved) {
+      const { item, teamId, teamName } = row;
+      const teamData = teamEquipmentMap.get(teamId)!;
+      let coords = row.coords;
+      let source = row.source;
+      const formatted_address = row.formatted_address;
+      let location_updated_at = row.location_updated_at;
+
+      if (!coords) {
+        const latest = latestScanByEquipmentId.get(item.id);
+        if (latest?.location) {
+          const parsed = parseLatLng(latest.location);
+          if (parsed) {
+            coords = parsed;
+            source = 'scan';
+            location_updated_at = latest.scanned_at;
+          }
+        }
+      }
+
+      // If we have coordinates, add to team equipment
+      if (coords) {
+        teamData.locatedCount++;
+        teamData.equipment.push({
+          id: item.id,
+          name: item.name,
+          manufacturer: item.manufacturer,
+          model: item.model,
+          serial_number: item.serial_number,
+          lat: coords.lat,
+          lng: coords.lng,
+          source,
+          formatted_address,
+          working_hours: item.working_hours ?? undefined,
+          last_maintenance: item.last_maintenance ?? undefined,
+          image_url: item.image_url ?? undefined,
+          location_updated_at,
+          team_id: item.team_id,
+          team_name: teamName
+        });
+      }
+    }
+
+    return Array.from(teamEquipmentMap.values());
+  } catch (error) {
+    logger.error('Error in getTeamEquipmentWithLocations', error);
+    throw error;
+  }
+};
+
+/**
+ * Get complete team fleet data with access control
+ */
+export const getTeamFleetData = async (
+  organizationId: string,
+  userTeamIds: string[],
+  isOrgAdmin: boolean
+): Promise<TeamFleetData> => {
+  try {
+    // Get accessible teams
+    const teams = await getAccessibleTeams(organizationId, userTeamIds, isOrgAdmin);
+    
+    if (teams.length === 0) {
+      return {
+        teams: [],
+        teamEquipmentData: [],
+        hasLocationData: false,
+        totalEquipmentCount: 0,
+        totalLocatedCount: 0
+      };
+    }
+
+    // Get equipment data for accessible teams
+    const teamEquipmentData = await getTeamEquipmentWithLocations(
+      organizationId,
+      teams.map(t => t.id)
+    );
+
+    // Calculate totals
+    const totalEquipmentCount = teamEquipmentData.reduce((sum, team) => sum + team.equipmentCount, 0);
+    const totalLocatedCount = teamEquipmentData.reduce((sum, team) => sum + team.locatedCount, 0);
+
+    // Create team options with equipment counts and HQ location
+    const teamOptions: TeamFleetOption[] = teams.map(team => {
+      const teamData = teamEquipmentData.find(t => t.teamId === team.id);
+      return {
+        id: team.id,
+        name: team.name,
+        description: team.description,
+        equipmentCount: teamData?.equipmentCount || 0,
+        hasLocationData: (teamData?.locatedCount || 0) > 0,
+        location_lat: team.location_lat,
+        location_lng: team.location_lng,
+        location_address: team.location_address,
+        location_city: team.location_city,
+        location_state: team.location_state,
+        location_country: team.location_country,
+      };
+    });
+
+    // Add "Unassigned" option if there's unassigned equipment
+    const unassignedData = teamEquipmentData.find(t => t.teamId === 'unassigned');
+    if (unassignedData && unassignedData.equipmentCount > 0) {
+      teamOptions.push({
+        id: 'unassigned',
+        name: 'Unassigned',
+        description: 'Equipment not assigned to any team',
+        equipmentCount: unassignedData.equipmentCount,
+        hasLocationData: unassignedData.locatedCount > 0,
+      });
+    }
+
+    // Show map if we have at least one item with location data OR any team has an HQ location
+    const anyTeamHasHQ = teamOptions.some(t => t.location_lat != null && t.location_lng != null);
+    const hasLocationData = totalLocatedCount > 0 || anyTeamHasHQ;
+
+    return {
+      teams: teamOptions,
+      teamEquipmentData,
+      hasLocationData,
+      totalEquipmentCount,
+      totalLocatedCount
+    };
+  } catch (error) {
+    logger.error('Error in getTeamFleetData', error);
+    throw error;
+  }
+};

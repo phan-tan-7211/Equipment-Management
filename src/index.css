@@ -1,0 +1,781 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+/* ============================================
+   CEVphantanDesign System
+   ============================================
+   All colors, gradients, fonts, shadows, and animations are defined here.
+   This is the source of truth for the visual identity.
+*/
+
+/* Typography: Plus Jakarta Sans (Display) + System Stack (Body). Alternative: Sora. */
+
+@layer base {
+  :root {
+    /* Font families */
+    --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+    /* ============================================
+       Mission Control "NASA-punk" dark-only palette
+       Background luminance 0.00288 (#0a0a0a)
+       All foreground / accent tokens chosen to pass
+       WCAG AAA (>= 7:1) for normal text on background.
+       ============================================ */
+    --background: 0 0% 4%;        /* #0a0a0a */
+    --foreground: 0 0% 98%;       /* #fafafa — 19.7:1 */
+
+    --card: 0 0% 7%;              /* #121212 */
+    --card-foreground: 0 0% 98%;
+    --card-elevated: 0 0% 10%;    /* #1a1a1a */
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 258 100% 81%;      /* #B79CFF — 8.8:1 */
+    --primary-foreground: 0 0% 4%;
+
+    --secondary: 240 5% 13%;      /* #1f1f23 */
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 5% 13%;          /* #1f1f23 */
+    --muted-foreground: 240 4% 65%; /* #a1a1aa — 8.0:1 */
+
+    --accent: 240 5% 13%;
+    --accent-foreground: 0 0% 98%;
+
+    /* Semantic color accents (AAA on #0a0a0a) */
+    --success: 145 80% 65%;       /* #5EEDA0 — 13.3:1 */
+    --success-foreground: 0 0% 4%;
+    --info: 213 100% 68%;         /* #5EA8FF — 8.1:1 */
+    --info-foreground: 0 0% 4%;
+    --warning: 42 100% 67%;       /* #FFC857 — 13.0:1 */
+    --warning-foreground: 0 0% 4%;
+
+    --destructive: 0 100% 76%;    /* #FF8585 — 8.4:1 */
+    --destructive-foreground: 0 0% 4%;
+
+    /* Work Order Status Colors — mapped onto the AAA accent set */
+    --status-open: 213 100% 68%;          /* info */
+    --status-open-foreground: 0 0% 4%;
+    --status-assigned: 213 100% 68%;      /* info */
+    --status-assigned-foreground: 0 0% 4%;
+    --status-in-progress: 42 100% 67%;    /* warning */
+    --status-in-progress-foreground: 0 0% 4%;
+    --status-completed: 145 80% 65%;      /* success */
+    --status-completed-foreground: 0 0% 4%;
+    --status-cancelled: 220 9% 65%;       /* #9ca3af — 7.85:1, AAA for normal text */
+    --status-cancelled-foreground: 0 0% 4%;
+    --status-overdue: 0 100% 76%;         /* destructive */
+    --status-overdue-foreground: 0 0% 4%;
+
+    /* Equipment Status Colors */
+    --equipment-operational: 145 80% 65%; /* success */
+    --equipment-maintenance: 42 100% 67%; /* warning */
+    --equipment-repair: 0 100% 76%;       /* destructive */
+    --equipment-retired: 220 9% 65%;      /* #9ca3af — 7.85:1, AAA */
+
+    /* Priority Colors */
+    --priority-low: 213 100% 68%;         /* info */
+    --priority-medium: 42 100% 67%;       /* warning */
+    --priority-high: 25 100% 70%;         /* amber-orange, AAA on #0a0a0a */
+    --priority-critical: 0 100% 76%;      /* destructive */
+
+    --border: 240 4% 16%;         /* #27272a — exact divider from SR */
+    --input: 240 4% 16%;
+    --ring: 258 100% 81%;         /* neon focus ring per #635 contract */
+
+    /* Chart palette — bright accents tuned for dark grounds */
+    --chart-1: 213 100% 68%;
+    --chart-2: 145 80% 65%;
+    --chart-3: 42 100% 67%;
+    --chart-4: 25 100% 70%;
+    --chart-5: 258 100% 81%;
+
+    --radius: 0;
+
+    /* Spacing and layout tokens */
+    --content-padding: 1.5rem; /* p-6 */
+    --content-padding-sm: 1rem; /* p-4 */
+    --content-padding-xs: 0.75rem; /* p-3 */
+    --content-padding-lg: 2rem; /* p-8 */
+
+    /* Shadow tokens — tuned for dark grounds */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+
+    /* Elevation system for mobile-optimized depth */
+    --shadow-elevation-1: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+    --shadow-elevation-2: 0 4px 6px -1px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.35);
+    --shadow-elevation-3: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --shadow-elevation-4: 0 20px 25px -5px rgb(0 0 0 / 0.45), 0 8px 10px -6px rgb(0 0 0 / 0.45);
+
+    /* Colored shadows for brand elements */
+    --shadow-primary: 0 4px 14px -3px hsl(258 100% 81% / 0.3);
+    --shadow-primary-lg: 0 10px 25px -5px hsl(258 100% 81% / 0.35);
+    --shadow-success: 0 4px 14px -3px hsl(145 80% 65% / 0.3);
+    --shadow-warning: 0 4px 14px -3px hsl(42 100% 67% / 0.3);
+    --shadow-destructive: 0 4px 14px -3px hsl(0 100% 76% / 0.3);
+
+    /* Card interaction shadows */
+    --shadow-card: var(--shadow-elevation-1);
+    --shadow-card-hover: var(--shadow-elevation-2);
+    --shadow-card-active: var(--shadow-elevation-3);
+
+    /* Z-index scale */
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+
+    /* Mobile bottom nav clearance (matches FAB offset at bottom-[78px]) */
+    --mobile-bottom-nav-height: calc(4.875rem + env(safe-area-inset-bottom, 0px));
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+    /* Cookie banner below toasts so Sonner feedback stays visible while consent is pending. */
+    --z-cookie-banner: 1075;
+    --z-toast: 1080;
+
+    /* Focus outline tokens */
+    --focus-ring-width: 2px;
+    --focus-ring-offset: 2px;
+    --focus-ring-color: hsl(var(--ring));
+
+    /* Typography scale - Mobile-first with responsive scaling using clamp() */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: clamp(1.125rem, 1.1rem + 0.125vw, 1.25rem);
+    --font-size-xl: clamp(1.25rem, 1.2rem + 0.25vw, 1.5rem);
+    --font-size-2xl: clamp(1.5rem, 1.4rem + 0.5vw, 1.875rem);
+    --font-size-3xl: clamp(1.875rem, 1.7rem + 0.875vw, 2.5rem);
+    --font-size-4xl: clamp(2.25rem, 2rem + 1.25vw, 3rem);
+    --font-size-5xl: clamp(3rem, 2.5rem + 2.5vw, 4rem);
+
+    --line-height-tight: 1.25;
+    --line-height-snug: 1.375;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --line-height-loose: 2;
+
+    /* Mobile-optimized line heights for body text */
+    --line-height-body: 1.7;
+
+    /* Icon size tokens */
+    --icon-xs: 0.75rem; /* 12px */
+    --icon-sm: 1rem; /* 16px */
+    --icon-base: 1.25rem; /* 20px */
+    --icon-lg: 1.5rem; /* 24px */
+    --icon-xl: 1.75rem; /* 28px */
+    --icon-2xl: 2rem; /* 32px */
+
+    /* Animation tokens */
+    --duration-fast: 150ms;
+    --duration-normal: 200ms;
+    --duration-slow: 300ms;
+    --easing-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --easing-ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --easing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+    /* Organization branding tokens */
+    --brand: var(--primary);
+    --brand-foreground: var(--primary-foreground);
+
+    --sidebar-background: 0 0% 7%;        /* #121212 — matches card */
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 258 100% 81%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 240 5% 13%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 4% 16%;         /* #27272a */
+    --sidebar-ring: 258 100% 81%;
+
+    /* Construction border pattern */
+    --construction-stripe-1: hsl(var(--warning));
+    --construction-stripe-2: hsl(var(--primary));
+
+    /* Scrollbar — subtle dark thumbs on transparent tracks */
+    --scrollbar-thumb: 240 4% 26%;
+    --scrollbar-thumb-hover: 240 4% 35%;
+  }
+}
+
+@layer components {
+  [data-slot="card-content"] {
+    padding: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    [data-slot="card-content"] {
+      padding: 1.25rem;
+    }
+  }
+
+  [data-slot="card-content"]:not(:first-child):not([data-standalone]) {
+    padding-top: 0;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  @supports (scrollbar-width: thin) and (scrollbar-color: auto) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--scrollbar-thumb)) transparent;
+    }
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--scrollbar-thumb));
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--scrollbar-thumb-hover));
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+    font-feature-settings: 'liga' 1, 'kern' 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Display font for headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+
+  /* Monospace stack for inline IDs, serials, and code blocks */
+  code, kbd, samp, pre {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer utilities {
+  /* Tabular numerics — opt-in for currency, metrics, and tables.
+     Pairs JetBrains Mono with `tnum` so digits align in columns
+     and `cv11` for the lowercase l/1 disambiguation glyph. */
+  .font-tabular {
+    font-family: var(--font-mono);
+    font-feature-settings: 'tnum' 1, 'cv11' 1;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* ============================================
+     Scrollbar Utilities
+     ============================================ */
+  
+  /* Themed scrollbar — explicit opt-in when a region overrides global base rules */
+  @supports (scrollbar-width: thin) and (scrollbar-color: auto) {
+    .scrollbar-themed {
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--scrollbar-thumb)) transparent;
+    }
+  }
+
+  .scrollbar-themed::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .scrollbar-themed::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-themed::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--scrollbar-thumb));
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-themed::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--scrollbar-thumb-hover));
+  }
+
+  /* Hide scrollbar while maintaining scroll functionality */
+  .scrollbar-none {
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  @supports (scrollbar-width: none) {
+    .scrollbar-none {
+      scrollbar-width: none; /* Firefox */
+    }
+  }
+  
+  .scrollbar-none::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+
+  /* ============================================
+     Subtle Textures
+     ============================================ */
+  
+  /* Grain texture overlay - very subtle (0.5-1% opacity).
+     The overlay sits under content via an isolated stacking context and a
+     negative z-index instead of forcing position:relative onto children —
+     the old `.texture-grain > *` rule overrode Tailwind's `fixed` utility
+     after the v4 migration (same cascade layer, later source order), which
+     pulled fixed children like the mobile work order footer and quick
+     access button into the page flow. */
+  .texture-grain {
+    position: relative;
+    isolation: isolate;
+  }
+  
+  .texture-grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.015;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    z-index: -1;
+  }
+  
+  /* ============================================
+     Gradient Washes
+     ============================================ */
+  
+  /* Subtle primary gradient for empty states and headers */
+  .gradient-primary {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary) / 0.03) 0%,
+      transparent 50%,
+      hsl(var(--primary) / 0.02) 100%
+    );
+  }
+  
+  /* Radial gradient for hero sections and empty states */
+  .gradient-radial-primary {
+    background: radial-gradient(
+      ellipse at top,
+      hsl(var(--primary) / 0.05) 0%,
+      transparent 50%
+    );
+  }
+  
+  /* Sidebar gradient for visual differentiation */
+  .gradient-sidebar {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--sidebar-background)) 0%,
+      hsl(var(--sidebar-background) / 0.95) 100%
+    );
+  }
+  
+  /* Subtle ambient gradient for card backgrounds */
+  .gradient-card-ambient {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--card) / 0.98) 100%
+    );
+  }
+  
+  /* Success state gradient */
+  .gradient-success {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--success) / 0.05) 0%,
+      transparent 100%
+    );
+  }
+  
+  /* Warning state gradient */
+  .gradient-warning {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--warning) / 0.05) 0%,
+      transparent 100%
+    );
+  }
+  
+  /* ============================================
+     Touch Feedback & Interactions
+     ============================================ */
+  
+  /* Remove 300ms tap delay on touch devices */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  /* Button press feedback */
+  .btn-press-feedback {
+    @apply transition-all duration-fast;
+  }
+  
+  .btn-press-feedback:active {
+    transform: scale(0.98);
+  }
+  
+  /* Card lift effect on hover */
+  .card-lift {
+    @apply transition-all duration-normal;
+  }
+  
+  .card-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+  }
+  
+  .card-lift:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-card-active);
+  }
+  
+  /* Smooth status transitions */
+  .status-transition {
+    @apply transition-colors duration-normal;
+  }
+  
+  /* ============================================
+     Animation Utilities
+     ============================================ */
+  
+  /* Staggered reveal animation for lists */
+  .animate-stagger-in {
+    animation: stagger-fade-in 0.3s ease-out forwards;
+    opacity: 0;
+  }
+  
+  @keyframes stagger-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Entrance animation for empty states */
+  .animate-empty-state-in {
+    animation: empty-state-entrance 0.4s ease-out forwards;
+  }
+  
+  @keyframes empty-state-entrance {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes pricing-collage-scroll {
+    to {
+      transform: translate3d(0, -50%, 0);
+    }
+  }
+
+  .pricing-collage-track-animated {
+    animation-name: pricing-collage-scroll;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    will-change: transform;
+  }
+
+  .pricing-collage-duration-48000 {
+    animation-duration: 48000ms;
+  }
+
+  .pricing-collage-duration-56000 {
+    animation-duration: 56000ms;
+  }
+
+  .pricing-collage-duration-52000 {
+    animation-duration: 52000ms;
+  }
+
+  .pricing-collage-duration-64000 {
+    animation-duration: 64000ms;
+  }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-stagger-in,
+    .animate-empty-state-in,
+    .card-lift,
+    .btn-press-feedback,
+    .pm-collapsible-animate,
+    .pricing-collage-track-animated {
+      animation: none !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* ============================================
+     Equipment card → details morph transition
+     ============================================ */
+
+  [data-equipment-list-transitioning] [data-equipment-list-chrome],
+  [data-equipment-list-transitioning] [data-equipment-id]:not([data-equipment-transition-active]) {
+    opacity: 0.18;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+  }
+
+  [data-equipment-list-transitioning] [data-equipment-transition-active] {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Card silhouette expands into the details page shell. */
+  ::view-transition-group(eq-vt-shell),
+  ::view-transition-old(eq-vt-shell),
+  ::view-transition-new(eq-vt-shell) {
+    animation-duration: 450ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none !important;
+    }
+  }
+
+  ::view-transition-old(eq-vt-shell),
+  ::view-transition-new(eq-vt-shell) {
+    /* Keep shell content clipped while the bounds morph so the card
+       silhouette reads as expanding into the details layout. */
+    overflow: clip;
+  }
+
+  ::view-transition-old(eq-vt-image),
+  ::view-transition-new(eq-vt-image),
+  ::view-transition-old(eq-vt-name),
+  ::view-transition-new(eq-vt-name),
+  ::view-transition-old(eq-vt-meta),
+  ::view-transition-new(eq-vt-meta),
+  ::view-transition-old(eq-vt-location),
+  ::view-transition-new(eq-vt-location),
+  ::view-transition-old(eq-vt-hours),
+  ::view-transition-new(eq-vt-hours) {
+    animation-duration: 400ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-equipment-list-transitioning] [data-equipment-list-chrome],
+    [data-equipment-list-transitioning] [data-equipment-id]:not([data-equipment-transition-active]) {
+      opacity: 1;
+      pointer-events: auto;
+      transition: none;
+    }
+  }
+  
+  /* ============================================
+     Construction Border (Existing)
+     ============================================ */
+
+  /* Construction border pattern for "In Development" features */
+  .border-construction {
+    position: relative;
+    border: 2px solid transparent;
+    background: transparent !important;
+  }
+
+  .border-construction::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: var(--radius);
+    background: 
+      repeating-linear-gradient(
+        45deg,
+        var(--construction-stripe-1) 0px,
+        var(--construction-stripe-1) 8px,
+        var(--construction-stripe-2) 8px,
+        var(--construction-stripe-2) 16px
+      );
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .border-construction::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: max(calc(var(--radius) - 2px), 0px);
+    background: hsl(var(--card));
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Ensure card content is above the pseudo-elements */
+  .border-construction > * {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+/* ----------------------------------------------------------------
+ * Google Places Autocomplete (New API) – style the web component
+ * <gmp-place-autocomplete> to match shadcn/ui Input appearance.
+ * ---------------------------------------------------------------- */
+.gmp-autocomplete-container {
+  width: 100%;
+}
+
+.gmp-autocomplete-container gmp-place-autocomplete {
+  display: block;
+  width: 100%;
+}
+
+/* ============================================
+ * Content Visibility Optimization
+ * Defers rendering of off-screen list items for better initial render performance.
+ * See: https://web.dev/content-visibility/
+ * ============================================ */
+
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 80px;
+}
+
+.cv-auto-lg {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
+}
+
+.cv-auto-sm {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 48px;
+}
+
+/* Style the internal input rendered by PlaceAutocompleteElement */
+.gmp-autocomplete-container gmp-place-autocomplete input {
+  width: 100% !important;
+  height: 2.5rem !important;
+  padding-left: 2.25rem !important;
+  padding-right: 0.75rem !important;
+  border-radius: max(calc(var(--radius) - 2px), 0px) !important;
+  border: 1px solid hsl(var(--input)) !important;
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  outline: 2px solid transparent !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+}
+
+.gmp-autocomplete-container gmp-place-autocomplete input:focus {
+  border-color: hsl(var(--ring)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2) !important;
+}
+
+.gmp-autocomplete-container gmp-place-autocomplete input::placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Hide the default Google branding/icon inside the element if it conflicts */
+.gmp-autocomplete-container gmp-place-autocomplete .icon {
+  display: none !important;
+}
+
+/*
+ * Google Maps InfoWindow overrides
+ *
+ * Google's InfoWindow renders with a hardcoded white background and its
+ * .gm-style ancestor sets color/font at higher specificity than Tailwind.
+ * We swap the bubble surface to the dark card token and re-declare the
+ * design-system variables inside the popup so Tailwind utility classes
+ * (text-foreground, badges, etc.) resolve correctly.
+ */
+
+/* Swap bubble background to match the dark card surface */
+.gm-style .gm-style-iw-c {
+  background-color: hsl(var(--card)) !important;
+  box-shadow:
+    0 8px 24px -4px rgb(0 0 0 / 0.65),
+    0 2px 8px -2px rgb(0 0 0 / 0.45) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  /* Remove any white outline/padding that can produce edge artifacts */
+  outline: none !important;
+  overflow: hidden !important;
+}
+
+/* Tail triangle — must match bubble background */
+.gm-style .gm-style-iw-tc::after {
+  background: hsl(var(--card)) !important;
+}
+
+/* Override design tokens inside the scrollable content div */
+.gm-style .gm-style-iw-d {
+  overflow: hidden !important;
+  max-height: none !important;
+  --background: 0 0% 7%;
+  --foreground: 0 0% 98%;
+  --muted: 240 5% 13%;
+  --muted-foreground: 240 4% 65%;
+  --primary: 258 100% 81%;
+  --primary-foreground: 0 0% 4%;
+  --border: 240 4% 16%;
+  --input: 240 4% 16%;
+  --ring: 258 100% 81%;
+  --info: 213 100% 68%;
+  --info-foreground: 0 0% 4%;
+  --success: 145 80% 65%;
+  --success-foreground: 0 0% 4%;
+  --warning: 42 100% 67%;
+  --warning-foreground: 0 0% 4%;
+
+  color: hsl(var(--foreground)) !important;
+  font-family: var(--font-body) !important;
+}
+
+.gm-style .gm-style-iw-d * {
+  border-color: hsl(var(--border));
+}
+
+/* Close button — invert to stay visible against dark bubble */
+.gm-style .gm-ui-hover-effect {
+  filter: invert(1) brightness(0.9) !important;
+  opacity: 0.75 !important;
+}
+.gm-style .gm-ui-hover-effect:hover {
+  opacity: 1 !important;
+}

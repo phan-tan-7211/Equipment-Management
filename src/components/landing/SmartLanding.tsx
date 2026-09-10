@@ -1,0 +1,79 @@
+import React, { Suspense, lazy, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { PageSEO } from '@/components/seo/PageSEO';
+import { Loader2 } from 'lucide-react';
+import {
+  clearPendingRedirect,
+  getPendingRedirect,
+  getSafeRedirectPath,
+} from '@/utils/redirectValidation';
+
+const Landing = lazy(() => import('@/pages/Landing'));
+
+/**
+ * Smart landing page that conditionally renders based on authentication state.
+ *
+ * - For unauthenticated visitors: Displays the public marketing landing page immediately,
+ *   with no dependency on auth resolution. The hero must never be gated on isLoading —
+ *   when supabase-js retries a stale token refresh, that loop can take 13–60+s and
+ *   would produce a fully black viewport for all visitors. See issue #671.
+ * - For authenticated users: Honors `pendingRedirect` (e.g. QR scan after Google OAuth)
+ *   when present; otherwise redirects to the dashboard once auth resolves. A brief
+ *   flash of the hero while the redirect effect fires is the accepted trade-off.
+ *
+ * Workspace onboarding is voluntary — users connect their Google Workspace from
+ * Organization Settings rather than being prompted on first login.
+ */
+const SmartLanding = () => {
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Guard on !isLoading so we don't redirect prematurely while auth is resolving.
+    if (!isLoading && user) {
+      const pendingRedirect = getPendingRedirect();
+      if (pendingRedirect) {
+        clearPendingRedirect();
+        navigate(getSafeRedirectPath(pendingRedirect, '/dashboard'), { replace: true });
+        return;
+      }
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, isLoading, navigate]);
+
+  // Authenticated and auth resolved: return null while the redirect fires.
+  // The useEffect above will navigate to /dashboard on the next tick.
+  if (!isLoading && user) {
+    return null;
+  }
+
+  // Public marketing page — renders unconditionally for all other cases:
+  //   • isLoading=true, user=null  (fresh visitor, auth still initialising)
+  //   • isLoading=true, user=set   (session found but refresh in progress — brief hero flash)
+  //   • isLoading=false, user=null (unauthenticated visitor)
+  return (
+    <>
+      <PageSEO
+        title="CEV.PhanTan | Free Work Order Software for Heavy Equipment Repair Shops"
+        description="Stop losing money to lost work orders. CEV.PhanTan gives heavy equipment repair shops secure QR code equipment tracking, team-based access, and one-click QuickBooks work order invoicing."
+        path="/"
+      />
+      <Suspense
+        fallback={
+          <div
+            className="flex min-h-[50vh] items-center justify-center bg-background"
+            role="status"
+            aria-label="Loading page"
+          >
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        }
+      >
+        <Landing />
+      </Suspense>
+    </>
+  );
+};
+
+export default SmartLanding;

@@ -1,0 +1,297 @@
+# Project ID for local Supabase CLI development
+# This is the default production project ID. Developers can override this by linking
+# to a different project using: npx supabase link --project-ref <project-ref>
+# For preview/staging environments, link to the preview branch project.
+project_id = "ymxkzronkhwxzcdcbnwq"
+
+# =============================================================================
+# AUTH CONFIGURATION
+# =============================================================================
+# These settings should match your remote Supabase project configuration.
+# Note: Changes here affect local development. Production settings are managed
+# in the Supabase Dashboard or via CI/CD environment variables.
+[auth]
+enabled = true
+# For local development, use the Vite dev server URL
+site_url = "http://localhost:8080"
+# Additional redirect URLs for OAuth and auth flows
+additional_redirect_urls = [
+  "http://localhost:5173/**",
+  "http://localhost:8080/**",
+  "http://127.0.0.1:5173/**",
+  "http://127.0.0.1:8080/**",
+  "https://CEVphantanapp/**",
+  "https://preview.CEVphantanapp/**",
+  # Vercel preview deployments for this project only.
+  # The slug must match the Vercel project name ("equip-qr").
+  # Update this if the Vercel project is renamed.
+  "https://equip-qr-*.vercel.app/**"
+]
+
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+
+# =============================================================================
+# STORAGE CONFIGURATION
+# =============================================================================
+# Storage buckets used by the application
+[storage.buckets.work-order-images]
+public = false
+file_size_limit = "10MB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+
+[storage.buckets.equipment-note-images]
+public = false
+file_size_limit = "10MB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+
+[storage.buckets.organization-logos]
+public = true
+file_size_limit = "5MB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+
+[storage.buckets.user-avatars]
+public = false
+file_size_limit = "5MB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+
+[storage.buckets.team-images]
+public = false
+file_size_limit = "5MB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+
+[storage.buckets.inventory-item-images]
+public = false
+file_size_limit = "10MB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+
+# Public marketing screenshots (anonymous GET via storage policies + public bucket flag).
+[storage.buckets.landing-page-images]
+public = true
+file_size_limit = "5MB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+
+# Public documentation screenshots and videos (service-role uploads only).
+[storage.buckets.docs-media]
+public = true
+file_size_limit = "50MB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/avif", "video/mp4", "video/webm"]
+
+# Async export job results (#1193) — private; signed URLs only.
+[storage.buckets.export-results]
+public = false
+file_size_limit = "50MB"
+allowed_mime_types = ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+
+[api]
+enabled = true
+port = 54321
+# pgmq_public is listed so the queue-worker Edge Function can call
+# supabase.schema('pgmq_public').rpc('read'/'delete', ...) per the Supabase
+# Queues documented pattern. The schema is set up by migration
+# 20260503130000_add_notifications_queue.sql with SECURITY DEFINER wrappers
+# around the bare pgmq.* functions. anon is NOT granted USAGE. authenticated
+# is NOT granted EXECUTE on any pgmq_public function — only service_role has
+# read/delete/pop/archive/send access. The SECURITY DEFINER trigger
+# public.broadcast_notification is the only producer; app code must not enqueue.
+schemas = ["public", "graphql_public", "pgmq_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[functions.send-invitation-email]
+verify_jwt = true
+
+[functions.geocode-location]
+verify_jwt = true
+
+[functions.public-google-maps-key]
+verify_jwt = true
+
+[functions.list-organizations-admin]
+verify_jwt = true
+
+# QuickBooks OAuth Integration
+[functions.quickbooks-oauth-callback]
+verify_jwt = false
+# Handles OAuth callback from Intuit. OAuth callbacks don't include JWT tokens.
+# Security is handled via state parameter validation and organization membership checks.
+
+[functions.google-workspace-oauth-callback]
+verify_jwt = false
+# Handles OAuth callback from Google Workspace. OAuth callbacks don't include JWT tokens.
+# Security is handled via state parameter validation and organization membership checks.
+
+[functions.google-workspace-sync-users]
+verify_jwt = true
+# Syncs Google Workspace directory users. Requires authenticated admin/owner.
+
+[functions.quickbooks-refresh-tokens]
+verify_jwt = true
+# Called by cron job to refresh expiring tokens. Requires authentication with service role key.
+
+[functions.quickbooks-search-customers]
+verify_jwt = true
+# Searches QuickBooks customers for team-customer mapping. Requires authenticated admin/owner.
+
+[functions.quickbooks-export-invoice]
+verify_jwt = true
+# Exports work order to QuickBooks as a draft invoice. Requires authenticated admin/owner.
+
+[functions.quickbooks-webhook-receiver]
+verify_jwt = false
+# Public Intuit webhook endpoint. Security is handled by HMAC-SHA256
+# verification of the raw body against QBO_WEBHOOK_VERIFIER_TOKEN.
+
+[functions.quickbooks-sync-invoice-status]
+verify_jwt = true
+# Cron-triggered QuickBooks invoice-status reconciler.
+# Invoked hourly by public.invoke_quickbooks_invoice_status_sync() using the
+# Supabase service role key from Vault; the function also enforces a literal
+# service-role Bearer token match before processing.
+
+[functions.export-report]
+verify_jwt = false
+# JWT verification disabled at runtime level - function performs its own auth via supabase.auth.getUser()
+# This works around a jose library compatibility issue with ES256 keys in local development
+
+[functions.export-work-orders-excel]
+verify_jwt = false
+# JWT verification disabled at runtime level - function performs its own auth via supabase.auth.getUser()
+# This works around a jose library compatibility issue with ES256 keys in local development
+
+[functions.get-google-export-destination]
+verify_jwt = false
+# JWT verification disabled at runtime level - function performs its own auth via supabase.auth.getUser()
+
+[functions.set-google-export-destination]
+verify_jwt = false
+# JWT verification disabled at runtime level - function performs its own auth via supabase.auth.getUser()
+
+[functions.list-google-drive-destinations]
+verify_jwt = false
+# JWT verification disabled at runtime level - function performs its own auth via supabase.auth.getUser()
+
+[functions.manage-google-drive-destination-folder]
+verify_jwt = false
+# JWT verification disabled at runtime level - function performs its own auth via supabase.auth.getUser()
+
+[functions.export-work-orders-to-google-docs]
+verify_jwt = false
+# JWT verification disabled at runtime level - function performs its own auth via supabase.auth.getUser()
+
+[functions.export-work-orders-csv]
+verify_jwt = false
+
+[functions.export-work-orders-docx-download]
+verify_jwt = false
+
+[functions.create-ticket]
+verify_jwt = false
+# JWT verification disabled at runtime level - function performs its own auth via supabase.auth.getUser()
+# This works around a jose library compatibility issue with ES256 keys in local development
+
+[functions.github-issue-webhook]
+verify_jwt = false
+# GitHub webhook endpoint -- no JWT available. Security is handled via HMAC-SHA256
+# signature verification using the GITHUB_WEBHOOK_SECRET environment variable.
+
+[functions.google-risc-receiver]
+verify_jwt = false
+# Google Cross-Account Protection (RISC) endpoint. Google posts Security Event Tokens
+# without Supabase JWTs. Validation uses Google JWKS signature + issuer/audience checks.
+
+[functions.send-push-notification]
+verify_jwt = false
+# Called from database via pg_net when notifications are inserted.
+# Uses service role key passed in Authorization header for authentication.
+# Also handles cleanup of expired push subscriptions.
+
+[functions.queue-worker]
+verify_jwt = true
+# Cron-triggered drainer for the notifications + exports pgmq queues (#722, #1193).
+# Invoked every minute by cron.schedule('drain-notifications-queue', ...) via
+# net.http_post from the SECURITY DEFINER function public.invoke_queue_worker.
+# Authenticates via Bearer = SUPABASE_SERVICE_ROLE_KEY. The platform JWT check
+# (verify_jwt = true) validates that the token is a valid Supabase JWT; the
+# function additionally enforces a literal-match against the service role key
+# (defense-in-depth, same posture as quickbooks-refresh-tokens).
+
+[functions.process-export-job]
+verify_jwt = true
+# Invoked by queue-worker for each `exports` pgmq message (#1193).
+# Service-role Bearer only; builds CSV, uploads to export-results, updates log.
+
+[functions.submit-privacy-request]
+verify_jwt = false
+# Public CCPA/CPRA DSR intake endpoint. No JWT required for anonymous submitters.
+# Authenticated users may include a Bearer token to link the request to their account.
+# Abuse controls: hCaptcha verification + per-email rate limiting within the function.
+
+[functions.operator-check-in]
+verify_jwt = false
+# Public operator daily check-in load/submit (#1091). Token-scoped; hCaptcha + rate limits.
+
+[functions.quick-form]
+verify_jwt = false
+# Public quick form load/submit (#1184). Token-scoped; hCaptcha + rate limits.
+
+[functions.manage-dsr-request]
+verify_jwt = false
+# Internal admin endpoint for DSR lifecycle management. Requires authenticated admin/owner.
+# JWT verification handled inside the function via supabase.auth.getUser().
+
+[functions.delete-account]
+verify_jwt = false
+# Authenticated self-service account deletion. JWT verification handled via requireUser().
+
+[functions.record-terms-acceptance]
+verify_jwt = true
+
+[functions.verify-hcaptcha]
+verify_jwt = false
+# Public hCaptcha token verification endpoint. Called before privacy request submission.
+
+[functions.healthcheck]
+verify_jwt = false
+# Public monitoring endpoint for Better Stack uptime checks.
+# No authentication required -- returns non-sensitive health status only.
+
+[db.seed]
+enabled = true
+# Committed durable-core seeds first, then generated volume data (#1164).
+# ./seeds/generated/*.sql is gitignored output from dev/seed-data/generate-seeds.ts
+# (run automatically by dev-start -Force and run-user-regression -ResetDb).
+sql_paths = ['./seeds/*.sql', './seeds/generated/*.sql']
+
+# =============================================================================
+# Database Branching (per-PR ephemeral branches) — Issue #722, Sub-change 3
+# =============================================================================
+# As of 2026-05-03, the production project is configured to create ephemeral
+# preview branches automatically on PRs via the Supabase Dashboard's
+# "Supabase changes only" toggle. That trigger fires on ANY change under the
+# supabase/ directory (migrations, Edge Functions, config.toml, seeds, etc.) —
+# NOT just supabase/migrations/**. PRs touching only application code, CI, or
+# docs do NOT create a branch.
+#
+# Configuration lives in the Supabase Dashboard, not in this file:
+#   Settings → Integrations → GitHub Integration
+#     Automatic branching: ON
+#     Supabase changes only: ON
+#     Branch limit: 50 (hard cap; auto-rejects above this)
+#     Deploy to production: ON (auto-deploys to main on push/merge)
+#
+# Branches auto-delete on PR close. Estimated recurring cost at typical
+# CEVphantancadence: ~$25-35/mo at $0.01344/branch/hour
+# (https://supabase.com/pricing). Branching compute is NOT covered by the
+# organization Spend Cap — monitor weekly via Settings → Billing → Usage →
+# Branching.
+#
+# Per-branch overrides (e.g. seed files for ephemeral preview branches) would
+# go in [remotes.<branch_name>] blocks below.
+#
+# Cloud preview uses production (ymxkzronkhwxzcdcbnwq). Persistent preview branch
+# olsdirkvvfegvclbpgrg was decommissioned in #1033.
+#
+# See docs/ops/preview-architecture-migration.md and docs/ops/supabase-branching.md.

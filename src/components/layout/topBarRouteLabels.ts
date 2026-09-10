@@ -1,0 +1,79 @@
+/**
+ * Shared route-label resolution for the global TopBar / ContextBreadcrumb.
+ *
+ * Centralized here so both `TopBar.tsx` and `ContextBreadcrumb.tsx` can
+ * resolve the human-readable label for the currently active dashboard route
+ * (the "section" segment of the breadcrumb) without duplicating the map.
+ */
+
+export const ROUTE_LABELS: Record<string, string> = {
+  '/dashboard': 'Dashboard',
+  '/dashboard/scan': 'Scan QR',
+  '/dashboard/equipment': 'Equipment',
+  '/dashboard/work-orders': 'Work Orders',
+  '/dashboard/fleet-map': 'Fleet Map',
+  '/dashboard/inventory': 'Inventory',
+  '/dashboard/part-lookup': 'Part Lookup',
+  '/dashboard/alternate-groups': 'Part Alternates',
+  '/dashboard/teams': 'Teams',
+  '/dashboard/organization': 'Settings',
+  '/dashboard/organization/settings': 'Settings',
+  '/dashboard/organization/members': 'Members',
+  '/dashboard/organization/integrations': 'Integrations',
+  '/dashboard/pm-templates': 'PM Templates',
+  '/dashboard/pm-templates/new': 'New PM Template',
+  '/dashboard/operator-check-ins': 'Daily Check-Ins',
+  '/dashboard/reports': 'Reports',
+  '/dashboard/organization/audit-log': 'Audit Log',
+  '/dashboard/settings': 'Settings',
+  '/dashboard/support': 'Support & tickets',
+};
+
+/**
+ * Routes where the page content already renders a prominent H1 title.
+ * On mobile the top-bar label would duplicate that title, so consumers
+ * may suppress the section label and show the compact brand mark instead.
+ */
+export const ROUTES_WITH_PAGE_H1 = new Set([
+  '/dashboard',
+  '/dashboard/scan',
+  '/dashboard/equipment',
+  '/dashboard/work-orders',
+  '/dashboard/inventory',
+  '/dashboard/fleet-map',
+  '/dashboard/teams',
+  '/dashboard/reports',
+  '/dashboard/pm-templates',
+  '/dashboard/organization/audit-log',
+  '/dashboard/settings',
+  '/dashboard/support',
+  '/dashboard/organization',
+  '/dashboard/organization/settings',
+  '/dashboard/organization/members',
+  '/dashboard/organization/integrations',
+]);
+
+const MOBILE_DETAIL_PREFIXES = [
+  '/dashboard/equipment/',
+  '/dashboard/work-orders/',
+  '/dashboard/inventory/',
+];
+
+export function shouldSuppressLabelOnMobile(pathname: string): boolean {
+  if (ROUTES_WITH_PAGE_H1.has(pathname)) return true;
+  return MOBILE_DETAIL_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+export function getPageLabel(pathname: string): string {
+  if (ROUTE_LABELS[pathname]) return ROUTE_LABELS[pathname];
+  if (pathname.endsWith('/edit') && pathname.includes('/pm-templates/')) {
+    return 'Edit PM Template';
+  }
+  // Match dynamic routes, e.g. /dashboard/equipment/:id
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length >= 2) {
+    const base = `/${segments[0]}/${segments[1]}`;
+    if (ROUTE_LABELS[base]) return ROUTE_LABELS[base];
+  }
+  return '';
+}

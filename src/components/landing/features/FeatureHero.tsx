@@ -1,0 +1,52 @@
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { PageBackButton } from '@/components/layout/PageBackButton';
+import { ArrowRight, type LucideIcon } from 'lucide-react';
+
+interface FeatureHeroProps {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  ctaText: string;
+  ctaLink?: string;
+}
+
+export const FeatureHero = ({ icon: Icon, title, description, ctaText, ctaLink = '/auth?tab=signup' }: FeatureHeroProps) => {
+  return (
+    <section className="relative pt-16 sm:pt-20 pb-24 bg-linear-to-br from-background via-background to-primary/5">
+      <div className="container px-4 mx-auto">
+        <div className="max-w-4xl mx-auto">
+          <PageBackButton
+            fallbackTo={{ pathname: '/', hash: 'features' }}
+            label="Back to Features"
+            className="mb-8"
+          />
+          
+          <div className="flex items-center gap-4 mb-6">
+            <div className="p-3 rounded-lg bg-primary/10">
+              <Icon className="h-10 w-10 text-primary" />
+            </div>
+            <h1
+              data-route-heading="true"
+              tabIndex={-1}
+              className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              {title}
+            </h1>
+          </div>
+          
+          <p className="text-xl sm:text-2xl text-muted-foreground mb-8 max-w-3xl">
+            {description}
+          </p>
+          
+          <Button asChild size="lg" className="text-lg px-8 py-6">
+            <Link to={ctaLink}>
+              {ctaText}
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+};
