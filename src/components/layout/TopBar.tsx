@@ -6,9 +6,12 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import ContextBreadcrumb from './ContextBreadcrumb';
 import UserProfileMenu from './UserProfileMenu';
+import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
+import { useI18n } from '@/i18n';
 
 const TopBar: React.FC = () => {
   const { toggleSidebar } = useSidebar();
+  const { t } = useI18n();
 
   return (
     <header
@@ -21,12 +24,12 @@ const TopBar: React.FC = () => {
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          aria-label="Open sidebar"
+          aria-label={t('common.openSidebar')}
           className="-ml-1 h-8 w-8 p-1 shrink-0 sm:hidden"
         >
           <img
             src="/images/brand/icons/EquipQR-Icon-Purple-Small.png"
-            alt="EquipQR"
+            alt="ZNTEQR"
             className="h-6 w-6"
           />
         </Button>
@@ -38,6 +41,7 @@ const TopBar: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
+          <LanguageSwitcher />
           <UserProfileMenu />
         </div>
       </div>
