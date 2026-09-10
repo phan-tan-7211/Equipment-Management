@@ -38,9 +38,10 @@ import { useSidebar } from "@/components/ui/sidebar-context";
 import Logo from "@/components/ui/Logo";
 import { ORGANIZATION_INTEGRATIONS_PATH, ORGANIZATION_MEMBERS_PATH } from "@/features/organization/constants/routes";
 import { useInventoryAccess } from "@/features/inventory/hooks/useInventoryAccess";
+import { useI18n } from '@/i18n';
 
 interface NavigationItem {
-  title: string;
+  translationKey: string;
   url: string;
   icon: LucideIcon;
   adminOnly?: boolean;
@@ -48,38 +49,38 @@ interface NavigationItem {
 }
 
 interface NavigationGroup {
-  label: string;
+  translationKey: string;
   items: NavigationItem[];
 }
 
 const navigationGroups: NavigationGroup[] = [
   {
-    label: "Fleet",
+    translationKey: "navigation.groups.fleet",
     items: [
-      { title: "Equipment", url: "/dashboard/equipment", icon: Forklift },
-      { title: "Fleet Map", url: "/dashboard/fleet-map", icon: Map },
-      { title: "Inventory", url: "/dashboard/inventory", icon: Warehouse, inventoryAccessRequired: true },
-      { title: "Part Lookup", url: "/dashboard/part-lookup", icon: Search, inventoryAccessRequired: true },
-      { title: "Part Alternates", url: "/dashboard/alternate-groups", icon: Layers, inventoryAccessRequired: true },
+      { translationKey: "navigation.items.equipment", url: "/dashboard/equipment", icon: Forklift },
+      { translationKey: "navigation.items.fleetMap", url: "/dashboard/fleet-map", icon: Map },
+      { translationKey: "navigation.items.inventory", url: "/dashboard/inventory", icon: Warehouse, inventoryAccessRequired: true },
+      { translationKey: "navigation.items.partLookup", url: "/dashboard/part-lookup", icon: Search, inventoryAccessRequired: true },
+      { translationKey: "navigation.items.partAlternates", url: "/dashboard/alternate-groups", icon: Layers, inventoryAccessRequired: true },
     ],
   },
   {
-    label: "Operations",
+    translationKey: "navigation.groups.operations",
     items: [
-      { title: "Dashboard", url: "/dashboard", icon: Home },
-      { title: "Work Orders", url: "/dashboard/work-orders", icon: ClipboardList },
-      { title: "PM Templates", url: "/dashboard/pm-templates", icon: ClipboardCheck, adminOnly: true },
-      { title: "Daily Check-Ins", url: "/dashboard/operator-check-ins", icon: ClipboardSignature, adminOnly: true },
-      { title: "Quick Forms", url: "/dashboard/quick-forms", icon: FileSignature, adminOnly: true },
-      { title: "Reports", url: "/dashboard/reports", icon: FileText },
+      { translationKey: "navigation.items.dashboard", url: "/dashboard", icon: Home },
+      { translationKey: "navigation.items.workOrders", url: "/dashboard/work-orders", icon: ClipboardList },
+      { translationKey: "navigation.items.pmTemplates", url: "/dashboard/pm-templates", icon: ClipboardCheck, adminOnly: true },
+      { translationKey: "navigation.items.dailyCheckIns", url: "/dashboard/operator-check-ins", icon: ClipboardSignature, adminOnly: true },
+      { translationKey: "navigation.items.quickForms", url: "/dashboard/quick-forms", icon: FileSignature, adminOnly: true },
+      { translationKey: "navigation.items.reports", url: "/dashboard/reports", icon: FileText },
     ],
   },
   {
-    label: "Infrastructure",
+    translationKey: "navigation.groups.infrastructure",
     items: [
-      { title: "Teams", url: "/dashboard/teams", icon: Users },
-      { title: "Organization", url: ORGANIZATION_MEMBERS_PATH, icon: Building },
-      { title: "Integrations", url: ORGANIZATION_INTEGRATIONS_PATH, icon: Plug, adminOnly: true },
+      { translationKey: "navigation.items.teams", url: "/dashboard/teams", icon: Users },
+      { translationKey: "navigation.items.organization", url: ORGANIZATION_MEMBERS_PATH, icon: Building },
+      { translationKey: "navigation.items.integrations", url: ORGANIZATION_INTEGRATIONS_PATH, icon: Plug, adminOnly: true },
     ],
   },
   // Audit Log lives under Organization settings (#1122).
@@ -91,6 +92,7 @@ const AppSidebar = () => {
   const { currentOrganization } = useOrganization();
   const isMobile = useIsMobile();
   const { setOpenMobile } = useSidebar();
+  const { t } = useI18n();
 
   const handleNavClick = () => {
     if (isMobile) {
@@ -98,30 +100,21 @@ const AppSidebar = () => {
     }
   };
 
-  // Get organization branding
   const orgBackgroundColor = currentOrganization?.backgroundColor;
   const hasCustomBranding = orgBackgroundColor && orgBackgroundColor !== '#ffffff';
   const isLightBrand = hasCustomBranding ? isLightColor(orgBackgroundColor) : true;
 
-  // Dynamic styles for branded sidebar using CSS variables
   const sidebarStyle = hasCustomBranding ? {
     '--brand': orgBackgroundColor,
     '--brand-foreground': isLightBrand ? '#1a1a1a' : '#ffffff',
     backgroundColor: orgBackgroundColor,
   } as React.CSSProperties : {};
 
-  const textColorClass = hasCustomBranding
-    ? 'text-brand-foreground'
-    : '';
-
-  const mutedTextColorClass = hasCustomBranding
-    ? (isLightBrand ? 'text-brand-foreground/70' : 'text-brand-foreground/70')
-    : '';
-
+  const textColorClass = hasCustomBranding ? 'text-brand-foreground' : '';
+  const mutedTextColorClass = hasCustomBranding ? 'text-brand-foreground/70' : '';
   const hoverBackgroundClass = hasCustomBranding
     ? (isLightBrand ? 'hover:bg-brand-foreground/10' : 'hover:bg-brand-foreground/20')
     : '';
-
   const activeBackgroundClass = hasCustomBranding
     ? (isLightBrand ? 'bg-brand-foreground/15' : 'bg-brand-foreground/25')
     : '';
@@ -138,7 +131,7 @@ const AppSidebar = () => {
           !location.pathname.startsWith(ORGANIZATION_INTEGRATIONS_PATH)
         : location.pathname === item.url;
     return (
-      <SidebarMenuItem key={item.title}>
+      <SidebarMenuItem key={item.translationKey}>
         <SidebarMenuButton
           asChild
           className={cn(
@@ -153,7 +146,7 @@ const AppSidebar = () => {
         >
           <Link to={item.url} onClick={handleNavClick}>
             <item.icon className="h-4 w-4" />
-            <span>{item.title}</span>
+            <span>{t(item.translationKey)}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -162,7 +155,7 @@ const AppSidebar = () => {
 
   const visibleGroups = navigationGroups
     .map((group) => ({
-      label: group.label,
+      translationKey: group.translationKey,
       items: group.items.filter((item) => {
         if (item.adminOnly && !isAdmin) return false;
         if (item.inventoryAccessRequired && !canViewInventory) return false;
@@ -184,21 +177,19 @@ const AppSidebar = () => {
           </div>
         </SidebarHeader>
 
-        <SidebarContent className="px-2 sm:px-3 overflow-x-hidden" role="navigation" aria-label="Main navigation">
+        <SidebarContent className="px-2 sm:px-3 overflow-x-hidden" role="navigation" aria-label={t('navigation.mainNavigation')}>
           {visibleGroups.map((group, idx) => (
-            <React.Fragment key={group.label}>
+            <React.Fragment key={group.translationKey}>
               {idx > 0 && <Separator className="mx-1 my-1 opacity-30" />}
               <SidebarGroup>
                 <SidebarGroupLabel className={cn(
                   "text-[10px] uppercase tracking-widest font-semibold",
                   mutedTextColorClass || "text-sidebar-foreground/50"
                 )}>
-                  {group.label}
+                  {t(group.translationKey)}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
-                  <SidebarMenu>
-                    {group.items.map(renderNavItem)}
-                  </SidebarMenu>
+                  <SidebarMenu>{group.items.map(renderNavItem)}</SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
             </React.Fragment>
