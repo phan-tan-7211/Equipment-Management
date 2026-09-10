@@ -1,5 +1,5 @@
 {
-  "name": "CEVphantan,
+  "name": "cev-phantan",
   "private": true,
   "version": "3.32.0",
   "type": "module",
@@ -73,7 +73,7 @@
     "test:ci:sharded": "node dev/test-ci-sharded.mjs --shards=4",
     "test:shard": "node dev/test-ci-shard.mjs",
     "test:perf:report": "node dev/vitest-perf/report-vitest-durations.mjs",
-    "test:perf:publish-comment": "node dev/vitest-perf/publish-duration-pr-comment.mjs",
+    "test:perf:publish-comment": "node dev/vitest-perf/publish-duration-comment.mjs",
     "coverage:merge": "node dev/merge-coverage.mjs",
     "analyze": "npm run build && npx vite-bundle-analyzer",
     "size-check": "npx size-limit",
