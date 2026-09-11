@@ -18,6 +18,7 @@ export interface EquipmentTableRow {
   team_name?: string;
   team_id?: string | null;
   working_hours?: number | null;
+  management_code?: string | null;
   [key: string]: unknown;
 }
 
@@ -28,7 +29,7 @@ export function getEquipmentTableCellDisplayValue(
 ): string {
   switch (columnKey) {
     case 'name':
-      return row.name;
+      return row.management_code ? `${row.name} ${row.management_code}` : row.name;
     case 'status':
       return getStatusDisplayInfo(row.status).label;
     case 'manufacturer':
