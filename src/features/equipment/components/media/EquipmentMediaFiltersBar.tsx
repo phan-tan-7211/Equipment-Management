@@ -17,6 +17,7 @@ import type {
   EquipmentMediaSourceFilter,
 } from '@/features/equipment/utils/equipmentMediaFilters';
 import type { EquipmentMediaFilterHandlers } from '@/features/equipment/components/media/equipmentMediaFilterHandlers';
+import { useI18n } from '@/i18n';
 
 interface EquipmentMediaFiltersProps extends EquipmentMediaFilterHandlers {
   filters: EquipmentMediaFiltersState;
@@ -35,12 +36,14 @@ export function EquipmentMediaFiltersBar({
   onSortChange,
   onClear,
 }: EquipmentMediaFiltersProps) {
+  const { t } = useI18n();
+
   return (
     <div className="space-y-2 rounded-lg border bg-muted/30 p-2 sm:p-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
         <div className="relative min-w-0 flex-1">
           <Label htmlFor="equipment-media-search" className="sr-only">
-            Search media
+            {t('equipmentMedia.searchMedia')}
           </Label>
           <Search
             className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
@@ -50,7 +53,7 @@ export function EquipmentMediaFiltersBar({
             id="equipment-media-search"
             value={filters.search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search file, note, uploader…"
+            placeholder={t('equipmentMedia.searchPlaceholder')}
             className="h-8 pl-8 text-sm"
           />
         </div>
@@ -58,7 +61,7 @@ export function EquipmentMediaFiltersBar({
         <div className="grid grid-cols-2 gap-2 sm:flex sm:items-end">
           <div className="space-y-1">
             <Label htmlFor="equipment-media-source" className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              Source
+              {t('equipmentMedia.source')}
             </Label>
             <Select
               value={filters.source}
@@ -68,16 +71,16 @@ export function EquipmentMediaFiltersBar({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All sources</SelectItem>
-                <SelectItem value="equipment_note">Equipment notes</SelectItem>
-                <SelectItem value="work_order_note">Work orders</SelectItem>
+                <SelectItem value="all">{t('equipmentMedia.allSources')}</SelectItem>
+                <SelectItem value="equipment_note">{t('equipmentMedia.equipmentNotes')}</SelectItem>
+                <SelectItem value="work_order_note">{t('equipmentMedia.workOrders')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="equipment-media-sort" className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              Sort
+              {t('equipmentMedia.sort')}
             </Label>
             <Select
               value={`${filters.sortField}:${filters.sortOrder}`}
@@ -93,11 +96,11 @@ export function EquipmentMediaFiltersBar({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="created_at:desc">Newest first</SelectItem>
-                <SelectItem value="created_at:asc">Oldest first</SelectItem>
-                <SelectItem value="source:asc">Source A–Z</SelectItem>
-                <SelectItem value="uploader:asc">Uploader A–Z</SelectItem>
-                <SelectItem value="file_name:asc">File name A–Z</SelectItem>
+                <SelectItem value="created_at:desc">{t('equipmentMedia.newestFirst')}</SelectItem>
+                <SelectItem value="created_at:asc">{t('equipmentMedia.oldestFirst')}</SelectItem>
+                <SelectItem value="source:asc">{t('equipmentMedia.sourceAz')}</SelectItem>
+                <SelectItem value="uploader:asc">{t('equipmentMedia.uploaderAz')}</SelectItem>
+                <SelectItem value="file_name:asc">{t('equipmentMedia.fileNameAz')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -107,19 +110,19 @@ export function EquipmentMediaFiltersBar({
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <div className="space-y-1">
           <Label htmlFor="equipment-media-uploader" className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            Uploader
+            {t('equipmentMedia.uploader')}
           </Label>
           <Input
             id="equipment-media-uploader"
             value={filters.uploader}
             onChange={(e) => onUploaderChange(e.target.value)}
-            placeholder="Name or user…"
+            placeholder={t('equipmentMedia.uploaderPlaceholder')}
             className="h-8 text-sm"
           />
         </div>
         <div className="space-y-1">
           <Label htmlFor="equipment-media-from" className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            From
+            {t('equipmentMedia.from')}
           </Label>
           <Input
             id="equipment-media-from"
@@ -131,7 +134,7 @@ export function EquipmentMediaFiltersBar({
         </div>
         <div className="space-y-1">
           <Label htmlFor="equipment-media-to" className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            To
+            {t('equipmentMedia.to')}
           </Label>
           <Input
             id="equipment-media-to"
@@ -146,11 +149,14 @@ export function EquipmentMediaFiltersBar({
       {activeFilterCount > 0 && (
         <div className="flex items-center justify-between gap-2 pt-0.5">
           <p className="text-xs text-muted-foreground">
-            {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
+            {t(
+              activeFilterCount === 1 ? 'equipmentMedia.activeFilter' : 'equipmentMedia.activeFilters',
+              { count: activeFilterCount },
+            )}
           </p>
           <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={onClear}>
             <X className="mr-1 h-3 w-3" aria-hidden />
-            Clear
+            {t('equipmentMedia.clear')}
           </Button>
         </div>
       )}
