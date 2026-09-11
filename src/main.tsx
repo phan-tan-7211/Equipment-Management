@@ -11,12 +11,14 @@ import './znteqr-theme.css'
 import './capacitor-native.css'
 import { initConsoleErrorCapture } from '@/features/tickets/utils/consoleErrorBuffer';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { installNativeDownloadInterceptor } from '@/services/nativeDownloadInterceptor';
 
 const isNativeApp = Capacitor.isNativePlatform();
 
 if (isNativeApp) {
   document.documentElement.classList.add('capacitor-native');
   document.body.classList.add('capacitor-native');
+  installNativeDownloadInterceptor();
 }
 
 // Initialize console error capture for bug report diagnostics
