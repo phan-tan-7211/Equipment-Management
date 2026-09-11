@@ -26,26 +26,19 @@ const EquipmentBasicInfoSection: React.FC<EquipmentBasicInfoSectionProps> = ({
 }) => {
   const { currentOrganization } = useOrganization();
   
-  // Get manufacturer/model suggestions from existing equipment
   const { data: manufacturersData = [] } = useEquipmentManufacturersAndModels(
     currentOrganization?.id
   );
 
-  // Track if name has been manually edited (only for new equipment)
   const [nameManuallyEdited, setNameManuallyEdited] = useState(false);
-
-  // Watch manufacturer and model for auto-generating name
   const manufacturer = form.watch('manufacturer');
   const model = form.watch('model');
   const name = form.watch('name');
 
-  // Check if this is an edit (has existing name) on mount
   const isEdit = useMemo(() => {
-    // If name was already set when component mounted, treat as edit mode
     return !!form.formState.defaultValues?.name;
   }, [form.formState.defaultValues?.name]);
 
-  // Auto-generate name when manufacturer/model changes (if not manually edited and not in edit mode)
   useEffect(() => {
     if (!nameManuallyEdited && !isEdit) {
       const generatedName = generateEquipmentName(manufacturer || '', model || '');
@@ -60,7 +53,6 @@ const EquipmentBasicInfoSection: React.FC<EquipmentBasicInfoSectionProps> = ({
     manufacturer,
   );
 
-  // Handle name field focus - mark as manually edited if user types
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, fieldOnChange: (value: string) => void) => {
     setNameManuallyEdited(true);
     fieldOnChange(e.target.value);
@@ -73,7 +65,6 @@ const EquipmentBasicInfoSection: React.FC<EquipmentBasicInfoSectionProps> = ({
           Basic Information
         </h3>
         
-        {/* Manufacturer - AutocompleteInput with suggestions */}
         <FormField
           control={form.control}
           name="manufacturer"
@@ -87,9 +78,7 @@ const EquipmentBasicInfoSection: React.FC<EquipmentBasicInfoSectionProps> = ({
                   value={field.value || ''}
                   onChange={(value) => {
                     field.onChange(value);
-                    if (!value) {
-                      setNameManuallyEdited(false);
-                    }
+                    if (!value) setNameManuallyEdited(false);
                   }}
                   emptyMessage="No matching manufacturers"
                 />
@@ -104,7 +93,6 @@ const EquipmentBasicInfoSection: React.FC<EquipmentBasicInfoSectionProps> = ({
           )}
         />
 
-        {/* Model - AutocompleteInput with suggestions */}
         <FormField
           control={form.control}
           name="model"
@@ -118,9 +106,7 @@ const EquipmentBasicInfoSection: React.FC<EquipmentBasicInfoSectionProps> = ({
                   value={field.value || ''}
                   onChange={(value) => {
                     field.onChange(value);
-                    if (!value) {
-                      setNameManuallyEdited(false);
-                    }
+                    if (!value) setNameManuallyEdited(false);
                   }}
                   emptyMessage="No matching models"
                 />
@@ -135,7 +121,6 @@ const EquipmentBasicInfoSection: React.FC<EquipmentBasicInfoSectionProps> = ({
           )}
         />
 
-        {/* Equipment Name - Auto-generated from manufacturer + model, but editable */}
         <FormField
           control={form.control}
           name="name"
@@ -169,10 +154,11 @@ const EquipmentBasicInfoSection: React.FC<EquipmentBasicInfoSectionProps> = ({
           name="serial_number"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Serial Number *</FormLabel>
+              <FormLabel>Serial Number <span className="font-normal text-muted-foreground">(optional)</span></FormLabel>
               <FormControl>
-                <Input placeholder="e.g., 12345678" {...field} />
+                <Input placeholder="Manufacturer serial number, if available" {...field} />
               </FormControl>
+              <FormDescription>Leave blank when the asset has no manufacturer serial number or it is no longer readable.</FormDescription>
               <FormMessage />
               {duplicateMatch && (
                 <DuplicateSerialWarning
