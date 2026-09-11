@@ -44,6 +44,7 @@ jobs:
           @capacitor/splash-screen@8
           @capacitor/haptics@8
           @capacitor/barcode-scanner@3.1.2
+          @capacitor-community/media@9.1.0
           @capacitor/assets@3
 
       - name: Build Vite app
@@ -112,7 +113,7 @@ jobs:
       - name: Sync web assets and native plugins into Android
         run: npx cap sync android
 
-      - name: Verify V5 native shell and QR wiring
+      - name: Verify V5.1 native QR and gallery wiring
         run: |
           echo "Checking native shell plugins..."
           grep -R --line-number --fixed-strings "capacitor-app" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
@@ -122,6 +123,7 @@ jobs:
           echo "Checking Phase 2 QR plugins..."
           grep -R --line-number --fixed-strings "capacitor-barcode-scanner" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
           grep -R --line-number --fixed-strings "capacitor-haptics" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+          grep -R --line-number --fixed-strings "capacitor-community-media" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
 
           echo "Checking Android camera requirements..."
           grep -E 'minSdkVersion\s*=\s*26' android/variables.gradle
@@ -151,16 +153,16 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Prepare V5 APK artifact
+      - name: Prepare V5.1 APK artifact
         run: |
           mkdir -p artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-v5.apk
-          sha256sum artifacts/equipment-management-capacitor-v5.apk > artifacts/equipment-management-capacitor-v5.apk.sha256
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-v5.1.apk
+          sha256sum artifacts/equipment-management-capacitor-v5.1.apk > artifacts/equipment-management-capacitor-v5.1.apk.sha256
 
-      - name: Upload V5 debug APK
+      - name: Upload V5.1 debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: equipment-management-capacitor-v5-apk
+          name: equipment-management-capacitor-v5.1-apk
           path: artifacts/
           if-no-files-found: error
           retention-days: 7
