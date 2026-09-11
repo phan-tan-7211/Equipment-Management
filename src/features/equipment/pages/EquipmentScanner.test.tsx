@@ -4,7 +4,8 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import EquipmentScanner from './EquipmentScanner';
-import { getCameraAccessErrorMessage } from '@/features/equipment/utils/cameraAccessErrors';
+import { getCameraAccessErrorCode } from '@/features/equipment/utils/cameraAccessErrors';
+import { I18nProvider } from '@/i18n/I18nProvider';
 
 const hoisted = vi.hoisted(() => {
   const scannerState = {
@@ -66,11 +67,13 @@ vi.mock('react-router-dom', async () => {
 
 function renderScanner() {
   return render(
-    <MemoryRouter initialEntries={['/dashboard/scan']}>
-      <Routes>
-        <Route path="/dashboard/scan" element={<EquipmentScanner />} />
-      </Routes>
-    </MemoryRouter>
+    <I18nProvider>
+      <MemoryRouter initialEntries={['/dashboard/scan']}>
+        <Routes>
+          <Route path="/dashboard/scan" element={<EquipmentScanner />} />
+        </Routes>
+      </MemoryRouter>
+    </I18nProvider>,
   );
 }
 
@@ -78,40 +81,40 @@ async function startCameraScan(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByTestId('scanner-start-camera'));
 }
 
-describe('getCameraAccessErrorMessage', () => {
+describe('getCameraAccessErrorCode', () => {
   it('detects permissions policy violation text', () => {
-    expect(getCameraAccessErrorMessage(new Error('Permissions policy violation: camera is not allowed'))).toContain(
-      'security policy'
-    );
+    expect(
+      getCameraAccessErrorCode(new Error('Permissions policy violation: camera is not allowed')),
+    ).toBe('policy_blocked');
   });
 
   it('maps NotAllowedError', () => {
-    expect(getCameraAccessErrorMessage(new DOMException('Permission denied', 'NotAllowedError'))).toContain(
-      'permission was denied'
-    );
+    expect(
+      getCameraAccessErrorCode(new DOMException('Permission denied', 'NotAllowedError')),
+    ).toBe('permission_denied');
   });
 
   it('maps NotFoundError', () => {
-    expect(getCameraAccessErrorMessage(new DOMException('No camera', 'NotFoundError'))).toContain(
-      'No camera was detected'
+    expect(getCameraAccessErrorCode(new DOMException('No camera', 'NotFoundError'))).toBe(
+      'not_found',
     );
   });
 
   it('maps NotReadableError', () => {
-    expect(getCameraAccessErrorMessage(new DOMException('Busy', 'NotReadableError'))).toContain(
-      'already in use'
+    expect(getCameraAccessErrorCode(new DOMException('Busy', 'NotReadableError'))).toBe(
+      'not_readable',
     );
   });
 });
 
 describe('EquipmentScanner', () => {
   beforeEach(() => {
+    window.localStorage.setItem('znteqr-language', 'en');
     scanFeedbackHookMock.prepareFeedback.mockClear();
     scanFeedbackHookMock.markPendingFeedback.mockClear();
     scanFeedbackHookMock.triggerFeedback.mockClear();
     scanFeedbackHookMock.triggerPendingFeedback.mockClear();
 
-    // Radix Select expects Pointer Capture APIs; jsdom does not implement them.
     Object.defineProperty(Element.prototype, 'hasPointerCapture', {
       configurable: true,
       value: vi.fn(() => false),
@@ -184,7 +187,9 @@ describe('EquipmentScanner', () => {
   it('decodes upload via scanImage and navigates', async () => {
     const user = userEvent.setup();
     renderScanner();
-    await waitFor(() => expect(screen.getByRole('button', { name: /upload qr image/i })).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /upload qr image/i })).toBeInTheDocument(),
+    );
     await user.click(screen.getByRole('button', { name: /upload qr image/i }));
     const input = screen.getByLabelText(/upload an image containing a qr code/i);
     await user.upload(input, new File(['x'], 'qr.png', { type: 'image/png' }));
@@ -270,7 +275,9 @@ describe('EquipmentScanner', () => {
     expect(errorAlert).toHaveTextContent(/not an equipqr link/i);
     const destroysBefore = hoisted.mockDestroy.mock.calls.length;
     await user.click(screen.getByRole('button', { name: /retry scan/i }));
-    await waitFor(() => expect(hoisted.mockDestroy.mock.calls.length).toBeGreaterThan(destroysBefore));
+    await waitFor(() =>
+      expect(hoisted.mockDestroy.mock.calls.length).toBeGreaterThan(destroysBefore),
+    );
   });
 
   it('destroys scanner on unmount', async () => {
