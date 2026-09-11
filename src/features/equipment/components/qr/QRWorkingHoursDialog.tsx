@@ -22,6 +22,7 @@ import {
 } from '@/features/equipment/services/equipmentQRPermissions';
 import { updateQRWorkingHours } from '@/features/equipment/services/equipmentQRActionService';
 import { logger } from '@/utils/logger';
+import { useI18n } from '@/i18n';
 
 interface QRWorkingHoursDialogProps {
   open: boolean;
@@ -40,6 +41,7 @@ const QRWorkingHoursDialog: React.FC<QRWorkingHoursDialogProps> = ({
   scanId,
   onSuccess,
 }) => {
+  const { t } = useI18n();
   const [newHours, setNewHours] = useState(
     equipment.workingHours == null ? '' : String(equipment.workingHours)
   );
@@ -65,7 +67,7 @@ const QRWorkingHoursDialog: React.FC<QRWorkingHoursDialogProps> = ({
 
     const parsedHours = Number(newHours);
     if (!Number.isFinite(parsedHours) || parsedHours < 0) {
-      setError('Enter a valid non-negative hour value.');
+      setError(t('equipmentQRScan.invalidHours'));
       return;
     }
 
@@ -73,7 +75,7 @@ const QRWorkingHoursDialog: React.FC<QRWorkingHoursDialogProps> = ({
       !permissionContext ||
       !canRunQRAction('update-hours', permissionContext, equipment.teamId)
     ) {
-      setError('Permission changed. Re-open this action to continue.');
+      setError(t('equipmentQRScan.permissionChanged'));
       return;
     }
 
@@ -91,7 +93,7 @@ const QRWorkingHoursDialog: React.FC<QRWorkingHoursDialogProps> = ({
       onOpenChange(false);
     } catch (submitError) {
       logger.error('Failed to update QR working hours', submitError);
-      setError(submitError instanceof Error ? submitError.message : 'Unable to update hours.');
+      setError(t('equipmentQRScan.updateHoursFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -101,10 +103,9 @@ const QRWorkingHoursDialog: React.FC<QRWorkingHoursDialogProps> = ({
     <Dialog open={open} onOpenChange={isSubmitting ? undefined : onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Update Hours</DialogTitle>
+          <DialogTitle>{t('equipmentQRScan.updateHours')}</DialogTitle>
           <DialogDescription>
-            Record the latest machine hours for {equipment.name}. The existing audit history will capture the prior value,
-            new value, updater, and timestamp.
+            {t('equipmentQRScan.updateHoursDescription', { name: equipment.name })}
           </DialogDescription>
         </DialogHeader>
 
@@ -112,14 +113,16 @@ const QRWorkingHoursDialog: React.FC<QRWorkingHoursDialogProps> = ({
           <QRDialogFormError error={error} />
 
           <div className="rounded-md border bg-muted/40 p-3 text-sm">
-            Current hours:{' '}
+            {t('equipmentQRScan.currentHours')}{' '}
             <span className="font-semibold">
-              {equipment.workingHours == null ? 'Not recorded' : `${equipment.workingHours} hours`}
+              {equipment.workingHours == null
+                ? t('equipmentQRScan.notRecorded')
+                : t('equipmentQRScan.hoursValue', { count: equipment.workingHours })}
             </span>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="qr-new-hours">New total hours</Label>
+            <Label htmlFor="qr-new-hours">{t('equipmentQRScan.newTotalHours')}</Label>
             <Input
               id="qr-new-hours"
               type="number"
@@ -132,13 +135,13 @@ const QRWorkingHoursDialog: React.FC<QRWorkingHoursDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="qr-hours-reason">Reason or note (optional)</Label>
+            <Label htmlFor="qr-hours-reason">{t('equipmentQRScan.reasonOptional')}</Label>
             <div className="relative">
               <Textarea
                 id="qr-hours-reason"
                 value={reason}
                 onChange={event => setReason(event.target.value)}
-                placeholder="Meter reading, field service update, or correction reason"
+                placeholder={t('equipmentQRScan.reasonPlaceholder')}
                 rows={3}
                 disabled={isSubmitting}
                 className="pb-12"
@@ -167,11 +170,11 @@ const QRWorkingHoursDialog: React.FC<QRWorkingHoursDialogProps> = ({
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('equipmentQRScan.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Update Hours
+              {t('equipmentQRScan.updateHours')}
             </Button>
           </div>
         </form>
