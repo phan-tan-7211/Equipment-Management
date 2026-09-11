@@ -32,6 +32,7 @@ import { useEquipmentScanLogger } from '@/features/equipment/hooks/useEquipmentS
 import { getEquipmentViewTransitionStyle } from '@/features/equipment/transitions/equipmentViewTransitionNames';
 import { useEquipmentCardTransitionState } from '@/features/equipment/transitions/useEquipmentCardTransitionState';
 import { useScrollMainContentToTopOnMount } from '@/features/equipment/transitions/useScrollMainContentToTopOnMount';
+import { useI18n } from '@/i18n';
 
 const EquipmentNotesTab = lazy(() => import('@/features/equipment/components/EquipmentNotesTab'));
 const EquipmentWorkOrdersTab = lazy(() => import('@/features/equipment/components/EquipmentWorkOrdersTab'));
@@ -42,13 +43,16 @@ const EquipmentOperatorCheckinLedgerTab = lazy(
   () => import('@/features/equipment/components/EquipmentOperatorCheckinLedgerTab'),
 );
 
-const TabContentSkeleton = () => (
-  <div className="space-y-4 mt-2" role="status" aria-label="Loading tab content">
-    {[0, 1, 2].map(i => (
-      <div key={i} className="h-24 w-full animate-pulse rounded-lg bg-muted" />
-    ))}
-  </div>
-);
+const TabContentSkeleton = () => {
+  const { t } = useI18n();
+  return (
+    <div className="space-y-4 mt-2" role="status" aria-label={t('equipment.loadingTabContent')}>
+      {[0, 1, 2].map(i => (
+        <div key={i} className="h-24 w-full animate-pulse rounded-lg bg-muted" />
+      ))}
+    </div>
+  );
+};
 
 const EQUIPMENT_TAB_VALUES = [
   'details',
@@ -67,6 +71,7 @@ function normalizeTabParam(tab: string | null): string {
 }
 
 const EquipmentDetails = () => {
+  const { t } = useI18n();
   const { equipmentId } = useParams<{ equipmentId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -106,13 +111,8 @@ const EquipmentDetails = () => {
     }
   }, [tabParam]);
 
-  // Users without inventory access must see no evidence of parts — bounce
-  // direct ?tab=parts navigation back to the details tab once access resolves.
   useEffect(() => {
-    if (inventoryAccessLoading) {
-      return;
-    }
-
+    if (inventoryAccessLoading) return;
     if (!canViewInventory && (activeTab === 'parts' || tabParam === 'parts')) {
       setActiveTab('details');
       if (tabParam === 'parts') {
@@ -121,23 +121,13 @@ const EquipmentDetails = () => {
         setSearchParams(nextSearchParams, { replace: true });
       }
     }
-  }, [
-    inventoryAccessLoading,
-    canViewInventory,
-    activeTab,
-    tabParam,
-    searchParams,
-    setSearchParams,
-  ]);
+  }, [inventoryAccessLoading, canViewInventory, activeTab, tabParam, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!equipment) return;
-
     const createParam = searchParams.get('createWorkOrder');
     if (!createParam) return;
-
     setIsWorkOrderFormOpen(true);
-
     const nextSearchParams = new URLSearchParams(searchParams);
     nextSearchParams.delete('createWorkOrder');
     setSearchParams(nextSearchParams, { replace: true });
@@ -160,12 +150,9 @@ const EquipmentDetails = () => {
     : false;
   const { saveAssignedLocation, isSavingLocation: isSavingSummaryLocation } =
     useSaveEquipmentAssignedLocation(currentOrganization?.id, equipmentId);
-  const { isLoaded: isPlacesLoadedForSummary } = useGoogleMapsLoader({
-    enabled: isEditingSummaryLocation,
-  });
+  const { isLoaded: isPlacesLoadedForSummary } = useGoogleMapsLoader({ enabled: isEditingSummaryLocation });
   const isLoading = orgLoading || equipmentLoading || (!isOrgAdmin && teamsLoading);
-  const isAdmin =
-    currentOrganization?.userRole === 'owner' || currentOrganization?.userRole === 'admin';
+  const isAdmin = currentOrganization?.userRole === 'owner' || currentOrganization?.userRole === 'admin';
 
   const handleOpenQrCode = (initialVariant: EquipmentQRVariant = 'equipment') => {
     setQrInitialVariant(initialVariant);
@@ -180,17 +167,12 @@ const EquipmentDetails = () => {
   if (!currentOrganization) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <PageHeader
-          title="Equipment Details"
-          description="Please select an organization to view equipment details."
-        />
+        <PageHeader title={t('equipment.detailsTitle')} description={t('equipment.detailsSelectOrganization')} />
         <Card>
           <CardContent className="text-center py-12">
             <Forklift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Organization Selected</h3>
-            <p className="text-muted-foreground">
-              Please select an organization to view equipment details.
-            </p>
+            <h3 className="text-lg font-semibold mb-2">{t('equipment.noOrganizationSelected')}</h3>
+            <p className="text-muted-foreground">{t('equipment.detailsSelectOrganization')}</p>
           </CardContent>
         </Card>
       </Page>
@@ -200,15 +182,10 @@ const EquipmentDetails = () => {
   if (isLoading) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <div
-          className="space-y-6"
-          style={getEquipmentViewTransitionStyle('shell', isTransitionActive)}
-        >
-          <PageHeader title="Equipment Details" description="Loading equipment information..." />
+        <div className="space-y-6" style={getEquipmentViewTransitionStyle('shell', isTransitionActive)}>
+          <PageHeader title={t('equipment.detailsTitle')} description={t('equipment.loadingEquipment')} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
-              <Skeleton className="h-64 w-full rounded-lg" />
-            </div>
+            <div className="lg:col-span-1"><Skeleton className="h-64 w-full rounded-lg" /></div>
             <div className="lg:col-span-2 space-y-4">
               <Skeleton className="h-32 w-full rounded-lg" />
               <Skeleton className="h-32 w-full rounded-lg" />
@@ -219,27 +196,18 @@ const EquipmentDetails = () => {
     );
   }
 
-  if (
-    !equipment ||
-    !isRecordOnAccessibleTeam(isOrgAdmin, getUserTeamIds(), equipment.team_id)
-  ) {
+  if (!equipment || !isRecordOnAccessibleTeam(isOrgAdmin, getUserTeamIds(), equipment.team_id)) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <PageHeader title="Equipment Details" description="Equipment not found" />
+        <PageHeader title={t('equipment.detailsTitle')} description={t('equipment.equipmentNotFound')} />
         <Card>
           <CardContent className="text-center py-12">
             <Forklift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Equipment not found</h3>
-            <p className="text-muted-foreground">
-              The equipment you're looking for doesn't exist or you don't have access to it.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/dashboard/equipment')}
-              className="mt-4"
-            >
+            <h3 className="text-lg font-semibold mb-2">{t('equipment.equipmentNotFound')}</h3>
+            <p className="text-muted-foreground">{t('equipment.equipmentNotFoundDescription')}</p>
+            <Button variant="outline" onClick={() => navigate('/dashboard/equipment')} className="mt-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Equipment
+              {t('equipment.backToEquipment')}
             </Button>
           </CardContent>
         </Card>
@@ -249,17 +217,10 @@ const EquipmentDetails = () => {
 
   return (
     <Page maxWidth="7xl" padding="responsive">
-      <div
-        className="space-y-6"
-        style={getEquipmentViewTransitionStyle('shell', isTransitionActive)}
-      >
+      <div className="space-y-6" style={getEquipmentViewTransitionStyle('shell', isTransitionActive)}>
         {isMobile ? (
           <>
-            <MobileEquipmentHeader
-              equipment={equipment}
-              onShowQRCode={() => handleOpenQrCode()}
-              onShowWorkingHours={() => setIsWorkingHoursModalOpen(true)}
-            />
+            <MobileEquipmentHeader equipment={equipment} onShowQRCode={() => handleOpenQrCode()} onShowWorkingHours={() => setIsWorkingHoursModalOpen(true)} />
             <Card className="shadow-elevation-2">
               <EquipmentLocationMapPanel
                 layout="card"
@@ -279,7 +240,7 @@ const EquipmentDetails = () => {
                     setIsEditingSummaryLocation(false);
                   } catch (error) {
                     logger.error('Error updating equipment location from map card', error);
-                    toast.error('Failed to update equipment location');
+                    toast.error(t('equipment.updateLocationFailed'));
                   }
                 }}
                 mapHeight="180px"
@@ -294,15 +255,12 @@ const EquipmentDetails = () => {
               description={`${equipment.manufacturer} ${equipment.model} • ${equipment.serial_number}`}
               titleStyle={getEquipmentViewTransitionStyle('name', isTransitionActive)}
               descriptionStyle={getEquipmentViewTransitionStyle('meta', isTransitionActive)}
-              breadcrumbs={[
-                { label: 'Equipment', href: '/dashboard/equipment' },
-                { label: equipment.name },
-              ]}
+              breadcrumbs={[{ label: t('equipment.title'), href: '/dashboard/equipment' }, { label: equipment.name }]}
               actions={
                 <div className="flex items-center gap-2">
                   <Button size="sm" onClick={() => handleOpenQrCode()}>
                     <QrCode className="h-4 w-4 mr-2" />
-                    QR Code
+                    {t('equipment.qrCode')}
                   </Button>
                 </div>
               }
@@ -325,7 +283,7 @@ const EquipmentDetails = () => {
                   setIsEditingSummaryLocation(false);
                 } catch (error) {
                   logger.error('Error updating equipment location from map card', error);
-                  toast.error('Failed to update equipment location');
+                  toast.error(t('equipment.updateLocationFailed'));
                 }
               }}
             />
@@ -334,11 +292,7 @@ const EquipmentDetails = () => {
 
         {isMobile && (
           <>
-            <MobileEquipmentActionBar
-              equipmentId={equipment.id}
-              onCreateWorkOrder={() => setIsWorkOrderFormOpen(true)}
-              onAddNote={() => setActiveTab('notes')}
-            />
+            <MobileEquipmentActionBar equipmentId={equipment.id} onCreateWorkOrder={() => setIsWorkOrderFormOpen(true)} onAddNote={() => setActiveTab('notes')} />
             <EquipmentQuickAccessDrawer
               equipmentId={equipment.id}
               equipmentName={equipment.name}
@@ -350,102 +304,18 @@ const EquipmentDetails = () => {
           </>
         )}
 
-        <ResponsiveEquipmentTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          showPartsTab={canViewInventory}
-        >
-          <TabsContent value="details">
-            <EquipmentDetailsTab
-              equipment={equipment}
-              assignedTeam={assignedTeam}
-            />
-          </TabsContent>
-
+        <ResponsiveEquipmentTabs activeTab={activeTab} onTabChange={setActiveTab} showPartsTab={canViewInventory}>
+          <TabsContent value="details"><EquipmentDetailsTab equipment={equipment} assignedTeam={assignedTeam} /></TabsContent>
           <TabsContent value="notes">
-            {activeTab === 'notes' && (
-              <Suspense fallback={<TabContentSkeleton />}>
-                <EquipmentNotesTab
-                  equipmentId={equipment.id}
-                  organizationId={currentOrganization.id}
-                  equipmentTeamId={equipment.team_id || undefined}
-                  currentDisplayImage={equipment.image_url}
-                />
-              </Suspense>
-            )}
+            {activeTab === 'notes' && <Suspense fallback={<TabContentSkeleton />}><EquipmentNotesTab equipmentId={equipment.id} organizationId={currentOrganization.id} equipmentTeamId={equipment.team_id || undefined} currentDisplayImage={equipment.image_url} /></Suspense>}
           </TabsContent>
-
           <TabsContent value="work-orders">
-            {activeTab === 'work-orders' && (
-              <Suspense fallback={<TabContentSkeleton />}>
-                <EquipmentWorkOrdersTab
-                  equipmentId={equipment.id}
-                  organizationId={currentOrganization.id}
-                  onCreateWorkOrder={() => setIsWorkOrderFormOpen(true)}
-                  equipmentManufacturer={equipment.manufacturer}
-                  equipmentModel={equipment.model}
-                  equipmentSerialNumber={equipment.serial_number}
-                  equipment={equipment}
-                  assignedTeamName={assignedTeam?.name ?? null}
-                />
-              </Suspense>
-            )}
+            {activeTab === 'work-orders' && <Suspense fallback={<TabContentSkeleton />}><EquipmentWorkOrdersTab equipmentId={equipment.id} organizationId={currentOrganization.id} onCreateWorkOrder={() => setIsWorkOrderFormOpen(true)} equipmentManufacturer={equipment.manufacturer} equipmentModel={equipment.model} equipmentSerialNumber={equipment.serial_number} equipment={equipment} assignedTeamName={assignedTeam?.name ?? null} /></Suspense>}
           </TabsContent>
-
-          {canViewInventory && (
-            <TabsContent value="parts">
-              {activeTab === 'parts' && (
-                <Suspense fallback={<TabContentSkeleton />}>
-                  <EquipmentPartsTab
-                    equipmentId={equipment.id}
-                    organizationId={currentOrganization.id}
-                  />
-                </Suspense>
-              )}
-            </TabsContent>
-          )}
-
-          <TabsContent value="images">
-            {activeTab === 'images' && (
-              <Suspense fallback={<TabContentSkeleton />}>
-                <EquipmentImagesTab
-                  equipmentId={equipment.id}
-                  organizationId={currentOrganization.id}
-                  equipmentTeamId={equipment.team_id || undefined}
-                  currentDisplayImage={equipment.image_url || undefined}
-                  equipmentName={equipment.name}
-                />
-              </Suspense>
-            )}
-          </TabsContent>
-
-          <TabsContent value="check-ins">
-            {activeTab === 'check-ins' && (
-              <Suspense fallback={<TabContentSkeleton />}>
-                <EquipmentOperatorCheckinLedgerTab
-                  organizationId={currentOrganization.id}
-                  equipmentId={equipment.id}
-                  equipmentName={equipment.name}
-                  isAdmin={isAdmin}
-                  onOpenQrCodeForAssignment={(assignmentId) =>
-                    handleOpenQrCode(`assignment:${assignmentId}`)
-                  }
-                />
-              </Suspense>
-            )}
-          </TabsContent>
-
-          <TabsContent value="scan-history">
-            {activeTab === 'scan-history' && (
-              <Suspense fallback={<TabContentSkeleton />}>
-                <EquipmentScanHistoryTab
-                  equipmentId={equipment.id}
-                  organizationId={currentOrganization.id}
-                  scanLocationCollectionEnabled={currentOrganization.scanLocationCollectionEnabled}
-                />
-              </Suspense>
-            )}
-          </TabsContent>
+          {canViewInventory && <TabsContent value="parts">{activeTab === 'parts' && <Suspense fallback={<TabContentSkeleton />}><EquipmentPartsTab equipmentId={equipment.id} organizationId={currentOrganization.id} /></Suspense>}</TabsContent>}
+          <TabsContent value="images">{activeTab === 'images' && <Suspense fallback={<TabContentSkeleton />}><EquipmentImagesTab equipmentId={equipment.id} organizationId={currentOrganization.id} equipmentTeamId={equipment.team_id || undefined} currentDisplayImage={equipment.image_url || undefined} equipmentName={equipment.name} /></Suspense>}</TabsContent>
+          <TabsContent value="check-ins">{activeTab === 'check-ins' && <Suspense fallback={<TabContentSkeleton />}><EquipmentOperatorCheckinLedgerTab organizationId={currentOrganization.id} equipmentId={equipment.id} equipmentName={equipment.name} isAdmin={isAdmin} onOpenQrCodeForAssignment={(assignmentId) => handleOpenQrCode(`assignment:${assignmentId}`)} /></Suspense>}</TabsContent>
+          <TabsContent value="scan-history">{activeTab === 'scan-history' && <Suspense fallback={<TabContentSkeleton />}><EquipmentScanHistoryTab equipmentId={equipment.id} organizationId={currentOrganization.id} scanLocationCollectionEnabled={currentOrganization.scanLocationCollectionEnabled} /></Suspense>}</TabsContent>
         </ResponsiveEquipmentTabs>
 
         {isAdmin && (
@@ -454,20 +324,14 @@ const EquipmentDetails = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight text-destructive">
                   <AlertTriangle className="h-4 w-4" />
-                  Delete Equipment
+                  {t('equipment.deleteEquipment')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Deleting equipment permanently removes it and cannot be undone.
-                </p>
-                <Button
-                  variant="destructive"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  className="w-full sm:w-auto"
-                >
+                <p className="text-sm text-muted-foreground">{t('equipment.deleteEquipmentDescription')}</p>
+                <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)} className="w-full sm:w-auto">
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Equipment
+                  {t('equipment.deleteEquipment')}
                 </Button>
               </CardContent>
             </Card>
@@ -484,9 +348,7 @@ const EquipmentDetails = () => {
           qrInitialVariant={qrInitialVariant}
           isDeleteDialogOpen={isDeleteDialogOpen}
           isWorkingHoursModalOpen={isWorkingHoursModalOpen}
-          onCloseWorkOrderForm={() => {
-            setIsWorkOrderFormOpen(false);
-          }}
+          onCloseWorkOrderForm={() => setIsWorkOrderFormOpen(false)}
           onCloseQRCode={handleCloseQrCode}
           onDeleteDialogOpenChange={setIsDeleteDialogOpen}
           onDeleteSuccess={() => navigate('/dashboard/equipment')}
