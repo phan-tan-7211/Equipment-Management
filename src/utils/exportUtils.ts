@@ -5,6 +5,11 @@
  */
 
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+import {
+  downloadBlobNative,
+  isNativeAndroidFileRuntime,
+} from '@/services/nativeFileBridge';
 
 /**
  * Neutralize spreadsheet formula injection when a cell begins with =, +, -, or @.
@@ -55,8 +60,22 @@ export function filenameWithDate(base: string, extension: string): string {
   return `${base}-${format(new Date(), 'yyyy-MM-dd')}.${extension}`;
 }
 
-/** Trigger a browser file download from a Blob (revokes object URL after click). */
+/**
+ * Download a Blob.
+ *
+ * Browser/PWA: standard anchor download.
+ * Capacitor Android: persist to Documents/EquipQR and surface a native Share
+ * action so PDF/Excel/CSV/JSON exports are not trapped inside WebView downloads.
+ */
 export function downloadBlob(blob: Blob, filename: string): void {
+  if (isNativeAndroidFileRuntime()) {
+    void downloadBlobNative(blob, filename).catch((error) => {
+      const message = error instanceof Error ? error.message : 'Could not save exported file.';
+      toast.error(message);
+    });
+    return;
+  }
+
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
