@@ -9,20 +9,17 @@ import {
   type EquipmentUpdateData,
 } from '@/features/equipment/services/EquipmentService';
 import {
-  equipmentFormSchema,
+  createEquipmentFormSchema,
+  type EquipmentValidationMessages,
   type EquipmentRecord,
 } from '@/features/equipment/types/equipment';
 import {
-  bulkEditMutationOnError,
   useBulkEditCommitResult,
   type BulkEditCommitHookResult,
 } from '@/hooks/useBulkEditCommitResult';
 import { useBulkEditRowState } from '@/hooks/useBulkEditRowState';
+import { useI18n } from '@/i18n';
 
-/**
- * Field-level delta for a single equipment row. Only the fields the user has
- * actually changed are present.
- */
 export type EquipmentRowDelta = Partial<EquipmentRecord>;
 
 export type UseBulkEditEquipmentResult = BulkEditCommitHookResult<
@@ -30,34 +27,39 @@ export type UseBulkEditEquipmentResult = BulkEditCommitHookResult<
   EquipmentRowDelta
 >;
 
-/**
- * Local state + commit logic for the bulk-edit equipment grid (#627).
- *
- * Stores per-row, per-field deltas in a `Map` so the grid can render dirty
- * indicators and discard semantics without re-walking every row. On commit,
- * each delta is validated with `equipmentFormSchema.partial()` (zod) and the
- * survivors are sent to `EquipmentService.batchUpdate` in a single batched call
- * with partial-tolerant semantics — see the service method for details.
- *
- * Invalidates the per-org `equipment.list` query on success so the source list
- * page refreshes after the user navigates back.
- */
 export const useBulkEditEquipment = (
   initialRows: EquipmentRecord[]
 ): UseBulkEditEquipmentResult => {
   const { currentOrganization } = useOrganization();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const rowState = useBulkEditRowState<EquipmentRecord, EquipmentRowDelta>(initialRows);
   const { dirtyRows, clearSucceededDirtyFields } = rowState;
 
-  const partialSchema = useMemo(() => equipmentFormSchema.partial(), []);
+  const validationMessages = useMemo<EquipmentValidationMessages>(() => ({
+    equipmentNameRequired: t('equipmentForm.validationEquipmentNameRequired'),
+    manufacturerRequired: t('equipmentForm.validationManufacturerRequired'),
+    modelRequired: t('equipmentForm.validationModelRequired'),
+    serialRequired: t('equipmentForm.validationSerialRequired'),
+    locationRequired: t('equipmentForm.validationLocationRequired'),
+    workingHoursNonNegative: t('equipmentForm.validationWorkingHoursNonNegative'),
+    teamRequired: t('equipmentForm.validationTeamRequired'),
+    nameRequired: t('equipmentForm.validationNameRequired'),
+    nameMax: t('equipmentForm.validationNameMax'),
+    teamCreatePermission: t('equipmentForm.validationTeamCreatePermission'),
+  }), [t]);
+
+  const partialSchema = useMemo(
+    () => createEquipmentFormSchema(validationMessages).partial(),
+    [validationMessages],
+  );
 
   const commitMutation = useMutation({
     mutationFn: async () => {
       const orgId = currentOrganization?.id;
       if (!orgId) {
-        throw new Error('Organization not selected');
+        throw new Error(t('equipmentBulk.organizationNotSelected'));
       }
 
       const validUpdates: Array<{ id: string; data: EquipmentUpdateData }> = [];
@@ -69,22 +71,15 @@ export const useBulkEditEquipment = (
           const message = parsed.error.issues
             .map((issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
             .join('; ');
-          validationFailures.push({ id, error: message || 'Invalid value' });
+          validationFailures.push({ id, error: message || t('equipmentBulk.invalidValue') });
         } else {
-          // Use `parsed.data` (not the raw `delta`) so zod's allow-list strips
-          // any unknown keys that snuck into the cell-edit payload before they
-          // reach Supabase. With the partial schema this is defense-in-depth:
-          // `setCellValue` is typed against `EquipmentRecord`, but the edit
-          // grid evolves independently of the wire schema and we want the
-          // validation layer to be the single source of truth on what fields
-          // are allowed in a row update.
           validUpdates.push({ id, data: parsed.data as EquipmentUpdateData });
         }
       }
 
       const result = await EquipmentService.batchUpdate(orgId, validUpdates);
       if (!result.success || !result.data) {
-        throw new Error(result.error ?? 'Bulk update failed');
+        throw new Error(result.error ?? t('equipmentBulk.bulkUpdateFailed'));
       }
 
       const submittedById = new Map(
@@ -101,13 +96,15 @@ export const useBulkEditEquipment = (
     onSuccess: (summary) => {
       const { succeeded, failed, attempted, submittedById } = summary;
       if (failed.length === 0) {
-        toast.success(`Updated ${succeeded.length} equipment`);
+        toast.success(t('equipmentBulk.updatedCount', { count: succeeded.length }));
       } else if (succeeded.length === 0) {
-        toast.error(`Failed to update ${failed.length} of ${attempted} equipment`);
+        toast.error(t('equipmentBulk.failedCount', { failed: failed.length, attempted }));
       } else {
-        toast.warning(
-          `Updated ${succeeded.length} of ${attempted}; ${failed.length} failed`
-        );
+        toast.warning(t('equipmentBulk.partialCount', {
+          succeeded: succeeded.length,
+          attempted,
+          failed: failed.length,
+        }));
       }
 
       if (succeeded.length > 0) {
@@ -122,7 +119,9 @@ export const useBulkEditEquipment = (
         }
       }
     },
-    onError: bulkEditMutationOnError,
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : t('equipmentBulk.bulkUpdateFailed'));
+    },
   });
 
   return useBulkEditCommitResult(rowState, commitMutation);
