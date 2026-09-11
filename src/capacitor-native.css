@@ -1,0 +1,61 @@
+/* Native-only shell adjustments for Capacitor Android.
+ * Capacitor 8 SystemBars injects --safe-area-inset-* values on Android and we
+ * fall back to the standard env() variables on WebViews that expose them.
+ */
+
+html.capacitor-native {
+  --app-safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --app-safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --app-safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --app-safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --native-keyboard-height: 0px;
+  background: #0a0a0a;
+  color-scheme: dark;
+}
+
+html.capacitor-native,
+html.capacitor-native body,
+html.capacitor-native #root {
+  min-height: 100dvh;
+  background: #0a0a0a;
+}
+
+/* Keep the normal layout out from under camera cutouts / status bar while
+ * preserving the existing mobile bottom-nav logic already present in the app.
+ */
+html.capacitor-native #root {
+  box-sizing: border-box;
+  padding-top: var(--app-safe-top);
+  padding-left: var(--app-safe-left);
+  padding-right: var(--app-safe-right);
+}
+
+/* Tailwind sticky/fixed headers using top-0 need the same inset once they pin
+ * to the viewport; root padding alone is not enough for sticky positioning.
+ */
+html.capacitor-native .sticky.top-0,
+html.capacitor-native .fixed.top-0 {
+  top: var(--app-safe-top) !important;
+}
+
+/* Reuse the app's mobile bottom-nav variable but prefer Capacitor's corrected
+ * Android inset when available.
+ */
+html.capacitor-native {
+  --mobile-bottom-nav-height: calc(4.875rem + var(--app-safe-bottom));
+}
+
+/* When the Android keyboard is visible, give scroll containers a little extra
+ * breathing room and make focused controls scrollable above the IME.
+ */
+html.capacitor-native.keyboard-visible body {
+  overscroll-behavior-y: contain;
+}
+
+html.capacitor-native.keyboard-visible input:focus,
+html.capacitor-native.keyboard-visible textarea:focus,
+html.capacitor-native.keyboard-visible select:focus,
+html.capacitor-native.keyboard-visible [contenteditable='true']:focus {
+  scroll-margin-top: calc(var(--app-safe-top) + 5rem);
+  scroll-margin-bottom: 1.5rem;
+}
