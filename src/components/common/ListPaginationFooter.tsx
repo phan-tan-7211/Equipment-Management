@@ -12,6 +12,7 @@ import {
   getListPageCount,
   getListPageRange,
 } from '@/utils/listPagination';
+import { useI18n } from '@/i18n';
 
 type ListPaginationFooterProps = {
   totalItems: number;
@@ -34,6 +35,7 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
   onPageSizeChange,
   testId = 'list-pagination-footer',
 }) => {
+  const { t } = useI18n();
   const pageSizeSelectId = useId();
   const totalPages = getListPageCount(totalItems, pageSize);
   const { start, end } = getListPageRange(totalItems, page, pageSize);
@@ -46,13 +48,12 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
     <div className="flex flex-col gap-4 border-t pt-4" data-testid={testId}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Showing {start} to {end} of {totalItems} {itemLabel}
-          {totalItems !== 1 ? 's' : ''}
+          {t('commonPagination.showing', { start, end, total: totalItems, label: itemLabel })}
         </p>
 
         <div className="hidden md:flex items-center gap-2">
           <label htmlFor={pageSizeSelectId} className="text-sm text-muted-foreground whitespace-nowrap">
-            Per page:
+            {t('commonPagination.perPage')}
           </label>
           <Select
             value={pageSize.toString()}
@@ -84,12 +85,12 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
               className="h-9 w-9"
               onClick={() => onPageChange(page - 1)}
               disabled={page <= 1}
-              aria-label="Previous page"
+              aria-label={t('commonPagination.previousPage')}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-sm px-3 whitespace-nowrap">
-              Page {page} of {totalPages}
+              {t('commonPagination.pageOf', { page, totalPages })}
             </span>
             <Button
               variant="outline"
@@ -97,7 +98,7 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
               className="h-9 w-9"
               onClick={() => onPageChange(page + 1)}
               disabled={page >= totalPages}
-              aria-label="Next page"
+              aria-label={t('commonPagination.nextPage')}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -111,10 +112,10 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
               disabled={page <= 1}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Previous
+              {t('commonPagination.previous')}
             </Button>
             <span className="text-sm px-4 whitespace-nowrap">
-              Page {page} of {totalPages}
+              {t('commonPagination.pageOf', { page, totalPages })}
             </span>
             <Button
               variant="outline"
@@ -122,7 +123,7 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
               onClick={() => onPageChange(page + 1)}
               disabled={page >= totalPages}
             >
-              Next
+              {t('commonPagination.next')}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
