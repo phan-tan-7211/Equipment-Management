@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { arrayToCsv, downloadCsv, downloadJson, filenameWithDate } from '@/utils/exportUtils';
 import type { EquipmentRecord } from '@/features/equipment/types/equipment';
+import { useI18n } from '@/i18n';
 
 interface EquipmentDownloadMenuProps {
   equipment: EquipmentRecord[];
@@ -47,6 +48,8 @@ function equipmentToCsvRows(equipment: EquipmentRecord[]): string[][] {
 }
 
 const EquipmentDownloadMenu: React.FC<EquipmentDownloadMenuProps> = ({ equipment }) => {
+  const { t } = useI18n();
+
   const handleExportCsv = () => {
     const rows = equipmentToCsvRows(equipment);
     const csv = arrayToCsv(CSV_HEADERS, rows);
@@ -80,14 +83,14 @@ const EquipmentDownloadMenu: React.FC<EquipmentDownloadMenuProps> = ({ equipment
           variant="outline"
           size="icon"
           className="h-8 w-8"
-          aria-label="Download equipment"
+          aria-label={t('equipmentAux.downloadEquipment')}
         >
           <Download className="h-3.5 w-3.5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-          Export format
+          {t('equipmentAux.exportFormat')}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ExportFormatMenuItems
