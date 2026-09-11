@@ -16,6 +16,7 @@ export const FleetMap = lazyWithRetry(() => import('@/features/fleet-map/pages/F
 export const Organization = lazyWithRetry(() => import('@/features/organization/pages/Organization'), 'Organization');
 export const OrganizationMembers = lazyWithRetry(() => import('@/features/organization/pages/OrganizationMembers'), 'OrganizationMembers');
 export const OrganizationIntegrations = lazyWithRetry(() => import('@/features/organization/pages/OrganizationIntegrations'), 'OrganizationIntegrations');
+export const EquipmentGroups = lazyWithRetry(() => import('@/features/equipment-groups/pages/EquipmentGroupsPage'), 'EquipmentGroups');
 export const Settings = lazyWithRetry(() => import('@/pages/Settings'), 'Settings');
 export const Reports = lazyWithRetry(() => import('@/features/reports/pages/Reports'), 'Reports');
 export const DashboardSupport = lazyWithRetry(
