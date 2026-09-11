@@ -11,7 +11,8 @@ export function buildEquipmentFormDefaultValues(
       name: initialData.name,
       manufacturer: initialData.manufacturer,
       model: initialData.model,
-      serial_number: initialData.serial_number,
+      serial_number: initialData.serial_number || '',
+      equipment_group_id: initialData.equipment_group_id || '',
       status: initialData.status,
       location: initialData.location,
       installation_date: initialData.installation_date,
@@ -37,6 +38,7 @@ export function buildEquipmentFormDefaultValues(
     manufacturer: '',
     model: '',
     serial_number: '',
+    equipment_group_id: '',
     status: 'active',
     location: '',
     installation_date: new Date().toISOString().split('T')[0],
@@ -63,9 +65,9 @@ export function toEquipmentCreateData(data: EquipmentFormData): EquipmentCreateD
     customer_id: null,
     working_hours: 0,
     import_id: null,
-  };
+  } as EquipmentCreateData;
 }
 
 export function toEquipmentUpdateData(data: EquipmentFormData): EquipmentUpdateData {
-  return mapEquipmentFormSharedFields(data);
+  return mapEquipmentFormSharedFields(data) as EquipmentUpdateData;
 }
