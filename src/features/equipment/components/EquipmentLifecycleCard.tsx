@@ -6,6 +6,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import InlineEditField from './InlineEditField';
 import { formatDateForInput } from '@/features/equipment/utils/equipmentHelpers';
+import { useI18n } from '@/i18n';
 
 type Equipment = Tables<'equipment'>;
 
@@ -31,19 +32,20 @@ export function EquipmentLifecycleCard({
   onFieldUpdate,
 }: EquipmentLifecycleCardProps) {
   const { formatDate } = useFormatTimestamp();
+  const { t } = useI18n();
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
-          Lifecycle & Warranty
+          {t('equipmentDetails.lifecycleTitle')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor={installationDateFieldId} className="text-sm font-medium text-muted-foreground">Installation Date</label>
+            <label htmlFor={installationDateFieldId} className="text-sm font-medium text-muted-foreground">{t('equipmentDetails.installationDate')}</label>
             <div className="mt-1 w-full">
               <InlineEditField
                 value={formatDateForInput(equipment.installation_date)}
@@ -51,15 +53,15 @@ export function EquipmentLifecycleCard({
                 canEdit={canEdit}
                 fieldId={installationDateFieldId}
                 type="date"
-                placeholder="Select installation date"
+                placeholder={t('equipmentDetails.installationDatePlaceholder')}
                 className="w-full text-base"
-                editAriaLabel="Edit installation date"
+                editAriaLabel={t('equipmentDetails.editInstallationDate')}
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor={warrantyExpirationFieldId} className="text-sm font-medium text-muted-foreground">Warranty Expiration</label>
+            <label htmlFor={warrantyExpirationFieldId} className="text-sm font-medium text-muted-foreground">{t('equipmentDetails.warrantyExpiration')}</label>
             <div className="mt-1 w-full">
               <InlineEditField
                 value={formatDateForInput(equipment.warranty_expiration)}
@@ -67,15 +69,15 @@ export function EquipmentLifecycleCard({
                 canEdit={canEdit}
                 fieldId={warrantyExpirationFieldId}
                 type="date"
-                placeholder="Select warranty expiration date"
+                placeholder={t('equipmentDetails.warrantyExpirationPlaceholder')}
                 className="w-full text-base"
-                editAriaLabel="Edit warranty expiration"
+                editAriaLabel={t('equipmentDetails.editWarrantyExpiration')}
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor={maintenanceDateFieldId} className="text-sm font-medium text-muted-foreground">Last Maintenance</label>
+            <label htmlFor={maintenanceDateFieldId} className="text-sm font-medium text-muted-foreground">{t('equipmentDetails.lastMaintenance')}</label>
             <div className="mt-1 w-full">
               <InlineEditField
                 value={formatDateForInput(equipment.last_maintenance)}
@@ -83,15 +85,15 @@ export function EquipmentLifecycleCard({
                 canEdit={canEdit}
                 fieldId={maintenanceDateFieldId}
                 type="date"
-                placeholder="Select last maintenance date"
+                placeholder={t('equipmentDetails.lastMaintenancePlaceholder')}
                 className="w-full text-base"
-                editAriaLabel="Edit last maintenance"
+                editAriaLabel={t('equipmentDetails.editLastMaintenance')}
                 displayNode={
                   lastMaintenanceLink ? (
                     <Link
                       to={lastMaintenanceLink}
                       className="text-primary hover:underline"
-                      aria-label="View work order for last maintenance"
+                      aria-label={t('equipmentDetails.viewLastMaintenanceWorkOrder')}
                     >
                       {lastMaintenanceDisplay}
                     </Link>
@@ -102,7 +104,7 @@ export function EquipmentLifecycleCard({
           </div>
 
           <div>
-            <span className="text-sm font-medium text-muted-foreground">Created Date</span>
+            <span className="text-sm font-medium text-muted-foreground">{t('equipmentDetails.createdDate')}</span>
             <div className="mt-1 text-base text-foreground">
               {equipment.created_at ? formatDate(equipment.created_at) : '—'}
             </div>
