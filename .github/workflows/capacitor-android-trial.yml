@@ -85,7 +85,6 @@ jobs:
             );
           }
 
-          // Capacitor deep-link delivery relies on one MainActivity instance.
           if (!manifest.includes('android:launchMode="singleTask"')) {
             manifest = manifest.replace(
               /(<activity\b[^>]*android:name="\.MainActivity")/,
@@ -124,7 +123,7 @@ jobs:
                     <category android:name="android.intent.category.BROWSABLE" />
                     <data android:scheme="https" android:host="equipqr.app" android:path="/auth" />
                 </intent-filter>
-`;
+            `;
             manifest = manifest.replace('</activity>', `${phase3Filters}            </activity>`);
           }
 
