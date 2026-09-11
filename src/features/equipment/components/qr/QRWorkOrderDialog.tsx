@@ -33,11 +33,11 @@ import { createQRWorkOrder } from '@/features/equipment/services/equipmentQRActi
 import { logger } from '@/utils/logger';
 import { workOrders, workOrderMetrics } from '@/lib/queryKeys';
 import WorkOrderCreationPhotoPicker from '@/features/work-orders/components/WorkOrderCreationPhotoPicker';
-import { OFFLINE_CREATION_PHOTOS_MESSAGE } from '@/features/work-orders/utils/workOrderCreationImages';
 import { toast } from 'sonner';
 import { WorkOrderPMChecklist } from '@/features/work-orders/components/WorkOrderPMChecklist';
 import type { WorkOrderPMChecklistSetValue } from '@/features/work-orders/hooks/useWorkOrderPMChecklist';
 import { QRDialogFormError } from '@/features/equipment/components/qr/QRDialogFormError';
+import { useI18n } from '@/i18n';
 
 interface QRWorkOrderDialogProps {
   open: boolean;
@@ -49,6 +49,12 @@ interface QRWorkOrderDialogProps {
 }
 
 const priorityOptions: WorkOrderPriority[] = ['low', 'medium', 'high'];
+
+const PRIORITY_LABEL_KEYS: Record<WorkOrderPriority, string> = {
+  low: 'equipmentQRScan.priorityLow',
+  medium: 'equipmentQRScan.priorityMedium',
+  high: 'equipmentQRScan.priorityHigh',
+};
 
 function getDefaultPmTemplateId(equipment: QRActionEquipment): string | null {
   return equipment.defaultPmTemplateId ?? null;
@@ -62,9 +68,10 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
   scanId,
   onCreated,
 }) => {
-  const [title, setTitle] = useState(`Work order - ${equipment.name}`);
-  const [description, setDescription] = useState(
-    `Work order created from QR scan for ${equipment.name}.`,
+  const { t } = useI18n();
+  const [title, setTitle] = useState(() => t('equipmentQRScan.workOrderDefaultTitle', { name: equipment.name }));
+  const [description, setDescription] = useState(() =>
+    t('equipmentQRScan.workOrderDefaultDescription', { name: equipment.name }),
   );
   const [priority, setPriority] = useState<WorkOrderPriority>('medium');
   const [dueDate, setDueDate] = useState('');
@@ -82,11 +89,11 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
     }
 
     const defaultTemplateId = getDefaultPmTemplateId(equipment);
-    setTitle(`Work order - ${equipment.name}`);
-    setDescription(`Work order created from QR scan for ${equipment.name}.`);
+    setTitle(t('equipmentQRScan.workOrderDefaultTitle', { name: equipment.name }));
+    setDescription(t('equipmentQRScan.workOrderDefaultDescription', { name: equipment.name }));
     setPmTemplateId(defaultTemplateId);
     setHasPM(Boolean(defaultTemplateId));
-  }, [open, equipment.id, equipment.name, equipment.defaultPmTemplateId]);
+  }, [open, equipment.id, equipment.name, equipment.defaultPmTemplateId, t]);
 
   const selectedEquipment = useMemo(
     () => ({
@@ -130,7 +137,7 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
     setError(null);
 
     if (!title.trim() || !description.trim()) {
-      setError('Title and description are required.');
+      setError(t('equipmentQRScan.titleDescriptionRequired'));
       return;
     }
 
@@ -138,12 +145,12 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
       !permissionContext ||
       !canRunQRAction('generic-work-order', permissionContext, equipment.teamId)
     ) {
-      setError('Permission changed. Re-open this action to continue.');
+      setError(t('equipmentQRScan.permissionChanged'));
       return;
     }
 
     if (images.length > 0 && typeof navigator !== 'undefined' && !navigator.onLine) {
-      setError(OFFLINE_CREATION_PHOTOS_MESSAGE);
+      setError(t('equipmentQRScan.createWorkOrderFailed'));
       return;
     }
 
@@ -173,9 +180,7 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
           queryKey: workOrderMetrics.imageCount(workOrder.id),
         });
         if (!creationPhotosAttached) {
-          toast.warning(
-            'Work order created, but photos did not attach. Open the work order to retry.',
-          );
+          toast.warning(t('equipmentQRScan.photosAttachFailed'));
         }
       }
       setImages([]);
@@ -183,7 +188,7 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
       onOpenChange(false);
     } catch (submitError) {
       logger.error('QR work order creation failed', submitError);
-      setError(submitError instanceof Error ? submitError.message : 'Failed to create work order.');
+      setError(t('equipmentQRScan.createWorkOrderFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -193,9 +198,9 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
     <Dialog open={open} onOpenChange={isSubmitting ? undefined : onOpenChange}>
       <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New Work Order</DialogTitle>
+          <DialogTitle>{t('equipmentQRScan.newWorkOrder')}</DialogTitle>
           <DialogDescription>
-            Create a work order pre-populated with {equipment.name} without opening the full dashboard.
+            {t('equipmentQRScan.workOrderDescription', { name: equipment.name })}
           </DialogDescription>
         </DialogHeader>
 
@@ -203,7 +208,7 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
           <QRDialogFormError error={error} />
 
           <div className="space-y-2">
-            <Label htmlFor="qr-work-order-title">Title</Label>
+            <Label htmlFor="qr-work-order-title">{t('equipmentQRScan.title')}</Label>
             <Input
               id="qr-work-order-title"
               value={title}
@@ -222,7 +227,7 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
           />
 
           <div className="space-y-2">
-            <Label htmlFor="qr-work-order-description">Description</Label>
+            <Label htmlFor="qr-work-order-description">{t('equipmentQRScan.description')}</Label>
             <div className="relative">
               <Textarea
                 id="qr-work-order-description"
@@ -252,26 +257,26 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="qr-work-order-priority">Priority</Label>
+              <Label htmlFor="qr-work-order-priority">{t('equipmentQRScan.priority')}</Label>
               <Select
                 value={priority}
                 onValueChange={value => setPriority(value as WorkOrderPriority)}
                 disabled={isSubmitting}
               >
                 <SelectTrigger id="qr-work-order-priority">
-                  <SelectValue placeholder="Select priority" />
+                  <SelectValue placeholder={t('equipmentQRScan.selectPriority')} />
                 </SelectTrigger>
                 <SelectContent>
                   {priorityOptions.map(option => (
                     <SelectItem key={option} value={option}>
-                      {option.charAt(0).toUpperCase() + option.slice(1)}
+                      {t(PRIORITY_LABEL_KEYS[option])}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="qr-work-order-due-date">Due Date (Optional)</Label>
+              <Label htmlFor="qr-work-order-due-date">{t('equipmentQRScan.dueDateOptional')}</Label>
               <Input
                 id="qr-work-order-due-date"
                 type="date"
@@ -295,11 +300,11 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('equipmentQRScan.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Work Order
+              {t('equipmentQRScan.createWorkOrder')}
             </Button>
           </DialogFooter>
         </form>
