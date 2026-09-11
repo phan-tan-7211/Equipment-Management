@@ -11,6 +11,7 @@ html.capacitor-native {
   --native-keyboard-height: 0px;
   background: #0a0a0a;
   color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html.capacitor-native,
@@ -18,6 +19,21 @@ html.capacitor-native body,
 html.capacitor-native #root {
   min-height: 100dvh;
   background: #0a0a0a;
+}
+
+html.capacitor-native body {
+  overscroll-behavior-y: none;
+}
+
+/* Reduce the WebView's delayed/double-tap gesture interpretation without
+ * changing the visual size of dense desktop/table layouts. */
+html.capacitor-native button,
+html.capacitor-native a,
+html.capacitor-native [role='button'],
+html.capacitor-native input,
+html.capacitor-native select,
+html.capacitor-native textarea {
+  touch-action: manipulation;
 }
 
 /* Keep the normal layout out from under camera cutouts / status bar while
