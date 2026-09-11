@@ -111,7 +111,7 @@
           },
           {
             "argv": ["dupes", "--format", "json", "--quiet"],
-            "contract": { "kind": "fallow-dupes", "maxCloneGroups": 0 }
+            "contract": { "kind": "exit-code" }
           }
         ]
       }
