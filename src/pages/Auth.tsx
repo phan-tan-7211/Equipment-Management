@@ -21,6 +21,7 @@ import SignInForm from '@/components/auth/SignInForm';
 import MFAVerification from '@/components/auth/MFAVerification';
 import LegalFooter from '@/components/layout/LegalFooter';
 import { useAppToast } from '@/hooks/useAppToast';
+import { useI18n } from '@/i18n';
 
 type AuthMode = 'signin' | 'signup';
 
@@ -72,6 +73,7 @@ function navigateAfterAuth(
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { user, signInWithGoogle, isLoading: authLoading } = useAuth();
   const { needsVerification, refreshMFAStatus } = useMFA();
   const location = useLocation();
@@ -132,35 +134,19 @@ const Auth = () => {
 
       navigateAfterAuth(location.search, navigate);
     }
-  }, [
-    user,
-    authLoading,
-    navigate,
-    needsVerification,
-    showMFAVerification,
-    success,
-    location.search,
-  ]);
+  }, [user, authLoading, navigate, needsVerification, showMFAVerification, success, location.search]);
 
   const handleSuccess = (message: string, email?: string) => {
     setError(null);
     if (email) {
       suppressAuthRedirectRef.current = true;
       setSuccess({ message, email });
-      showSuccessToast({
-        title: 'Check your email',
-        description: message,
-        duration: 10000,
-      });
+      showSuccessToast({ title: t('auth.checkEmail'), description: message, duration: 10000 });
       return;
     }
 
     setSuccess(null);
-    showSuccessToast({
-      title: 'Success',
-      description: message,
-      duration: 10000,
-    });
+    showSuccessToast({ title: t('auth.success'), description: message, duration: 10000 });
   };
 
   const handleReturnToSignIn = () => {
@@ -174,25 +160,14 @@ const Auth = () => {
     suppressAuthRedirectRef.current = false;
     setError(errorMessage);
     setSuccess(null);
-    showErrorToast({
-      title: 'Something went wrong',
-      description: errorMessage,
-      duration: 6000,
-    });
+    showErrorToast({ title: t('auth.somethingWentWrong'), description: errorMessage, duration: 6000 });
   };
 
   const handleGoogleSignIn = async (organizationName?: string) => {
     setIsLoading(true);
     setError(null);
-
-    const { error } = await signInWithGoogle(
-      organizationName ? { organizationName } : undefined,
-    );
-    
-    if (error) {
-      handleError(error.message);
-    }
-    
+    const { error } = await signInWithGoogle(organizationName ? { organizationName } : undefined);
+    if (error) handleError(error.message);
     setIsLoading(false);
   };
 
@@ -210,11 +185,7 @@ const Auth = () => {
   const inboxUrl = getEmailProviderInboxUrl(success?.email);
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
   return (
@@ -222,135 +193,51 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center px-6 pt-6 pb-4 sm:px-7 sm:pt-7 sm:pb-5">
-            <div className="mx-auto mb-4">
-              <Logo size="xl" />
-            </div>
+            <div className="mx-auto mb-4"><Logo size="xl" /></div>
             <CardTitle as="h1" className="text-2xl">
-              {pendingQRScan
-                ? 'Sign in to continue'
-                : mode === 'signup'
-                  ? 'Create your organization'
-                  : 'Sign in to ZNTEQR'}
+              {pendingQRScan ? t('auth.signInToContinue') : mode === 'signup' ? t('auth.createOrganization') : t('auth.signInToZnteqr')}
             </CardTitle>
             <CardDescription>
               {pendingQRScan ? (
-                <span className="flex items-center justify-center gap-2 text-info">
-                  <QrCode className="h-4 w-4" />
-                  <span>Complete sign in to view scanned equipment</span>
-                </span>
-              ) : mode === 'signup' ? (
-                'Create an organization to get started'
-              ) : (
-                'Sign in to your account to get started'
-              )}
+                <span className="flex items-center justify-center gap-2 text-info"><QrCode className="h-4 w-4" /><span>{t('auth.scanHint')}</span></span>
+              ) : mode === 'signup' ? t('auth.createOrganizationHint') : t('auth.signInHint')}
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6 pb-8 sm:px-7 sm:pb-8">
             {success ? (
               <div className="space-y-5 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/15">
-                  <CheckCircle className="h-7 w-7 text-success" aria-hidden />
-                </div>
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/15"><CheckCircle className="h-7 w-7 text-success" aria-hidden /></div>
                 <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">Check your email</h2>
+                  <h2 className="text-xl font-semibold">{t('auth.checkEmail')}</h2>
                   <p className="text-sm text-muted-foreground">
-                    {success.email ? (
-                      <>
-                        We sent a verification link to <span className="font-medium text-foreground">{success.email}</span>.
-                      </>
-                    ) : (
-                      'We sent you a verification link.'
-                    )}{' '}
-                    Open your inbox, verify your account, then return to sign in.
+                    {success.email ? t('auth.verificationSentTo', { email: success.email }) : t('auth.verificationSent')} {' '}{t('auth.verifyThenReturn')}
                   </p>
                 </div>
                 <Alert className="border-success/40 bg-success/10 text-left text-success-foreground">
                   <Mail className="h-4 w-4 text-success" />
-                  <AlertTitle>Signup was accepted</AlertTitle>
+                  <AlertTitle>{t('auth.signupAccepted')}</AlertTitle>
                   <AlertDescription>{success.message}</AlertDescription>
                 </Alert>
                 <div className="space-y-2">
-                  {inboxUrl ? (
-                    <Button asChild className="w-full">
-                      <a href={inboxUrl} target="_blank" rel="noopener noreferrer">
-                        Open email inbox
-                        <ExternalLink className="h-4 w-4" aria-hidden />
-                      </a>
-                    </Button>
-                  ) : null}
-                  <Button type="button" variant={inboxUrl ? 'outline' : 'default'} className="w-full" onClick={handleReturnToSignIn}>
-                    I verified my email - sign in
-                  </Button>
+                  {inboxUrl ? <Button asChild className="w-full"><a href={inboxUrl} target="_blank" rel="noopener noreferrer">{t('auth.openInbox')}<ExternalLink className="h-4 w-4" aria-hidden /></a></Button> : null}
+                  <Button type="button" variant={inboxUrl ? 'outline' : 'default'} className="w-full" onClick={handleReturnToSignIn}>{t('auth.verifiedSignIn')}</Button>
                 </div>
               </div>
             ) : showMFAVerification ? (
-              <MFAVerification
-                onSuccess={handleMFASuccess}
-                onError={handleError}
-              />
+              <MFAVerification onSuccess={handleMFASuccess} onError={handleError} />
             ) : (
-            <div className="w-full">
-              {mode === 'signin' ? (
-                <SignInForm
-                  onError={handleError}
-                  isLoading={isLoading}
-                  setIsLoading={setIsLoading}
-                  onGoogleSignIn={() => {
-                    void handleGoogleSignIn();
-                  }}
-                  onMFARequired={handleMFARequired}
-                />
-              ) : (
-                <SignUpForm
-                  onBeforeSignupSubmit={() => {
-                    suppressAuthRedirectRef.current = true;
-                  }}
-                  onSuccess={handleSuccess}
-                  onError={handleError}
-                  onGoogleSignUp={(organizationName) => {
-                    void handleGoogleSignIn(organizationName);
-                  }}
-                  isLoading={isLoading}
-                  setIsLoading={setIsLoading}
-                  prefillEmail={prefillEmail}
-                  invitedOrgId={invitedOrgId}
-                  invitedOrgName={invitedOrgName}
-                />
-              )}
-
-              <p className="mt-6 text-center text-sm text-muted-foreground">
+              <div className="w-full">
                 {mode === 'signin' ? (
-                  <>
-                    New to ZNTEQR?{' '}
-                    <button
-                      type="button"
-                      className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
-                      onClick={() => setMode('signup')}
-                    >
-                      Create an account
-                    </button>
-                  </>
+                  <SignInForm onError={handleError} isLoading={isLoading} setIsLoading={setIsLoading} onGoogleSignIn={() => void handleGoogleSignIn()} onMFARequired={handleMFARequired} />
                 ) : (
-                  <>
-                    Already have an account?{' '}
-                    <button
-                      type="button"
-                      className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
-                      onClick={() => setMode('signin')}
-                    >
-                      Sign in
-                    </button>
-                  </>
+                  <SignUpForm onBeforeSignupSubmit={() => { suppressAuthRedirectRef.current = true; }} onSuccess={handleSuccess} onError={handleError} onGoogleSignUp={(organizationName) => void handleGoogleSignIn(organizationName)} isLoading={isLoading} setIsLoading={setIsLoading} prefillEmail={prefillEmail} invitedOrgId={invitedOrgId} invitedOrgName={invitedOrgName} />
                 )}
-              </p>
-            </div>
+                <p className="mt-6 text-center text-sm text-muted-foreground">
+                  {mode === 'signin' ? <>{t('auth.newToZnteqr')} <button type="button" className="font-medium text-foreground underline underline-offset-4 hover:text-primary" onClick={() => setMode('signup')}>{t('auth.createAccount')}</button></> : <>{t('auth.alreadyHaveAccount')} <button type="button" className="font-medium text-foreground underline underline-offset-4 hover:text-primary" onClick={() => setMode('signin')}>{t('auth.signIn')}</button></>}
+                </p>
+              </div>
             )}
-            
-            {error ? (
-              <Alert className="mt-4" variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            ) : null}
+            {error ? <Alert className="mt-4" variant="destructive"><AlertDescription>{error}</AlertDescription></Alert> : null}
           </CardContent>
         </Card>
       </div>
