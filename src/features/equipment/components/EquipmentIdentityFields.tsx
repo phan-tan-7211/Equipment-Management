@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tables } from '@/integrations/supabase/types';
 import InlineEditField from './InlineEditField';
+import { useI18n } from '@/i18n';
 
 type Equipment = Tables<'equipment'>;
 
@@ -20,57 +21,61 @@ export const EquipmentIdentityFields: React.FC<EquipmentIdentityFieldsProps> = (
   modelFieldId,
   serialNumberFieldId,
   onFieldUpdate,
-}) => (
-  <>
-    <div>
-      <label htmlFor={manufacturerFieldId} className="text-sm font-medium text-muted-foreground">
-        Manufacturer
-      </label>
-      <div className="mt-1 w-full">
-        <InlineEditField
-          value={equipment.manufacturer || ''}
-          onSave={(value) => onFieldUpdate('manufacturer', value)}
-          canEdit={canEdit}
-          fieldId={manufacturerFieldId}
-          placeholder="Enter manufacturer"
-          className="w-full text-base"
-          editAriaLabel="Edit manufacturer"
-        />
-      </div>
-    </div>
+}) => {
+  const { t } = useI18n();
 
-    <div>
-      <label htmlFor={modelFieldId} className="text-sm font-medium text-muted-foreground">
-        Model
-      </label>
-      <div className="mt-1 w-full">
-        <InlineEditField
-          value={equipment.model || ''}
-          onSave={(value) => onFieldUpdate('model', value)}
-          canEdit={canEdit}
-          fieldId={modelFieldId}
-          placeholder="Enter model"
-          className="w-full text-base"
-          editAriaLabel="Edit model"
-        />
+  return (
+    <>
+      <div>
+        <label htmlFor={manufacturerFieldId} className="text-sm font-medium text-muted-foreground">
+          {t('equipmentDetails.manufacturer')}
+        </label>
+        <div className="mt-1 w-full">
+          <InlineEditField
+            value={equipment.manufacturer || ''}
+            onSave={(value) => onFieldUpdate('manufacturer', value)}
+            canEdit={canEdit}
+            fieldId={manufacturerFieldId}
+            placeholder={t('equipmentDetails.manufacturerPlaceholder')}
+            className="w-full text-base"
+            editAriaLabel={t('equipmentDetails.editManufacturer')}
+          />
+        </div>
       </div>
-    </div>
 
-    <div>
-      <label htmlFor={serialNumberFieldId} className="text-sm font-medium text-muted-foreground">
-        Serial Number
-      </label>
-      <div className="mt-1 w-full">
-        <InlineEditField
-          value={equipment.serial_number || ''}
-          onSave={(value) => onFieldUpdate('serial_number', value)}
-          canEdit={canEdit}
-          fieldId={serialNumberFieldId}
-          placeholder="Enter serial number"
-          className="w-full text-base"
-          editAriaLabel="Edit serial number"
-        />
+      <div>
+        <label htmlFor={modelFieldId} className="text-sm font-medium text-muted-foreground">
+          {t('equipmentDetails.model')}
+        </label>
+        <div className="mt-1 w-full">
+          <InlineEditField
+            value={equipment.model || ''}
+            onSave={(value) => onFieldUpdate('model', value)}
+            canEdit={canEdit}
+            fieldId={modelFieldId}
+            placeholder={t('equipmentDetails.modelPlaceholder')}
+            className="w-full text-base"
+            editAriaLabel={t('equipmentDetails.editModel')}
+          />
+        </div>
       </div>
-    </div>
-  </>
-);
+
+      <div>
+        <label htmlFor={serialNumberFieldId} className="text-sm font-medium text-muted-foreground">
+          {t('equipmentDetails.serialNumber')}
+        </label>
+        <div className="mt-1 w-full">
+          <InlineEditField
+            value={equipment.serial_number || ''}
+            onSave={(value) => onFieldUpdate('serial_number', value)}
+            canEdit={canEdit}
+            fieldId={serialNumberFieldId}
+            placeholder={t('equipmentDetails.serialNumberPlaceholder')}
+            className="w-full text-base"
+            editAriaLabel={t('equipmentDetails.editSerialNumber')}
+          />
+        </div>
+      </div>
+    </>
+  );
+};
