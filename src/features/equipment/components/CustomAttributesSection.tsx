@@ -1,11 +1,11 @@
-
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, Plus } from 'lucide-react';
 import { useCustomAttributes, type CustomAttribute } from '@/hooks/useCustomAttributes';
+import { useI18n } from '@/i18n';
 
 interface CustomAttributesSectionProps {
   initialAttributes?: CustomAttribute[] | Record<string, string>;
@@ -18,13 +18,9 @@ const CustomAttributesSection: React.FC<CustomAttributesSectionProps> = ({
   onChange,
   hasError = false
 }) => {
-  // Convert initialAttributes to the expected format if it's an object
+  const { t } = useI18n();
   const normalizedInitialAttributes = React.useMemo(() => {
-    if (Array.isArray(initialAttributes)) {
-      return initialAttributes;
-    }
-    
-    // Convert object format to array format
+    if (Array.isArray(initialAttributes)) return initialAttributes;
     if (initialAttributes && typeof initialAttributes === 'object') {
       return Object.entries(initialAttributes).map(([key, value]) => ({
         id: crypto.randomUUID(),
@@ -32,7 +28,6 @@ const CustomAttributesSection: React.FC<CustomAttributesSectionProps> = ({
         value: String(value)
       }));
     }
-    
     return [];
   }, [initialAttributes]);
 
@@ -53,22 +48,17 @@ const CustomAttributesSection: React.FC<CustomAttributesSectionProps> = ({
       <CardContent className="pt-4 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-            Custom Attributes
+            {t('equipmentCustomAttributes.title')}
           </h3>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addAttribute}
-          >
+          <Button type="button" variant="outline" size="sm" onClick={addAttribute}>
             <Plus className="h-4 w-4 mr-1" />
-            Add Attribute
+            {t('equipmentCustomAttributes.add')}
           </Button>
         </div>
 
         {hasError && (
           <p className="text-sm text-destructive">
-            Attribute names must be unique and not empty
+            {t('equipmentCustomAttributes.uniqueRequired')}
           </p>
         )}
 
@@ -77,22 +67,22 @@ const CustomAttributesSection: React.FC<CustomAttributesSectionProps> = ({
             <div key={attribute.id} className="flex gap-2 items-start">
               <div className="flex-1">
                 <Label htmlFor={`attr-key-${attribute.id}`} className="sr-only">
-                  Attribute Name
+                  {t('equipmentCustomAttributes.name')}
                 </Label>
                 <Input
                   id={`attr-key-${attribute.id}`}
-                  placeholder="Attribute name"
+                  placeholder={t('equipmentCustomAttributes.namePlaceholder')}
                   value={attribute.key}
                   onChange={(e) => updateAttribute(attribute.id, 'key', e.target.value)}
                 />
               </div>
               <div className="flex-1">
                 <Label htmlFor={`attr-value-${attribute.id}`} className="sr-only">
-                  Attribute Value
+                  {t('equipmentCustomAttributes.value')}
                 </Label>
                 <Input
                   id={`attr-value-${attribute.id}`}
-                  placeholder="Attribute value"
+                  placeholder={t('equipmentCustomAttributes.valuePlaceholder')}
                   value={attribute.value}
                   onChange={(e) => updateAttribute(attribute.id, 'value', e.target.value)}
                 />
@@ -103,7 +93,7 @@ const CustomAttributesSection: React.FC<CustomAttributesSectionProps> = ({
                 size="icon"
                 onClick={() => removeAttribute(attribute.id)}
                 disabled={attributes.length === 1}
-                aria-label={`Delete attribute ${attribute.key || 'unnamed'}`}
+                aria-label={t('equipmentCustomAttributes.deleteAria', { name: attribute.key || t('equipmentCustomAttributes.unnamed') })}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
