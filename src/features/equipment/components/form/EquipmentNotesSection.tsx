@@ -6,12 +6,14 @@ import { type EquipmentFormData } from '@/features/equipment/types/equipment';
 import { useVoiceTextAppender } from '@/hooks/useVoiceTextAppender';
 import VoiceInputButton from '@/components/common/VoiceInputButton';
 import VoiceInterimTranscript from '@/components/common/VoiceInterimTranscript';
+import { useI18n } from '@/i18n';
 
 interface EquipmentNotesSectionProps {
   form: UseFormReturn<EquipmentFormData>;
 }
 
 const EquipmentNotesSection: React.FC<EquipmentNotesSectionProps> = ({ form }) => {
+  const { t } = useI18n();
   const notesValue = form.watch('notes') || '';
 
   const handleNotesChange = useCallback((nextValue: string) => {
@@ -38,11 +40,11 @@ const EquipmentNotesSection: React.FC<EquipmentNotesSectionProps> = ({ form }) =
       name="notes"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Description/Notes</FormLabel>
+          <FormLabel>{t('equipmentForm.descriptionNotes')}</FormLabel>
           <FormControl>
             <div className="relative">
               <Textarea
-                placeholder="Additional information about the equipment..."
+                placeholder={t('equipmentForm.notesPlaceholder')}
                 className="min-h-[100px] pb-12"
                 {...field}
               />
