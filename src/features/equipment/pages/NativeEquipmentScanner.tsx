@@ -6,7 +6,7 @@ import {
   CapacitorBarcodeScannerAndroidScanningLibrary,
   CapacitorBarcodeScannerCameraDirection,
   CapacitorBarcodeScannerScanOrientation,
-  Html5QrcodeSupportedFormats,
+  CapacitorBarcodeScannerTypeHint,
 } from '@capacitor/barcode-scanner';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { AlertCircle, Camera, RotateCcw, Upload, Zap } from 'lucide-react';
@@ -87,7 +87,7 @@ const NativeEquipmentScanner: React.FC = () => {
 
     try {
       const result = await CapacitorBarcodeScanner.scanBarcode({
-        hint: Html5QrcodeSupportedFormats.QR_CODE,
+        hint: CapacitorBarcodeScannerTypeHint.QR_CODE,
         cameraDirection: CapacitorBarcodeScannerCameraDirection.BACK,
         scanOrientation: CapacitorBarcodeScannerScanOrientation.ADAPTIVE,
         scanInstructions: 'Align the EquipQR code inside the frame',
