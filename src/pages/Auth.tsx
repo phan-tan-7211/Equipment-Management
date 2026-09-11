@@ -22,6 +22,7 @@ import MFAVerification from '@/components/auth/MFAVerification';
 import LegalFooter from '@/components/layout/LegalFooter';
 import { useAppToast } from '@/hooks/useAppToast';
 import { useI18n } from '@/i18n';
+import { shouldUseNativeGoogleOAuth, signInWithGoogleNative } from '@/services/nativeGoogleOAuth';
 
 type AuthMode = 'signin' | 'signup';
 
@@ -166,8 +167,12 @@ const Auth = () => {
   const handleGoogleSignIn = async (organizationName?: string) => {
     setIsLoading(true);
     setError(null);
-    const { error } = await signInWithGoogle(organizationName ? { organizationName } : undefined);
-    if (error) handleError(error.message);
+
+    const result = shouldUseNativeGoogleOAuth()
+      ? await signInWithGoogleNative(organizationName)
+      : await signInWithGoogle(organizationName ? { organizationName } : undefined);
+
+    if (result.error) handleError(result.error.message);
     setIsLoading(false);
   };
 
