@@ -44,7 +44,7 @@ export const equipmentQRScanResources = {
       newWorkOrder: 'New Work Order',
       updateHours: 'Update Hours',
       addNoteImage: 'Add Note / Upload Image',
-      workOrderCreated: 'Work order “{{title}}” was created.',
+      workOrderCreated: 'Work order "{{title}}" was created.',
       hoursUpdated: 'Working hours updated to {{count}} hours.',
       workOrderDefaultTitle: 'Work order - {{name}}',
       workOrderDefaultDescription: 'Work order created from QR scan for {{name}}.',
