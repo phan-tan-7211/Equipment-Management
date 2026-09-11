@@ -33,7 +33,7 @@ jobs:
       # Do not use --no-save. Capacitor discovers native plugins from the
       # package dependency graph when generating/syncing Android. The changes
       # are transient inside CI and are not committed to the branch.
-      - name: Install Capacitor 8 native shell plugins
+      - name: Install Capacitor 8 native shell and QR plugins
         run: >-
           npm install --package-lock=false
           @capacitor/core@8
@@ -42,6 +42,8 @@ jobs:
           @capacitor/app@8
           @capacitor/keyboard@8
           @capacitor/splash-screen@8
+          @capacitor/haptics@8
+          @capacitor/barcode-scanner@3.1.2
           @capacitor/assets@3
 
       - name: Build Vite app
@@ -57,6 +59,30 @@ jobs:
 
       - name: Generate Android project
         run: npx cap add android
+
+      - name: Configure Android native QR scanner
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          const variablesPath = 'android/variables.gradle';
+          let variables = fs.readFileSync(variablesPath, 'utf8');
+          if (!/minSdkVersion\s*=\s*\d+/.test(variables)) {
+            throw new Error('Could not find minSdkVersion in android/variables.gradle');
+          }
+          variables = variables.replace(/minSdkVersion\s*=\s*\d+/, 'minSdkVersion = 26');
+          fs.writeFileSync(variablesPath, variables);
+
+          const manifestPath = 'android/app/src/main/AndroidManifest.xml';
+          let manifest = fs.readFileSync(manifestPath, 'utf8');
+          if (!manifest.includes('android.permission.CAMERA')) {
+            manifest = manifest.replace(
+              '<application',
+              '    <uses-permission android:name="android.permission.CAMERA" />\n\n    <application',
+            );
+          }
+          fs.writeFileSync(manifestPath, manifest);
+          NODE
 
       - name: Generate ZNTEQR Android icon and splash resources
         run: |
@@ -86,12 +112,20 @@ jobs:
       - name: Sync web assets and native plugins into Android
         run: npx cap sync android
 
-      - name: Verify V4 native shell wiring
+      - name: Verify V5 native shell and QR wiring
         run: |
-          echo "Checking native plugins..."
+          echo "Checking native shell plugins..."
           grep -R --line-number --fixed-strings "capacitor-app" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
           grep -R --line-number --fixed-strings "capacitor-keyboard" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
           grep -R --line-number --fixed-strings "capacitor-splash-screen" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+
+          echo "Checking Phase 2 QR plugins..."
+          grep -R --line-number --fixed-strings "capacitor-barcode-scanner" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+          grep -R --line-number --fixed-strings "capacitor-haptics" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+
+          echo "Checking Android camera requirements..."
+          grep -E 'minSdkVersion\s*=\s*26' android/variables.gradle
+          grep --fixed-strings 'android.permission.CAMERA' android/app/src/main/AndroidManifest.xml
 
           echo "Checking SystemBars/safe-area config..."
           grep --fixed-strings 'SystemBars' android/app/src/main/assets/capacitor.config.json
@@ -100,7 +134,6 @@ jobs:
           test ! -f android/app/src/main/assets/public/sw.js
 
           echo "Checking generated Android launcher resources..."
-          find android/app/src/main/res -type f -name 'ic_launcher*' | head -20
           test -n "$(find android/app/src/main/res -type f -name 'ic_launcher*' -print -quit)"
 
       - name: Setup Java 21
@@ -118,16 +151,16 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Prepare V4 APK artifact
+      - name: Prepare V5 APK artifact
         run: |
           mkdir -p artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-v4.apk
-          sha256sum artifacts/equipment-management-capacitor-v4.apk > artifacts/equipment-management-capacitor-v4.apk.sha256
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-v5.apk
+          sha256sum artifacts/equipment-management-capacitor-v5.apk > artifacts/equipment-management-capacitor-v5.apk.sha256
 
-      - name: Upload V4 debug APK
+      - name: Upload V5 debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: equipment-management-capacitor-v4-apk
+          name: equipment-management-capacitor-v5-apk
           path: artifacts/
           if-no-files-found: error
           retention-days: 7
