@@ -6,6 +6,7 @@ import { useTeams } from '@/features/teams/hooks/useTeams';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Loader2 } from 'lucide-react';
 import TeamPickerWithCreate from '@/features/teams/components/TeamPickerWithCreate';
+import { useI18n } from '@/i18n';
 
 interface TeamSelectionSectionProps {
   form: UseFormReturn<import('@/features/equipment/types/equipment').EquipmentFormData>;
@@ -16,6 +17,7 @@ const TeamSelectionSection: React.FC<TeamSelectionSectionProps> = ({
   form,
   onRequestUnassignedConfirm,
 }) => {
+  const { t } = useI18n();
   const { teams, isLoading } = useTeams();
   const { hasRole, canCreateEquipmentForTeam } = usePermissions();
   const isAdmin = hasRole(['owner', 'admin']);
@@ -32,7 +34,7 @@ const TeamSelectionSection: React.FC<TeamSelectionSectionProps> = ({
         <CardContent className="pt-4">
           <div className="flex items-center justify-center p-4">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="ml-2 text-sm text-muted-foreground">Loading teams...</span>
+            <span className="ml-2 text-sm text-muted-foreground">{t('equipmentForm.loadingTeams')}</span>
           </div>
         </CardContent>
       </Card>
@@ -43,7 +45,7 @@ const TeamSelectionSection: React.FC<TeamSelectionSectionProps> = ({
     <Card>
       <CardContent className="pt-4 space-y-4">
         <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-          Team Assignment
+          {t('equipmentForm.teamAssignment')}
         </h3>
 
         <FormField
@@ -63,12 +65,12 @@ const TeamSelectionSection: React.FC<TeamSelectionSectionProps> = ({
               />
               {!isAdmin && filteredTeamCount === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  You must be a team manager or technician on at least one team to create equipment.
+                  {t('equipmentForm.teamPermissionRequired')}
                 </p>
               )}
               {!isAdmin && filteredTeamCount > 0 && (
                 <p className="text-sm text-muted-foreground">
-                  You can only assign equipment to teams where you are a manager or technician.
+                  {t('equipmentForm.teamAssignmentLimited')}
                 </p>
               )}
               <FormMessage />
