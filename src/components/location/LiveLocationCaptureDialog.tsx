@@ -15,10 +15,12 @@ import {
   buildLiveLocationPlaceData,
   DeviceGeolocationError,
   requestCurrentDevicePosition,
+  type DeviceGeolocationErrorCode,
   type LatLng,
 } from '@/components/location/liveLocationCapture';
 import { useGoogleMapsKey } from '@/hooks/useGoogleMapsKey';
 import { useIsDarkTheme } from '@/hooks/useThemeVersion';
+import { useI18n } from '@/i18n';
 
 type LiveLocationCaptureDialogProps = {
   open: boolean;
@@ -30,15 +32,24 @@ type LiveLocationCaptureDialogProps = {
   initialPosition?: LatLng | null;
 };
 
+const GEO_ERROR_KEYS: Record<DeviceGeolocationErrorCode, string> = {
+  unsupported: 'equipmentLocation.geoUnsupported',
+  permission_denied: 'equipmentLocation.geoPermissionDenied',
+  position_unavailable: 'equipmentLocation.geoPositionUnavailable',
+  timeout: 'equipmentLocation.geoTimeout',
+  unknown: 'equipmentLocation.geoUnknown',
+};
+
 export function LiveLocationCaptureDialog({
   open,
   onOpenChange,
   onConfirm,
   isSaving = false,
-  title = 'Set equipment location',
-  confirmLabel = 'Set equipment location',
+  title,
+  confirmLabel,
   initialPosition = null,
 }: LiveLocationCaptureDialogProps) {
+  const { t } = useI18n();
   const isDark = useIsDarkTheme();
   const {
     googleMapsKey,
@@ -54,7 +65,7 @@ export function LiveLocationCaptureDialog({
   const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'detected' | 'error'>(
     initialPosition ? 'detected' : 'idle',
   );
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<DeviceGeolocationErrorCode | null>(null);
 
   const resetState = useCallback(() => {
     setPendingPosition(initialPosition);
@@ -62,7 +73,7 @@ export function LiveLocationCaptureDialog({
     setRecenterKey(initialPosition ? 1 : 0);
     setWasAdjusted(false);
     setGeoStatus(initialPosition ? 'detected' : 'idle');
-    setErrorMessage(null);
+    setErrorCode(null);
   }, [initialPosition]);
 
   useEffect(() => {
@@ -73,7 +84,7 @@ export function LiveLocationCaptureDialog({
 
   const handleRequestLocation = useCallback(async () => {
     setGeoStatus('loading');
-    setErrorMessage(null);
+    setErrorCode(null);
 
     try {
       const position = await requestCurrentDevicePosition();
@@ -84,11 +95,7 @@ export function LiveLocationCaptureDialog({
       setGeoStatus('detected');
     } catch (error) {
       setGeoStatus('error');
-      if (error instanceof DeviceGeolocationError) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage('Unable to read your device location.');
-      }
+      setErrorCode(error instanceof DeviceGeolocationError ? error.code : 'unknown');
     }
   }, []);
 
@@ -108,17 +115,15 @@ export function LiveLocationCaptureDialog({
   }, [onConfirm, onOpenChange, pendingPosition, wasAdjusted]);
 
   const canConfirm = geoStatus === 'detected' && pendingPosition != null && !isSaving;
+  const resolvedTitle = title ?? t('equipmentLocation.captureDefaultTitle');
+  const resolvedConfirmLabel = confirmLabel ?? t('equipmentLocation.captureDefaultConfirm');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg" className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            Stand next to the equipment, use your device location once, then pan the map so the
-            centered pin sits on the equipment. The pin lifts while you move the map; the shadow
-            shows where it will land.
-          </DialogDescription>
+          <DialogTitle>{resolvedTitle}</DialogTitle>
+          <DialogDescription>{t('equipmentLocation.captureDescription')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -126,7 +131,7 @@ export function LiveLocationCaptureDialog({
             <div className="rounded-md border border-dashed bg-muted/20 p-4 text-center">
               <MapPin className="mx-auto h-6 w-6 text-muted-foreground" />
               <p className="mt-2 text-sm text-muted-foreground">
-                We only request your location after you click the button below.
+                {t('equipmentLocation.locationRequestNotice')}
               </p>
               <Button
                 type="button"
@@ -139,10 +144,10 @@ export function LiveLocationCaptureDialog({
                 ) : (
                   <Navigation className="h-4 w-4" />
                 )}
-                Use my current location
+                {t('equipmentLocation.useCurrentLocation')}
               </Button>
-              {errorMessage ? (
-                <p className="mt-3 text-sm text-destructive">{errorMessage}</p>
+              {errorCode ? (
+                <p className="mt-3 text-sm text-destructive">{t(GEO_ERROR_KEYS[errorCode])}</p>
               ) : null}
             </div>
           ) : null}
@@ -151,11 +156,11 @@ export function LiveLocationCaptureDialog({
             <div className="space-y-2">
               {isKeyLoading ? (
                 <div className="flex h-64 items-center justify-center rounded-lg border bg-muted/30">
-                  <p className="text-sm text-muted-foreground">Loading map...</p>
+                  <p className="text-sm text-muted-foreground">{t('equipmentLocation.loadingMapPreview')}</p>
                 </div>
               ) : keyError || !googleMapsKey ? (
                 <div className="flex h-64 items-center justify-center rounded-lg border border-dashed bg-muted/30 px-4 text-center">
-                  <p className="text-sm text-muted-foreground">Map preview unavailable.</p>
+                  <p className="text-sm text-muted-foreground">{t('equipmentLocation.mapPreviewUnavailable')}</p>
                 </div>
               ) : (
                 <CenterPinMapPicker
@@ -170,11 +175,14 @@ export function LiveLocationCaptureDialog({
                 />
               )}
               <p className="text-xs text-muted-foreground">
-                Selected location: {pendingPosition.lat.toFixed(5)}, {pendingPosition.lng.toFixed(5)}
-                {wasAdjusted ? ' (adjusted on map)' : ''}
+                {t('equipmentLocation.selectedLocation', {
+                  lat: pendingPosition.lat.toFixed(5),
+                  lng: pendingPosition.lng.toFixed(5),
+                })}
+                {wasAdjusted ? ` (${t('equipmentLocation.adjustedOnMap')})` : ''}
               </p>
               <p className="text-xs text-muted-foreground">
-                Confirm only if the shadow is where the equipment is right now.
+                {t('equipmentLocation.confirmShadowHint')}
               </p>
             </div>
           ) : null}
@@ -187,14 +195,14 @@ export function LiveLocationCaptureDialog({
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
           >
-            Cancel
+            {t('equipmentLocation.cancel')}
           </Button>
           <Button
             type="button"
             onClick={() => void handleConfirm()}
             disabled={!canConfirm}
           >
-            {isSaving ? 'Saving...' : confirmLabel}
+            {isSaving ? t('equipmentLocation.saving') : resolvedConfirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
