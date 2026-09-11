@@ -7,9 +7,43 @@ import { toast } from 'sonner';
 const EXIT_CONFIRM_WINDOW_MS = 2000;
 
 /**
+ * Dismiss the top-most Radix/shadcn overlay before changing routes. Android
+ * users expect Back to close a dialog, drawer, popover, or menu first.
+ */
+function dismissOpenOverlay(): boolean {
+  const openOverlay = document.querySelector<HTMLElement>(
+    [
+      '[role="dialog"][data-state="open"]',
+      '[role="alertdialog"][data-state="open"]',
+      '[data-radix-menu-content][data-state="open"]',
+      '[data-radix-select-content][data-state="open"]',
+      '[data-radix-popover-content][data-state="open"]',
+      '[data-radix-dropdown-menu-content][data-state="open"]',
+      '[data-radix-context-menu-content][data-state="open"]',
+    ].join(','),
+  );
+
+  if (!openOverlay) return false;
+
+  // Radix primitives consistently handle Escape and restore focus to the
+  // trigger. Dispatch on the active element and document for nested portals.
+  const eventOptions: KeyboardEventInit = {
+    key: 'Escape',
+    code: 'Escape',
+    bubbles: true,
+    cancelable: true,
+  };
+  (document.activeElement instanceof HTMLElement ? document.activeElement : openOverlay)
+    .dispatchEvent(new KeyboardEvent('keydown', eventOptions));
+  document.dispatchEvent(new KeyboardEvent('keydown', eventOptions));
+  return true;
+}
+
+/**
  * Maps the Android hardware/system Back button to React Router navigation.
  *
  * Behaviour on Android native builds:
+ * - Open overlay: close the overlay first.
  * - Nested routes: go back through the web navigation history.
  * - A dashboard child route without usable history: return to /dashboard.
  * - Dashboard root: require a second Back press within 2 seconds to exit.
@@ -29,6 +63,8 @@ export function AndroidBackHandler() {
     let removeListener: (() => void) | undefined;
 
     void CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+      if (dismissOpenOverlay()) return;
+
       const pathname = window.location.pathname;
       const isDashboardRoot = pathname === '/dashboard' || pathname === '/dashboard/';
 
@@ -44,13 +80,11 @@ export function AndroidBackHandler() {
         return;
       }
 
-      // Prefer actual browser/router history so Back behaves like the web app.
       if (canGoBack && window.history.length > 1) {
         navigate(-1);
         return;
       }
 
-      // Deep links can open a dashboard child directly with no history entry.
       if (pathname.startsWith('/dashboard/')) {
         navigate('/dashboard', { replace: true });
         return;
@@ -61,7 +95,6 @@ export function AndroidBackHandler() {
         return;
       }
 
-      // Public/native entry route fallback: return to the app home instead of exiting.
       if (pathname !== '/') {
         navigate('/', { replace: true });
       }
