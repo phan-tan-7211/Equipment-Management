@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Images, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 
 interface EquipmentImagesTabProps {
   equipmentId: string;
@@ -34,8 +35,10 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   organizationId,
   equipmentTeamId,
   currentDisplayImage,
-  equipmentName = 'Equipment',
+  equipmentName,
 }) => {
+  const { t } = useI18n();
+  const resolvedEquipmentName = equipmentName || t('equipmentMedia.defaultEquipmentName');
   const queryClient = useQueryClient();
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
@@ -78,28 +81,32 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
       }),
     onSuccess: () => {
       invalidateMedia();
-      toast.success('Image deleted successfully');
+      toast.success(t('equipmentMedia.imageDeleted'));
     },
     onError: (error) => {
       console.error('Error deleting image:', error);
-      toast.error('Failed to delete image');
+      toast.error(t('equipmentMedia.imageDeleteFailed'));
     },
   });
 
   const setDisplayImageMutation = useMutation({
     mutationFn: (imageUrl: string) => {
       if (!permissions.canSetDisplayImage) {
-        throw new Error('You do not have permission to set the equipment display image');
+        throw new Error('Display image permission denied');
       }
       return updateEquipmentDisplayImage(organizationId, equipmentId, imageUrl);
     },
     onSuccess: () => {
       invalidateMedia();
-      toast.success('Display image updated successfully');
+      toast.success(t('equipmentMedia.displayImageUpdated'));
     },
     onError: (error) => {
       console.error('Error setting display image:', error);
-      toast.error('Failed to update display image');
+      toast.error(
+        permissions.canSetDisplayImage
+          ? t('equipmentMedia.displayImageUpdateFailed')
+          : t('equipmentMedia.displayImagePermissionDenied'),
+      );
     },
   });
 
@@ -107,6 +114,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
     mutationFn: async (files: File[]) => {
       const userName = user?.email?.split('@')[0] || 'User';
       const trimmedNote = optionalNote.trim();
+      // Keep automatic persisted audit captions canonical; do not store UI-language text.
       const noteContent =
         trimmedNote ||
         (files.length === 1
@@ -129,7 +137,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
     },
     onError: (error) => {
       console.error('Error uploading images:', error);
-      toast.error('Failed to upload images');
+      toast.error(t('equipmentMedia.imagesUploadFailed'));
     },
   });
 
@@ -165,10 +173,12 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-lg font-semibold">Media library</h2>
+          <h2 className="text-lg font-semibold">{t('equipmentMedia.library')}</h2>
           <p className="text-xs text-muted-foreground">
-            {media.images.length} item{media.images.length === 1 ? '' : 's'} from notes and work
-            orders
+            {t(
+              media.images.length === 1 ? 'equipmentMedia.itemSummary' : 'equipmentMedia.itemsSummary',
+              { count: media.images.length },
+            )}
             {currentOrganization?.name ? ` · ${currentOrganization.name}` : ''}
           </p>
         </div>
@@ -181,7 +191,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
             onClick={() => setExplorerOpen(true)}
           >
             <Images className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-            Open explorer
+            {t('equipmentMedia.openExplorer')}
           </Button>
           {permissions.canUploadImages && (
             <Button
@@ -192,7 +202,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
               onClick={() => setShowUploadForm((open) => !open)}
             >
               <Upload className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-              {showUploadForm ? 'Cancel' : 'Upload'}
+              {showUploadForm ? t('equipmentMedia.cancel') : t('equipmentMedia.upload')}
             </Button>
           )}
         </div>
@@ -214,13 +224,13 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
         <div className="space-y-3 rounded-lg border p-3">
           <div className="space-y-1">
             <Label htmlFor="media-upload-note" className="text-xs">
-              Optional note (leave blank for auto caption)
+              {t('equipmentMedia.optionalNote')}
             </Label>
             <Input
               id="media-upload-note"
               value={optionalNote}
               onChange={(e) => setOptionalNote(e.target.value)}
-              placeholder="Context for these photos…"
+              placeholder={t('equipmentMedia.notePlaceholder')}
               className="h-8"
             />
           </div>
@@ -245,15 +255,15 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
         title=""
         emptyMessage={
           media.hasActiveFilters
-            ? 'No media match the current filters.'
-            : 'No images found for this equipment. Upload images above, or add them through equipment notes and work orders.'
+            ? t('equipmentMedia.noMediaMatchFilters')
+            : t('equipmentMedia.noImages')
         }
       />
 
       <EquipmentMediaExplorer
         open={explorerOpen}
         onOpenChange={setExplorerOpen}
-        equipmentName={equipmentName}
+        equipmentName={resolvedEquipmentName}
         images={media.images}
         filteredImages={media.filteredImages}
         filters={media.filters}
