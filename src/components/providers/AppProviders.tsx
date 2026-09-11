@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Capacitor } from '@capacitor/core';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { MFAProvider } from '@/contexts/MFAContext';
@@ -12,17 +13,18 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
+const isNativeRuntime = Capacitor.isNativePlatform();
+
 /**
- * Sonner toasts are used across the app (`import { toast } from 'sonner'`),
- * but no Sonner <Toaster /> was mounted, so those toasts never rendered
- * (#1081). Mounted above modals via the shared z-toast token so feedback
- * stays visible while dialogs are open.
+ * Sonner toasts are mounted above modals. On a phone, top-center keeps short
+ * native feedback away from the Android gesture/navigation area.
  */
 const AppSonnerToaster: React.FC = () => (
   <SonnerToaster
     theme="dark"
-    position="bottom-right"
+    position={isNativeRuntime ? 'top-center' : 'bottom-right'}
     closeButton
+    mobileOffset={{ top: 'calc(var(--safe-area-inset-top, 0px) + 12px)', left: 12, right: 12 }}
     style={{ zIndex: 'var(--z-toast)' } as React.CSSProperties}
   />
 );
@@ -45,25 +47,25 @@ function isNonRetryableQueryError(error: unknown): boolean {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      // Auth/permission errors should not retry; on cellular, give a real
-      // error a fast first retry and exponential backoff thereafter so
-      // failures pile up sensibly instead of hammering the network.
+      // Native users revisit the same equipment/work-order screens repeatedly.
+      // Keep successful data warm longer in the APK to reduce factory-Wi-Fi
+      // round trips while still refreshing on reconnect.
+      staleTime: isNativeRuntime ? 10 * 60 * 1000 : 5 * 60 * 1000,
+      gcTime: isNativeRuntime ? 24 * 60 * 60 * 1000 : 30 * 60 * 1000,
+      refetchOnReconnect: true,
+      refetchOnWindowFocus: !isNativeRuntime,
       retry: (failureCount, error) => {
         if (isNonRetryableQueryError(error)) return false;
         return failureCount < 2;
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      // NOTE: experimental_createQueryPersister from @tanstack/react-query-persist-client
-      // is NOT set here as a global default because it intercepts the restore phase
-      // of EVERY query and stalls any query whose IDB entry doesn't resolve
-      // synchronously, breaking the organization loading. Targeted per-query
-      // persistence can be wired on individual hooks once the stable v5 API is
-      // confirmed. The PWA service worker (src/sw.ts) already covers app-shell
-      // caching for offline/cellular scenarios.
+      // Persistent storage is intentionally not enabled globally: many queries
+      // contain tenant-scoped data and indiscriminate disk persistence would be
+      // a privacy/security regression. Existing offline-aware mutations remain
+      // responsible for their own durable queue.
     },
     mutations: {
-      networkMode: 'always', // Always fire mutationFn; offline handling is in OfflineAwareService layer
+      networkMode: 'always', // Offline handling is in OfflineAwareService layer.
     },
   },
 });
