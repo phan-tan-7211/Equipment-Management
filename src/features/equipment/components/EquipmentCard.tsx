@@ -25,6 +25,7 @@ import { useI18n } from '@/i18n';
 interface Equipment {
   id: string; name: string; manufacturer: string; model: string; serial_number: string; status: string; location: string;
   last_maintenance?: string; image_url?: string; default_pm_template_id?: string | null; working_hours?: number | null; team_name?: string;
+  management_code?: string | null;
 }
 export type EquipmentViewMode = 'grid' | 'table';
 export const EQUIPMENT_ABOVE_FOLD_IMAGE_COUNT = 6;
@@ -67,15 +68,16 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({ equipment, onShowQRCode, 
       {statusRailClass ? <div className={cn('pointer-events-none absolute inset-y-0 left-0 z-10 w-1 rounded-l-lg', statusRailClass)} aria-hidden /> : null}
       <div className="md:hidden">
         <div className="grid min-w-0 grid-cols-[4.5rem_1fr_auto] gap-x-2.5 gap-y-0.5 p-3">
-          <div className="row-span-4 self-center"><div className="relative aspect-[4/5] w-full overflow-hidden rounded-md bg-muted" style={getEquipmentViewTransitionStyle('image', isTransitionActive)}>
+          <div className="row-span-5 self-center"><div className="relative aspect-[4/5] w-full overflow-hidden rounded-md bg-muted" style={getEquipmentViewTransitionStyle('image', isTransitionActive)}>
             {resolvedImageSrc ? <img src={resolvedImageSrc} alt={display.imageAlt} className="absolute inset-0 h-full w-full object-cover" loading={imageLoading} decoding="async" onError={(e) => { e.currentTarget.src = display.imageFallbackSrc; }} /> : <div className="flex h-full w-full items-center justify-center"><Forklift className="h-[45%] w-[45%] text-muted-foreground/50" /></div>}
           </div></div>
           <div className="col-start-2 row-start-1 flex min-w-0 items-center gap-1.5"><span className="truncate text-sm font-semibold leading-tight" style={getEquipmentViewTransitionStyle('name', isTransitionActive)}>{equipment.name}</span>{(equipment as MergedEquipment)._isPendingSync && <PendingSyncBadge className="flex-shrink-0" />}</div>
           <div className="col-start-3 row-start-1"><Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 -mr-1 text-muted-foreground hover:text-foreground" onClick={handleQRClick} aria-label={t('equipment.showQrFor', { name: equipment.name })}><QrCode className="h-4 w-4" /></Button></div>
-          <div className="col-start-2 row-start-2 flex min-w-0 items-center gap-1 text-xs text-muted-foreground"><Calendar className="h-3 w-3 flex-shrink-0" /><span className="truncate font-tabular">{display.lastMaintenanceMobileDisplay}</span></div>
-          <div className="col-start-2 row-start-3 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5"><PMStatusIndicator status={pmStatus} size="sm" /><span className="inline-flex flex-shrink-0 items-center gap-0.5 text-xs text-muted-foreground" style={getEquipmentViewTransitionStyle('hours', isTransitionActive)}><Clock className="h-3 w-3" />{display.workingHoursShortText}</span></div>
-          <div className="col-start-2 row-start-4 flex min-w-0 items-center gap-1 text-xs text-muted-foreground" style={getEquipmentViewTransitionStyle('location', isTransitionActive)}><MapPin className="h-3 w-3 flex-shrink-0" /><span className="truncate">{equipment.location}</span></div>
-          <div className="col-start-3 row-start-4 self-end"><EquipmentCardWorkOrderMenu equipmentId={equipment.id} pmStatus={pmStatus} onQuickAction={handleQuickAction} variant="icon" /></div>
+          {equipment.management_code ? <div className="col-start-2 row-start-2 truncate font-mono text-[11px] text-muted-foreground">{equipment.management_code}</div> : null}
+          <div className={`col-start-2 ${equipment.management_code ? 'row-start-3' : 'row-start-2'} flex min-w-0 items-center gap-1 text-xs text-muted-foreground`}><Calendar className="h-3 w-3 flex-shrink-0" /><span className="truncate font-tabular">{display.lastMaintenanceMobileDisplay}</span></div>
+          <div className={`col-start-2 ${equipment.management_code ? 'row-start-4' : 'row-start-3'} flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5`}><PMStatusIndicator status={pmStatus} size="sm" /><span className="inline-flex flex-shrink-0 items-center gap-0.5 text-xs text-muted-foreground" style={getEquipmentViewTransitionStyle('hours', isTransitionActive)}><Clock className="h-3 w-3" />{display.workingHoursShortText}</span></div>
+          <div className={`col-start-2 ${equipment.management_code ? 'row-start-5' : 'row-start-4'} flex min-w-0 items-center gap-1 text-xs text-muted-foreground`} style={getEquipmentViewTransitionStyle('location', isTransitionActive)}><MapPin className="h-3 w-3 flex-shrink-0" /><span className="truncate">{equipment.location}</span></div>
+          <div className={`col-start-3 ${equipment.management_code ? 'row-start-5' : 'row-start-4'} self-end`}><EquipmentCardWorkOrderMenu equipmentId={equipment.id} pmStatus={pmStatus} onQuickAction={handleQuickAction} variant="icon" /></div>
         </div>
       </div>
       {viewMode === 'grid' && <EquipmentCardGridView equipment={equipment} display={display} pmReadout={pmReadout} pmStatus={pmStatus} isPendingSync={(equipment as MergedEquipment)._isPendingSync} onQRClick={handleQRClick} onQuickAction={handleQuickAction} imageLoading={imageLoading} isTransitionActive={isTransitionActive} />}
