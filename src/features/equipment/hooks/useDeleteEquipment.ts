@@ -2,18 +2,19 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteEquipmentCascade } from '@/features/equipment/services/deleteEquipmentService';
 import { useToast } from '@/hooks/use-toast';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import { useI18n } from '@/i18n';
 
 export const useDeleteEquipment = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { currentOrganization } = useOrganization();
+  const { t } = useI18n();
 
   return useMutation({
-    mutationFn: ({ equipmentId, orgId }: { equipmentId: string; orgId: string }) => 
+    mutationFn: ({ equipmentId, orgId }: { equipmentId: string; orgId: string }) =>
       deleteEquipmentCascade(equipmentId, orgId),
     onSuccess: () => {
       if (currentOrganization?.id) {
-        // Invalidate all equipment related queries
         queryClient.invalidateQueries({ queryKey: ['equipment', currentOrganization.id] });
         queryClient.invalidateQueries({ queryKey: ['dashboard-stats', currentOrganization.id] });
         queryClient.invalidateQueries({ queryKey: ['work-orders', currentOrganization.id] });
@@ -21,18 +22,17 @@ export const useDeleteEquipment = () => {
       }
 
       toast({
-        title: "Equipment Deleted",
-        description: "The equipment and all associated data have been permanently deleted.",
+        title: t('equipmentMutation.deletedTitle'),
+        description: t('equipmentMutation.deletedDescription'),
       });
     },
     onError: (error: unknown) => {
       console.error('Delete equipment error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete equipment. Please try again.';
       toast({
-        title: "Delete Failed",
-        description: errorMessage,
-        variant: "destructive",
+        title: t('equipmentMutation.deleteFailedTitle'),
+        description: t('equipmentMutation.deleteFailedDescription'),
+        variant: 'destructive',
       });
-    }
+    },
   });
 };
