@@ -78,7 +78,7 @@ describe('EquipmentBasicInfoSection', () => {
     it('renders serial number field as optional', () => {
       render(<TestWrapper />);
       
-      expect(screen.getByLabelText('Serial Number')).toBeInTheDocument();
+      expect(screen.getByLabelText(/Serial Number/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText('e.g., 12345678')).toBeInTheDocument();
     });
   });
@@ -99,7 +99,7 @@ describe('EquipmentBasicInfoSection', () => {
       const nameInput = screen.getByLabelText('Equipment Name *') as HTMLInputElement;
       const manufacturerInput = screen.getByLabelText('Manufacturer *') as HTMLInputElement;
       const modelInput = screen.getByLabelText('Model *') as HTMLInputElement;
-      const serialInput = screen.getByLabelText('Serial Number') as HTMLInputElement;
+      const serialInput = screen.getByLabelText(/Serial Number/i) as HTMLInputElement;
       
       expect(nameInput.value).toBe('Test Equipment');
       expect(manufacturerInput.value).toBe('Test Manufacturer');
