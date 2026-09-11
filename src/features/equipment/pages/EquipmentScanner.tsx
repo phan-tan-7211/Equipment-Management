@@ -13,9 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { parseEquipQRTarget } from '@/utils/qr';
-import { getCameraAccessErrorMessage } from '@/features/equipment/utils/cameraAccessErrors';
+import { parseEquipQRTarget, type ParseEquipQRTargetResult } from '@/utils/qr';
+import {
+  getCameraAccessErrorCode,
+  type CameraAccessErrorCode,
+} from '@/features/equipment/utils/cameraAccessErrors';
 import { useScanFeedback } from '@/hooks/useScanFeedback';
+import { useI18n } from '@/i18n';
 
 const BACK_CAMERA_LABEL_PATTERN = /\b(back|rear|environment|world|wide|telephoto)\b/i;
 
@@ -29,6 +33,22 @@ type Phase =
   | 'no-camera';
 
 type DecodeSource = 'camera' | 'upload';
+type ParseErrorReason = Extract<ParseEquipQRTargetResult, { ok: false }>['reason'];
+
+const CAMERA_ERROR_KEYS: Record<CameraAccessErrorCode, string> = {
+  policy_blocked: 'equipmentScanner.cameraPolicyBlocked',
+  permission_denied: 'equipmentScanner.cameraDenied',
+  not_found: 'equipmentScanner.cameraNotFound',
+  not_readable: 'equipmentScanner.cameraNotReadable',
+  unknown: 'equipmentScanner.cameraFallback',
+};
+
+const PARSE_ERROR_KEYS: Record<ParseErrorReason, string> = {
+  empty: 'equipmentScanner.parseEmpty',
+  malformed: 'equipmentScanner.parseMalformed',
+  external: 'equipmentScanner.parseExternal',
+  unsupported: 'equipmentScanner.parseUnsupported',
+};
 
 function getPreferredListedCameraId(cameras: QrScanner.Camera[]): string {
   return cameras.find((camera) => BACK_CAMERA_LABEL_PATTERN.test(camera.label))?.id ?? cameras[0]?.id ?? '';
@@ -36,6 +56,7 @@ function getPreferredListedCameraId(cameras: QrScanner.Camera[]): string {
 
 const EquipmentScanner: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { prepareFeedback, markPendingFeedback } = useScanFeedback();
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,7 +66,6 @@ const EquipmentScanner: React.FC = () => {
   const [phase, setPhase] = useState<Phase>('ready');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
-  /** Increment to begin or restart the live camera session (0 = user has not opted in). */
   const [cameraRunId, setCameraRunId] = useState(0);
   const [cameras, setCameras] = useState<QrScanner.Camera[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string>('');
@@ -76,23 +96,24 @@ const EquipmentScanner: React.FC = () => {
       if (handledDecodeRef.current) return;
       const parsed = parseEquipQRTarget(raw);
       if (!parsed.ok) {
+        const message = t(PARSE_ERROR_KEYS[parsed.reason]);
         handledDecodeRef.current = true;
         stopScannerSafe();
         setPhase('error');
-        setErrorMessage(parsed.message);
-        setLiveMessage(parsed.message);
+        setErrorMessage(message);
+        setLiveMessage(message);
         return;
       }
       handledDecodeRef.current = true;
       stopScannerSafe();
       setPhase('decoded');
-      setLiveMessage('QR code recognized. Opening link.');
+      setLiveMessage(t('equipmentScanner.recognized'));
       if (source === 'camera') {
         markPendingFeedback();
       }
       navigate(parsed.path);
     },
-    [navigate, stopScannerSafe, markPendingFeedback]
+    [markPendingFeedback, navigate, stopScannerSafe, t],
   );
 
   useEffect(() => {
@@ -140,7 +161,7 @@ const EquipmentScanner: React.FC = () => {
             highlightScanRegion: true,
             highlightCodeOutline: true,
             returnDetailedScanResult: true,
-          }
+          },
         );
         scannerRef.current = scanner;
 
@@ -161,10 +182,10 @@ const EquipmentScanner: React.FC = () => {
 
         const hf = await scanner.hasFlash();
         if (!cancelled) setHasFlash(hf);
-      } catch (e) {
+      } catch (error) {
         if (!cancelled) {
           setPhase('error');
-          setErrorMessage(getCameraAccessErrorMessage(e));
+          setErrorMessage(t(CAMERA_ERROR_KEYS[getCameraAccessErrorCode(error)]));
         }
       }
     };
@@ -175,7 +196,7 @@ const EquipmentScanner: React.FC = () => {
       cancelled = true;
       destroyScannerSafe();
     };
-  }, [cameraRunId, retryKey, destroyScannerSafe, handleDecodedPayload]);
+  }, [cameraRunId, retryKey, destroyScannerSafe, handleDecodedPayload, t]);
 
   const handleCameraChange = async (cameraId: string) => {
     const scanner = scannerRef.current;
@@ -187,10 +208,10 @@ const EquipmentScanner: React.FC = () => {
       await scanner.setCamera(cameraId);
       const hf = await scanner.hasFlash();
       setHasFlash(hf);
-    } catch (e) {
+    } catch (error) {
       setHasFlash(false);
       setPhase('error');
-      setErrorMessage(getCameraAccessErrorMessage(e));
+      setErrorMessage(t(CAMERA_ERROR_KEYS[getCameraAccessErrorCode(error)]));
     }
   };
 
@@ -217,7 +238,7 @@ const EquipmentScanner: React.FC = () => {
       handleDecodedPayload(result.data, 'upload');
     } catch {
       setPhase('error');
-      setErrorMessage('No QR code found in this image. Try another photo or use the camera.');
+      setErrorMessage(t('equipmentScanner.noQrInImage'));
     } finally {
       setIsImageScanning(false);
     }
@@ -226,13 +247,13 @@ const EquipmentScanner: React.FC = () => {
   const handleRetry = () => {
     handledDecodeRef.current = false;
     setErrorMessage(null);
-    setRetryKey((k) => k + 1);
+    setRetryKey((key) => key + 1);
   };
 
   const handleStartCameraScan = () => {
     setErrorMessage(null);
     prepareFeedback();
-    setCameraRunId((n) => n + 1);
+    setCameraRunId((runId) => runId + 1);
   };
 
   const showCameraPreview =
@@ -240,10 +261,10 @@ const EquipmentScanner: React.FC = () => {
 
   const placeholderMessage = (() => {
     if (phase === 'ready') {
-      return 'Tap Start camera scan below. Your browser may ask for camera permission.';
+      return t('equipmentScanner.readyHint');
     }
     if (phase === 'checking' || phase === 'starting') {
-      return 'Starting camera…';
+      return t('equipmentScanner.startingCamera');
     }
     return null;
   })();
@@ -252,10 +273,8 @@ const EquipmentScanner: React.FC = () => {
     <div className="mx-auto w-full max-w-lg space-y-4 p-4 pb-24 md:pb-6">
       <Card>
         <CardHeader className="space-y-1">
-          <CardTitle className="text-xl">Scan QR</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Point the camera at an EquipQR sticker, or upload a photo of the code.
-          </p>
+          <CardTitle className="text-xl">{t('equipmentScanner.title')}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t('equipmentScanner.description')}</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
@@ -268,7 +287,7 @@ const EquipmentScanner: React.FC = () => {
                 <span>{errorMessage}</span>
                 <Button type="button" variant="outline" size="sm" onClick={handleRetry} className="shrink-0">
                   <RotateCcw className="mr-2 h-4 w-4" aria-hidden />
-                  Retry scan
+                  {t('equipmentScanner.retryScan')}
                 </Button>
               </AlertDescription>
             </Alert>
@@ -277,15 +296,15 @@ const EquipmentScanner: React.FC = () => {
           {phase === 'no-camera' && !errorMessage && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                No camera was detected. Use upload below or open this page on a device with a camera.
-              </AlertDescription>
+              <AlertDescription>{t('equipmentScanner.noCamera')}</AlertDescription>
             </Alert>
           )}
 
           {phase === 'decoded' && (
             <Alert>
-              <AlertDescription data-testid="scanner-decoded-state">Opening scanned link…</AlertDescription>
+              <AlertDescription data-testid="scanner-decoded-state">
+                {t('equipmentScanner.openingLink')}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -298,7 +317,7 @@ const EquipmentScanner: React.FC = () => {
               className={`h-full w-full object-cover ${showCameraPreview ? 'block' : 'hidden'}`}
               muted
               playsInline
-              aria-label="Camera preview for QR scanning"
+              aria-label={t('equipmentScanner.cameraPreviewAria')}
             />
             {!showCameraPreview && phase !== 'decoded' && (
               <div className="flex h-full min-h-[200px] items-center justify-center px-4 text-center text-sm text-muted-foreground">
@@ -309,15 +328,15 @@ const EquipmentScanner: React.FC = () => {
 
           {phase === 'scanning' && cameras.length > 1 && (
             <div className="space-y-2">
-              <Label htmlFor="scanner-camera-select">Camera</Label>
+              <Label htmlFor="scanner-camera-select">{t('equipmentScanner.camera')}</Label>
               <Select value={selectedCameraId} onValueChange={(cameraId) => void handleCameraChange(cameraId)}>
                 <SelectTrigger id="scanner-camera-select">
-                  <SelectValue placeholder="Choose a camera" />
+                  <SelectValue placeholder={t('equipmentScanner.chooseCamera')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {cameras.map((cam) => (
-                    <SelectItem key={cam.id} value={cam.id}>
-                      {cam.label || cam.id}
+                  {cameras.map((camera) => (
+                    <SelectItem key={camera.id} value={camera.id}>
+                      {camera.label || camera.id}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -335,7 +354,7 @@ const EquipmentScanner: React.FC = () => {
                 onClick={handleStartCameraScan}
               >
                 <Camera className="mr-2 h-4 w-4" aria-hidden />
-                Start camera scan
+                {t('equipmentScanner.startCamera')}
               </Button>
             )}
 
@@ -346,17 +365,21 @@ const EquipmentScanner: React.FC = () => {
                 size="sm"
                 onClick={() => void handleTorchToggle()}
                 aria-pressed={flashOn}
-                aria-label={flashOn ? 'Turn flash off' : 'Turn flash on'}
+                aria-label={
+                  flashOn
+                    ? t('equipmentScanner.turnFlashOff')
+                    : t('equipmentScanner.turnFlashOn')
+                }
               >
                 {flashOn ? (
                   <>
                     <ZapOff className="mr-2 h-4 w-4" aria-hidden />
-                    Flash off
+                    {t('equipmentScanner.flashOff')}
                   </>
                 ) : (
                   <>
                     <Zap className="mr-2 h-4 w-4" aria-hidden />
-                    Flash on
+                    {t('equipmentScanner.flashOn')}
                   </>
                 )}
               </Button>
@@ -370,22 +393,24 @@ const EquipmentScanner: React.FC = () => {
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="mr-2 h-4 w-4" aria-hidden />
-              {isImageScanning ? 'Reading image…' : 'Upload QR image'}
+              {isImageScanning
+                ? t('equipmentScanner.readingImage')
+                : t('equipmentScanner.uploadQrImage')}
             </Button>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
               className="sr-only"
-              onChange={(e) => void handleImageSelected(e)}
+              onChange={(event) => void handleImageSelected(event)}
               disabled={isImageScanning}
-              aria-label="Upload an image containing a QR code"
+              aria-label={t('equipmentScanner.uploadImageAria')}
             />
 
             {(phase === 'error' || phase === 'no-camera') && (
               <Button type="button" variant="default" size="sm" onClick={handleRetry}>
                 <Camera className="mr-2 h-4 w-4" aria-hidden />
-                Retry camera
+                {t('equipmentScanner.retryCamera')}
               </Button>
             )}
           </div>
