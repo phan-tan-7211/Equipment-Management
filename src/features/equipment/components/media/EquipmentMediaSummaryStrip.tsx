@@ -5,6 +5,7 @@ import { Images } from 'lucide-react';
 import type { EquipmentImageData } from '@/features/equipment/services/equipmentImagesService';
 import { displayableImageSrc } from '@/services/imageUploadService';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 interface EquipmentMediaSummaryStripProps {
   images: EquipmentImageData[];
@@ -23,6 +24,7 @@ export function EquipmentMediaSummaryStrip({
   onOpenExplorer,
   className,
 }: EquipmentMediaSummaryStripProps) {
+  const { t } = useI18n();
   const thumbs = images.slice(0, 4);
 
   return (
@@ -70,15 +72,15 @@ export function EquipmentMediaSummaryStrip({
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-medium">Media & artifacts</p>
+            <p className="text-sm font-medium">{t('equipmentMedia.summaryTitle')}</p>
             <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
               {isLoading ? '…' : totalCount}
             </Badge>
           </div>
           <p className="truncate text-xs text-muted-foreground">
             {totalCount === 0
-              ? `No photos yet for ${equipmentName}`
-              : 'Notes, work orders, and display image'}
+              ? t('equipmentMedia.noPhotosYet', { name: equipmentName })
+              : t('equipmentMedia.summaryDescription')}
           </p>
         </div>
       </div>
@@ -88,10 +90,10 @@ export function EquipmentMediaSummaryStrip({
         size="sm"
         className="h-8 shrink-0"
         onClick={onOpenExplorer}
-        aria-label={`View all media for ${equipmentName}`}
+        aria-label={t('equipmentMedia.viewAllAria', { name: equipmentName })}
       >
         <Images className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-        View all media
+        {t('equipmentMedia.viewAll')}
       </Button>
     </div>
   );
