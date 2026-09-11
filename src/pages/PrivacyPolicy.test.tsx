@@ -102,7 +102,7 @@ describe('PrivacyPolicy', () => {
       expect(link.closest('a')).toHaveAttribute('target', '_blank');
       expect(link.closest('a')).toHaveAttribute('rel', 'noopener noreferrer');
     });
-    expect(screen.getByText(/nicholas\.king@columbiacloudworks\.com/)).toBeInTheDocument();
+    expect(screen.getByText(/phantan7211@gmail\.com/)).toBeInTheDocument();
     expect(screen.getAllByText('equipqr.app').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Contact us for business address information/)).toBeInTheDocument();
 
