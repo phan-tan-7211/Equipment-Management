@@ -7,12 +7,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  EFFECTIVE_LOCATION_OPTION_LABEL,
-  getLocationSelectorChoices,
-} from '@/components/location/locationSourceSelectorChoices';
+import { getLocationSelectorChoices } from '@/components/location/locationSourceSelectorChoices';
 import { cn } from '@/lib/utils';
 import type { EquipmentLocationOption, LocationDisplayMode } from '@/utils/effectiveLocation';
+import { useI18n } from '@/i18n';
 
 type LocationSourceSelectorProps = {
   value: LocationDisplayMode;
@@ -23,6 +21,14 @@ type LocationSourceSelectorProps = {
   variant?: 'default' | 'header';
 };
 
+const LOCATION_LABEL_KEYS: Record<LocationDisplayMode, string> = {
+  effective: 'equipmentLocation.effective',
+  team: 'equipmentLocation.team',
+  manual: 'equipmentLocation.manual',
+  scan: 'equipmentLocation.scan',
+  legacy: 'equipmentLocation.legacy',
+};
+
 export function LocationSourceSelector({
   value,
   onChange,
@@ -31,13 +37,16 @@ export function LocationSourceSelector({
   className,
   variant = 'default',
 }: LocationSourceSelectorProps) {
+  const { t } = useI18n();
   const choices = getLocationSelectorChoices(options);
+  const sourceLabel = t('equipmentLocation.source');
+  const effectiveLabel = t('equipmentLocation.effective');
 
   const selectContent = (
     <SelectContent>
       {choices.map((choice) => (
         <SelectItem key={choice.value} value={choice.value} disabled={choice.disabled}>
-          {choice.label}
+          {t(LOCATION_LABEL_KEYS[choice.value])}
         </SelectItem>
       ))}
     </SelectContent>
@@ -48,7 +57,7 @@ export function LocationSourceSelector({
       <Select value={value} onValueChange={(next) => onChange(next as LocationDisplayMode)}>
         <SelectTrigger
           id={id}
-          aria-label="Location source"
+          aria-label={sourceLabel}
           className={cn(
             'h-auto min-h-0 w-full border-0 bg-transparent px-1 py-1.5 shadow-none',
             'text-sm font-medium hover:bg-muted/40 rounded-md -mx-1',
@@ -58,7 +67,7 @@ export function LocationSourceSelector({
         >
           <div className="flex min-w-0 flex-1 items-center gap-2 leading-none">
             <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            <SelectValue placeholder={EFFECTIVE_LOCATION_OPTION_LABEL} className="truncate leading-none" />
+            <SelectValue placeholder={effectiveLabel} className="truncate leading-none" />
           </div>
         </SelectTrigger>
         {selectContent}
@@ -69,11 +78,11 @@ export function LocationSourceSelector({
   return (
     <div className={className}>
       <Label htmlFor={id} className="sr-only">
-        Location source
+        {sourceLabel}
       </Label>
       <Select value={value} onValueChange={(next) => onChange(next as LocationDisplayMode)}>
-        <SelectTrigger id={id} aria-label="Location source" className="h-8 text-xs">
-          <SelectValue placeholder={EFFECTIVE_LOCATION_OPTION_LABEL} />
+        <SelectTrigger id={id} aria-label={sourceLabel} className="h-8 text-xs">
+          <SelectValue placeholder={effectiveLabel} />
         </SelectTrigger>
         {selectContent}
       </Select>
