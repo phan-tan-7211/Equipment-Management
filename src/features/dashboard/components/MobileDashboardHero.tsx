@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ScanLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DASHBOARD_MOBILE_SCAN_ENTRY_PATH } from '@/features/dashboard/constants/mobileDashboard';
+import { useI18n } from '@/i18n';
 
 export interface MobileDashboardHeroProps {
   className?: string;
@@ -10,6 +11,8 @@ export interface MobileDashboardHeroProps {
 
 /** Above-the-fold primary action for mobile technicians — opens the in-app QR scanner. */
 const MobileDashboardHero: React.FC<MobileDashboardHeroProps> = ({ className }) => {
+  const { t } = useI18n();
+
   return (
     <Link
       to={DASHBOARD_MOBILE_SCAN_ENTRY_PATH}
@@ -26,9 +29,11 @@ const MobileDashboardHero: React.FC<MobileDashboardHeroProps> = ({ className }) 
         <ScanLine className="h-6 w-6" aria-hidden />
       </span>
       <span className="min-w-0 flex-1 space-y-0.5">
-        <span className="block text-base font-semibold leading-tight text-foreground">Scan equipment QR</span>
+        <span className="block text-base font-semibold leading-tight text-foreground">
+          {t('dashboard.scanEquipmentQr')}
+        </span>
         <span className="block text-sm text-muted-foreground leading-snug">
-          Open the in-app camera scanner for any EquipQR sticker.
+          {t('dashboard.scanEquipmentDescription')}
         </span>
       </span>
     </Link>
