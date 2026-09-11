@@ -13,6 +13,7 @@ import {
   Organization,
   OrganizationMembers,
   OrganizationIntegrations,
+  EquipmentGroups,
   PMTemplates,
   PMTemplateEditor,
   PMTemplateView,
@@ -52,6 +53,7 @@ export const dashboardRouteElements = (
     <Route path="/organization/settings" element={<Organization />} />
     <Route path="/organization/members" element={<OrganizationMembers />} />
     <Route path="/organization/integrations" element={<OrganizationIntegrations />} />
+    <Route path="/organization/equipment-groups" element={<EquipmentGroups />} />
     <Route path="/organization/audit-log" element={<AuditLog />} />
     <Route path="/pm-templates" element={<PMTemplates />} />
     <Route path="/pm-templates/new" element={<PMTemplateEditor />} />

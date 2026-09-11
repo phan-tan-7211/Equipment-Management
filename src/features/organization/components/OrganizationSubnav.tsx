@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { History, Plug, Settings, Users } from 'lucide-react';
+import { Boxes, History, Plug, Settings, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import {
   ORGANIZATION_AUDIT_LOG_PATH,
+  ORGANIZATION_EQUIPMENT_GROUPS_PATH,
   ORGANIZATION_INTEGRATIONS_PATH,
   ORGANIZATION_MEMBERS_PATH,
   ORGANIZATION_SETTINGS_PATH,
@@ -20,6 +21,12 @@ const organizationLinks = [
     label: 'Settings',
     icon: Settings,
     end: true,
+  },
+  {
+    to: ORGANIZATION_EQUIPMENT_GROUPS_PATH,
+    label: 'Equipment Groups',
+    icon: Boxes,
+    adminOnly: true,
   },
   {
     to: ORGANIZATION_INTEGRATIONS_PATH,
