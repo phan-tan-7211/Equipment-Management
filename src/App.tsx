@@ -3,6 +3,7 @@ import { AppProviders } from '@/components/providers/AppProviders';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { RouteAnnouncer } from '@/components/a11y/RouteAnnouncer';
 import { AndroidBackHandler } from '@/components/native/AndroidBackHandler';
+import { NativeRuntimeBridge } from '@/components/native/NativeRuntimeBridge';
 import { publicRouteElements } from '@/routes/PublicRoutes';
 import { legacyRedirectRouteElements } from '@/routes/LegacyRedirectRoutes';
 import { DashboardRouteLayout } from '@/routes/DashboardRouteLayout';
@@ -13,6 +14,7 @@ function AppContent() {
 
   return (
     <AppProviders>
+      <NativeRuntimeBridge />
       <AndroidBackHandler />
       <a
         href="#main-content"
