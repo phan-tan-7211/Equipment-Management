@@ -63,20 +63,41 @@ const locationSchema = z.object({
   timestamp: z.string().optional()
 }).optional();
 
-// Context for role-based validation
-export interface EquipmentValidationContext {
-  userRole: 'owner' | 'admin' | 'manager' | 'member';
-  isOrgAdmin: boolean;
-  teamMemberships: Array<{ teamId: string; role: string }>;
+export interface EquipmentValidationMessages {
+  equipmentNameRequired: string;
+  manufacturerRequired: string;
+  modelRequired: string;
+  serialRequired: string;
+  locationRequired: string;
+  workingHoursNonNegative: string;
+  teamRequired: string;
+  nameRequired: string;
+  nameMax: string;
+  teamCreatePermission: string;
 }
 
-export const equipmentFormSchema = z.object({
-  name: z.string().min(1, "Equipment name is required"),
-  manufacturer: z.string().min(1, "Manufacturer is required"),
-  model: z.string().min(1, "Model is required"),
-  serial_number: z.string().min(1, "Serial number is required"),
+export const defaultEquipmentValidationMessages: EquipmentValidationMessages = {
+  equipmentNameRequired: 'Equipment name is required',
+  manufacturerRequired: 'Manufacturer is required',
+  modelRequired: 'Model is required',
+  serialRequired: 'Serial number is required',
+  locationRequired: 'Location is required',
+  workingHoursNonNegative: 'Working hours cannot be negative',
+  teamRequired: 'Team is required',
+  nameRequired: 'Name is required',
+  nameMax: 'Name must be less than 100 characters',
+  teamCreatePermission: 'You must assign equipment to a team where you can create equipment (manager or technician)',
+};
+
+export const createEquipmentFormSchema = (
+  messages: EquipmentValidationMessages = defaultEquipmentValidationMessages,
+) => z.object({
+  name: z.string().min(1, messages.equipmentNameRequired),
+  manufacturer: z.string().min(1, messages.manufacturerRequired),
+  model: z.string().min(1, messages.modelRequired),
+  serial_number: z.string().min(1, messages.serialRequired),
   status: z.enum(['active', 'maintenance', 'inactive']),
-  location: z.string().min(1, "Location is required"),
+  location: z.string().min(1, messages.locationRequired),
   installation_date: z.string(),
   warranty_expiration: z.string().optional(),
   last_maintenance: z.string().optional(),
@@ -89,7 +110,7 @@ export const equipmentFormSchema = z.object({
   // Mirrors `quickEquipmentSchema.working_hours` — required for partial-update
   // validation in the bulk-edit grid (#627) so hour edits can't bypass the
   // non-negative constraint by routing through `equipmentFormSchema.partial()`.
-  working_hours: z.number().min(0, "Working hours cannot be negative").optional().nullable(),
+  working_hours: z.number().min(0, messages.workingHoursNonNegative).optional().nullable(),
   assigned_location_street: z.string().optional(),
   assigned_location_city: z.string().optional(),
   assigned_location_state: z.string().optional(),
@@ -99,9 +120,22 @@ export const equipmentFormSchema = z.object({
   use_team_location: z.boolean().optional()
 });
 
+// Keep the default English schema for non-UI callers/tests and backwards compatibility.
+export const equipmentFormSchema = createEquipmentFormSchema();
+
+// Context for role-based validation
+export interface EquipmentValidationContext {
+  userRole: 'owner' | 'admin' | 'manager' | 'member';
+  isOrgAdmin: boolean;
+  teamMemberships: Array<{ teamId: string; role: string }>;
+}
+
 // Function to create context-aware validation
-export const createEquipmentValidationSchema = (context?: EquipmentValidationContext) => {
-  return equipmentFormSchema.refine((data) => {
+export const createEquipmentValidationSchema = (
+  context?: EquipmentValidationContext,
+  messages: EquipmentValidationMessages = defaultEquipmentValidationMessages,
+) => {
+  return createEquipmentFormSchema(messages).refine((data) => {
     // If no context provided, skip team validation (for backward compatibility)
     if (!context) return true;
 
@@ -125,8 +159,8 @@ export const createEquipmentValidationSchema = (context?: EquipmentValidationCon
 
     return canCreateForTeam;
   }, {
-    message: "You must assign equipment to a team where you can create equipment (manager or technician)",
-    path: ["team_id"]
+    message: messages.teamCreatePermission,
+    path: ['team_id']
   });
 };
 
@@ -142,14 +176,18 @@ export type EquipmentFormData = z.infer<typeof equipmentFormSchema>;
  * Used when technicians create equipment during work order creation.
  * Only requires essential fields; name is auto-generated but editable.
  */
-export const quickEquipmentSchema = z.object({
-  manufacturer: z.string().min(1, "Manufacturer is required"),
-  model: z.string().min(1, "Model is required"),
-  serial_number: z.string().min(1, "Serial number is required"),
-  working_hours: z.number().min(0, "Working hours cannot be negative").optional().nullable(),
-  team_id: z.string().min(1, "Team is required"),
-  name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+export const createQuickEquipmentSchema = (
+  messages: EquipmentValidationMessages = defaultEquipmentValidationMessages,
+) => z.object({
+  manufacturer: z.string().min(1, messages.manufacturerRequired),
+  model: z.string().min(1, messages.modelRequired),
+  serial_number: z.string().min(1, messages.serialRequired),
+  working_hours: z.number().min(0, messages.workingHoursNonNegative).optional().nullable(),
+  team_id: z.string().min(1, messages.teamRequired),
+  name: z.string().min(1, messages.nameRequired).max(100, messages.nameMax),
 });
+
+export const quickEquipmentSchema = createQuickEquipmentSchema();
 
 export type QuickEquipmentFormData = z.infer<typeof quickEquipmentSchema>;
 
