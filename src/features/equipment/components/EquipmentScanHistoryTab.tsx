@@ -25,20 +25,37 @@ import {
 import { useEquipmentLocationHistory } from '@/features/equipment/hooks/useEquipmentLocationHistory';
 import {
   getCoordinateHistoryRows,
-  LOCATION_HISTORY_SOURCE_LABELS,
+  type EquipmentLocationHistorySource,
 } from '@/features/equipment/services/equipmentLocationHistoryService';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { buildGoogleMapsUrlFromCoords } from '@/utils/effectiveLocation';
 import {
   buildScanHistoryTimeline,
   type ScanHistoryAction,
+  type ScanHistoryActionDetail,
 } from '@/features/equipment/utils/scanHistoryTimeline';
+import { useI18n } from '@/i18n';
 
 interface EquipmentScanHistoryTabProps {
   equipmentId: string;
   organizationId: string;
   scanLocationCollectionEnabled?: boolean;
 }
+
+const LOCATION_SOURCE_KEYS: Record<EquipmentLocationHistorySource, string> = {
+  scan: 'equipmentScan.sourceScan',
+  manual: 'equipmentScan.sourceManual',
+  team_sync: 'equipmentScan.sourceTeamSync',
+  quickbooks: 'equipmentScan.sourceQuickBooks',
+};
+
+const ACTION_LABEL_KEYS = {
+  dashboard_opened: 'equipmentScan.actionDashboardOpened',
+  pm_work_order_created: 'equipmentScan.actionPmWorkOrderCreated',
+  generic_work_order_created: 'equipmentScan.actionWorkOrderCreated',
+  working_hours_updated: 'equipmentScan.actionWorkingHoursUpdated',
+  note_image_added: 'equipmentScan.actionNoteImageAdded',
+} as const;
 
 function ActionIcon({ action }: { action: ScanHistoryAction }) {
   switch (action.eventType) {
@@ -62,6 +79,7 @@ const EquipmentScanHistoryTab: React.FC<EquipmentScanHistoryTabProps> = ({
   organizationId,
   scanLocationCollectionEnabled = true,
 }) => {
+  const { t } = useI18n();
   const { data: scans = [], isLoading: scansLoading, error: scansError } =
     useEquipmentScans(organizationId, equipmentId);
   const {
@@ -79,6 +97,38 @@ const EquipmentScanHistoryTab: React.FC<EquipmentScanHistoryTabProps> = ({
   const isLoading = scansLoading || followUpsLoading || historyLoading;
   const error = scansError ?? followUpsError ?? historyError;
   const coordinateHistory = getCoordinateHistoryRows(locationHistory);
+
+  const getActionLabel = (action: ScanHistoryAction): string => {
+    if (!action.eventType) return t('equipmentScan.actionViewedScanPage');
+    const key = ACTION_LABEL_KEYS[action.eventType as keyof typeof ACTION_LABEL_KEYS];
+    return key ? t(key) : t('equipmentScan.actionPerformed');
+  };
+
+  const getActionDetail = (detail: ScanHistoryActionDetail | undefined): string | null => {
+    if (!detail) return null;
+
+    switch (detail.kind) {
+      case 'title':
+        return detail.value;
+      case 'hours':
+        return t('equipmentScan.hoursValue', { count: detail.value });
+      case 'note_image': {
+        const parts: string[] = [];
+        if (detail.imageCount != null && detail.imageCount > 0) {
+          parts.push(
+            t(
+              detail.imageCount === 1
+                ? 'equipmentScan.imageCount'
+                : 'equipmentScan.imagesCount',
+              { count: detail.imageCount },
+            ),
+          );
+        }
+        if (detail.isPrivate) parts.push(t('equipmentScan.private'));
+        return parts.length > 0 ? parts.join(', ') : null;
+      }
+    }
+  };
 
   if (isLoading) {
     return (
@@ -98,8 +148,8 @@ const EquipmentScanHistoryTab: React.FC<EquipmentScanHistoryTabProps> = ({
     return (
       <EmptyState
         icon={History}
-        title="Failed to load scan history"
-        description={error instanceof Error ? error.message : 'An error occurred'}
+        title={t('equipmentScan.historyLoadFailed')}
+        description={t('equipmentScan.genericError')}
       />
     );
   }
@@ -110,28 +160,28 @@ const EquipmentScanHistoryTab: React.FC<EquipmentScanHistoryTabProps> = ({
     <div className="space-y-8">
       <section className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold">Location Movement</h3>
+          <h3 className="text-lg font-semibold">{t('equipmentScan.locationMovement')}</h3>
           <p className="text-sm text-muted-foreground">
-            Coordinate-backed location history for reconstructing equipment movement over time.
+            {t('equipmentScan.locationMovementDescription')}
           </p>
         </div>
 
         {!scanLocationCollectionEnabled ? (
           <EmptyState
             icon={MapPin}
-            title="Scan GPS collection disabled"
-            description="This organization has disabled scan location collection, so GPS movement history is not available."
+            title={t('equipmentScan.gpsDisabled')}
+            description={t('equipmentScan.gpsDisabledDescription')}
           />
         ) : coordinateHistory.length === 0 ? (
           <EmptyState
             icon={MapPin}
-            title="No coordinate history yet"
-            description="GPS-backed scan or sync events will appear here when location coordinates are recorded."
+            title={t('equipmentScan.noCoordinateHistory')}
+            description={t('equipmentScan.noCoordinateHistoryDescription')}
           />
         ) : (
           <div className="space-y-3">
             {coordinateHistory.map((row) => {
-              const label = LOCATION_HISTORY_SOURCE_LABELS[row.source];
+              const label = t(LOCATION_SOURCE_KEYS[row.source]);
               const address =
                 row.formatted_address ||
                 [row.address_street, row.address_city, row.address_state, row.address_country]
@@ -181,7 +231,7 @@ const EquipmentScanHistoryTab: React.FC<EquipmentScanHistoryTabProps> = ({
                           }
                         >
                           <Navigation className="h-3.5 w-3.5 mr-1" />
-                          Directions
+                          {t('equipmentScan.directions')}
                         </Button>
                       )}
                     </div>
@@ -195,17 +245,20 @@ const EquipmentScanHistoryTab: React.FC<EquipmentScanHistoryTabProps> = ({
 
       <section className="space-y-6">
         <div>
-          <h3 className="text-lg font-semibold">Scan History</h3>
+          <h3 className="text-lg font-semibold">{t('equipmentScan.scanHistory')}</h3>
           <p className="text-sm text-muted-foreground">
-            {scans.length} {scans.length === 1 ? 'scan' : 'scans'} recorded
+            {t(
+              scans.length === 1 ? 'equipmentScan.scanRecorded' : 'equipmentScan.scansRecorded',
+              { count: scans.length },
+            )}
           </p>
         </div>
 
         {timeline.length === 0 ? (
           <EmptyState
             icon={QrCode}
-            title="No scan history yet"
-            description="When this equipment's QR code is scanned, who scanned it, where, and what they did will appear here."
+            title={t('equipmentScan.noScanHistory')}
+            description={t('equipmentScan.noScanHistoryDescription')}
           />
         ) : (
           <div className="relative space-y-6">
@@ -225,7 +278,7 @@ const EquipmentScanHistoryTab: React.FC<EquipmentScanHistoryTabProps> = ({
                           <User className="h-4 w-4 text-muted-foreground" />
                           <div>
                             <div className="font-medium">
-                              {entry.scan.scannedByName || 'Unknown User'}
+                              {entry.scan.scannedByName || t('equipmentScan.unknownUser')}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {formatRelative(entry.scan.scanned_at)}
@@ -246,33 +299,34 @@ const EquipmentScanHistoryTab: React.FC<EquipmentScanHistoryTabProps> = ({
 
                       <div className="mt-4 border-t pt-4">
                         <ul className="space-y-3">
-                          {entry.actions.map((action) => (
-                            <li key={action.id} className="flex items-start gap-3">
-                              <div
-                                className={cn(
-                                  'mt-0.5 rounded-md p-1.5',
-                                  action.eventType
-                                    ? 'bg-info/15 text-info'
-                                    : 'bg-muted text-muted-foreground',
-                                )}
-                              >
-                                <ActionIcon action={action} />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="text-sm font-medium">{action.label}</div>
-                                {action.detail && (
-                                  <div className="text-sm text-muted-foreground">
-                                    {action.detail}
-                                  </div>
-                                )}
-                                <div className="mt-0.5 text-xs text-muted-foreground">
-                                  {action.performedByName || 'Unknown User'}
-                                  {' · '}
-                                  {formatDateTime(action.performedAt)}
+                          {entry.actions.map((action) => {
+                            const detail = getActionDetail(action.detail);
+                            return (
+                              <li key={action.id} className="flex items-start gap-3">
+                                <div
+                                  className={cn(
+                                    'mt-0.5 rounded-md p-1.5',
+                                    action.eventType
+                                      ? 'bg-info/15 text-info'
+                                      : 'bg-muted text-muted-foreground',
+                                  )}
+                                >
+                                  <ActionIcon action={action} />
                                 </div>
-                              </div>
-                            </li>
-                          ))}
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-sm font-medium">{getActionLabel(action)}</div>
+                                  {detail && (
+                                    <div className="text-sm text-muted-foreground">{detail}</div>
+                                  )}
+                                  <div className="mt-0.5 text-xs text-muted-foreground">
+                                    {action.performedByName || t('equipmentScan.unknownUser')}
+                                    {' · '}
+                                    {formatDateTime(action.performedAt)}
+                                  </div>
+                                </div>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     </CardContent>
