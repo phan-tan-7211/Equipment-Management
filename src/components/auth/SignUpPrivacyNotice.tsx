@@ -9,7 +9,7 @@ const SignUpPrivacyNotice: React.FC = () => {
     <p className="text-sm text-muted-foreground leading-relaxed">
       {t('auth.privacyNoticePrefix')}{' '}
       <Link to="/privacy-policy#notice-at-collection" className="text-primary underline underline-offset-2">
-        {t('auth.privacyNoticeAtCollection')}
+        {t('auth.privacyNoticeLink')}
       </Link>
       .
     </p>
