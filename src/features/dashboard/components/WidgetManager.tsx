@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { getWidget } from '@/features/dashboard/registry/widgetRegistry';
+import { useI18n } from '@/i18n';
 
 interface WidgetManagerProps {
   open: boolean;
@@ -19,11 +20,18 @@ interface WidgetManagerProps {
   onOpenCatalog: () => void;
 }
 
-/**
- * Unified widget manager sheet for all screen sizes.
- * Users can reorder widgets with up/down buttons, remove them inline,
- * or open the widget catalog to add new ones.
- */
+const WIDGET_TITLE_KEYS: Record<string, string> = {
+  'stats-grid': 'dashboard.widgets.statsGridTitle',
+  'fleet-efficiency': 'dashboard.widgets.fleetEfficiencyTitle',
+  'recent-equipment': 'dashboard.widgets.recentEquipmentTitle',
+  'recent-work-orders': 'dashboard.widgets.recentWorkOrdersTitle',
+  'high-priority-wo': 'dashboard.widgets.highPriorityWoTitle',
+  'pm-compliance': 'dashboard.widgets.pmComplianceTitle',
+  'equipment-by-status': 'dashboard.widgets.equipmentByStatusTitle',
+  'cost-trend': 'dashboard.widgets.costTrendTitle',
+  'quick-actions': 'dashboard.widgets.quickActionsTitle',
+};
+
 export const WidgetManager: React.FC<WidgetManagerProps> = ({
   open,
   onOpenChange,
@@ -31,13 +39,11 @@ export const WidgetManager: React.FC<WidgetManagerProps> = ({
   onSave,
   onOpenCatalog,
 }) => {
+  const { t } = useI18n();
   const [order, setOrder] = useState<string[]>(activeWidgetIds);
 
-  // Reset order when sheet opens
   React.useEffect(() => {
-    if (open) {
-      setOrder(activeWidgetIds);
-    }
+    if (open) setOrder(activeWidgetIds);
   }, [open, activeWidgetIds]);
 
   const moveUp = useCallback((index: number) => {
@@ -81,56 +87,31 @@ export const WidgetManager: React.FC<WidgetManagerProps> = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[85vh] flex flex-col pb-safe">
         <SheetHeader className="text-left shrink-0">
-          <SheetTitle>Customize Dashboard</SheetTitle>
-          <SheetDescription>
-            Reorder or remove widgets. Use the button below to add new ones.
-          </SheetDescription>
+          <SheetTitle>{t('dashboard.customizeDashboard')}</SheetTitle>
+          <SheetDescription>{t('dashboard.customizeDashboardDescription')}</SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto mt-4 space-y-2">
           {order.map((widgetId, index) => {
             const widget = getWidget(widgetId);
             if (!widget) return null;
-
             const Icon = widget.icon;
+            const title = WIDGET_TITLE_KEYS[widgetId] ? t(WIDGET_TITLE_KEYS[widgetId]) : widget.title;
 
             return (
-              <div
-                key={widgetId}
-                className="flex items-center gap-3 rounded-lg border border-border p-3"
-              >
+              <div key={widgetId} className="flex items-center gap-3 rounded-lg border border-border p-3">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm font-medium truncate">{widget.title}</span>
+                  <span className="text-sm font-medium truncate">{title}</span>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={index === 0}
-                    onClick={() => moveUp(index)}
-                    aria-label={`Move ${widget.title} up`}
-                  >
+                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={index === 0} onClick={() => moveUp(index)} aria-label={t('dashboard.moveWidgetUp', { name: title })}>
                     <ArrowUp className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={index === order.length - 1}
-                    onClick={() => moveDown(index)}
-                    aria-label={`Move ${widget.title} down`}
-                  >
+                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={index === order.length - 1} onClick={() => moveDown(index)} aria-label={t('dashboard.moveWidgetDown', { name: title })}>
                     <ArrowDown className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => removeFromOrder(widgetId)}
-                    aria-label={`Remove ${widget.title}`}
-                  >
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => removeFromOrder(widgetId)} aria-label={t('dashboard.removeWidget', { name: title })}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -139,24 +120,18 @@ export const WidgetManager: React.FC<WidgetManagerProps> = ({
           })}
 
           {order.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-6">
-              No widgets on your dashboard. Add some below.
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-6">{t('dashboard.noWidgets')}</p>
           )}
         </div>
 
         <SheetFooter className="mt-4 shrink-0 flex-col gap-2 sm:flex-row">
           <Button variant="outline" className="w-full sm:w-auto gap-1.5" onClick={handleOpenCatalog}>
             <Plus className="h-4 w-4" />
-            Add Widgets
+            {t('dashboard.addWidgets')}
           </Button>
           <div className="flex gap-2 w-full sm:w-auto sm:ml-auto">
-            <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button className="flex-1 sm:flex-none" onClick={handleSave}>
-              Save
-            </Button>
+            <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleCancel}>{t('dashboard.cancel')}</Button>
+            <Button className="flex-1 sm:flex-none" onClick={handleSave}>{t('dashboard.save')}</Button>
           </div>
         </SheetFooter>
       </SheetContent>
