@@ -22,6 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { getEquipmentDeletionImpact } from '@/features/equipment/services/deleteEquipmentService';
 import { useDeleteEquipment } from '@/features/equipment/hooks/useDeleteEquipment';
+import { useI18n } from '@/i18n';
 
 interface DeleteEquipmentDialogProps {
   open: boolean;
@@ -42,10 +43,9 @@ export const DeleteEquipmentDialog = ({
 }: DeleteEquipmentDialogProps) => {
   const [step, setStep] = useState<'initial' | 'confirmation'>('initial');
   const [acknowledged, setAcknowledged] = useState(false);
-  
+  const { t } = useI18n();
   const deleteEquipmentMutation = useDeleteEquipment();
 
-  // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
       setStep('initial');
@@ -53,16 +53,13 @@ export const DeleteEquipmentDialog = ({
     }
   }, [open]);
 
-  // Fetch deletion impact when dialog opens
   const { data: impact, isLoading: impactLoading } = useQuery({
     queryKey: ['equipment-deletion-impact', equipmentId],
     queryFn: () => getEquipmentDeletionImpact(equipmentId),
     enabled: open && step === 'initial',
   });
 
-  const handleContinue = () => {
-    setStep('confirmation');
-  };
+  const handleContinue = () => setStep('confirmation');
 
   const handleDelete = async () => {
     try {
@@ -82,12 +79,12 @@ export const DeleteEquipmentDialog = ({
     setAcknowledged(false);
   };
 
-  const handleDialogChange = (open: boolean) => {
-    if (!open) {
+  const handleDialogChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
       setStep('initial');
       setAcknowledged(false);
     }
-    onOpenChange(open);
+    onOpenChange(nextOpen);
   };
 
   const totalImages = (impact?.equipmentNoteImages || 0) + (impact?.workOrderImages || 0);
@@ -99,26 +96,23 @@ export const DeleteEquipmentDialog = ({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
-              Delete this equipment?
+              {t('equipmentDelete.initialTitle')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4 text-sm text-muted-foreground">
-                <p>
-                  This will permanently delete <strong>{equipmentName}</strong> and all associated data.
-                </p>
-                
+                <p>{t('equipmentDelete.initialDescription', { name: equipmentName })}</p>
                 {impactLoading ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Calculating impact...
+                    {t('equipmentDelete.calculatingImpact')}
                   </div>
                 ) : impact ? (
                   <div className="bg-muted rounded-lg p-4 space-y-2">
-                    <div className="font-medium">This will delete:</div>
+                    <div className="font-medium">{t('equipmentDelete.willDelete')}</div>
                     <ul className="space-y-1">
-                      <li>• Work orders: <strong>{impact.workOrders}</strong></li>
-                      <li>• Preventative maintenance records: <strong>{impact.pmCount}</strong></li>
-                      <li>• Images (notes + work orders): <strong>{totalImages}</strong></li>
+                      <li>• {t('equipmentDelete.workOrders')}: <strong>{impact.workOrders}</strong></li>
+                      <li>• {t('equipmentDelete.pmRecords')}: <strong>{impact.pmCount}</strong></li>
+                      <li>• {t('equipmentDelete.images')}: <strong>{totalImages}</strong></li>
                     </ul>
                   </div>
                 ) : null}
@@ -126,13 +120,9 @@ export const DeleteEquipmentDialog = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancel}>Cancel</AlertDialogCancel>
-            <Button 
-              onClick={handleContinue}
-              variant="destructive"
-              disabled={impactLoading}
-            >
-              Continue
+            <AlertDialogCancel onClick={handleCancel}>{t('equipmentDelete.cancel')}</AlertDialogCancel>
+            <Button onClick={handleContinue} variant="destructive" disabled={impactLoading}>
+              {t('equipmentDelete.continue')}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -146,22 +136,18 @@ export const DeleteEquipmentDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            Confirm Equipment Deletion
+            {t('equipmentDelete.confirmTitle')}
           </DialogTitle>
           <DialogDescription asChild>
             <div className="space-y-4 text-sm text-muted-foreground">
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-                <p className="font-medium text-destructive mb-2">
-                  ⚠️ This action cannot be undone
-                </p>
-                <p>
-                  Deleting <strong>{equipmentName}</strong> will permanently and irreversibly delete:
-                </p>
+                <p className="font-medium text-destructive mb-2">{t('equipmentDelete.cannotUndo')}</p>
+                <p>{t('equipmentDelete.confirmDescription', { name: equipmentName })}</p>
                 <ul className="mt-2 space-y-1">
-                  <li>• The equipment record</li>
-                  <li>• All work orders tied to it</li>
-                  <li>• All PM records tied to those work orders</li>
-                  <li>• All images from equipment notes and work orders (files removed from storage)</li>
+                  <li>• {t('equipmentDelete.equipmentRecord')}</li>
+                  <li>• {t('equipmentDelete.allWorkOrders')}</li>
+                  <li>• {t('equipmentDelete.allPmRecords')}</li>
+                  <li>• {t('equipmentDelete.allImages')}</li>
                 </ul>
               </div>
 
@@ -171,20 +157,15 @@ export const DeleteEquipmentDialog = ({
                   checked={acknowledged}
                   onCheckedChange={(checked) => setAcknowledged(checked === true)}
                 />
-                <label 
-                  htmlFor="acknowledge" 
-                  className="leading-5 cursor-pointer"
-                >
-                  I understand this will permanently delete this equipment and all related work orders, PMs, and images.
+                <label htmlFor="acknowledge" className="leading-5 cursor-pointer">
+                  {t('equipmentDelete.acknowledge')}
                 </label>
               </div>
             </div>
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={handleCancel}>{t('equipmentDelete.cancel')}</Button>
           <Button 
             variant="destructive"
             onClick={handleDelete}
@@ -193,11 +174,9 @@ export const DeleteEquipmentDialog = ({
             {deleteEquipmentMutation.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Deleting...
+                {t('equipmentDelete.deleting')}
               </>
-            ) : (
-              'Delete Forever'
-            )}
+            ) : t('equipmentDelete.deleteForever')}
           </Button>
         </DialogFooter>
       </DialogContent>
