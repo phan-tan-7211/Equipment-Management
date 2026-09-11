@@ -4,15 +4,16 @@ import vi from './locales/vi';
 import ko from './locales/ko';
 import { coreResources } from './coreResources';
 import { dashboardWidgetResources } from './dashboardWidgetResources';
+import { equipmentResources } from './equipmentResources';
 
 export type Language = 'vi' | 'en' | 'ko';
 
 const STORAGE_KEY = 'znteqr-language';
 
 const resources = {
-  vi: { ...vi, ...coreResources.vi, ...dashboardWidgetResources.vi },
-  en: { ...en, ...coreResources.en, ...dashboardWidgetResources.en },
-  ko: { ...ko, ...coreResources.ko, ...dashboardWidgetResources.ko },
+  vi: { ...vi, ...coreResources.vi, ...dashboardWidgetResources.vi, ...equipmentResources.vi },
+  en: { ...en, ...coreResources.en, ...dashboardWidgetResources.en, ...equipmentResources.en },
+  ko: { ...ko, ...coreResources.ko, ...dashboardWidgetResources.ko, ...equipmentResources.ko },
 } as const;
 
 type TranslationParams = Record<string, string | number>;
