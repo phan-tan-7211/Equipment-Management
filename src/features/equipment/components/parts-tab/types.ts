@@ -23,16 +23,16 @@ export const DEFAULT_PARTS_FILTERS: PartsFiltersState = {
 };
 
 export const SORT_OPTIONS = [
-  { value: 'name-asc', label: 'Name (A-Z)', field: 'name' as const, order: 'asc' as const },
-  { value: 'name-desc', label: 'Name (Z-A)', field: 'name' as const, order: 'desc' as const },
-  { value: 'stock-asc', label: 'Stock (Low to High)', field: 'stock' as const, order: 'asc' as const },
-  { value: 'stock-desc', label: 'Stock (High to Low)', field: 'stock' as const, order: 'desc' as const },
-  { value: 'location-asc', label: 'Location (A-Z)', field: 'location' as const, order: 'asc' as const },
+  { value: 'name-asc', labelKey: 'equipmentParts.sortNameAsc', field: 'name' as const, order: 'asc' as const },
+  { value: 'name-desc', labelKey: 'equipmentParts.sortNameDesc', field: 'name' as const, order: 'desc' as const },
+  { value: 'stock-asc', labelKey: 'equipmentParts.sortStockAsc', field: 'stock' as const, order: 'asc' as const },
+  { value: 'stock-desc', labelKey: 'equipmentParts.sortStockDesc', field: 'stock' as const, order: 'desc' as const },
+  { value: 'location-asc', labelKey: 'equipmentParts.sortLocationAsc', field: 'location' as const, order: 'asc' as const },
 ] as const;
 
 export const STOCK_FILTER_OPTIONS = [
-  { value: 'all', label: 'All Stock Levels' },
-  { value: 'in_stock', label: 'In Stock' },
-  { value: 'low_stock', label: 'Low Stock' },
-  { value: 'out_of_stock', label: 'Out of Stock' },
+  { value: 'all', labelKey: 'equipmentParts.stockAll' },
+  { value: 'in_stock', labelKey: 'equipmentParts.stockIn' },
+  { value: 'low_stock', labelKey: 'equipmentParts.stockLow' },
+  { value: 'out_of_stock', labelKey: 'equipmentParts.stockOut' },
 ] as const;
