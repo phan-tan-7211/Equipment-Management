@@ -71,6 +71,18 @@ function interpolate(value: string, params?: TranslationParams): string {
   });
 }
 
+function translateEnglish(key: string, params?: TranslationParams): string {
+  const fallback = getNestedValue(resources.en, key);
+  const value = typeof fallback === 'string' ? fallback : key;
+  return interpolate(value, params);
+}
+
+const fallbackI18nContext: I18nContextValue = {
+  language: 'en',
+  setLanguage: () => undefined,
+  t: translateEnglish,
+};
+
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(resolveInitialLanguage);
   const setLanguage = useCallback((nextLanguage: Language) => {
@@ -94,7 +106,5 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export function useI18n(): I18nContextValue {
-  const context = useContext(I18nContext);
-  if (!context) throw new Error('useI18n must be used within I18nProvider');
-  return context;
+  return useContext(I18nContext) ?? fallbackI18nContext;
 }
