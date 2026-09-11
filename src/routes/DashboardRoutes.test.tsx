@@ -20,6 +20,7 @@ vi.mock('@/routes/lazyDashboardPages', () => {
     Organization: stub('Organization Route'),
     OrganizationMembers: stub('Organization Members Route'),
     OrganizationIntegrations: stub('Organization Integrations Route'),
+    EquipmentGroups: stub('Equipment Groups Route'),
     PMTemplates: stub('PM Templates Route'),
     PMTemplateEditor: stub('PM Template Editor Route'),
     PMTemplateView: stub('PM Template View Route'),
