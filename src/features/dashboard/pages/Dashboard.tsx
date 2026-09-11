@@ -41,11 +41,13 @@ import {
 import { prioritizeWorkOrdersForDashboard } from '@/features/dashboard/utils/prioritizeWorkOrdersForDashboard';
 import type { WorkOrder } from '@/features/work-orders/types/workOrder';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 type DashboardRoleBucket = 'technician_requestor' | 'manager_admin' | 'viewer';
 
 const Dashboard = () => {
-  useDocumentTitle('Dashboard');
+  const { t } = useI18n();
+  useDocumentTitle(t('dashboard.title'));
   const isMobile = useIsMobile();
   const { currentOrganization, isLoading: orgLoading } = useOrganization();
   const { toast } = useToast();
@@ -80,10 +82,10 @@ const Dashboard = () => {
   }, [isManager, isTechnician, teamMemberships]);
 
   const selectedTeamLabel = useMemo(() => {
-    if (!selectedTeamId) return 'All teams';
-    if (selectedTeamId === UNASSIGNED_TEAM_ID) return 'Unassigned';
-    return selectedTeam?.team_name ?? 'Selected team';
-  }, [selectedTeamId, selectedTeam]);
+    if (!selectedTeamId) return t('dashboard.allTeams');
+    if (selectedTeamId === UNASSIGNED_TEAM_ID) return t('dashboard.unassigned');
+    return selectedTeam?.team_name ?? t('dashboard.selectedTeam');
+  }, [selectedTeamId, selectedTeam, t]);
 
   const overdueCount = dashboardStats?.overdueWorkOrders ?? 0;
   const pmOverdueCount = pmStatuses?.filter((s) => s.is_overdue).length ?? 0;
@@ -101,8 +103,6 @@ const Dashboard = () => {
     [prioritizedOpenWorkOrders]
   );
 
-  // Requestors/viewers must stay oblivious to cost data — strip cost widgets
-  // from the grid, the reorder manager, and the catalog for those roles.
   const costSafeWidgets = useMemo(
     () => filterWidgetsForCostVisibility(activeWidgets, canViewWorkOrderCosts),
     [activeWidgets, canViewWorkOrderCosts]
@@ -116,25 +116,25 @@ const Dashboard = () => {
   const lastUpdatedText = useMemo(() => {
     if (!dataUpdatedAt) return null;
     const minutes = Math.floor((Date.now() - dataUpdatedAt) / 60_000);
-    if (minutes < 1) return 'Updated just now';
-    if (minutes === 1) return 'Updated 1 min ago';
-    return `Updated ${minutes} min ago`;
-  }, [dataUpdatedAt]);
+    if (minutes < 1) return t('dashboard.updatedJustNow');
+    if (minutes === 1) return t('dashboard.updatedOneMinuteAgo');
+    return t('dashboard.updatedMinutesAgo', { count: minutes });
+  }, [dataUpdatedAt, t]);
 
   const alertInfo = useMemo(() => {
     if (overdueCount === 0 && needsAttentionCount === 0 && pmOverdueCount === 0) return null;
     const parts: string[] = [];
-    if (overdueCount > 0) parts.push(`${overdueCount} overdue work order${overdueCount === 1 ? '' : 's'}`);
+    if (overdueCount > 0) {
+      parts.push(t(overdueCount === 1 ? 'dashboard.overdueWorkOrder' : 'dashboard.overdueWorkOrders', { count: overdueCount }));
+    }
     if (needsAttentionCount > 0) {
-      parts.push(
-        `${needsAttentionCount} equipment need${needsAttentionCount === 1 ? 's' : ''} attention (maintenance or inactive)`
-      );
+      parts.push(t(needsAttentionCount === 1 ? 'dashboard.equipmentNeedAttention' : 'dashboard.equipmentNeedsAttention', { count: needsAttentionCount }));
     }
     if (pmOverdueCount > 0) {
-      parts.push(`${pmOverdueCount} PM${pmOverdueCount === 1 ? '' : 's'} overdue`);
+      parts.push(t(pmOverdueCount === 1 ? 'dashboard.pmOverdue' : 'dashboard.pmsOverdue', { count: pmOverdueCount }));
     }
     return parts.join(' · ');
-  }, [overdueCount, needsAttentionCount, pmOverdueCount]);
+  }, [overdueCount, needsAttentionCount, pmOverdueCount, t]);
 
   const alertHref = useMemo(() => {
     if (overdueCount > 0 || pmOverdueCount > 0) return '/dashboard/work-orders?date=overdue';
@@ -147,10 +147,10 @@ const Dashboard = () => {
   const handleResetLayout = useCallback(() => {
     resetToDefault();
     toast({
-      title: 'Dashboard layout reset',
-      description: 'Your default widget layout has been restored.',
+      title: t('dashboard.layoutResetTitle'),
+      description: t('dashboard.layoutResetDescription'),
     });
-  }, [resetToDefault, toast]);
+  }, [resetToDefault, toast, t]);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
@@ -185,8 +185,8 @@ const Dashboard = () => {
     return (
       <Page maxWidth="full" padding="responsive">
         <PageHeader
-          title="Dashboard"
-          description="Select an organization to view your dashboard."
+          title={t('dashboard.title')}
+          description={t('dashboard.selectOrganization')}
         />
       </Page>
     );
@@ -196,8 +196,8 @@ const Dashboard = () => {
     return (
       <Page maxWidth="full" padding="responsive">
         <PageHeader
-          title="Dashboard"
-          description={`Welcome to ${currentOrganization.name}`}
+          title={t('dashboard.title')}
+          description={t('dashboard.welcomeTo', { name: currentOrganization.name })}
         />
         <DashboardNoTeamsCard organizationName={currentOrganization.name} />
       </Page>
@@ -208,9 +208,9 @@ const Dashboard = () => {
     return (
       <Page maxWidth="full" padding="responsive">
         {isMobile ? (
-          <h1 className="sr-only">Dashboard</h1>
+          <h1 className="sr-only">{t('dashboard.title')}</h1>
         ) : (
-          <PageHeader title="Dashboard" description="Loading your fleet overview..." />
+          <PageHeader title={t('dashboard.title')} description={t('dashboard.loadingOverview')} />
         )}
         <DashboardStatsGrid
           stats={null}
@@ -233,27 +233,27 @@ const Dashboard = () => {
         className="h-8 w-8"
         onClick={handleRefresh}
         disabled={isRefreshing}
-        title="Refresh dashboard data"
+        title={t('dashboard.refreshData')}
       >
         <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-        <span className="sr-only">Refresh dashboard</span>
+        <span className="sr-only">{t('dashboard.refreshDashboard')}</span>
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8" title="Dashboard settings">
+          <Button variant="ghost" size="icon" className="h-8 w-8" title={t('dashboard.settings')}>
             <Settings2 className="h-4 w-4" />
-            <span className="sr-only">Dashboard settings</span>
+            <span className="sr-only">{t('dashboard.settings')}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem onClick={() => setManagerOpen(true)}>
             <Settings2 className="mr-2 h-4 w-4" />
-            Customize widgets
+            {t('dashboard.customizeWidgets')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleResetLayout}>
             <RotateCcw className="mr-2 h-4 w-4" />
-            Reset layout
+            {t('dashboard.resetLayout')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -268,23 +268,23 @@ const Dashboard = () => {
             <div className="min-w-0 flex-1 space-y-3">
               {isMobile ? (
                 <>
-                  <h1 className="sr-only">Dashboard</h1>
+                  <h1 className="sr-only">{t('dashboard.title')}</h1>
                   <div className="space-y-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Team scope</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('dashboard.teamScope')}</p>
                     <p className="text-sm text-foreground">{selectedTeamLabel}</p>
                     <p className="text-xs text-muted-foreground capitalize">
-                      View:&nbsp;
+                      {t('dashboard.view')}&nbsp;
                       {roleBucket === 'manager_admin'
-                        ? 'Manager / admin analytics'
+                        ? t('dashboard.managerAdminAnalytics')
                         : roleBucket === 'viewer'
-                          ? 'Viewer'
-                          : 'Field / requestor'}
+                          ? t('dashboard.viewer')
+                          : t('dashboard.fieldRequestor')}
                     </p>
                   </div>
                 </>
               ) : (
                 <>
-                  <PageHeader title="Dashboard" />
+                  <PageHeader title={t('dashboard.title')} />
                   {alertInfo && (
                     <div className="inline-flex max-w-full items-start gap-1.5 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive dark:border-destructive/40 dark:bg-destructive/15">
                       <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" aria-hidden />
@@ -317,8 +317,8 @@ const Dashboard = () => {
                 </Link>
               )}
               {mobileWorkOrderPreview.length > 0 && (
-                <section aria-label="Priority open work" className="space-y-2">
-                  <h2 className="text-sm font-semibold text-foreground">Open work — tap to open</h2>
+                <section aria-label={t('dashboard.priorityOpenWork')} className="space-y-2">
+                  <h2 className="text-sm font-semibold text-foreground">{t('dashboard.openWorkTap')}</h2>
                   <ul className="space-y-2">
                     {mobileWorkOrderPreview.map((wo) => {
                       const eqName = wo.equipment?.name;
@@ -336,7 +336,7 @@ const Dashboard = () => {
                             {eqName ? (
                               <span className="text-xs text-muted-foreground">{eqName}</span>
                             ) : (
-                              <span className="text-xs text-muted-foreground">Work order</span>
+                              <span className="text-xs text-muted-foreground">{t('dashboard.workOrder')}</span>
                             )}
                           </Link>
                         </li>
