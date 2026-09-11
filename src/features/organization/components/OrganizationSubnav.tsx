@@ -9,39 +9,41 @@ import {
   ORGANIZATION_MEMBERS_PATH,
   ORGANIZATION_SETTINGS_PATH,
 } from '@/features/organization/constants/routes';
+import { useI18n } from '@/i18n';
 
 const organizationLinks = [
   {
     to: ORGANIZATION_MEMBERS_PATH,
-    label: 'Members',
+    labelKey: 'equipmentGroups.navMembers',
     icon: Users,
   },
   {
     to: ORGANIZATION_SETTINGS_PATH,
-    label: 'Settings',
+    labelKey: 'equipmentGroups.navSettings',
     icon: Settings,
     end: true,
   },
   {
     to: ORGANIZATION_EQUIPMENT_GROUPS_PATH,
-    label: 'Equipment Groups',
+    labelKey: 'equipmentGroups.navEquipmentGroups',
     icon: Boxes,
     adminOnly: true,
   },
   {
     to: ORGANIZATION_INTEGRATIONS_PATH,
-    label: 'Integrations',
+    labelKey: 'equipmentGroups.navIntegrations',
     icon: Plug,
   },
   {
     to: ORGANIZATION_AUDIT_LOG_PATH,
-    label: 'Audit Log',
+    labelKey: 'equipmentGroups.navAuditLog',
     icon: History,
     adminOnly: true,
   },
 ] as const;
 
 export function OrganizationSubnav() {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const isAdmin =
     currentOrganization?.userRole === 'owner' || currentOrganization?.userRole === 'admin';
@@ -50,9 +52,9 @@ export function OrganizationSubnav() {
   );
 
   return (
-    <nav aria-label="Organization sections" className="border-b mb-4 sm:mb-6">
+    <nav aria-label={t('equipmentGroups.navAria')} className="border-b mb-4 sm:mb-6">
       <div className="flex w-full gap-1 overflow-x-auto pb-px sm:gap-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {visibleLinks.map(({ to, label, icon: Icon, ...rest }) => (
+        {visibleLinks.map(({ to, labelKey, icon: Icon, ...rest }) => (
           <NavLink
             key={to}
             to={to}
@@ -66,7 +68,7 @@ export function OrganizationSubnav() {
             }
           >
             <Icon className="h-4 w-4" aria-hidden="true" />
-            {label}
+            {t(labelKey)}
           </NavLink>
         ))}
       </div>
