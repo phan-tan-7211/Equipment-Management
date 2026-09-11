@@ -39,9 +39,11 @@ export function quickFormQRPath(token: string): string {
   return `/qr/quick-form/${encodeURIComponent(token)}`;
 }
 
+const EQUIPQR_CANONICAL_ORIGIN = 'https://equipqr.app';
+
 /** Origins accepted when decoding printed stickers against a different dev host. */
 const EQUIPQR_QR_ORIGINS = new Set([
-  'https://equipqr.app',
+  EQUIPQR_CANONICAL_ORIGIN,
   'https://www.equipqr.app',
   'https://preview.equipqr.app',
 ]);
@@ -53,6 +55,44 @@ const RESERVED_QR_FIRST_SEGMENTS = new Set([
   'operator-check-in',
   'quick-form',
 ]);
+
+function isNativeCapacitorRuntime(): boolean {
+  if (typeof window === 'undefined') return false;
+  const capacitor = (window as Window & {
+    Capacitor?: { isNativePlatform?: () => boolean; getPlatform?: () => string };
+  }).Capacitor;
+
+  try {
+    return Boolean(capacitor?.isNativePlatform?.() || capacitor?.getPlatform?.() === 'android');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Accept the production/preview hosts, Capacitor localhost origins, and old
+ * Vercel preview hosts. Existing printed stickers must keep working after the
+ * Android app moves from browser-hosted URLs to a native localhost WebView.
+ */
+function isTrustedEquipQROrigin(url: URL, baseOrigin: string): boolean {
+  if (url.origin === baseOrigin || EQUIPQR_QR_ORIGINS.has(url.origin)) return true;
+
+  const hostname = url.hostname.toLowerCase();
+  const protocol = url.protocol.toLowerCase();
+
+  if (
+    (protocol === 'http:' || protocol === 'https:' || protocol === 'capacitor:') &&
+    (hostname === 'localhost' || hostname === '127.0.0.1')
+  ) {
+    return true;
+  }
+
+  if (protocol === 'https:' && (hostname.endsWith('.equipqr.app') || hostname.endsWith('.vercel.app'))) {
+    return true;
+  }
+
+  return false;
+}
 
 export type ParseEquipQRTargetResult =
   | { ok: true; kind: 'equipment'; equipmentId: string; path: string; orgId?: string }
@@ -68,7 +108,8 @@ export type ParseEquipQRTargetResult =
 
 /**
  * Parse QR decode results into EquipQR routes. Accepts relative paths and
- * absolute URLs on the current origin or known EquipQR production/preview hosts.
+ * absolute URLs on the current origin, production/preview hosts, Capacitor
+ * localhost, and legacy EquipQR Vercel preview hosts.
  */
 export function parseEquipQRTarget(
   rawValue: string,
@@ -93,9 +134,7 @@ export function parseEquipQRTarget(
     return { ok: false, reason: 'malformed', message: 'Could not read this QR link.' };
   }
 
-  const originAllowed = url.origin === baseOrigin || EQUIPQR_QR_ORIGINS.has(url.origin);
-
-  if (!originAllowed) {
+  if (!isTrustedEquipQROrigin(url, baseOrigin)) {
     return { ok: false, reason: 'external', message: 'This QR code is not an EquipQR link.' };
   }
 
@@ -161,7 +200,13 @@ export function parseEquipQRTarget(
 // ── Full-URL builder ──
 
 export function qrFullUrl(relativePath: string): string {
-  return `${window.location.origin}${relativePath}`;
+  // Capacitor serves the bundled web app from localhost. Never print/download
+  // localhost into a physical QR sticker; use the canonical public EquipQR host
+  // so the code remains valid outside this one Android installation.
+  const origin = isNativeCapacitorRuntime()
+    ? EQUIPQR_CANONICAL_ORIGIN
+    : window.location.origin;
+  return `${origin}${relativePath}`;
 }
 
 // ── QR data-URL generation (for embedding in PDFs / images) ──
