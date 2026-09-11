@@ -26,6 +26,7 @@ import {
 import { queryKeys } from '@/lib/queryKeys';
 import { invalidatePMScheduleQueries } from '@/features/equipment/hooks/useEquipmentPMTemplateAssignment';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 
 type InlineEditPMScheduleProps = {
   equipmentId: string;
@@ -34,30 +35,21 @@ type InlineEditPMScheduleProps = {
   canEdit: boolean;
 };
 
-export function InlineEditPMSchedule({
-  equipmentId,
-  organizationId,
-  teamName,
-  canEdit,
-}: InlineEditPMScheduleProps) {
+export function InlineEditPMSchedule({ equipmentId, organizationId, teamName, canEdit }: InlineEditPMScheduleProps) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const target = { scopeType: 'equipment' as const, equipmentId };
   const { data: policy, isLoading } = usePMIntervalPolicy(organizationId, target);
   const isInherit = policyRowToFormState(policy).mode === 'inherit';
-  const { data: inheritedEffective, isLoading: isLoadingInheritedEffective } =
-    useEffectivePMIntervalForEquipment(equipmentId, {
-      enabled: isInherit,
-    });
+  const { data: inheritedEffective, isLoading: isLoadingInheritedEffective } = useEffectivePMIntervalForEquipment(equipmentId, { enabled: isInherit });
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<PMSchedulePolicyFormState>(policyRowToFormState(policy));
   const [intervalError, setIntervalError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isEditing) {
-      setForm(policyRowToFormState(policy));
-    }
+    if (!isEditing) setForm(policyRowToFormState(policy));
   }, [policy, isEditing]);
 
   const display = getPMSchedulePolicyDisplay(policy, {
@@ -68,7 +60,7 @@ export function InlineEditPMSchedule({
 
   const handleSave = async () => {
     if (form.mode === 'custom' && (!form.intervalValue || form.intervalValue < 1)) {
-      setIntervalError('Enter a value of 1 or greater');
+      setIntervalError(t('equipment.pmIntervalMinimum'));
       return;
     }
 
@@ -76,16 +68,12 @@ export function InlineEditPMSchedule({
     setIsSaving(true);
     try {
       await pmIntervalPolicyService.upsertPolicy(organizationId, target, form);
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.pmIntervalPolicies.byEquipment(organizationId, equipmentId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.pmIntervalPolicies.byOrg(organizationId),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.pmIntervalPolicies.byEquipment(organizationId, equipmentId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.pmIntervalPolicies.byOrg(organizationId) });
       invalidatePMScheduleQueries(queryClient, equipmentId, organizationId);
       setIsEditing(false);
     } catch {
-      toast.error('Failed to update PM schedule');
+      toast.error(t('equipment.pmScheduleUpdateFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -97,33 +85,13 @@ export function InlineEditPMSchedule({
     setIsEditing(false);
   };
 
-  if (!canEdit) {
-    return <PMSchedulePolicyReadout display={display} />;
-  }
+  if (!canEdit) return <PMSchedulePolicyReadout display={display} />;
 
   if (!isEditing) {
-    const startEdit = () => setIsEditing(true);
-
     return (
-      <div
-        className={cn(
-          isMobile ? mobileInlineEditRowClassName : desktopInlineEditRowClassName,
-          'min-w-0 w-full flex-1 items-center',
-        )}
-      >
-        <div className={cn(isMobile && mobileInlineEditValueClassName, !isMobile && 'min-w-0 flex-1')}>
-          <PMSchedulePolicyReadout display={display} />
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={isMobile ? inlineEditIconClassName : desktopHoverEditIconClassName}
-          onClick={startEdit}
-          disabled={isLoading}
-          aria-label="Edit PM schedule"
-        >
-          <Edit2 className="h-3.5 w-3.5" />
-        </Button>
+      <div className={cn(isMobile ? mobileInlineEditRowClassName : desktopInlineEditRowClassName, 'min-w-0 w-full flex-1 items-center')}>
+        <div className={cn(isMobile && mobileInlineEditValueClassName, !isMobile && 'min-w-0 flex-1')}><PMSchedulePolicyReadout display={display} /></div>
+        <Button variant="ghost" size="sm" className={isMobile ? inlineEditIconClassName : desktopHoverEditIconClassName} onClick={() => setIsEditing(true)} disabled={isLoading} aria-label={t('equipment.editPmSchedule')}><Edit2 className="h-3.5 w-3.5" /></Button>
       </div>
     );
   }
@@ -133,32 +101,14 @@ export function InlineEditPMSchedule({
       <PMSchedulePolicyFields
         value={form}
         onChange={setForm}
-        inheritLabel={teamName ? `Inherit from team (${teamName})` : 'Inherit from team or template'}
+        inheritLabel={teamName ? t('equipment.inheritFromTeam', { name: teamName }) : t('equipment.inheritFromTeamOrTemplate')}
         intervalError={intervalError}
         disabled={isLoading || isSaving}
         compact
       />
       <div className="flex gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0"
-          onClick={() => void handleSave()}
-          disabled={isSaving}
-          aria-label="Save PM schedule"
-        >
-          <Check className="h-3 w-3" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0"
-          onClick={handleCancel}
-          disabled={isSaving}
-          aria-label="Cancel PM schedule edit"
-        >
-          <X className="h-3 w-3" />
-        </Button>
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => void handleSave()} disabled={isSaving} aria-label={t('equipment.savePmSchedule')}><Check className="h-3 w-3" /></Button>
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleCancel} disabled={isSaving} aria-label={t('equipment.cancelPmScheduleEdit')}><X className="h-3 w-3" /></Button>
       </div>
     </div>
   );
