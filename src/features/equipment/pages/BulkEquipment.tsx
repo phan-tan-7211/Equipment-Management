@@ -15,12 +15,14 @@ import { useEquipmentFiltering } from '@/features/equipment/hooks/useEquipmentFi
 import { useBulkEditEquipment } from '@/features/equipment/hooks/useBulkEditEquipment';
 import EquipmentLoadingState from '@/features/equipment/components/EquipmentLoadingState';
 import { BulkEquipmentGrid } from '../components/BulkEquipmentGrid';
+import { useI18n } from '@/i18n';
 
 const BulkEquipment: React.FC = () => {
   const { currentOrganization } = useOrganization();
   const { canCreateEquipment, canCreateEquipmentForAnyTeam } = usePermissions();
   const isOnline = useBrowserOnline();
   const isMobile = useIsMobile();
+  const { t } = useI18n();
 
   const {
     filteredAndSortedEquipment,
@@ -42,14 +44,6 @@ const BulkEquipment: React.FC = () => {
     commit,
   } = useBulkEditEquipment(filteredAndSortedEquipment);
 
-  // Bulk edit is a desktop-only surface (#627 AC#1). Mobile users that hit
-  // /dashboard/equipment/bulk directly (deep link, browser back, mistaken
-  // dropdown menu nav, etc.) are redirected to the equipment list — bulk is
-  // an edit-only surface, so we do NOT pass `?create=true` here (that would
-  // auto-open the creation modal via the initializedFromUrl effect in
-  // `Equipment.tsx`, which is the wrong intent for someone who landed on the
-  // bulk-edit URL). Placed below the hook calls so React sees a stable hook
-  // order on every render.
   if (isMobile) {
     return <Navigate to="/dashboard/equipment" replace />;
   }
@@ -58,26 +52,20 @@ const BulkEquipment: React.FC = () => {
     return (
       <Page maxWidth="full" padding="responsive">
         <PageHeader
-          title="Bulk Edit Equipment"
-          description="Please select an organization to edit equipment."
+          title={t('equipmentBulk.title')}
+          description={t('equipmentBulk.selectOrganization')}
           actions={<BulkEditBackButton to="/dashboard/equipment" />}
         />
       </Page>
     );
   }
 
-  // Gate by the same matrix as the "Add Equipment" affordance on
-  // `/dashboard/equipment` (issue #650): owners/admins org-wide, plus team
-  // managers/technicians who can create equipment for at least one of their
-  // teams. Per-row edit writes are still RLS-gated through the same
-  // `equipment.update` path used by the single-item form, so opening the
-  // grid does not bypass row-level permissions.
   if (!canCreateEquipment() && !canCreateEquipmentForAnyTeam()) {
     return (
       <Page maxWidth="full" padding="responsive">
         <PageHeader
-          title="Bulk Edit Equipment"
-          description="Bulk equipment editing is restricted to roles that can create equipment. Contact an organization administrator or a team manager if you need access."
+          title={t('equipmentBulk.title')}
+          description={t('equipmentBulk.restricted')}
           actions={<BulkEditBackButton to="/dashboard/equipment" />}
         />
       </Page>
@@ -88,13 +76,13 @@ const BulkEquipment: React.FC = () => {
     return (
       <Page maxWidth="full" padding="responsive">
         <PageHeader
-          title="Bulk Edit Equipment"
+          title={t('equipmentBulk.title')}
           actions={<BulkEditBackButton to="/dashboard/equipment" />}
         />
         <BulkEditOfflinePanel
-          message="Bulk editing requires an internet connection. Use the single-item form to queue offline edits."
+          message={t('equipmentBulk.offlineMessage')}
           backHref="/dashboard/equipment"
-          backLabel="Back to Equipment"
+          backLabel={t('equipmentBulk.backToEquipment')}
         />
       </Page>
     );
@@ -112,8 +100,8 @@ const BulkEquipment: React.FC = () => {
     <Page maxWidth="full" padding="responsive">
       <div className="space-y-4 pb-4">
         <PageHeader
-          title="Bulk Edit Equipment"
-          description={`Edit equipment for ${currentOrganization.name}. Single-click to select, double-click to edit.`}
+          title={t('equipmentBulk.title')}
+          description={t('equipmentBulk.description', { name: currentOrganization.name })}
           hideDescriptionOnMobile
           actions={<BulkEditBackButton to="/dashboard/equipment" />}
         />
