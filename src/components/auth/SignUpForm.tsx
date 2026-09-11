@@ -31,6 +31,7 @@ import {
   isSignupFormValid,
   type SignUpValidationContext,
 } from './signUpFormModel';
+import { useI18n } from '@/i18n';
 
 interface SignUpFormProps {
   onSuccess: (message: string, email?: string) => void;
@@ -55,6 +56,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   invitedOrgId,
   invitedOrgName,
 }) => {
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     name: '',
     email: prefillEmail || '',
@@ -110,9 +112,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     if (!prefillEmail) return;
     setEmailSignupOpen(true);
     setFormData(prev => {
-      if (prefillEmail === prev.email) {
-        return prev;
-      }
+      if (prefillEmail === prev.email) return prev;
       setEmailError(getEmailErrorForValue(prefillEmail));
       return { ...prev, email: prefillEmail };
     });
@@ -121,7 +121,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => {
       const next = { ...prev, [field]: value };
-
       if (field === 'password' || field === 'confirmPassword') {
         setPasswordMatch(
           computePasswordMatch(
@@ -133,13 +132,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           ),
         );
       }
-
       return next;
     });
 
-    if (field === 'email') {
-      setEmailError(getEmailErrorForValue(value));
-    }
+    if (field === 'email') setEmailError(getEmailErrorForValue(value));
     if (field === 'organizationName' && invitedOrgName) {
       setOrgNameError(getInvitedOrgNameConflict(value, invitedOrgName));
     }
@@ -150,29 +146,25 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   };
 
   const getFieldError = (field: string) => getSignupFieldError(field, validationContext);
-
   const getAcceptanceError = () =>
     getSignupAcceptanceError(termsAccepted, acceptanceTouched, submitAttempted);
-
   const formIsValid = () => isSignupFormValid(validationContext);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailSignupOpen) {
-      return;
-    }
+    if (!emailSignupOpen) return;
 
     setSubmitAttempted(true);
     setAcceptanceTouched(true);
 
     if (!termsAccepted) {
-      onError('Please accept the Terms of Service and Privacy Policy to continue.');
+      onError(t('auth.acceptTermsRequired'));
       return;
     }
 
     if (!formIsValid()) {
       setTouched(ALL_SIGNUP_FIELDS_TOUCHED);
-      onError('Please fill in all fields correctly');
+      onError(t('auth.fillFieldsCorrectly'));
       return;
     }
 
@@ -182,16 +174,12 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     try {
       const hibp = await checkPasswordBreachedHibp(formData.password);
       if (hibp.status === 'error') {
-        onError(
-          'Could not verify password safety (breach check unavailable). Please try again in a few minutes.',
-        );
+        onError(t('auth.passwordSafetyUnavailable'));
         setIsLoading(false);
         return;
       }
       if (hibp.breached) {
-        onError(
-          'This password appears in known data breaches. Choose a different password that you do not reuse elsewhere.',
-        );
+        onError(t('auth.passwordBreached'));
         setIsLoading(false);
         return;
       }
@@ -224,9 +212,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           if (!recorded) {
             if (newUserId) markPendingTermsAcceptanceForUser(newUserId);
             setShowRetryAcceptance(true);
-            onError(
-              'Your account was created, but we could not save legal acceptance evidence. Use “Retry acceptance” below or sign out and sign in again after verifying email.',
-            );
+            onError(t('auth.legalAcceptanceSaveFailed'));
             setHcaptchaToken(null);
             setIsLoading(false);
             return;
@@ -234,9 +220,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         } catch {
           if (newUserId) markPendingTermsAcceptanceForUser(newUserId);
           setShowRetryAcceptance(true);
-          onError(
-            'Your account was created, but we could not reach the server to save legal acceptance. Check your connection and use “Retry acceptance” below.',
-          );
+          onError(t('auth.legalAcceptanceServerFailed'));
           setHcaptchaToken(null);
           setIsLoading(false);
           return;
@@ -246,13 +230,11 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
       }
 
       onSuccess(
-        accessToken
-          ? 'Account created successfully! Please check your email to verify your account and complete organization setup.'
-          : 'Account created successfully! After you verify your email, your first sign-in will save your Terms acceptance record automatically. Please check your inbox to verify your account.',
+        accessToken ? t('auth.accountCreated') : t('auth.accountCreatedPendingVerification'),
         submittedEmail,
       );
     } catch (error) {
-      onError(error instanceof Error ? error.message : 'An error occurred during sign up');
+      onError(error instanceof Error ? error.message : t('auth.signupFailed'));
       setHcaptchaToken(null);
     }
 
@@ -265,7 +247,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
       const { session } = await getCurrentAuthSession();
       const token = session?.access_token;
       if (!token) {
-        onError('Sign in first, then retry saving acceptance.');
+        onError(t('auth.signInFirstForAcceptance'));
         setIsLoading(false);
         return;
       }
@@ -274,28 +256,26 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         setShowRetryAcceptance(false);
         const uid = session?.user?.id;
         if (uid) clearPendingTermsAcceptanceForUser(uid);
-        onSuccess('Legal acceptance recorded successfully.');
+        onSuccess(t('auth.acceptanceRecorded'));
       } else {
-        onError('Could not record acceptance. Try again shortly or contact support.');
+        onError(t('auth.acceptanceRecordFailed'));
       }
     } catch (e) {
-      onError(e instanceof Error ? e.message : 'Retry failed');
+      onError(e instanceof Error ? e.message : t('auth.retryFailed'));
     }
     setIsLoading(false);
   };
 
-  const handleHCaptchaVerify = (token: string) => {
-    setHcaptchaToken(token);
-  };
+  const handleHCaptchaVerify = (token: string) => setHcaptchaToken(token);
 
   const handleHCaptchaError = () => {
     setHcaptchaToken(null);
-    onError('CAPTCHA verification failed. Please try again.');
+    onError(t('auth.captchaFailed'));
   };
 
   const handleHCaptchaExpire = () => {
     setHcaptchaToken(null);
-    onError('CAPTCHA expired. Please complete it again.');
+    onError(t('auth.captchaExpired'));
   };
 
   const googleSignupReady = canStartGoogleSignup(formData.organizationName, orgNameError);
@@ -310,20 +290,17 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
       return;
     }
     const organizationName = formData.organizationName.trim();
-    if (!organizationName) {
-      return;
-    }
+    if (!organizationName) return;
     onGoogleSignUp(organizationName);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {invitedOrgName && <SignUpInviteBanner invitedOrgName={invitedOrgName} />}
-
       <SignUpPrivacyNotice />
 
       <div className="space-y-2">
-        <Label htmlFor="signup-organization">Organization Name</Label>
+        <Label htmlFor="signup-organization">{t('auth.organizationName')}</Label>
         <Input
           id="signup-organization"
           type="text"
@@ -331,7 +308,9 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           onChange={e => handleInputChange('organizationName', e.target.value)}
           onBlur={() => handleBlur('organizationName')}
           placeholder={
-            invitedOrgName ? `Enter your organization name (not ${invitedOrgName})` : 'Enter your organization name'
+            invitedOrgName
+              ? t('auth.organizationPlaceholderInvite', { name: invitedOrgName })
+              : t('auth.organizationPlaceholder')
           }
           required
           aria-invalid={!!getFieldError('organizationName')}
@@ -350,128 +329,128 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           <AuthGoogleSignInButton
             onClick={handleGoogleSignUp}
             disabled={isLoading || !googleSignupReady}
-            label="Sign up with Google"
+            label={t('auth.signUpWithGoogle')}
           />
-          <p className="text-center text-xs text-muted-foreground">or</p>
+          <p className="text-center text-xs text-muted-foreground">{t('auth.or')}</p>
           <Button type="button" variant="outline" className="w-full" onClick={() => setEmailSignupOpen(true)}>
             <Mail className="mr-2 h-4 w-4" aria-hidden />
-            Sign up with email
+            {t('auth.signUpWithEmail')}
           </Button>
         </>
       )}
 
       {emailSignupOpen ? (
         <>
-      <div className="space-y-2">
-        <Label htmlFor="signup-name">Full Name</Label>
-        <Input
-          id="signup-name"
-          type="text"
-          autoComplete="name"
-          value={formData.name}
-          onChange={e => handleInputChange('name', e.target.value)}
-          onBlur={() => handleBlur('name')}
-          required
-          aria-invalid={!!getFieldError('name')}
-          aria-describedby={getFieldError('name') ? 'signup-name-error' : undefined}
-        />
-        {getFieldError('name') && (
-          <p id="signup-name-error" className="text-sm text-destructive" aria-live="polite">
-            {getFieldError('name')}
-          </p>
-        )}
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="signup-name">{t('auth.fullName')}</Label>
+            <Input
+              id="signup-name"
+              type="text"
+              autoComplete="name"
+              value={formData.name}
+              onChange={e => handleInputChange('name', e.target.value)}
+              onBlur={() => handleBlur('name')}
+              required
+              aria-invalid={!!getFieldError('name')}
+              aria-describedby={getFieldError('name') ? 'signup-name-error' : undefined}
+            />
+            {getFieldError('name') && (
+              <p id="signup-name-error" className="text-sm text-destructive" aria-live="polite">
+                {getFieldError('name')}
+              </p>
+            )}
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="signup-email">Email</Label>
-        <Input
-          id="signup-email"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
-          autoCorrect="off"
-          autoCapitalize="none"
-          value={formData.email}
-          onChange={e => handleInputChange('email', e.target.value)}
-          onBlur={() => handleBlur('email')}
-          required
-          aria-invalid={!!(emailError || (touched.email && !formData.email.trim()))}
-          aria-describedby={getFieldError('email') ? 'signup-email-error' : undefined}
-        />
-        {getFieldError('email') && (
-          <p id="signup-email-error" className="text-sm text-destructive" aria-live="polite">
-            {getFieldError('email')}
-          </p>
-        )}
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="signup-email">{t('auth.email')}</Label>
+            <Input
+              id="signup-email"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              autoCorrect="off"
+              autoCapitalize="none"
+              value={formData.email}
+              onChange={e => handleInputChange('email', e.target.value)}
+              onBlur={() => handleBlur('email')}
+              required
+              aria-invalid={!!(emailError || (touched.email && !formData.email.trim()))}
+              aria-describedby={getFieldError('email') ? 'signup-email-error' : undefined}
+            />
+            {getFieldError('email') && (
+              <p id="signup-email-error" className="text-sm text-destructive" aria-live="polite">
+                {getFieldError('email')}
+              </p>
+            )}
+          </div>
 
-      <SignUpPasswordField
-        password={formData.password}
-        complexity={complexity}
-        strength={strength}
-        error={getFieldError('password')}
-        onChange={value => handleInputChange('password', value)}
-        onBlur={() => handleBlur('password')}
-      />
+          <SignUpPasswordField
+            password={formData.password}
+            complexity={complexity}
+            strength={strength}
+            error={getFieldError('password')}
+            onChange={value => handleInputChange('password', value)}
+            onBlur={() => handleBlur('password')}
+          />
 
-      <SignUpConfirmPasswordField
-        confirmPassword={formData.confirmPassword}
-        passwordMatch={passwordMatch}
-        onChange={value => handleInputChange('confirmPassword', value)}
-        onBlur={() => handleBlur('confirmPassword')}
-      />
+          <SignUpConfirmPasswordField
+            confirmPassword={formData.confirmPassword}
+            passwordMatch={passwordMatch}
+            onChange={value => handleInputChange('confirmPassword', value)}
+            onBlur={() => handleBlur('confirmPassword')}
+          />
 
-      <SignUpTermsAcceptance
-        termsAccepted={termsAccepted}
-        error={getAcceptanceError()}
-        onCheckedChange={accepted => {
-          setTermsAccepted(accepted);
-          setAcceptanceTouched(true);
-        }}
-      />
+          <SignUpTermsAcceptance
+            termsAccepted={termsAccepted}
+            error={getAcceptanceError()}
+            onCheckedChange={accepted => {
+              setTermsAccepted(accepted);
+              setAcceptanceTouched(true);
+            }}
+          />
 
-      {hcaptchaEnabled && (
-        <HCaptchaComponent
-          onSuccess={handleHCaptchaVerify}
-          onError={handleHCaptchaError}
-          onExpire={handleHCaptchaExpire}
-        />
-      )}
+          {hcaptchaEnabled && (
+            <HCaptchaComponent
+              onSuccess={handleHCaptchaVerify}
+              onError={handleHCaptchaError}
+              onExpire={handleHCaptchaExpire}
+            />
+          )}
 
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isLoading || !formIsValid()}
-        onClick={() => {
-          setSubmitAttempted(true);
-          if (!formIsValid()) {
-            setTouched(ALL_SIGNUP_FIELDS_TOUCHED);
-            setAcceptanceTouched(true);
-          }
-        }}
-      >
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-label="Creating account" />}
-        Create Account & Organization
-      </Button>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || !formIsValid()}
+            onClick={() => {
+              setSubmitAttempted(true);
+              if (!formIsValid()) {
+                setTouched(ALL_SIGNUP_FIELDS_TOUCHED);
+                setAcceptanceTouched(true);
+              }
+            }}
+          >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-label={t('auth.creatingAccount')} />}
+            {t('auth.createAccountOrganization')}
+          </Button>
 
-      {showRetryAcceptance && (
-        <Button type="button" variant="outline" className="w-full" onClick={handleRetryAcceptance} disabled={isLoading}>
-          Retry saving legal acceptance
-        </Button>
-      )}
+          {showRetryAcceptance && (
+            <Button type="button" variant="outline" className="w-full" onClick={handleRetryAcceptance} disabled={isLoading}>
+              {t('auth.retryLegalAcceptance')}
+            </Button>
+          )}
 
-      {!formIsValid() && Object.keys(touched).length > 0 && (
-        <p className="text-xs text-muted-foreground text-center">Fill in all required fields to continue</p>
-      )}
+          {!formIsValid() && Object.keys(touched).length > 0 && (
+            <p className="text-xs text-muted-foreground text-center">{t('auth.fillRequiredFields')}</p>
+          )}
 
-      <button
-        type="button"
-        className="flex w-full items-center justify-center gap-2 text-sm font-medium text-foreground underline underline-offset-4 hover:text-primary"
-        onClick={() => setEmailSignupOpen(false)}
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden />
-        Back to Google signup
-      </button>
+          <button
+            type="button"
+            className="flex w-full items-center justify-center gap-2 text-sm font-medium text-foreground underline underline-offset-4 hover:text-primary"
+            onClick={() => setEmailSignupOpen(false)}
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            {t('auth.backToGoogleSignup')}
+          </button>
         </>
       ) : null}
     </form>
