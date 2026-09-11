@@ -6,8 +6,9 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useSession } from '@/hooks/useSession';
 import {
+  createEquipmentFormSchema,
   createEquipmentValidationSchema,
-  equipmentFormSchema,
+  type EquipmentValidationMessages,
   EquipmentFormData,
   EquipmentRecord,
 } from '@/features/equipment/types/equipment';
@@ -29,6 +30,7 @@ import {
 import type { EquipmentFormPendingMedia } from '@/features/equipment/components/form/EquipmentFormMediaSection';
 import { equipment } from '@/lib/queryKeys';
 import { extractEquipmentDisplayImagePath } from '@/services/imageUploadService';
+import { useI18n } from '@/i18n';
 
 /**
  * Map a raw equipment mutation error to an operator-friendly message. Permission
@@ -36,10 +38,14 @@ import { extractEquipmentDisplayImagePath } from '@/services/imageUploadService'
  * message. Duplicate-serial (23505) can no longer occur after migration
  * `20260623210000_equipment_serial_drop_unique.sql`.
  */
-const getEquipmentMutationErrorMessage = (error: unknown, fallback: string): string => {
+const getEquipmentMutationErrorMessage = (
+  error: unknown,
+  fallback: string,
+  permissionDenied: string,
+): string => {
   const message = error instanceof Error ? error.message : String(error ?? '');
   if (/permission denied|row-level security|42501/i.test(message)) {
-    return 'You do not have permission to do this. You must be an org admin, or a manager or technician on the selected team.';
+    return permissionDenied;
   }
   return fallback;
 };
@@ -55,14 +61,28 @@ export const useEquipmentForm = (
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
   const { sessionData } = useSession();
+  const { t } = useI18n();
   const offlineCtx = useOfflineQueueOptional();
   const { warning: showWarningToast } = useAppToast();
   const localPendingRef = useRef<EquipmentFormPendingMedia>({ files: [], displayIndex: 0 });
   const mediaRef = pendingMediaRef ?? localPendingRef;
 
+  const validationMessages = useMemo<EquipmentValidationMessages>(() => ({
+    equipmentNameRequired: t('equipmentForm.validationEquipmentNameRequired'),
+    manufacturerRequired: t('equipmentForm.validationManufacturerRequired'),
+    modelRequired: t('equipmentForm.validationModelRequired'),
+    serialRequired: t('equipmentForm.validationSerialRequired'),
+    locationRequired: t('equipmentForm.validationLocationRequired'),
+    workingHoursNonNegative: t('equipmentForm.validationWorkingHoursNonNegative'),
+    teamRequired: t('equipmentForm.validationTeamRequired'),
+    nameRequired: t('equipmentForm.validationNameRequired'),
+    nameMax: t('equipmentForm.validationNameMax'),
+    teamCreatePermission: t('equipmentForm.validationTeamCreatePermission'),
+  }), [t]);
+
   const validationSchema = useMemo(() => {
     if (initialData || !currentOrganization) {
-      return equipmentFormSchema;
+      return createEquipmentFormSchema(validationMessages);
     }
 
     const isOrgAdmin =
@@ -76,8 +96,8 @@ export const useEquipmentForm = (
       })) ?? [],
     );
 
-    return createEquipmentValidationSchema(context);
-  }, [currentOrganization, initialData, sessionData?.teamMemberships]);
+    return createEquipmentValidationSchema(context, validationMessages);
+  }, [currentOrganization, initialData, sessionData?.teamMemberships, validationMessages]);
 
   const form = useForm<EquipmentFormData>({
     resolver: zodResolver(validationSchema),
@@ -87,7 +107,7 @@ export const useEquipmentForm = (
   const createMutation = useMutation({
     mutationFn: async (data: EquipmentFormData) => {
       if (!currentOrganization?.id || !user?.id) {
-        throw new Error('Organization or user not found');
+        throw new Error(t('equipmentForm.organizationOrUserNotFound'));
       }
 
       const service = new OfflineAwareWorkOrderService(currentOrganization.id, user.id);
@@ -97,7 +117,7 @@ export const useEquipmentForm = (
       if (result.queuedOffline) {
         return { id: 'offline', queuedOffline: true as const };
       }
-      if (!result.data) throw new Error('Failed to create equipment');
+      if (!result.data) throw new Error(t('equipmentForm.createFailed'));
 
       if (
         data.assigned_location_street ||
@@ -173,7 +193,7 @@ export const useEquipmentForm = (
     onSuccess: (data) => {
       const queuedOffline = data && 'queuedOffline' in data && data.queuedOffline;
       if (queuedOffline) {
-        toast.success('Saved offline — equipment will be created when you reconnect.');
+        toast.success(t('equipmentForm.savedOfflineCreate'));
         offlineCtx?.refresh();
       } else {
         queryClient.invalidateQueries({ queryKey: equipment.list(currentOrganization?.id ?? '') });
@@ -184,11 +204,10 @@ export const useEquipmentForm = (
         }
         if (data && 'mediaUploadFailed' in data && data.mediaUploadFailed) {
           showWarningToast({
-            description:
-              'Equipment created, but media upload failed. Add photos from the equipment details page.',
+            description: t('equipmentForm.mediaUploadFailedAfterCreate'),
           });
         } else {
-          toast.success('Equipment created successfully');
+          toast.success(t('equipmentForm.createdSuccessfully'));
         }
       }
       mediaRef.current = { files: [], displayIndex: 0 };
@@ -207,17 +226,21 @@ export const useEquipmentForm = (
     },
     onError: (error) => {
       console.error('Equipment creation error:', error);
-      toast.error(getEquipmentMutationErrorMessage(error, 'Failed to create equipment'));
+      toast.error(getEquipmentMutationErrorMessage(
+        error,
+        t('equipmentForm.createFailed'),
+        t('equipmentForm.permissionDenied'),
+      ));
     }
   });
 
   const updateMutation = useMutation({
     mutationFn: async (data: EquipmentFormData) => {
       if (!initialData?.id) {
-        throw new Error('Equipment ID not found');
+        throw new Error(t('equipmentForm.equipmentIdNotFound'));
       }
       if (!currentOrganization?.id || !user?.id) {
-        throw new Error('Organization or user not found');
+        throw new Error(t('equipmentForm.organizationOrUserNotFound'));
       }
 
       const service = new OfflineAwareWorkOrderService(currentOrganization.id, user.id);
@@ -231,7 +254,7 @@ export const useEquipmentForm = (
       if (result.queuedOffline) {
         return { id: initialData.id, queuedOffline: true as const };
       }
-      if (!result.data) throw new Error('Failed to update equipment');
+      if (!result.data) throw new Error(t('equipmentForm.updateFailed'));
 
       const hasAssignedLocationChanged =
         (initialData.assigned_location_street ?? '') !== (data.assigned_location_street ?? '') ||
@@ -261,21 +284,25 @@ export const useEquipmentForm = (
     onSuccess: (data) => {
       const queuedOffline = data && 'queuedOffline' in data && data.queuedOffline;
       if (queuedOffline) {
-        toast.success('Saved offline — equipment will be updated when you reconnect.');
+        toast.success(t('equipmentForm.savedOfflineUpdate'));
         offlineCtx?.refresh();
       } else {
         queryClient.invalidateQueries({ queryKey: equipment.list(currentOrganization?.id ?? '') });
         queryClient.invalidateQueries({
           queryKey: equipment.byId(currentOrganization?.id ?? '', initialData?.id ?? ''),
         });
-        toast.success('Equipment updated successfully');
+        toast.success(t('equipmentForm.updatedSuccessfully'));
       }
       setIsOpen(false);
       onSuccess?.();
     },
     onError: (error) => {
       console.error('Equipment update error:', error);
-      toast.error(getEquipmentMutationErrorMessage(error, 'Failed to update equipment'));
+      toast.error(getEquipmentMutationErrorMessage(
+        error,
+        t('equipmentForm.updateFailed'),
+        t('equipmentForm.permissionDenied'),
+      ));
     }
   });
 
