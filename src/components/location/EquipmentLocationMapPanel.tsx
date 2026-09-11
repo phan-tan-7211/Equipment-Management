@@ -15,6 +15,7 @@ import { useGoogleMapsKey } from '@/hooks/useGoogleMapsKey';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsDarkTheme, useThemeVersion } from '@/hooks/useThemeVersion';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 import {
   buildEquipmentLocationOptions,
   parseLastKnownLocation,
@@ -121,6 +122,7 @@ export function EquipmentLocationMapPanel({
   onSaveAddress,
   layout = 'embedded',
 }: EquipmentLocationMapPanelProps) {
+  const { t } = useI18n();
   const [selectedMode, setSelectedMode] = useState<LocationDisplayMode>('effective');
   const [pendingPlace, setPendingPlace] = useState<PlaceLocationData | null>(null);
   const [isCleared, setIsCleared] = useState(false);
@@ -257,8 +259,8 @@ export function EquipmentLocationMapPanel({
     if (!showInlineLocationActions) return null;
 
     const addressActionLabel = equipmentAddress
-      ? 'Edit equipment address'
-      : 'Set equipment address';
+      ? t('equipmentLocation.editAddress')
+      : t('equipmentLocation.setAddress');
 
     return (
       <div className="flex shrink-0 items-center gap-0.5">
@@ -280,7 +282,7 @@ export function EquipmentLocationMapPanel({
           onClick={() => setIsLiveCaptureOpen(true)}
           disabled={isSavingAddress}
           className={inlineLocationActionClassName}
-          aria-label="Use my current location"
+          aria-label={t('equipmentLocation.useCurrentLocation')}
         >
           <Navigation className="h-3.5 w-3.5" />
         </Button>
@@ -305,7 +307,7 @@ export function EquipmentLocationMapPanel({
           className="rounded-lg bg-muted/50 border flex items-center justify-center"
           style={{ height: mapHeight }}
         >
-          <p className="text-xs text-muted-foreground">Loading map...</p>
+          <p className="text-xs text-muted-foreground">{t('equipmentLocation.loadingMap')}</p>
         </div>
       );
     }
@@ -322,11 +324,11 @@ export function EquipmentLocationMapPanel({
         >
           <div className="text-center px-4 space-y-1">
             <MapPin className="h-6 w-6 text-muted-foreground/50 mx-auto" />
-            <p className="text-xs font-medium text-muted-foreground">No map coordinates yet</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('equipmentLocation.noCoordinates')}</p>
             <p className="text-[11px] text-muted-foreground">
               {canEditLocation
-                ? 'Set an equipment address or use this device\u2019s location.'
-                : 'Set an equipment address or current device location on the equipment page.'}
+                ? t('equipmentLocation.noCoordinatesEditable')
+                : t('equipmentLocation.noCoordinatesReadonly')}
             </p>
           </div>
         </div>
@@ -357,7 +359,7 @@ export function EquipmentLocationMapPanel({
 
       {!center && showInlineLocationActions
         ? renderAddressRow(
-            <span className="text-xs text-muted-foreground">No location set</span>,
+            <span className="text-xs text-muted-foreground">{t('equipmentLocation.noLocation')}</span>,
           )
         : null}
 
@@ -366,7 +368,7 @@ export function EquipmentLocationMapPanel({
           to={`/dashboard/teams/${assignedTeam.id}`}
           className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
         >
-          Edit team location on team page
+          {t('equipmentLocation.editTeamLocation')}
         </Link>
       )}
 
@@ -382,7 +384,7 @@ export function EquipmentLocationMapPanel({
               setPendingPlace(null);
               setIsCleared(true);
             }}
-            placeholder="Search for an equipment address..."
+            placeholder={t('equipmentLocation.searchAddress')}
             isLoaded={isPlacesLoaded}
           />
           <Button
@@ -394,7 +396,7 @@ export function EquipmentLocationMapPanel({
             className="gap-1.5 h-7 text-xs"
           >
             <Navigation className="h-3 w-3" />
-            Use my current location
+            {t('equipmentLocation.useCurrentLocation')}
           </Button>
           <div className="flex items-center gap-2">
             <Button
@@ -405,7 +407,7 @@ export function EquipmentLocationMapPanel({
               className="gap-1 h-7 text-xs"
             >
               <Check className="h-3 w-3" />
-              {isSavingAddress ? 'Saving...' : 'Save equipment location'}
+              {isSavingAddress ? t('equipmentLocation.saving') : t('equipmentLocation.saveLocation')}
             </Button>
             <Button
               size="sm"
@@ -415,11 +417,11 @@ export function EquipmentLocationMapPanel({
               className="gap-1 h-7 text-xs"
             >
               <X className="h-3 w-3" />
-              Cancel
+              {t('equipmentLocation.cancel')}
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Saving sets a dedicated equipment address, which takes priority over the team default location.
+            {t('equipmentLocation.saveHint')}
           </p>
         </div>
       )}
@@ -429,7 +431,7 @@ export function EquipmentLocationMapPanel({
           to={`/dashboard/equipment/${equipment.id}`}
           className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80"
         >
-          Set location on equipment page
+          {t('equipmentLocation.setOnEquipmentPage')}
         </Link>
       ) : null}
 
@@ -439,8 +441,8 @@ export function EquipmentLocationMapPanel({
           onOpenChange={setIsLiveCaptureOpen}
           onConfirm={handleLiveLocationConfirm}
           isSaving={isSavingAddress}
-          title="Set equipment location from this device"
-          confirmLabel="Use this location"
+          title={t('equipmentLocation.captureTitle')}
+          confirmLabel={t('equipmentLocation.useThisLocation')}
         />
       ) : null}
     </>
