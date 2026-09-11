@@ -30,39 +30,78 @@ jobs:
       - name: Install web dependencies
         run: npm ci
 
-      # IMPORTANT: do not use --no-save here. Capacitor discovers native plugins
-      # from the project's package dependency graph when generating/syncing Android.
-      # This transiently updates package.json in the CI workspace only; the branch
-      # itself remains clean while @capacitor/app is correctly linked natively.
-      - name: Install Capacitor 8 and native App plugin
+      # Do not use --no-save. Capacitor discovers native plugins from the
+      # package dependency graph when generating/syncing Android. The changes
+      # are transient inside CI and are not committed to the branch.
+      - name: Install Capacitor 8 native shell plugins
         run: >-
           npm install --package-lock=false
           @capacitor/core@8
           @capacitor/cli@8
           @capacitor/android@8
           @capacitor/app@8
+          @capacitor/keyboard@8
+          @capacitor/splash-screen@8
+          @capacitor/assets@3
 
       - name: Build Vite app
         run: npm run build
 
-      - name: Use SPA app shell for Capacitor
+      - name: Prepare Capacitor SPA shell without PWA worker
         run: |
           test -f dist/app-shell.html
           cp dist/app-shell.html dist/index.html
+          rm -f dist/sw.js dist/registerSW.js
+          rm -f dist/workbox-*.js
+          test ! -f dist/sw.js
 
       - name: Generate Android project
         run: npx cap add android
 
+      - name: Generate ZNTEQR Android icon and splash resources
+        run: |
+          mkdir -p assets
+          node <<'NODE'
+          const sharp = require('sharp');
+          (async () => {
+            await sharp('public/pwa-512x512.png')
+              .resize(1024, 1024, {
+                fit: 'contain',
+                background: { r: 10, g: 10, b: 10, alpha: 1 },
+              })
+              .png()
+              .toFile('assets/logo.png');
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+          npx @capacitor/assets generate --android \
+            --iconBackgroundColor '#0A0A0A' \
+            --iconBackgroundColorDark '#0A0A0A' \
+            --splashBackgroundColor '#0A0A0A' \
+            --splashBackgroundColorDark '#0A0A0A' \
+            --logoSplashScale 0.18
+
       - name: Sync web assets and native plugins into Android
         run: npx cap sync android
 
-      - name: Verify native App plugin is linked
+      - name: Verify V4 native shell wiring
         run: |
-          echo "Checking generated Android project for @capacitor/app..."
-          if ! grep -R --line-number --fixed-strings "capacitor-app" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -20; then
-            echo "ERROR: @capacitor/app was not linked into the Android project."
-            exit 1
-          fi
+          echo "Checking native plugins..."
+          grep -R --line-number --fixed-strings "capacitor-app" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+          grep -R --line-number --fixed-strings "capacitor-keyboard" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+          grep -R --line-number --fixed-strings "capacitor-splash-screen" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+
+          echo "Checking SystemBars/safe-area config..."
+          grep --fixed-strings 'SystemBars' android/app/src/main/assets/capacitor.config.json
+
+          echo "Checking PWA service worker is absent from packaged assets..."
+          test ! -f android/app/src/main/assets/public/sw.js
+
+          echo "Checking generated Android launcher resources..."
+          find android/app/src/main/res -type f -name 'ic_launcher*' | head -20
+          test -n "$(find android/app/src/main/res -type f -name 'ic_launcher*' -print -quit)"
 
       - name: Setup Java 21
         uses: actions/setup-java@v4
@@ -79,16 +118,16 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Prepare APK artifact
+      - name: Prepare V4 APK artifact
         run: |
           mkdir -p artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-debug.apk
-          sha256sum artifacts/equipment-management-capacitor-debug.apk > artifacts/equipment-management-capacitor-debug.apk.sha256
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-v4.apk
+          sha256sum artifacts/equipment-management-capacitor-v4.apk > artifacts/equipment-management-capacitor-v4.apk.sha256
 
-      - name: Upload debug APK
+      - name: Upload V4 debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: equipment-management-capacitor-debug-apk
+          name: equipment-management-capacitor-v4-apk
           path: artifacts/
           if-no-files-found: error
           retention-days: 7
