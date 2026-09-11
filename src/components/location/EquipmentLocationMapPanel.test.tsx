@@ -246,7 +246,7 @@ describe('EquipmentLocationMapPanel', () => {
     await waitFor(() => {
       expect(screen.getAllByText('Equipment location').length).toBeGreaterThan(0);
       expect(screen.getAllByText('Team location').length).toBeGreaterThan(0);
-      expect(screen.getAllByText('Last known scan location').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Last scan location').length).toBeGreaterThan(0);
     });
   });
 
