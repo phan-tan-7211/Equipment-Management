@@ -5,15 +5,16 @@ import ko from './locales/ko';
 import { coreResources } from './coreResources';
 import { dashboardWidgetResources } from './dashboardWidgetResources';
 import { equipmentResources } from './equipmentResources';
+import { equipmentFormResources } from './equipmentFormResources';
 
 export type Language = 'vi' | 'en' | 'ko';
 
 const STORAGE_KEY = 'znteqr-language';
 
 const resources = {
-  vi: { ...vi, ...coreResources.vi, ...dashboardWidgetResources.vi, ...equipmentResources.vi },
-  en: { ...en, ...coreResources.en, ...dashboardWidgetResources.en, ...equipmentResources.en },
-  ko: { ...ko, ...coreResources.ko, ...dashboardWidgetResources.ko, ...equipmentResources.ko },
+  vi: { ...vi, ...coreResources.vi, ...dashboardWidgetResources.vi, ...equipmentResources.vi, ...equipmentFormResources.vi },
+  en: { ...en, ...coreResources.en, ...dashboardWidgetResources.en, ...equipmentResources.en, ...equipmentFormResources.en },
+  ko: { ...ko, ...coreResources.ko, ...dashboardWidgetResources.ko, ...equipmentResources.ko, ...equipmentFormResources.ko },
 } as const;
 
 type TranslationParams = Record<string, string | number>;
