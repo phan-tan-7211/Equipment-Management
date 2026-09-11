@@ -36,6 +36,7 @@ jobs:
           @capacitor/core@8
           @capacitor/cli@8
           @capacitor/android@8
+          @capacitor/app@8
 
       - name: Build Vite app
         run: npm run build
