@@ -6,15 +6,16 @@ import { coreResources } from './coreResources';
 import { dashboardWidgetResources } from './dashboardWidgetResources';
 import { equipmentResources } from './equipmentResources';
 import { equipmentFormResources } from './equipmentFormResources';
+import { equipmentBulkResources } from './equipmentBulkResources';
 
 export type Language = 'vi' | 'en' | 'ko';
 
 const STORAGE_KEY = 'znteqr-language';
 
 const resources = {
-  vi: { ...vi, ...coreResources.vi, ...dashboardWidgetResources.vi, ...equipmentResources.vi, ...equipmentFormResources.vi },
-  en: { ...en, ...coreResources.en, ...dashboardWidgetResources.en, ...equipmentResources.en, ...equipmentFormResources.en },
-  ko: { ...ko, ...coreResources.ko, ...dashboardWidgetResources.ko, ...equipmentResources.ko, ...equipmentFormResources.ko },
+  vi: { ...vi, ...coreResources.vi, ...dashboardWidgetResources.vi, ...equipmentResources.vi, ...equipmentFormResources.vi, ...equipmentBulkResources.vi },
+  en: { ...en, ...coreResources.en, ...dashboardWidgetResources.en, ...equipmentResources.en, ...equipmentFormResources.en, ...equipmentBulkResources.en },
+  ko: { ...ko, ...coreResources.ko, ...dashboardWidgetResources.ko, ...equipmentResources.ko, ...equipmentFormResources.ko, ...equipmentBulkResources.ko },
 } as const;
 
 type TranslationParams = Record<string, string | number>;
