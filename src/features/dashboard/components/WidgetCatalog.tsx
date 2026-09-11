@@ -17,6 +17,7 @@ import {
 } from '@/features/dashboard/registry/widgetRegistry';
 import { useCanViewWorkOrderCosts } from '@/features/work-orders/hooks/useCanViewWorkOrderCosts';
 import type { WidgetCategory, WidgetDefinition } from '@/features/dashboard/types/dashboard';
+import { useI18n } from '@/i18n';
 
 interface WidgetCatalogProps {
   open: boolean;
@@ -26,20 +27,28 @@ interface WidgetCatalogProps {
   onRemoveWidget: (widgetId: string) => void;
 }
 
-const CATEGORY_LABELS: Record<WidgetCategory, string> = {
-  overview: 'Overview',
-  'work-orders': 'Work Orders',
-  equipment: 'Equipment',
-  team: 'Team',
-  inventory: 'Inventory',
+const CATEGORY_KEYS: Record<WidgetCategory, string> = {
+  overview: 'dashboard.categories.overview',
+  'work-orders': 'dashboard.categories.workOrders',
+  equipment: 'dashboard.categories.equipment',
+  team: 'dashboard.categories.team',
+  inventory: 'dashboard.categories.inventory',
+};
+
+const WIDGET_KEYS: Record<string, { title: string; description: string }> = {
+  'stats-grid': { title: 'dashboard.widgets.statsGridTitle', description: 'dashboard.widgets.statsGridDescription' },
+  'fleet-efficiency': { title: 'dashboard.widgets.fleetEfficiencyTitle', description: 'dashboard.widgets.fleetEfficiencyDescription' },
+  'recent-equipment': { title: 'dashboard.widgets.recentEquipmentTitle', description: 'dashboard.widgets.recentEquipmentDescription' },
+  'recent-work-orders': { title: 'dashboard.widgets.recentWorkOrdersTitle', description: 'dashboard.widgets.recentWorkOrdersDescription' },
+  'high-priority-wo': { title: 'dashboard.widgets.highPriorityWoTitle', description: 'dashboard.widgets.highPriorityWoDescription' },
+  'pm-compliance': { title: 'dashboard.widgets.pmComplianceTitle', description: 'dashboard.widgets.pmComplianceDescription' },
+  'equipment-by-status': { title: 'dashboard.widgets.equipmentByStatusTitle', description: 'dashboard.widgets.equipmentByStatusDescription' },
+  'cost-trend': { title: 'dashboard.widgets.costTrendTitle', description: 'dashboard.widgets.costTrendDescription' },
+  'quick-actions': { title: 'dashboard.widgets.quickActionsTitle', description: 'dashboard.widgets.quickActionsDescription' },
 };
 
 const CATEGORY_ORDER: WidgetCategory[] = ['overview', 'equipment', 'work-orders', 'team', 'inventory'];
 
-/**
- * Widget catalog drawer for adding/removing widgets from the dashboard.
- * Shows all registered widgets grouped by category with search filtering.
- */
 export const WidgetCatalog: React.FC<WidgetCatalogProps> = ({
   open,
   onOpenChange,
@@ -47,6 +56,7 @@ export const WidgetCatalog: React.FC<WidgetCatalogProps> = ({
   onAddWidget,
   onRemoveWidget,
 }) => {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const canViewWorkOrderCosts = useCanViewWorkOrderCosts();
   const allWidgets = useMemo(
@@ -57,26 +67,32 @@ export const WidgetCatalog: React.FC<WidgetCatalogProps> = ({
     [canViewWorkOrderCosts]
   );
 
-  const filteredWidgets = useMemo(() => {
-    if (!searchQuery.trim()) return allWidgets;
-    const q = searchQuery.toLowerCase();
-    return allWidgets.filter(
-      (w) =>
-        w.title.toLowerCase().includes(q) ||
-        w.description.toLowerCase().includes(q)
-    );
-  }, [allWidgets, searchQuery]);
+  const localizedWidgets = useMemo(
+    () => allWidgets.map((widget) => {
+      const keys = WIDGET_KEYS[widget.id];
+      return {
+        widget,
+        title: keys ? t(keys.title) : widget.title,
+        description: keys ? t(keys.description) : widget.description,
+      };
+    }),
+    [allWidgets, t]
+  );
 
-  // Group filtered widgets by category
+  const filteredWidgets = useMemo(() => {
+    if (!searchQuery.trim()) return localizedWidgets;
+    const q = searchQuery.toLowerCase();
+    return localizedWidgets.filter(
+      ({ title, description }) => title.toLowerCase().includes(q) || description.toLowerCase().includes(q)
+    );
+  }, [localizedWidgets, searchQuery]);
+
   const groupedWidgets = useMemo(() => {
-    const groups = new Map<WidgetCategory, WidgetDefinition[]>();
-    for (const widget of filteredWidgets) {
-      const group = groups.get(widget.category);
-      if (group) {
-        group.push(widget);
-      } else {
-        groups.set(widget.category, [widget]);
-      }
+    const groups = new Map<WidgetCategory, Array<{ widget: WidgetDefinition; title: string; description: string }>>();
+    for (const item of filteredWidgets) {
+      const group = groups.get(item.widget.category);
+      if (group) group.push(item);
+      else groups.set(item.widget.category, [item]);
     }
     return groups;
   }, [filteredWidgets]);
@@ -85,25 +101,21 @@ export const WidgetCatalog: React.FC<WidgetCatalogProps> = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Widget Catalog</SheetTitle>
-          <SheetDescription>
-            Add or remove widgets from your dashboard
-          </SheetDescription>
+          <SheetTitle>{t('dashboard.widgetCatalog')}</SheetTitle>
+          <SheetDescription>{t('dashboard.widgetCatalogDescription')}</SheetDescription>
         </SheetHeader>
 
         <div className="mt-4 space-y-6">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search widgets..."
+              placeholder={t('dashboard.searchWidgets')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
             />
           </div>
 
-          {/* Widget groups by category */}
           {CATEGORY_ORDER.map((category) => {
             const widgets = groupedWidgets.get(category);
             if (!widgets || widgets.length === 0) return null;
@@ -111,10 +123,10 @@ export const WidgetCatalog: React.FC<WidgetCatalogProps> = ({
             return (
               <div key={category}>
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  {CATEGORY_LABELS[category]}
+                  {t(CATEGORY_KEYS[category])}
                 </h3>
                 <div className="space-y-2">
-                  {widgets.map((widget) => {
+                  {widgets.map(({ widget, title, description }) => {
                     const isActive = activeWidgetIds.includes(widget.id);
                     const Icon = widget.icon;
 
@@ -123,56 +135,34 @@ export const WidgetCatalog: React.FC<WidgetCatalogProps> = ({
                         key={widget.id}
                         className={cn(
                           'flex items-center gap-3 rounded-lg border p-3 transition-colors',
-                          isActive
-                            ? 'border-primary/30 bg-primary/5'
-                            : 'border-border hover:bg-muted/50'
+                          isActive ? 'border-primary/30 bg-primary/5' : 'border-border hover:bg-muted/50'
                         )}
                       >
                         <div
                           className={cn(
                             'flex h-9 w-9 shrink-0 items-center justify-center rounded-md',
-                            isActive
-                              ? 'bg-primary/10 text-primary'
-                              : 'bg-muted text-muted-foreground'
+                            isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                           )}
                         >
                           <Icon className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium truncate">
-                              {widget.title}
-                            </p>
+                            <p className="text-sm font-medium truncate">{title}</p>
                             {isActive && (
-                              <Badge variant="secondary" className="text-xs shrink-0">
-                                Active
-                              </Badge>
+                              <Badge variant="secondary" className="text-xs shrink-0">{t('dashboard.active')}</Badge>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground line-clamp-1">
-                            {widget.description}
-                          </p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{description}</p>
                         </div>
                         <Button
                           variant={isActive ? 'outline' : 'default'}
                           size="sm"
                           className="shrink-0"
-                          onClick={() =>
-                            isActive
-                              ? onRemoveWidget(widget.id)
-                              : onAddWidget(widget.id)
-                          }
-                          aria-label={
-                            isActive
-                              ? `Remove ${widget.title}`
-                              : `Add ${widget.title}`
-                          }
+                          onClick={() => isActive ? onRemoveWidget(widget.id) : onAddWidget(widget.id)}
+                          aria-label={isActive ? t('dashboard.removeWidget', { name: title }) : t('dashboard.addWidget', { name: title })}
                         >
-                          {isActive ? (
-                            <Check className="h-4 w-4" />
-                          ) : (
-                            <Plus className="h-4 w-4" />
-                          )}
+                          {isActive ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                         </Button>
                       </div>
                     );
@@ -184,7 +174,7 @@ export const WidgetCatalog: React.FC<WidgetCatalogProps> = ({
 
           {filteredWidgets.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              <p className="text-sm">No widgets match your search</p>
+              <p className="text-sm">{t('dashboard.noWidgetMatches')}</p>
             </div>
           )}
         </div>
