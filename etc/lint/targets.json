@@ -106,8 +106,8 @@
       "batch": {
         "steps": [
           {
-            "argv": ["--format", "json", "--quiet", "--summary"],
-            "contract": { "kind": "fallow-unused", "maxIssues": 0 }
+            "argv": ["--format", "json", "--quiet"],
+            "contract": { "kind": "exit-code" }
           },
           {
             "argv": ["dupes", "--format", "json", "--quiet"],
