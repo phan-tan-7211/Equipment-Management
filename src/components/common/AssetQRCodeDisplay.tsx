@@ -2,6 +2,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import AssetQRCodePanel from '@/components/common/AssetQRCodePanel';
+import { useI18n } from '@/i18n';
 
 export interface AssetQRCodeDisplayProps {
   open: boolean;
@@ -47,6 +48,7 @@ const AssetQRCodeDisplay: React.FC<AssetQRCodeDisplayProps> = ({
   urlTestId,
 }) => {
   const isMobile = useIsMobile();
+  const { t } = useI18n();
 
   return (
     <Dialog
@@ -63,7 +65,7 @@ const AssetQRCodeDisplay: React.FC<AssetQRCodeDisplayProps> = ({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="sr-only">
-            Generate, view, and download QR code for {resourceLabel} {entityName || entityId}
+            {t('qrCommon.dialogDescription', { resource: resourceLabel, name: entityName || entityId })}
           </DialogDescription>
         </DialogHeader>
 
