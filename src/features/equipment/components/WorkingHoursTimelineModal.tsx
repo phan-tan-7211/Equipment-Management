@@ -13,8 +13,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Settings, User, FileEdit, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEquipmentWorkingHoursHistory, useEquipmentCurrentWorkingHours, useUpdateEquipmentWorkingHours } from '@/features/equipment/hooks/useEquipmentWorkingHours';
-import { format } from 'date-fns';
+import {
+  useEquipmentWorkingHoursHistory,
+  useEquipmentCurrentWorkingHours,
+  useUpdateEquipmentWorkingHours,
+} from '@/features/equipment/hooks/useEquipmentWorkingHours';
 import { toast } from 'sonner';
 import { DataTable } from '@/components/ui/data-table';
 import type { Column } from '@/components/ui/data-table';
@@ -24,6 +27,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useVoiceTextAppender } from '@/hooks/useVoiceTextAppender';
 import VoiceInputButton from '@/components/common/VoiceInputButton';
 import VoiceInterimTranscript from '@/components/common/VoiceInterimTranscript';
+import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
+import { useI18n } from '@/i18n';
 
 interface WorkingHoursTimelineModalProps {
   open: boolean;
@@ -38,6 +43,8 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
   equipmentId,
   equipmentName,
 }) => {
+  const { t } = useI18n();
+  const { formatDateTime } = useFormatTimestamp();
   const [isAddingHours, setIsAddingHours] = useState(false);
   const [newHours, setNewHours] = useState('');
   const [notes, setNotes] = useState('');
@@ -48,7 +55,7 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
   const { data: historyResult, isLoading: isLoadingHistory } = useEquipmentWorkingHoursHistory(
     equipmentId,
     currentPage,
-    pageSize
+    pageSize,
   );
   const { data: currentHours, isLoading: isLoadingCurrent } = useEquipmentCurrentWorkingHours(equipmentId);
   const updateHoursMutation = useUpdateEquipmentWorkingHours();
@@ -65,12 +72,12 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
     disabled: updateHoursMutation.isPending,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
     const hours = parseFloat(newHours);
-    if (isNaN(hours) || hours < 0) {
-      toast.error('Please enter a valid number of hours');
+    if (Number.isNaN(hours) || hours < 0) {
+      toast.error(t('equipmentDetails.invalidHours'));
       return;
     }
 
@@ -90,16 +97,7 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      // Normalize PostgreSQL timestamp format (replace space with T for ISO compliance)
-      const normalizedDate = dateString.replace(' ', 'T');
-      return format(new Date(normalizedDate), 'MMM d, yyyy h:mm a');
-    } catch (error) {
-      logger.warn('Failed to format working hours date', { dateString, error });
-      return 'Invalid date';
-    }
-  };
+  const formatDate = (dateString: string) => formatDateTime(dateString);
 
   const getSourceIcon = (source: string) => {
     switch (source) {
@@ -111,30 +109,23 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
     }
   };
 
-  const getSourceLabel = (source: string) => {
-    switch (source) {
-      case 'work_order':
-        return 'Work Order';
-      case 'manual':
-      default:
-        return 'Manual';
-    }
-  };
+  const getSourceLabel = (source: string) =>
+    source === 'work_order'
+      ? t('equipmentDetails.sourceWorkOrder')
+      : t('equipmentDetails.sourceManual');
 
   const columns: Column<WorkingHoursHistoryEntry>[] = [
     {
       key: 'created_at',
-      title: 'Date',
+      title: t('equipmentDetails.date'),
       width: '180px',
       render: (_value, item) => (
-        <div className="text-sm">
-          {item ? formatDate(item.created_at) : '-'}
-        </div>
+        <div className="text-sm">{item ? formatDate(item.created_at) : '-'}</div>
       ),
     },
     {
       key: 'update_source',
-      title: 'Source',
+      title: t('equipmentDetails.source'),
       width: '120px',
       render: (_value, item) => (
         <div className="flex items-center gap-2">
@@ -145,18 +136,18 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
     },
     {
       key: 'updated_by_name',
-      title: 'Updated By',
+      title: t('equipmentDetails.updatedBy'),
       width: '140px',
       render: (_value, item) => (
         <div className="flex items-center gap-2">
           <User className="h-3 w-3" />
-          <span className="text-sm">{item?.updated_by_name || 'Unknown'}</span>
+          <span className="text-sm">{item?.updated_by_name || t('equipmentDetails.unknown')}</span>
         </div>
       ),
     },
     {
       key: 'hours_change',
-      title: 'Hours Change',
+      title: t('equipmentDetails.hoursChange'),
       width: '140px',
       render: (_value, item) => (
         <div className="flex items-center gap-2">
@@ -174,7 +165,7 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
     },
     {
       key: 'notes',
-      title: 'Notes',
+      title: t('equipmentDetails.notes'),
       render: (_value, item) => (
         <div className="text-sm text-muted-foreground max-w-xs truncate">
           {item?.notes || '—'}
@@ -183,14 +174,15 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
     },
   ];
 
-  const pagination = historyResult ? {
-    page: currentPage,
-    limit: pageSize,
-    total: historyResult.total,
-    onPageChange: setCurrentPage,
-  } : undefined;
+  const pagination = historyResult
+    ? {
+        page: currentPage,
+        limit: pageSize,
+        total: historyResult.total,
+        onPageChange: setCurrentPage,
+      }
+    : undefined;
 
-  // Mobile card component for history entries
   const MobileHistoryCard = ({ entry }: { entry: WorkingHoursHistoryEntry }) => (
     <Card className="mb-3">
       <CardContent standalone>
@@ -202,23 +194,26 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
             </div>
             <span className="text-xs text-muted-foreground">{formatDate(entry.created_at)}</span>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <ArrowUpDown className="h-4 w-4" />
               <span className="text-sm font-medium">
-                {entry.old_hours !== null ? entry.old_hours : '0'} → {entry.new_hours} hours
+                {entry.old_hours !== null ? entry.old_hours : '0'} →{' '}
+                {t('equipmentDetails.hoursValue', { count: entry.new_hours })}
               </span>
               <span className="text-xs text-muted-foreground">
                 ({entry.hours_added > 0 ? '+' : ''}{entry.hours_added})
               </span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span className="text-sm">{entry.updated_by_name || 'Unknown'}</span>
+              <span className="text-sm">
+                {entry.updated_by_name || t('equipmentDetails.unknown')}
+              </span>
             </div>
-            
+
             {entry.notes && (
               <div className="text-sm text-muted-foreground bg-muted/30 p-2 rounded">
                 {entry.notes}
@@ -230,18 +225,17 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
     </Card>
   );
 
-  // Mobile pagination component
   const MobilePagination = () => {
     if (!pagination) return null;
-    
+
     const totalPages = Math.ceil(pagination.total / pagination.limit);
     const hasNext = pagination.page < totalPages;
     const hasPrev = pagination.page > 1;
-    
+
     return (
       <div className="flex items-center justify-between px-4 py-3 border-t">
         <div className="text-sm text-muted-foreground">
-          Page {pagination.page} of {totalPages}
+          {t('commonPagination.pageOf', { page: pagination.page, totalPages })}
         </div>
         <div className="flex gap-2">
           <Button
@@ -249,6 +243,7 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
             size="sm"
             onClick={() => pagination.onPageChange(pagination.page - 1)}
             disabled={!hasPrev}
+            aria-label={t('commonPagination.previousPage')}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -257,6 +252,7 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
             size="sm"
             onClick={() => pagination.onPageChange(pagination.page + 1)}
             disabled={!hasNext}
+            aria-label={t('commonPagination.nextPage')}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -269,20 +265,23 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[calc(100dvh-2rem)] p-3' : 'max-w-4xl max-h-[calc(100dvh-2rem)]'} flex flex-col`}>
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle className={isMobile ? 'text-lg' : ''}>Working Hours Timeline</DialogTitle>
+          <DialogTitle className={isMobile ? 'text-lg' : ''}>
+            {t('equipmentDetails.workingHoursTimeline')}
+          </DialogTitle>
           <DialogDescription className={isMobile ? 'text-sm' : ''}>
-            Track and manage runtime for {equipmentName}
+            {t('equipmentDetails.trackRuntime', { name: equipmentName })}
           </DialogDescription>
           <OfflineFormBanner />
         </DialogHeader>
 
         <div className="flex-shrink-0 space-y-4">
-          {/* Current Hours Summary */}
           <div className={`${isMobile ? 'flex-col space-y-3' : 'flex items-center justify-between'} p-4 bg-muted/50 rounded-lg`}>
             <div>
-              <p className="text-sm text-muted-foreground">Current Hours</p>
+              <p className="text-sm text-muted-foreground">{t('equipmentDetails.currentHours')}</p>
               <p className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold`}>
-                {isLoadingCurrent ? '...' : `${currentHours || 0} hours`}
+                {isLoadingCurrent
+                  ? '...'
+                  : t('equipmentDetails.hoursValue', { count: currentHours || 0 })}
               </p>
             </div>
             <Button
@@ -291,35 +290,34 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
               className={`gap-2 ${isMobile ? 'w-full' : ''}`}
             >
               <Plus className="h-4 w-4" />
-              Update Hours
+              {t('equipmentDetails.updateHours')}
             </Button>
           </div>
 
-          {/* Add Hours Form */}
           {isAddingHours && (
             <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg">
               <div className={`${isMobile ? 'space-y-4' : 'grid grid-cols-2 gap-4'}`}>
                 <div>
-                  <Label htmlFor="new-hours">New Total Hours</Label>
+                  <Label htmlFor="new-hours">{t('equipmentDetails.newTotalHours')}</Label>
                   <Input
                     id="new-hours"
                     type="number"
                     step="0.1"
                     min="0"
                     value={newHours}
-                    onChange={(e) => setNewHours(e.target.value)}
-                    placeholder="Enter total hours"
+                    onChange={(event) => setNewHours(event.target.value)}
+                    placeholder={t('equipmentDetails.enterTotalHours')}
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="notes">Notes (Optional)</Label>
+                  <Label htmlFor="notes">{t('equipmentDetails.notesOptional')}</Label>
                   <div className="relative">
                     <Textarea
                       id="notes"
                       value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Add any notes about this update"
+                      onChange={(event) => setNotes(event.target.value)}
+                      placeholder={t('equipmentDetails.updateNotesPlaceholder')}
                       rows={isMobile ? 2 : 1}
                       disabled={updateHoursMutation.isPending}
                       className="pb-12"
@@ -342,17 +340,19 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
                 </div>
               </div>
               <div className={`flex gap-2 ${isMobile ? 'flex-col' : ''}`}>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   size="sm"
                   disabled={updateHoursMutation.isPending}
                   className={isMobile ? 'w-full' : ''}
                 >
-                  {updateHoursMutation.isPending ? 'Updating...' : 'Update Hours'}
+                  {updateHoursMutation.isPending
+                    ? t('equipmentDetails.updating')
+                    : t('equipmentDetails.updateHours')}
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   size="sm"
                   onClick={() => {
                     setIsAddingHours(false);
@@ -361,29 +361,29 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
                   }}
                   className={isMobile ? 'w-full' : ''}
                 >
-                  Cancel
+                  {t('equipmentDetails.cancel')}
                 </Button>
               </div>
             </form>
           )}
         </div>
 
-        {/* History Display */}
         <div className="flex-1 min-h-0">
           {isMobile ? (
-            // Mobile card-based layout
             <div className="space-y-3 h-full flex flex-col">
-              <h3 className="text-sm font-medium text-muted-foreground px-1">History</h3>
+              <h3 className="text-sm font-medium text-muted-foreground px-1">
+                {t('equipmentDetails.history')}
+              </h3>
               <div className="flex-1 overflow-y-auto">
                 {isLoadingHistory ? (
                   <div className="space-y-3">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <Card key={i} className="animate-pulse">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <Card key={index} className="animate-pulse">
                         <CardContent standalone>
                           <div className="space-y-2">
-                            <div className="h-4 bg-muted rounded w-3/4"></div>
-                            <div className="h-3 bg-muted rounded w-1/2"></div>
-                            <div className="h-3 bg-muted rounded w-2/3"></div>
+                            <div className="h-4 bg-muted rounded w-3/4" />
+                            <div className="h-3 bg-muted rounded w-1/2" />
+                            <div className="h-3 bg-muted rounded w-2/3" />
                           </div>
                         </CardContent>
                       </Card>
@@ -395,20 +395,19 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
                   ))
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    No working hours history found.
+                    {t('equipmentDetails.noWorkingHoursHistory')}
                   </div>
                 )}
               </div>
               <MobilePagination />
             </div>
           ) : (
-            // Desktop table layout
             <DataTable
               data={historyResult?.data || []}
               columns={columns}
               isLoading={isLoadingHistory}
               pagination={pagination}
-              emptyMessage="No working hours history found."
+              emptyMessage={t('equipmentDetails.noWorkingHoursHistory')}
               className="h-full"
             />
           )}
