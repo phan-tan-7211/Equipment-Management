@@ -207,7 +207,15 @@ export const useEquipmentForm = (
             description: t('equipmentForm.mediaUploadFailedAfterCreate'),
           });
         } else {
-          toast.success(t('equipmentForm.createdSuccessfully'));
+          const managementCode =
+            data && 'management_code' in data && typeof data.management_code === 'string'
+              ? data.management_code
+              : null;
+          toast.success(
+            managementCode
+              ? `${t('equipmentForm.createdSuccessfully')} · ${managementCode}`
+              : t('equipmentForm.createdSuccessfully'),
+          );
         }
       }
       mediaRef.current = { files: [], displayIndex: 0 };
