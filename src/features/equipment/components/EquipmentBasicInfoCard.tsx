@@ -13,6 +13,7 @@ import { mobileInlineEditIconRowClassName } from './inlineEditStyles';
 import { useI18n } from '@/i18n';
 
 type Equipment = Tables<'equipment'>;
+type EquipmentWithManagementCode = Equipment & { management_code?: string | null };
 
 function EquipmentDescriptionField({
   descriptionFieldId,
@@ -93,6 +94,7 @@ export function EquipmentBasicInfoCard({
   getCurrentTeamDisplay,
 }: EquipmentBasicInfoCardProps) {
   const { t } = useI18n();
+  const managementCode = (equipment as EquipmentWithManagementCode).management_code ?? null;
   const statusOptions = [
     { value: 'active', label: t('equipmentDetails.active') },
     { value: 'maintenance', label: t('equipmentDetails.maintenance') },
@@ -122,6 +124,13 @@ export function EquipmentBasicInfoCard({
                 className="w-full text-base"
                 editAriaLabel={t('equipmentDetails.editName')}
               />
+            </div>
+          </div>
+
+          <div>
+            <span className="text-sm font-medium text-muted-foreground">Management Code</span>
+            <div className="mt-1 min-h-9 rounded-md border bg-muted/30 px-3 py-2 font-mono text-sm font-semibold text-foreground">
+              {managementCode || '—'}
             </div>
           </div>
 
