@@ -38,8 +38,18 @@ const EquipmentFilterPopover: React.FC<EquipmentFilterPopoverProps> = ({
   activeQuickFilter,
 }) => {
   const { t } = useI18n();
+  const triggerAriaLabel = activeFilterCount > 0
+    ? t('equipment.openFiltersActive', { count: activeFilterCount })
+    : t('equipment.openFilters');
+
   return (
-    <FilterPopoverShell ariaSubject={t('equipment.title')} activeFilterCount={activeFilterCount}>
+    <FilterPopoverShell
+      ariaSubject={t('equipment.title')}
+      activeFilterCount={activeFilterCount}
+      headerLabel={t('equipment.filters')}
+      triggerLabel={t('equipment.filters')}
+      triggerAriaLabel={triggerAriaLabel}
+    >
       {({ close }) => (
         <>
           <div className="flex flex-col gap-1.5">
@@ -106,6 +116,7 @@ const EquipmentFilterPopover: React.FC<EquipmentFilterPopoverProps> = ({
             activeFilterCount={activeFilterCount}
             onClearFilters={onClearFilters}
             onClose={close}
+            label={t('equipment.clearAllFilters')}
           />
         </>
       )}
