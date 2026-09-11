@@ -30,9 +30,13 @@ jobs:
       - name: Install web dependencies
         run: npm ci
 
-      - name: Install Capacitor 8 for trial build
+      # IMPORTANT: do not use --no-save here. Capacitor discovers native plugins
+      # from the project's package dependency graph when generating/syncing Android.
+      # This transiently updates package.json in the CI workspace only; the branch
+      # itself remains clean while @capacitor/app is correctly linked natively.
+      - name: Install Capacitor 8 and native App plugin
         run: >-
-          npm install --no-save --package-lock=false
+          npm install --package-lock=false
           @capacitor/core@8
           @capacitor/cli@8
           @capacitor/android@8
@@ -49,8 +53,16 @@ jobs:
       - name: Generate Android project
         run: npx cap add android
 
-      - name: Sync web assets into Android
+      - name: Sync web assets and native plugins into Android
         run: npx cap sync android
+
+      - name: Verify native App plugin is linked
+        run: |
+          echo "Checking generated Android project for @capacitor/app..."
+          if ! grep -R --line-number --fixed-strings "capacitor-app" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -20; then
+            echo "ERROR: @capacitor/app was not linked into the Android project."
+            exit 1
+          fi
 
       - name: Setup Java 21
         uses: actions/setup-java@v4
