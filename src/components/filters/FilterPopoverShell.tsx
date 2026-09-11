@@ -7,6 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+
 export type FilterPopoverShellHelpers = {
   close: () => void;
 };
@@ -17,6 +18,8 @@ export type FilterPopoverShellProps = {
   children: (helpers: FilterPopoverShellHelpers) => React.ReactNode;
   contentClassName?: string;
   headerLabel?: string;
+  triggerLabel?: string;
+  triggerAriaLabel?: string;
 };
 
 export function FilterPopoverShell({
@@ -25,9 +28,14 @@ export function FilterPopoverShell({
   children,
   contentClassName = 'w-72 p-4',
   headerLabel = 'Filters',
+  triggerLabel = 'Filter',
+  triggerAriaLabel,
 }: FilterPopoverShellProps) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+  const resolvedAriaLabel =
+    triggerAriaLabel ??
+    `Filter ${ariaSubject}${activeFilterCount > 0 ? `, ${activeFilterCount} active` : ''}`;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -36,10 +44,10 @@ export function FilterPopoverShell({
           variant="outline"
           size="sm"
           className="h-8 gap-1.5 text-sm font-normal"
-          aria-label={`Filter ${ariaSubject}${activeFilterCount > 0 ? `, ${activeFilterCount} active` : ''}`}
+          aria-label={resolvedAriaLabel}
         >
           <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-          Filter
+          {triggerLabel}
           {activeFilterCount > 0 && (
             <Badge
               variant="secondary"
