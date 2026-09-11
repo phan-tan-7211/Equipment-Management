@@ -5,6 +5,16 @@ export const SIGNUP_EMAIL_REGEX = /[^\s@]+@[^\s@]+\.[^\s@]+/;
 
 export const STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong'] as const;
 
+type TranslationParams = Record<string, string | number>;
+export type SignupTranslator = (key: string, params?: TranslationParams) => string;
+
+const translate = (
+  t: SignupTranslator | undefined,
+  key: string,
+  fallback: string,
+  params?: TranslationParams,
+): string => (t ? t(key, params) : fallback);
+
 export type SignUpFormFields = {
   name: string;
   email: string;
@@ -31,8 +41,10 @@ export function isSignupEmailValid(email: string): boolean {
   return SIGNUP_EMAIL_REGEX.test(email);
 }
 
-export function getEmailErrorForValue(value: string): string | null {
-  return isSignupEmailValid(value) || value.length === 0 ? null : 'Enter a valid email address';
+export function getEmailErrorForValue(value: string, t?: SignupTranslator): string | null {
+  return isSignupEmailValid(value) || value.length === 0
+    ? null
+    : translate(t, 'auth.validEmail', 'Enter a valid email address');
 }
 
 export function canStartGoogleSignup(
@@ -45,10 +57,16 @@ export function canStartGoogleSignup(
 export function getInvitedOrgNameConflict(
   orgName: string,
   invitedOrgName: string | undefined,
+  t?: SignupTranslator,
 ): string | null {
   if (!invitedOrgName) return null;
   if (orgName.trim().toLowerCase() === invitedOrgName.trim().toLowerCase()) {
-    return `Please choose a different name than "${invitedOrgName}"`;
+    return translate(
+      t,
+      'auth.organizationNameConflict',
+      `Please choose a different name than "${invitedOrgName}"`,
+      { name: invitedOrgName },
+    );
   }
   return null;
 }
@@ -69,25 +87,41 @@ export function computePasswordMatch(
   return null;
 }
 
-export function getSignupFieldError(field: string, ctx: SignUpValidationContext): string | null {
+export function getSignupFieldError(
+  field: string,
+  ctx: SignUpValidationContext,
+  t?: SignupTranslator,
+): string | null {
   if (!ctx.touched[field]) return null;
   switch (field) {
     case 'name':
-      return !ctx.formData.name.trim() ? 'Full name is required' : null;
+      return !ctx.formData.name.trim()
+        ? translate(t, 'auth.fullNameRequired', 'Full name is required')
+        : null;
     case 'email':
-      if (!ctx.formData.email.trim()) return 'Email is required';
+      if (!ctx.formData.email.trim()) {
+        return translate(t, 'auth.emailRequired', 'Email is required');
+      }
       return ctx.emailError;
     case 'organizationName':
       if (ctx.orgNameError) return ctx.orgNameError;
-      return !ctx.formData.organizationName.trim() ? 'Organization name is required' : null;
+      return !ctx.formData.organizationName.trim()
+        ? translate(t, 'auth.organizationNameRequired', 'Organization name is required')
+        : null;
     case 'password':
-      if (!ctx.formData.password) return 'Password is required';
+      if (!ctx.formData.password) {
+        return translate(t, 'auth.passwordRequired', 'Password is required');
+      }
       return ctx.complexity.valid
         ? null
-        : ctx.complexity.errors[0] ?? 'Password does not meet requirements';
+        : translate(t, 'auth.passwordRequirementsNotMet', 'Password does not meet requirements');
     case 'confirmPassword':
-      if (!ctx.formData.confirmPassword) return 'Please confirm your password';
-      return ctx.passwordMatch === false ? 'Passwords do not match' : null;
+      if (!ctx.formData.confirmPassword) {
+        return translate(t, 'auth.confirmPasswordRequired', 'Please confirm your password');
+      }
+      return ctx.passwordMatch === false
+        ? translate(t, 'auth.passwordsDoNotMatch', 'Passwords do not match')
+        : null;
     default:
       return null;
   }
@@ -97,9 +131,16 @@ export function getSignupAcceptanceError(
   termsAccepted: boolean,
   acceptanceTouched: boolean,
   submitAttempted: boolean,
+  t?: SignupTranslator,
 ): string | null {
   if (!acceptanceTouched && !submitAttempted) return null;
-  return termsAccepted ? null : 'You must accept the Terms of Service and Privacy Policy';
+  return termsAccepted
+    ? null
+    : translate(
+        t,
+        'auth.acceptTermsValidation',
+        'You must accept the Terms of Service and Privacy Policy',
+      );
 }
 
 export function isSignupFormValid(ctx: SignUpValidationContext): boolean {
