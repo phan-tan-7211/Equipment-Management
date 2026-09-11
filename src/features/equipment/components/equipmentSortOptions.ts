@@ -1,52 +1,44 @@
-import type { SortOption } from '@/components/common/ListSortPopover';
 import type { ListSortFieldKind } from '@/components/common/listSortFieldKind';
 
 export type EquipmentSortFieldOption = {
   value: string;
-  label: string;
+  labelKey: string;
   kind: ListSortFieldKind;
   defaultOrder: 'asc' | 'desc';
 };
 
+export type EquipmentSortOption = {
+  value: string;
+  labelKey: string;
+};
+
 /** Field-only options for mobile Personalize list (direction is toggled separately). */
 export const EQUIPMENT_SORT_FIELD_OPTIONS: EquipmentSortFieldOption[] = [
-  { value: 'name', label: 'Name', kind: 'text', defaultOrder: 'asc' },
-  { value: 'working_hours', label: 'Hours', kind: 'numeric', defaultOrder: 'desc' },
-  { value: 'last_maintenance', label: 'Last Maintenance', kind: 'default', defaultOrder: 'desc' },
-  { value: 'updated_at', label: 'Last Updated', kind: 'default', defaultOrder: 'desc' },
-  { value: 'status', label: 'Status', kind: 'default', defaultOrder: 'asc' },
-  { value: 'location', label: 'Location', kind: 'text', defaultOrder: 'asc' },
-  { value: 'manufacturer', label: 'Manufacturer', kind: 'text', defaultOrder: 'asc' },
-  { value: 'created_at', label: 'Created Date', kind: 'default', defaultOrder: 'desc' },
-  { value: 'warranty_expiration', label: 'Warranty Expiration', kind: 'default', defaultOrder: 'asc' },
+  { value: 'name', labelKey: 'equipmentList.sortName', kind: 'text', defaultOrder: 'asc' },
+  { value: 'working_hours', labelKey: 'equipmentList.sortHours', kind: 'numeric', defaultOrder: 'desc' },
+  { value: 'last_maintenance', labelKey: 'equipmentList.sortLastMaintenance', kind: 'default', defaultOrder: 'desc' },
+  { value: 'updated_at', labelKey: 'equipmentList.sortLastUpdated', kind: 'default', defaultOrder: 'desc' },
+  { value: 'status', labelKey: 'equipmentList.sortStatus', kind: 'default', defaultOrder: 'asc' },
+  { value: 'location', labelKey: 'equipmentList.sortLocation', kind: 'text', defaultOrder: 'asc' },
+  { value: 'manufacturer', labelKey: 'equipmentList.sortManufacturer', kind: 'text', defaultOrder: 'asc' },
+  { value: 'created_at', labelKey: 'equipmentList.sortCreatedDate', kind: 'default', defaultOrder: 'desc' },
+  { value: 'warranty_expiration', labelKey: 'equipmentList.sortWarrantyExpiration', kind: 'default', defaultOrder: 'asc' },
 ];
 
 /** Composite options for desktop sort popover / select. */
-export const EQUIPMENT_SORT_OPTIONS: SortOption[] = [
-  { value: 'name:asc', label: 'Name (A–Z)' },
-  { value: 'name:desc', label: 'Name (Z–A)' },
-  { value: 'working_hours:desc', label: 'Hours (High–Low)' },
-  { value: 'working_hours:asc', label: 'Hours (Low–High)' },
-  { value: 'last_maintenance:desc', label: 'Last Maintenance' },
-  { value: 'updated_at:desc', label: 'Last Updated' },
-  { value: 'status:asc', label: 'Status' },
-  { value: 'location:asc', label: 'Location (A–Z)' },
-  { value: 'manufacturer:asc', label: 'Manufacturer (A–Z)' },
-  { value: 'created_at:desc', label: 'Recently Added' },
-  { value: 'warranty_expiration:asc', label: 'Warranty Expiration' },
+export const EQUIPMENT_SORT_OPTIONS: EquipmentSortOption[] = [
+  { value: 'name:asc', labelKey: 'equipmentList.sortNameAsc' },
+  { value: 'name:desc', labelKey: 'equipmentList.sortNameDesc' },
+  { value: 'working_hours:desc', labelKey: 'equipmentList.sortHoursDesc' },
+  { value: 'working_hours:asc', labelKey: 'equipmentList.sortHoursAsc' },
+  { value: 'last_maintenance:desc', labelKey: 'equipmentList.sortLastMaintenanceDesc' },
+  { value: 'updated_at:desc', labelKey: 'equipmentList.sortLastUpdatedDesc' },
+  { value: 'status:asc', labelKey: 'equipmentList.sortStatusAsc' },
+  { value: 'location:asc', labelKey: 'equipmentList.sortLocationAsc' },
+  { value: 'manufacturer:asc', labelKey: 'equipmentList.sortManufacturerAsc' },
+  { value: 'created_at:desc', labelKey: 'equipmentList.sortRecentlyAdded' },
+  { value: 'warranty_expiration:asc', labelKey: 'equipmentList.sortWarrantyExpirationAsc' },
 ];
-
-export function equipmentSortLabel(
-  sortOptions: SortOption[],
-  compositeValue: string,
-  field: string,
-): string {
-  return (
-    sortOptions.find((o) => o.value === compositeValue)?.label ??
-    sortOptions.find((o) => o.value.startsWith(`${field}:`))?.label ??
-    field
-  );
-}
 
 export function getEquipmentSortFieldDefaultOrder(field: string): 'asc' | 'desc' {
   return (
