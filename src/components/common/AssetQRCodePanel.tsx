@@ -1,4 +1,6 @@
 import React from 'react';
+import { Capacitor } from '@capacitor/core';
+import { Media } from '@capacitor-community/media';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,6 +19,8 @@ import { useI18n } from '@/i18n';
 
 type QrDownloadFormat = 'png' | 'jpg';
 
+const ANDROID_QR_ALBUM_NAME = 'EquipQR';
+
 export interface AssetQRCodePanelProps {
   entityId: string;
   entityName?: string;
@@ -33,6 +37,33 @@ export interface AssetQRCodePanelProps {
 
 function sanitizeFilename(name: string): string {
   return name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+}
+
+async function getOrCreateAndroidQrAlbum(): Promise<string> {
+  const albumsPath = (await Media.getAlbumsPath()).path;
+  let { albums } = await Media.getAlbums();
+
+  let album = albums.find(
+    (candidate) =>
+      candidate.name === ANDROID_QR_ALBUM_NAME &&
+      candidate.identifier.startsWith(albumsPath)
+  );
+
+  if (!album) {
+    await Media.createAlbum({ name: ANDROID_QR_ALBUM_NAME });
+    ({ albums } = await Media.getAlbums());
+    album = albums.find(
+      (candidate) =>
+        candidate.name === ANDROID_QR_ALBUM_NAME &&
+        candidate.identifier.startsWith(albumsPath)
+    );
+  }
+
+  if (!album) {
+    throw new Error('Could not create the EquipQR gallery album.');
+  }
+
+  return album.identifier;
 }
 
 const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
@@ -83,6 +114,18 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
         color: { dark: '#000000', light: '#FFFFFF' },
         type: format === 'jpg' ? 'image/jpeg' : 'image/png',
       });
+
+      if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
+        const albumIdentifier = await getOrCreateAndroidQrAlbum();
+        await Media.savePhoto({
+          path: dataUrl,
+          albumIdentifier,
+          fileName: `${baseFilename}-qr`,
+        });
+
+        toast.success(`QR saved to Gallery > ${ANDROID_QR_ALBUM_NAME}`);
+        return;
+      }
 
       const link = document.createElement('a');
       link.download = `${baseFilename}-qr.${format}`;
@@ -200,7 +243,9 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-              {t('qrCommon.downloadFormat')}
+              {Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'
+                ? `Save to Gallery > ${ANDROID_QR_ALBUM_NAME}`
+                : t('qrCommon.downloadFormat')}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
