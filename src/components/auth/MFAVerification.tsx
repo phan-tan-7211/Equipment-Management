@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useMFA } from '@/hooks/useMFA';
 import { Loader2, ShieldCheck } from 'lucide-react';
+import { useI18n } from '@/i18n';
 
 interface MFAVerificationProps {
   onSuccess: () => void;
@@ -11,6 +12,7 @@ interface MFAVerificationProps {
 
 const MFAVerification: React.FC<MFAVerificationProps> = ({ onSuccess, onError }) => {
   const { challengeAndVerify } = useMFA();
+  const { t } = useI18n();
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,18 +34,17 @@ const MFAVerification: React.FC<MFAVerificationProps> = ({ onSuccess, onError })
     setIsLoading(false);
 
     if (verifyError) {
-      const message = 'Invalid verification code. Please try again.';
+      const message = t('auth.invalidVerificationCode');
       setError(message);
       onError?.(message);
       setCode('');
     } else {
       onSuccess();
     }
-  }, [challengeAndVerify, onSuccess, onError]);
+  }, [challengeAndVerify, onSuccess, onError, t]);
 
   const handleCodeChange = useCallback((value: string) => {
     setCode(value);
-    // Auto-submit when 6 digits are entered
     if (value.length === 6) {
       handleVerify(value);
     }
@@ -56,10 +57,10 @@ const MFAVerification: React.FC<MFAVerificationProps> = ({ onSuccess, onError })
           <ShieldCheck className="h-6 w-6 text-primary" />
         </div>
         <h2 className="text-xl font-semibold tracking-tight">
-          Two-Factor Authentication
+          {t('auth.mfaTitle')}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Enter the 6-digit code from your authenticator app
+          {t('auth.mfaDescription')}
         </p>
       </div>
 
@@ -69,7 +70,7 @@ const MFAVerification: React.FC<MFAVerificationProps> = ({ onSuccess, onError })
           value={code}
           onChange={handleCodeChange}
           disabled={isLoading}
-          aria-label="Verification code"
+          aria-label={t('auth.verificationCode')}
           aria-invalid={error ? 'true' : 'false'}
           aria-describedby={error ? 'mfa-verify-error' : undefined}
         >
@@ -100,11 +101,11 @@ const MFAVerification: React.FC<MFAVerificationProps> = ({ onSuccess, onError })
         className="w-full max-w-65"
       >
         {isLoading ? (
-          <div role="status" aria-label="Verifying code">
+          <div role="status" aria-label={t('auth.verifyingCode')}>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           </div>
         ) : null}
-        Verify
+        {t('auth.verify')}
       </Button>
     </div>
   );
