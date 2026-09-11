@@ -4,16 +4,20 @@ import type {
   ScanFollowUpEventType,
 } from '@/features/equipment/services/scanFollowUpEventService';
 
+export type ScanHistoryActionDetail =
+  | { kind: 'title'; value: string }
+  | { kind: 'hours'; value: number }
+  | { kind: 'note_image'; imageCount?: number; isPrivate?: boolean };
+
 /**
  * A single action shown under a scan in the Scan History timeline. `eventType`
- * is `null` for the synthetic "Viewed scan page" fallback used when a scan has
- * no recorded follow-up events.
+ * is `null` for the synthetic viewed-scan fallback used when a scan has no
+ * recorded follow-up events.
  */
 export interface ScanHistoryAction {
   id: string;
   eventType: ScanFollowUpEventType | null;
-  label: string;
-  detail?: string;
+  detail?: ScanHistoryActionDetail;
   performedByName?: string;
   performedAt: string;
   entityType?: string | null;
@@ -54,43 +58,39 @@ function readBoolean(metadata: unknown, key: string): boolean | undefined {
 }
 
 /**
- * Human-readable label (and optional detail) for a follow-up event, derived
- * from its type and minimal non-sensitive metadata.
+ * Semantic detail for a follow-up event. Presentation labels are intentionally
+ * resolved by the UI so this utility does not lock scan history to English.
  */
 export function describeScanFollowUpEvent(
   event: Pick<ScanFollowUpEvent, 'event_type' | 'metadata'>
-): { label: string; detail?: string } {
+): { detail?: ScanHistoryActionDetail } {
   const metadata = event.metadata;
 
   switch (event.event_type as ScanFollowUpEventType) {
-    case 'dashboard_opened':
-      return { label: 'Opened full dashboard record' };
     case 'pm_work_order_created':
-      return { label: 'Created PM work order', detail: readString(metadata, 'title') };
-    case 'generic_work_order_created':
-      return { label: 'Created work order', detail: readString(metadata, 'title') };
+    case 'generic_work_order_created': {
+      const title = readString(metadata, 'title');
+      return title ? { detail: { kind: 'title', value: title } } : {};
+    }
     case 'working_hours_updated': {
       const hours = readNumber(metadata, 'newHours');
-      return {
-        label: 'Updated working hours',
-        detail: hours === undefined ? undefined : `${hours} hours`,
-      };
+      return hours === undefined ? {} : { detail: { kind: 'hours', value: hours } };
     }
     case 'note_image_added': {
       const imageCount = readNumber(metadata, 'imageCount');
       const isPrivate = readBoolean(metadata, 'isPrivate');
-      const parts: string[] = [];
-      if (imageCount !== undefined && imageCount > 0) {
-        parts.push(`${imageCount} image${imageCount === 1 ? '' : 's'}`);
-      }
-      if (isPrivate) parts.push('private');
+      if (imageCount === undefined && !isPrivate) return {};
       return {
-        label: 'Added note / image',
-        detail: parts.length > 0 ? parts.join(', ') : undefined,
+        detail: {
+          kind: 'note_image',
+          imageCount,
+          isPrivate,
+        },
       };
     }
+    case 'dashboard_opened':
     default:
-      return { label: 'Performed an action' };
+      return {};
   }
 }
 
@@ -111,7 +111,7 @@ function compareAsc(aTime: string, bTime: string, aId: string, bId: string): num
 /**
  * Build the Scan History timeline: scans newest-first, with their follow-up
  * actions nested oldest-to-newest. Scans without follow-up events get a single
- * synthetic "Viewed scan page" action. Follow-up events whose `scan_id` does not
+ * synthetic viewed-scan action. Follow-up events whose `scan_id` does not
  * match a provided scan are ignored (scans are the spine of the timeline).
  */
 export function buildScanHistoryTimeline(
@@ -144,7 +144,6 @@ export function buildScanHistoryTimeline(
           {
             id: `${scan.id}:viewed`,
             eventType: null,
-            label: 'Viewed scan page',
             performedByName: scan.scannedByName,
             performedAt: scan.scanned_at,
           },
@@ -155,11 +154,10 @@ export function buildScanHistoryTimeline(
     return {
       scan,
       actions: events.map((event) => {
-        const { label, detail } = describeScanFollowUpEvent(event);
+        const { detail } = describeScanFollowUpEvent(event);
         return {
           id: event.id,
           eventType: event.event_type as ScanFollowUpEventType,
-          label,
           detail,
           performedByName: event.performedByName,
           performedAt: event.performed_at,
