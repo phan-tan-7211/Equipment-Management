@@ -12,6 +12,7 @@ import { Edit2, Wrench, X } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import { useUnifiedPermissions } from '@/hooks/useUnifiedPermissions';
 import { useEquipmentPMTemplateAssignment } from '@/features/equipment/hooks/useEquipmentPMTemplateAssignment';
+import { useI18n } from '@/i18n';
 
 type Equipment = Tables<'equipment'>;
 
@@ -24,6 +25,7 @@ interface EquipmentPMTemplateFieldProps {
  * config (#1212), directly above the PM schedule field.
  */
 export function EquipmentPMTemplateField({ equipment }: EquipmentPMTemplateFieldProps) {
+  const { t } = useI18n();
   const [isUnlocked, setIsUnlocked] = useState(false);
   const permissions = useUnifiedPermissions();
   const canEdit = permissions.equipment.getPermissions(equipment.team_id || undefined).canEdit;
@@ -55,10 +57,10 @@ export function EquipmentPMTemplateField({ equipment }: EquipmentPMTemplateField
     <div className="min-w-0">
       <Label htmlFor={fieldId} className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
         <Wrench className="h-4 w-4 shrink-0" />
-        PM Template
+        {t('equipmentPM.template')}
       </Label>
       <p className="mt-1 text-xs text-muted-foreground lg:min-h-[2.5rem]">
-        Default checklist applied when creating PM work orders for this equipment.
+        {t('equipmentPM.templateHint')}
       </p>
       <div className="mt-2 flex min-h-10 min-w-0 items-center gap-1.5">
         <Select
@@ -66,8 +68,8 @@ export function EquipmentPMTemplateField({ equipment }: EquipmentPMTemplateField
           onValueChange={handleValueChange}
           disabled={!isUnlocked || isSaving}
         >
-          <SelectTrigger id={fieldId} className="w-full min-w-0" aria-label="PM Template">
-            <SelectValue placeholder="Select PM template" />
+          <SelectTrigger id={fieldId} className="w-full min-w-0" aria-label={t('equipmentPM.template')}>
+            <SelectValue placeholder={t('equipmentPM.selectTemplate')} />
           </SelectTrigger>
           <SelectContent>
             {pmTemplateOptions.map((option) => (
@@ -84,8 +86,8 @@ export function EquipmentPMTemplateField({ equipment }: EquipmentPMTemplateField
             size="sm"
             className="h-8 w-8 shrink-0 p-0"
             onClick={() => setIsUnlocked(true)}
-            aria-label="Edit PM template"
-            title="Edit PM template"
+            aria-label={t('equipmentPM.editTemplate')}
+            title={t('equipmentPM.editTemplate')}
           >
             <Edit2 className="h-4 w-4" />
           </Button>
@@ -98,8 +100,8 @@ export function EquipmentPMTemplateField({ equipment }: EquipmentPMTemplateField
             className="h-8 w-8 shrink-0 p-0"
             onClick={() => setIsUnlocked(false)}
             disabled={isSaving}
-            aria-label="Cancel PM template edit"
-            title="Cancel"
+            aria-label={t('equipmentPM.cancelTemplateEdit')}
+            title={t('equipmentPM.cancel')}
           >
             <X className="h-4 w-4" />
           </Button>
