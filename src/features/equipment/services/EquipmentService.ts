@@ -470,10 +470,6 @@ export class EquipmentService {
         )
         .eq('organization_id', organizationId);
 
-      // Team-based access control (RBAC). When the user is NOT an org admin
-      // and has no team memberships, return an empty page short-circuit so
-      // we don't issue a query that the DB would happily answer with zero
-      // rows but that still costs a round trip.
       if (hasNoEquipmentListAccess(filters)) {
         return createServiceSuccessResponse({ data: [], count: 0 });
       }
@@ -481,16 +477,11 @@ export class EquipmentService {
         query = query.in('team_id', filters.userTeamIds);
       }
 
-      // Free-text search: PostgREST `or()` matches across columns. Names,
-      // manufacturers, models, serial numbers and locations are all the
-      // operator-friendly identifiers a technician will type.
       const searchPattern = getEquipmentSearchPattern(filters.search);
       if (searchPattern) {
         query = query.or(buildEquipmentSearchFilter(searchPattern));
       }
 
-      // Status: handle the synthetic `out_of_service` sentinel that the UI
-      // uses for "anything that's not active" (maintenance OR inactive).
       if (filters.status === 'out_of_service') {
         query = query.in('status', ['maintenance', 'inactive']);
       } else if (filters.status) {
@@ -600,8 +591,8 @@ export class EquipmentService {
     data: EquipmentCreateData
   ): Promise<ApiResponse<Equipment>> {
     try {
-      // Validate required fields
-      if (!data.name || !data.manufacturer || !data.model || !data.serial_number) {
+      // Serial number is optional for full equipment creation.
+      if (!data.name || !data.manufacturer || !data.model) {
         return createServiceErrorResponse(new Error('Missing required fields'), 'EquipmentService error');
       }
 
@@ -627,12 +618,6 @@ export class EquipmentService {
 
   /**
    * Look up an existing equipment record by exact serial number within an org.
-   *
-   * Serial numbers are NOT enforced unique (see migration
-   * `20260623210000_equipment_serial_drop_unique.sql`). This lookup powers the
-   * non-blocking "possible duplicate" warning in the create form and the
-   * idempotent offline-create replay. Returns the oldest matching record, or
-   * `null` when the serial is blank or unused.
    */
   static async findBySerial(
     organizationId: string,
@@ -678,21 +663,16 @@ export class EquipmentService {
 
   /**
    * Create equipment with minimal data (quick creation during work order creation)
-   *
-   * Auto-generates description and sets sensible defaults for optional fields.
-   * Used when technicians create equipment inline while creating work orders.
    */
   static async createQuick(
     organizationId: string,
     data: QuickEquipmentCreateData
   ): Promise<ApiResponse<Equipment>> {
     try {
-      // Validate required fields
       if (!data.manufacturer || !data.model || !data.serial_number || !data.team_id || !data.name) {
         return createServiceErrorResponse(new Error('Missing required fields for quick equipment creation'), 'EquipmentService error');
       }
 
-      // Auto-generate description
       const notes = `${data.manufacturer} ${data.model} - S/N: ${data.serial_number}\nCreated via quick entry during work order creation`;
 
       const { data: newEquipment, error } = await supabase
@@ -706,9 +686,9 @@ export class EquipmentService {
           working_hours: data.working_hours ?? null,
           team_id: data.team_id,
           status: 'active',
-          location: '', // Optional for quick creation - can be updated later
+          location: '',
           notes: notes,
-          installation_date: new Date().toISOString().split('T')[0], // Default to today for quick creation
+          installation_date: new Date().toISOString().split('T')[0],
         })
         .select()
         .single();
@@ -757,18 +737,7 @@ export class EquipmentService {
   }
 
   /**
-   * Bulk update equipment rows. Uses partial-tolerant semantics: each row is
-   * updated independently and per-row failures do not block the rest. Returns
-   * separate `succeeded` and `failed` lists so the caller can surface partial-
-   * success UX (e.g., a sonner warning toast with row counts).
-   *
-   * Single-row update path is identical to `update()` — same RLS policy, same
-   * audit-log behavior, no new triggers. Used by the bulk-edit grid (#627).
-   *
-   * Concurrency is capped at `BATCH_UPDATE_CONCURRENCY` to avoid network
-   * saturation and per-tenant rate limiting on large bulk saves; chunks run
-   * sequentially while rows within a chunk run in parallel via
-   * `Promise.allSettled`.
+   * Bulk update equipment rows. Uses partial-tolerant semantics.
    */
   static async batchUpdate(
     organizationId: string,
@@ -809,10 +778,6 @@ export class EquipmentService {
 
       return createServiceSuccessResponse({ succeeded, failed });
     } catch (error) {
-      // Outer catch handles unexpected runtime errors (e.g. `supabase.from()`
-      // throwing synchronously, malformed inputs that escape Promise.allSettled)
-      // so callers always receive a normalized `ApiResponse` matching the rest
-      // of this service — no caller has to handle a different failure shape.
       return createServiceErrorResponse(error, 'EquipmentService error');
     }
   }
@@ -864,7 +829,6 @@ export class EquipmentService {
         return acc;
       }, {} as Record<Equipment['status'], number>);
 
-      // Ensure all statuses are present
       const allStatuses: Equipment['status'][] = ['active', 'maintenance', 'inactive'];
       allStatuses.forEach(status => {
         if (!(status in counts)) {
@@ -997,13 +961,10 @@ export class EquipmentService {
         `)
         .eq('organization_id', organizationId);
 
-      // Organization admins can see all equipment
       if (!isOrgAdmin) {
-        // Regular users can only see equipment assigned to their teams
         if (userTeamIds.length > 0) {
           query = query.in('team_id', userTeamIds);
         } else {
-          // Users with no team memberships see no equipment
           return createServiceSuccessResponse([]);
         }
       }
@@ -1019,8 +980,6 @@ export class EquipmentService {
         return createServiceErrorResponse(error, 'EquipmentService error');
       }
 
-      // Note: this query aliases the join as `teams` (not `team`); flatten
-      // the same way so the convenience field is consistent.
       const flattened = (data || []).map(row => ({
         ...row,
         team_name: (row.teams as { name?: string } | null | undefined)?.name ?? undefined,
@@ -1061,14 +1020,11 @@ export class EquipmentService {
     } = {}
   ): Promise<ApiResponse<EquipmentScan>> {
     try {
-      // Always derive user identity server-side; never trust caller-provided identity.
       const userId = (await getAuthClaims())?.sub;
       if (!userId) {
         return createServiceErrorResponse(new Error('User not authenticated'), 'EquipmentService error');
       }
 
-      // Narrow existence check — avoids a full select('*') + team join just to validate
-      // that the equipment belongs to this org. RLS still enforces tenancy at the DB layer.
       const { data: equip, error: equipError } = await supabase
         .from('equipment')
         .select('id')
@@ -1079,7 +1035,6 @@ export class EquipmentService {
         return createServiceErrorResponse(new Error('Equipment not found or access denied'), 'EquipmentService error');
       }
 
-      // Create the scan
       const { data, error } = await supabase
         .from('scans')
         .insert({
