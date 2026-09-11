@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { useI18n } from '@/i18n';
 
 interface EquipmentFormActionsProps {
   isEdit: boolean;
@@ -12,13 +13,19 @@ const EquipmentFormActions: React.FC<EquipmentFormActionsProps> = ({
   isPending,
   onClose
 }) => {
+  const { t } = useI18n();
+
   return (
     <div className="flex gap-2 justify-end" data-testid="equipment-form-actions">
       <Button type="button" variant="outline" onClick={onClose}>
-        Cancel
+        {t('equipmentForm.cancel')}
       </Button>
       <Button type="submit" disabled={isPending}>
-        {isPending ? 'Creating...' : (isEdit ? 'Update Equipment' : 'Create Equipment')}
+        {isPending
+          ? t('equipmentForm.creating')
+          : isEdit
+            ? t('equipmentForm.updateEquipment')
+            : t('equipmentForm.createEquipment')}
       </Button>
     </div>
   );
