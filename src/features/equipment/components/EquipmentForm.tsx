@@ -25,6 +25,7 @@ import { useCustomAttributes, type CustomAttribute } from '@/hooks/useCustomAttr
 import { useEquipmentForm } from '@/features/equipment/hooks/useEquipmentForm';
 import { type EquipmentRecord, type EquipmentFormData } from '@/features/equipment/types/equipment';
 import EquipmentBasicInfoSection from './form/EquipmentBasicInfoSection';
+import EquipmentGroupSelectionSection from './form/EquipmentGroupSelectionSection';
 import EquipmentStatusLocationSection from './form/EquipmentStatusLocationSection';
 import EquipmentNotesSection from './form/EquipmentNotesSection';
 import EquipmentFormActions from './form/EquipmentFormActions';
@@ -77,7 +78,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ open, onClose, equipment,
   };
   const handleValidatedSubmit = async (data: EquipmentFormData) => {
     if (!isEdit) {
-      const matchForSubmit = await resolveDuplicateSerialAtSubmit(currentOrganization?.id, data.serial_number, equipment?.id, duplicateCheck);
+      const matchForSubmit = await resolveDuplicateSerialAtSubmit(currentOrganization?.id, data.serial_number ?? '', equipment?.id, duplicateCheck);
       if (matchForSubmit) { setConfirmDuplicateMatch(matchForSubmit); setPendingDuplicateData(data); setShowDuplicateConfirm(true); return; }
     }
     finalizeSubmit(data);
@@ -100,6 +101,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ open, onClose, equipment,
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleValidatedSubmit)} className="space-y-6">
               <TeamSelectionSection form={form} onRequestUnassignedConfirm={isAdmin ? handleRequestUnassignedConfirm : undefined} />
+              <EquipmentGroupSelectionSection form={form} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <EquipmentBasicInfoSection form={form} duplicateMatch={isEdit ? null : duplicateMatch} onDuplicateNavigate={onClose} />
                 <EquipmentStatusLocationSection form={form} />
