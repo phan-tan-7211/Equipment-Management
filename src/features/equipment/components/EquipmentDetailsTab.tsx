@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { EquipmentPrimaryMediaPanel } from "@/features/equipment/components/media/EquipmentPrimaryMediaPanel";
 import { getEquipmentViewTransitionStyle } from "@/features/equipment/transitions/equipmentViewTransitionNames";
 import { useEquipmentCardTransitionState } from "@/features/equipment/transitions/useEquipmentCardTransitionState";
+import { useI18n } from '@/i18n';
 
 type Equipment = Tables<'equipment'>;
 
@@ -47,6 +48,7 @@ const EquipmentDetailsTab: React.FC<EquipmentDetailsTabProps> = ({
   const [showWorkingHoursModal, setShowWorkingHoursModal] = useState(false);
   const [showAllBasicInfo, setShowAllBasicInfo] = useState(false);
   const [mediaExplorerOpen, setMediaExplorerOpen] = useState(false);
+  const { t } = useI18n();
   const permissions = useUnifiedPermissions();
   const { currentOrganization } = useOrganization();
   const queryClient = useQueryClient();
@@ -76,7 +78,7 @@ const EquipmentDetailsTab: React.FC<EquipmentDetailsTabProps> = ({
 
   const setDisplayImageMutation = useMutation({
     mutationFn: (imageUrl: string) => {
-      if (!organizationId) throw new Error('Organization ID required');
+      if (!organizationId) throw new Error(t('equipmentDetails.organizationIdRequired'));
       return updateEquipmentDisplayImage(organizationId, equipment.id, imageUrl);
     },
     onSuccess: () => {
@@ -84,9 +86,9 @@ const EquipmentDetailsTab: React.FC<EquipmentDetailsTabProps> = ({
       queryClient.invalidateQueries({ queryKey: equipmentKeys.images(equipment.id) });
       queryClient.invalidateQueries({ queryKey: equipmentKeys.list(organizationId) });
       queryClient.invalidateQueries({ queryKey: equipmentKeys.byId(organizationId, equipment.id) });
-      toast.success('Display image updated');
+      toast.success(t('equipmentDetails.displayImageUpdated'));
     },
-    onError: () => toast.error('Failed to update display image'),
+    onError: () => toast.error(t('equipmentDetails.displayImageUpdateFailed')),
   });
 
   const nameFieldId = `equipment-name-${equipment.id}`;
@@ -205,7 +207,7 @@ const EquipmentDetailsTab: React.FC<EquipmentDetailsTabProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Custom Attributes
+            {t('equipmentDetails.customAttributes')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -230,7 +232,7 @@ const EquipmentDetailsTab: React.FC<EquipmentDetailsTabProps> = ({
             open={showWorkingHoursModal}
             onClose={() => setShowWorkingHoursModal(false)}
             equipmentId={equipment.id}
-            equipmentName={equipment.name || 'Unknown Equipment'}
+            equipmentName={equipment.name || t('equipmentDetails.unknownEquipment')}
           />
         </Suspense>
       )}
