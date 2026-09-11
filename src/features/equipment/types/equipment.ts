@@ -1,6 +1,6 @@
 /**
  * Equipment Types - Consolidated type definitions
- * 
+ *
  * This file serves as the single source of truth for equipment types.
  * Import from here instead of defining types locally in components/hooks.
  */
@@ -8,15 +8,7 @@
 import { z } from 'zod';
 import { Tables } from '@/integrations/supabase/types';
 
-// ============================================
-// Core Status Type
-// ============================================
-
 export type EquipmentStatus = 'active' | 'maintenance' | 'inactive';
-
-// ============================================
-// Location Types
-// ============================================
 
 export interface EquipmentLocation {
   latitude: number;
@@ -34,20 +26,10 @@ export interface AssignedLocation {
   lng?: number;
 }
 
-// Re-export EffectiveLocation from the shared utility (single source of truth)
 export type { EffectiveLocation } from '@/utils/effectiveLocation';
-
-// ============================================
-// Custom Attributes Type
-// ============================================
 
 export type CustomAttributes = Record<string, string | number | boolean | null>;
 
-// ============================================
-// Zod Schemas for Validation
-// ============================================
-
-// Custom attributes schema for better type safety
 const customAttributesSchema = z.record(z.string(), z.union([
   z.string(),
   z.number(),
@@ -55,7 +37,6 @@ const customAttributesSchema = z.record(z.string(), z.union([
   z.null()
 ])).optional();
 
-// Location schema for last_known_location
 const locationSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
@@ -63,7 +44,6 @@ const locationSchema = z.object({
   timestamp: z.string().optional()
 }).optional();
 
-// Context for role-based validation
 export interface EquipmentValidationContext {
   userRole: 'owner' | 'admin' | 'manager' | 'member';
   isOrgAdmin: boolean;
@@ -74,7 +54,8 @@ export const equipmentFormSchema = z.object({
   name: z.string().min(1, "Equipment name is required"),
   manufacturer: z.string().min(1, "Manufacturer is required"),
   model: z.string().min(1, "Model is required"),
-  serial_number: z.string().min(1, "Serial number is required"),
+  serial_number: z.string().optional(),
+  equipment_group_id: z.string().min(1, "Equipment group is required"),
   status: z.enum(['active', 'maintenance', 'inactive']),
   location: z.string().min(1, "Location is required"),
   installation_date: z.string(),
@@ -86,9 +67,6 @@ export const equipmentFormSchema = z.object({
   last_known_location: locationSchema,
   team_id: z.string().optional(),
   default_pm_template_id: z.string().optional(),
-  // Mirrors `quickEquipmentSchema.working_hours` — required for partial-update
-  // validation in the bulk-edit grid (#627) so hour edits can't bypass the
-  // non-negative constraint by routing through `equipmentFormSchema.partial()`.
   working_hours: z.number().min(0, "Working hours cannot be negative").optional().nullable(),
   assigned_location_street: z.string().optional(),
   assigned_location_city: z.string().optional(),
@@ -99,31 +77,16 @@ export const equipmentFormSchema = z.object({
   use_team_location: z.boolean().optional()
 });
 
-// Function to create context-aware validation
 export const createEquipmentValidationSchema = (context?: EquipmentValidationContext) => {
   return equipmentFormSchema.refine((data) => {
-    // If no context provided, skip team validation (for backward compatibility)
     if (!context) return true;
+    if (context.isOrgAdmin || context.userRole === 'owner') return true;
+    if (!data.team_id) return false;
 
-    // Org admins and owners can create equipment without team assignment
-    if (context.isOrgAdmin || context.userRole === 'owner') {
-      return true;
-    }
-
-    // Non-admin users must assign equipment to a team where they hold a
-    // create-capable role (manager or technician) — issue #650. The
-    // historical 'admin' team role is kept for backward compatibility with
-    // any seeded fixture data, but no team currently issues that role.
-    if (!data.team_id) {
-      return false;
-    }
-
-    const canCreateForTeam = context.teamMemberships.some(
+    return context.teamMemberships.some(
       membership => membership.teamId === data.team_id &&
         (membership.role === 'manager' || membership.role === 'technician' || membership.role === 'admin')
     );
-
-    return canCreateForTeam;
   }, {
     message: "You must assign equipment to a team where you can create equipment (manager or technician)",
     path: ["team_id"]
@@ -132,20 +95,10 @@ export const createEquipmentValidationSchema = (context?: EquipmentValidationCon
 
 export type EquipmentFormData = z.infer<typeof equipmentFormSchema>;
 
-// ============================================
-// Quick Equipment Schema (Minimal for inline creation)
-// ============================================
-
-/**
- * Quick Equipment Schema - Minimal validation for inline equipment creation
- * 
- * Used when technicians create equipment during work order creation.
- * Only requires essential fields; name is auto-generated but editable.
- */
 export const quickEquipmentSchema = z.object({
   manufacturer: z.string().min(1, "Manufacturer is required"),
   model: z.string().min(1, "Model is required"),
-  serial_number: z.string().min(1, "Serial number is required"),
+  serial_number: z.string().optional(),
   working_hours: z.number().min(0, "Working hours cannot be negative").optional().nullable(),
   team_id: z.string().min(1, "Team is required"),
   name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -153,9 +106,6 @@ export const quickEquipmentSchema = z.object({
 
 export type QuickEquipmentFormData = z.infer<typeof quickEquipmentSchema>;
 
-/**
- * Generate default equipment name from manufacturer and model
- */
 export const generateEquipmentName = (manufacturer: string, model: string): string => {
   const mfr = manufacturer.trim();
   const mdl = model.trim();
@@ -165,34 +115,16 @@ export const generateEquipmentName = (manufacturer: string, model: string): stri
   return `${mfr} ${mdl}`;
 };
 
-// ============================================
-// Equipment Record Types
-// ============================================
-
-/**
- * Base equipment row type from Supabase database
- * This is the raw database type with Json fields
- */
 type EquipmentRow = Tables<'equipment'>;
 
-/**
- * Strongly-typed Equipment record used across forms and pages
- * 
- * Extends the Supabase database row type with:
- * - Type-safe transformations for Json fields (custom_attributes, last_known_location)
- * - Frontend-specific computed fields from joins (team_name)
- * 
- * This is the primary type for equipment data throughout the application.
- */
 export interface EquipmentRecord extends Omit<EquipmentRow, 'custom_attributes' | 'last_known_location'> {
-  // Transform Json fields to type-safe interfaces
   custom_attributes?: CustomAttributes | null;
   last_known_location?: EquipmentLocation | null;
-  
-  // Frontend-specific computed fields from joins
   team_name?: string;
-  
-  // Assigned location fields
+  // Added by 20260911030000_equipment_groups_management_codes.sql. These are
+  // repeated here until the shared generated Supabase type file is refreshed.
+  equipment_group_id?: string | null;
+  management_code?: string | null;
   assigned_location_street?: string | null;
   assigned_location_city?: string | null;
   assigned_location_state?: string | null;
@@ -202,17 +134,9 @@ export interface EquipmentRecord extends Omit<EquipmentRow, 'custom_attributes' 
   use_team_location?: boolean;
 }
 
-/**
- * Equipment with team information (from joins)
- * @deprecated Use EquipmentRecord directly - it now includes team_name
- */
 export interface EquipmentWithTeam extends EquipmentRecord {
   team_name?: string;
 }
-
-// ============================================
-// Equipment Filter Types
-// ============================================
 
 export interface EquipmentFilters {
   status?: EquipmentStatus;
@@ -221,14 +145,9 @@ export interface EquipmentFilters {
   model?: string;
   team_id?: string | null;
   search?: string;
-  // Team-based access control
   userTeamIds?: string[];
   isOrgAdmin?: boolean;
 }
-
-// ============================================
-// Equipment Scan Types
-// ============================================
 
 export interface EquipmentScan {
   id: string;
