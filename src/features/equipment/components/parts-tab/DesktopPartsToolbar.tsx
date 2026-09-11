@@ -20,6 +20,7 @@ import {
   STOCK_FILTER_OPTIONS,
 } from './types';
 import { createPartsSortChangeHandler, partsToolbarSortValue } from './partsSortHandlers';
+import { useI18n } from '@/i18n';
 
 interface DesktopPartsToolbarProps {
   filters: PartsFiltersState;
@@ -40,54 +41,51 @@ export const DesktopPartsToolbar: React.FC<DesktopPartsToolbarProps> = ({
   onSortChange,
   onClearFilters,
 }) => {
+  const { t } = useI18n();
   const currentSortValue = partsToolbarSortValue(filters.sortField, filters.sortOrder);
   const handleSortChange = createPartsSortChangeHandler(onSortChange);
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Search Input */}
       <div className="relative flex-1 min-w-[200px] max-w-[300px]">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search parts..."
+          placeholder={t('equipmentParts.searchParts')}
           value={filters.search}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={(event) => onSearchChange(event.target.value)}
           className="pl-9"
         />
       </div>
 
-      {/* Sort Dropdown */}
       <Select value={currentSortValue} onValueChange={handleSortChange}>
         <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Sort by" />
+          <SelectValue placeholder={t('equipmentParts.sortBy')} />
         </SelectTrigger>
         <SelectContent>
           {SORT_OPTIONS.map((option) => (
             <SelectItem key={option.value} value={option.value}>
-              {option.label}
+              {t(option.labelKey)}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      {/* Stock Filter Dropdown */}
       <Select
         value={filters.stockFilter}
         onValueChange={(value) => onStockFilterChange(value as StockFilter)}
       >
         <SelectTrigger className="w-[160px]">
-          <SelectValue placeholder="Stock status" />
+          <SelectValue placeholder={t('equipmentParts.stockStatus')} />
         </SelectTrigger>
         <SelectContent>
           {STOCK_FILTER_OPTIONS.map((option) => (
             <SelectItem key={option.value} value={option.value}>
-              {option.label}
+              {t(option.labelKey)}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      {/* Alternates Toggle */}
       <div className="flex items-center gap-2">
         <Switch
           id="alternates-toggle"
@@ -99,11 +97,10 @@ export const DesktopPartsToolbar: React.FC<DesktopPartsToolbarProps> = ({
           className="text-sm cursor-pointer flex items-center gap-1"
         >
           <RefreshCw className="h-3.5 w-3.5" />
-          Alternates only
+          {t('equipmentParts.alternatesOnly')}
         </Label>
       </div>
 
-      {/* Clear Filters Button */}
       {hasActiveFilters && (
         <Button
           variant="ghost"
@@ -112,7 +109,7 @@ export const DesktopPartsToolbar: React.FC<DesktopPartsToolbarProps> = ({
           className="text-muted-foreground"
         >
           <X className="h-4 w-4 mr-1" />
-          Clear
+          {t('equipmentParts.clear')}
         </Button>
       )}
     </div>
