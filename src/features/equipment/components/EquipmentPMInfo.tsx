@@ -10,9 +10,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Tables } from '@/integrations/supabase/types';
 import { getLatestCompletedPM } from '@/features/pm-templates/services/preventativeMaintenanceService';
 import { useEquipmentPMStatus, getPMComplianceLevel } from '@/features/equipment/hooks/useEquipmentPMStatus';
-import { getPMScheduleSourceLabel } from '@/features/pm-templates/utils/pmScheduleSourceLabel';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { EquipmentPMConfigFields } from './EquipmentPMConfigFields';
+import { useI18n } from '@/i18n';
 
 type Equipment = Tables<'equipment'>;
 
@@ -27,28 +27,35 @@ interface EquipmentPMInfoProps {
 const COMPLIANCE_CONFIG = {
   current: {
     icon: CheckCircle,
-    label: 'PM Current',
+    labelKey: 'equipment.pmCurrent',
     badgeClass: 'bg-success/20 text-success',
     iconClass: 'text-success',
   },
   due_soon: {
     icon: Clock,
-    label: 'PM Due Soon',
+    labelKey: 'equipment.pmDueSoon',
     badgeClass: 'bg-warning/20 text-warning',
     iconClass: 'text-warning',
   },
   overdue: {
     icon: AlertTriangle,
-    label: 'PM Overdue',
+    labelKey: 'equipment.pmOverdue',
     badgeClass: 'bg-destructive/20 text-destructive',
     iconClass: 'text-destructive',
   },
   no_interval: {
     icon: CheckCircle,
-    label: 'Completed',
+    labelKey: 'equipmentPM.completed',
     badgeClass: 'bg-success/20 text-success',
     iconClass: 'text-success',
   },
+} as const;
+
+const PM_SOURCE_KEYS = {
+  equipment_policy: 'equipmentPM.sourceEquipmentOverride',
+  team_policy: 'equipmentPM.sourceTeamSchedule',
+  template_policy: 'equipmentPM.sourceTemplateSchedule',
+  template_default: 'equipmentPM.sourceTemplateDefault',
 } as const;
 
 const EquipmentPMInfo: React.FC<EquipmentPMInfoProps> = ({
@@ -58,6 +65,7 @@ const EquipmentPMInfo: React.FC<EquipmentPMInfoProps> = ({
   onCreateWorkOrder,
   onViewPM,
 }) => {
+  const { t } = useI18n();
   const { formatDate } = useFormatTimestamp();
   const { data: latestPM, isLoading: isPMLoading } = useQuery({
     queryKey: ['latestPM', equipment.organization_id, equipment.id],
@@ -82,7 +90,7 @@ const EquipmentPMInfo: React.FC<EquipmentPMInfoProps> = ({
     return (
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Preventative Maintenance</CardTitle>
+          <CardTitle className="text-base">{t('equipmentPM.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {pmConfigFields}
@@ -99,14 +107,14 @@ const EquipmentPMInfo: React.FC<EquipmentPMInfoProps> = ({
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            Preventative Maintenance
+            {t('equipmentPM.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {pmConfigFields}
           <Separator />
           <p className="text-sm text-muted-foreground">
-            No PM records found.{' '}
+            {t('equipmentPM.noRecordsPrefix')}{' '}
             {onCreateWorkOrder ? (
               <Button
                 type="button"
@@ -114,12 +122,12 @@ const EquipmentPMInfo: React.FC<EquipmentPMInfoProps> = ({
                 className="h-auto p-0 text-sm font-normal text-primary"
                 onClick={onCreateWorkOrder}
               >
-                Create a work order
+                {t('equipmentPM.createWorkOrder')}
               </Button>
             ) : (
-              'Create a work order'
+              t('equipmentPM.createWorkOrder')
             )}{' '}
-            to start tracking.
+            {t('equipmentPM.noRecordsSuffix')}
           </p>
         </CardContent>
       </Card>
@@ -130,12 +138,19 @@ const EquipmentPMInfo: React.FC<EquipmentPMInfoProps> = ({
     (Date.now() - new Date(latestPM.completed_at).getTime()) / (1000 * 60 * 60 * 24)
   );
 
+  const intervalLabel = pmStatus
+    ? t(pmStatus.interval_type === 'hours' ? 'equipmentPM.intervalHours' : 'equipmentPM.intervalDays', {
+        count: pmStatus.interval_value,
+      })
+    : '';
+  const sourceLabel = pmStatus?.source ? t(PM_SOURCE_KEYS[pmStatus.source]) : '';
+
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <StatusIcon className={`h-4 w-4 ${config.iconClass}`} />
-          Preventative Maintenance
+          {t('equipmentPM.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -146,18 +161,18 @@ const EquipmentPMInfo: React.FC<EquipmentPMInfoProps> = ({
             <div>
               <div className="flex items-center gap-1.5 mb-1">
                 <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs font-medium">Last PM</span>
+                <span className="text-xs font-medium">{t('equipmentPM.lastPM')}</span>
               </div>
               <p className="text-sm">
                 {formatDate(latestPM.completed_at)}
               </p>
-              <p className="text-xs text-muted-foreground">{daysSinceLastPM} days ago</p>
+              <p className="text-xs text-muted-foreground">{t('equipmentPM.daysAgo', { count: daysSinceLastPM })}</p>
             </div>
 
             <div>
               <div className="flex items-center gap-1.5 mb-1">
                 <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs font-medium">Work Order</span>
+                <span className="text-xs font-medium">{t('equipmentPM.workOrder')}</span>
               </div>
               {latestPM.work_order_id ? (
                 <Link
@@ -165,7 +180,7 @@ const EquipmentPMInfo: React.FC<EquipmentPMInfoProps> = ({
                   className="text-sm text-primary hover:underline truncate block"
                   title={latestPM.work_order_title ?? undefined}
                 >
-                  {latestPM.work_order_title ?? 'PM work order'}
+                  {latestPM.work_order_title ?? t('equipmentPM.fallbackWorkOrder')}
                 </Link>
               ) : (
                 <p className="text-sm truncate">{latestPM.work_order_title}</p>
@@ -182,25 +197,25 @@ const EquipmentPMInfo: React.FC<EquipmentPMInfoProps> = ({
           )}
 
           <div className="flex items-center flex-wrap gap-2">
-            <Badge className={config.badgeClass}>{config.label}</Badge>
+            <Badge className={config.badgeClass}>{t(config.labelKey)}</Badge>
 
             {pmStatus && (
               <span className="text-xs text-muted-foreground flex items-center gap-1">
                 <Timer className="h-3 w-3" />
-                Every {pmStatus.interval_value} {pmStatus.interval_type === 'hours' ? 'hrs' : 'days'}
-                {pmStatus.source ? ` (${getPMScheduleSourceLabel(pmStatus.source)})` : ''}
+                {intervalLabel}
+                {sourceLabel ? ` (${sourceLabel})` : ''}
               </span>
             )}
 
             {pmStatus?.is_overdue && pmStatus.days_overdue != null && (
               <span className="text-xs text-destructive font-medium">
-                {pmStatus.days_overdue} days overdue
+                {t('equipmentPM.daysOverdue', { count: pmStatus.days_overdue })}
               </span>
             )}
 
             {pmStatus?.is_overdue && pmStatus.hours_overdue != null && (
               <span className="text-xs text-destructive font-medium">
-                {Math.round(pmStatus.hours_overdue)} hrs overdue
+                {t('equipmentPM.hoursOverdue', { count: Math.round(pmStatus.hours_overdue) })}
               </span>
             )}
           </div>
@@ -212,7 +227,7 @@ const EquipmentPMInfo: React.FC<EquipmentPMInfoProps> = ({
                 size="sm"
                 onClick={() => onViewPM(latestPM.id)}
               >
-                View PM Details
+                {t('equipmentPM.viewDetails')}
               </Button>
             </div>
           )}
