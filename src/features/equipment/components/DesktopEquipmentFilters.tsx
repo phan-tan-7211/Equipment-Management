@@ -1,8 +1,8 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter, Users, X } from 'lucide-react';
 import {
   EquipmentLocationSelect,
@@ -10,8 +10,9 @@ import {
   EquipmentStatusSelect,
 } from '@/features/equipment/components/EquipmentFilterSelects';
 import { EQUIPMENT_QUICK_FILTERS } from '@/features/equipment/components/equipmentFilterConstants';
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/components/ui/badge';
 import { EquipmentFilters } from '@/features/equipment/hooks/useEquipmentFiltering';
+import { useI18n } from '@/i18n';
 
 interface Team {
   id: string;
@@ -43,6 +44,14 @@ export const DesktopEquipmentFilters: React.FC<DesktopEquipmentFiltersProps> = (
   hasActiveFilters,
   activeQuickFilter,
 }) => {
+  const { t } = useI18n();
+  const statusLabels: Record<string, string> = {
+    active: t('equipmentList.active'),
+    maintenance: t('equipmentList.maintenance'),
+    inactive: t('equipmentList.inactive'),
+    out_of_service: t('equipmentList.outOfService'),
+  };
+
   return (
     <Card className="bg-muted/50">
       <CardContent className="pt-6">
@@ -52,22 +61,23 @@ export const DesktopEquipmentFilters: React.FC<DesktopEquipmentFiltersProps> = (
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Search equipment..."
+                  placeholder={t('equipmentList.searchEquipment')}
                   value={filters.search}
-                  onChange={(e) => onFilterChange('search', e.target.value)}
+                  onChange={(event) => onFilterChange('search', event.target.value)}
                   className="pl-9"
+                  aria-label={t('equipment.searchAria')}
                 />
               </div>
             </div>
             <EquipmentStatusSelect
               value={filters.status}
               onValueChange={(value) => onFilterChange('status', value)}
-              placeholder="Filter by status"
+              placeholder={t('equipmentList.filterByStatus')}
               triggerClassName="w-[180px]"
               leadingIcon={<Filter className="h-4 w-4 mr-2" />}
             />
           </div>
-          
+
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             <EquipmentManufacturerSelect
               value={filters.manufacturer}
@@ -82,12 +92,12 @@ export const DesktopEquipmentFilters: React.FC<DesktopEquipmentFiltersProps> = (
             />
 
             <Select value={filters.team} onValueChange={(value) => onFilterChange('team', value)}>
-              <SelectTrigger aria-label="Team">
+              <SelectTrigger aria-label={t('equipmentList.team')}>
                 <Users className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Team" />
+                <SelectValue placeholder={t('equipmentList.team')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Teams</SelectItem>
+                <SelectItem value="all">{t('equipmentList.allTeams')}</SelectItem>
                 {filterOptions.teams.map((team) => (
                   <SelectItem key={team.id} value={team.id}>
                     {team.name}
@@ -98,12 +108,8 @@ export const DesktopEquipmentFilters: React.FC<DesktopEquipmentFiltersProps> = (
 
             {hasActiveFilters && (
               <div className="col-span-2 sm:col-span-1">
-                <Button
-                  variant="outline"
-                  onClick={onClearFilters}
-                  className="w-full"
-                >
-                  Clear Filters
+                <Button variant="outline" onClick={onClearFilters} className="w-full">
+                  {t('equipmentList.clearFilters')}
                 </Button>
               </div>
             )}
@@ -118,51 +124,51 @@ export const DesktopEquipmentFilters: React.FC<DesktopEquipmentFiltersProps> = (
                 className="h-7 text-xs"
                 onClick={() => onQuickFilter(preset.value)}
               >
-                {preset.label}
+                {t(preset.labelKey)}
               </Button>
             ))}
           </div>
 
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-xs text-muted-foreground">Active:</span>
+              <span className="text-xs text-muted-foreground">{t('equipmentList.activeFilters')}:</span>
               {filters.status !== 'all' && (
                 <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-                  Status: {filters.status}
+                  {t('equipmentList.status')}: {statusLabels[filters.status] ?? filters.status}
                   <X
                     className="h-3 w-3 cursor-pointer hover:text-foreground"
                     onClick={() => onFilterChange('status', 'all')}
-                    aria-label="Clear status filter"
+                    aria-label={t('equipmentList.clearStatusFilter')}
                   />
                 </Badge>
               )}
               {filters.manufacturer !== 'all' && (
                 <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-                  Manufacturer: {filters.manufacturer}
+                  {t('equipmentList.manufacturer')}: {filters.manufacturer}
                   <X
                     className="h-3 w-3 cursor-pointer hover:text-foreground"
                     onClick={() => onFilterChange('manufacturer', 'all')}
-                    aria-label="Clear manufacturer filter"
+                    aria-label={t('equipmentList.clearManufacturerFilter')}
                   />
                 </Badge>
               )}
               {filters.location !== 'all' && (
                 <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-                  Location: {filters.location}
+                  {t('equipmentList.location')}: {filters.location}
                   <X
                     className="h-3 w-3 cursor-pointer hover:text-foreground"
                     onClick={() => onFilterChange('location', 'all')}
-                    aria-label="Clear location filter"
+                    aria-label={t('equipmentList.clearLocationFilter')}
                   />
                 </Badge>
               )}
               {filters.team !== 'all' && (
                 <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-                  Team: {filterOptions.teams.find(t => t.id === filters.team)?.name || filters.team}
+                  {t('equipmentList.team')}: {filterOptions.teams.find((team) => team.id === filters.team)?.name || filters.team}
                   <X
                     className="h-3 w-3 cursor-pointer hover:text-foreground"
                     onClick={() => onFilterChange('team', 'all')}
-                    aria-label="Clear team filter"
+                    aria-label={t('equipmentList.clearTeamFilter')}
                   />
                 </Badge>
               )}
@@ -172,7 +178,7 @@ export const DesktopEquipmentFilters: React.FC<DesktopEquipmentFiltersProps> = (
                 className="h-6 px-2 text-xs"
                 onClick={onClearFilters}
               >
-                Clear all
+                {t('equipmentList.clearAll')}
               </Button>
             </div>
           )}
