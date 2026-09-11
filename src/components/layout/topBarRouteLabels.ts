@@ -1,9 +1,8 @@
 /**
  * Shared route-label resolution for the global TopBar / ContextBreadcrumb.
  *
- * Centralized here so both `TopBar.tsx` and `ContextBreadcrumb.tsx` can
- * resolve the human-readable label for the currently active dashboard route
- * (the "section" segment of the breadcrumb) without duplicating the map.
+ * English labels are retained for backwards compatibility with existing
+ * tests/callers. `getPageLabelKey` exposes stable i18n keys for UI rendering.
  */
 
 export const ROUTE_LABELS: Record<string, string> = {
@@ -29,11 +28,29 @@ export const ROUTE_LABELS: Record<string, string> = {
   '/dashboard/support': 'Support & tickets',
 };
 
-/**
- * Routes where the page content already renders a prominent H1 title.
- * On mobile the top-bar label would duplicate that title, so consumers
- * may suppress the section label and show the compact brand mark instead.
- */
+export const ROUTE_LABEL_KEYS: Record<string, string> = {
+  '/dashboard': 'breadcrumb.dashboard',
+  '/dashboard/scan': 'breadcrumb.scanQr',
+  '/dashboard/equipment': 'breadcrumb.equipment',
+  '/dashboard/work-orders': 'breadcrumb.workOrders',
+  '/dashboard/fleet-map': 'breadcrumb.fleetMap',
+  '/dashboard/inventory': 'breadcrumb.inventory',
+  '/dashboard/part-lookup': 'breadcrumb.partLookup',
+  '/dashboard/alternate-groups': 'breadcrumb.partAlternates',
+  '/dashboard/teams': 'breadcrumb.teams',
+  '/dashboard/organization': 'breadcrumb.settings',
+  '/dashboard/organization/settings': 'breadcrumb.settings',
+  '/dashboard/organization/members': 'breadcrumb.members',
+  '/dashboard/organization/integrations': 'breadcrumb.integrations',
+  '/dashboard/pm-templates': 'breadcrumb.pmTemplates',
+  '/dashboard/pm-templates/new': 'breadcrumb.newPmTemplate',
+  '/dashboard/operator-check-ins': 'breadcrumb.dailyCheckIns',
+  '/dashboard/reports': 'breadcrumb.reports',
+  '/dashboard/organization/audit-log': 'breadcrumb.auditLog',
+  '/dashboard/settings': 'breadcrumb.settings',
+  '/dashboard/support': 'breadcrumb.supportTickets',
+};
+
 export const ROUTES_WITH_PAGE_H1 = new Set([
   '/dashboard',
   '/dashboard/scan',
@@ -69,11 +86,23 @@ export function getPageLabel(pathname: string): string {
   if (pathname.endsWith('/edit') && pathname.includes('/pm-templates/')) {
     return 'Edit PM Template';
   }
-  // Match dynamic routes, e.g. /dashboard/equipment/:id
   const segments = pathname.split('/').filter(Boolean);
   if (segments.length >= 2) {
     const base = `/${segments[0]}/${segments[1]}`;
     if (ROUTE_LABELS[base]) return ROUTE_LABELS[base];
+  }
+  return '';
+}
+
+export function getPageLabelKey(pathname: string): string {
+  if (ROUTE_LABEL_KEYS[pathname]) return ROUTE_LABEL_KEYS[pathname];
+  if (pathname.endsWith('/edit') && pathname.includes('/pm-templates/')) {
+    return 'breadcrumb.editPmTemplate';
+  }
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length >= 2) {
+    const base = `/${segments[0]}/${segments[1]}`;
+    if (ROUTE_LABEL_KEYS[base]) return ROUTE_LABEL_KEYS[base];
   }
   return '';
 }
