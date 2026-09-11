@@ -3,6 +3,7 @@ import { Timer } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import { InlineEditPMSchedule } from './InlineEditPMSchedule';
 import { EquipmentPMTemplateField } from './EquipmentPMTemplateField';
+import { useI18n } from '@/i18n';
 
 type Equipment = Tables<'equipment'>;
 
@@ -21,6 +22,8 @@ export function EquipmentPMConfigFields({
   canEdit,
   getCurrentTeamDisplay,
 }: EquipmentPMConfigFieldsProps) {
+  const { t } = useI18n();
+
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6 lg:items-start">
       <EquipmentPMTemplateField equipment={equipment} />
@@ -28,10 +31,10 @@ export function EquipmentPMConfigFields({
       <div className="min-w-0">
         <Label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <Timer className="h-4 w-4 shrink-0" />
-          PM Schedule
+          {t('equipmentPM.schedule')}
         </Label>
         <p className={pmConfigHintClassName}>
-          Override the team or template default interval for this equipment.
+          {t('equipmentPM.scheduleHint')}
         </p>
         <div className={pmConfigControlRowClassName}>
           <InlineEditPMSchedule
