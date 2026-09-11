@@ -1,9 +1,15 @@
-import React, { useId, useRef } from 'react';
+import React, { useId, useRef, useState } from 'react';
 import { useFileObjectUrlPreview } from '@/components/common/useFileObjectUrlPreview';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Image, X } from 'lucide-react';
+import { Camera, Image, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { validateAndAppendWorkOrderCreationImages } from '@/features/work-orders/utils/workOrderCreationImages';
+import {
+  isNativeAndroidImageRuntime,
+  pickNativeAndroidPhotos,
+  takeNativeAndroidPhoto,
+} from '@/services/nativeImagePicker';
 
 const Thumbnail: React.FC<{
   file: File;
@@ -43,9 +49,7 @@ export interface WorkOrderCreationPhotoPickerProps {
   description?: string;
 }
 
-/**
- * Shared creation-time photo picker (QR flow, full form, request form).
- */
+/** Shared creation-time photo picker (QR flow, full form, request form). */
 const WorkOrderCreationPhotoPicker: React.FC<WorkOrderCreationPhotoPickerProps> = ({
   images,
   onImagesChange,
@@ -53,32 +57,93 @@ const WorkOrderCreationPhotoPicker: React.FC<WorkOrderCreationPhotoPickerProps> 
   description = 'JPEG, PNG, GIF, or WebP — up to 5 images, 10 MB each.',
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [nativeBusy, setNativeBusy] = useState(false);
   const generatedId = useId();
   const inputId = `${generatedId}-work-order-creation-photos`;
+  const cameraInputId = `${inputId}-camera`;
   const hintId = `${inputId}-hint`;
+  const nativeAndroid = isNativeAndroidImageRuntime();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = Array.from(e.target.files || []);
+  const appendPickedFiles = (picked: File[]) => {
     const next = validateAndAppendWorkOrderCreationImages(images, picked);
     onImagesChange(next);
-    if (inputRef.current) inputRef.current.value = '';
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    appendPickedFiles(Array.from(e.target.files || []));
+    e.target.value = '';
+  };
+
+  const handleCameraFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    appendPickedFiles(Array.from(e.target.files || []));
+    e.target.value = '';
+  };
+
+  const handleAddPhotos = async () => {
+    if (!nativeAndroid) {
+      inputRef.current?.click();
+      return;
+    }
+
+    setNativeBusy(true);
+    try {
+      const picked = await pickNativeAndroidPhotos(Math.max(1, 5 - images.length), 'work-order');
+      if (picked.length > 0) appendPickedFiles(picked);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not open Android photo picker.');
+    } finally {
+      setNativeBusy(false);
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    if (!nativeAndroid) {
+      cameraInputRef.current?.click();
+      return;
+    }
+
+    setNativeBusy(true);
+    try {
+      const photo = await takeNativeAndroidPhoto('work-order');
+      if (photo) appendPickedFiles([photo]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not open Android camera.');
+    } finally {
+      setNativeBusy(false);
+    }
+  };
+
+  const controlsDisabled = disabled || nativeBusy || images.length >= 5;
 
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Label htmlFor={inputId}>Attach photos from this request</Label>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="gap-1"
-          disabled={disabled}
-          onClick={() => inputRef.current?.click()}
-        >
-          <Image className="h-4 w-4" aria-hidden />
-          Add photos
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1"
+            disabled={controlsDisabled}
+            onClick={() => void handleTakePhoto()}
+          >
+            <Camera className="h-4 w-4" aria-hidden />
+            Take photo
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1"
+            disabled={controlsDisabled}
+            onClick={() => void handleAddPhotos()}
+          >
+            <Image className="h-4 w-4" aria-hidden />
+            Add photos
+          </Button>
+        </div>
       </div>
       <p id={hintId} className="text-xs text-muted-foreground">
         {description}
@@ -93,6 +158,17 @@ const WorkOrderCreationPhotoPicker: React.FC<WorkOrderCreationPhotoPickerProps> 
         aria-describedby={hintId}
         disabled={disabled}
         onChange={handleFileChange}
+      />
+      <input
+        ref={cameraInputRef}
+        id={cameraInputId}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="sr-only"
+        aria-describedby={hintId}
+        disabled={disabled}
+        onChange={handleCameraFileChange}
       />
       {images.length > 0 ? (
         <div className="flex flex-wrap gap-2 pt-1">
