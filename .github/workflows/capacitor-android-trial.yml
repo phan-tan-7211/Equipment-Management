@@ -13,6 +13,9 @@ jobs:
   build-debug-apk:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      VITE_SUPABASE_URL: https://owwfmviduprmjksmelfq.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_QWdi-_gAL39N0YC0nRwkFw_FbcJBIRd
 
     steps:
       - name: Checkout
@@ -36,6 +39,11 @@ jobs:
 
       - name: Build Vite app
         run: npm run build
+
+      - name: Use SPA app shell for Capacitor
+        run: |
+          test -f dist/app-shell.html
+          cp dist/app-shell.html dist/index.html
 
       - name: Generate Android project
         run: npx cap add android
