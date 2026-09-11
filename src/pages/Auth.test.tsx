@@ -119,7 +119,7 @@ describe('Auth Page', () => {
     it('renders sign-in title and description by default', () => {
       render(<Auth />);
 
-      expect(screen.getByText('Sign in to EquipQR')).toBeInTheDocument();
+      expect(screen.getByText('Sign in to ZNTEQR')).toBeInTheDocument();
       expect(screen.getByText('Sign in to your account to get started')).toBeInTheDocument();
     });
 
@@ -223,7 +223,7 @@ describe('Auth Page', () => {
 
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: /check your email/i })).toBeInTheDocument();
-        expect(screen.getByText('viralarchitect@yahoo.com')).toBeInTheDocument();
+        expect(screen.getByText(/We sent a verification link to viralarchitect@yahoo\.com\./)).toBeInTheDocument();
         expect(screen.getByText('Account created')).toBeInTheDocument();
       });
       expect(screen.queryByRole('form', { name: /sign up form/i })).not.toBeInTheDocument();
@@ -429,4 +429,3 @@ describe('Auth Page', () => {
     });
   });
 });
-
