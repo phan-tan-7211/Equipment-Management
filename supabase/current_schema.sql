@@ -719,6 +719,64 @@ $$;
 ALTER FUNCTION "public"."assert_inventory_read_access"("p_organization_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."assign_equipment_management_code"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_group public.equipment_groups%ROWTYPE;
+  v_sequence bigint;
+  v_prefix text;
+BEGIN
+  -- Once issued, the management code is immutable.
+  IF TG_OP = 'UPDATE'
+     AND OLD.management_code IS NOT NULL
+     AND NEW.management_code IS DISTINCT FROM OLD.management_code THEN
+    RAISE EXCEPTION 'Equipment management code cannot be changed after it is issued';
+  END IF;
+
+  -- Existing codes stay unchanged even if the classification changes later.
+  IF NEW.management_code IS NOT NULL OR NEW.equipment_group_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT * INTO v_group
+  FROM public.equipment_groups
+  WHERE id = NEW.equipment_group_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Equipment group not found';
+  END IF;
+
+  IF v_group.organization_id <> NEW.organization_id THEN
+    RAISE EXCEPTION 'Equipment group must belong to the same organization as the equipment';
+  END IF;
+
+  IF NOT v_group.is_active THEN
+    RAISE EXCEPTION 'Inactive equipment groups cannot issue new management codes';
+  END IF;
+
+  v_sequence := v_group.next_sequence;
+
+  UPDATE public.equipment_groups
+  SET next_sequence = next_sequence + 1
+  WHERE id = v_group.id;
+
+  SELECT upper(trim(equipment_code_prefix))
+  INTO v_prefix
+  FROM public.organizations
+  WHERE id = NEW.organization_id;
+
+  NEW.management_code := concat(v_prefix, '-', v_group.code, '-', lpad(v_sequence::text, 6, '0'));
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."assign_equipment_management_code"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."audit_equipment_changes"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -843,6 +901,112 @@ $$;
 
 
 ALTER FUNCTION "public"."audit_equipment_changes"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."audit_equipment_classification_changes"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_changes jsonb := '{}'::jsonb;
+BEGIN
+  IF OLD.equipment_group_id IS DISTINCT FROM NEW.equipment_group_id THEN
+    v_changes := v_changes || jsonb_build_object(
+      'equipment_group_id', jsonb_build_object('old', OLD.equipment_group_id, 'new', NEW.equipment_group_id)
+    );
+  END IF;
+
+  IF OLD.management_code IS DISTINCT FROM NEW.management_code THEN
+    v_changes := v_changes || jsonb_build_object(
+      'management_code', jsonb_build_object('old', OLD.management_code, 'new', NEW.management_code)
+    );
+  END IF;
+
+  IF v_changes <> '{}'::jsonb THEN
+    PERFORM public.log_audit_entry(
+      NEW.organization_id,
+      'equipment',
+      NEW.id,
+      NEW.name,
+      'UPDATE',
+      v_changes,
+      jsonb_build_object('source', 'equipment_classification')
+    );
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."audit_equipment_classification_changes"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."audit_equipment_group_changes"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_changes jsonb := '{}'::jsonb;
+  v_row public.equipment_groups%ROWTYPE;
+BEGIN
+  v_row := COALESCE(NEW, OLD);
+
+  IF TG_OP = 'INSERT' THEN
+    v_changes := jsonb_build_object(
+      'code', jsonb_build_object('old', NULL, 'new', NEW.code),
+      'name', jsonb_build_object('old', NULL, 'new', NEW.name),
+      'examples', jsonb_build_object('old', NULL, 'new', NEW.examples),
+      'management_focus', jsonb_build_object('old', NULL, 'new', NEW.management_focus),
+      'description', jsonb_build_object('old', NULL, 'new', NEW.description),
+      'is_active', jsonb_build_object('old', NULL, 'new', NEW.is_active)
+    );
+  ELSIF TG_OP = 'UPDATE' THEN
+    IF OLD.code IS DISTINCT FROM NEW.code THEN
+      v_changes := v_changes || jsonb_build_object('code', jsonb_build_object('old', OLD.code, 'new', NEW.code));
+    END IF;
+    IF OLD.name IS DISTINCT FROM NEW.name THEN
+      v_changes := v_changes || jsonb_build_object('name', jsonb_build_object('old', OLD.name, 'new', NEW.name));
+    END IF;
+    IF OLD.examples IS DISTINCT FROM NEW.examples THEN
+      v_changes := v_changes || jsonb_build_object('examples', jsonb_build_object('old', OLD.examples, 'new', NEW.examples));
+    END IF;
+    IF OLD.management_focus IS DISTINCT FROM NEW.management_focus THEN
+      v_changes := v_changes || jsonb_build_object('management_focus', jsonb_build_object('old', OLD.management_focus, 'new', NEW.management_focus));
+    END IF;
+    IF OLD.description IS DISTINCT FROM NEW.description THEN
+      v_changes := v_changes || jsonb_build_object('description', jsonb_build_object('old', OLD.description, 'new', NEW.description));
+    END IF;
+    IF OLD.is_active IS DISTINCT FROM NEW.is_active THEN
+      v_changes := v_changes || jsonb_build_object('is_active', jsonb_build_object('old', OLD.is_active, 'new', NEW.is_active));
+    END IF;
+    -- Internal sequence increments are implementation detail, not audit events.
+    IF v_changes = '{}'::jsonb THEN
+      RETURN NEW;
+    END IF;
+  ELSE
+    v_changes := jsonb_build_object(
+      'code', jsonb_build_object('old', OLD.code, 'new', NULL),
+      'name', jsonb_build_object('old', OLD.name, 'new', NULL)
+    );
+  END IF;
+
+  PERFORM public.log_audit_entry(
+    v_row.organization_id,
+    'equipment_group',
+    v_row.id,
+    v_row.name,
+    TG_OP,
+    v_changes,
+    jsonb_build_object('group_code', v_row.code)
+  );
+
+  RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."audit_equipment_group_changes"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."audit_inventory_changes"() RETURNS "trigger"
@@ -11567,6 +11731,23 @@ $$;
 ALTER FUNCTION "public"."prevent_inactive_operator_template_with_enabled_assignments"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."prevent_used_equipment_group_delete"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF OLD.next_sequence > 1
+     OR EXISTS (SELECT 1 FROM public.equipment e WHERE e.equipment_group_id = OLD.id) THEN
+    RAISE EXCEPTION 'Equipment group has been used and cannot be deleted; deactivate it instead';
+  END IF;
+  RETURN OLD;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."prevent_used_equipment_group_delete"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."preview_account_deletion"("p_user_id" "uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -12011,6 +12192,27 @@ ALTER FUNCTION "public"."process_departure_batch"("p_queue_id" "uuid", "p_batch_
 
 COMMENT ON FUNCTION "public"."process_departure_batch"("p_queue_id" "uuid", "p_batch_size" integer) IS 'Process a batch of records for a user departure. Updates denormalized name columns.';
 
+
+
+CREATE OR REPLACE FUNCTION "public"."protect_equipment_group_code"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  NEW.code := upper(trim(NEW.code));
+
+  IF TG_OP = 'UPDATE'
+     AND OLD.code IS DISTINCT FROM NEW.code
+     AND OLD.next_sequence > 1 THEN
+    RAISE EXCEPTION 'Equipment group code cannot be changed after a management code has been issued';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."protect_equipment_group_code"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."reconcile_google_workspace_directory"("p_organization_id" "uuid", "p_sync_started_at" timestamp with time zone) RETURNS "jsonb"
@@ -14510,6 +14712,20 @@ $$;
 ALTER FUNCTION "public"."synthesize_historical_timeline_events"("p_historical_start_date" timestamp with time zone, "p_completed_date" timestamp with time zone, "p_status" "public"."work_order_status", "p_assignee_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."touch_equipment_group_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."touch_equipment_group_updated_at"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."touch_updated_at"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -15755,7 +15971,7 @@ CREATE TABLE IF NOT EXISTS "public"."audit_log" (
     "metadata" "jsonb" DEFAULT '{}'::"jsonb",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     CONSTRAINT "audit_log_action_check" CHECK (("action" = ANY (ARRAY['INSERT'::"text", 'UPDATE'::"text", 'DELETE'::"text"]))),
-    CONSTRAINT "audit_log_entity_type_check" CHECK (("entity_type" = ANY (ARRAY['equipment'::"text", 'work_order'::"text", 'inventory_item'::"text", 'preventative_maintenance'::"text", 'organization_member'::"text", 'team_member'::"text", 'team'::"text", 'pm_template'::"text", 'organization'::"text"])))
+    CONSTRAINT "audit_log_entity_type_check" CHECK (("entity_type" = ANY (ARRAY['equipment'::"text", 'work_order'::"text", 'inventory_item'::"text", 'preventative_maintenance'::"text", 'organization_member'::"text", 'team_member'::"text", 'team'::"text", 'pm_template'::"text", 'organization'::"text", 'equipment_group'::"text"])))
 );
 
 
@@ -15763,10 +15979,6 @@ ALTER TABLE "public"."audit_log" OWNER TO "postgres";
 
 
 COMMENT ON TABLE "public"."audit_log" IS 'Comprehensive audit trail for regulatory compliance. Tracks all changes to equipment, work orders, inventory, PM, and permissions. Records are append-only - no updates or deletes allowed.';
-
-
-
-COMMENT ON CONSTRAINT "audit_log_entity_type_check" ON "public"."audit_log" IS 'Allowed entity types for audit logging. Includes organization for deletion events.';
 
 
 
@@ -15934,7 +16146,7 @@ CREATE TABLE IF NOT EXISTS "public"."equipment" (
     "name" "text" NOT NULL,
     "manufacturer" "text" NOT NULL,
     "model" "text" NOT NULL,
-    "serial_number" "text" NOT NULL,
+    "serial_number" "text",
     "status" "public"."equipment_status" DEFAULT 'active'::"public"."equipment_status" NOT NULL,
     "location" "text" NOT NULL,
     "installation_date" "date" NOT NULL,
@@ -15958,7 +16170,9 @@ CREATE TABLE IF NOT EXISTS "public"."equipment" (
     "assigned_location_country" "text",
     "assigned_location_lat" double precision,
     "assigned_location_lng" double precision,
-    "use_team_location" boolean DEFAULT false NOT NULL
+    "use_team_location" boolean DEFAULT false NOT NULL,
+    "equipment_group_id" "uuid",
+    "management_code" "text"
 );
 
 
@@ -15995,6 +16209,26 @@ COMMENT ON COLUMN "public"."equipment"."assigned_location_lng" IS 'Longitude fro
 
 COMMENT ON COLUMN "public"."equipment"."use_team_location" IS 'When true, this equipment defers to its team location if the team has override_equipment_location enabled';
 
+
+
+CREATE TABLE IF NOT EXISTS "public"."equipment_groups" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "organization_id" "uuid" NOT NULL,
+    "code" "text" NOT NULL,
+    "name" "text" NOT NULL,
+    "examples" "text",
+    "management_focus" "text",
+    "description" "text",
+    "is_active" boolean DEFAULT true NOT NULL,
+    "next_sequence" bigint DEFAULT 1 NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "equipment_groups_code_format" CHECK (("code" ~ '^[A-Z0-9]{2,10}$'::"text")),
+    CONSTRAINT "equipment_groups_next_sequence_check" CHECK (("next_sequence" >= 1))
+);
+
+
+ALTER TABLE "public"."equipment_groups" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."equipment_location_history" (
@@ -16735,7 +16969,8 @@ CREATE TABLE IF NOT EXISTS "public"."organizations" (
     "inventory_default_location_country" "text",
     "inventory_default_location_lat" double precision,
     "inventory_default_location_lng" double precision,
-    "note_author_edit_window_hours" integer DEFAULT 24 NOT NULL
+    "note_author_edit_window_hours" integer DEFAULT 24 NOT NULL,
+    "equipment_code_prefix" "text" DEFAULT 'EQ'::"text" NOT NULL
 );
 
 
@@ -18062,6 +18297,16 @@ ALTER TABLE ONLY "public"."dsr_requests"
 
 
 
+ALTER TABLE ONLY "public"."equipment_groups"
+    ADD CONSTRAINT "equipment_groups_org_code_key" UNIQUE ("organization_id", "code");
+
+
+
+ALTER TABLE ONLY "public"."equipment_groups"
+    ADD CONSTRAINT "equipment_groups_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."equipment_location_history"
     ADD CONSTRAINT "equipment_location_history_pkey" PRIMARY KEY ("id");
 
@@ -18532,6 +18777,10 @@ ALTER TABLE ONLY "public"."workspace_personal_org_merge_requests"
 
 
 
+CREATE UNIQUE INDEX "equipment_org_management_code_key" ON "public"."equipment" USING "btree" ("organization_id", "management_code") WHERE ("management_code" IS NOT NULL);
+
+
+
 CREATE INDEX "equipment_org_serial_idx" ON "public"."equipment" USING "btree" ("organization_id", "serial_number");
 
 
@@ -18649,6 +18898,14 @@ CREATE INDEX "idx_equipment_customer_id" ON "public"."equipment" USING "btree" (
 
 
 CREATE INDEX "idx_equipment_default_pm_template_id" ON "public"."equipment" USING "btree" ("default_pm_template_id");
+
+
+
+CREATE INDEX "idx_equipment_equipment_group_id" ON "public"."equipment" USING "btree" ("equipment_group_id");
+
+
+
+CREATE INDEX "idx_equipment_groups_organization" ON "public"."equipment_groups" USING "btree" ("organization_id", "is_active", "name");
 
 
 
@@ -19452,6 +19709,14 @@ CREATE UNIQUE INDEX "workspace_merge_unique_pending" ON "public"."workspace_pers
 
 
 
+CREATE OR REPLACE TRIGGER "audit_equipment_classification_trigger" AFTER UPDATE OF "equipment_group_id", "management_code" ON "public"."equipment" FOR EACH ROW EXECUTE FUNCTION "public"."audit_equipment_classification_changes"();
+
+
+
+CREATE OR REPLACE TRIGGER "audit_equipment_group_trigger" AFTER INSERT OR DELETE OR UPDATE ON "public"."equipment_groups" FOR EACH ROW EXECUTE FUNCTION "public"."audit_equipment_group_changes"();
+
+
+
 CREATE OR REPLACE TRIGGER "audit_equipment_trigger" AFTER INSERT OR DELETE OR UPDATE ON "public"."equipment" FOR EACH ROW EXECUTE FUNCTION "public"."audit_equipment_changes"();
 
 
@@ -19584,11 +19849,19 @@ CREATE OR REPLACE TRIGGER "tr_sync_equipment_last_maintenance" AFTER UPDATE OF "
 
 
 
+CREATE OR REPLACE TRIGGER "trg_assign_equipment_management_code" BEFORE INSERT OR UPDATE OF "equipment_group_id", "management_code" ON "public"."equipment" FOR EACH ROW EXECUTE FUNCTION "public"."assign_equipment_management_code"();
+
+
+
 CREATE OR REPLACE TRIGGER "trg_enforce_scan_location_privacy" BEFORE INSERT ON "public"."scans" FOR EACH ROW EXECUTE FUNCTION "public"."enforce_scan_location_privacy"();
 
 
 
 CREATE OR REPLACE TRIGGER "trg_ensure_operator_template_active_for_enabled_assignment" BEFORE INSERT OR UPDATE OF "enabled", "template_id", "organization_id" ON "public"."equipment_operator_checkin_settings" FOR EACH ROW EXECUTE FUNCTION "public"."ensure_operator_template_active_for_enabled_assignment"();
+
+
+
+CREATE OR REPLACE TRIGGER "trg_equipment_groups_updated_at" BEFORE UPDATE ON "public"."equipment_groups" FOR EACH ROW EXECUTE FUNCTION "public"."touch_equipment_group_updated_at"();
 
 
 
@@ -19629,6 +19902,14 @@ CREATE OR REPLACE TRIGGER "trg_prevent_dsr_event_update" BEFORE UPDATE ON "publi
 
 
 CREATE OR REPLACE TRIGGER "trg_prevent_inactive_operator_template_with_enabled_assignments" BEFORE UPDATE OF "is_active" ON "public"."operator_checklist_templates" FOR EACH ROW EXECUTE FUNCTION "public"."prevent_inactive_operator_template_with_enabled_assignments"();
+
+
+
+CREATE OR REPLACE TRIGGER "trg_prevent_used_equipment_group_delete" BEFORE DELETE ON "public"."equipment_groups" FOR EACH ROW EXECUTE FUNCTION "public"."prevent_used_equipment_group_delete"();
+
+
+
+CREATE OR REPLACE TRIGGER "trg_protect_equipment_group_code" BEFORE INSERT OR UPDATE OF "code" ON "public"."equipment_groups" FOR EACH ROW EXECUTE FUNCTION "public"."protect_equipment_group_code"();
 
 
 
@@ -19836,6 +20117,16 @@ ALTER TABLE ONLY "public"."equipment"
 
 ALTER TABLE ONLY "public"."equipment"
     ADD CONSTRAINT "equipment_default_pm_template_id_fkey" FOREIGN KEY ("default_pm_template_id") REFERENCES "public"."pm_checklist_templates"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."equipment"
+    ADD CONSTRAINT "equipment_equipment_group_id_fkey" FOREIGN KEY ("equipment_group_id") REFERENCES "public"."equipment_groups"("id") ON DELETE RESTRICT;
+
+
+
+ALTER TABLE ONLY "public"."equipment_groups"
+    ADD CONSTRAINT "equipment_groups_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE CASCADE;
 
 
 
@@ -20919,6 +21210,35 @@ CREATE POLICY "equipment_admin_access" ON "public"."equipment" USING ("public"."
 
 
 COMMENT ON POLICY "equipment_admin_access" ON "public"."equipment" IS 'Consolidated admin policy for all equipment operations. Uses cached auth.uid() for performance.';
+
+
+
+ALTER TABLE "public"."equipment_groups" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "equipment_groups_admin_delete" ON "public"."equipment_groups" FOR DELETE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."organization_members" "om"
+  WHERE (("om"."organization_id" = "equipment_groups"."organization_id") AND ("om"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['owner'::"text", 'admin'::"text"]))))));
+
+
+
+CREATE POLICY "equipment_groups_admin_insert" ON "public"."equipment_groups" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."organization_members" "om"
+  WHERE (("om"."organization_id" = "equipment_groups"."organization_id") AND ("om"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['owner'::"text", 'admin'::"text"]))))));
+
+
+
+CREATE POLICY "equipment_groups_admin_update" ON "public"."equipment_groups" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."organization_members" "om"
+  WHERE (("om"."organization_id" = "equipment_groups"."organization_id") AND ("om"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['owner'::"text", 'admin'::"text"])))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."organization_members" "om"
+  WHERE (("om"."organization_id" = "equipment_groups"."organization_id") AND ("om"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['owner'::"text", 'admin'::"text"]))))));
+
+
+
+CREATE POLICY "equipment_groups_members_select" ON "public"."equipment_groups" FOR SELECT TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."organization_members" "om"
+  WHERE (("om"."organization_id" = "equipment_groups"."organization_id") AND ("om"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("om"."status" = 'active'::"text")))));
 
 
 
@@ -22800,8 +23120,23 @@ GRANT ALL ON FUNCTION "public"."assert_inventory_read_access"("p_organization_id
 
 
 
+REVOKE ALL ON FUNCTION "public"."assign_equipment_management_code"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."assign_equipment_management_code"() TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."audit_equipment_changes"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."audit_equipment_changes"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."audit_equipment_classification_changes"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."audit_equipment_classification_changes"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."audit_equipment_group_changes"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."audit_equipment_group_changes"() TO "service_role";
 
 
 
@@ -23826,6 +24161,10 @@ GRANT ALL ON FUNCTION "public"."prevent_inactive_operator_template_with_enabled_
 
 
 
+GRANT ALL ON FUNCTION "public"."prevent_used_equipment_group_delete"() TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."preview_account_deletion"("p_user_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."preview_account_deletion"("p_user_id" "uuid") TO "service_role";
 
@@ -23838,6 +24177,10 @@ GRANT ALL ON FUNCTION "public"."process_all_pending_departures"() TO "service_ro
 
 REVOKE ALL ON FUNCTION "public"."process_departure_batch"("p_queue_id" "uuid", "p_batch_size" integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."process_departure_batch"("p_queue_id" "uuid", "p_batch_size" integer) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."protect_equipment_group_code"() TO "service_role";
 
 
 
@@ -24033,6 +24376,10 @@ GRANT ALL ON FUNCTION "public"."sync_work_order_primary_equipment"() TO "service
 
 REVOKE ALL ON FUNCTION "public"."synthesize_historical_timeline_events"("p_historical_start_date" timestamp with time zone, "p_completed_date" timestamp with time zone, "p_status" "public"."work_order_status", "p_assignee_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."synthesize_historical_timeline_events"("p_historical_start_date" timestamp with time zone, "p_completed_date" timestamp with time zone, "p_status" "public"."work_order_status", "p_assignee_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."touch_equipment_group_updated_at"() TO "service_role";
 
 
 
@@ -24266,6 +24613,11 @@ GRANT ALL ON TABLE "public"."dsr_requests" TO "service_role";
 GRANT ALL ON TABLE "public"."equipment" TO "anon";
 GRANT ALL ON TABLE "public"."equipment" TO "authenticated";
 GRANT ALL ON TABLE "public"."equipment" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."equipment_groups" TO "authenticated";
+GRANT ALL ON TABLE "public"."equipment_groups" TO "service_role";
 
 
 
