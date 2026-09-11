@@ -110,7 +110,7 @@
             "contract": { "kind": "exit-code" }
           },
           {
-            "argv": ["dupes", "--format", "json", "--quiet"],
+            "argv": ["dupes", "--threshold", "0.000001", "--format", "json", "--quiet"],
             "contract": { "kind": "exit-code" }
           }
         ]
