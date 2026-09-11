@@ -7,7 +7,7 @@ export const Dashboard = lazyWithRetry(() => import('@/features/dashboard/pages/
 export const Equipment = lazyWithRetry(() => import('@/features/equipment/pages/Equipment'), 'Equipment');
 export const BulkEquipment = lazyWithRetry(() => import('@/features/equipment/pages/BulkEquipment'), 'BulkEquipment');
 export const EquipmentDetails = lazyWithRetry(() => import('@/features/equipment/pages/EquipmentDetails'), 'EquipmentDetails');
-export const EquipmentScanner = lazyWithRetry(() => import('@/features/equipment/pages/EquipmentScanner'), 'EquipmentScanner');
+export const EquipmentScanner = lazyWithRetry(() => import('@/features/equipment/pages/EquipmentScannerEntry'), 'EquipmentScanner');
 export const WorkOrders = lazyWithRetry(() => import('@/features/work-orders/pages/WorkOrders'), 'WorkOrders');
 export const WorkOrderDetails = lazyWithRetry(() => import('@/features/work-orders/pages/WorkOrderDetails'), 'WorkOrderDetails');
 export const Teams = lazyWithRetry(() => import('@/features/teams/pages/Teams'), 'Teams');
