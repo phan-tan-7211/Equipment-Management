@@ -20,62 +20,58 @@ import { useCreateQuickEquipment } from '@/features/equipment/hooks/useCreateQui
 import { useManufacturerModelSuggestions } from '@/features/equipment/utils/manufacturerModelLookup';
 import { useTeams } from '@/features/teams/hooks/useTeams';
 import {
-  quickEquipmentSchema,
+  createQuickEquipmentSchema,
   generateEquipmentName,
+  type EquipmentValidationMessages,
   type QuickEquipmentFormData,
 } from '@/features/equipment/types/equipment';
+import { useI18n } from '@/i18n';
 
 interface QuickEquipmentFormProps {
-  /**
-   * Called when equipment is successfully created with the new equipment ID
-   */
   onEquipmentCreated: (equipmentId: string) => void;
-  /**
-   * Called when user cancels the form
-   */
   onCancel: () => void;
-  /**
-   * Function to check if user can create equipment for a given team
-   */
   canCreateForTeam: (teamId: string) => boolean;
 }
 
-/**
- * Compact inline form for quick equipment creation during work order creation.
- * 
- * Features:
- * - Manufacturer autocomplete from existing equipment (with free text input)
- * - Model autocomplete filtered by selected manufacturer (with free text input)
- * - Auto-generated equipment name (editable)
- * - Team selector (only teams user has access to)
- * - Info tooltip about parts auto-matching
- */
 export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
   onEquipmentCreated,
   onCancel,
   canCreateForTeam,
 }) => {
   const { currentOrganization } = useOrganization();
+  const { t } = useI18n();
 
-  // Get manufacturer/model suggestions from existing equipment
   const { data: manufacturersData = [] } = useEquipmentManufacturersAndModels(
     currentOrganization?.id
   );
-
-  // Get teams for team selector
   const { teams = [], isLoading: isLoadingTeams } = useTeams();
 
-  // Filter to teams user can create equipment for
   const availableTeams = useMemo(() => {
     return teams.filter(team => canCreateForTeam(team.id));
   }, [teams, canCreateForTeam]);
 
-  // Create mutation
   const createMutation = useCreateQuickEquipment();
 
-  // Form state
+  const validationMessages = useMemo<EquipmentValidationMessages>(() => ({
+    equipmentNameRequired: t('equipmentForm.validationEquipmentNameRequired'),
+    manufacturerRequired: t('equipmentForm.validationManufacturerRequired'),
+    modelRequired: t('equipmentForm.validationModelRequired'),
+    serialRequired: t('equipmentForm.validationSerialRequired'),
+    locationRequired: t('equipmentForm.validationLocationRequired'),
+    workingHoursNonNegative: t('equipmentForm.validationWorkingHoursNonNegative'),
+    teamRequired: t('equipmentForm.validationTeamRequired'),
+    nameRequired: t('equipmentForm.validationNameRequired'),
+    nameMax: t('equipmentForm.validationNameMax'),
+    teamCreatePermission: t('equipmentForm.validationTeamCreatePermission'),
+  }), [t]);
+
+  const quickSchema = useMemo(
+    () => createQuickEquipmentSchema(validationMessages),
+    [validationMessages],
+  );
+
   const form = useForm<QuickEquipmentFormData>({
-    resolver: zodResolver(quickEquipmentSchema),
+    resolver: zodResolver(quickSchema),
     defaultValues: {
       manufacturer: '',
       model: '',
@@ -90,11 +86,8 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
   const manufacturer = watch('manufacturer');
   const model = watch('model');
   const name = watch('name');
-
-  // Track if name has been manually edited
   const [nameManuallyEdited, setNameManuallyEdited] = useState(false);
 
-  // Auto-generate name when manufacturer/model changes (if not manually edited)
   useEffect(() => {
     if (!nameManuallyEdited) {
       const generatedName = generateEquipmentName(manufacturer || '', model || '');
@@ -104,7 +97,6 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
     }
   }, [manufacturer, model, nameManuallyEdited, setValue]);
 
-  // Set default team if only one available
   useEffect(() => {
     if (availableTeams.length === 1 && !form.getValues('team_id')) {
       setValue('team_id', availableTeams[0].id);
@@ -116,7 +108,6 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
     manufacturer,
   );
 
-  // Handle form submission
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
       const result = await createMutation.mutateAsync(data);
@@ -126,28 +117,21 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
     }
   });
 
-  // Handle name change - mark as manually edited
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setNameManuallyEdited(true);
     setValue('name', e.target.value);
   }, [setValue]);
 
-  // Handle manufacturer change
   const handleManufacturerChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setValue('manufacturer', value);
-    if (!value) {
-      setNameManuallyEdited(false);
-    }
+    if (!value) setNameManuallyEdited(false);
   }, [setValue]);
 
-  // Handle model change
   const handleModelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setValue('model', value);
-    if (!value) {
-      setNameManuallyEdited(false);
-    }
+    if (!value) setNameManuallyEdited(false);
   }, [setValue]);
 
   const isSubmitting = createMutation.isPending;
@@ -157,30 +141,26 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
       <CardContent className="pt-4 space-y-4">
         <div className="flex items-center gap-2 text-sm font-medium text-primary">
           <Forklift className="h-4 w-4" />
-          <span>Quick Equipment Entry</span>
+          <span>{t('equipmentForm.quickEntry')}</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info className="h-4 w-4 text-muted-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p>
-                  Create a new equipment record with minimal info. Compatible parts
-                  will automatically match based on manufacturer and model.
-                </p>
+                <p>{t('equipmentForm.quickEntryHelp')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Manufacturer - Input with datalist for autocomplete */}
           <div className="space-y-2">
-            <Label htmlFor="manufacturer">Manufacturer *</Label>
+            <Label htmlFor="manufacturer">{t('equipmentForm.manufacturerLabel')}</Label>
             <Input
               id="manufacturer"
               list="manufacturer-suggestions"
-              placeholder="Type or select manufacturer"
+              placeholder={t('equipmentForm.manufacturerQuickPlaceholder')}
               value={manufacturer}
               onChange={handleManufacturerChange}
               disabled={isSubmitting}
@@ -193,7 +173,7 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
             </datalist>
             {manufacturers.length > 0 && !manufacturer && (
               <p className="text-xs text-muted-foreground">
-                {manufacturers.length} existing manufacturer{manufacturers.length !== 1 ? 's' : ''} available as suggestions
+                {t('equipmentForm.manufacturerSuggestions', { count: manufacturers.length })}
               </p>
             )}
             {errors.manufacturer && (
@@ -201,13 +181,12 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
             )}
           </div>
 
-          {/* Model - Input with datalist for autocomplete */}
           <div className="space-y-2">
-            <Label htmlFor="model">Model *</Label>
+            <Label htmlFor="model">{t('equipmentForm.modelLabel')}</Label>
             <Input
               id="model"
               list="model-suggestions"
-              placeholder="Type or select model"
+              placeholder={t('equipmentForm.modelQuickPlaceholder')}
               value={model}
               onChange={handleModelChange}
               disabled={isSubmitting}
@@ -220,7 +199,10 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
             </datalist>
             {modelsForManufacturer.length > 0 && !model && (
               <p className="text-xs text-muted-foreground">
-                {modelsForManufacturer.length} existing model{modelsForManufacturer.length !== 1 ? 's' : ''} for {manufacturer}
+                {t('equipmentForm.modelSuggestions', {
+                  count: modelsForManufacturer.length,
+                  manufacturer,
+                })}
               </p>
             )}
             {errors.model && (
@@ -228,12 +210,11 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
             )}
           </div>
 
-          {/* Serial Number */}
           <div className="space-y-2">
-            <Label htmlFor="serial_number">Serial Number *</Label>
+            <Label htmlFor="serial_number">{t('equipmentForm.serialNumberLabel')}</Label>
             <Input
               id="serial_number"
-              placeholder="Enter serial number"
+              placeholder={t('equipmentForm.serialNumberQuickPlaceholder')}
               {...form.register('serial_number')}
               disabled={isSubmitting}
             />
@@ -242,18 +223,17 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
             )}
           </div>
 
-          {/* Working Hours (optional) */}
           <div className="space-y-2">
             <Label htmlFor="working_hours">
-              Machine Hours
-              <span className="text-muted-foreground ml-1">(optional)</span>
+              {t('equipmentForm.machineHours')}
+              <span className="text-muted-foreground ml-1">{t('equipmentForm.optional')}</span>
             </Label>
             <Input
               id="working_hours"
               type="number"
               min="0"
               step="0.1"
-              placeholder="e.g., 1250.5"
+              placeholder={t('equipmentForm.machineHoursPlaceholder')}
               {...form.register('working_hours', { valueAsNumber: true })}
               disabled={isSubmitting}
             />
@@ -262,17 +242,14 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
             )}
           </div>
 
-          {/* Team Selector */}
           {isLoadingTeams ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Loading teams...
+              {t('equipmentForm.loadingTeams')}
             </div>
           ) : availableTeams.length === 0 ? (
             <Alert variant="destructive">
-              <AlertDescription>
-                You don&apos;t have permission to create equipment for any team.
-              </AlertDescription>
+              <AlertDescription>{t('equipmentForm.noTeamCreatePermission')}</AlertDescription>
             </Alert>
           ) : (
             <TeamPickerWithCreate
@@ -288,17 +265,16 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
             <p className="text-sm text-destructive">{errors.team_id.message}</p>
           )}
 
-          {/* Equipment Name (auto-generated, editable) */}
           <div className="space-y-2">
             <Label htmlFor="name">
-              Equipment Name
+              {t('equipmentForm.equipmentNameLabel')}
               {!nameManuallyEdited && name && (
-                <span className="text-muted-foreground ml-1">(auto-generated)</span>
+                <span className="text-muted-foreground ml-1">{t('equipmentForm.autoGenerated')}</span>
               )}
             </Label>
             <Input
               id="name"
-              placeholder="Auto-generated from manufacturer + model"
+              placeholder={t('equipmentForm.equipmentNamePlaceholder')}
               value={name}
               onChange={handleNameChange}
               disabled={isSubmitting}
@@ -308,16 +284,13 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
             )}
           </div>
 
-          {/* Info about parts matching */}
           <Alert className="border-info/30 bg-info/10 dark:bg-info/10">
             <Info className="h-4 w-4 text-info" />
             <AlertDescription className="text-info dark:text-info">
-              Parts with compatibility rules matching this manufacturer/model will
-              be automatically suggested for work orders on this equipment.
+              {t('equipmentForm.partsMatchingInfo')}
             </AlertDescription>
           </Alert>
 
-          {/* Actions */}
           <div className="flex gap-2 justify-end pt-2">
             <Button
               type="button"
@@ -325,7 +298,7 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
               onClick={onCancel}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('equipmentForm.cancel')}
             </Button>
             <Button
               type="submit"
@@ -334,12 +307,12 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating...
+                  {t('equipmentForm.creating')}
                 </>
               ) : (
                 <>
                   <Forklift className="h-4 w-4 mr-2" />
-                  Create Equipment
+                  {t('equipmentForm.createEquipment')}
                 </>
               )}
             </Button>
@@ -349,5 +322,3 @@ export const QuickEquipmentForm: React.FC<QuickEquipmentFormProps> = ({
     </Card>
   );
 };
-
-
