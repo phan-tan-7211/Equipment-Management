@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      VITE_SUPABASE_URL: https://owwfmviduprmjksmelfq.supabase.co
-      VITE_SUPABASE_ANON_KEY: sb_publishable_QWdi-_gAL39N0YC0nRwkFw_FbcJBIRd
+      VITE_SUPABASE_URL: https://wgynakhoppqkrutnslmv.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_5pStEJfSD1p_Nui6ZAA5Cw_ZuJH--fn
 
     steps:
       - name: Checkout
