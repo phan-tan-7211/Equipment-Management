@@ -60,8 +60,12 @@ export function buildEquipmentFormDefaultValues(
 }
 
 export function toEquipmentCreateData(data: EquipmentFormData): EquipmentCreateData {
+  const shared = mapEquipmentFormSharedFields(data);
+  const { serial_number, ...sharedWithoutSerial } = shared;
+
   return {
-    ...mapEquipmentFormSharedFields(data),
+    ...sharedWithoutSerial,
+    ...(serial_number ? { serial_number } : {}),
     customer_id: null,
     working_hours: 0,
     import_id: null,
