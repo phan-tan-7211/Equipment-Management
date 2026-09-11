@@ -15,6 +15,7 @@ import {
 } from '@/features/equipment/services/equipmentQRPermissions';
 import { getAuthClaims } from '@/lib/authClaims';
 import { logger } from '@/utils/logger';
+import { useI18n } from '@/i18n';
 
 const QRWorkOrderDialog = lazy(() => import('@/features/equipment/components/qr/QRWorkOrderDialog'));
 const QRUpdateHoursDialog = lazy(() => import('@/features/equipment/components/qr/QRWorkingHoursDialog'));
@@ -39,11 +40,11 @@ type SuccessMessage =
   | { message: string; workOrderId?: string }
   | null;
 
-const ACTION_DENIED_COPY: Record<QRActionType, string> = {
-  'pm-work-order': 'You need work order access for this equipment team to create a work order from the scan page.',
-  'generic-work-order': 'You need work order access for this equipment team to create a work order from the scan page.',
-  'update-hours': 'Only organization admins, owners, or managers of this equipment team can update hours from the scan page.',
-  'note-image': 'You need equipment note access for this equipment team to add a note or image from the scan page.',
+const ACTION_DENIED_KEYS: Record<QRActionType, string> = {
+  'pm-work-order': 'equipmentQRScan.deniedWorkOrder',
+  'generic-work-order': 'equipmentQRScan.deniedWorkOrder',
+  'update-hours': 'equipmentQRScan.deniedHours',
+  'note-image': 'equipmentQRScan.deniedNote',
 };
 
 export default function EquipmentQRQuickActions({
@@ -53,6 +54,7 @@ export default function EquipmentQRQuickActions({
   scanId,
   onWorkingHoursUpdated,
 }: EquipmentQRQuickActionsProps) {
+  const { t } = useI18n();
   const [dialog, setDialog] = useState<DialogState>(null);
   const [activePermissionContext, setActivePermissionContext] = useState<QRActionPermissionContext | null>(null);
   const [permissionMessage, setPermissionMessage] = useState<string | null>(null);
@@ -67,7 +69,7 @@ export default function EquipmentQRQuickActions({
     try {
       const claims = await getAuthClaims();
       if (!claims?.sub) {
-        setPermissionMessage('User not authenticated.');
+        setPermissionMessage(t('equipmentQRScan.userNotAuthenticated'));
         return;
       }
       const permissionContext: QRActionPermissionContext = {
@@ -84,7 +86,7 @@ export default function EquipmentQRQuickActions({
       const nextPermissionContext = { ...permissionContext, teamMemberships };
 
       if (!canRunQRAction(action, nextPermissionContext, equipment.teamId)) {
-        setPermissionMessage(ACTION_DENIED_COPY[action]);
+        setPermissionMessage(t(ACTION_DENIED_KEYS[action]));
         return;
       }
 
@@ -92,8 +94,7 @@ export default function EquipmentQRQuickActions({
       setDialog(nextDialog);
     } catch (error) {
       logger.error('QR quick action permission check failed', error);
-      const message = error instanceof Error ? error.message : 'Unable to check permissions for this action.';
-      setPermissionMessage(message);
+      setPermissionMessage(t('equipmentQRScan.permissionCheckFailed'));
     } finally {
       setCheckingAction(null);
     }
@@ -106,10 +107,10 @@ export default function EquipmentQRQuickActions({
     <section className="space-y-3" aria-labelledby="qr-quick-actions-heading">
       <div>
         <h2 id="qr-quick-actions-heading" className="text-base font-semibold">
-          Quick Actions
+          {t('equipmentQRScan.quickActions')}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          These actions load only after selection and keep you on the scanned equipment record.
+          {t('equipmentQRScan.quickActionsDescription')}
         </p>
       </div>
 
@@ -131,7 +132,7 @@ export default function EquipmentQRQuickActions({
                   to={`/dashboard/work-orders/${successMessage.workOrderId}`}
                   reloadDocument
                 >
-                  Open work order
+                  {t('equipmentQRScan.openWorkOrder')}
                 </Link>
               </Button>
             )}
@@ -147,7 +148,7 @@ export default function EquipmentQRQuickActions({
           disabled={checkingAction !== null}
         >
           {renderSpinner('generic-work-order') ?? <Plus className="h-4 w-4" />}
-          New Work Order
+          {t('equipmentQRScan.newWorkOrder')}
         </Button>
         <Button
           type="button"
@@ -157,7 +158,7 @@ export default function EquipmentQRQuickActions({
           disabled={checkingAction !== null}
         >
           {renderSpinner('update-hours') ?? <Clock className="h-4 w-4" />}
-          Update Hours
+          {t('equipmentQRScan.updateHours')}
         </Button>
         <Button
           type="button"
@@ -167,7 +168,7 @@ export default function EquipmentQRQuickActions({
           disabled={checkingAction !== null}
         >
           {renderSpinner('note-image') ?? <Camera className="h-4 w-4" />}
-          Add Note / Upload Image
+          {t('equipmentQRScan.addNoteImage')}
         </Button>
       </div>
 
@@ -189,7 +190,7 @@ export default function EquipmentQRQuickActions({
                 setDialog(null);
                 setActivePermissionContext(null);
                 setSuccessMessage({
-                  message: `Work order "${workOrder.title}" was created.`,
+                  message: t('equipmentQRScan.workOrderCreated', { title: workOrder.title }),
                   workOrderId: workOrder.id,
                 });
               }}
@@ -211,7 +212,7 @@ export default function EquipmentQRQuickActions({
                 setDialog(null);
                 setActivePermissionContext(null);
                 setSuccessMessage({
-                  message: `Working hours updated to ${newHours} hours.`,
+                  message: t('equipmentQRScan.hoursUpdated', { count: newHours }),
                 });
                 onWorkingHoursUpdated?.(newHours);
               }}
