@@ -106,11 +106,11 @@
       "batch": {
         "steps": [
           {
-            "argv": ["--format", "json", "--fail-on-issues"],
+            "argv": ["--format", "json", "--quiet", "--fail-on-issues"],
             "contract": { "kind": "exit-code" }
           },
           {
-            "argv": ["dupes", "--format", "json", "--fail-on-issues"],
+            "argv": ["dupes", "--format", "json", "--quiet", "--fail-on-issues"],
             "contract": { "kind": "exit-code" }
           }
         ]
