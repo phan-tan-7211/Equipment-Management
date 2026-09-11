@@ -43,37 +43,40 @@ export type EffectivePMIntervalPolicy = {
   templateName?: string | null;
 };
 
+export type PMSchedulePolicyDisplayPrimary =
+  | { kind: 'interval'; value: number; intervalType: PMIntervalType }
+  | { kind: 'no_recurring_pm' }
+  | { kind: 'loading' }
+  | { kind: 'no_schedule_configured' }
+  | { kind: 'inherited_schedule' };
+
+export type PMSchedulePolicyDisplaySecondary =
+  | { kind: 'equipment_override' }
+  | { kind: 'team_source'; teamName?: string | null }
+  | { kind: 'template_source'; templateName?: string | null }
+  | { kind: 'pm_template_source'; templateName?: string | null }
+  | { kind: 'inherit_source'; teamName?: string | null };
+
 export type PMSchedulePolicyDisplay = {
-  primary: string;
-  secondary: string | null;
+  primary: PMSchedulePolicyDisplayPrimary;
+  secondary: PMSchedulePolicyDisplaySecondary | null;
 };
 
-export function formatPMIntervalPrimary(value: number, type: PMIntervalType): string {
-  const unit = type === 'hours' ? 'hours' : 'days';
-  return `Every ${value} ${unit}`;
-}
-
-function getInheritedSourceLabel(
+function getInheritedSourceDisplay(
   effective: EffectivePMIntervalPolicy,
   teamName?: string | null
-): string {
+): PMSchedulePolicyDisplaySecondary | null {
   switch (effective.source) {
     case 'team_policy':
-      return teamName ? `From team (${teamName})` : 'From team schedule';
+      return { kind: 'team_source', teamName };
     case 'template_policy':
-      return effective.templateName
-        ? `From template (${effective.templateName})`
-        : 'From template schedule';
+      return { kind: 'template_source', templateName: effective.templateName };
     case 'template_default':
-      return effective.templateName
-        ? `From PM template (${effective.templateName})`
-        : 'From PM template default';
+      return { kind: 'pm_template_source', templateName: effective.templateName };
     case 'equipment_policy':
-      return '';
+      return null;
     case 'unconfigured':
-      return teamName
-        ? `Inherits from team (${teamName})`
-        : 'Inherits from team or PM template';
+      return { kind: 'inherit_source', teamName };
   }
 }
 
@@ -88,48 +91,57 @@ export function getPMSchedulePolicyDisplay(
   const form = policyRowToFormState(policy);
 
   if (form.mode === 'none') {
-    return { primary: 'No recurring PM', secondary: 'Equipment override' };
+    return {
+      primary: { kind: 'no_recurring_pm' },
+      secondary: { kind: 'equipment_override' },
+    };
   }
 
   if (form.mode === 'custom' && form.intervalValue) {
     return {
-      primary: formatPMIntervalPrimary(form.intervalValue, form.intervalType),
-      secondary: 'Equipment override',
+      primary: {
+        kind: 'interval',
+        value: form.intervalValue,
+        intervalType: form.intervalType,
+      },
+      secondary: { kind: 'equipment_override' },
     };
   }
 
   if (options?.inheritedEffectiveLoading) {
-    return { primary: 'Loading…', secondary: null };
+    return { primary: { kind: 'loading' }, secondary: null };
   }
 
   const effective = options?.inheritedEffective;
 
   if (effective?.scheduleMode === 'custom' && effective.intervalValue && effective.intervalType) {
     return {
-      primary: formatPMIntervalPrimary(effective.intervalValue, effective.intervalType),
-      secondary: getInheritedSourceLabel(effective, options?.teamName),
+      primary: {
+        kind: 'interval',
+        value: effective.intervalValue,
+        intervalType: effective.intervalType,
+      },
+      secondary: getInheritedSourceDisplay(effective, options?.teamName),
     };
   }
 
   if (effective?.scheduleMode === 'none') {
     return {
-      primary: 'No recurring PM',
-      secondary: getInheritedSourceLabel(effective, options?.teamName),
+      primary: { kind: 'no_recurring_pm' },
+      secondary: getInheritedSourceDisplay(effective, options?.teamName),
     };
   }
 
   if (effective?.scheduleMode === 'unconfigured') {
     return {
-      primary: 'No schedule configured',
-      secondary: getInheritedSourceLabel(effective, options?.teamName),
+      primary: { kind: 'no_schedule_configured' },
+      secondary: getInheritedSourceDisplay(effective, options?.teamName),
     };
   }
 
   return {
-    primary: 'Inherited schedule',
-    secondary: options?.teamName
-      ? `Inherits from team (${options.teamName})`
-      : 'Inherits from team or PM template',
+    primary: { kind: 'inherited_schedule' },
+    secondary: { kind: 'inherit_source', teamName: options?.teamName },
   };
 }
 
