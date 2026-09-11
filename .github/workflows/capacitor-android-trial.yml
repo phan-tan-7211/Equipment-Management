@@ -44,6 +44,9 @@ jobs:
           @capacitor/keyboard@8
           @capacitor/splash-screen@8
           @capacitor/haptics@8
+          @capacitor/camera@8
+          @capacitor/filesystem@8
+          @capacitor/share@8
           @capacitor/barcode-scanner@3.1.2
           @capacitor-community/media@9.1.0
           @capacitor/assets@3
@@ -78,12 +81,15 @@ jobs:
           const manifestPath = 'android/app/src/main/AndroidManifest.xml';
           let manifest = fs.readFileSync(manifestPath, 'utf8');
 
-          if (!manifest.includes('android.permission.CAMERA')) {
-            manifest = manifest.replace(
-              '<application',
-              '    <uses-permission android:name="android.permission.CAMERA" />\n\n    <application',
-            );
-          }
+          const addPermission = (xml) => {
+            if (!manifest.includes(xml)) {
+              manifest = manifest.replace('<application', `    ${xml}\n\n    <application`);
+            }
+          };
+
+          addPermission('<uses-permission android:name="android.permission.CAMERA" />');
+          addPermission('<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />');
+          addPermission('<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />');
 
           if (!manifest.includes('android:launchMode="singleTask"')) {
             manifest = manifest.replace(
@@ -158,9 +164,9 @@ jobs:
       - name: Sync web assets and native plugins into Android
         run: npx cap sync android
 
-      - name: Verify V6 native OAuth and App Link wiring
+      - name: Verify V7 Phase 4 native media and file wiring
         run: |
-          echo "Checking required Capacitor plugins..."
+          echo "Checking required Capacitor shell plugins..."
           grep -R --line-number --fixed-strings "capacitor-app" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
           grep -R --line-number --fixed-strings "capacitor-browser" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
           grep -R --line-number --fixed-strings "capacitor-keyboard" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
@@ -169,15 +175,22 @@ jobs:
           grep -R --line-number --fixed-strings "capacitor-haptics" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
           grep -R --line-number --fixed-strings "capacitor-community-media" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
 
-          echo "Checking Phase 3 Android deep links..."
+          echo "Checking Phase 4 native plugins..."
+          grep -R --line-number --fixed-strings "capacitor-camera" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+          grep -R --line-number --fixed-strings "capacitor-filesystem" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+          grep -R --line-number --fixed-strings "capacitor-share" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+
+          echo "Checking Phase 3 Android deep links remain wired..."
           grep --fixed-strings 'android:scheme="equipqr"' android/app/src/main/AndroidManifest.xml
           grep --fixed-strings 'android:host="equipqr.app"' android/app/src/main/AndroidManifest.xml
           grep --fixed-strings 'android:pathPrefix="/qr/"' android/app/src/main/AndroidManifest.xml
           grep --fixed-strings 'android:launchMode="singleTask"' android/app/src/main/AndroidManifest.xml
 
-          echo "Checking Android camera requirements..."
+          echo "Checking Android media/storage requirements..."
           grep -E 'minSdkVersion\s*=\s*26' android/variables.gradle
           grep --fixed-strings 'android.permission.CAMERA' android/app/src/main/AndroidManifest.xml
+          grep --fixed-strings 'android.permission.READ_EXTERNAL_STORAGE' android/app/src/main/AndroidManifest.xml
+          grep --fixed-strings 'android.permission.WRITE_EXTERNAL_STORAGE' android/app/src/main/AndroidManifest.xml
 
           echo "Checking SystemBars/safe-area config..."
           grep --fixed-strings 'SystemBars' android/app/src/main/assets/capacitor.config.json
@@ -203,16 +216,16 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Prepare V6 APK artifact
+      - name: Prepare V7 Phase 4 APK artifact
         run: |
           mkdir -p artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-v6.apk
-          sha256sum artifacts/equipment-management-capacitor-v6.apk > artifacts/equipment-management-capacitor-v6.apk.sha256
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-v7-phase4.apk
+          sha256sum artifacts/equipment-management-capacitor-v7-phase4.apk > artifacts/equipment-management-capacitor-v7-phase4.apk.sha256
 
-      - name: Upload V6 debug APK
+      - name: Upload V7 Phase 4 debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: equipment-management-capacitor-v6-apk
+          name: equipment-management-capacitor-v7-phase4-apk
           path: artifacts/
           if-no-files-found: error
           retention-days: 7
