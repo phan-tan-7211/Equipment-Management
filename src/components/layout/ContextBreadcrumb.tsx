@@ -28,25 +28,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { UNASSIGNED_TEAM_ID } from '@/contexts/selected-team-context';
-import { getPageLabel, shouldSuppressLabelOnMobile } from './topBarRouteLabels';
+import { getPageLabelKey, shouldSuppressLabelOnMobile } from './topBarRouteLabels';
 import { useI18n } from '@/i18n';
-
-const SECTION_TRANSLATION_KEYS: Record<string, string> = {
-  Dashboard: 'navigation.items.dashboard',
-  Equipment: 'navigation.items.equipment',
-  'Work Orders': 'navigation.items.workOrders',
-  'Fleet Map': 'navigation.items.fleetMap',
-  Inventory: 'navigation.items.inventory',
-  'Part Lookup': 'navigation.items.partLookup',
-  'Part Alternates': 'navigation.items.partAlternates',
-  Teams: 'navigation.items.teams',
-  Settings: 'common.settings',
-  Integrations: 'navigation.items.integrations',
-  'PM Templates': 'navigation.items.pmTemplates',
-  'Daily Check-Ins': 'navigation.items.dailyCheckIns',
-  Reports: 'navigation.items.reports',
-  'Support & tickets': 'profileMenu.supportTickets',
-};
 
 /** Persistent global context breadcrumb rendered in the TopBar left slot. */
 const ContextBreadcrumb: React.FC = () => {
@@ -60,9 +43,8 @@ const ContextBreadcrumb: React.FC = () => {
   const { canCreateTeam } = usePermissions();
   const [showCreateTeamDialog, setShowCreateTeamDialog] = useState(false);
 
-  const sectionLabel = getPageLabel(location.pathname);
-  const sectionTranslationKey = SECTION_TRANSLATION_KEYS[sectionLabel];
-  const translatedSectionLabel = sectionTranslationKey ? t(sectionTranslationKey) : sectionLabel;
+  const sectionLabelKey = getPageLabelKey(location.pathname);
+  const sectionLabel = sectionLabelKey ? t(sectionLabelKey) : '';
   const suppressSectionOnMobile =
     isMobile && shouldSuppressLabelOnMobile(location.pathname);
 
@@ -70,7 +52,7 @@ const ContextBreadcrumb: React.FC = () => {
   const showTeamSegment = teamMemberships.length > 0 || canCreateTeams;
   const teamLabel =
     selectedTeam?.team_name ??
-    (selectedTeamId === UNASSIGNED_TEAM_ID ? 'Unassigned' : 'All teams');
+    (selectedTeamId === UNASSIGNED_TEAM_ID ? t('breadcrumb.unassigned') : t('breadcrumb.allTeams'));
 
   if (isMobile) {
     return (
@@ -111,7 +93,7 @@ const ContextBreadcrumb: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      aria-label={`Switch team (current: ${teamLabel})`}
+                      aria-label={t('breadcrumb.switchTeamCurrent', { name: teamLabel })}
                       className="inline-flex max-w-full items-center justify-center gap-1.5 h-8 px-2 sm:max-w-40 text-muted-foreground hover:text-foreground sm:justify-start"
                     >
                       <WorkspaceAvatar kind="team" src={selectedTeamImageUrl} name={teamLabel} size="sm" />
@@ -121,13 +103,13 @@ const ContextBreadcrumb: React.FC = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" side="bottom" className="w-56">
                     <DropdownMenuLabel className="text-xs flex items-center justify-between gap-2 pr-1">
-                      <span>Switch team</span>
+                      <span>{t('breadcrumb.switchTeam')}</span>
                       {canCreateTeams && (
                         <Button
                           type="button"
                           size="icon"
-                          aria-label="Create new team"
-                          title="Create new team"
+                          aria-label={t('breadcrumb.createNewTeam')}
+                          title={t('breadcrumb.createNewTeam')}
                           onClick={(event) => {
                             event.preventDefault();
                             event.stopPropagation();
@@ -141,11 +123,11 @@ const ContextBreadcrumb: React.FC = () => {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setSelectedTeamId(null)} className="text-sm cursor-pointer flex items-center justify-between">
-                      <span>All teams</span>
+                      <span>{t('breadcrumb.allTeams')}</span>
                       {selectedTeamId === null && <Check className="h-4 w-4 text-primary" />}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setSelectedTeamId(UNASSIGNED_TEAM_ID)} className="text-sm cursor-pointer flex items-center justify-between">
-                      <span>Unassigned</span>
+                      <span>{t('breadcrumb.unassigned')}</span>
                       {selectedTeamId === UNASSIGNED_TEAM_ID && <Check className="h-4 w-4 text-primary" />}
                     </DropdownMenuItem>
                     {teamMemberships.length > 0 && <DropdownMenuSeparator />}
@@ -161,7 +143,7 @@ const ContextBreadcrumb: React.FC = () => {
             </>
           )}
 
-          {!suppressSectionOnMobile && translatedSectionLabel && (
+          {!suppressSectionOnMobile && sectionLabel && (
             <>
               <BreadcrumbSeparator className="inline-flex shrink-0 items-center px-0.5 text-muted-foreground/70 sm:hidden">
                 <span aria-hidden="true" className="text-sm leading-none">·</span>
@@ -169,7 +151,7 @@ const ContextBreadcrumb: React.FC = () => {
               <BreadcrumbSeparator className="hidden sm:inline-flex" />
               <BreadcrumbItem className="min-w-0">
                 <BreadcrumbPage className="text-sm sm:text-base font-medium truncate max-w-32 sm:max-w-none text-center sm:text-left">
-                  {translatedSectionLabel}
+                  {sectionLabel}
                 </BreadcrumbPage>
               </BreadcrumbItem>
             </>
