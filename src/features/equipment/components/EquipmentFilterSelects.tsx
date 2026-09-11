@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { EQUIPMENT_STATUS_FILTER_VALUES } from '@/features/equipment/components/equipmentFilterConstants';
+import { useI18n } from '@/i18n';
 
 export type EquipmentStatusSelectLabels = {
   all: string;
@@ -15,14 +16,6 @@ export type EquipmentStatusSelectLabels = {
   maintenance: string;
   inactive: string;
   out_of_service: string;
-};
-
-const DEFAULT_STATUS_LABELS: EquipmentStatusSelectLabels = {
-  all: 'All Status',
-  active: 'Active',
-  maintenance: 'Maintenance',
-  inactive: 'Inactive',
-  out_of_service: 'Out of Service',
 };
 
 type EquipmentStatusSelectProps = {
@@ -40,18 +33,27 @@ export function EquipmentStatusSelect({
   value,
   onValueChange,
   placeholder,
-  ariaLabel = 'Filter by status',
+  ariaLabel,
   triggerId,
   triggerClassName,
-  labels = DEFAULT_STATUS_LABELS,
+  labels,
   leadingIcon,
 }: EquipmentStatusSelectProps) {
+  const { t } = useI18n();
+  const resolvedLabels: EquipmentStatusSelectLabels = labels ?? {
+    all: t('equipmentList.allStatus'),
+    active: t('equipmentList.active'),
+    maintenance: t('equipmentList.maintenance'),
+    inactive: t('equipmentList.inactive'),
+    out_of_service: t('equipmentList.outOfService'),
+  };
+
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger
         id={triggerId}
         className={triggerClassName}
-        aria-label={ariaLabel}
+        aria-label={ariaLabel ?? t('equipmentList.filterByStatus')}
       >
         {leadingIcon}
         <SelectValue placeholder={placeholder} />
@@ -59,7 +61,7 @@ export function EquipmentStatusSelect({
       <SelectContent>
         {EQUIPMENT_STATUS_FILTER_VALUES.map((statusValue) => (
           <SelectItem key={statusValue} value={statusValue}>
-            {labels[statusValue]}
+            {resolvedLabels[statusValue]}
           </SelectItem>
         ))}
       </SelectContent>
@@ -83,29 +85,30 @@ export function EquipmentManufacturerSelect({
   value,
   onValueChange,
   manufacturers,
-  placeholder = 'Manufacturer',
-  ariaLabel = 'Manufacturer',
+  placeholder,
+  ariaLabel,
   triggerId,
   triggerClassName,
-  allLabel = 'All Manufacturers',
+  allLabel,
   showIcon = false,
 }: EquipmentManufacturerSelectProps) {
+  const { t } = useI18n();
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger
         id={triggerId}
         className={triggerClassName}
-        aria-label={ariaLabel}
+        aria-label={ariaLabel ?? t('equipmentList.manufacturer')}
       >
         {showIcon ? (
           <Building className="h-3.5 w-3.5 mr-1.5 text-muted-foreground shrink-0" />
         ) : (
           <Building className="h-4 w-4 mr-2" />
         )}
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={placeholder ?? t('equipmentList.manufacturer')} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">{allLabel}</SelectItem>
+        <SelectItem value="all">{allLabel ?? t('equipmentList.allManufacturers')}</SelectItem>
         {manufacturers.map((manufacturer) => (
           <SelectItem key={manufacturer} value={manufacturer}>
             {manufacturer}
@@ -132,29 +135,30 @@ export function EquipmentLocationSelect({
   value,
   onValueChange,
   locations,
-  placeholder = 'Location',
-  ariaLabel = 'Location',
+  placeholder,
+  ariaLabel,
   triggerId,
   triggerClassName,
-  allLabel = 'All Locations',
+  allLabel,
   showIcon = false,
 }: EquipmentLocationSelectProps) {
+  const { t } = useI18n();
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger
         id={triggerId}
         className={triggerClassName}
-        aria-label={ariaLabel}
+        aria-label={ariaLabel ?? t('equipmentList.location')}
       >
         {showIcon ? (
           <MapPin className="h-3.5 w-3.5 mr-1.5 text-muted-foreground shrink-0" />
         ) : (
           <MapPin className="h-4 w-4 mr-2" />
         )}
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={placeholder ?? t('equipmentList.location')} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">{allLabel}</SelectItem>
+        <SelectItem value="all">{allLabel ?? t('equipmentList.allLocations')}</SelectItem>
         {locations.map((location) => (
           <SelectItem key={location} value={location}>
             {location}
