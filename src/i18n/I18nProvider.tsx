@@ -2,12 +2,17 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import en from './locales/en';
 import vi from './locales/vi';
 import ko from './locales/ko';
+import { coreResources } from './coreResources';
 
 export type Language = 'vi' | 'en' | 'ko';
 
 const STORAGE_KEY = 'znteqr-language';
 
-const resources = { vi, en, ko } as const;
+const resources = {
+  vi: { ...vi, ...coreResources.vi },
+  en: { ...en, ...coreResources.en },
+  ko: { ...ko, ...coreResources.ko },
+} as const;
 
 type TranslationParams = Record<string, string | number>;
 
