@@ -33,13 +33,14 @@ jobs:
       # Do not use --no-save. Capacitor discovers native plugins from the
       # package dependency graph when generating/syncing Android. The changes
       # are transient inside CI and are not committed to the branch.
-      - name: Install Capacitor 8 native shell and QR plugins
+      - name: Install Capacitor 8 native plugins
         run: >-
           npm install --package-lock=false
           @capacitor/core@8
           @capacitor/cli@8
           @capacitor/android@8
           @capacitor/app@8
+          @capacitor/browser@8
           @capacitor/keyboard@8
           @capacitor/splash-screen@8
           @capacitor/haptics@8
@@ -61,7 +62,7 @@ jobs:
       - name: Generate Android project
         run: npx cap add android
 
-      - name: Configure Android native QR scanner
+      - name: Configure Android native integrations
         run: |
           node <<'NODE'
           const fs = require('fs');
@@ -76,12 +77,57 @@ jobs:
 
           const manifestPath = 'android/app/src/main/AndroidManifest.xml';
           let manifest = fs.readFileSync(manifestPath, 'utf8');
+
           if (!manifest.includes('android.permission.CAMERA')) {
             manifest = manifest.replace(
               '<application',
               '    <uses-permission android:name="android.permission.CAMERA" />\n\n    <application',
             );
           }
+
+          // Capacitor deep-link delivery relies on one MainActivity instance.
+          if (!manifest.includes('android:launchMode="singleTask"')) {
+            manifest = manifest.replace(
+              /(<activity\b[^>]*android:name="\.MainActivity")/,
+              '$1 android:launchMode="singleTask"',
+            );
+          }
+
+          if (!manifest.includes('android:scheme="equipqr"')) {
+            const phase3Filters = `
+                <!-- Phase 3: Supabase Google OAuth -> native app -->
+                <intent-filter>
+                    <action android:name="android.intent.action.VIEW" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                    <category android:name="android.intent.category.BROWSABLE" />
+                    <data android:scheme="equipqr" android:host="auth" android:pathPrefix="/callback" />
+                </intent-filter>
+
+                <!-- Phase 3: EquipQR HTTPS QR links -> Android app -->
+                <intent-filter android:autoVerify="true">
+                    <action android:name="android.intent.action.VIEW" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                    <category android:name="android.intent.category.BROWSABLE" />
+                    <data android:scheme="https" android:host="equipqr.app" android:pathPrefix="/qr/" />
+                </intent-filter>
+                <intent-filter android:autoVerify="true">
+                    <action android:name="android.intent.action.VIEW" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                    <category android:name="android.intent.category.BROWSABLE" />
+                    <data android:scheme="https" android:host="www.equipqr.app" android:pathPrefix="/qr/" />
+                </intent-filter>
+
+                <!-- HTTPS OAuth callback fallback if Supabase uses the public host -->
+                <intent-filter android:autoVerify="true">
+                    <action android:name="android.intent.action.VIEW" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                    <category android:name="android.intent.category.BROWSABLE" />
+                    <data android:scheme="https" android:host="equipqr.app" android:path="/auth" />
+                </intent-filter>
+`;
+            manifest = manifest.replace('</activity>', `${phase3Filters}            </activity>`);
+          }
+
           fs.writeFileSync(manifestPath, manifest);
           NODE
 
@@ -113,17 +159,22 @@ jobs:
       - name: Sync web assets and native plugins into Android
         run: npx cap sync android
 
-      - name: Verify V5.1 native QR and gallery wiring
+      - name: Verify V6 native OAuth and App Link wiring
         run: |
-          echo "Checking native shell plugins..."
+          echo "Checking required Capacitor plugins..."
           grep -R --line-number --fixed-strings "capacitor-app" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+          grep -R --line-number --fixed-strings "capacitor-browser" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
           grep -R --line-number --fixed-strings "capacitor-keyboard" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
           grep -R --line-number --fixed-strings "capacitor-splash-screen" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
-
-          echo "Checking Phase 2 QR plugins..."
           grep -R --line-number --fixed-strings "capacitor-barcode-scanner" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
           grep -R --line-number --fixed-strings "capacitor-haptics" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
           grep -R --line-number --fixed-strings "capacitor-community-media" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+
+          echo "Checking Phase 3 Android deep links..."
+          grep --fixed-strings 'android:scheme="equipqr"' android/app/src/main/AndroidManifest.xml
+          grep --fixed-strings 'android:host="equipqr.app"' android/app/src/main/AndroidManifest.xml
+          grep --fixed-strings 'android:pathPrefix="/qr/"' android/app/src/main/AndroidManifest.xml
+          grep --fixed-strings 'android:launchMode="singleTask"' android/app/src/main/AndroidManifest.xml
 
           echo "Checking Android camera requirements..."
           grep -E 'minSdkVersion\s*=\s*26' android/variables.gradle
@@ -153,16 +204,16 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Prepare V5.1 APK artifact
+      - name: Prepare V6 APK artifact
         run: |
           mkdir -p artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-v5.1.apk
-          sha256sum artifacts/equipment-management-capacitor-v5.1.apk > artifacts/equipment-management-capacitor-v5.1.apk.sha256
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-v6.apk
+          sha256sum artifacts/equipment-management-capacitor-v6.apk > artifacts/equipment-management-capacitor-v6.apk.sha256
 
-      - name: Upload V5.1 debug APK
+      - name: Upload V6 debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: equipment-management-capacitor-v5.1-apk
+          name: equipment-management-capacitor-v6-apk
           path: artifacts/
           if-no-files-found: error
           retention-days: 7
