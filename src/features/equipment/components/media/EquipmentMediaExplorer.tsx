@@ -21,6 +21,7 @@ import type { EquipmentMediaFilterHandlers } from '@/features/equipment/componen
 import { displayableImageSrc } from '@/services/imageUploadService';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 interface EquipmentMediaExplorerProps extends EquipmentMediaFilterHandlers {
   open: boolean;
@@ -35,10 +36,6 @@ interface EquipmentMediaExplorerProps extends EquipmentMediaFilterHandlers {
   canSetDisplayImage?: boolean;
   onClearFilters: () => void;
   onSetDisplayImage?: (imageUrl: string) => Promise<void>;
-}
-
-function sourceLabel(source: EquipmentImageData['source_type']): string {
-  return source === 'equipment_note' ? 'Equipment note' : 'Work order';
 }
 
 export function EquipmentMediaExplorer({
@@ -61,10 +58,14 @@ export function EquipmentMediaExplorer({
   onClearFilters,
   onSetDisplayImage,
 }: EquipmentMediaExplorerProps) {
+  const { t } = useI18n();
   const { formatDateTime } = useFormatTimestamp();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected =
     filteredImages.find((image) => image.id === selectedId) ?? filteredImages[0] ?? null;
+
+  const sourceLabel = (source: EquipmentImageData['source_type']): string =>
+    source === 'equipment_note' ? t('equipmentMedia.equipmentNote') : t('equipmentMedia.workOrder');
 
   const selectedKind = selected
     ? resolveEquipmentMediaArtifactKind(undefined, selected.file_name)
@@ -79,11 +80,11 @@ export function EquipmentMediaExplorer({
       <DialogContent className="flex max-h-[calc(100dvh-1.5rem)] w-[calc(100vw-1rem)] max-w-5xl flex-col gap-3 overflow-hidden p-3 sm:p-4">
         <DialogHeader className="space-y-1 text-left">
           <DialogTitle className="text-base sm:text-lg">
-            Media & artifacts — {equipmentName}
+            {t('equipmentMedia.explorerTitle', { name: equipmentName })}
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
-            Search and filter photos from equipment notes and work order history.
-            {images.length > 0 ? ` ${images.length} total.` : ''}
+            {t('equipmentMedia.explorerDescription')}
+            {images.length > 0 ? ` ${t('equipmentMedia.totalCount', { count: images.length })}` : ''}
           </DialogDescription>
         </DialogHeader>
 
@@ -109,9 +110,9 @@ export function EquipmentMediaExplorer({
               </div>
             ) : filteredImages.length === 0 ? (
               <div className="flex h-40 flex-col items-center justify-center gap-1 px-4 text-center">
-                <p className="text-sm font-medium">No media match</p>
+                <p className="text-sm font-medium">{t('equipmentMedia.noMediaMatch')}</p>
                 <p className="text-xs text-muted-foreground">
-                  Adjust filters or upload photos from the Images tab.
+                  {t('equipmentMedia.adjustOrUpload')}
                 </p>
               </div>
             ) : (
@@ -130,7 +131,7 @@ export function EquipmentMediaExplorer({
                         'group relative aspect-square overflow-hidden rounded-md border bg-muted text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                         isSelected && 'ring-2 ring-primary',
                       )}
-                      aria-label={`Preview ${image.file_name}`}
+                      aria-label={t('equipmentMedia.previewFile', { name: image.file_name })}
                       aria-pressed={isSelected}
                     >
                       {kind === 'image' && src ? (
@@ -154,7 +155,7 @@ export function EquipmentMediaExplorer({
                           {sourceLabel(image.source_type)}
                         </Badge>
                         {isDisplay ? (
-                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-label="Display image" />
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-label={t('equipmentMedia.displayImage')} />
                         ) : null}
                       </div>
                     </button>
@@ -195,7 +196,7 @@ export function EquipmentMediaExplorer({
                       onClick={() => void onSetDisplayImage(selected.file_url)}
                     >
                       <Star className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-                      {selectedIsDisplay ? 'Current display image' : 'Set as display image'}
+                      {selectedIsDisplay ? t('equipmentMedia.currentDisplayImage') : t('equipmentMedia.setDisplayImage')}
                     </Button>
                   ) : null}
                 </div>
@@ -205,18 +206,17 @@ export function EquipmentMediaExplorer({
                 <FileText className="h-10 w-10 text-muted-foreground" aria-hidden />
                 <p className="text-sm font-medium">{selected.file_name}</p>
                 <p className="text-xs text-muted-foreground">
-                  Document preview is not available yet. Download from the linked note when needed.
+                  {t('equipmentMedia.documentPreviewUnavailable')}
                 </p>
               </div>
             ) : (
               <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-muted-foreground">
-                Select a media item to preview
+                {t('equipmentMedia.selectToPreview')}
               </div>
             )}
           </div>
         </div>
 
-        {/* Mobile preview: selected item viewport below grid */}
         {selected && selectedKind === 'image' && selectedSrc ? (
           <div className="space-y-2 border-t pt-2 lg:hidden">
             <DynamicImageViewport
@@ -235,7 +235,7 @@ export function EquipmentMediaExplorer({
                 onClick={() => void onSetDisplayImage(selected.file_url)}
               >
                 <Star className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-                {selectedIsDisplay ? 'Current display image' : 'Set as display image'}
+                {selectedIsDisplay ? t('equipmentMedia.currentDisplayImage') : t('equipmentMedia.setDisplayImage')}
               </Button>
             ) : null}
           </div>
