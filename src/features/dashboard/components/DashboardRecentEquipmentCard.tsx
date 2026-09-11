@@ -4,6 +4,7 @@ import { Forklift } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getStatusDisplayInfo } from "@/features/equipment/utils/equipmentHelpers";
 import { cn } from "@/lib/utils";
+import { useI18n } from '@/i18n';
 
 import { DashboardRecentListCard } from "./DashboardRecentListCard";
 
@@ -29,44 +30,29 @@ function equipmentStatusStripeClass(status: string): string {
   return 'bg-destructive';
 }
 
-export const DashboardRecentEquipmentCard: React.FC<DashboardRecentEquipmentCardProps> = ({
-  equipment,
-  isLoading,
-  hasMore,
-}) => (
-  <DashboardRecentListCard
-    sectionId="recent-equipment-heading"
-    heading="Recent Equipment"
-    description="Latest equipment in your fleet"
-    icon={Forklift}
-    items={equipment}
-    isLoading={isLoading}
-    hasMore={hasMore}
-    viewAllHref="/dashboard/equipment"
-    viewAllLabel="View all equipment"
-    emptyMessage="No equipment found"
-    getItemKey={(item) => item.id}
-    getItemHref={(item) => `/dashboard/equipment/${item.id}`}
-    renderStatusStripe={(item) => (
-      <div
-        className={cn(
-          'w-0.5 self-stretch flex-shrink-0 rounded-full',
-          equipmentStatusStripeClass(item.status)
-        )}
-      />
-    )}
-    renderTitle={(item) => item.name}
-    renderSubtitle={(item) => `${item.manufacturer} ${item.model}`}
-    renderBadge={(item) => {
-      const statusInfo = getStatusDisplayInfo(item.status);
-      return (
-        <Badge
-          variant="outline"
-          className={cn('ml-1 flex-shrink-0 text-xs', statusInfo.badgeClassName)}
-        >
-          {statusInfo.label}
-        </Badge>
-      );
-    }}
-  />
-);
+export const DashboardRecentEquipmentCard: React.FC<DashboardRecentEquipmentCardProps> = ({ equipment, isLoading, hasMore }) => {
+  const { t } = useI18n();
+  return (
+    <DashboardRecentListCard
+      sectionId="recent-equipment-heading"
+      heading={t('dashboard.widgets.recentEquipmentTitle')}
+      description={t('dashboard.recentEquipmentSubtitle')}
+      icon={Forklift}
+      items={equipment}
+      isLoading={isLoading}
+      hasMore={hasMore}
+      viewAllHref="/dashboard/equipment"
+      viewAllLabel={t('dashboard.viewAllEquipment')}
+      emptyMessage={t('dashboard.noEquipmentFound')}
+      getItemKey={(item) => item.id}
+      getItemHref={(item) => `/dashboard/equipment/${item.id}`}
+      renderStatusStripe={(item) => <div className={cn('w-0.5 self-stretch flex-shrink-0 rounded-full', equipmentStatusStripeClass(item.status))} />}
+      renderTitle={(item) => item.name}
+      renderSubtitle={(item) => `${item.manufacturer} ${item.model}`}
+      renderBadge={(item) => {
+        const statusInfo = getStatusDisplayInfo(item.status);
+        return <Badge variant="outline" className={cn('ml-1 flex-shrink-0 text-xs', statusInfo.badgeClassName)}>{statusInfo.label}</Badge>;
+      }}
+    />
+  );
+};
