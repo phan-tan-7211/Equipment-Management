@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, FileText, Info } from 'lucide-react';
+import { useI18n } from '@/i18n';
 
 interface CSVUploadStepProps {
   onFileUpload: (file: File) => void;
@@ -17,31 +18,24 @@ export const CSVUploadStep: React.FC<CSVUploadStepProps> = ({
   rowCount,
   delimiter
 }) => {
+  const { t } = useI18n();
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
     const csvFile = files.find(f => f.name.toLowerCase().endsWith('.csv'));
-    
-    if (csvFile) {
-      onFileUpload(csvFile);
-    }
+    if (csvFile) onFileUpload(csvFile);
   }, [onFileUpload]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onFileUpload(file);
-    }
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) onFileUpload(selectedFile);
   }, [onFileUpload]);
 
   return (
     <div className="space-y-6">
       <Alert>
         <Info className="w-4 h-4" />
-        <AlertDescription>
-          Upload a CSV file with equipment data. Maximum 10,000 rows and 5MB file size.
-          The CSV should include columns for manufacturer, model, serial number, and any custom attributes.
-        </AlertDescription>
+        <AlertDescription>{t('equipmentImportStep.uploadInfo')}</AlertDescription>
       </Alert>
 
       <Card 
@@ -52,20 +46,10 @@ export const CSVUploadStep: React.FC<CSVUploadStepProps> = ({
       >
         <CardContent className="pt-6">
           <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">Upload CSV File</h3>
-          <p className="text-muted-foreground mb-4">
-            Drag and drop your CSV file here, or click to browse
-          </p>
-          <Button variant="outline">
-            Choose File
-          </Button>
-          <input
-            id="csv-upload"
-            type="file"
-            accept=".csv"
-            className="hidden"
-            onChange={handleFileSelect}
-          />
+          <h3 className="text-lg font-semibold mb-2">{t('equipmentImportStep.uploadTitle')}</h3>
+          <p className="text-muted-foreground mb-4">{t('equipmentImportStep.dragDrop')}</p>
+          <Button variant="outline">{t('equipmentImportStep.chooseFile')}</Button>
+          <input id="csv-upload" type="file" accept=".csv" className="hidden" onChange={handleFileSelect} />
         </CardContent>
       </Card>
 
@@ -77,9 +61,9 @@ export const CSVUploadStep: React.FC<CSVUploadStepProps> = ({
               <div className="flex-1">
                 <h4 className="font-semibold">{file.name}</h4>
                 <div className="text-sm text-muted-foreground space-y-1 mt-1">
-                  <div>Size: {(file.size / 1024).toFixed(1)} KB</div>
-                  <div>Rows: {rowCount.toLocaleString()}</div>
-                  <div>Delimiter: "{delimiter}"</div>
+                  <div>{t('equipmentImportStep.size')}: {(file.size / 1024).toFixed(1)} KB</div>
+                  <div>{t('equipmentImportStep.rows')}: {rowCount.toLocaleString()}</div>
+                  <div>{t('equipmentImportStep.delimiter')}: "{delimiter}"</div>
                 </div>
               </div>
             </div>
@@ -88,13 +72,13 @@ export const CSVUploadStep: React.FC<CSVUploadStepProps> = ({
       )}
 
       <div className="space-y-3 text-sm text-muted-foreground">
-        <h4 className="font-semibold text-foreground">Requirements:</h4>
+        <h4 className="font-semibold text-foreground">{t('equipmentImportStep.requirements')}</h4>
         <ul className="space-y-1 ml-4">
-          <li>• CSV format with header row</li>
-          <li>• Maximum 10,000 data rows</li>
-          <li>• Maximum 5MB file size</li>
-          <li>• Include manufacturer, model, or serial number for equipment identification</li>
-          <li>• Dates should be in YYYY-MM-DD, MM/DD/YYYY, or YYYY/MM/DD format</li>
+          <li>• {t('equipmentImportStep.reqHeader')}</li>
+          <li>• {t('equipmentImportStep.reqRows')}</li>
+          <li>• {t('equipmentImportStep.reqSize')}</li>
+          <li>• {t('equipmentImportStep.reqIdentity')}</li>
+          <li>• {t('equipmentImportStep.reqDates')}</li>
         </ul>
       </div>
     </div>
