@@ -1,12 +1,11 @@
 /**
  * Console Error Ring Buffer
  *
- * Intercepts console.error calls and stores the last N error messages
- * in a ring buffer. Used by the bug reporting system to include recent
- * errors in ticket metadata for faster diagnosis.
+ * Captures recent console errors plus uncaught browser/WebView errors so bug
+ * reports can include useful diagnostics without a third-party crash SDK.
  *
- * Privacy: Only error message strings are stored (truncated).
- * No stack traces, no PII, no sensitive data.
+ * Privacy: only short error message strings are stored in memory. No stack
+ * traces, tokens, request bodies, or persistent PII are captured here.
  */
 
 const ERROR_BUFFER_SIZE = 10;
@@ -15,10 +14,26 @@ const MAX_ERROR_LENGTH = 200;
 const errorBuffer: string[] = [];
 let initialized = false;
 
+function pushErrorMessage(value: unknown): void {
+  try {
+    const message = (
+      value instanceof Error
+        ? value.message
+        : typeof value === 'string'
+          ? value
+          : String(value ?? '')
+    ).slice(0, MAX_ERROR_LENGTH);
+
+    if (!message) return;
+    errorBuffer.push(message);
+    if (errorBuffer.length > ERROR_BUFFER_SIZE) errorBuffer.shift();
+  } catch {
+    // Diagnostics must never become an application failure.
+  }
+}
+
 /**
- * Initialize console.error interception.
- * Call once at app startup (e.g., in main.tsx).
- * Safe to call multiple times -- only initializes once.
+ * Initialize console/global error interception. Safe to call more than once.
  */
 export function initConsoleErrorCapture(): void {
   if (initialized) return;
@@ -28,38 +43,38 @@ export function initConsoleErrorCapture(): void {
 
   console.error = (...args: unknown[]) => {
     try {
-      const message = args
-        .map((a) => {
-          if (a instanceof Error) return a.message;
-          if (typeof a === 'string') return a;
-          try {
-            return String(a);
-          } catch {
-            return '[unstringifiable]';
-          }
-        })
-        .join(' ')
-        .slice(0, MAX_ERROR_LENGTH);
-
-      if (message.length > 0) {
-        errorBuffer.push(message);
-        if (errorBuffer.length > ERROR_BUFFER_SIZE) {
-          errorBuffer.shift();
-        }
-      }
+      pushErrorMessage(
+        args
+          .map((a) => {
+            if (a instanceof Error) return a.message;
+            if (typeof a === 'string') return a;
+            try {
+              return String(a);
+            } catch {
+              return '[unstringifiable]';
+            }
+          })
+          .join(' '),
+      );
     } catch {
-      // Never let the buffer logic break console.error itself
+      // Never let the buffer logic break console.error itself.
     }
 
-    // Always call the original
     originalError.apply(console, args);
   };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('error', (event) => {
+      pushErrorMessage(event.error instanceof Error ? event.error : event.message);
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      pushErrorMessage(event.reason instanceof Error ? event.reason : event.reason);
+    });
+  }
 }
 
-/**
- * Get a copy of the recent error messages.
- * Returns up to ERROR_BUFFER_SIZE most recent errors.
- */
+/** Get a copy of the most recent captured errors. */
 export function getRecentErrors(): string[] {
   return [...errorBuffer];
 }
