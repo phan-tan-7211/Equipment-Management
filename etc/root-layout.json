@@ -73,8 +73,13 @@
   ],
   "imageMustLiveUnder": "public/images/",
   "imageExceptions": [
+    "public/apple-touch-icon.png",
     "public/favicon.ico",
+    "public/favicon-16x16.png",
+    "public/favicon-32x32.png",
     "public/og-image.png",
+    "public/pwa-192x192.png",
+    "public/pwa-512x512.png",
     "docs/assets/",
     "docs/public/",
     "supabase/seed-images/"
