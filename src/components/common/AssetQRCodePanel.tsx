@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { generateQRDataUrl } from '@/utils/qr';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useI18n } from '@/i18n';
 
 type QrDownloadFormat = 'png' | 'jpg';
 
@@ -47,6 +48,7 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
   qrImageTestId,
   urlTestId,
 }) => {
+  const { t } = useI18n();
   const [qrCodeDataUrl, setQrCodeDataUrl] = React.useState('');
   const [copied, setCopied] = React.useState(false);
   const [instructionsOpen, setInstructionsOpen] = React.useState(false);
@@ -58,9 +60,9 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
       setQrCodeDataUrl(dataUrl);
     } catch (error) {
       console.error('Error generating QR code:', error);
-      toast.error('Failed to generate QR code');
+      toast.error(t('qrCommon.generateFailed'));
     }
-  }, [qrCodeUrl]);
+  }, [qrCodeUrl, t]);
 
   React.useEffect(() => {
     if (entityId) {
@@ -89,10 +91,10 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
       link.click();
       document.body.removeChild(link);
 
-      toast.success(`QR code downloaded as ${format.toUpperCase()}`);
+      toast.success(t('qrCommon.downloaded', { format: format.toUpperCase() }));
     } catch (error) {
       console.error('Error downloading QR code:', error);
-      toast.error('Failed to download QR code');
+      toast.error(t('qrCommon.downloadFailed'));
     }
   };
 
@@ -100,10 +102,10 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
     try {
       await navigator.clipboard.writeText(qrCodeUrl);
       setCopied(true);
-      toast.success('QR code URL copied to clipboard');
+      toast.success(t('qrCommon.copiedSuccess'));
     } catch (error) {
       console.error('Failed to copy URL:', error);
-      toast.error('Failed to copy URL');
+      toast.error(t('qrCommon.copyFailed'));
     }
   };
 
@@ -124,13 +126,13 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
           <div
             className={`${isMobile ? 'w-48 h-48' : 'w-64 h-64'} bg-muted rounded-lg flex items-center justify-center`}
           >
-            <div className="text-muted-foreground text-center px-2">Generating QR code...</div>
+            <div className="text-muted-foreground text-center px-2">{t('qrCommon.generating')}</div>
           </div>
         )}
       </div>
 
       <div className="space-y-2">
-        <span className="text-sm font-medium text-foreground">QR Code URL:</span>
+        <span className="text-sm font-medium text-foreground">{t('qrCommon.urlLabel')}</span>
         <div className="flex items-center gap-2">
           <div
             className="flex-1 p-2 bg-muted rounded border text-sm font-mono break-all text-muted-foreground"
@@ -144,7 +146,7 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
               size="sm"
               onClick={copyQRCodeUrl}
               className="flex items-center gap-1"
-              aria-label="Copy URL to clipboard"
+              aria-label={t('qrCommon.copyAria')}
               disabled={copied}
             >
               {copied ? (
@@ -152,13 +154,13 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
               ) : (
                 <Copy className="h-4 w-4" />
               )}
-              {copied ? 'Copied' : 'Copy'}
+              {copied ? t('qrCommon.copied') : t('qrCommon.copy')}
             </Button>
             {copied && (
               <Button variant="outline" size="sm" asChild className="flex items-center gap-1">
-                <a href={qrCodeUrl} target="_blank" rel="noopener noreferrer" aria-label="Open URL in new tab">
+                <a href={qrCodeUrl} target="_blank" rel="noopener noreferrer" aria-label={t('qrCommon.openAria')}>
                   <ExternalLink className="h-4 w-4" />
-                  Test
+                  {t('qrCommon.test')}
                 </a>
               </Button>
             )}
@@ -172,7 +174,7 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
         className="text-sm text-muted-foreground bg-muted rounded-lg"
       >
         <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 p-3 text-left font-medium text-foreground rounded-lg transition-colors hover:bg-muted/80 motion-reduce:transition-none group">
-          How to use
+          {t('qrCommon.howToUse')}
           <ChevronRight
             className="h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none group-data-[state=open]:rotate-90"
             aria-hidden
@@ -192,13 +194,13 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
           <DropdownMenuTrigger asChild>
             <Button disabled={!qrCodeDataUrl} className="flex-1">
               <Download className="h-4 w-4" />
-              Download
+              {t('qrCommon.download')}
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-              Download format
+              {t('qrCommon.downloadFormat')}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -227,7 +229,7 @@ const AssetQRCodePanel: React.FC<AssetQRCodePanelProps> = ({
         </DropdownMenu>
         {showCloseButton && onClose && (
           <Button variant="outline" onClick={onClose} className="flex-1 min-h-11">
-            Close
+            {t('qrCommon.close')}
           </Button>
         )}
       </div>
