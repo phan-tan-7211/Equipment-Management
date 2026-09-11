@@ -1,4 +1,4 @@
-name: Capacitor Android Trial APK
+name: Capacitor Android Final Test APK
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
 jobs:
   build-debug-apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     env:
       VITE_SUPABASE_URL: https://wgynakhoppqkrutnslmv.supabase.co
       VITE_SUPABASE_ANON_KEY: sb_publishable_5pStEJfSD1p_Nui6ZAA5Cw_ZuJH--fn
@@ -31,8 +31,8 @@ jobs:
         run: npm ci
 
       # Do not use --no-save. Capacitor discovers native plugins from the
-      # package dependency graph when generating/syncing Android. The changes
-      # are transient inside CI and are not committed to the branch.
+      # package dependency graph when generating/syncing Android. These package
+      # changes are transient inside CI and are not committed to the branch.
       - name: Install Capacitor 8 native plugins
         run: >-
           npm install --package-lock=false
@@ -47,6 +47,7 @@ jobs:
           @capacitor/camera@8
           @capacitor/filesystem@8
           @capacitor/share@8
+          @capacitor/network@8
           @capacitor/barcode-scanner@3.1.2
           @capacitor-community/media@9.1.0
           @capacitor/assets@3
@@ -65,10 +66,11 @@ jobs:
       - name: Generate Android project
         run: npx cap add android
 
-      - name: Configure Android native integrations
+      - name: Configure Android native integrations and version
         run: |
           node <<'NODE'
           const fs = require('fs');
+          const pkg = require('./package.json');
 
           const variablesPath = 'android/variables.gradle';
           let variables = fs.readFileSync(variablesPath, 'utf8');
@@ -77,6 +79,20 @@ jobs:
           }
           variables = variables.replace(/minSdkVersion\s*=\s*\d+/, 'minSdkVersion = 26');
           fs.writeFileSync(variablesPath, variables);
+
+          const appGradlePath = 'android/app/build.gradle';
+          let appGradle = fs.readFileSync(appGradlePath, 'utf8');
+          const [major = 0, minor = 0, patch = 0] = String(pkg.version || '1.0.0')
+            .split('.')
+            .map((part) => Number.parseInt(part, 10) || 0);
+          const runNumber = Number.parseInt(process.env.GITHUB_RUN_NUMBER || '1', 10) || 1;
+          const versionCode = major * 1000000 + minor * 10000 + patch * 100 + (runNumber % 100);
+          const versionName = `${pkg.version}-android.${runNumber}`;
+          appGradle = appGradle
+            .replace(/versionCode\s+\d+/, `versionCode ${versionCode}`)
+            .replace(/versionName\s+"[^"]+"/, `versionName "${versionName}"`);
+          fs.writeFileSync(appGradlePath, appGradle);
+          console.log(`Android versionName=${versionName} versionCode=${versionCode}`);
 
           const manifestPath = 'android/app/src/main/AndroidManifest.xml';
           let manifest = fs.readFileSync(manifestPath, 'utf8');
@@ -100,7 +116,7 @@ jobs:
 
           if (!manifest.includes('android:scheme="equipqr"')) {
             const phase3Filters = `
-                <!-- Phase 3: Supabase Google OAuth -> native app -->
+                <!-- Supabase Google OAuth -> native app -->
                 <intent-filter>
                     <action android:name="android.intent.action.VIEW" />
                     <category android:name="android.intent.category.DEFAULT" />
@@ -108,7 +124,7 @@ jobs:
                     <data android:scheme="equipqr" android:host="auth" android:pathPrefix="/callback" />
                 </intent-filter>
 
-                <!-- Phase 3: EquipQR HTTPS QR links -> Android app -->
+                <!-- EquipQR HTTPS QR links -> Android app -->
                 <intent-filter android:autoVerify="true">
                     <action android:name="android.intent.action.VIEW" />
                     <category android:name="android.intent.category.DEFAULT" />
@@ -122,7 +138,7 @@ jobs:
                     <data android:scheme="https" android:host="www.equipqr.app" android:pathPrefix="/qr/" />
                 </intent-filter>
 
-                <!-- HTTPS OAuth callback fallback if Supabase uses the public host -->
+                <!-- HTTPS OAuth callback fallback -->
                 <intent-filter android:autoVerify="true">
                     <action android:name="android.intent.action.VIEW" />
                     <category android:name="android.intent.category.DEFAULT" />
@@ -164,23 +180,26 @@ jobs:
       - name: Sync web assets and native plugins into Android
         run: npx cap sync android
 
-      - name: Verify V7 Phase 4 native media and file wiring
+      - name: Verify final native wiring
         run: |
-          echo "Checking required Capacitor shell plugins..."
-          grep -R --line-number --fixed-strings "capacitor-app" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
-          grep -R --line-number --fixed-strings "capacitor-browser" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
-          grep -R --line-number --fixed-strings "capacitor-keyboard" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
-          grep -R --line-number --fixed-strings "capacitor-splash-screen" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
-          grep -R --line-number --fixed-strings "capacitor-barcode-scanner" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
-          grep -R --line-number --fixed-strings "capacitor-haptics" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
-          grep -R --line-number --fixed-strings "capacitor-community-media" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
+          echo "Checking native plugins..."
+          for plugin in \
+            capacitor-app \
+            capacitor-browser \
+            capacitor-keyboard \
+            capacitor-splash-screen \
+            capacitor-barcode-scanner \
+            capacitor-haptics \
+            capacitor-community-media \
+            capacitor-camera \
+            capacitor-filesystem \
+            capacitor-share \
+            capacitor-network
+          do
+            grep -R --line-number --fixed-strings "$plugin" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -3
+          done
 
-          echo "Checking Phase 4 native plugins..."
-          grep -R --line-number --fixed-strings "capacitor-camera" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
-          grep -R --line-number --fixed-strings "capacitor-filesystem" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
-          grep -R --line-number --fixed-strings "capacitor-share" android --exclude='*.apk' --exclude='*.jar' --exclude='*.class' | head -10
-
-          echo "Checking Phase 3 Android deep links remain wired..."
+          echo "Checking Android deep links..."
           grep --fixed-strings 'android:scheme="equipqr"' android/app/src/main/AndroidManifest.xml
           grep --fixed-strings 'android:host="equipqr.app"' android/app/src/main/AndroidManifest.xml
           grep --fixed-strings 'android:pathPrefix="/qr/"' android/app/src/main/AndroidManifest.xml
@@ -191,6 +210,10 @@ jobs:
           grep --fixed-strings 'android.permission.CAMERA' android/app/src/main/AndroidManifest.xml
           grep --fixed-strings 'android.permission.READ_EXTERNAL_STORAGE' android/app/src/main/AndroidManifest.xml
           grep --fixed-strings 'android.permission.WRITE_EXTERNAL_STORAGE' android/app/src/main/AndroidManifest.xml
+
+          echo "Checking versioning..."
+          grep -E 'versionCode\s+[0-9]+' android/app/build.gradle
+          grep -E 'versionName\s+"[^"]+"' android/app/build.gradle
 
           echo "Checking SystemBars/safe-area config..."
           grep --fixed-strings 'SystemBars' android/app/src/main/assets/capacitor.config.json
@@ -210,22 +233,22 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build debug APK
+      - name: Build final debug APK
         working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Prepare V7 Phase 4 APK artifact
+      - name: Prepare final test APK artifact
         run: |
           mkdir -p artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-v7-phase4.apk
-          sha256sum artifacts/equipment-management-capacitor-v7-phase4.apk > artifacts/equipment-management-capacitor-v7-phase4.apk.sha256
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-final-test.apk
+          sha256sum artifacts/equipment-management-capacitor-final-test.apk > artifacts/equipment-management-capacitor-final-test.apk.sha256
 
-      - name: Upload V7 Phase 4 debug APK
+      - name: Upload final test APK
         uses: actions/upload-artifact@v4
         with:
-          name: equipment-management-capacitor-v7-phase4-apk
+          name: equipment-management-capacitor-final-test-apk
           path: artifacts/
           if-no-files-found: error
           retention-days: 7
