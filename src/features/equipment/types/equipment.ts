@@ -55,7 +55,10 @@ export const equipmentFormSchema = z.object({
   manufacturer: z.string().min(1, "Manufacturer is required"),
   model: z.string().min(1, "Model is required"),
   serial_number: z.string().optional(),
-  equipment_group_id: z.string().min(1, "Equipment group is required"),
+  // Optional at the schema layer for backward compatibility with organizations
+  // that have not configured classification yet. The selector requires a value
+  // whenever the current organization has active groups (CEV does).
+  equipment_group_id: z.string().optional(),
   status: z.enum(['active', 'maintenance', 'inactive']),
   location: z.string().min(1, "Location is required"),
   installation_date: z.string(),
@@ -98,7 +101,9 @@ export type EquipmentFormData = z.infer<typeof equipmentFormSchema>;
 export const quickEquipmentSchema = z.object({
   manufacturer: z.string().min(1, "Manufacturer is required"),
   model: z.string().min(1, "Model is required"),
-  serial_number: z.string().optional(),
+  // Quick-entry keeps its current contract until the dedicated compact form is
+  // classification-aware; the full equipment form already treats serial as optional.
+  serial_number: z.string().min(1, "Serial number is required"),
   working_hours: z.number().min(0, "Working hours cannot be negative").optional().nullable(),
   team_id: z.string().min(1, "Team is required"),
   name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
