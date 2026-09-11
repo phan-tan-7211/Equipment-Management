@@ -3,7 +3,7 @@ import { CheckCircle, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PASSWORD_POLICY } from '@/lib/passwordPolicy';
-import { STRENGTH_LABELS } from './signUpFormModel';
+import { useI18n } from '@/i18n';
 
 type PasswordComplexity = {
   valid: boolean;
@@ -30,11 +30,19 @@ const SignUpPasswordField: React.FC<SignUpPasswordFieldProps> = ({
   onChange,
   onBlur,
 }) => {
-  const strengthLabel = STRENGTH_LABELS[strength] ?? '';
+  const { t } = useI18n();
+  const strengthKeys = [
+    'auth.strengthVeryWeak',
+    'auth.strengthWeak',
+    'auth.strengthFair',
+    'auth.strengthGood',
+    'auth.strengthStrong',
+  ];
+  const strengthLabel = t(strengthKeys[Math.max(0, Math.min(strength, 4))]);
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="signup-password">Password</Label>
+      <Label htmlFor="signup-password">{t('auth.password')}</Label>
       <Input
         id="signup-password"
         type="password"
@@ -48,24 +56,24 @@ const SignUpPasswordField: React.FC<SignUpPasswordFieldProps> = ({
         aria-describedby={error ? 'signup-password-hint signup-password-error' : 'signup-password-hint'}
       />
       <div id="signup-password-hint" className="space-y-2 text-sm">
-        <p className="text-muted-foreground">Password must have:</p>
+        <p className="text-muted-foreground">{t('auth.passwordMustHave')}</p>
         <ul className="space-y-1">
           <li className={complexity.hasMinLength ? 'text-success' : 'text-muted-foreground'}>
             {complexity.hasMinLength ? <CheckCircle className="inline h-3 w-3 mr-1" /> : <XCircle className="inline h-3 w-3 mr-1" />}
-            At least {PASSWORD_POLICY.minLength} characters
+            {t('auth.minCharacters', { count: PASSWORD_POLICY.minLength })}
           </li>
           <li className={complexity.hasNumber ? 'text-success' : 'text-muted-foreground'}>
             {complexity.hasNumber ? <CheckCircle className="inline h-3 w-3 mr-1" /> : <XCircle className="inline h-3 w-3 mr-1" />}
-            One number
+            {t('auth.oneNumber')}
           </li>
           <li className={complexity.hasSymbol ? 'text-success' : 'text-muted-foreground'}>
             {complexity.hasSymbol ? <CheckCircle className="inline h-3 w-3 mr-1" /> : <XCircle className="inline h-3 w-3 mr-1" />}
-            One symbol (e.g. ! @ # $)
+            {t('auth.oneSymbol')}
           </li>
         </ul>
         <div className="space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Strength</span>
+            <span>{t('auth.strength')}</span>
             <span>{strengthLabel}</span>
           </div>
           <div className="flex gap-1">
