@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.cev.equipmentmanagement.trial',
-  appName: 'Equipment Management',
+  appName: 'ZNTEQR',
   webDir: 'dist',
   backgroundColor: '#0A0A0A',
   android: {
@@ -30,9 +30,6 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     Keyboard: {
-      // Android normally resizes the WebView itself. This also covers
-      // fullscreen/edge-to-edge layouts where the keyboard can otherwise
-      // overlap focused form controls.
       resizeOnFullScreen: true,
     },
   },
