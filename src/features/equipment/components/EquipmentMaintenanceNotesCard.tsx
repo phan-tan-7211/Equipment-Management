@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Wrench } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import InlineEditField from './InlineEditField';
+import { useI18n } from '@/i18n';
 
 type Equipment = Tables<'equipment'>;
 
@@ -19,17 +20,21 @@ export function EquipmentMaintenanceNotesCard({
   notesFieldId,
   onFieldUpdate,
 }: EquipmentMaintenanceNotesCardProps) {
+  const { t } = useI18n();
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Wrench className="h-5 w-5" />
-          Maintenance Information
+          {t('equipmentDetails.maintenanceInformation')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <label htmlFor={notesFieldId} className="text-sm font-medium text-muted-foreground">Notes</label>
+          <label htmlFor={notesFieldId} className="text-sm font-medium text-muted-foreground">
+            {t('equipmentDetails.notes')}
+          </label>
           <div className="mt-1 w-full">
             <InlineEditField
               value={equipment.notes || ''}
@@ -37,9 +42,9 @@ export function EquipmentMaintenanceNotesCard({
               canEdit={canEdit}
               fieldId={notesFieldId}
               type="textarea"
-              placeholder="Enter maintenance notes or additional information"
+              placeholder={t('equipmentDetails.maintenanceNotesPlaceholder')}
               className="w-full text-base"
-              editAriaLabel="Edit notes"
+              editAriaLabel={t('equipmentDetails.editNotes')}
             />
           </div>
         </div>
