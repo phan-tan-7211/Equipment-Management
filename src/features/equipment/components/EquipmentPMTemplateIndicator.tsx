@@ -6,6 +6,7 @@ import { Wrench, X } from 'lucide-react';
 import { usePMTemplate } from '@/features/pm-templates/hooks/usePMTemplates';
 import { useRemoveTemplateFromEquipment } from '@/features/equipment/hooks/useEquipmentTemplateManagement';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useI18n } from '@/i18n';
 
 interface EquipmentPMTemplateIndicatorProps {
   equipmentId: string;
@@ -19,6 +20,7 @@ export const EquipmentPMTemplateIndicator: React.FC<EquipmentPMTemplateIndicator
   templateId,
   compact = false
 }) => {
+  const { t } = useI18n();
   const { data: template } = usePMTemplate(templateId || '');
   const removeTemplate = useRemoveTemplateFromEquipment();
   const { hasRole } = usePermissions();
@@ -46,7 +48,7 @@ export const EquipmentPMTemplateIndicator: React.FC<EquipmentPMTemplateIndicator
             </Badge>
           </TooltipTrigger>
           <TooltipContent>
-            <p>PM Template: {template.name}</p>
+            <p>{t('equipmentPM.templateTooltip', { name: template.name })}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -58,7 +60,7 @@ export const EquipmentPMTemplateIndicator: React.FC<EquipmentPMTemplateIndicator
       <div className="flex items-center gap-2 flex-1">
         <Wrench className="h-4 w-4 text-primary" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-primary">Default PM Template</p>
+          <p className="text-sm font-medium text-primary">{t('equipmentPM.defaultTemplate')}</p>
           <p className="text-xs text-muted-foreground truncate">{template.name}</p>
         </div>
       </div>
@@ -72,12 +74,13 @@ export const EquipmentPMTemplateIndicator: React.FC<EquipmentPMTemplateIndicator
                 onClick={handleRemoveTemplate}
                 disabled={removeTemplate.isPending}
                 className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                aria-label={t('equipmentPM.removeTemplateAssignment')}
               >
                 <X className="h-3 w-3" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Remove PM template assignment</p>
+              <p>{t('equipmentPM.removeTemplateAssignment')}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
