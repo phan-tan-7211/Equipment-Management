@@ -60,11 +60,11 @@ describe('TermsOfService', () => {
       .find((a) => (a as HTMLAnchorElement).getAttribute('href') === '/privacy-policy');
     expect(privacyLink).toBeTruthy();
 
-    const links = screen.queryAllByText('ZNT LLC');
-    links.forEach((link) => {
-      expect(link.closest('a')).toHaveAttribute('href', 'https://columbiacloudworks.com');
-      expect(link.closest('a')).toHaveAttribute('target', '_blank');
-      expect(link.closest('a')).toHaveAttribute('rel', 'noopener noreferrer');
+    const companyLinks = screen.getAllByRole('link', { name: 'ZNT LLC' });
+    companyLinks.forEach((link) => {
+      expect(link).toHaveAttribute('href', 'https://columbiacloudworks.com');
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
     expect(screen.getByText(/phantan7211@gmail\.com/i)).toBeInTheDocument();
     expect(screen.getByText(/https:\/\/equipqr\.app/i)).toBeInTheDocument();
