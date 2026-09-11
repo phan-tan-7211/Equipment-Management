@@ -1,0 +1,73 @@
+name: Capacitor Android Trial APK
+
+on:
+  push:
+    branches:
+      - test/capacitor-android
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-debug-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Install Capacitor 8 for trial build
+        run: >-
+          npm install --no-save --package-lock=false
+          @capacitor/core@8
+          @capacitor/cli@8
+          @capacitor/android@8
+
+      - name: Build Vite app
+        run: npm run build
+
+      - name: Generate Android project
+        run: npx cap add android
+
+      - name: Sync web assets into Android
+        run: npx cap sync android
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Prepare APK artifact
+        run: |
+          mkdir -p artifacts
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/equipment-management-capacitor-debug.apk
+          sha256sum artifacts/equipment-management-capacitor-debug.apk > artifacts/equipment-management-capacitor-debug.apk.sha256
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: equipment-management-capacitor-debug-apk
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 7
