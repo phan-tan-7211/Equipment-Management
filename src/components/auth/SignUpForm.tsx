@@ -113,10 +113,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     setEmailSignupOpen(true);
     setFormData(prev => {
       if (prefillEmail === prev.email) return prev;
-      setEmailError(getEmailErrorForValue(prefillEmail));
+      setEmailError(getEmailErrorForValue(prefillEmail, t));
       return { ...prev, email: prefillEmail };
     });
-  }, [prefillEmail]);
+  }, [prefillEmail, t]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => {
@@ -135,9 +135,9 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
       return next;
     });
 
-    if (field === 'email') setEmailError(getEmailErrorForValue(value));
+    if (field === 'email') setEmailError(getEmailErrorForValue(value, t));
     if (field === 'organizationName' && invitedOrgName) {
-      setOrgNameError(getInvitedOrgNameConflict(value, invitedOrgName));
+      setOrgNameError(getInvitedOrgNameConflict(value, invitedOrgName, t));
     }
   };
 
@@ -145,9 +145,9 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     setTouched(prev => ({ ...prev, [field]: true }));
   };
 
-  const getFieldError = (field: string) => getSignupFieldError(field, validationContext);
+  const getFieldError = (field: string) => getSignupFieldError(field, validationContext, t);
   const getAcceptanceError = () =>
-    getSignupAcceptanceError(termsAccepted, acceptanceTouched, submitAttempted);
+    getSignupAcceptanceError(termsAccepted, acceptanceTouched, submitAttempted, t);
   const formIsValid = () => isSignupFormValid(validationContext);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -283,7 +283,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   const handleGoogleSignUp = () => {
     setTouched(prev => ({ ...prev, organizationName: true }));
     const conflict = invitedOrgName
-      ? getInvitedOrgNameConflict(formData.organizationName, invitedOrgName)
+      ? getInvitedOrgNameConflict(formData.organizationName, invitedOrgName, t)
       : null;
     if (conflict) {
       setOrgNameError(conflict);
