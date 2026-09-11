@@ -77,7 +77,7 @@ describe('buildScanHistoryTimeline', () => {
     expect(timeline[0].actions.map((a) => a.id)).toEqual(['evt-early', 'evt-late']);
   });
 
-  it('adds a "Viewed scan page" fallback action when a scan has no follow-up events', () => {
+  it('adds a semantic viewed-scan fallback action when a scan has no follow-up events', () => {
     const scans = [
       scan({ id: 'scan-1', scanned_at: '2026-01-01T00:00:00Z', scannedByName: 'Jane' }),
     ];
@@ -87,7 +87,6 @@ describe('buildScanHistoryTimeline', () => {
     expect(timeline[0].actions).toHaveLength(1);
     expect(timeline[0].actions[0]).toMatchObject({
       eventType: null,
-      label: 'Viewed scan page',
       performedByName: 'Jane',
     });
   });
@@ -105,42 +104,39 @@ describe('buildScanHistoryTimeline', () => {
 
     const timeline = buildScanHistoryTimeline(scans, followUps);
 
-    // The scan falls back to the synthetic action; the orphan event is dropped.
     expect(timeline[0].actions).toHaveLength(1);
     expect(timeline[0].actions[0].eventType).toBeNull();
   });
 });
 
 describe('describeScanFollowUpEvent', () => {
-  it('labels dashboard_opened', () => {
-    expect(describeScanFollowUpEvent({ event_type: 'dashboard_opened', metadata: {} })).toEqual({
-      label: 'Opened full dashboard record',
-    });
+  it('keeps dashboard_opened presentation-free', () => {
+    expect(describeScanFollowUpEvent({ event_type: 'dashboard_opened', metadata: {} })).toEqual({});
   });
 
-  it('labels work order events with the title detail', () => {
+  it('preserves work order titles as raw semantic detail', () => {
     expect(
       describeScanFollowUpEvent({ event_type: 'pm_work_order_created', metadata: { title: 'PM 1' } })
-    ).toEqual({ label: 'Created PM work order', detail: 'PM 1' });
+    ).toEqual({ detail: { kind: 'title', value: 'PM 1' } });
 
     expect(
       describeScanFollowUpEvent({ event_type: 'generic_work_order_created', metadata: { title: 'WO 9' } })
-    ).toEqual({ label: 'Created work order', detail: 'WO 9' });
+    ).toEqual({ detail: { kind: 'title', value: 'WO 9' } });
   });
 
-  it('labels working hours with the new hours value', () => {
+  it('returns working hours as semantic detail', () => {
     expect(
       describeScanFollowUpEvent({ event_type: 'working_hours_updated', metadata: { newHours: 125 } })
-    ).toEqual({ label: 'Updated working hours', detail: '125 hours' });
+    ).toEqual({ detail: { kind: 'hours', value: 125 } });
   });
 
-  it('labels note/image with image count and privacy detail', () => {
+  it('returns note/image metadata without presentation text', () => {
     expect(
       describeScanFollowUpEvent({ event_type: 'note_image_added', metadata: { imageCount: 2, isPrivate: true } })
-    ).toEqual({ label: 'Added note / image', detail: '2 images, private' });
+    ).toEqual({ detail: { kind: 'note_image', imageCount: 2, isPrivate: true } });
 
     expect(
       describeScanFollowUpEvent({ event_type: 'note_image_added', metadata: {} })
-    ).toEqual({ label: 'Added note / image' });
+    ).toEqual({});
   });
 });
