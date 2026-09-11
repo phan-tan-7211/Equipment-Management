@@ -14,6 +14,7 @@ import { useBulkGridClickToSelect } from '@/hooks/useBulkGridClickToSelect';
 import { useBulkGridPendingApply } from '@/hooks/useBulkGridPendingApply';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { EquipmentRecord } from '@/features/equipment/types/equipment';
+import { useI18n } from '@/i18n';
 
 import { BulkApplyConfirmDialog } from './BulkApplyConfirmDialog';
 import {
@@ -21,31 +22,6 @@ import {
   type BulkEditableCellProps,
   type BulkEditableCellSelectOption,
 } from './BulkEditableCell';
-
-// TODO(#627): Add `react-window` virtualization when the grid is exercised
-// against organizations with 500+ equipment rows. The headless TanStack Table
-// already exposes `rows` as a flat array, so virtualization is a drop-in
-// replacement of the `<TableBody>` map with a windowed renderer.
-
-const STATUS_OPTIONS: BulkEditableCellSelectOption[] = [
-  { value: 'active', label: 'Active' },
-  { value: 'maintenance', label: 'Maintenance' },
-  { value: 'inactive', label: 'Inactive' },
-];
-
-/**
- * Map from `EquipmentRecord` field key to the human-readable label shown in
- * the Bulk Apply confirmation dialog when AC#4 broadcasts a single-cell edit
- * across selected rows.
- */
-const FIELD_LABELS: Partial<Record<keyof EquipmentRecord, string>> = {
-  status: 'Status',
-  manufacturer: 'Manufacturer',
-  model: 'Model',
-  serial_number: 'Serial #',
-  working_hours: 'Hours',
-  location: 'Location',
-};
 
 export interface BulkEquipmentGridProps {
   rows: EquipmentRecord[];
@@ -66,19 +42,6 @@ export interface BulkEquipmentGridProps {
   onClearSelection: () => void;
 }
 
-/**
- * TanStack Table-driven bulk-edit grid (#627). Renders onto shadcn `<Table>`
- * primitives (intentionally NOT the project's wrapper `DataTable` from #633 —
- * TanStack provides its own state, sort, and selection model). v1 surfaces
- * the same static column set as the dense-table view: Name (read-only / link),
- * Status, Manufacturer, Model, Serial #, Hours, Location, and Team
- * (display-only). Custom attributes are deferred to a follow-up issue.
- *
- * Single-click on a cell toggles row selection; double-click mounts the
- * inline editor inside `BulkEditableCell`. When the edited row is part of a
- * multi-row selection (AC#4), `BulkApplyConfirmDialog` prompts the user
- * before broadcasting the change.
- */
 export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
   rows,
   dirtyRows,
@@ -89,7 +52,23 @@ export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
   onSelectAll,
   onClearSelection,
 }) => {
+  const { t } = useI18n();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
+
+  const statusOptions = useMemo<BulkEditableCellSelectOption[]>(() => [
+    { value: 'active', label: t('equipmentBulk.active') },
+    { value: 'maintenance', label: t('equipmentBulk.maintenance') },
+    { value: 'inactive', label: t('equipmentBulk.inactive') },
+  ], [t]);
+
+  const fieldLabels = useMemo<Partial<Record<keyof EquipmentRecord, string>>>(() => ({
+    status: t('equipmentBulk.status'),
+    manufacturer: t('equipmentBulk.manufacturer'),
+    model: t('equipmentBulk.model'),
+    serial_number: t('equipmentBulk.serialNumber'),
+    working_hours: t('equipmentBulk.hours'),
+    location: t('equipmentBulk.location'),
+  }), [t]);
 
   const { cancelPendingSelection, handleRowClick } = useBulkGridClickToSelect(onToggleSelected);
 
@@ -101,7 +80,7 @@ export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
     clearPendingApply,
   } = useBulkGridPendingApply<keyof EquipmentRecord>({
     selectedRowIds,
-    fieldLabels: FIELD_LABELS,
+    fieldLabels,
     onSetCellValue: (rowId, field, value) =>
       onSetCellValue(rowId, field, value as EquipmentRecord[keyof EquipmentRecord]),
     onSetCellValueOnRows: (ids, field, value) =>
@@ -157,7 +136,7 @@ export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
                 if (value === true) onSelectAll(rows.map((r) => r.id));
                 else onClearSelection();
               }}
-              aria-label="Select all rows"
+              aria-label={t('equipmentBulk.selectAllRows')}
             />
           );
         },
@@ -165,7 +144,7 @@ export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
           <Checkbox
             checked={selectedRowIds.has(row.original.id)}
             onCheckedChange={() => onToggleSelected(row.original.id)}
-            aria-label={`Select ${row.original.name}`}
+            aria-label={t('equipmentBulk.selectRow', { name: row.original.name })}
             onClick={(e) => e.stopPropagation()}
           />
         ),
@@ -174,7 +153,7 @@ export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
       {
         id: 'name',
         accessorKey: 'name',
-        header: ({ column }) => <BulkGridSortableHeader column={column} title="Name" />,
+        header: ({ column }) => <BulkGridSortableHeader column={column} title={t('equipmentBulk.name')} />,
         cell: ({ row }) => (
           <Link
             to={`/dashboard/equipment/${row.original.id}`}
@@ -189,17 +168,17 @@ export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
       {
         id: 'status',
         accessorKey: 'status',
-        header: ({ column }) => <BulkGridSortableHeader column={column} title="Status" />,
+        header: ({ column }) => <BulkGridSortableHeader column={column} title={t('equipmentBulk.status')} />,
         cell: ({ row }) => (
           <BulkEditableCell
             rowId={row.original.id}
             field="status"
             type="select"
-            selectOptions={STATUS_OPTIONS}
+            selectOptions={statusOptions}
             value={getDisplayValue(row.original, 'status') as string}
             initialValue={row.original.status}
             formatDisplay={(v) =>
-              STATUS_OPTIONS.find((o) => o.value === v)?.label ?? String(v ?? '')
+              statusOptions.find((o) => o.value === v)?.label ?? String(v ?? '')
             }
             onChange={(next) =>
               handleCellChange(row.original.id, 'status', next as EquipmentRecord['status'])
@@ -210,13 +189,13 @@ export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
         ),
         enableSorting: true,
       },
-      editableTextCol('manufacturer', 'Manufacturer'),
-      editableTextCol('model', 'Model'),
-      editableTextCol('serial_number', 'Serial #', { mono: true }),
+      editableTextCol('manufacturer', t('equipmentBulk.manufacturer')),
+      editableTextCol('model', t('equipmentBulk.model')),
+      editableTextCol('serial_number', t('equipmentBulk.serialNumber'), { mono: true }),
       {
         id: 'working_hours',
         accessorKey: 'working_hours',
-        header: ({ column }) => <BulkGridSortableHeader column={column} title="Hours" align="right" />,
+        header: ({ column }) => <BulkGridSortableHeader column={column} title={t('equipmentBulk.hours')} align="right" />,
         cell: ({ row }) => (
           <BulkEditableCell
             rowId={row.original.id}
@@ -236,11 +215,11 @@ export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
         ),
         enableSorting: true,
       },
-      editableTextCol('location', 'Location'),
+      editableTextCol('location', t('equipmentBulk.location')),
       {
         id: 'team_name',
         accessorKey: 'team_name',
-        header: ({ column }) => <BulkGridSortableHeader column={column} title="Team" />,
+        header: ({ column }) => <BulkGridSortableHeader column={column} title={t('equipmentBulk.team')} />,
         cell: ({ row }) =>
           row.original.team_id && row.original.team_name ? (
             <Link
@@ -251,9 +230,6 @@ export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
               {row.original.team_name}
             </Link>
           ) : (
-            // TODO(#627): Make Team editable via a `<Select>` driven by the
-            // org-teams query. v1 keeps Team display-only because team_id is a
-            // foreign key — wiring an inline picker is a follow-up.
             <span className="text-muted-foreground">—</span>
           ),
         enableSorting: true,
@@ -268,6 +244,8 @@ export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
     getDisplayValue,
     handleCellChange,
     cancelPendingSelection,
+    statusOptions,
+    t,
   ]);
 
   const table = useReactTable({
@@ -285,7 +263,7 @@ export const BulkEquipmentGrid: React.FC<BulkEquipmentGridProps> = ({
       <BulkTanstackTableShell
         table={table}
         columnCount={columns.length}
-        emptyMessage="No equipment to edit."
+        emptyMessage={t('equipmentBulk.empty')}
         selectedRowIds={selectedRowIds}
         getRowId={(row) => row.id}
         isRowDirty={(row) => dirtyRows.has(row.id)}
