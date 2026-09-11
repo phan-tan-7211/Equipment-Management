@@ -8,8 +8,9 @@ import { Calendar, Clock, ChevronDown, FileText, Users } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import InlineEditField from './InlineEditField';
 import { EquipmentIdentityFields } from './EquipmentIdentityFields';
-import { EQUIPMENT_STATUS_OPTIONS, getStatusColor } from '@/features/equipment/utils/equipmentHelpers';
+import { getStatusColor } from '@/features/equipment/utils/equipmentHelpers';
 import { mobileInlineEditIconRowClassName } from './inlineEditStyles';
+import { useI18n } from '@/i18n';
 
 type Equipment = Tables<'equipment'>;
 
@@ -24,10 +25,11 @@ function EquipmentDescriptionField({
   canEdit: boolean;
   onSave: (value: string) => void | Promise<void>;
 }) {
+  const { t } = useI18n();
   return (
     <div>
       <label htmlFor={descriptionFieldId} className="text-sm font-medium text-muted-foreground">
-        Description
+        {t('equipmentDetails.description')}
       </label>
       <div className="mt-1 w-full">
         <InlineEditField
@@ -36,9 +38,9 @@ function EquipmentDescriptionField({
           canEdit={canEdit}
           fieldId={descriptionFieldId}
           type="textarea"
-          placeholder="Enter equipment description"
+          placeholder={t('equipmentDetails.descriptionPlaceholder')}
           className="w-full text-base"
-          editAriaLabel="Edit description"
+          editAriaLabel={t('equipmentDetails.editDescription')}
         />
       </div>
     </div>
@@ -90,33 +92,41 @@ export function EquipmentBasicInfoCard({
   onTeamAssignment,
   getCurrentTeamDisplay,
 }: EquipmentBasicInfoCardProps) {
+  const { t } = useI18n();
+  const statusOptions = [
+    { value: 'active', label: t('equipmentDetails.active') },
+    { value: 'maintenance', label: t('equipmentDetails.maintenance') },
+    { value: 'inactive', label: t('equipmentDetails.inactive') },
+  ];
+  const currentStatusLabel = statusOptions.find((option) => option.value === (equipment.status || 'active'))?.label ?? t('equipmentDetails.active');
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Basic Information
+          {t('equipmentDetails.basicInformation')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor={nameFieldId} className="text-sm font-medium text-muted-foreground">Name</label>
+            <label htmlFor={nameFieldId} className="text-sm font-medium text-muted-foreground">{t('equipmentDetails.name')}</label>
             <div className="mt-1 w-full">
               <InlineEditField
                 value={equipment.name || ''}
                 onSave={(value) => onFieldUpdate('name', value)}
                 canEdit={canEdit}
                 fieldId={nameFieldId}
-                placeholder="Enter equipment name"
+                placeholder={t('equipmentDetails.namePlaceholder')}
                 className="w-full text-base"
-                editAriaLabel="Edit name"
+                editAriaLabel={t('equipmentDetails.editName')}
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor={statusFieldId} className="text-sm font-medium text-muted-foreground">Status</label>
+            <label htmlFor={statusFieldId} className="text-sm font-medium text-muted-foreground">{t('equipmentDetails.status')}</label>
             <div className="mt-1 w-full">
               {canEdit ? (
                 <InlineEditField
@@ -125,20 +135,20 @@ export function EquipmentBasicInfoCard({
                   canEdit={canEdit}
                   fieldId={statusFieldId}
                   type="select"
-                  selectOptions={[...EQUIPMENT_STATUS_OPTIONS]}
+                  selectOptions={statusOptions}
                   className="w-full text-base"
-                  editAriaLabel="Edit status"
+                  editAriaLabel={t('equipmentDetails.editStatus')}
                 />
               ) : (
                 <Badge className={`${getStatusColor(equipment.status || 'active')} rounded-full px-2 py-0.5 text-xs`} variant="outline">
-                  {EQUIPMENT_STATUS_OPTIONS.find(opt => opt.value === equipment.status)?.label || 'Active'}
+                  {currentStatusLabel}
                 </Badge>
               )}
             </div>
           </div>
 
           <div>
-            <span className="text-sm font-medium text-muted-foreground">Working Hours</span>
+            <span className="text-sm font-medium text-muted-foreground">{t('equipmentDetails.workingHours')}</span>
             <div className="mt-1 flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <Button
@@ -147,13 +157,13 @@ export function EquipmentBasicInfoCard({
                 onClick={onShowWorkingHoursModal}
                 className="min-h-11 justify-start px-2 text-left text-base font-normal hover:underline"
               >
-                {equipment.working_hours ?? 0} hours
+                {t('equipmentDetails.hoursValue', { count: equipment.working_hours ?? 0 })}
               </Button>
             </div>
           </div>
 
           <div>
-            <label htmlFor={assignedTeamFieldId} className="text-sm font-medium text-muted-foreground">Assigned Team</label>
+            <label htmlFor={assignedTeamFieldId} className="text-sm font-medium text-muted-foreground">{t('equipmentDetails.assignedTeam')}</label>
             <div className={mobileInlineEditIconRowClassName}>
               <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
               {canAssignTeams ? (
@@ -164,9 +174,9 @@ export function EquipmentBasicInfoCard({
                   fieldId={assignedTeamFieldId}
                   type="select"
                   selectOptions={teamOptions}
-                  placeholder="Select team"
+                  placeholder={t('equipmentDetails.selectTeam')}
                   className="min-w-0 flex-1 text-base"
-                  editAriaLabel="Edit assigned team"
+                  editAriaLabel={t('equipmentDetails.editAssignedTeam')}
                 />
               ) : (
                 <span className="min-w-0 flex-1 text-base text-foreground">
@@ -177,14 +187,11 @@ export function EquipmentBasicInfoCard({
           </div>
 
           <div>
-            <span className="text-sm font-medium text-muted-foreground">Last Maintenance</span>
+            <span className="text-sm font-medium text-muted-foreground">{t('equipmentDetails.lastMaintenance')}</span>
             <div className="mt-1 flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               {lastMaintenanceLink ? (
-                <Link
-                  to={lastMaintenanceLink}
-                  className="text-base text-primary hover:underline"
-                >
+                <Link to={lastMaintenanceLink} className="text-base text-primary hover:underline">
                   {lastMaintenanceDisplay}
                 </Link>
               ) : (
@@ -217,7 +224,7 @@ export function EquipmentBasicInfoCard({
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm" className="w-full justify-center gap-1.5 text-muted-foreground">
                 <ChevronDown className={`h-4 w-4 transition-transform ${showAllBasicInfo ? 'rotate-180' : ''}`} />
-                {showAllBasicInfo ? 'Hide description' : 'Show description'}
+                {showAllBasicInfo ? t('equipmentDetails.hideDescription') : t('equipmentDetails.showDescription')}
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>
