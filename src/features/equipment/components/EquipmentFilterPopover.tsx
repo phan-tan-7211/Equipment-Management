@@ -11,10 +11,8 @@ import {
 } from '@/features/equipment/components/EquipmentFilterSelects';
 import { EQUIPMENT_QUICK_FILTERS } from '@/features/equipment/components/equipmentFilterConstants';
 import { EquipmentStatusRailLegend } from '@/features/equipment/components/EquipmentStatusRailLegend';
+import { useI18n } from '@/i18n';
 
-// Team is intentionally not part of FilterOptions here — the team scope is
-// owned by the global TopBar `useSelectedTeam`. The popover only exposes
-// page-local filters (status / manufacturer / location / quick filters).
 interface FilterOptions {
   manufacturers: string[];
   locations: string[];
@@ -39,53 +37,44 @@ const EquipmentFilterPopover: React.FC<EquipmentFilterPopoverProps> = ({
   activeFilterCount,
   activeQuickFilter,
 }) => {
+  const { t } = useI18n();
   return (
-    <FilterPopoverShell ariaSubject="equipment" activeFilterCount={activeFilterCount}>
+    <FilterPopoverShell ariaSubject={t('equipment.title')} activeFilterCount={activeFilterCount}>
       {({ close }) => (
         <>
-          {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted-foreground">Status</span>
+            <span className="text-xs text-muted-foreground">{t('equipmentList.status')}</span>
             <EquipmentStatusSelect
               value={filters.status}
               onValueChange={(value) => onFilterChange('status', value)}
-              placeholder="All statuses"
+              placeholder={t('equipmentList.allStatuses')}
               triggerClassName="h-8 text-sm"
-              labels={{
-                all: 'All Statuses',
-                active: 'Active',
-                maintenance: 'Maintenance',
-                inactive: 'Inactive',
-                out_of_service: 'Out of Service',
-              }}
             />
           </div>
 
           <EquipmentStatusRailLegend />
 
-          {/* Manufacturer */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted-foreground">Manufacturer</span>
+            <span className="text-xs text-muted-foreground">{t('equipmentList.manufacturer')}</span>
             <EquipmentManufacturerSelect
               value={filters.manufacturer}
               onValueChange={(value) => onFilterChange('manufacturer', value)}
               manufacturers={filterOptions.manufacturers}
-              placeholder="All manufacturers"
-              ariaLabel="Filter by manufacturer"
+              placeholder={t('equipmentList.allManufacturers')}
+              ariaLabel={t('equipmentList.filterByManufacturer')}
               triggerClassName="h-8 text-sm"
               showIcon
             />
           </div>
 
-          {/* Location */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted-foreground">Location</span>
+            <span className="text-xs text-muted-foreground">{t('equipmentList.location')}</span>
             <EquipmentLocationSelect
               value={filters.location}
               onValueChange={(value) => onFilterChange('location', value)}
               locations={filterOptions.locations}
-              placeholder="All locations"
-              ariaLabel="Filter by location"
+              placeholder={t('equipmentList.allLocations')}
+              ariaLabel={t('equipmentList.filterByLocation')}
               triggerClassName="h-8 text-sm"
               showIcon
             />
@@ -93,9 +82,8 @@ const EquipmentFilterPopover: React.FC<EquipmentFilterPopoverProps> = ({
 
           <Separator />
 
-          {/* Quick filters */}
           <div className="flex flex-col gap-1.5">
-            <p className="text-xs text-muted-foreground">Quick filters</p>
+            <p className="text-xs text-muted-foreground">{t('equipmentList.quickFilters')}</p>
             <div className="flex flex-wrap gap-1.5">
               {EQUIPMENT_QUICK_FILTERS.map((preset) => (
                 <button
@@ -108,7 +96,7 @@ const EquipmentFilterPopover: React.FC<EquipmentFilterPopoverProps> = ({
                       : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
                   )}
                 >
-                  {preset.label}
+                  {t(preset.labelKey)}
                 </button>
               ))}
             </div>
