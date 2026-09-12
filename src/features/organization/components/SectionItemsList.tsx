@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { useI18n } from '@/i18n';
 import { List, type RowComponentProps } from 'react-window';
 import type { PMChecklistItem } from '@/features/pm-templates/services/preventativeMaintenanceService';
 import type { ChecklistItemRowCallbacks } from '@/features/organization/components/checklistItemRowCallbacks';
@@ -90,6 +91,7 @@ export function SectionItemsList({
   onAddBelow,
   triggerAutoSave,
 }: SectionItemsListProps) {
+  const { t } = useI18n();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const enableDragReorder =
@@ -176,7 +178,7 @@ export function SectionItemsList({
             <div className="flex items-center justify-between gap-2">
               <div className="font-medium min-w-0 wrap-break-word">{item.title}</div>
               <Badge variant={item.required ? 'default' : 'outline'} className="shrink-0">
-                {item.required ? 'Required' : 'Optional'}
+                {item.required ? t('pmTemplates.view.required') : t('pmTemplates.view.optional')}
               </Badge>
             </div>
             {item.description && (

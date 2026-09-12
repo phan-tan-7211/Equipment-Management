@@ -553,7 +553,7 @@ const CompatiblePartRow: React.FC<CompatiblePartRowProps> = ({ part, onViewItem 
           {part.is_verified && (
             <Badge variant="default" className="bg-success text-xs">
               <CheckCircle2 className="h-3 w-3 mr-1" />
-              Verified
+              {t('partLookup.verified')}
             </Badge>
           )}
           
@@ -584,7 +584,7 @@ const CompatiblePartRow: React.FC<CompatiblePartRowProps> = ({ part, onViewItem 
           {part.quantity_on_hand <= part.low_stock_threshold && (
             <div className="text-xs text-destructive flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
-              Low stock
+              {t('partLookup.lowStock')}
             </div>
           )}
         </div>
