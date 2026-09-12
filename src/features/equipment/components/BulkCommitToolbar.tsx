@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n';
 
 export interface BulkCommitToolbarProps {
   dirtyCount: number;
@@ -24,16 +25,17 @@ export const BulkCommitToolbar: React.FC<BulkCommitToolbarProps> = ({
   onDiscard,
   onCommit,
 }) => {
+  const { t } = useI18n();
   const dirtyLabel =
     dirtyCount === 0
-      ? 'No changes'
-      : `${dirtyCount} ${dirtyCount === 1 ? 'row modified' : 'rows modified'}`;
+      ? t('equipmentResidual.bulkNoChanges')
+      : t(dirtyCount === 1 ? 'equipmentResidual.bulkModifiedOne' : 'equipmentResidual.bulkModifiedMany', { count: dirtyCount });
 
   return (
     <div
       className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t bg-card px-4 py-3"
       role="region"
-      aria-label="Bulk edit commit toolbar"
+      aria-label={t('equipmentResidual.bulkToolbar')}
     >
       <div className="flex items-center gap-3 text-sm">
         <span
@@ -45,7 +47,7 @@ export const BulkCommitToolbar: React.FC<BulkCommitToolbarProps> = ({
         </span>
         {selectedCount > 0 && (
           <Badge variant="secondary" className="font-normal">
-            {selectedCount} selected
+            {t('equipmentResidual.bulkSelected', { count: selectedCount })}
           </Badge>
         )}
       </div>
@@ -56,7 +58,7 @@ export const BulkCommitToolbar: React.FC<BulkCommitToolbarProps> = ({
           onClick={onDiscard}
           disabled={dirtyCount === 0 || isPending}
         >
-          Discard Changes
+          {t('equipmentResidual.bulkDiscard')}
         </Button>
         <Button
           type="button"
@@ -64,7 +66,7 @@ export const BulkCommitToolbar: React.FC<BulkCommitToolbarProps> = ({
           disabled={dirtyCount === 0 || isPending}
         >
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />}
-          Save Updates
+          {t('equipmentResidual.bulkSave')}
         </Button>
       </div>
     </div>

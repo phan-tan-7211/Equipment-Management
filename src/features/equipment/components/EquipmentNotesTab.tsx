@@ -36,6 +36,7 @@ import {
 } from '@/components/common/noteCardPermissions';
 import { createNoteMutationHandlers } from '@/components/common/noteMutationHandlers';
 import type { EquipmentNote } from '@/features/equipment/types/equipmentNotes';
+import { useI18n } from '@/i18n';
 
 interface EquipmentNotesTabProps {
   equipmentId: string;
@@ -49,6 +50,7 @@ const EquipmentNotesTab: React.FC<EquipmentNotesTabProps> = ({
   organizationId,
   equipmentTeamId,
 }) => {
+  const { t } = useI18n();
   const { user } = useAuth();
   const { currentOrganization } = useOrganization();
   const { isOrgAdmin, isTeamManager, editWindowHours, isViewerOrRequestor } =
@@ -133,7 +135,7 @@ const EquipmentNotesTab: React.FC<EquipmentNotesTabProps> = ({
       },
       onOnlineSuccess: () => {
         invalidateNotes();
-        toast.success('Note created successfully');
+        toast.success(t('equipmentFinalize.noteCreated'));
       },
       resetForm: () => {
         setShowForm(false);

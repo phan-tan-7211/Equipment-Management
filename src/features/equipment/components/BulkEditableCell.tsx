@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 export type BulkEditableCellType = 'text' | 'number' | 'select';
 
@@ -89,6 +90,7 @@ export const BulkEditableCell: React.FC<BulkEditableCellProps> = ({
   onSelectRow,
   onCancelPendingSelect,
 }) => {
+  const { t } = useI18n();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState<string>(() => stringifyForInput(value));
   const inputRef = useRef<HTMLInputElement>(null);
@@ -192,7 +194,7 @@ export const BulkEditableCell: React.FC<BulkEditableCellProps> = ({
           }}
         >
           <SelectTrigger
-            aria-label={`Edit ${field}`}
+            aria-label={t('equipmentResidual.editField', { field })}
             className={cn('h-8', dirty && 'border-l-2 border-l-primary')}
             onClick={stopBubbling}
           >
@@ -218,7 +220,7 @@ export const BulkEditableCell: React.FC<BulkEditableCellProps> = ({
         onKeyDown={handleKeyDown}
         onBlur={commitText}
         onClick={stopBubbling}
-        aria-label={`Edit ${field}`}
+        aria-label={t('equipmentResidual.editField', { field })}
         className={cn(
           'h-8',
           align === 'right' && 'text-right',
@@ -233,7 +235,7 @@ export const BulkEditableCell: React.FC<BulkEditableCellProps> = ({
     <div
       role="button"
       tabIndex={0}
-      aria-label={`${field}: ${displayText}. Single-click row to select, double-click to edit.`}
+      aria-label={t('equipmentResidual.editCellInstructions', { field, value: displayText })}
       onDoubleClick={handleStaticDoubleClick}
       onKeyDown={handleStaticKeyDown}
       className={cn(
