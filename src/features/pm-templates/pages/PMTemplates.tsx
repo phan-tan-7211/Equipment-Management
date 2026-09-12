@@ -345,7 +345,7 @@ const PMTemplates = () => {
 
   const handleCloneTemplate = (templateId: string) => {
     const template = templates?.find(t => t.id === templateId);
-    setCloneName(template ? t('pmTemplates.list.copyName', { name: template.name }) : '');
+    setCloneName(template ? `${template.name} (Copy)` : '');
     setCloneDialogOpen(templateId);
   };
 
