@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useId, useRef } from 'react';
 import { useFileObjectUrlPreview } from '@/components/common/useFileObjectUrlPreview';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ const Thumbnail: React.FC<{
   onRemove: () => void;
   disabled?: boolean;
 }> = ({ file, onRemove, disabled }) => {
+  const { t } = useI18n();
   const previewUrl = useFileObjectUrlPreview(file);
 
   if (!previewUrl) return null;
@@ -25,8 +27,8 @@ const Thumbnail: React.FC<{
           onClick={onRemove}
           disabled={disabled}
           className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0"
-          title="Remove image"
-          aria-label={`Remove ${file.name}`}
+          title={t('workOrderForm.removeImage')}
+          aria-label={t('workOrderForm.removeNamedImage', { name: file.name })}
         >
           <X className="h-3 w-3" aria-hidden />
         </Button>
@@ -50,8 +52,9 @@ const WorkOrderCreationPhotoPicker: React.FC<WorkOrderCreationPhotoPickerProps> 
   images,
   onImagesChange,
   disabled = false,
-  description = 'JPEG, PNG, GIF, or WebP — up to 5 images, 10 MB each.',
+  description,
 }) => {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const generatedId = useId();
   const inputId = `${generatedId}-work-order-creation-photos`;
@@ -67,7 +70,7 @@ const WorkOrderCreationPhotoPicker: React.FC<WorkOrderCreationPhotoPickerProps> 
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Label htmlFor={inputId}>Attach photos from this request</Label>
+        <Label htmlFor={inputId}>{t('workOrderForm.attachPhotos')}</Label>
         <Button
           type="button"
           variant="outline"
@@ -77,11 +80,11 @@ const WorkOrderCreationPhotoPicker: React.FC<WorkOrderCreationPhotoPickerProps> 
           onClick={() => inputRef.current?.click()}
         >
           <Image className="h-4 w-4" aria-hidden />
-          Add photos
+          {t('workOrderForm.addPhotos')}
         </Button>
       </div>
       <p id={hintId} className="text-xs text-muted-foreground">
-        {description}
+        {description ?? t('workOrderForm.photosHint')}
       </p>
       <input
         ref={inputRef}

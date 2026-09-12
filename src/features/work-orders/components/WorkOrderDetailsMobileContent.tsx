@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   AlertDialog,
@@ -174,6 +175,7 @@ export function WorkOrderDetailsMobileContent({
   onStatusUpdate,
 }: WorkOrderDetailsMobileContentProps) {
   const [showStatusSheet, setShowStatusSheet] = useState(false);
+  const { t } = useI18n();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const {
@@ -328,19 +330,19 @@ export function WorkOrderDetailsMobileContent({
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel work order?</AlertDialogTitle>
+            <AlertDialogTitle>{t('workOrderDetail.cancelQuestion')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This work order will be marked as cancelled. Logged hours, notes, and costs are preserved.
+              {t('workOrderDetail.cancelDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={updateStatusMutation.isPending}>Go back</AlertDialogCancel>
+            <AlertDialogCancel disabled={updateStatusMutation.isPending}>{t('workOrderDetail.goBack')}</AlertDialogCancel>
             <AlertDialogAction
               disabled={updateStatusMutation.isPending}
               onClick={() => void handleConfirmCancel()}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {updateStatusMutation.isPending ? 'Cancelling...' : 'Cancel work order'}
+              {updateStatusMutation.isPending ? t('workOrderDetail.cancelling') : t('workOrderDetail.cancelWorkOrder')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -507,7 +509,7 @@ export function WorkOrderDetailsMobileContent({
                     MOBILE_WO_FAB_AVOIDANCE_INSET_CLASS,
                   )}
                 >
-                  <CardTitle className="text-lg">Events & Times</CardTitle>
+                  <CardTitle className="text-lg">{t('workOrderDetail.eventsAndTimes')}</CardTitle>
                   <ChevronDown
                     className={cn(
                       'h-5 w-5 text-muted-foreground transition-transform',
