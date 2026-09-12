@@ -12,6 +12,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Bug } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthFlowCopy } from './useAuthFlowCopy';
 
 /**
  * Test users from Supabase seed data / cloud preview quick-login seed.
@@ -74,7 +75,7 @@ const USER_GROUP_DEFINITIONS = [
   org: DevQuickLoginUser['org'];
 }>;
 
-const PREVIEW_QA_USER_EMAILS = new Set([
+const PREVIEW_QA_USER_EMAILS = new Set<string>([
   'owner@apex.test',
   'tech@apex.test',
   'viewer@apex.test',
@@ -128,6 +129,7 @@ interface DevQuickLoginProps {
 }
 
 const DevQuickLogin: React.FC<DevQuickLoginProps> = ({ onAuthFailure }) => {
+  const t = useAuthFlowCopy();
   const { signIn } = useAuth();
   const [selectedEmail, setSelectedEmail] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -137,6 +139,28 @@ const DevQuickLogin: React.FC<DevQuickLoginProps> = ({ onAuthFailure }) => {
     isPreviewQuickLoginEnabled: import.meta.env.VITE_PREVIEW_QUICK_LOGIN === 'true',
   });
   const visibleUsers = userGroups.flatMap((group) => group.users);
+  const groupDisplayName = (group: DevQuickLoginGroup): string => {
+    switch (group.label) {
+      case 'Apex Construction (Premium)': return `Apex Construction (${t('authFlow.premium')})`;
+      case 'Metro Equipment (Premium)': return `Metro Equipment (${t('authFlow.premium')})`;
+      case 'Valley Landscaping (Free Tier)': return `Valley Landscaping (${t('authFlow.freeTier')})`;
+      case 'Industrial Rentals (Premium)': return `Industrial Rentals (${t('authFlow.premium')})`;
+      case 'Fresh Start (Onboarding)': return `Fresh Start (${t('authFlow.onboarding')})`;
+      case 'Multi-Org Testing': return t('authFlow.multiOrgTesting');
+      case 'Invitation Signup (E2E)': return t('authFlow.invitationSignup');
+      default: return group.label;
+    }
+  };
+  const roleDisplayName = (role: DevQuickLoginUser['role']): string => {
+    switch (role) {
+      case 'Owner': return t('authFlow.roleOwner');
+      case 'Admin': return t('authFlow.roleAdmin');
+      case 'Technician': return t('authFlow.roleTechnician');
+      case 'Viewer': return t('authFlow.roleViewer');
+      case 'Member': return t('authFlow.roleMember');
+      default: return role;
+    }
+  };
 
   if (!DEV_QUICK_LOGIN_ENABLED) {
     return null;
@@ -162,7 +186,7 @@ const DevQuickLogin: React.FC<DevQuickLoginProps> = ({ onAuthFailure }) => {
           err
         );
       }
-      const msg = 'Authentication failed. Please try again.';
+      const msg = t('authFlow.authFailed');
       setError(msg);
       onAuthFailure?.(msg);
     } finally {
@@ -176,23 +200,23 @@ const DevQuickLogin: React.FC<DevQuickLoginProps> = ({ onAuthFailure }) => {
     <div className="rounded-lg border-2 border-dashed border-warning/50 bg-warning/10 p-4 dark:border-warning/50 dark:bg-warning/15">
       <div className="mb-3 flex items-center gap-2 text-sm font-medium text-warning dark:text-warning">
         <Bug className="h-4 w-4" />
-        <span>Dev Quick Login</span>
+        <span>{t('authFlow.devQuickLogin')}</span>
       </div>
 
       <div className="space-y-3">
         <Select value={selectedEmail} onValueChange={setSelectedEmail}>
-          <SelectTrigger className="w-full bg-background" aria-label="Select a test account">
-            <SelectValue placeholder="Select a test account..." />
+          <SelectTrigger className="w-full bg-background" aria-label={t('authFlow.selectTestAccount')}>
+            <SelectValue placeholder={t('authFlow.selectTestAccountPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
             {userGroups.map((group) => (
               <SelectGroup key={group.label}>
-                <SelectLabel>{group.label}</SelectLabel>
+                <SelectLabel>{groupDisplayName(group)}</SelectLabel>
                 {group.users.map((user) => (
                   <SelectItem key={user.email} value={user.email}>
                     <span className="flex items-center gap-2">
                       <span className="font-medium">{user.name}</span>
-                      <span className="text-muted-foreground">({user.role})</span>
+                      <span className="text-muted-foreground">({roleDisplayName(user.role)})</span>
                     </span>
                   </SelectItem>
                 ))}
@@ -203,7 +227,7 @@ const DevQuickLogin: React.FC<DevQuickLoginProps> = ({ onAuthFailure }) => {
 
         {selectedUser && (
           <p className="text-xs text-muted-foreground">
-            Logging in as <strong>{selectedUser.email}</strong>
+            {t('authFlow.loggingInAs')} <strong>{selectedUser.email}</strong>
           </p>
         )}
 
@@ -217,10 +241,10 @@ const DevQuickLogin: React.FC<DevQuickLoginProps> = ({ onAuthFailure }) => {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing in...
+              {t('authFlow.signingIn')}
             </>
           ) : (
-            'Quick Login'
+            t('authFlow.quickLogin')
           )}
         </Button>
 
@@ -235,4 +259,3 @@ const DevQuickLogin: React.FC<DevQuickLoginProps> = ({ onAuthFailure }) => {
 };
 
 export default DevQuickLogin;
-

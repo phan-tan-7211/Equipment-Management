@@ -8,15 +8,22 @@ export async function runAuditExport(
   exportFn: AuditExportRunner,
   setExportProgressLabel: (label: string | undefined) => void,
   setIsExporting: (exporting: boolean) => void,
+  options?: {
+    t: (key: string, params?: Record<string, string | number>) => string;
+    locale: string;
+  },
 ): Promise<void> {
   setIsExporting(true);
-  setExportProgressLabel('Preparing export...');
+  setExportProgressLabel(options?.t('auditExplorer.preparingExport') ?? 'Preparing export...');
   try {
     await exportFn(({ current, total }) => {
       setExportProgressLabel(
         total === 0
-          ? 'No matching records found.'
-          : `Exporting ${current.toLocaleString()} of ${total.toLocaleString()} records...`,
+          ? options?.t('auditExplorer.noExportRecords') ?? 'No matching records found.'
+          : options?.t('auditExplorer.exportingRecords', {
+              current: current.toLocaleString(options.locale),
+              total: total.toLocaleString(options.locale),
+            }) ?? `Exporting ${current.toLocaleString()} of ${total.toLocaleString()} records...`,
       );
     });
   } finally {

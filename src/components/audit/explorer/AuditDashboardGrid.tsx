@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { useWhenPreferenceStorageAllowed } from '@/contexts/CookieConsentContext';
 import { getPreferenceLocalStorage, setPreferenceLocalStorage } from '@/lib/cookieConsent';
 import { logger } from '@/utils/logger';
+import { useI18n } from '@/i18n/I18nProvider';
 
 const STORAGE_KEY = 'audit-dashboard-grid-v1';
 const GRID_COLS = 12;
@@ -513,6 +514,7 @@ interface WidgetDragSession {
 }
 
 export function AuditDashboardGrid({ widgets }: AuditDashboardGridProps) {
+  const { t } = useI18n();
   const { width, containerRef, mounted } = useContainerWidth({
     initialWidth: 1024,
   });
@@ -778,7 +780,7 @@ export function AuditDashboardGrid({ widgets }: AuditDashboardGridProps) {
           data-testid="audit-dashboard-reset-layout"
         >
           <RotateCcw className="h-3 w-3 mr-1" />
-          Reset layout
+          {t('auditExplorer.resetLayout')}
         </Button>
       </div>
       <div ref={containerRef} className="relative w-full">
@@ -831,8 +833,8 @@ export function AuditDashboardGrid({ widgets }: AuditDashboardGridProps) {
                       role="button"
                       tabIndex={0}
                       className="audit-widget-drag-handle flex items-center justify-center h-6 w-6 rounded cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      title="Drag to rearrange"
-                      aria-label={`Drag to move the ${widget.title} section`}
+                      title={t('auditExplorer.dragTitle')}
+                      aria-label={t('auditExplorer.dragSection', { name: widget.title })}
                       data-testid={`audit-widget-drag-${widget.id}`}
                       onPointerDown={handleGripPointerDown(widget.id)}
                       onPointerMove={handleGripPointerMove}
@@ -849,7 +851,7 @@ export function AuditDashboardGrid({ widgets }: AuditDashboardGridProps) {
                         className="h-6 w-6 text-muted-foreground hover:text-foreground"
                         onClick={() => moveWidget(widget.id, 'up')}
                         disabled={!canMoveUp}
-                        aria-label={`Move ${widget.title} section up`}
+                        aria-label={t('auditExplorer.moveUp', { name: widget.title })}
                         data-testid={`audit-widget-move-up-${widget.id}`}
                       >
                         <ArrowUp className="h-3.5 w-3.5" />
@@ -860,7 +862,7 @@ export function AuditDashboardGrid({ widgets }: AuditDashboardGridProps) {
                         className="h-6 w-6 text-muted-foreground hover:text-foreground"
                         onClick={() => moveWidget(widget.id, 'down')}
                         disabled={!canMoveDown}
-                        aria-label={`Move ${widget.title} section down`}
+                        aria-label={t('auditExplorer.moveDown', { name: widget.title })}
                         data-testid={`audit-widget-move-down-${widget.id}`}
                       >
                         <ArrowDown className="h-3.5 w-3.5" />
@@ -873,8 +875,8 @@ export function AuditDashboardGrid({ widgets }: AuditDashboardGridProps) {
                         aria-expanded={!collapsed}
                         aria-label={
                           collapsed
-                            ? `Expand the ${widget.title} section`
-                            : `Collapse the ${widget.title} section`
+                            ? t('auditExplorer.expand', { name: widget.title })
+                            : t('auditExplorer.collapse', { name: widget.title })
                         }
                         data-testid={`audit-widget-collapse-${widget.id}`}
                       >

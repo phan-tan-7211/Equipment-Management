@@ -12,8 +12,8 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 import type { WorkOrderStatus } from '@/features/work-orders/types/workOrder';
-import { START_WORK_ASSIGNEE_REQUIRED_COPY } from '@/features/work-orders/utils/startWorkActionCopy';
 export interface MobileWorkOrderFieldNextActionProps {
   workOrder: {
     id: string;
@@ -51,19 +51,19 @@ export interface MobileWorkOrderFieldNextActionProps {
 
 function syncBannerCopy(sync: MobileWorkOrderFieldNextActionProps['sync']): {
   tone: 'neutral' | 'warning' | 'destructive' | 'info';
-  message: string;
+  messageKey: string;
 } | null {
   if (sync.failedCount > 0) {
-    return { tone: 'destructive', message: 'Sync failed - tap Retry to try again.' };
+    return { tone: 'destructive', messageKey: 'syncFailed' };
   }
   if (sync.isSyncing) {
-    return { tone: 'info', message: 'Syncing...' };
+    return { tone: 'info', messageKey: 'syncing' };
   }
   if (sync.pendingCount > 0) {
-    return { tone: 'warning', message: sync.isOnline ? 'Sync pending' : 'Saved offline - will sync when you reconnect.' };
+    return { tone: 'warning', messageKey: sync.isOnline ? 'syncPending' : 'savedOffline' };
   }
   if (!sync.isOnline) {
-    return { tone: 'warning', message: 'Saved offline - text and status changes sync when you reconnect.' };
+    return { tone: 'warning', messageKey: 'savedOfflineChanges' };
   }
   return null;
 }
@@ -83,6 +83,7 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
   onRetrySync,
   hideCaptureActions = false,
 }) => {
+  const { t } = useI18n();
   const syncBanner = syncBannerCopy(sync);
   const pmIncomplete =
     !!workOrder.has_pm && pm.status !== 'completed' && (pm.total > 0 ? pm.progress < pm.total : true);
@@ -93,13 +94,13 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
       {permissions.canAddNotes ? (
         <Button type="button" variant="outline" className="min-h-11 flex-1" onClick={onAddNote}>
           <MessageSquare className="mr-2 h-4 w-4 shrink-0" aria-hidden />
-          Add note
+          {t('workOrderFieldAction.addNote')}
         </Button>
       ) : null}
       {permissions.canUpload ? (
         <Button type="button" variant="outline" className="min-h-11 flex-1" onClick={onAddPhoto}>
           <Camera className="mr-2 h-4 w-4 shrink-0" aria-hidden />
-          Photo
+          {t('workOrderFieldAction.photo')}
         </Button>
       ) : null}
     </div>
@@ -109,14 +110,14 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
     !hideCaptureActions && permissions.canAddNotes ? (
       <Button type="button" variant="outline" className="min-h-11 w-full" onClick={onAddNote}>
         <MessageSquare className="mr-2 h-4 w-4 shrink-0" aria-hidden />
-        Add note
+        {t('workOrderFieldAction.addNote')}
       </Button>
     ) : null;
 
   return (
-    <Card className="border-primary/25 shadow-elevation-2 lg:hidden" aria-label="Next field actions">
+    <Card className="border-primary/25 shadow-elevation-2 lg:hidden" aria-label={t('workOrderFieldAction.nextFieldActions')}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">Next step</CardTitle>
+        <CardTitle className="text-base font-semibold">{t('workOrderFieldAction.nextStep')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div aria-live="polite" className="min-h-5 text-sm text-muted-foreground">
@@ -131,7 +132,7 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
             >
               {sync.failedCount > 0 ? <Ban className="h-4 w-4 shrink-0" aria-hidden /> : null}
               {!sync.isOnline && sync.failedCount === 0 ? <WifiOff className="h-4 w-4 shrink-0" aria-hidden /> : null}
-              <span>{syncBanner.message}</span>
+              <span>{t(`workOrderFieldAction.${syncBanner.messageKey}`)}</span>
               {sync.failedCount > 0 && onRetrySync ? (
                 <Button
                   type="button"
@@ -141,7 +142,7 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
                   onClick={onRetrySync}
                 >
                   <RefreshCw className="mr-1 h-4 w-4" aria-hidden />
-                  Retry sync
+                  {t('workOrderFieldAction.retrySync')}
                 </Button>
               ) : null}
             </div>
@@ -151,21 +152,21 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
         {workOrder.status === 'completed' ? (
           <div className="flex min-h-11 items-center gap-2 rounded-lg border border-success/30 bg-success/10 px-3 py-2 text-success">
             <CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden />
-            <span className="font-medium">Completed</span>
+            <span className="font-medium">{t('workOrderFieldAction.completed')}</span>
           </div>
         ) : null}
 
         {workOrder.status === 'cancelled' ? (
           <div className="flex min-h-11 items-center gap-2 rounded-lg border bg-muted px-3 py-2">
             <Ban className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
-            <span className="font-medium">Cancelled</span>
+            <span className="font-medium">{t('workOrderFieldAction.cancelled')}</span>
           </div>
         ) : null}
 
         {workOrder.status === 'submitted' && permissions.canWork ? (
           <>
             <Button type="button" className="h-12 min-h-11 w-full text-base font-semibold" onClick={onAcceptWorkOrder}>
-              Accept work order
+              {t('workOrderFieldAction.accept')}
             </Button>
             {noteOnlyRow}
           </>
@@ -180,10 +181,10 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
               disabled={!canStartWork}
             >
               <Play className="mr-2 h-5 w-5" aria-hidden />
-              Start work
+              {t('workOrderFieldAction.start')}
             </Button>
             {!canStartWork ? (
-              <p className="text-sm text-muted-foreground">{START_WORK_ASSIGNEE_REQUIRED_COPY}</p>
+              <p className="text-sm text-muted-foreground">{t('workOrderFieldAction.selectAssignee')}</p>
             ) : null}
             {noteAndPhotoRow}
           </>
@@ -194,9 +195,9 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
             {pmIncomplete ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Checklist:{' '}
+                  {t('workOrderFieldAction.checklist')}{' '}
                   <span className="font-medium text-foreground">
-                    {pm.progress} of {pm.total} items
+                    {t('workOrderFieldAction.checklistCount', { progress: pm.progress, total: pm.total })}
                   </span>
                 </p>
                 <Button
@@ -205,13 +206,13 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
                   onClick={onContinueChecklist}
                 >
                   <ClipboardList className="mr-2 h-5 w-5" aria-hidden />
-                  Continue checklist
+                  {t('workOrderFieldAction.continueChecklist')}
                 </Button>
               </>
             ) : (
               <Button type="button" className="h-12 min-h-11 w-full text-base font-semibold" onClick={onComplete}>
                 <CheckCircle2 className="mr-2 h-5 w-5" aria-hidden />
-                Complete work order
+                {t('workOrderFieldAction.complete')}
               </Button>
             )}
             {noteAndPhotoRow}
@@ -222,7 +223,7 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
           <>
             <Button type="button" className="h-12 min-h-11 w-full text-base font-semibold" onClick={onResumeWork}>
               <Play className="mr-2 h-5 w-5" aria-hidden />
-              Resume work
+              {t('workOrderFieldAction.resume')}
             </Button>
             {noteAndPhotoRow}
           </>
@@ -234,7 +235,7 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
         workOrder.status !== 'cancelled' &&
         (permissions.canAddNotes || permissions.canUpload) ? (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">View-only — capture only</p>
+            <p className="text-sm font-medium text-muted-foreground">{t('workOrderFieldAction.viewOnlyCapture')}</p>
             {noteAndPhotoRow}
           </div>
         ) : null}
@@ -242,4 +243,3 @@ export const MobileWorkOrderFieldNextAction: React.FC<MobileWorkOrderFieldNextAc
     </Card>
   );
 };
-

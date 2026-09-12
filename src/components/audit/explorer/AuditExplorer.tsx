@@ -43,6 +43,7 @@ import { AuditLogList } from './AuditLogList';
 import { AuditLogDetailPanel } from './AuditLogDetailPanel';
 import { AuditLogBulkActionsPanel } from './AuditLogBulkActionsPanel';
 import { AuditDashboardGrid, type AuditDashboardWidgetDef } from './AuditDashboardGrid';
+import { useI18n } from '@/i18n/I18nProvider';
 import {
   applyRowClick,
   pruneSelection,
@@ -115,6 +116,7 @@ export interface AuditExplorerProps {
 }
 
 export function AuditExplorer({ organizationId, initialFilters }: AuditExplorerProps) {
+  const { t, language } = useI18n();
   const { canManageOrganization } = usePermissions();
   const canExport = canManageOrganization();
 
@@ -258,6 +260,7 @@ export function AuditExplorer({ organizationId, initialFilters }: AuditExplorerP
       (onProgress) => exportToCsv(filtersForQuery, onProgress),
       setExportProgressLabel,
       setIsExporting,
+      { t, locale: language === 'vi' ? 'vi-VN' : language === 'ko' ? 'ko-KR' : 'en-US' },
     );
   };
 
@@ -267,6 +270,7 @@ export function AuditExplorer({ organizationId, initialFilters }: AuditExplorerP
       (onProgress) => exportToJson(filtersForQuery, onProgress),
       setExportProgressLabel,
       setIsExporting,
+      { t, locale: language === 'vi' ? 'vi-VN' : language === 'ko' ? 'ko-KR' : 'en-US' },
     );
   };
 
@@ -286,8 +290,8 @@ export function AuditExplorer({ organizationId, initialFilters }: AuditExplorerP
         emptyState={
           <EmptyState
             icon={History}
-            title="No audit entries found"
-            description="Try adjusting your filters or widening the time range."
+            title={t('auditExplorer.emptyTitle')}
+            description={t('auditExplorer.emptyHint')}
             className="border-0 bg-transparent"
           />
         }
@@ -337,10 +341,11 @@ export function AuditExplorer({ organizationId, initialFilters }: AuditExplorerP
             style={{ height: paginationHeight }}
           >
             <span className="text-xs text-muted-foreground">
-              Showing {((page - 1) * PAGE_SIZE) + 1}
-              {'\u2013'}
-              {Math.min(page * PAGE_SIZE, totalCount)} of {totalCount.toLocaleString()}{' '}
-              entries
+              {t('auditExplorer.showing', {
+                start: ((page - 1) * PAGE_SIZE) + 1,
+                end: Math.min(page * PAGE_SIZE, totalCount),
+                total: totalCount.toLocaleString(language === 'vi' ? 'vi-VN' : language === 'ko' ? 'ko-KR' : 'en-US'),
+              })}
             </span>
             <div className="flex items-center gap-2">
               <Button
@@ -350,10 +355,10 @@ export function AuditExplorer({ organizationId, initialFilters }: AuditExplorerP
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
               >
-                Previous
+                {t('auditExplorer.previous')}
               </Button>
               <span className="text-xs text-muted-foreground">
-                Page {page} of {totalPages}
+                {t('auditExplorer.pageOf', { page, total: totalPages })}
               </span>
               <Button
                 variant="outline"
@@ -362,7 +367,7 @@ export function AuditExplorer({ organizationId, initialFilters }: AuditExplorerP
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
               >
-                Next
+                {t('auditExplorer.next')}
               </Button>
             </div>
           </div>
@@ -374,7 +379,7 @@ export function AuditExplorer({ organizationId, initialFilters }: AuditExplorerP
   const widgets: AuditDashboardWidgetDef[] = [
     {
       id: 'metrics',
-      title: 'Key Metrics',
+      title: t('auditExplorer.metrics'),
       defaultH: 5,
       minH: 4,
       render: () => (
@@ -385,7 +390,7 @@ export function AuditExplorer({ organizationId, initialFilters }: AuditExplorerP
     },
     {
       id: 'timeline',
-      title: 'Timeline',
+      title: t('auditExplorer.timeline'),
       defaultH: 5,
       minH: 3,
       render: (contentHeight) => (
@@ -402,7 +407,7 @@ export function AuditExplorer({ organizationId, initialFilters }: AuditExplorerP
     },
     {
       id: 'events',
-      title: 'Events',
+      title: t('auditExplorer.events'),
       defaultH: 14,
       minH: 8,
       render: renderEventsWidget,

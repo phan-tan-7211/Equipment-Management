@@ -4,6 +4,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { logger } from '@/utils/logger';
+import { useAuthFlowCopy } from './useAuthFlowCopy';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, loadingFallback }) => {
+  const t = useAuthFlowCopy();
   const { user, isLoading } = useAuth();
   const location = useLocation();
 
@@ -29,8 +31,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, loadingFallba
     }
     return (
       <div className="min-h-screen bg-background">
-        <div role="status" aria-label="Checking authentication" className="sr-only">
-          Verifying access before opening protected content.
+        <div role="status" aria-label={t('authFlow.checkingAuth')} className="sr-only">
+          {t('authFlow.verifyingProtected')}
         </div>
         <PageSkeleton />
       </div>

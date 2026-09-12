@@ -5,6 +5,7 @@ const QRCodeIntegrationFeature = () => (
   <StandardFeaturePage
     seoPath="/features/qr-code-integration"
     content={content}
+    translationKey="qrCodeIntegration"
     benefits={benefits}
     steps={steps}
     showcases={showcases}

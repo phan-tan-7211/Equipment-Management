@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { AuditLogDetailPanel } from './AuditLogDetailPanel';
 import { FormattedAuditEntry } from '@/types/audit';
+import { I18nProvider } from '@/i18n/I18nProvider';
 
 const sampleEntry: FormattedAuditEntry = {
   id: 'entry-123',
@@ -28,6 +29,22 @@ const sampleEntry: FormattedAuditEntry = {
 };
 
 describe('AuditLogDetailPanel', () => {
+  it.each([
+    ['vi', 'Chi tiết bản ghi', 'Đã cập nhật'],
+    ['ko', '기록 상세', '업데이트됨'],
+  ])('localizes detail labels in %s while preserving the audit values', (language, heading, action) => {
+    window.localStorage.setItem('znteqr-language', language);
+    try {
+      render(<I18nProvider><AuditLogDetailPanel entry={sampleEntry} /></I18nProvider>);
+      expect(screen.getByText(heading)).toBeInTheDocument();
+      expect(screen.getAllByText(action).length).toBeGreaterThan(0);
+      expect(screen.getByRole('heading', { name: 'Forklift A' })).toBeInTheDocument();
+      expect(screen.getByText('2026-04-20T10:00:00.000Z')).toBeInTheDocument();
+    } finally {
+      window.localStorage.removeItem('znteqr-language');
+    }
+  });
+
   it('renders the empty state when no entry is selected', () => {
     render(<AuditLogDetailPanel entry={null} />);
     expect(screen.getByTestId('audit-detail-empty')).toBeInTheDocument();

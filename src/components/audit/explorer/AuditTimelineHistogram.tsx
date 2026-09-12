@@ -5,6 +5,9 @@
  */
 
 import React, { useMemo } from 'react';
+import { formatInTimeZone } from 'date-fns-tz';
+import { enUS, ko as koLocale, vi as viLocale } from 'date-fns/locale';
+import { useI18n } from '@/i18n/I18nProvider';
 import {
   BarChart,
   Bar,
@@ -22,7 +25,7 @@ import {
   AuditLogTimelineBucket,
   AuditLogTimelineRow,
 } from '@/types/audit';
-import { aggregateByBucket } from './aggregate-bucket';
+import { aggregateByBucket, BUCKET_LABEL_FORMAT } from './aggregate-bucket';
 
 function readBucketIsoFromBarClick(payload: unknown): string | undefined {
   if (!payload || typeof payload !== 'object') return undefined;
@@ -57,9 +60,15 @@ export function AuditTimelineHistogram({
   onBucketClick,
   height = 96,
 }: AuditTimelineHistogramProps) {
+  const { t, language } = useI18n();
   const chartData = useMemo(
-    () => aggregateByBucket(data, bucket, dateFrom, dateTo),
-    [data, bucket, dateFrom, dateTo]
+    () => aggregateByBucket(data, bucket, dateFrom, dateTo).map((row) => ({
+      ...row,
+      bucketLabel: formatInTimeZone(new Date(row.bucket), 'UTC', BUCKET_LABEL_FORMAT[bucket], {
+        locale: language === 'vi' ? viLocale : language === 'ko' ? koLocale : enUS,
+      }),
+    })),
+    [data, bucket, dateFrom, dateTo, language]
   );
 
   if (isLoading) {
@@ -95,10 +104,10 @@ export function AuditTimelineHistogram({
           aria-hidden
         />
         <p className="text-[11px] font-medium leading-tight text-muted-foreground">
-          No activity in this range
+          {t('auditExplorer.noActivity')}
         </p>
         <p className="text-[10px] leading-tight text-muted-foreground/80">
-          Widen the time range above
+          {t('auditExplorer.widenRange')}
         </p>
       </div>
     );
@@ -129,6 +138,7 @@ export function AuditTimelineHistogram({
             width={28}
           />
           <Tooltip
+            formatter={(value, name) => [value, t(`auditLogControls.${String(name)}`)]}
             cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
             contentStyle={{
               background: 'hsl(var(--popover))',
@@ -157,4 +167,3 @@ export function AuditTimelineHistogram({
     </div>
   );
 }
-

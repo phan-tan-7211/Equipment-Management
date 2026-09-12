@@ -4,6 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { ACTION_SEVERITY_COLOR, AuditLogTimelineRow } from '@/types/audit';
 import { AuditTimelineHistogram } from './AuditTimelineHistogram';
 import { aggregateByBucket } from './aggregate-bucket';
+import { I18nProvider } from '@/i18n/I18nProvider';
 
 // Capture each Bar's onClick prop so we can fire it deterministically below.
 type CapturedBar = { dataKey: string; fill: string; onClick?: (data: unknown) => void };
@@ -11,6 +12,7 @@ const capturedBars: CapturedBar[] = [];
 
 interface CapturedChartData {
   bucket: string;
+  bucketLabel: string;
   total: number;
   INSERT: number;
   UPDATE: number;
@@ -56,6 +58,21 @@ const sampleRows: AuditLogTimelineRow[] = [
 ];
 
 describe('AuditTimelineHistogram', () => {
+  it.each([
+    ['vi', 'Không có hoạt động trong khoảng thời gian này'],
+    ['ko', '이 기간에 활동이 없습니다'],
+  ])('shows the localized empty state in %s', (language, message) => {
+    window.localStorage.setItem('znteqr-language', language);
+    try {
+      render(<I18nProvider><AuditTimelineHistogram data={[]} bucket="hour" /></I18nProvider>);
+      expect(screen.getByText(message)).toBeInTheDocument();
+      render(<I18nProvider><AuditTimelineHistogram data={sampleRows} bucket="hour" /></I18nProvider>);
+      expect(capturedChartData.at(-1)?.[0]?.bucketLabel).not.toContain('Apr');
+    } finally {
+      window.localStorage.removeItem('znteqr-language');
+    }
+  });
+
   beforeEach(() => {
     capturedBars.length = 0;
     capturedChartData.length = 0;
