@@ -6,39 +6,40 @@ interface SaveStatusProps {
   status: 'saving' | 'saved' | 'error' | 'offline';
   lastSaved?: Date;
   className?: string;
+  labels?: { saving: string; saved: string; savedAt: (time: string) => string; error: string; offline: string; ready: string; justNow: string; minutesAgo: (minutes: number) => string };
 }
 
-export const SaveStatus: React.FC<SaveStatusProps> = ({ status, lastSaved, className }) => {
+export const SaveStatus: React.FC<SaveStatusProps> = ({ status, lastSaved, className, labels }) => {
   const getStatusConfig = () => {
     switch (status) {
       case 'saving':
         return {
           icon: Clock,
-          text: 'Saving...',
+          text: labels?.saving ?? 'Saving...',
           className: 'bg-info/20 text-info border-info/30'
         };
       case 'saved':
         return {
           icon: CheckCircle,
-          text: lastSaved ? `Saved ${formatTime(lastSaved)}` : 'Saved',
+          text: lastSaved ? (labels?.savedAt(formatTime(lastSaved)) ?? `Saved ${formatTime(lastSaved)}`) : (labels?.saved ?? 'Saved'),
           className: 'bg-success/20 text-success border-success/30'
         };
       case 'error':
         return {
           icon: AlertCircle,
-          text: 'Save failed',
+          text: labels?.error ?? 'Save failed',
           className: 'bg-destructive/20 text-destructive border-destructive/30'
         };
       case 'offline':
         return {
           icon: WifiOff,
-          text: 'Offline',
+          text: labels?.offline ?? 'Offline',
           className: 'bg-muted text-foreground border-border'
         };
       default:
         return {
           icon: Wifi,
-          text: 'Ready',
+          text: labels?.ready ?? 'Ready',
           className: 'bg-muted text-foreground border-border'
         };
     }
@@ -50,8 +51,8 @@ export const SaveStatus: React.FC<SaveStatusProps> = ({ status, lastSaved, class
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(seconds / 60);
     
-    if (seconds < 60) return 'just now';
-    if (minutes < 60) return `${minutes}m ago`;
+    if (seconds < 60) return labels?.justNow ?? 'just now';
+    if (minutes < 60) return labels?.minutesAgo(minutes) ?? `${minutes}m ago`;
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
