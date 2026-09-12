@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,7 +12,6 @@ import {
 } from '@/components/ui/dialog';
 import { Download, Loader2, CloudUpload } from 'lucide-react';
 import { Label } from '@/components/ui/label';
-import { SERVICE_REPORT_EXPORT_POLICY } from '@/features/work-orders/constants/workOrderExportPolicy';
 
 interface WorkOrderPDFExportDialogProps {
   open: boolean;
@@ -53,6 +53,7 @@ export const WorkOrderPDFExportDialog: React.FC<WorkOrderPDFExportDialogProps> =
   isSavingToDrive = false,
   focusDriveAction = false,
 }) => {
+  const { t } = useI18n();
   const [includeCosts, setIncludeCosts] = useState(false);
   
   const isAnyExporting = isExporting || isSavingToDrive;
@@ -93,10 +94,9 @@ export const WorkOrderPDFExportDialog: React.FC<WorkOrderPDFExportDialogProps> =
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="sm" className="overflow-y-visible">
         <DialogHeader>
-          <DialogTitle>{SERVICE_REPORT_EXPORT_POLICY.title}</DialogTitle>
+          <DialogTitle>{t('workOrderOperations.exportTitle')}</DialogTitle>
           <DialogDescription>
-            {SERVICE_REPORT_EXPORT_POLICY.description} Includes work order summary,
-            equipment, PM checklist, and public notes.
+            {t('workOrderOperations.exportDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -111,7 +111,7 @@ export const WorkOrderPDFExportDialog: React.FC<WorkOrderPDFExportDialogProps> =
               htmlFor="include-costs" 
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              Include itemized costs
+              {t('workOrderOperations.includeItemizedCosts')}
             </Label>
           </div>
         )}
@@ -123,7 +123,7 @@ export const WorkOrderPDFExportDialog: React.FC<WorkOrderPDFExportDialogProps> =
             disabled={isAnyExporting}
             className={exportDialogActionClassName}
           >
-            Cancel
+            {t('workOrderOperations.cancel')}
           </Button>
 
           {showDriveAction && (
@@ -132,17 +132,17 @@ export const WorkOrderPDFExportDialog: React.FC<WorkOrderPDFExportDialogProps> =
               onClick={handleSaveToDrive}
               disabled={isAnyExporting}
               className={exportDialogActionClassName}
-              aria-label="Save Service Report PDF to organization Drive"
+              aria-label={t('workOrderOperations.savePdfDriveAria')}
             >
               {isSavingToDrive ? (
                 <>
                   <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                  Saving to Drive…
+                  {t('workOrderOperations.savingToDrive')}
                 </>
               ) : (
                 <>
                   <CloudUpload className="h-4 w-4 shrink-0" />
-                  Save to Drive
+                  {t('workOrderOperations.saveToDrive')}
                 </>
               )}
             </Button>
@@ -153,17 +153,17 @@ export const WorkOrderPDFExportDialog: React.FC<WorkOrderPDFExportDialogProps> =
             disabled={isAnyExporting}
             variant={focusDriveAction ? 'outline' : 'default'}
             className={exportDialogActionClassName}
-            aria-label="Download Service Report PDF"
+            aria-label={t('workOrderOperations.downloadPdfAria')}
           >
             {isExporting ? (
               <>
                 <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                Generating…
+                {t('workOrderOperations.generating')}
               </>
             ) : (
               <>
                 <Download className="h-4 w-4 shrink-0" />
-                Download PDF
+                {t('workOrderOperations.downloadPdf')}
               </>
             )}
           </Button>

@@ -1,5 +1,5 @@
 import { useI18n } from '@/i18n';
-import { localizeWorkOrderStatus } from '@/features/work-orders/utils/workOrderI18nLabels';
+import { localizeWorkOrderStatus, localizePmStatus } from '@/features/work-orders/utils/workOrderI18nLabels';
 // fallow-ignore-file code-duplication
 // Duplication rationale: Requestor status mirrors manager status controls
 
@@ -117,7 +117,7 @@ export const WorkOrderDetailsRequestorStatus: React.FC<WorkOrderDetailsRequestor
               {workOrder.has_pm && pmData && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clipboard className="h-4 w-4" />
-                  <span>{t('workOrderDetail.pmStatus', { status: pmData.status.replace('_', ' ').toUpperCase() })}</span>
+                  <span>{t('workOrderDetail.pmStatus', { status: localizePmStatus(pmData.status, t) })}</span>
                 </div>
               )}
 

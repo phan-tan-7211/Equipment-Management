@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 
 import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -49,6 +50,7 @@ const WorkOrderImagesSection: React.FC<WorkOrderImagesSectionProps> = ({
   showPrivateNotes,
   primaryImageId,
 }) => {
+  const { t } = useI18n();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { formatDateTime } = useFormatTimestamp();
@@ -110,10 +112,10 @@ const WorkOrderImagesSection: React.FC<WorkOrderImagesSectionProps> = ({
         organizationId,
         workOrderId,
       });
-      toast.success('Image deleted successfully');
+      toast.success(t('workOrderActivity.imageDeleted'));
     } catch (error) {
       console.error('Failed to delete image:', error);
-      toast.error('Failed to delete image');
+      toast.error(t('workOrderActivity.imageDeleteFailed'));
     }
   };
 
@@ -126,7 +128,7 @@ const WorkOrderImagesSection: React.FC<WorkOrderImagesSectionProps> = ({
   const countBadgeContent = countLoading ? (
     <span className="inline-block h-5 w-8 animate-pulse rounded bg-muted" aria-hidden />
   ) : countError ? (
-    <Badge variant="secondary" aria-label="Image count unavailable">
+    <Badge variant="secondary" aria-label={t('workOrderActivity.imageCountUnavailable')}>
       —
     </Badge>
   ) : (
@@ -147,15 +149,15 @@ const WorkOrderImagesSection: React.FC<WorkOrderImagesSectionProps> = ({
               <div className="min-w-0 flex-1 space-y-1">
                 <CardTitle className="flex flex-wrap items-center gap-2 text-lg">
                   <Images className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
-                  <span>Work Order Images</span>
+                  <span>{t('workOrderActivity.workOrderImages')}</span>
                   {countBadgeContent}
                 </CardTitle>
                 {countError ? (
                   <p className="text-sm text-muted-foreground">
-                    Image count unavailable. Tap to try loading photos.
+                    {t('workOrderActivity.imageCountRetry')}
                   </p>
                 ) : !countLoading && totalCount > 0 ? (
-                  <p className="text-sm text-muted-foreground">Tap to review work order photos</p>
+                  <p className="text-sm text-muted-foreground">{t('workOrderActivity.reviewPhotos')}</p>
                 ) : null}
               </div>
               <ChevronDown
@@ -175,11 +177,11 @@ const WorkOrderImagesSection: React.FC<WorkOrderImagesSectionProps> = ({
               <div
                 className="flex aspect-video w-full animate-pulse rounded-lg bg-muted"
                 role="status"
-                aria-label="Loading images"
+                aria-label={t('workOrderActivity.loadingImages')}
               />
             ) : imagesError ? (
               <div className="space-y-3 py-6 text-center text-sm text-muted-foreground" role="alert">
-                <p>We could not load work order images. Check your connection and try again.</p>
+                <p>{t('workOrderActivity.imagesLoadFailed')}</p>
                 <Button
                   type="button"
                   variant="outline"
@@ -187,17 +189,16 @@ const WorkOrderImagesSection: React.FC<WorkOrderImagesSectionProps> = ({
                   onClick={() => void refetchImages()}
                   disabled={imagesFetching}
                 >
-                  {imagesFetching ? 'Retrying...' : 'Retry'}
+                  {imagesFetching ? t('workOrderActivity.retrying') : t('workOrderActivity.retry')}
                 </Button>
               </div>
             ) : visibleImages.length === 0 ? (
               <div className="space-y-2 py-6 text-center text-sm text-muted-foreground">
                 <p>
-                  No images are visible for your account. Some photos may be attached to private notes you
-                  cannot view.
+                  {t('workOrderActivity.noVisibleImages')}
                 </p>
                 {canUpload ? (
-                  <p className="text-xs">Add a note with images when you have permission to upload.</p>
+                  <p className="text-xs">{t('workOrderActivity.addNoteImagesHint')}</p>
                 ) : null}
               </div>
             ) : (
@@ -213,19 +214,19 @@ const WorkOrderImagesSection: React.FC<WorkOrderImagesSectionProps> = ({
                                 className="absolute left-2 top-2 z-[1] shadow-sm"
                                 variant="secondary"
                               >
-                                Primary
+                                {t('workOrderActivity.primary')}
                               </Badge>
                             ) : null}
                             <DynamicImageViewport
                               src={image.file_url}
-                              alt={image.file_name || 'Work order image'}
+                              alt={image.file_name || t('workOrderActivity.workOrderImage')}
                               fileName={image.file_name}
                               className="aspect-video h-full w-full rounded-md"
                               fit="contain"
                               onClick={() =>
                                 openImage({
                                   src: image.file_url,
-                                  alt: image.file_name || 'Work order image',
+                                  alt: image.file_name || t('workOrderActivity.workOrderImage'),
                                   fileName: image.file_name,
                                 })
                               }
@@ -261,10 +262,10 @@ const WorkOrderImagesSection: React.FC<WorkOrderImagesSectionProps> = ({
                                   className="shrink-0"
                                   disabled={deleteImageMutation.isPending}
                                   onClick={() => handleDelete(image)}
-                                  aria-label={`Delete image ${image.file_name}`}
+                                  aria-label={t('workOrderActivity.deleteImageNamed', { name: image.file_name || '' })}
                                 >
                                   <Trash2 className="mr-1 h-4 w-4" aria-hidden />
-                                  Delete
+                                  {t('workOrderActivity.delete')}
                                 </Button>
                               ) : null}
                             </div>
@@ -276,12 +277,12 @@ const WorkOrderImagesSection: React.FC<WorkOrderImagesSectionProps> = ({
                   <CarouselPrevious
                     type="button"
                     className="left-1 top-1/2 z-10 -translate-y-1/2 border bg-background/90 shadow-sm"
-                    aria-label="Previous image"
+                    aria-label={t('workOrderActivity.previousImage')}
                   />
                   <CarouselNext
                     type="button"
                     className="right-1 top-1/2 z-10 -translate-y-1/2 border bg-background/90 shadow-sm"
-                    aria-label="Next image"
+                    aria-label={t('workOrderActivity.nextImage')}
                   />
                 </Carousel>
               </div>

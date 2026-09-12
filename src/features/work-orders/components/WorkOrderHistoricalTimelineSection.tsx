@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CalendarClock } from 'lucide-react';
@@ -52,6 +53,7 @@ export function WorkOrderHistoricalTimelineSection({
   showDetailedHistory = true,
   canEditTimeline,
 }: WorkOrderHistoricalTimelineSectionProps) {
+  const { t } = useI18n();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorMode, setEditorMode] = useState<'edit' | 'convert'>('edit');
   const isHistorical = Boolean(workOrder.is_historical);
@@ -78,11 +80,11 @@ export function WorkOrderHistoricalTimelineSection({
               type="button"
               variant="outline"
               className="min-h-11 shrink-0 gap-2"
-              aria-label="Edit Timeline"
+              aria-label={t('workOrderActivity.editTimeline')}
               onClick={() => openEditor(isHistorical ? 'edit' : 'convert')}
             >
               <CalendarClock className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="text-sm">Edit Timeline</span>
+              <span className="text-sm">{t('workOrderActivity.editTimeline')}</span>
             </Button>
           ) : null
         }
@@ -98,7 +100,7 @@ export function WorkOrderHistoricalTimelineSection({
           historyRows={historyRows}
           historyReady={historyReady}
           mode={editorMode}
-          title="Timeline Editor"
+          title={t('workOrderActivity.timelineEditor')}
           historicalStartDate={workOrder.historical_start_date ?? workOrder.created_date ?? null}
           initialEvents={editorMode === 'convert' ? conversionSeedEvents : undefined}
         />

@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -77,7 +78,8 @@ const WorkOrderNotesSection: React.FC<WorkOrderNotesSectionProps> = ({
   openFormTrigger,
   openCaptureTrigger,
 }) => {
-  const offlinePhotoMessage = 'Photos need a connection. Text notes can still be saved offline.';
+  const { t } = useI18n();
+  const offlinePhotoMessage = t('workOrderActivity.offlinePhoto');
   const { formatDate } = useFormatTimestamp();
   const { user } = useAuth();
   const { currentOrganization } = useOrganization();
@@ -160,7 +162,7 @@ const WorkOrderNotesSection: React.FC<WorkOrderNotesSectionProps> = ({
         queryClient.invalidateQueries({ queryKey: workOrderQueryKeys.notesWithImages(workOrderId) });
         queryClient.invalidateQueries({ queryKey: workOrderQueryKeys.images(workOrderId) });
         queryClient.invalidateQueries({ queryKey: workOrderMetrics.imageCount(workOrderId) });
-        toast.success('Note created successfully');
+        toast.success(t('workOrderActivity.noteCreated'));
       },
       resetForm: () => {
         setShowForm(false);
@@ -200,7 +202,7 @@ const WorkOrderNotesSection: React.FC<WorkOrderNotesSectionProps> = ({
       if (import.meta.env.DEV) {
         logger.debug('No content or images provided for note creation');
       }
-      toast.error('Please enter note content or attach images');
+      toast.error(t('workOrderActivity.noteRequired'));
       return;
     }
     
@@ -305,7 +307,7 @@ const WorkOrderNotesSection: React.FC<WorkOrderNotesSectionProps> = ({
           <CardContent className="p-6">
             <div className="text-center text-muted-foreground">
               <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">No notes have been added yet.</p>
+              <p className="text-sm">{t('workOrderActivity.noNotes')}</p>
             </div>
           </CardContent>
         </Card>
@@ -317,7 +319,7 @@ const WorkOrderNotesSection: React.FC<WorkOrderNotesSectionProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
-              Notes & Updates
+              {t('workOrderActivity.notesUpdates')}
             </CardTitle>
           </CardHeader>
           <CardContent>

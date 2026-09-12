@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,6 +63,7 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
   showDetailedHistory = true,
   headerAction,
 }) => {
+  const { t } = useI18n();
   const { formatDateTime } = useFormatTimestamp();
   const { data: historyRows = [], isLoading } = useWorkOrderTimeline(workOrder.id);
   const isHistorical = Boolean(workOrder.is_historical);
@@ -196,7 +198,7 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
         <div className={cn('flex flex-wrap items-center justify-between gap-3', MOBILE_WO_FAB_AVOIDANCE_INSET_CLASS)}>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <Clock className="h-5 w-5" />
-            Timeline
+            {t('workOrderActivity.timeline')}
             {timelineHasBeenEdited ? (
               <TooltipProvider>
                 <Tooltip>
@@ -204,18 +206,16 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
                     <button
                       type="button"
                       className="inline-flex items-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:ring-offset-2"
-                      aria-label="Edited timeline"
+                      aria-label={t('workOrderActivity.editedTimeline')}
                       data-testid="timeline-edited-indicator"
                     >
                       <Pencil className="h-4 w-4" aria-hidden />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
-                    <p className="font-medium">Edited timeline</p>
+                    <p className="font-medium">{t('workOrderActivity.editedTimeline')}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      An admin backdated or corrected status events and dates to reflect paper
-                      records or actual field history. These timestamps may differ from when changes
-                      were recorded in EquipQR.
+                      {t('workOrderActivity.editedTimelineHint')}
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -223,7 +223,7 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
             ) : null}
             {!showDetailedHistory && (
               <Badge variant="outline" className="text-xs">
-                Limited View
+                {t('workOrderActivity.limitedView')}
               </Badge>
             )}
           </CardTitle>

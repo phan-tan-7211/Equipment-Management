@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -139,6 +140,7 @@ export function WorkOrderMobileExportSection({
   isExportingToSheets,
   isExportBusy,
 }: WorkOrderMobileExportSectionProps) {
+  const { t } = useI18n();
   const isAdminExport = exportAudience === 'admin';
   const {
     canExportDocs,
@@ -161,7 +163,7 @@ export function WorkOrderMobileExportSection({
   if (exportAudience === 'customer-safe') {
     return (
       <div className="space-y-2 rounded-xl border border-border/60 bg-muted/15 p-3">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Download</p>
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t('workOrderOperations.download')}</p>
         <Button
           variant="secondary"
           className="h-14 w-full flex-col gap-1"
@@ -173,7 +175,7 @@ export function WorkOrderMobileExportSection({
           ) : (
             <Download className="h-5 w-5" aria-hidden />
           )}
-          <span className="text-xs">Service Report PDF</span>
+          <span className="text-xs">{t('workOrderOperations.serviceReportPdf')}</span>
         </Button>
       </div>
     );
@@ -182,7 +184,7 @@ export function WorkOrderMobileExportSection({
   return (
     <>
       <div className="space-y-3 rounded-xl border border-border/60 bg-muted/15 p-3">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Download</p>
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t('workOrderOperations.download')}</p>
         <div className="grid grid-cols-2 gap-2">
           <Button
             variant="secondary"
@@ -247,7 +249,7 @@ export function WorkOrderMobileExportSection({
             ) : (
               <ClipboardList className="h-5 w-5" aria-hidden />
             )}
-            <span className="text-sm font-medium">Field Worksheet</span>
+            <span className="text-sm font-medium">{t('workOrderOperations.fieldWorksheet')}</span>
           </Button>
         </div>
       </div>
@@ -258,9 +260,9 @@ export function WorkOrderMobileExportSection({
           <div className="space-y-2">
             <GoogleDriveMobileRow
               label="Docs"
-              createLabel="Create"
-              updateLabel="Update"
-              openLabel="Open"
+              createLabel={t('workOrderOperations.create')}
+              updateLabel={t('workOrderOperations.update')}
+              openLabel={t('workOrderOperations.open')}
               canExport={canExportDocs}
               isBusy={isExportingToDocs}
               hasLinkedArtifact={docsDisplay.hasLinkedArtifact}
@@ -273,9 +275,9 @@ export function WorkOrderMobileExportSection({
             />
             <GoogleDriveMobileRow
               label="PDF"
-              createLabel="Save"
-              updateLabel="Update"
-              openLabel="Open"
+              createLabel={t('workOrderOperations.save')}
+              updateLabel={t('workOrderOperations.update')}
+              openLabel={t('workOrderOperations.open')}
               canExport={canExportPdf}
               isBusy={isGeneratingPdf}
               hasLinkedArtifact={pdfDisplay.hasLinkedArtifact}
@@ -288,9 +290,9 @@ export function WorkOrderMobileExportSection({
             />
             <GoogleDriveMobileRow
               label="Sheets"
-              createLabel="Create"
-              updateLabel="Update"
-              openLabel="Open"
+              createLabel={t('workOrderOperations.create')}
+              updateLabel={t('workOrderOperations.update')}
+              openLabel={t('workOrderOperations.open')}
               canExport={canExportSheets}
               isBusy={isExportingToSheets}
               hasLinkedArtifact={sheetsDisplay.hasLinkedArtifact}
