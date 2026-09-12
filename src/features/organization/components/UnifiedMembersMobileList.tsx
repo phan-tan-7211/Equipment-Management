@@ -7,6 +7,7 @@ import type { UnifiedMembersListViewProps } from '@/features/organization/compon
 import {
   getUnifiedMemberStatusBadgeVariant,
   getStatusIcon,
+  getUnifiedMemberDisplayName,
 } from '@/features/organization/utils/unifiedMemberPresentation';
 import { getRoleBadgeVariant } from '@/utils/badgeVariants';
 import { useI18n } from '@/i18n';
@@ -41,6 +42,11 @@ export function UnifiedMembersMobileList({
     ? t(`organizationMembers.${role}`) : role;
   const statusLabel = (status: string) => status === 'active' ? t('organizationMembers.active')
     : status === 'pending_invite' ? t('organizationMembers.pendingInvite') : t('organizationMembers.pendingGoogle');
+  const displayNameLabels = {
+    pendingInvite: t('organizationMembers.pendingInvite'),
+    pendingGoogle: t('organizationMembers.pendingGoogleName'),
+    unknown: t('organizationMembers.unknownName'),
+  };
   return (
     <div className="sm:hidden space-y-3">
       {unifiedMembers.map((member) => (
@@ -49,7 +55,7 @@ export function UnifiedMembersMobileList({
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <UnifiedMemberAvatar member={member} />
               <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{member.name}</p>
+                <p className="text-sm font-medium truncate">{getUnifiedMemberDisplayName(member, displayNameLabels)}</p>
                 <p className="text-xs text-muted-foreground truncate">{member.email}</p>
               </div>
             </div>

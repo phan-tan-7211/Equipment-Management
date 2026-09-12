@@ -11,6 +11,8 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+- **Member roster localization** — Placeholder names for pending invitations, Google Workspace claims, and unknown members now display in Vietnamese, English, and Korean.
+
 - **Equipment localization follow-up** — Remaining equipment form hints, bulk-edit controls, loading text, media labels, and note confirmation now display in Vietnamese, English, and Korean.
 
 - **Work Orders mobile list localization** — Mobile search, filters, sorting, work-order cards, and auto-assignment prompts now display in Vietnamese, English, and Korean.
