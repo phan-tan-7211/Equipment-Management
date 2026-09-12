@@ -10,7 +10,8 @@ import {
   buildHowToSchema,
 } from '@/lib/structuredData';
 import { mapVisibleStepsToHowTo, type VisibleHowToStep } from '@/lib/featureMarketingDerivation';
-import { getFeatureSeoByPath } from '@/lib/featureSeoContent';
+import { getFeatureSeoByPath, type FeatureSeoEntry } from '@/lib/featureSeoContent';
+import { useI18n } from '@/i18n';
 import {
   Accordion,
   AccordionContent,
@@ -24,11 +25,15 @@ const MAIN_FOCUS_RING =
 interface FeaturePageLayoutProps {
   children: ReactNode;
   howToSteps?: readonly VisibleHowToStep[];
+  seoOverride?: FeatureSeoEntry;
 }
 
-export const FeaturePageLayout = ({ children, howToSteps }: FeaturePageLayoutProps) => {
+export const FeaturePageLayout = ({ children, howToSteps, seoOverride }: FeaturePageLayoutProps) => {
+  const { t } = useI18n();
   const { pathname } = useLocation();
-  const seo = getFeatureSeoByPath(pathname);
+  const seo = seoOverride ?? getFeatureSeoByPath(pathname);
+  const label = (key: 'home' | 'features' | 'faqHeading' | 'breadcrumbAria', english: string) =>
+    seoOverride ? t(`publicFeatures.common.${key}`) : english;
   const slug =
     pathname
       .replace(/^\//, '')
@@ -37,8 +42,8 @@ export const FeaturePageLayout = ({ children, howToSteps }: FeaturePageLayoutPro
 
   const breadcrumbItems = seo
     ? ([
-        { name: 'Home', path: '/' },
-        { name: 'Features', path: '/#features' },
+        { name: label('home', 'Home'), path: '/' },
+        { name: label('features', 'Features'), path: '/#features' },
         { name: seo.breadcrumbLabel, path: seo.path },
       ] as const)
     : null;
@@ -50,7 +55,7 @@ export const FeaturePageLayout = ({ children, howToSteps }: FeaturePageLayoutPro
         {breadcrumbItems ? (
           <>
             <nav
-              aria-label="Breadcrumb"
+              aria-label={label('breadcrumbAria', 'Breadcrumb')}
               className="border-b border-border/60 bg-background/90 backdrop-blur-sm"
             >
               <div className="container px-4 mx-auto pt-28 pb-3">
@@ -60,7 +65,7 @@ export const FeaturePageLayout = ({ children, howToSteps }: FeaturePageLayoutPro
                       to="/"
                       className="text-foreground hover:underline font-medium"
                     >
-                      Home
+                      {label('home', 'Home')}
                     </Link>
                   </li>
                   <ChevronRight
@@ -69,7 +74,7 @@ export const FeaturePageLayout = ({ children, howToSteps }: FeaturePageLayoutPro
                   />
                   <li>
                     <Link to="/#features" className="hover:text-foreground hover:underline">
-                      Features
+                      {label('features', 'Features')}
                     </Link>
                   </li>
                   <ChevronRight
@@ -102,7 +107,7 @@ export const FeaturePageLayout = ({ children, howToSteps }: FeaturePageLayoutPro
                 id={`${slug}-faq-heading`}
                 className="text-2xl font-bold text-foreground mb-6"
               >
-                Frequently asked questions
+                {label('faqHeading', 'Frequently asked questions')}
               </h2>
               <Accordion type="single" collapsible className="w-full">
                 {seo.faq.map((item, i) => (

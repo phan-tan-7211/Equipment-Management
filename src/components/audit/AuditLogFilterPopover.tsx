@@ -10,14 +10,13 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { FilterPopoverShell } from '@/components/filters/FilterPopoverShell';
+import { useI18n } from '@/i18n/I18nProvider';
 import {
   AuditLogFilters,
   AuditEntityType,
   AuditAction,
   AUDIT_ENTITY_TYPES,
   AUDIT_ACTIONS,
-  ENTITY_TYPE_LABELS,
-  ACTION_LABELS,
 } from '@/types/audit';
 
 interface AuditLogFilterPopoverProps {
@@ -33,13 +32,20 @@ const AuditLogFilterPopover: React.FC<AuditLogFilterPopoverProps> = ({
   onFilterChange,
   onClear,
 }) => {
+  const { t } = useI18n();
   return (
-    <FilterPopoverShell ariaSubject="audit log" activeFilterCount={activeFilterCount}>
+    <FilterPopoverShell
+      ariaSubject={t('auditLogControls.auditSubject')}
+      activeFilterCount={activeFilterCount}
+      triggerLabel={t('auditLogControls.filter')}
+      headerLabel={t('auditLogControls.filters')}
+      triggerAriaLabel={activeFilterCount > 0 ? t('auditLogControls.filterAuditActive', { count: activeFilterCount }) : t('auditLogControls.filterAudit')}
+    >
       {({ close }) => (
         <>
           {/* Entity Type */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted-foreground">Entity Type</span>
+            <span className="text-xs text-muted-foreground">{t('auditLogControls.entityType')}</span>
             <Select
               value={filters.entityType ?? 'all'}
               onValueChange={(v) =>
@@ -49,14 +55,14 @@ const AuditLogFilterPopover: React.FC<AuditLogFilterPopoverProps> = ({
                 })
               }
             >
-              <SelectTrigger className="h-8 text-sm" aria-label="Filter by entity type">
-                <SelectValue placeholder="All types" />
+              <SelectTrigger className="h-8 text-sm" aria-label={t('auditLogControls.filterEntity')}>
+                <SelectValue placeholder={t('auditLogControls.allTypes')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="all">{t('auditLogControls.allTypes')}</SelectItem>
                 {Object.values(AUDIT_ENTITY_TYPES).map((value) => (
                   <SelectItem key={value} value={value}>
-                    {ENTITY_TYPE_LABELS[value]}
+                    {t(`auditLogControls.${value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -65,7 +71,7 @@ const AuditLogFilterPopover: React.FC<AuditLogFilterPopoverProps> = ({
 
           {/* Action */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted-foreground">Action</span>
+            <span className="text-xs text-muted-foreground">{t('auditLogControls.action')}</span>
             <Select
               value={filters.action ?? 'all'}
               onValueChange={(v) =>
@@ -75,14 +81,14 @@ const AuditLogFilterPopover: React.FC<AuditLogFilterPopoverProps> = ({
                 })
               }
             >
-              <SelectTrigger className="h-8 text-sm" aria-label="Filter by action">
-                <SelectValue placeholder="All actions" />
+              <SelectTrigger className="h-8 text-sm" aria-label={t('auditLogControls.filterAction')}>
+                <SelectValue placeholder={t('auditLogControls.allActions')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Actions</SelectItem>
+                <SelectItem value="all">{t('auditLogControls.allActions')}</SelectItem>
                 {Object.values(AUDIT_ACTIONS).map((value) => (
                   <SelectItem key={value} value={value}>
-                    {ACTION_LABELS[value]}
+                    {t(`auditLogControls.${value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -102,7 +108,7 @@ const AuditLogFilterPopover: React.FC<AuditLogFilterPopoverProps> = ({
                 }}
               >
                 <X className="h-3 w-3 mr-1.5" />
-                Clear all filters
+                {t('auditLogControls.clearFilters')}
               </Button>
             </>
           )}

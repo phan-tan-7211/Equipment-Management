@@ -5,6 +5,7 @@ const GoogleWorkspaceFeature = () => (
   <StandardFeaturePage
     seoPath="/features/google-workspace"
     content={content}
+    translationKey="googleWorkspace"
     benefits={benefits}
     steps={steps}
     showcases={showcases}

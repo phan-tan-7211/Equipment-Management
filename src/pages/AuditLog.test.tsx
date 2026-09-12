@@ -42,8 +42,24 @@ vi.mock('@/hooks/usePermissions', () => ({
 }));
 
 import AuditLog from '@/pages/AuditLog';
+import { I18nProvider } from '@/i18n/I18nProvider';
 
 describe('AuditLog page', () => {
+  it.each([
+    ['vi', 'Chưa chọn tổ chức'],
+    ['ko', '조직이 선택되지 않음'],
+  ])('renders the organization gate in %s', (language, heading) => {
+    mockUseOrganization.mockReturnValue({ currentOrganization: null });
+    window.localStorage.setItem('znteqr-language', language);
+    try {
+      render(<I18nProvider><AuditLog /></I18nProvider>);
+      expect(screen.getByText(heading)).toBeInTheDocument();
+      expect(screen.queryByTestId('audit-explorer')).not.toBeInTheDocument();
+    } finally {
+      window.localStorage.removeItem('znteqr-language');
+    }
+  });
+
   it('renders the No Organization Selected alert when no org is active', () => {
     mockUseOrganization.mockReturnValue({ currentOrganization: null });
 
