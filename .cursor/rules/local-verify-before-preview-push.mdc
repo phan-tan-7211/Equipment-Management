@@ -1,5 +1,5 @@
 ---
-description: "Verify changes before publishing to preview/main with checks appropriate to their scope."
+description: "Hard gate — no push or PR to preview/main until local end-to-end verification passes with zero user manual steps. Agent runs all checks autonomously."
 alwaysApply: true
 ---
 # Local Verify Before Push / PR to Preview
@@ -8,11 +8,11 @@ As of 2026-06-13, the local dev stack has **production parity** (Auth, Edge Func
 
 ## Hard rule
 
-**Do not push a work branch or open/merge a PR into `preview` (or a release PR into `main`) until the change passes verification appropriate to its scope.** Presentation-only text/i18n changes do not require an authenticated browser flow.
+**Do not push a work branch and do not open/merge a PR into `preview` (or a release PR into `main`) until the change is verified locally end-to-end with zero manual user intervention.**
 
 - "Verified" means the agent ran the checks, observed pass signals, and can cite commands + outcomes in the handoff.
 - "Zero manual intervention" means no asking the maintainer to click OAuth, reload, sign in, or confirm behavior. Use shell, Vitest, Playwright, Supabase CLI, edge logs, and **browser MCP** instead.
-- If an applicable check cannot run without a human step, report what was checked and the remaining limitation; do not claim the missing check passed.
+- If the change cannot be verified locally without a human step, **stop before push** and report the blocker.
 
 **Exception:** workflow-only paths (`.cursor/**`, `AGENTS.md`, `dev/mcp.template.json`) still follow `workflow-artifacts.mdc` — Fallow clean, no product E2E required.
 
@@ -28,14 +28,14 @@ Run in order when a commit, push, or PR was requested; all must pass:
 3. **Targeted tests** — Vitest for touched behavior; add/update tests when behavior changed.
 4. **Build** — `npm run build` when routing, env wiring, Vite, or PWA may be affected.
 
-## Additional verification by change type
+## End-to-end gate (by change type)
 
-Pick the **smallest credible proof** that covers the change. Use browser E2E for interactions that need it, and focused static checks for presentation-only i18n.
+Pick the **smallest credible E2E proof** that covers the user-visible outcome. Prefer existing automation first.
 
-| Change touches | Local verification (agent-run) |
+| Change touches | Local E2E proof (agent-run) |
 |---|---|
 | UI route / form / dashboard flow | Browser MCP smoke on `http://localhost:8080` **or** `.\dev\dev-test.bat` critical when a spec exists |
-| Presentation-only copy / i18n (no behavior or layout change) | Scoped lint/tests and locale key/interpolation parity; no browser capture required |
+| User-visible behavior touched indirectly (help links, copy, docs discovery) | Playwright PR evidence or browser MCP proving discovery **and** the underlying workflow still completes |
 | equipqr.info docs wired to app surfaces | `npm run docs:build` plus Playwright/browser proof from each contextual Help link and Help Center nav to the article |
 | Broad UX / release-sensitive | `.\dev\dev-test.bat full` (headless) |
 | Edge Function / OAuth callback | `deno test` in function dir if present; then exercise callback path on local stack; confirm via edge logs + DB/RPC read |
@@ -72,6 +72,7 @@ Before `git push -u origin HEAD` or `gh pr create --base preview` (release: `--b
 - Pass/fail outcome for each layer (Fallow, npm ci, lint, tests, E2E).
 - For feature-branch PRs: **`gh pr checks` green** (or `--watch` completed) per `pr-ci-gate-before-open.mdc` — do not hand off with failing CI.
 - For integrations/OAuth: what signal proved success (log line, RPC result, UI state).
+- **PR visual evidence** (when opening/updating a product PR): capture command, spec path, and confirmation that screenshots + demo MP4 were uploaded per `pr-visual-evidence.mdc` (include PR comment link after `-Publish`).
 
 ## Relationship to branching
 
