@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 import { Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ export function EquipmentOperatorCheckinTemplateAssignmentMenu({
   isAssigning,
   onAssignTemplateIds,
 }: EquipmentOperatorCheckinTemplateAssignmentMenuProps) {
+  const { t } = useI18n();
   const assignedTemplateIds = useMemo(
     () => new Set(assignments.map((assignment) => assignment.template_id)),
     [assignments],
@@ -50,12 +52,12 @@ export function EquipmentOperatorCheckinTemplateAssignmentMenu({
         return {
           id: template.id,
           label: template.name,
-          sublabel: `${fieldCount} data field${fieldCount === 1 ? '' : 's'} · ${itemCount} checklist item${itemCount === 1 ? '' : 's'}`,
+          sublabel: `${t(fieldCount === 1 ? 'operatorEquipment.dataFieldCount' : 'operatorEquipment.dataFieldCountPlural', { count: fieldCount })} · ${t(itemCount === 1 ? 'operatorEquipment.checklistItemCount' : 'operatorEquipment.checklistItemCountPlural', { count: itemCount })}`,
           searchText: template.description ?? '',
-          lockedNote: assignedTemplateIds.has(template.id) ? 'Assigned' : undefined,
+          lockedNote: assignedTemplateIds.has(template.id) ? t('operatorEquipment.assigned') : undefined,
         };
       }),
-    [activeTemplates, assignedTemplateIds],
+    [activeTemplates, assignedTemplateIds, t],
   );
 
   const unassignedCount = useMemo(
@@ -69,31 +71,31 @@ export function EquipmentOperatorCheckinTemplateAssignmentMenu({
       trigger={
         <Button type="button" variant="outline" size="sm" disabled={isAssigning}>
           <Plus className="mr-2 h-4 w-4" />
-          Assign checklists
+          {t('operatorEquipment.assignChecklists')}
           {assignedCount > 0 ? (
             <Badge variant="secondary" className="ml-2 font-normal">
-              {assignedCount} assigned
+              {t('operatorEquipment.assignedBadge', { count: assignedCount })}
             </Badge>
           ) : null}
         </Button>
       }
-      title={`Assign checklists to ${equipmentName}`}
+      title={t('operatorEquipment.assignTo', { name: equipmentName })}
       description={
         unassignedCount > 0
-          ? `Choose one or more templates. ${unassignedCount} unassigned template${unassignedCount === 1 ? '' : 's'} available.`
-          : 'All active templates are already assigned to this equipment.'
+          ? t(unassignedCount === 1 ? 'operatorEquipment.chooseTemplates' : 'operatorEquipment.chooseTemplatesPlural', { count: unassignedCount })
+          : t('operatorEquipment.allTemplatesAssigned')
       }
       options={options}
       isLoading={isTemplatesLoading || isAssignmentsLoading}
       isPending={isAssigning}
-      searchPlaceholder="Search templates..."
-      loadingText="Loading templates…"
-      emptyText="No active checklist templates yet."
-      noMatchText="No templates match your search."
+      searchPlaceholder={t('operatorEquipment.searchTemplates')}
+      loadingText={t('operatorEquipment.loadingTemplates')}
+      emptyText={t('operatorEquipment.noTemplates')}
+      noMatchText={t('operatorEquipment.noTemplatesMatch')}
       actionLabel={(count) =>
         isAssigning
-          ? 'Assigning...'
-          : `Assign checklist${count === 1 ? '' : 's'}`
+          ? t('operatorEquipment.assigning')
+          : t(count === 1 ? 'operatorEquipment.assignChecklist' : 'operatorEquipment.assignChecklistPlural')
       }
       onAction={onAssignTemplateIds}
       align="start"
