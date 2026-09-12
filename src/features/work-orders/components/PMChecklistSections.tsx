@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { createSegmentsForSection, isNegativePMCondition } from '@/utils/pmChecklistHelpers';
 import { PMChecklistItem, type PMChecklistCondition } from '@/features/pm-templates/services/preventativeMaintenanceService';
 import PMChecklistItemRow from '@/features/work-orders/components/PMChecklistItemRow';
+import { useI18n } from '@/i18n';
 
 interface PMChecklistSectionsProps {
   sections: string[];
@@ -37,6 +38,7 @@ const PMChecklistSections: React.FC<PMChecklistSectionsProps> = ({
   getItemBorderClass,
   handleNotesItemChange,
 }) => {
+  const { t } = useI18n();
   return (
     <div className="space-y-4">
       {sections.map((section) => {
@@ -67,11 +69,11 @@ const PMChecklistSections: React.FC<PMChecklistSectionsProps> = ({
                         <span className="block font-semibold">{section}</span>
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                           <span>
-                            {sectionProgress.completed}/{sectionProgress.total} items completed ({Math.round(sectionProgress.percentage)}%)
+                            {t('workOrderResidual.sectionProgress', { completed: sectionProgress.completed, total: sectionProgress.total, percentage: Math.round(sectionProgress.percentage) })}
                           </span>
                           {flaggedItemsCount > 0 ? (
                             <span className="rounded-full bg-warning/15 px-2 py-0.5 font-medium text-warning">
-                              {flaggedItemsCount} flagged
+                              {t('workOrderResidual.flagged', { count: flaggedItemsCount })}
                             </span>
                           ) : null}
                         </div>

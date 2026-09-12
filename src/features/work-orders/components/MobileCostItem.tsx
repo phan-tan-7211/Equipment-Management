@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Trash2, Package } from 'lucide-react';
 import { WorkOrderCostItem } from '@/features/work-orders/hooks/useWorkOrderCostsState';
+import { useI18n } from '@/i18n';
 
 import {
   formatWorkOrderCostCurrency,
@@ -23,6 +24,7 @@ const MobileCostItem: React.FC<MobileCostItemProps> = React.memo(({
   onUpdateCost,
   canRemove
 }) => {
+  const { t } = useI18n();
   const isFromInventory = !!cost.inventory_item_id;
 
   return (
@@ -32,10 +34,10 @@ const MobileCostItem: React.FC<MobileCostItemProps> = React.memo(({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {isFromInventory && (
-            <Package className="h-4 w-4 text-info" title="From inventory - removing will restore stock" />
+            <Package className="h-4 w-4 text-info" title={t('workOrderResidual.fromInventory')} />
           )}
           <span className="text-sm font-medium text-muted-foreground">
-            Description {isFromInventory && <span className="text-info">(Inventory)</span>}
+            {t('workOrderOperations.description')} {isFromInventory && <span className="text-info">{t('workOrderResidual.inventoryTag')}</span>}
           </span>
         </div>
         <Button
@@ -45,7 +47,7 @@ const MobileCostItem: React.FC<MobileCostItemProps> = React.memo(({
           onClick={() => onRemoveCost(cost.id)}
           className="text-destructive hover:text-destructive h-6 w-6 p-0"
           disabled={!canRemove}
-          aria-label="Remove cost line"
+          aria-label={t('workOrderResidual.removeCostLine')}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -55,16 +57,16 @@ const MobileCostItem: React.FC<MobileCostItemProps> = React.memo(({
         id={`wo-cost-desc-${cost.id}`}
         value={cost.description}
         onChange={(e) => onUpdateCost(cost.id, 'description', e.target.value)}
-        placeholder="Enter description..."
+        placeholder={t('workOrderResidual.enterDescription')}
         className="h-9"
         readOnly={isFromInventory}
-        aria-label="Cost description"
+        aria-label={t('workOrderResidual.costDescription')}
       />
       
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label htmlFor={`wo-cost-qty-${cost.id}`} className="mb-1 block text-sm font-medium text-muted-foreground">
-            Quantity
+            {t('workOrderOperations.quantity')}
           </label>
           <Input
             id={`wo-cost-qty-${cost.id}`}
@@ -73,14 +75,14 @@ const MobileCostItem: React.FC<MobileCostItemProps> = React.memo(({
             min="0.01"
             value={cost.quantity}
             onChange={(e) => onUpdateCost(cost.id, 'quantity', parseFloat(e.target.value) || 1)}
-            placeholder="Qty"
+            placeholder={t('workOrderResidual.qty')}
             className="h-9"
           />
         </div>
         
         <div>
           <label htmlFor={`wo-cost-unit-${cost.id}`} className="mb-1 block text-sm font-medium text-muted-foreground">
-            Unit Price
+            {t('workOrderOperations.unitPrice')}
           </label>
           <div className="flex min-w-0 items-center gap-1">
             <span className="text-sm text-muted-foreground">$</span>
@@ -99,7 +101,7 @@ const MobileCostItem: React.FC<MobileCostItemProps> = React.memo(({
       </div>
       
       <div className="flex items-center justify-between pt-2 border-t">
-        <span className="text-sm font-medium text-muted-foreground">Total:</span>
+        <span className="text-sm font-medium text-muted-foreground">{t('workOrderResidual.total')}</span>
         <span className="font-semibold text-lg">
           {formatWorkOrderCostCurrency(cost.total_price_cents)}
         </span>
@@ -111,4 +113,3 @@ const MobileCostItem: React.FC<MobileCostItemProps> = React.memo(({
 MobileCostItem.displayName = 'MobileCostItem';
 
 export default MobileCostItem;
-
