@@ -34,6 +34,7 @@ import { usePMTemplates } from '@/features/pm-templates/hooks/usePMTemplates';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { MobileListGlanceCount } from '@/components/common/MobileListGlanceCount';
+import { useI18n } from '@/i18n';
 import {
   applyCalendarDrag,
   applyDueWrite,
@@ -78,6 +79,7 @@ const WorkOrders = () => {
 
   const { currentOrganization } = useOrganization();
   const { currentUser } = useUser();
+  const { t } = useI18n();
   const permissions = useUnifiedPermissions();
   const canDeleteWorkOrders = permissions.hasRole(['owner', 'admin']);
   const deleteWorkOrderMutation = useDeleteWorkOrder();
@@ -323,13 +325,13 @@ const WorkOrders = () => {
 
   const handleDeleteClick = useCallback((workOrder: WorkOrder) => {
     if ((workOrder as MergedWorkOrder)._isPendingSync) {
-      toast.info('Pending sync', {
-        description: 'Delete is available after the work order syncs.',
+      toast.info(t('workOrders.list.pendingSync'), {
+        description: t('workOrders.list.deleteAfterSync'),
       });
       return;
     }
     setDeleteTarget(workOrder);
-  }, []);
+  }, [t]);
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
@@ -351,8 +353,8 @@ const WorkOrders = () => {
     return (
       <Page maxWidth="7xl" padding="responsive">
         <PageHeader 
-          title="Work Orders" 
-          description="Loading team-based work orders..." 
+          title={t('workOrders.list.title')} 
+          description={t('workOrders.list.loading')} 
         />
         <div className="grid gap-6">
           {[...Array(3)].map((_, i) => (
@@ -366,7 +368,7 @@ const WorkOrders = () => {
 
   const accessDescription =
     !isManager && userTeamIds.length === 0
-      ? 'No team assignments - contact your administrator for access'
+      ? t('workOrders.list.noTeamAssignments')
       : undefined;
 
   // Generate meta badge based on access level
@@ -375,14 +377,16 @@ const WorkOrders = () => {
       return (
         <Badge variant="secondary" className="text-xs gap-1">
           <ShieldCheck className="h-3 w-3" />
-          Admin
+          {t('workOrders.list.admin')}
         </Badge>
       );
     } else if (userTeamIds.length > 0) {
       return (
         <Badge variant="outline" className="text-xs gap-1">
           <Users className="h-3 w-3" />
-          {userTeamIds.length} team{userTeamIds.length === 1 ? '' : 's'}
+          {t(userTeamIds.length === 1 ? 'workOrders.list.team' : 'workOrders.list.teams', {
+            count: userTeamIds.length,
+          })}
         </Badge>
       );
     }
@@ -400,7 +404,7 @@ const WorkOrders = () => {
     <Page maxWidth="7xl" padding="responsive">
       <div className="space-y-4">
         <PageHeader 
-          title="Work Orders" 
+          title={t('workOrders.list.title')} 
           description={accessDescription}
           meta={getAccessBadge()}
           hideDescriptionOnMobile={Boolean(accessDescription)}
@@ -414,7 +418,7 @@ const WorkOrders = () => {
                 className="w-full sm:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
-                <span>Create Work Order</span>
+                <span>{t('workOrders.list.createWorkOrder')}</span>
               </Button>
             ) : undefined
           }
@@ -494,7 +498,7 @@ const WorkOrders = () => {
               page={currentPage}
               pageSize={pageSize}
               pageSizeOptions={pageSizeOptions}
-              itemLabel="work order"
+              itemLabel={t('workOrders.list.itemLabel')}
               onPageChange={setCurrentPage}
               onPageSizeChange={setPageSize}
             />
@@ -532,8 +536,8 @@ const WorkOrders = () => {
               resultCount={totalFilteredCount}
               totalCount={totalAccessibleCount}
               hasActiveFilters={hasActiveFilters}
-              singularLabel="work order"
-              pluralLabel="work orders"
+              singularLabel={t('workOrders.list.itemLabel')}
+              pluralLabel={t('workOrders.list.itemLabelPlural')}
               className="border-t pt-4"
             />
           )}
@@ -546,7 +550,7 @@ const WorkOrders = () => {
             size="icon"
             className="fixed bottom-[78px] right-4 z-fixed h-14 w-14 rounded-full shadow-elevation-3"
             onClick={() => openCreate(null)}
-            aria-label="Create work order"
+            aria-label={t('workOrders.list.createWorkOrderAria')}
           >
             <Plus className="h-6 w-6" />
           </Button>

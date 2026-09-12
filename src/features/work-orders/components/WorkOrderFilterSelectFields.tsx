@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useI18n } from '@/i18n';
 
 type WorkOrderFilterSelectFieldProps = {
   value: string;
@@ -43,37 +44,40 @@ function WorkOrderFilterSelectField({
   );
 }
 
-export function WorkOrderStatusFilterSelect({
-  value,
-  onValueChange,
-  triggerId,
-  ariaLabel = 'Filter by status',
-  placeholder = 'All statuses',
-  allLabel = 'All Statuses',
-}: {
+type FilterSelectProps = {
   value: string;
   onValueChange: (value: string) => void;
   triggerId?: string;
   ariaLabel?: string;
   placeholder?: string;
   allLabel?: string;
-}) {
+};
+
+export function WorkOrderStatusFilterSelect({
+  value,
+  onValueChange,
+  triggerId,
+  ariaLabel,
+  placeholder,
+  allLabel,
+}: FilterSelectProps) {
+  const { t } = useI18n();
   return (
     <WorkOrderFilterSelectField
       value={value}
       onValueChange={onValueChange}
       triggerId={triggerId}
-      ariaLabel={ariaLabel}
-      placeholder={placeholder}
-      allLabel={allLabel}
+      ariaLabel={ariaLabel ?? t('workOrders.list.filterByStatusAria')}
+      placeholder={placeholder ?? t('workOrders.list.allStatuses')}
+      allLabel={allLabel ?? t('workOrders.list.allStatuses')}
     >
-      <SelectItem value="submitted">Submitted</SelectItem>
-      <SelectItem value="accepted">Accepted</SelectItem>
-      <SelectItem value="assigned">Assigned</SelectItem>
-      <SelectItem value="in_progress">In Progress</SelectItem>
-      <SelectItem value="on_hold">On Hold</SelectItem>
-      <SelectItem value="completed">Completed</SelectItem>
-      <SelectItem value="cancelled">Cancelled</SelectItem>
+      <SelectItem value="submitted">{t('workOrders.list.submitted')}</SelectItem>
+      <SelectItem value="accepted">{t('workOrders.list.accepted')}</SelectItem>
+      <SelectItem value="assigned">{t('workOrders.list.assigned')}</SelectItem>
+      <SelectItem value="in_progress">{t('workOrders.list.inProgress')}</SelectItem>
+      <SelectItem value="on_hold">{t('workOrders.list.onHold')}</SelectItem>
+      <SelectItem value="completed">{t('workOrders.list.completed')}</SelectItem>
+      <SelectItem value="cancelled">{t('workOrders.list.cancelled')}</SelectItem>
     </WorkOrderFilterSelectField>
   );
 }
@@ -82,29 +86,23 @@ export function WorkOrderPriorityFilterSelect({
   value,
   onValueChange,
   triggerId,
-  ariaLabel = 'Filter by priority',
-  placeholder = 'All priorities',
-  allLabel = 'All Priorities',
-}: {
-  value: string;
-  onValueChange: (value: string) => void;
-  triggerId?: string;
-  ariaLabel?: string;
-  placeholder?: string;
-  allLabel?: string;
-}) {
+  ariaLabel,
+  placeholder,
+  allLabel,
+}: FilterSelectProps) {
+  const { t } = useI18n();
   return (
     <WorkOrderFilterSelectField
       value={value}
       onValueChange={onValueChange}
       triggerId={triggerId}
-      ariaLabel={ariaLabel}
-      placeholder={placeholder}
-      allLabel={allLabel}
+      ariaLabel={ariaLabel ?? t('workOrders.list.filterByPriorityAria')}
+      placeholder={placeholder ?? t('workOrders.list.allPriorities')}
+      allLabel={allLabel ?? t('workOrders.list.allPriorities')}
     >
-      <SelectItem value="high">High</SelectItem>
-      <SelectItem value="medium">Medium</SelectItem>
-      <SelectItem value="low">Low</SelectItem>
+      <SelectItem value="high">{t('workOrders.list.high')}</SelectItem>
+      <SelectItem value="medium">{t('workOrders.list.medium')}</SelectItem>
+      <SelectItem value="low">{t('workOrders.list.low')}</SelectItem>
     </WorkOrderFilterSelectField>
   );
 }
@@ -113,29 +111,23 @@ export function WorkOrderDueDateFilterSelect({
   value,
   onValueChange,
   triggerId,
-  ariaLabel = 'Filter by due date',
-  placeholder = 'All dates',
-  allLabel = 'All Dates',
-}: {
-  value: string;
-  onValueChange: (value: string) => void;
-  triggerId?: string;
-  ariaLabel?: string;
-  placeholder?: string;
-  allLabel?: string;
-}) {
+  ariaLabel,
+  placeholder,
+  allLabel,
+}: FilterSelectProps) {
+  const { t } = useI18n();
   return (
     <WorkOrderFilterSelectField
       value={value}
       onValueChange={onValueChange}
       triggerId={triggerId}
-      ariaLabel={ariaLabel}
-      placeholder={placeholder}
-      allLabel={allLabel}
+      ariaLabel={ariaLabel ?? t('workOrders.list.filterByDueDateAria')}
+      placeholder={placeholder ?? t('workOrders.list.allDates')}
+      allLabel={allLabel ?? t('workOrders.list.allDates')}
     >
-      <SelectItem value="overdue">Overdue</SelectItem>
-      <SelectItem value="today">Due Today</SelectItem>
-      <SelectItem value="this_week">This Week</SelectItem>
+      <SelectItem value="overdue">{t('workOrders.list.overdue')}</SelectItem>
+      <SelectItem value="today">{t('workOrders.list.dueToday')}</SelectItem>
+      <SelectItem value="this_week">{t('workOrders.list.thisWeek')}</SelectItem>
     </WorkOrderFilterSelectField>
   );
 }
@@ -144,30 +136,24 @@ export function WorkOrderInvoiceFilterSelect({
   value,
   onValueChange,
   triggerId,
-  ariaLabel = 'Filter by invoice status',
-  placeholder = 'All invoices',
-  allLabel = 'All Invoices',
-}: {
-  value: string;
-  onValueChange: (value: string) => void;
-  triggerId?: string;
-  ariaLabel?: string;
-  placeholder?: string;
-  allLabel?: string;
-}) {
+  ariaLabel,
+  placeholder,
+  allLabel,
+}: FilterSelectProps) {
+  const { t } = useI18n();
   return (
     <WorkOrderFilterSelectField
       value={value}
       onValueChange={onValueChange}
       triggerId={triggerId}
-      ariaLabel={ariaLabel}
-      placeholder={placeholder}
-      allLabel={allLabel}
+      ariaLabel={ariaLabel ?? t('workOrders.list.filterByInvoiceAria')}
+      placeholder={placeholder ?? t('workOrders.list.allInvoices')}
+      allLabel={allLabel ?? t('workOrders.list.allInvoices')}
     >
-      <SelectItem value="paid">Paid</SelectItem>
-      <SelectItem value="unpaid">Unpaid</SelectItem>
-      <SelectItem value="overdue">Overdue</SelectItem>
-      <SelectItem value="not_exported">Not Exported</SelectItem>
+      <SelectItem value="paid">{t('workOrders.list.paid')}</SelectItem>
+      <SelectItem value="unpaid">{t('workOrders.list.unpaid')}</SelectItem>
+      <SelectItem value="overdue">{t('workOrders.list.overdue')}</SelectItem>
+      <SelectItem value="not_exported">{t('workOrders.list.notExported')}</SelectItem>
     </WorkOrderFilterSelectField>
   );
 }
