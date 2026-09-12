@@ -10,8 +10,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
+import { useAuthFlowCopy } from './useAuthFlowCopy';
 
 export default function IdleSessionTimeoutGuard() {
+  const t = useAuthFlowCopy();
   const { user, signOut } = useAuth();
 
   const { isWarningOpen, secondsRemaining, staySignedIn, signOutNow } = useIdleTimeout({
@@ -26,15 +28,14 @@ export default function IdleSessionTimeoutGuard() {
     <AlertDialog open={isWarningOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Session expiring soon</AlertDialogTitle>
+          <AlertDialogTitle>{t('authFlow.sessionExpiring')}</AlertDialogTitle>
           <AlertDialogDescription>
-            You have been inactive. For security, you will be signed out in {secondsRemaining} second
-            {secondsRemaining === 1 ? '' : 's'} unless you continue your session.
+            {t(secondsRemaining === 1 ? 'authFlow.inactivityOne' : 'authFlow.inactivityMany', { count: secondsRemaining })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={staySignedIn}>Stay signed in</AlertDialogCancel>
-          <AlertDialogAction onClick={() => void signOutNow()}>Sign out now</AlertDialogAction>
+          <AlertDialogCancel onClick={staySignedIn}>{t('authFlow.staySignedIn')}</AlertDialogCancel>
+          <AlertDialogAction onClick={() => void signOutNow()}>{t('authFlow.signOutNow')}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

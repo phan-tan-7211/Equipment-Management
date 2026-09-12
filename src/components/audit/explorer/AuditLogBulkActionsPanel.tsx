@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { logger } from '@/utils/logger';
 import { FormattedAuditEntry } from '@/types/audit';
+import { useI18n } from '@/i18n/I18nProvider';
 import {
   downloadAuditEntriesExcel,
   downloadAuditEntriesMarkdown,
@@ -31,6 +32,7 @@ export function AuditLogBulkActionsPanel({
   onClearSelection,
   canExport,
 }: AuditLogBulkActionsPanelProps) {
+  const { t } = useI18n();
   const [exporting, setExporting] = useState<BulkExportFormat | null>(null);
 
   const runExport = async (format: BulkExportFormat) => {
@@ -44,10 +46,10 @@ export function AuditLogBulkActionsPanel({
       } else {
         await downloadAuditEntriesPdf(entries);
       }
-      toast.success(`Exported ${entries.length} entries`);
+      toast.success(t('auditExplorer.exportedCount', { count: entries.length }));
     } catch (error) {
       logger.error('Audit bulk export failed', error);
-      toast.error('Export failed. Please try again.');
+      toast.error(t('auditExplorer.exportFailed'));
     } finally {
       setExporting(null);
     }
@@ -61,7 +63,7 @@ export function AuditLogBulkActionsPanel({
       <div className="px-5 pt-4 pb-3 border-b shrink-0 flex items-center gap-2">
         <Layers className="h-4 w-4 text-muted-foreground shrink-0" />
         <h2 className="text-sm font-semibold leading-tight">
-          {entries.length} entries selected
+          {t('auditExplorer.selectedCount', { count: entries.length })}
         </h2>
         <Button
           variant="ghost"
@@ -70,21 +72,19 @@ export function AuditLogBulkActionsPanel({
           onClick={onClearSelection}
         >
           <X className="h-3.5 w-3.5 mr-1" />
-          Clear
+          {t('auditExplorer.clear')}
         </Button>
       </div>
 
       <div className="px-5 py-4 space-y-4 overflow-y-auto">
         <p className="text-xs text-muted-foreground">
-          Multiple entries are selected, so this pane works on the group.
-          Export the selected log entries or clear the selection to inspect a
-          single entry.
+          {t('auditExplorer.bulkHint')}
         </p>
 
         {canExport ? (
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Export selection
+              {t('auditExplorer.exportSelection')}
             </p>
             <div className="flex flex-col gap-2">
               <Button
@@ -95,7 +95,7 @@ export function AuditLogBulkActionsPanel({
                 onClick={() => runExport('markdown')}
               >
                 <FileText className="h-4 w-4 mr-2" />
-                {exporting === 'markdown' ? 'Exporting…' : 'Markdown (.md)'}
+                {exporting === 'markdown' ? t('auditExplorer.exporting') : 'Markdown (.md)'}
               </Button>
               <Button
                 variant="outline"
@@ -105,7 +105,7 @@ export function AuditLogBulkActionsPanel({
                 onClick={() => runExport('excel')}
               >
                 <FileSpreadsheet className="h-4 w-4 mr-2" />
-                {exporting === 'excel' ? 'Exporting…' : 'Excel (.xlsx)'}
+                {exporting === 'excel' ? t('auditExplorer.exporting') : 'Excel (.xlsx)'}
               </Button>
               <Button
                 variant="outline"
@@ -115,13 +115,13 @@ export function AuditLogBulkActionsPanel({
                 onClick={() => runExport('pdf')}
               >
                 <FileDown className="h-4 w-4 mr-2" />
-                {exporting === 'pdf' ? 'Exporting…' : 'PDF (.pdf)'}
+                {exporting === 'pdf' ? t('auditExplorer.exporting') : 'PDF (.pdf)'}
               </Button>
             </div>
           </div>
         ) : (
           <p className="text-xs text-muted-foreground italic">
-            Exports are available to organization owners and administrators.
+            {t('auditExplorer.restricted')}
           </p>
         )}
 
@@ -129,8 +129,7 @@ export function AuditLogBulkActionsPanel({
 
         <div className="space-y-1 text-xs text-muted-foreground">
           <p>
-            Tip: use the row checkboxes, Ctrl/Cmd-click to toggle, or
-            Shift-click to select a range.
+            {t('auditExplorer.selectionTip')}
           </p>
         </div>
       </div>

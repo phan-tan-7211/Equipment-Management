@@ -1,8 +1,22 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MobileWorkOrderFieldNextAction } from './MobileWorkOrderFieldNextAction';
+
+const locale = vi.hoisted(() => ({ value: 'en' as 'en' | 'vi' | 'ko' }));
+vi.mock('@/i18n', async () => {
+  const { workOrderFieldActionResources } = await import('@/i18n/workOrderFieldActionResources');
+  return {
+    useI18n: () => ({
+      t: (key: string, params?: Record<string, string | number>) => {
+        const resource = workOrderFieldActionResources[locale.value].workOrderFieldAction;
+        const template = resource[key.split('.')[1] as keyof typeof resource];
+        return template.replace(/{{(.*?)}}/g, (_token, name: string) => String(params?.[name] ?? `{{${name}}}`));
+      },
+    }),
+  };
+});
 
 const baseSync = {
   isOnline: true,
@@ -43,6 +57,7 @@ function renderNextAction(
 }
 
 describe('MobileWorkOrderFieldNextAction', () => {
+  afterEach(() => { locale.value = 'en'; });
   it('submitted shows Accept work order', () => {
     const onAcceptWorkOrder = vi.fn();
     renderNextAction({
@@ -140,5 +155,26 @@ describe('MobileWorkOrderFieldNextAction', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: /retry sync/i }));
     expect(onRetrySync).toHaveBeenCalled();
+  });
+
+  it('renders localized offline feedback while keeping the next action available', () => {
+    locale.value = 'vi';
+    renderNextAction({
+      workOrder: { id: '1', status: 'assigned', assignee_id: 'user-1' },
+      sync: { isOnline: false, isSyncing: false, pendingCount: 1, failedCount: 0 },
+    });
+    expect(screen.getByText('Đã lưu ngoại tuyến — sẽ đồng bộ khi bạn kết nối lại.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Bắt đầu công việc' })).toBeEnabled();
+  });
+
+  it('prioritizes failed sync and translates checklist progress into Korean', () => {
+    locale.value = 'ko';
+    renderNextAction({
+      workOrder: { id: '1', status: 'in_progress', has_pm: true },
+      pm: { status: 'in_progress', progress: 1, total: 3 },
+      sync: { isOnline: false, isSyncing: true, pendingCount: 1, failedCount: 1 },
+    });
+    expect(screen.getByText('동기화에 실패했습니다. 다시 시도를 눌러 주세요.')).toBeInTheDocument();
+    expect(screen.getByText('3개 중 1개 항목')).toBeInTheDocument();
   });
 });

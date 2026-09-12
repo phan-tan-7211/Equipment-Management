@@ -1,4 +1,6 @@
 import React from 'react';
+import { useI18n } from '@/i18n';
+import { localizeNotificationCompact } from '@/pages/notifications/notificationCtaLabels';
 import { Bell, Check, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +34,7 @@ const NotificationMenuSection: React.FC<NotificationMenuSectionProps> = ({
   onClose,
 }) => {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { formatRelative } = useFormatTimestamp();
   const { switchOrganization } = useOrganization();
 
@@ -70,7 +73,7 @@ const NotificationMenuSection: React.FC<NotificationMenuSectionProps> = ({
   return (
     <>
       <DropdownMenuLabel className="flex items-center justify-between px-2 py-1.5">
-        <span className="text-sm font-medium">Notifications</span>
+        <span className="text-sm font-medium">{t('notificationPage.title')}</span>
         {unreadCount > 0 && (
           <Button
             variant="ghost"
@@ -79,7 +82,7 @@ const NotificationMenuSection: React.FC<NotificationMenuSectionProps> = ({
             className="h-6 text-xs"
           >
             <Check className="h-3 w-3 mr-1" />
-            Mark all read
+            {t('notificationExtras.markAllRead')}
           </Button>
         )}
       </DropdownMenuLabel>
@@ -87,7 +90,7 @@ const NotificationMenuSection: React.FC<NotificationMenuSectionProps> = ({
       {recentNotifications.length === 0 ? (
         <div className="px-4 py-3 text-center text-muted-foreground">
           <Bell className="h-6 w-6 mx-auto mb-1.5 opacity-50" />
-          <p className="text-sm">No notifications yet</p>
+          <p className="text-sm">{t('notificationExtras.noNotifications')}</p>
         </div>
       ) : (
         <ScrollArea className="max-h-64">
@@ -126,7 +129,7 @@ const NotificationMenuSection: React.FC<NotificationMenuSectionProps> = ({
                         </p>
                         {dest.navigable && (
                           <span className="text-xs text-primary font-medium">
-                            {dest.cta.compact}
+                            {localizeNotificationCompact(dest.cta.compact, t)}
                           </span>
                         )}
                       </div>
@@ -144,7 +147,7 @@ const NotificationMenuSection: React.FC<NotificationMenuSectionProps> = ({
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleViewAllNotifications} className="justify-center">
             <Eye className="h-4 w-4 mr-2" />
-            View All Notifications
+            {t('notificationExtras.viewAll')}
           </DropdownMenuItem>
         </>
       )}

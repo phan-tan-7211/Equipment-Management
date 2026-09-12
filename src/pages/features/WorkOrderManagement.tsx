@@ -5,6 +5,7 @@ const WorkOrderManagementFeature = () => (
   <StandardFeaturePage
     seoPath="/features/work-order-management"
     content={content}
+    translationKey="workOrderManagement"
     benefits={benefits}
     steps={steps}
     showcases={showcases}

@@ -12,6 +12,7 @@ const TeamCollaborationFeature = () => (
   <StandardFeaturePage
     seoPath="/features/team-collaboration"
     content={content}
+    translationKey="teamCollaboration"
     benefits={benefits}
     steps={steps}
     showcases={showcases}

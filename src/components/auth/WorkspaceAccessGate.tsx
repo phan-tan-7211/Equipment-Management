@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Clock3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { SUPPORT_DOCS_URL } from '@/lib/documentationUrl';
+import { useI18n } from '@/i18n';
+import { useAuthFlowCopy } from './useAuthFlowCopy';
 
 type WorkspaceAccessGateMode = 'blocked' | 'pending' | 'error';
 
@@ -16,6 +18,8 @@ interface WorkspaceAccessGateProps {
 }
 
 const WorkspaceAccessGate: React.FC<WorkspaceAccessGateProps> = ({ mode, domain, onRetry }) => {
+  const t = useAuthFlowCopy();
+  const { t: translate } = useI18n();
   const { signOut } = useAuth();
   const isPending = mode === 'pending';
   const isError = mode === 'error';
@@ -25,17 +29,17 @@ const WorkspaceAccessGate: React.FC<WorkspaceAccessGateProps> = ({ mode, domain,
       <PageHeader
         title={
           isError
-            ? 'Unable to verify workspace access'
+            ? t('authFlow.workspaceVerifyTitle')
             : isPending
-              ? 'Workspace access pending'
-              : 'Workspace access required'
+              ? t('authFlow.workspacePendingTitle')
+              : t('authFlow.workspaceRequiredTitle')
         }
         description={
           isError
-            ? 'EquipQR could not confirm your Google Workspace access status.'
+            ? t('authFlow.workspaceVerifyDescription')
             : domain
-              ? `Your Google account uses the claimed domain ${domain}.`
-              : 'Your Google Workspace domain is managed by an existing EquipQR organization.'
+              ? t('authFlow.claimedDomainDescription', { domain })
+              : t('authFlow.workspaceDomainDescription')
         }
       />
 
@@ -43,38 +47,34 @@ const WorkspaceAccessGate: React.FC<WorkspaceAccessGateProps> = ({ mode, domain,
         {isPending ? <Clock3 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
         <AlertTitle>
           {isError
-            ? 'Access check failed'
+            ? t('authFlow.accessCheckFailed')
             : isPending
-              ? 'Waiting for administrator approval'
-              : 'You do not have access yet'}
+              ? t('authFlow.awaitingApproval')
+              : t('authFlow.noAccessYet')}
         </AlertTitle>
         <AlertDescription className="space-y-3">
           {isError ? (
             <p>
-              We could not load your workspace onboarding status. Try again, or sign out and back in
-              if the problem continues.
+              {t('authFlow.workspaceRetryHelp')}
             </p>
           ) : isPending ? (
             <p>
-              An organization administrator has started adding you, or you have a pending invitation.
-              Sign in again after your administrator completes the import or your invitation is ready.
+              {t('authFlow.workspacePendingHelp')}
             </p>
           ) : (
             <p>
-              EquipQR does not allow automatic self-join for claimed Google Workspace domains.
-              Ask your organization administrator to import you from Google Workspace or send you a
-              standard EquipQR invitation.
+              {t('authFlow.workspaceBlockedHelp')}
             </p>
           )}
           <div className="flex flex-wrap gap-2">
             {isError && onRetry ? (
               <Button variant="outline" size="sm" onClick={onRetry}>
-                Try again
+                {t('authFlow.tryAgain')}
               </Button>
             ) : null}
             <Button variant="outline" size="sm" asChild>
               <a href={SUPPORT_DOCS_URL} target="_blank" rel="noopener noreferrer">
-                Help Center
+                {translate('profileMenu.helpCenter')}
               </a>
             </Button>
             <Button
@@ -84,7 +84,7 @@ const WorkspaceAccessGate: React.FC<WorkspaceAccessGateProps> = ({ mode, domain,
                 void signOut();
               }}
             >
-              Sign out
+              {translate('profileMenu.signOut')}
             </Button>
           </div>
         </AlertDescription>

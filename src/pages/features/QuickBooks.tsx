@@ -5,6 +5,7 @@ const QuickBooksFeature = () => (
   <StandardFeaturePage
     seoPath="/features/quickbooks"
     content={content}
+    translationKey="quickBooks"
     benefits={benefits}
     steps={steps}
     showcases={showcases}

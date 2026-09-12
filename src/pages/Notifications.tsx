@@ -1,4 +1,5 @@
 import { useI18n } from '@/i18n';
+import { localizeNotificationDetail } from './notifications/notificationCtaLabels';
 // fallow-ignore-file code-duplication
 // Duplication rationale: Notifications page reuses display formatting helpers
 import React, { useState } from 'react';
@@ -231,7 +232,7 @@ const Notifications: React.FC = () => {
                         <div className="flex items-center gap-2 mt-3">
                           <ArrowRight className="h-3 w-3 text-primary" />
                           <span className="text-xs text-primary font-medium">
-                            {dest.cta.detail}
+                            {localizeNotificationDetail(dest.cta.detail, t)}
                           </span>
                         </div>
                       )}

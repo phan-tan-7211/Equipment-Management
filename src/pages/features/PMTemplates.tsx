@@ -13,6 +13,7 @@ const PMTemplatesFeature = () => (
   <StandardFeaturePage
     seoPath="/features/pm-templates"
     content={content}
+    translationKey="pmTemplates"
     benefits={benefits}
     steps={steps}
     showcases={showcases}

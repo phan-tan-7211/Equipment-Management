@@ -5,6 +5,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { useMFA } from '@/hooks/useMFA';
 import { useAppToast } from '@/hooks/useAppToast';
 import { Loader2, Copy, Check, ShieldPlus } from 'lucide-react';
+import { useAuthFlowCopy } from './useAuthFlowCopy';
 
 interface MFAEnrollmentProps {
   onComplete: () => void;
@@ -24,6 +25,7 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
   onSkip,
   isRequired = false,
 }) => {
+  const t = useAuthFlowCopy();
   const { enrollTOTP, verifyTOTP } = useMFA();
   const toast = useAppToast();
   const [step, setStep] = useState<'loading' | 'scan' | 'verify'>('loading');
@@ -31,7 +33,7 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
   const [code, setCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<'enrollFailed' | 'invalidCode' | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const otpRef = useMountFocus<React.ComponentRef<typeof InputOTP>>(step === 'verify');
 
@@ -54,7 +56,7 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
         setEnrollmentData(data);
         setStep('scan');
       } else {
-        setError('Failed to start MFA enrollment. Please try again.');
+        setError('enrollFailed');
       }
     };
 
@@ -73,9 +75,9 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
       copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard API may not be available in all contexts
-      toast.error({ description: 'Failed to copy to clipboard' });
+      toast.error({ description: t('authFlow.copyFailed') });
     }
-  }, [enrollmentData?.secret, toast]);
+  }, [enrollmentData?.secret, toast, t]);
 
   const handleVerify = useCallback(async (verifyCode: string) => {
     if (!enrollmentData || verifyCode.length !== 6) return;
@@ -89,19 +91,19 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
 
     if (verifyError) {
       toast.error({
-        title: 'Verification Failed',
-        description: 'Invalid code. Please try again.',
+        title: t('authFlow.verificationFailed'),
+        description: t('authFlow.invalidCode'),
       });
-      setError('Invalid code. Please try again.');
+      setError('invalidCode');
       setCode('');
     } else {
       toast.success({
-        title: 'MFA Enabled',
-        description: 'Two-factor authentication has been set up successfully.',
+        title: t('authFlow.enabled'),
+        description: t('authFlow.enabledDescription'),
       });
       onComplete();
     }
-  }, [enrollmentData, verifyTOTP, toast, onComplete]);
+  }, [enrollmentData, verifyTOTP, toast, onComplete, t]);
 
   const handleCodeChange = useCallback((value: string) => {
     setCode(value);
@@ -113,12 +115,12 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
   if (step === 'loading') {
     return (
       <div className="flex flex-col items-center justify-center p-8 space-y-4">
-        <div role="status" aria-label="Setting up two-factor authentication">
+        <div role="status" aria-label={t('authFlow.settingUpLabel')}>
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-        <p className="text-sm text-muted-foreground">Setting up authenticator...</p>
+        <p className="text-sm text-muted-foreground">{t('authFlow.settingUp')}</p>
         {error ? (
-          <p className="text-sm text-destructive" role="alert">{error}</p>
+          <p className="text-sm text-destructive" role="alert">{t('authFlow.enrollFailed')}</p>
         ) : null}
       </div>
     );
@@ -132,12 +134,12 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
           <ShieldPlus className="h-6 w-6 text-primary" />
         </div>
         <h2 className="text-xl font-semibold tracking-tight">
-          Set Up Two-Factor Authentication
+          {t('authFlow.setupTitle')}
         </h2>
         <p className="text-sm text-muted-foreground">
           {isRequired
-            ? 'Your role requires two-factor authentication for security.'
-            : 'Add an extra layer of security to your account.'}
+            ? t('authFlow.requiredDescription')
+            : t('authFlow.optionalDescription')}
         </p>
       </div>
 
@@ -147,14 +149,14 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
           <div className="rounded-lg border bg-card p-4">
             <img
               src={enrollmentData.qrCode}
-              alt="QR code for authenticator app setup — scan with Google Authenticator, Authy, or similar"
+              alt={t('authFlow.qrAlt')}
               className="h-48 w-48 mx-auto"
             />
           </div>
 
           <div className="flex flex-col items-center space-y-2 text-center">
             <p className="text-xs text-muted-foreground">
-              Can&apos;t scan? Enter this code manually:
+              {t('authFlow.manualCode')}
             </p>
             <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2">
               <code className="text-xs font-mono break-all select-all">
@@ -165,7 +167,7 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
                 size="icon"
                 className="h-6 w-6 shrink-0"
                 onClick={copySecret}
-                aria-label="Copy secret to clipboard"
+                aria-label={t('authFlow.copySecret')}
               >
                 {copied ? (
                   <Check className="h-3 w-3 text-primary" />
@@ -177,7 +179,7 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
           </div>
 
           <Button onClick={() => setStep('verify')} className="w-full max-w-65">
-            I&apos;ve Scanned the Code
+            {t('authFlow.scanned')}
           </Button>
         </>
       ) : null}
@@ -186,7 +188,7 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
       {step === 'verify' ? (
         <>
           <p className="text-sm text-muted-foreground text-center">
-            Enter the 6-digit code from your authenticator app to confirm setup
+            {t('authFlow.enterCode')}
           </p>
 
           <div className="flex flex-col items-center space-y-4">
@@ -196,7 +198,7 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
               value={code}
               onChange={handleCodeChange}
               disabled={isVerifying}
-              aria-label="Verification code"
+              aria-label={t('authFlow.verificationCode')}
               aria-invalid={error ? 'true' : 'false'}
               aria-describedby={error ? 'mfa-enroll-error' : undefined}
             >
@@ -216,7 +218,7 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
                 className="text-sm text-destructive"
                 role="alert"
               >
-                {error}
+                {t(error === 'enrollFailed' ? 'authFlow.enrollFailed' : 'authFlow.invalidCode')}
               </p>
             ) : null}
           </div>
@@ -232,7 +234,7 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
               className="flex-1"
               disabled={isVerifying}
             >
-              Back
+              {t('authFlow.back')}
             </Button>
             <Button
               onClick={() => handleVerify(code)}
@@ -240,11 +242,11 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
               className="flex-1"
             >
               {isVerifying ? (
-                <div role="status" aria-label="Verifying code">
+                <div role="status" aria-label={t('authFlow.verifyingCode')}>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 </div>
               ) : null}
-              Verify &amp; Enable
+              {t('authFlow.verifyEnable')}
             </Button>
           </div>
         </>
@@ -257,7 +259,7 @@ const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
           onClick={onSkip}
           className="text-muted-foreground"
         >
-          Skip for now
+          {t('authFlow.skip')}
         </Button>
       ) : null}
     </div>
