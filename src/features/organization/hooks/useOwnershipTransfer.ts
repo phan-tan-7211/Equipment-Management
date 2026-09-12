@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 /**
  * useOwnershipTransfer - Hooks for managing ownership transfer requests
  * 
@@ -101,6 +102,7 @@ export const usePendingTransferForUser = () => {
 export const useInitiateTransfer = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -126,15 +128,15 @@ export const useInitiateTransfer = () => {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['ownership-transfers'] });
       toast({
-        title: 'Transfer Request Sent',
-        description: result.message || 'The target user will be notified to accept or decline.',
+        title: t('organizationNotices.transferSent'),
+        description: result.message || t('organizationNotices.transferSentDescription'),
         variant: 'success',
       });
     },
     onError: (error) => {
       toast({
-        title: 'Failed to Initiate Transfer',
-        description: error instanceof Error ? error.message : 'An error occurred',
+        title: t('organizationNotices.transferSendFailed'),
+        description: error instanceof Error ? error.message : t('organizationNotices.genericError'),
         variant: 'error',
       });
     },
@@ -147,6 +149,7 @@ export const useInitiateTransfer = () => {
 export const useAcceptTransfer = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   return useMutation({
@@ -179,8 +182,8 @@ export const useAcceptTransfer = () => {
       queryClient.invalidateQueries({ queryKey: ['organization-members'] });
 
       toast({
-        title: 'Ownership Accepted',
-        description: result.message || 'You are now the owner of this organization.',
+        title: t('organizationNotices.accepted'),
+        description: result.message || t('organizationNotices.acceptedDescription'),
         variant: 'success',
       });
 
@@ -189,8 +192,8 @@ export const useAcceptTransfer = () => {
     },
     onError: (error) => {
       toast({
-        title: 'Failed to Accept Transfer',
-        description: error instanceof Error ? error.message : 'An error occurred',
+        title: t('organizationNotices.acceptFailed'),
+        description: error instanceof Error ? error.message : t('organizationNotices.genericError'),
         variant: 'error',
       });
     },
@@ -203,6 +206,7 @@ export const useAcceptTransfer = () => {
 export const useRejectTransfer = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -228,14 +232,14 @@ export const useRejectTransfer = () => {
       queryClient.invalidateQueries({ queryKey: ['ownership-transfers'] });
 
       toast({
-        title: 'Transfer Declined',
-        description: 'The original owner has been notified.',
+        title: t('organizationNotices.declined'),
+        description: t('organizationNotices.declinedDescription'),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Failed to Decline Transfer',
-        description: error instanceof Error ? error.message : 'An error occurred',
+        title: t('organizationNotices.declineFailed'),
+        description: error instanceof Error ? error.message : t('organizationNotices.genericError'),
         variant: 'error',
       });
     },
@@ -248,6 +252,7 @@ export const useRejectTransfer = () => {
 export const useCancelTransfer = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -268,14 +273,14 @@ export const useCancelTransfer = () => {
       queryClient.invalidateQueries({ queryKey: ['ownership-transfers'] });
 
       toast({
-        title: 'Transfer Cancelled',
-        description: 'The transfer request has been cancelled.',
+        title: t('organizationNotices.transferCancelled'),
+        description: t('organizationNotices.transferCancelledDescription'),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Failed to Cancel Transfer',
-        description: error instanceof Error ? error.message : 'An error occurred',
+        title: t('organizationNotices.cancelFailed'),
+        description: error instanceof Error ? error.message : t('organizationNotices.genericError'),
         variant: 'error',
       });
     },

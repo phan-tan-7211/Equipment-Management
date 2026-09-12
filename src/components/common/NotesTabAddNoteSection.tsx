@@ -1,3 +1,4 @@
+import { useNotePresentationText } from '@/components/common/notePresentationI18n';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,11 +49,12 @@ export function NotesTabAddNoteSection({
   hideInlineAddButton,
   lockedMessage,
 }: NotesTabAddNoteSectionProps) {
+  const noteText = useNotePresentationText();
   if (lockedMessage) {
     return (
       <Card className={cardClassName}>
         <CardHeader>
-          <CardTitle>Notes locked</CardTitle>
+          <CardTitle>{noteText('noteLocked', 'Notes locked')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">{lockedMessage}</p>
@@ -67,7 +69,7 @@ export function NotesTabAddNoteSection({
     <>
       {(noteCount === 0 || showForm) && (
         <InlineNoteComposerCard
-          title={noteCount === 0 ? 'Add Your First Note' : 'Add Note'}
+          title={noteCount === 0 ? noteText('addFirstNote', 'Add Your First Note') : noteText('addNote', 'Add Note')}
           showCancel={noteCount > 0}
           onCancel={onCancelForm}
           cardClassName={cardClassName}
@@ -80,7 +82,7 @@ export function NotesTabAddNoteSection({
           showPrivateToggle={showPrivateToggle}
           disabled={disabled}
           isSubmitting={isSubmitting}
-          placeholder="Enter your note..."
+          placeholder={noteText('enterNote', 'Enter your note...')}
           userDisplayName={userDisplayName}
           requestAttachTrigger={requestAttachTrigger}
         />
@@ -90,7 +92,7 @@ export function NotesTabAddNoteSection({
         <div className="flex justify-center">
           <Button variant="outline" onClick={onShowForm}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Note
+            {noteText('addNote', 'Add Note')}
           </Button>
         </div>
       )}

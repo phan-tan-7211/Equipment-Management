@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -31,7 +32,7 @@ import {
   getAlternatesForPartNumber, 
   getCompatiblePartsForMakeModel 
 } from '@/features/inventory/services/partAlternatesService';
-import type { AlternatePartResult, MakeModelCompatiblePart } from '@/features/inventory/types/inventory';
+import type { AlternatePartResult, MakeModelCompatiblePart, PartIdentifierType } from '@/features/inventory/types/inventory';
 import { groupAlternatePartsByGroupId } from '@/features/inventory/utils/groupAlternateParts';
 import { useDebounced } from '@/hooks/useDebounced';
 import { PartLookupPartMeta } from '@/features/inventory/components/PartLookupPartMeta';
@@ -39,7 +40,17 @@ import { PartLookupPartMeta } from '@/features/inventory/components/PartLookupPa
 // Constant for "Any Model" option value
 const ANY_MODEL_VALUE = '__any__';
 
+const IDENTIFIER_LABEL_KEY: Record<PartIdentifierType, string> = {
+  oem: 'oemType',
+  aftermarket: 'aftermarketType',
+  sku: 'skuType',
+  mpn: 'mpnType',
+  upc: 'upcType',
+  cross_ref: 'crossRefType',
+};
+
 const PartLookup: React.FC = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { currentOrganization } = useOrganization();
   
@@ -126,8 +137,8 @@ const PartLookup: React.FC = () => {
     return (
       <Page maxWidth="7xl" padding="responsive">
         <PageHeader
-          title="Part Lookup"
-          description="Please select an organization to look up parts."
+          title={t('partLookup.title')}
+          description={t('partLookup.selectOrganization')}
         />
       </Page>
     );
@@ -137,19 +148,19 @@ const PartLookup: React.FC = () => {
     <Page maxWidth="7xl" padding="responsive">
       <div className="space-y-6">
         <PageHeader
-          title="Part Lookup"
-          description="Find compatible and alternate parts without needing an equipment record"
+          title={t('partLookup.title')}
+          description={t('partLookup.description')}
         />
         
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
           <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="part-number" className="flex items-center gap-2">
               <Tag className="h-4 w-4" />
-              By Part Number
+              {t('partLookup.byPartNumber')}
             </TabsTrigger>
             <TabsTrigger value="make-model" className="flex items-center gap-2">
               <Factory className="h-4 w-4" />
-              By Make/Model
+              {t('partLookup.byMakeModel')}
             </TabsTrigger>
           </TabsList>
           
@@ -157,9 +168,9 @@ const PartLookup: React.FC = () => {
           <TabsContent value="part-number" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Look Up by Part Number</CardTitle>
+                <CardTitle className="text-lg">{t('partLookup.lookupNumber')}</CardTitle>
                 <CardDescription>
-                  Enter an OEM part number, aftermarket part number, or SKU to find interchangeable alternatives
+                  {t('partLookup.numberHelp')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -167,11 +178,11 @@ const PartLookup: React.FC = () => {
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
-                      placeholder="Enter part number (e.g., CAT-1R-0750, WIX 51773)..."
+                      placeholder={t('partLookup.numberPlaceholder')}
                       value={partNumber}
                       onChange={(e) => setPartNumber(e.target.value)}
                       className="pl-9"
-                      aria-label="Search by part number"
+                      aria-label={t('partLookup.numberAria')}
                     />
                   </div>
                   <Button 
@@ -179,14 +190,14 @@ const PartLookup: React.FC = () => {
                     size="icon"
                     onClick={() => refetchAlternates()}
                     disabled={isLoadingAlternates}
-                    aria-label="Refresh part number results"
+                    aria-label={t('partLookup.refreshNumber')}
                   >
                     <RefreshCw className={`h-4 w-4 ${isLoadingAlternates ? 'animate-spin' : ''}`} />
                   </Button>
                 </div>
                 {partNumber && partNumber.length < 2 && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    Enter at least 2 characters to search
+                    {t('partLookup.minLength')}
                   </p>
                 )}
               </CardContent>
@@ -198,7 +209,7 @@ const PartLookup: React.FC = () => {
                 <CardContent className="py-8 text-center">
                   <Search className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
                   <p className="text-sm text-muted-foreground mb-4">
-                    Search by part number to find compatible parts and alternates across your inventory.
+                    {t('partLookup.guidance')}
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
                     {['600-311-3620', 'CAT-1R-0750', 'WIX 51773'].map((example) => (
@@ -209,7 +220,7 @@ const PartLookup: React.FC = () => {
                         className="text-xs"
                         onClick={() => setPartNumber(example)}
                       >
-                        Try: {example}
+                        {t('partLookup.tryExample', { example })}
                       </Button>
                     ))}
                   </div>
@@ -223,7 +234,7 @@ const PartLookup: React.FC = () => {
                 <CardContent className="py-8">
                   <div className="flex items-center justify-center">
                     <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-                    <span className="ml-2 text-muted-foreground">Searching...</span>
+                    <span className="ml-2 text-muted-foreground">{t('partLookup.searching')}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -231,10 +242,9 @@ const PartLookup: React.FC = () => {
               <Card>
                 <CardContent className="py-8 text-center">
                   <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No alternates found</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('partLookup.noAlternates')}</h3>
                   <p className="text-muted-foreground">
-                    No alternate parts were found for "{debouncedPartNumber}".
-                    Try a different part number or check the spelling.
+                    {t('partLookup.noAlternatesHelp', { number: debouncedPartNumber })}
                   </p>
                 </CardContent>
               </Card>
@@ -258,17 +268,17 @@ const PartLookup: React.FC = () => {
           <TabsContent value="make-model" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Look Up by Make/Model</CardTitle>
+                <CardTitle className="text-lg">{t('partLookup.lookupMakeModel')}</CardTitle>
                 <CardDescription>
-                  Enter an equipment manufacturer and optional model to find compatible parts based on your shop's compatibility rules
+                  {t('partLookup.makeModelHelp')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1">
                     <Select value={manufacturer} onValueChange={handleManufacturerChange}>
-                      <SelectTrigger aria-label="Select equipment manufacturer">
-                        <SelectValue placeholder="Select manufacturer..." />
+                      <SelectTrigger aria-label={t('partLookup.selectManufacturerAria')}>
+                        <SelectValue placeholder={t('partLookup.selectManufacturer')} />
                       </SelectTrigger>
                       <SelectContent>
                         {manufacturers.map((mfr) => (
@@ -285,12 +295,12 @@ const PartLookup: React.FC = () => {
                       onValueChange={(v) => setModel(v === ANY_MODEL_VALUE ? '' : v)}
                       disabled={!manufacturer}
                     >
-                      <SelectTrigger aria-label="Select equipment model">
-                        <SelectValue placeholder={manufacturer ? "Select model (optional)..." : "Select manufacturer first..."} />
+                      <SelectTrigger aria-label={t('partLookup.selectModelAria')}>
+                        <SelectValue placeholder={manufacturer ? t('partLookup.selectModel') : t('partLookup.selectManufacturerFirst')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={ANY_MODEL_VALUE}>
-                          <span className="italic">Any Model</span>
+                          <span className="italic">{t('partLookup.anyModel')}</span>
                         </SelectItem>
                         {modelsForManufacturer.map((m) => (
                           <SelectItem key={m} value={m}>
@@ -305,14 +315,14 @@ const PartLookup: React.FC = () => {
                     size="icon"
                     onClick={() => refetchCompatible()}
                     disabled={isLoadingCompatible}
-                    aria-label="Refresh make and model results"
+                    aria-label={t('partLookup.refreshMakeModel')}
                   >
                     <RefreshCw className={`h-4 w-4 ${isLoadingCompatible ? 'animate-spin' : ''}`} />
                   </Button>
                 </div>
                 {manufacturers.length === 0 && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    No equipment found. Add equipment to your organization to use make/model lookup.
+                    {t('partLookup.noEquipment')}
                   </p>
                 )}
               </CardContent>
@@ -324,7 +334,7 @@ const PartLookup: React.FC = () => {
                 <CardContent className="py-8">
                   <div className="flex items-center justify-center">
                     <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-                    <span className="ml-2 text-muted-foreground">Searching...</span>
+                    <span className="ml-2 text-muted-foreground">{t('partLookup.searching')}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -332,10 +342,9 @@ const PartLookup: React.FC = () => {
               <Card>
                 <CardContent className="py-8 text-center">
                   <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No compatible parts found</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('partLookup.noCompatible')}</h3>
                   <p className="text-muted-foreground">
-                    No parts have compatibility rules matching {debouncedManufacturer}
-                    {debouncedModel ? ` ${debouncedModel}` : ''}.
+                    {t('partLookup.noCompatibleHelp', { makeModel: `${debouncedManufacturer}${debouncedModel ? ` ${debouncedModel}` : ''}` })}
                   </p>
                 </CardContent>
               </Card>
@@ -343,11 +352,11 @@ const PartLookup: React.FC = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    Compatible Parts
+                    {t('partLookup.compatibleParts')}
                     <Badge variant="secondary">{compatibleParts.length}</Badge>
                   </CardTitle>
                   <CardDescription>
-                    Parts compatible with {manufacturer} {model || '(any model)'}
+                    {t('partLookup.compatibleWith', { makeModel: `${manufacturer} ${model || t('partLookup.anyModelHint')}` })}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -389,6 +398,7 @@ const AlternateGroupCard: React.FC<AlternateGroupCardProps> = ({
   parts,
   onViewItem
 }) => {
+  const { t } = useI18n();
   const inventoryParts = parts.filter(p => p.inventory_item_id);
   const inStockParts = parts.filter(p => p.is_in_stock);
   
@@ -402,7 +412,7 @@ const AlternateGroupCard: React.FC<AlternateGroupCardProps> = ({
               {groupVerified && (
                 <Badge variant="default" className="bg-success">
                   <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Verified
+                  {t('partLookup.verified')}
                 </Badge>
               )}
             </CardTitle>
@@ -411,9 +421,9 @@ const AlternateGroupCard: React.FC<AlternateGroupCardProps> = ({
             )}
           </div>
           <div className="text-right text-sm text-muted-foreground">
-            <div>{inventoryParts.length} in inventory</div>
+            <div>{t('partLookup.inInventory', { count: inventoryParts.length })}</div>
             <div className={inStockParts.length > 0 ? 'text-success font-medium' : ''}>
-              {inStockParts.length} in stock
+              {t('partLookup.inStock', { count: inStockParts.length })}
             </div>
           </div>
         </div>
@@ -438,7 +448,7 @@ const AlternateGroupCard: React.FC<AlternateGroupCardProps> = ({
               }}
               role={part.inventory_item_id ? 'button' : undefined}
               tabIndex={part.inventory_item_id ? 0 : undefined}
-              aria-label={part.inventory_item_id ? `Open inventory item ${part.inventory_name ?? part.identifier_value}` : undefined}
+              aria-label={part.inventory_item_id ? t('partLookup.openItem', { name: part.inventory_name ?? part.identifier_value ?? '' }) : undefined}
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -453,19 +463,19 @@ const AlternateGroupCard: React.FC<AlternateGroupCardProps> = ({
                   
                   {part.is_matching_input && (
                     <Badge variant="outline" className="text-xs">
-                      Searched
+                      {t('partLookup.searched')}
                     </Badge>
                   )}
                   
                   {part.is_primary && (
                     <Badge variant="secondary" className="text-xs">
-                      Primary
+                      {t('partLookup.primary')}
                     </Badge>
                   )}
                   
                   {part.identifier_type && (
                     <Badge variant="outline" className="text-xs uppercase">
-                      {part.identifier_type}
+                      {t(`partLookup.${IDENTIFIER_LABEL_KEY[part.identifier_type]}`)}
                     </Badge>
                   )}
                 </div>
@@ -494,12 +504,12 @@ const AlternateGroupCard: React.FC<AlternateGroupCardProps> = ({
                             ? 'text-success' 
                             : 'text-muted-foreground'
                       }`}>
-                        {part.quantity_on_hand} in stock
+                        {t('partLookup.inStock', { count: part.quantity_on_hand })}
                       </div>
                       {part.is_low_stock && (
                         <div className="text-xs text-destructive flex items-center gap-1">
                           <AlertCircle className="h-3 w-3" />
-                          Low stock
+                          {t('partLookup.lowStock')}
                         </div>
                       )}
                     </div>
@@ -521,6 +531,7 @@ interface CompatiblePartRowProps {
 }
 
 const CompatiblePartRow: React.FC<CompatiblePartRowProps> = ({ part, onViewItem }) => {
+  const { t } = useI18n();
   return (
     <div
       className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer"
@@ -533,7 +544,7 @@ const CompatiblePartRow: React.FC<CompatiblePartRowProps> = ({ part, onViewItem 
       }}
       role="button"
       tabIndex={0}
-      aria-label={`Open inventory item ${part.name}`}
+      aria-label={t('partLookup.openItem', { name: part.name })}
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -547,7 +558,7 @@ const CompatiblePartRow: React.FC<CompatiblePartRowProps> = ({ part, onViewItem 
           )}
           
           <Badge variant="outline" className="text-xs capitalize">
-            {part.rule_match_type === 'any' ? 'Any model' : part.rule_match_type}
+            {t(`partLookup.${({ any: 'matchAny', exact: 'matchExact', prefix: 'matchPrefix', wildcard: 'matchWildcard' } as const)[part.rule_match_type] ?? 'matchExact'}`)}
           </Badge>
         </div>
         
@@ -568,7 +579,7 @@ const CompatiblePartRow: React.FC<CompatiblePartRowProps> = ({ part, onViewItem 
                 ? 'text-success' 
                 : 'text-muted-foreground'
           }`}>
-            {part.quantity_on_hand} in stock
+            {t('partLookup.inStock', { count: part.quantity_on_hand })}
           </div>
           {part.quantity_on_hand <= part.low_stock_threshold && (
             <div className="text-xs text-destructive flex items-center gap-1">

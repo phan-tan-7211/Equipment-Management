@@ -12,6 +12,8 @@ import {
   showExportLoadingToast,
   waitForExportJob,
 } from '@/features/reports/utils/exportJobClient';
+import type { ReportTranslator } from '@/features/reports/utils/exportJobClient';
+import { useI18n } from '@/i18n';
 
 async function runReportExportWithLoadingToast(options: {
   reportType: ReportType;
@@ -19,32 +21,33 @@ async function runReportExportWithLoadingToast(options: {
   organizationName: string;
   filters: ExportFilters;
   columns: string[];
+  t: ReportTranslator;
 }): Promise<void> {
-  const { reportType, organizationId, organizationName, filters, columns } = options;
-  const label = reportType.replace(/-/g, ' ');
-  const loading = showExportLoadingToast(`Preparing your ${label} report`);
+  const { reportType, organizationId, organizationName, filters, columns, t } = options;
+  const label = t(`reports.cards.${reportType}.title`);
+  const loading = showExportLoadingToast(t('reports.preparingReport', { label }), t);
 
   try {
-    const result = await exportReport(reportType, organizationId, filters, columns);
+    const result = await exportReport(reportType, organizationId, filters, columns, { t });
     if (result instanceof Blob) {
       const filename = generateExportFilename(reportType, organizationName);
       downloadBlob(result, filename);
-      loading.updateSuccess(`Your ${label} report has been downloaded.`);
+      loading.updateSuccess(t('reports.downloaded', { label }));
       return;
     }
 
-    const status = await waitForExportJob(result.jobId);
+    const status = await waitForExportJob(result.jobId, { t });
     if (status.status === 'failed') {
-      throw new Error(status.errorMessage || 'Export job failed');
+      throw new Error(status.errorMessage || t('reports.jobFailed'));
     }
     const filename = generateExportFilename(reportType, organizationName);
-    await downloadExportJobResult(status, filename);
+    await downloadExportJobResult(status, filename, t);
     loading.updateSuccess(
-      `Your ${label} report is ready (${status.rowCount ?? 0} rows).`,
+      t('reports.ready', { label, count: status.rowCount ?? 0 }),
       status.resultUrl ?? undefined,
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to export report';
+    const message = error instanceof Error ? error.message : t('reports.exportError');
     loading.updateError(message);
     throw error;
   }
@@ -82,6 +85,7 @@ export function useReportExportDialog(
   organizationId: string | undefined,
   organizationName: string
 ) {
+  const { t } = useI18n();
   const { toast } = useAppToast();
 
   const handleExport = async (
@@ -91,8 +95,8 @@ export function useReportExportDialog(
   ) => {
     if (!organizationId) {
       toast({
-        title: 'Export Failed',
-        description: 'Organization not selected',
+        title: t('reports.exportFailed'),
+        description: t('reports.organizationNotSelected'),
         variant: 'error',
       });
       return;
@@ -105,13 +109,14 @@ export function useReportExportDialog(
         organizationName,
         filters,
         columns,
+        t,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Export failed';
-      if (errorMessage.includes('Rate limit')) {
+      const errorMessage = error instanceof Error ? error.message : t('reports.exportFailed');
+      if (errorMessage.includes('Rate limit') || errorMessage === t('reports.rateExceeded')) {
         toast({
-          title: 'Rate Limit Exceeded',
-          description: 'Please wait a moment before requesting another export.',
+          title: t('reports.rateLimitExceeded'),
+          description: t('reports.rateLimitHelp'),
           variant: 'warning',
         });
       }

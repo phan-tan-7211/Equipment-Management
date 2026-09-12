@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { useI18n } from '@/i18n';
 
 type GoogleDriveFolderDeleteConfirmDialogProps = {
   open: boolean;
@@ -30,6 +31,7 @@ export function GoogleDriveFolderDeleteConfirmDialog({
   isDeleting,
   onConfirm,
 }: GoogleDriveFolderDeleteConfirmDialogProps) {
+  const { t } = useI18n();
   const [acknowledged, setAcknowledged] = useState(false);
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -43,17 +45,14 @@ export function GoogleDriveFolderDeleteConfirmDialog({
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete folder and contents?</AlertDialogTitle>
+          <AlertDialogTitle>{t('organizationIntegrations.deleteFolderTitle')}</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-3 text-sm text-muted-foreground">
               <p>
-                <span className="font-medium text-foreground">{folderName}</span> contains{' '}
-                {childCount === 1 ? '1 item' : `${childCount}+ item(s)`} (files and/or subfolders).
-                Deleting this folder will permanently remove those items from Google Drive.
+                {t('organizationIntegrations.folderContains', { name: folderName, count: childCount === 1 ? 1 : `${childCount}+` })}
               </p>
               <p>
-                Some items may not belong to EquipQR. ZNT LLC is not responsible for
-                any potential data loss as a result of this action.
+                {t('organizationIntegrations.deleteFolderDisclaimer')}
               </p>
               <div className="flex items-start gap-2.5 rounded-md border border-destructive/30 bg-destructive/5 p-3">
                 <Checkbox
@@ -64,14 +63,14 @@ export function GoogleDriveFolderDeleteConfirmDialog({
                   className="mt-0.5"
                 />
                 <Label htmlFor="delete-folder-acknowledge" className="text-sm leading-snug cursor-pointer">
-                  I understand this permanently deletes folder contents and EquipQR cannot recover them.
+                  {t('organizationIntegrations.folderDeleteAcknowledgement')}
                 </Label>
               </div>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>{t('organizationIntegrations.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             disabled={!acknowledged || isDeleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -83,10 +82,10 @@ export function GoogleDriveFolderDeleteConfirmDialog({
             {isDeleting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Deleting...
+                {t('organizationIntegrations.deletingFolder')}
               </>
             ) : (
-              'Delete folder'
+              t('organizationIntegrations.deleteFolder')
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

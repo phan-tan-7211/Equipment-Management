@@ -1,3 +1,4 @@
+import { useNotePresentationText } from '@/components/common/notePresentationI18n';
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,35 +44,38 @@ export const InlineNoteComposerCard: React.FC<InlineNoteComposerCardProps> = ({
   placeholder,
   userDisplayName,
   requestAttachTrigger,
-}) => (
-  <Card className={cardClassName}>
-    <CardHeader>
-      <CardTitle className="flex items-center justify-between">
-        <span>{title}</span>
-        {showCancel && (
-          <Button variant="outline" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
-        )}
-      </CardTitle>
-      <OfflineFormBanner />
-    </CardHeader>
-    <CardContent>
-      <InlineNoteComposer
-        value={value}
-        onChange={onChange}
-        onSubmit={onSubmit}
-        attachedImages={attachedImages}
-        onImagesAdd={onImagesAdd}
-        onImageRemove={onImageRemove}
-        showPrivateToggle={showPrivateToggle}
-        showMachineHours={showMachineHours}
-        disabled={disabled}
-        isSubmitting={isSubmitting}
-        placeholder={placeholder}
-        userDisplayName={userDisplayName}
-        requestAttachTrigger={requestAttachTrigger}
-      />
-    </CardContent>
-  </Card>
-);
+}) => {
+  const noteText = useNotePresentationText();
+  return (
+    <Card className={cardClassName}>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>{title}</span>
+          {showCancel && (
+            <Button variant="outline" size="sm" onClick={onCancel}>
+              {noteText('cancel', 'Cancel')}
+            </Button>
+          )}
+        </CardTitle>
+        <OfflineFormBanner />
+      </CardHeader>
+      <CardContent>
+        <InlineNoteComposer
+          value={value}
+          onChange={onChange}
+          onSubmit={onSubmit}
+          attachedImages={attachedImages}
+          onImagesAdd={onImagesAdd}
+          onImageRemove={onImageRemove}
+          showPrivateToggle={showPrivateToggle}
+          showMachineHours={showMachineHours}
+          disabled={disabled}
+          isSubmitting={isSubmitting}
+          placeholder={placeholder}
+          userDisplayName={userDisplayName}
+          requestAttachTrigger={requestAttachTrigger}
+        />
+      </CardContent>
+    </Card>
+  );
+};

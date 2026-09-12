@@ -330,7 +330,7 @@ describe('GoogleWorkspaceExportDestinationCard', () => {
 
     customRender(<GoogleWorkspaceExportDestinationCard currentUserRole="owner" />);
 
-    expect(screen.getByText('Subfolder routing')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Subfolder routing' })).toBeInTheDocument();
     expect(screen.getByText(/example export path/i)).toBeInTheDocument();
     expect(
       screen.getByText('Marketing / Field Service / Work Order Packet'),
@@ -388,4 +388,3 @@ describe('GoogleWorkspaceExportDestinationCard', () => {
     });
   });
 });
-

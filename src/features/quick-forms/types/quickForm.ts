@@ -74,11 +74,12 @@ export function parseQuickFormData(raw: unknown): QuickFormData {
 export function validateQuickFormValues(
   fields: QuickFormField[],
   values: Record<string, unknown>,
+  requiredMessage?: (fieldLabel: string) => string,
 ): { isComplete: boolean; errors: string[] } {
   const requiredFields = fields
     .filter((field) => field.required !== false)
     .map((field) => ({ id: field.id, label: field.label, inputType: field.inputType }));
-  return validateRequiredInputFields(requiredFields, values);
+  return validateRequiredInputFields(requiredFields, values, requiredMessage);
 }
 
 export function createQuickFormFieldId(): string {
@@ -87,8 +88,8 @@ export function createQuickFormFieldId(): string {
     : `field-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-export function formatQuickFormValue(value: QuickFormFieldValue['value']): string {
+export function formatQuickFormValue(value: QuickFormFieldValue['value'], booleanLabels?: { yes: string; no: string }): string {
   if (value === null || value === undefined || value === '') return '—';
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'boolean') return value ? (booleanLabels?.yes ?? 'Yes') : (booleanLabels?.no ?? 'No');
   return String(value);
 }

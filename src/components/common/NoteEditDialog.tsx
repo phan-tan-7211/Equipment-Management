@@ -1,3 +1,4 @@
+import { useNotePresentationText } from '@/components/common/notePresentationI18n';
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -44,6 +45,7 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
   isSubmitting = false,
   onSubmit,
 }) => {
+  const noteText = useNotePresentationText();
   const [content, setContent] = useState(initialContent);
   const [isPrivate, setIsPrivate] = useState(initialIsPrivate);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
@@ -74,12 +76,12 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit note</DialogTitle>
+          <DialogTitle>{noteText('editNote', 'Edit note')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="note-edit-content">Note</Label>
+            <Label htmlFor="note-edit-content">{noteText('note', 'Note')}</Label>
             <Textarea
               id="note-edit-content"
               value={content}
@@ -92,7 +94,7 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
           {canToggleVisibility ? (
             <div className="flex items-center justify-between gap-3">
               <Label htmlFor="note-edit-private" className="cursor-pointer">
-                Private note
+                {noteText('privateNote', 'Private note')}
               </Label>
               <Switch
                 id="note-edit-private"
@@ -105,7 +107,7 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
 
           {canManageImages && visibleExisting.length > 0 ? (
             <div className="space-y-2">
-              <Label>Attached images</Label>
+              <Label>{noteText('attachedImages', 'Attached images')}</Label>
               <div className="flex flex-wrap gap-2">
                 {visibleExisting.map((image) => (
                   <div key={image.id} className="relative h-16 w-16 overflow-hidden rounded border">
@@ -117,7 +119,7 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
                       className="absolute -right-1 -top-1 h-5 w-5 rounded-full"
                       onClick={() => setRemovedImageIds((prev) => [...prev, image.id])}
                       disabled={isSubmitting}
-                      aria-label={`Remove ${image.file_name}`}
+                      aria-label={noteText('removeImage', `Remove ${image.file_name}`, { name: image.file_name })}
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -129,7 +131,7 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
 
           {canManageImages ? (
             <div className="space-y-2">
-              <Label htmlFor="note-edit-add-images">Add images</Label>
+              <Label htmlFor="note-edit-add-images">{noteText('addImages', 'Add images')}</Label>
               <input
                 id="note-edit-add-images"
                 type="file"
@@ -144,7 +146,7 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
                 }}
               />
               {attachedImages.length > 0 ? (
-                <p className="text-xs text-muted-foreground">{attachedImages.length} new image(s) selected</p>
+                <p className="text-xs text-muted-foreground">{noteText('newImagesSelected', `${attachedImages.length} new image(s) selected`, { count: attachedImages.length })}</p>
               ) : null}
               {attachedImages.map((file, index) => (
                 <div key={`${file.name}-${index}`} className="flex items-center justify-between text-xs">
@@ -156,7 +158,7 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
                     onClick={() => handleImageRemove(index)}
                     disabled={isSubmitting}
                   >
-                    Remove
+                    {noteText('remove', 'Remove')}
                   </Button>
                 </div>
               ))}
@@ -166,10 +168,10 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-            Cancel
+            {noteText('cancel', 'Cancel')}
           </Button>
           <Button type="button" onClick={() => void handleSubmit()} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving…' : 'Save changes'}
+            {isSubmitting ? noteText('saving', 'Saving…') : noteText('saveChanges', 'Save changes')}
           </Button>
         </DialogFooter>
       </DialogContent>

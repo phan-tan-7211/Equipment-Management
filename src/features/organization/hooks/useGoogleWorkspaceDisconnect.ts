@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { disconnectGoogleWorkspace } from '@/services/google-workspace';
@@ -9,6 +10,7 @@ export function useGoogleWorkspaceDisconnect(organizationId: string | undefined)
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async () => {
@@ -26,18 +28,18 @@ export function useGoogleWorkspaceDisconnect(organizationId: string | undefined)
       ]);
 
       toast({
-        title: 'Google Workspace disconnected',
+        title: t('organizationNotices.workspaceDisconnected'),
         description: result.domain
-          ? `Disconnected from ${result.domain}. You can connect again from Workspace onboarding.`
-          : 'Google Workspace has been disconnected. You can connect again from Workspace onboarding.',
+          ? t('organizationNotices.disconnectedDomain', { domain: result.domain })
+          : t('organizationNotices.disconnectedGeneral'),
       });
 
       navigate('/dashboard/onboarding/workspace');
     },
     onError: (error: Error) => {
       toast({
-        title: 'Failed to disconnect',
-        description: error.message || 'Please try again.',
+        title: t('organizationNotices.workspaceDisconnectFailed'),
+        description: error.message || t('organizationNotices.tryAgain'),
         variant: 'error',
       });
     },

@@ -1,4 +1,5 @@
 import { useI18n } from '@/i18n';
+import { NotePresentationI18nProvider } from '@/components/common/NotePresentationI18nProvider';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -273,7 +274,8 @@ const WorkOrderNotesSection: React.FC<WorkOrderNotesSectionProps> = ({
   }
 
   return (
-    <div className="space-y-6 overflow-x-hidden">
+    <NotePresentationI18nProvider t={t}>
+      <div className="space-y-6 overflow-x-hidden">
       {/* Add Note Form - Always show if no notes exist or explicitly requested */}
       <NotesTabAddNoteSection
         noteCount={visibleNotes.length}
@@ -364,7 +366,8 @@ const WorkOrderNotesSection: React.FC<WorkOrderNotesSectionProps> = ({
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </NotePresentationI18nProvider>
   );
 };
 

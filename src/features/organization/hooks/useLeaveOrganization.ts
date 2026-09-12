@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 /**
  * useLeaveOrganization - Hook for leaving an organization
  * 
@@ -31,6 +32,7 @@ interface LeaveResult {
 export const useLeaveOrganization = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   return useMutation({
@@ -64,8 +66,8 @@ export const useLeaveOrganization = () => {
       queryClient.invalidateQueries({ queryKey: ['organization-members'] });
 
       toast({
-        title: 'Left Organization',
-        description: result.message || 'You have successfully left the organization.',
+        title: t('organizationNotices.left'),
+        description: result.message || t('organizationNotices.leftDescription'),
         variant: 'success',
       });
 
@@ -74,8 +76,8 @@ export const useLeaveOrganization = () => {
     },
     onError: (error) => {
       toast({
-        title: 'Failed to Leave Organization',
-        description: error instanceof Error ? error.message : 'An error occurred',
+        title: t('organizationNotices.leaveFailed'),
+        description: error instanceof Error ? error.message : t('organizationNotices.genericError'),
         variant: 'error',
       });
     },

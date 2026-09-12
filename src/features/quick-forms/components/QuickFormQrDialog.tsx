@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useI18n } from '@/i18n';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import AssetQRCodeDisplay from '@/components/common/AssetQRCodeDisplay';
@@ -26,12 +27,6 @@ import { getQuickFormToken } from '@/features/quick-forms/services/quickFormsSer
 import type { QuickForm } from '@/features/quick-forms/services/quickFormsService';
 import { logger } from '@/utils/logger';
 
-const QUICK_FORM_QR_INSTRUCTIONS = [
-  'Print this QR code or share the link with people on site',
-  'Anyone can open the form and submit — no EquipQR sign-in required',
-  'Submissions appear in the Quick Forms ledger for owners and admins',
-  'Rotate the link to revoke previously printed or shared copies',
-];
 
 export interface QuickFormQrDialogProps {
   open: boolean;
@@ -49,6 +44,8 @@ export function QuickFormQrDialog({
   onRotateToken,
   isRotating,
 }: QuickFormQrDialogProps) {
+  const { t } = useI18n();
+  const qrInstructions = [1, 2, 3, 4].map((number) => t(`quickForms.qr.instruction${number}`));
   const [loading, setLoading] = useState(false);
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
   const [confirmRotate, setConfirmRotate] = useState(false);
@@ -70,7 +67,7 @@ export function QuickFormQrDialog({
         setPublicUrl(qrFullUrl(quickFormQRPath(rawToken)));
       } catch (error) {
         logger.error('Failed to load quick form token', error);
-        if (!cancelled) toast.error('Unable to load the QR link.');
+        if (!cancelled) toast.error(t('quickForms.qr.loadFailed'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -79,7 +76,7 @@ export function QuickFormQrDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, form]);
+  }, [open, form, t]);
 
   const dismissGuardActive = confirmRotate || isRotating || rotateInFlight;
 
@@ -94,10 +91,10 @@ export function QuickFormQrDialog({
     try {
       const rawToken = await onRotateToken(form.id);
       setPublicUrl(qrFullUrl(quickFormQRPath(rawToken)));
-      toast.success('QR link rotated. Old links no longer work.');
+      toast.success(t('quickForms.qr.rotated'));
     } catch (error) {
       logger.error('Failed to rotate quick form token', error);
-      toast.error('Unable to rotate the QR link.');
+      toast.error(t('quickForms.qr.rotateFailed'));
     } finally {
       setConfirmRotate(false);
       setRotateInFlight(false);
@@ -109,9 +106,9 @@ export function QuickFormQrDialog({
       <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && handleClose()}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Quick form QR link</DialogTitle>
+            <DialogTitle>{t('quickForms.qr.title')}</DialogTitle>
             <DialogDescription className="sr-only">
-              Loading QR link for {form?.name ?? 'quick form'}
+              {t('quickForms.qr.loading', { name: form?.name ?? t('quickForms.qr.resource') })}
             </DialogDescription>
           </DialogHeader>
           <Skeleton className="mx-auto h-56 w-56" />
@@ -131,14 +128,13 @@ export function QuickFormQrDialog({
             }}
           >
             <DialogHeader>
-              <DialogTitle>Quick form QR link</DialogTitle>
+              <DialogTitle>{t('quickForms.qr.title')}</DialogTitle>
               <DialogDescription>
-                {form?.name} — no QR link is available yet. Generate one to share
-                with unauthenticated users on site.
+                {t('quickForms.qr.unavailable', { name: form?.name ?? t('quickForms.qr.resource') })}
               </DialogDescription>
             </DialogHeader>
             <p className="text-sm text-muted-foreground text-center px-4">
-              Rotate the link to mint a new public URL and QR code for this form.
+              {t('quickForms.qr.generateHint')}
             </p>
             <Button
               variant="outline"
@@ -148,7 +144,7 @@ export function QuickFormQrDialog({
               disabled={isRotating || rotateInFlight || !form}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
-              {isRotating || rotateInFlight ? 'Rotating…' : 'Generate QR link'}
+              {isRotating || rotateInFlight ? t('quickForms.qr.rotating') : t('quickForms.qr.generate')}
             </Button>
           </DialogContent>
         </Dialog>
@@ -156,17 +152,15 @@ export function QuickFormQrDialog({
         <AlertDialog open={confirmRotate} onOpenChange={setConfirmRotate}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Generate this QR link?</AlertDialogTitle>
+              <AlertDialogTitle>{t('quickForms.qr.generateTitle')}</AlertDialogTitle>
               <AlertDialogDescription>
-                A new public link and QR code will be created for{' '}
-                <strong>{form?.name}</strong>. Anyone with the link can submit
-                without signing in.
+                {t('quickForms.qr.generateDescription', { name: form?.name ?? t('quickForms.qr.resource') })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t('quickForms.page.cancel')}</AlertDialogCancel>
               <AlertDialogAction onClick={() => void handleRotate()}>
-                Generate link
+                {t('quickForms.qr.generateAction')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -182,12 +176,12 @@ export function QuickFormQrDialog({
         onClose={handleClose}
         entityId={form?.id ?? 'quick-form'}
         entityName={form?.name}
-        title="Quick form QR link"
-        resourceLabel="quick form"
+        title={t('quickForms.qr.title')}
+        resourceLabel={t('quickForms.qr.resource')}
         qrCodeUrl={publicUrl}
-        qrImageAlt={`QR code for ${form?.name ?? 'quick form'}`}
+        qrImageAlt={t('quickForms.qr.alt', { name: form?.name ?? t('quickForms.qr.resource') })}
         defaultFilenameStem={form?.name?.replace(/\s+/g, '-') ?? 'quick-form'}
-        instructionBullets={QUICK_FORM_QR_INSTRUCTIONS}
+        instructionBullets={qrInstructions}
         qrImageTestId="quick-form-qr-image"
         urlTestId="quick-form-public-url"
         preventClose={dismissGuardActive}
@@ -208,7 +202,7 @@ export function QuickFormQrDialog({
             disabled={isRotating || rotateInFlight || !form}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            {isRotating || rotateInFlight ? 'Rotating…' : 'Rotate QR link'}
+            {isRotating || rotateInFlight ? t('quickForms.qr.rotating') : t('quickForms.qr.rotate')}
           </Button>
         }
       />
@@ -216,16 +210,15 @@ export function QuickFormQrDialog({
       <AlertDialog open={confirmRotate} onOpenChange={setConfirmRotate}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Rotate this QR link?</AlertDialogTitle>
+            <AlertDialogTitle>{t('quickForms.qr.rotateTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              A new link and QR code will be generated. Every previously printed
-              or shared QR code for this form will stop working immediately.
+              {t('quickForms.qr.rotateDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('quickForms.page.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={() => void handleRotate()}>
-              Rotate link
+              {t('quickForms.qr.rotateAction')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

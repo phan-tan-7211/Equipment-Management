@@ -16,11 +16,10 @@ import { useWorkOrderTimeline } from '@/features/work-orders/hooks/useHistorical
 import { cn } from '@/lib/utils';
 import { MOBILE_WO_FAB_AVOIDANCE_INSET_CLASS } from '@/features/work-orders/utils/workOrderDetailsViewModel';
 import {
-  buildCreationDescription,
-  getCreationTitle,
-  getStatusChangeDescription,
-  getStatusChangeTitle,
-} from '@/features/work-orders/utils/workOrderTimelineLabels';
+  localizeCreationDescription,
+  localizeTimelineDescription,
+  localizeTimelineTitle,
+} from '@/features/work-orders/utils/localizeWorkOrderTimelineEvent';
 import { UserIdentityCard } from '@/components/common/UserIdentityCard';
 
 interface WorkOrderTimelineProps {
@@ -73,18 +72,18 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
       const metadata = history.metadata as { assignee_id?: string } | null;
       const assigneeSuffix =
         history.new_status === 'assigned' && metadata?.assignee_id
-          ? ' (assignee recorded)'
+          ? ` (${t('workOrderTimelineNote.assigneeRecorded')})`
           : '';
 
       return {
         id: history.id,
-        title: getStatusChangeTitle(history.old_status, history.new_status),
-        description: `${getStatusChangeDescription(history.old_status, history.new_status, history.reason ?? undefined)}${assigneeSuffix}`,
+        title: localizeTimelineTitle(history.old_status, history.new_status, t),
+        description: `${localizeTimelineDescription(history.old_status, history.new_status, history.reason ?? undefined, t)}${assigneeSuffix}`,
         timestamp: history.changed_at,
         type: history.new_status,
         icon: getStatusIcon(history.new_status),
         actor: {
-          name: history.profiles?.name || 'System',
+          name: history.profiles?.name || t('workOrderTimelineNote.systemActor'),
           avatarUrl: history.profiles?.avatar_url ?? null,
         },
         isPublic: true,
@@ -103,17 +102,13 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
     if (!historyHasCreation) {
       events.push({
         id: 'created',
-        title: getCreationTitle(workOrder.status, Boolean(workOrder.assigneeName)),
-        description: buildCreationDescription({
-          status: workOrder.status,
-          createdByName: workOrder.createdByName,
-          assigneeName: workOrder.assigneeName,
-        }),
+        title: workOrder.status === 'assigned' && workOrder.assigneeName ? t('workOrderTimelineNote.createdAssigned') : localizeTimelineTitle(null, workOrder.status, t),
+        description: localizeCreationDescription(workOrder.status, workOrder.createdByName, workOrder.assigneeName, t),
         timestamp: workOrder.created_date,
         type: workOrder.status,
         icon: getStatusIcon(workOrder.status),
         actor: {
-          name: workOrder.createdByName || 'System',
+          name: workOrder.createdByName || t('workOrderTimelineNote.systemActor'),
           avatarUrl: workOrder.createdByAvatarUrl ?? null,
         },
         isPublic: true,
@@ -132,13 +127,13 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
       const previousStatus = mostRecentHistoryStatus ?? null;
       events.push({
         id: 'current',
-        title: getStatusChangeTitle(previousStatus, workOrder.status),
-        description: getStatusChangeDescription(previousStatus, workOrder.status),
+        title: localizeTimelineTitle(previousStatus, workOrder.status, t),
+        description: localizeTimelineDescription(previousStatus, workOrder.status, undefined, t),
         timestamp: workOrder.updated_at || workOrder.created_date,
         type: workOrder.status,
         icon: getStatusIcon(workOrder.status),
         actor: {
-          name: workOrder.assigneeName || historyEvents[0]?.actor.name || 'System',
+          name: workOrder.assigneeName || historyEvents[0]?.actor.name || t('workOrderTimelineNote.systemActor'),
           avatarUrl:
             workOrder.assignedTo?.avatarUrl ??
             historyEvents[0]?.actor.avatarUrl ??
@@ -157,6 +152,7 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
     );
   }, [
     historyRows,
+    t,
     isHistorical,
     showDetailedHistory,
     workOrder.assigneeName,

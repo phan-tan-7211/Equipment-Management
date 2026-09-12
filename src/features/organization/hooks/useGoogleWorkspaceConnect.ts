@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { useCallback, useState } from 'react';
 import { generateGoogleWorkspaceAuthUrl } from '@/services/google-workspace/auth';
 import { useAppToast } from '@/hooks/useAppToast';
@@ -14,6 +15,7 @@ export function useGoogleWorkspaceConnect({
   consentMode = 'directory',
 }: UseGoogleWorkspaceConnectOptions) {
   const { toast } = useAppToast();
+  const { t } = useI18n();
   const [isConnecting, setIsConnecting] = useState(false);
 
   const connect = useCallback(async () => {
@@ -31,13 +33,13 @@ export function useGoogleWorkspaceConnect({
       window.location.href = authUrl;
     } catch (error) {
       toast({
-        title: 'Failed to connect Google Workspace',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        title: t('organizationNotices.workspaceConnectFailed'),
+        description: error instanceof Error ? error.message : t('organizationNotices.tryAgain'),
         variant: 'error',
       });
       setIsConnecting(false);
     }
-  }, [organizationId, redirectUrl, consentMode, toast]);
+  }, [organizationId, redirectUrl, consentMode, toast, t]);
 
   return { connect, isConnecting };
 }

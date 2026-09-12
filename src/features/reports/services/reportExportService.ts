@@ -16,7 +16,7 @@ export async function exportReport(
   organizationId: string,
   filters: ExportFilters,
   columns: string[],
-  options?: { asyncMode?: boolean },
+  options?: { asyncMode?: boolean; t?: (key: string) => string },
 ): Promise<Blob | { async: true; jobId: string; status: string }> {
   const asyncMode =
     options?.asyncMode === true ||
@@ -43,7 +43,7 @@ export async function exportReport(
       body: request,
     })
     .catch((err: unknown) => {
-      const msg = err instanceof Error ? err.message : 'Failed to invoke export-report';
+      const msg = err instanceof Error ? err.message : options?.t?.('reports.invokeFailed') ?? 'Failed to invoke export-report';
       logger.error('Report export invoke failed', { error: msg });
       throw Object.assign(new Error(msg), { cause: err });
     });
@@ -53,7 +53,7 @@ export async function exportReport(
     const errorPayload = await getInvokeErrorPayload(
       invokeError as Error & { context?: unknown },
     );
-    const message = errorPayload?.error || invokeError.message || 'Failed to export report';
+    const message = errorPayload?.error || invokeError.message || options?.t?.('reports.exportError') || 'Failed to export report';
     logger.error('Report export failed', { error: message });
     throw Object.assign(new Error(message), { cause: invokeError });
   }
@@ -83,7 +83,7 @@ export async function exportReport(
     return data;
   }
 
-  throw new Error('Unexpected response format from export function');
+  throw new Error(options?.t?.('reports.unexpectedResponse') ?? 'Unexpected response format from export function');
 }
 
 /**

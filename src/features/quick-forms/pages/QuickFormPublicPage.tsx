@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useI18n } from '@/i18n';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -26,6 +27,8 @@ import {
 } from '@/features/quick-forms/types/quickForm';
 
 export default function QuickFormPublicPage() {
+  const { t, language } = useI18n();
+  const dateLocale = { vi: 'vi-VN', en: 'en-US', ko: 'ko-KR' }[language];
   const { token = '' } = useParams<{ token: string }>();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -71,7 +74,7 @@ export default function QuickFormPublicPage() {
         setCollectLocation(data.form.collectLocation);
         setCaptchaRequired(data.captchaRequired);
       } catch {
-        if (!cancelled) setLoadError('This form link is not available.');
+        if (!cancelled) setLoadError('unavailable');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -82,7 +85,10 @@ export default function QuickFormPublicPage() {
     };
   }, [token]);
 
-  const validation = useMemo(() => validateQuickFormValues(fields, values), [fields, values]);
+  const validation = useMemo(
+    () => validateQuickFormValues(fields, values, (label) => t('quickForms.public.required', { name: label })),
+    [fields, values, t],
+  );
 
   const canSubmit =
     !captchaMisconfigured &&
@@ -105,7 +111,7 @@ export default function QuickFormPublicPage() {
       setSubmittedAt(result.submittedAt);
       setSubmitted(true);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to submit the form.';
+      const message = err instanceof Error ? err.message : t('quickForms.public.submitFailed');
       setSubmitError(message);
       toast.error(message);
     } finally {
@@ -118,28 +124,29 @@ export default function QuickFormPublicPage() {
   }
 
   if (loading) {
-    return <PublicFormLoadingState message="Loading form…" />;
+    return <PublicFormLoadingState message={t('quickForms.public.load')} />;
   }
 
   if (loadError) {
-    return <PublicFormErrorState message={loadError} />;
+    return <PublicFormErrorState message={t('quickForms.public.linkUnavailable')} />;
   }
 
   if (submitted) {
     return (
-      <PublicFormSuccessCard title="Submission received">
+      <PublicFormSuccessCard title={t('quickForms.public.success')}>
         <p>
-          Your <strong className="text-foreground">{formName}</strong> submission was saved
-          {submittedAt ? ` at ${formatPublicSubmittedAt(submittedAt)}` : ''}.
+          {submittedAt
+            ? t('quickForms.public.savedAt', { name: formName, date: formatPublicSubmittedAt(submittedAt, dateLocale) })
+            : t('quickForms.public.saved', { name: formName })}
         </p>
-        <p className="text-xs">You can close this page. Please wait before submitting again.</p>
+        <p className="text-xs">{t('quickForms.public.closePage')}</p>
       </PublicFormSuccessCard>
     );
   }
 
   return (
     <>
-      <PageSEO title={`${formName} — Quick Form`} noindex />
+      <PageSEO title={`${formName} — ${t('quickForms.public.seoSuffix')}`} noindex />
       <div className="min-h-screen bg-background p-4 pb-24 max-w-lg mx-auto space-y-4">
         <div>
           <h1 className="text-2xl font-semibold">{formName}</h1>
@@ -150,14 +157,14 @@ export default function QuickFormPublicPage() {
         {captchaMisconfigured && (
           <Alert variant="destructive">
             <AlertDescription>
-              This form cannot accept submissions right now because CAPTCHA is not configured for this environment.
+              {t('quickForms.public.captchaMisconfigured')}
             </AlertDescription>
           </Alert>
         )}
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Form details</CardTitle>
+            <CardTitle className="text-base">{t('quickForms.public.details')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map((field) => (
@@ -175,13 +182,13 @@ export default function QuickFormPublicPage() {
 
             {collectLocation && (
               <div className="space-y-1">
-                <p className="text-sm font-medium">Your location</p>
+                <p className="text-sm font-medium">{t('quickForms.public.yourLocation')}</p>
                 <p className="text-sm text-muted-foreground">
                   {gpsStatus === 'pending'
-                    ? 'Requesting location…'
+                    ? t('quickForms.public.requestingLocation')
                     : gpsStatus === 'granted' && coords
                       ? `${coords.lat}, ${coords.lng}`
-                      : 'Not provided'}
+                      : t('quickForms.public.notProvided')}
                 </p>
               </div>
             )}
@@ -208,7 +215,7 @@ export default function QuickFormPublicPage() {
         )}
 
         {captchaRequired && !hcaptchaToken && !captchaMisconfigured && (
-          <p className="text-xs text-muted-foreground text-center">Complete the CAPTCHA below to submit.</p>
+          <p className="text-xs text-muted-foreground text-center">{t('quickForms.public.captchaPrompt')}</p>
         )}
 
         {submitError && (
@@ -218,7 +225,7 @@ export default function QuickFormPublicPage() {
         )}
 
         <Button className="w-full" size="lg" disabled={!canSubmit || submitting} onClick={() => void handleSubmit()}>
-          {submitting ? 'Submitting…' : 'Submit'}
+          {submitting ? t('quickForms.public.submitting') : t('quickForms.public.submit')}
         </Button>
       </div>
     </>

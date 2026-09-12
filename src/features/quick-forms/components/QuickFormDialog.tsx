@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -40,6 +41,7 @@ export function QuickFormDialog({
   onSubmit,
   isSaving,
 }: QuickFormDialogProps) {
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [fields, setFields] = useState<QuickFormField[]>([]);
@@ -80,30 +82,29 @@ export function QuickFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editingForm ? 'Edit Quick Form' : 'New Quick Form'}</DialogTitle>
+          <DialogTitle>{editingForm ? t('quickForms.dialog.editTitle') : t('quickForms.dialog.newTitle')}</DialogTitle>
           <DialogDescription>
-            Quick forms collect data from anyone with the QR link — no sign-in
-            required. Only organization owners and admins can see submissions.
+            {t('quickForms.dialog.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="quick-form-name">Form name</Label>
+            <Label htmlFor="quick-form-name">{t('quickForms.dialog.name')}</Label>
             <Input
               id="quick-form-name"
               value={name}
-              placeholder="e.g. Job Site Time Sheet"
+              placeholder={t('quickForms.dialog.namePlaceholder')}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="quick-form-description">Description (optional)</Label>
+            <Label htmlFor="quick-form-description">{t('quickForms.dialog.descriptionLabel')}</Label>
             <Textarea
               id="quick-form-description"
               value={description}
-              placeholder="Shown to submitters at the top of the form"
+              placeholder={t('quickForms.dialog.descriptionPlaceholder')}
               rows={2}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -116,22 +117,22 @@ export function QuickFormDialog({
               onCheckedChange={setCollectLocation}
             />
             <Label htmlFor="quick-form-collect-location" className="text-sm">
-              Ask submitters for their GPS location (optional consent)
+              {t('quickForms.dialog.collectGPS')}
             </Label>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Fields</Label>
+            <Label>{t('quickForms.dialog.fields')}</Label>
             <QuickFormFieldsEditor fields={fields} onChange={setFields} />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
-            Cancel
+            {t('quickForms.page.cancel')}
           </Button>
           <Button onClick={() => void handleSave()} disabled={!canSave}>
-            {isSaving ? 'Saving…' : editingForm ? 'Save changes' : 'Create form'}
+            {isSaving ? t('quickForms.dialog.saving') : editingForm ? t('quickForms.dialog.saveChanges') : t('quickForms.dialog.create')}
           </Button>
         </DialogFooter>
       </DialogContent>
