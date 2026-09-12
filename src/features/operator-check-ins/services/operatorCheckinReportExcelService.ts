@@ -129,5 +129,6 @@ export async function downloadOperatorCheckinDailyReport(
     templateName,
     equipmentLabel,
     options,
+    language,
   );
 }
