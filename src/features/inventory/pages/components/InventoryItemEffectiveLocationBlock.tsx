@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useMemo, useState } from 'react';
 import { Edit, MapPin, Navigation } from 'lucide-react';
 import ClickableAddress from '@/components/ui/ClickableAddress';
@@ -9,7 +10,6 @@ import { InventoryItemLocationEditorDialog } from '@/features/inventory/componen
 import type { InventoryItem } from '@/features/inventory/types/inventory';
 import { buildInventoryDirectionsUrl } from '@/features/inventory/utils/inventoryDirectionsUrl';
 import {
-  getInventoryLocationSourceLabel,
   hasInventoryStructuredLocation,
   hasOrganizationInventoryDefaultLocation,
   resolveEffectiveInventoryLocation,
@@ -51,6 +51,7 @@ export function InventoryItemEffectiveLocationBlock({
   canEdit,
   onSaveStructuredLocation,
 }: InventoryItemEffectiveLocationBlockProps) {
+  const { t } = useI18n();
   const [editorOpen, setEditorOpen] = useState(false);
 
   const orgDefault = organizationToDefaultFields(organization);
@@ -74,11 +75,11 @@ export function InventoryItemEffectiveLocationBlock({
             <MapPin className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-medium">Storage address</p>
+            <p className="text-sm font-medium">{t('inventoryDetail.storageAddress')}</p>
             <p className="text-xs text-muted-foreground">
               {orgHasDefault
-                ? 'This part has no address override. Set one here or rely on the organization default once it is saved to your session.'
-                : 'Set a part-specific address here, or configure an organization inventory default in Organization Settings so all parts inherit the same address.'}
+                ? t('inventoryDetail.noAddressOverride')
+                : t('inventoryDetail.noOrgAddress')}
             </p>
           </div>
         </div>
@@ -90,7 +91,7 @@ export function InventoryItemEffectiveLocationBlock({
             className="gap-1.5"
           >
             <Navigation className="h-3.5 w-3.5" />
-            Set storage address
+            {t('inventoryDetail.setStorageAddress')}
           </Button>
         ) : null}
 
@@ -111,14 +112,14 @@ export function InventoryItemEffectiveLocationBlock({
       <div className="space-y-3 rounded-lg border p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
-            <Label className="text-sm font-medium text-muted-foreground">Storage address</Label>
+            <Label className="text-sm font-medium text-muted-foreground">{t('inventoryDetail.storageAddress')}</Label>
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">
-                {getInventoryLocationSourceLabel(effectiveLocation.source)}
+                {effectiveLocation.source === 'organization_default' ? t('inventoryDetail.organizationDefault') : t('inventoryDetail.partLocation')}
               </Badge>
               {effectiveLocation.source === 'organization_default' ? (
                 <span className="text-xs text-muted-foreground">
-                  Address inherited from organization
+                  {t('inventoryDetail.addressInherited')}
                 </span>
               ) : null}
             </div>
@@ -131,7 +132,7 @@ export function InventoryItemEffectiveLocationBlock({
               onClick={() => setEditorOpen(true)}
             >
               <Edit className="h-3.5 w-3.5" />
-              {hasPartOverride ? 'Edit part address' : 'Override address'}
+              {hasPartOverride ? t('inventoryDetail.editPartAddress') : t('inventoryDetail.overrideAddress')}
             </Button>
           ) : null}
         </div>
@@ -169,7 +170,7 @@ export function InventoryItemEffectiveLocationBlock({
               })
             }
           >
-            Clear part-specific address and use organization default
+            {t('inventoryDetail.clearPartAddress')}
           </Button>
         ) : null}
       </div>
