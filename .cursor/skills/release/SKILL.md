@@ -25,7 +25,6 @@ Feature work merges to **`preview`** during normal development and accumulates C
 - **Promote PR head must be `preview`.** Never open `--base main --head chore/release-*` (or any other non-`preview` head). Version bumps must not land via a PR into `preview` either — Preview Release Metadata forbids package bumps on PRs to `preview`.
 - **Never force-push to `main` or `preview`.**
 - **Never run the full Vitest suite.** Run only updated or added test files from the release diff (since last tag).
-- **PR visual evidence** when the release diff includes user-visible UI changes since the last tag (per `.cursor/rules/pr-visual-evidence.mdc`).
 - **No handoff until merge-ready** per `.cursor/rules/pr-merge-ready-workflow.mdc`.
 - **PR summary is customer-facing.** Short user or operator outcomes per `.cursor/rules/changelog.mdc`. No file lists, no implementation inventory, no migration names, no test counts.
 - **Feature work does not bump versions** — curator bumps only in this promote path.
@@ -37,11 +36,9 @@ Feature work merges to **`preview`** during normal development and accumulates C
 - [ ] Step 2: Run changelog-version-curator subagent (release/main mode)
 - [ ] Step 3: Commit release metadata on preview tip and push origin/preview
 - [ ] Step 4: Run scoped Vitest on changed test files only
-- [ ] Step 5: Capture visual evidence if UI changed since last tag
-- [ ] Step 6: Open/update preview → main PR
-- [ ] Step 7: Publish visual evidence comment when captured
-- [ ] Step 8: Babysit until merge-ready
-- [ ] Step 9: Report merge-ready handoff
+- [ ] Step 5: Open/update preview → main PR
+- [ ] Step 6: Babysit until merge-ready
+- [ ] Step 7: Report merge-ready handoff
 ```
 
 ---
@@ -95,7 +92,7 @@ git commit -m "chore(release): vX.Y.Z" -m "Fallow: exitCode=0, total_issues=0, c
 git push origin preview
 ```
 
-Optional local scratch branch `chore/release-vX.Y.Z` is fine for isolation **before** fast-forwarding onto `preview`, but the commit that ships must land on `origin/preview` before Step 6. Never use that scratch branch as the promote PR head.
+Optional local scratch branch `chore/release-vX.Y.Z` is fine for isolation **before** fast-forwarding onto `preview`, but the commit that ships must land on `origin/preview` before Step 5. Never use that scratch branch as the promote PR head.
 
 If metadata did not change, **stop** — nothing to release.
 
@@ -114,13 +111,7 @@ Record skipped state when no test files changed.
 
 ---
 
-## Step 5: Visual evidence (when UI changed)
-
-If `git diff --name-status "$sinceTag..HEAD"` touches `src/**/*.tsx`, capture per `.cursor/rules/pr-visual-evidence.mdc`.
-
----
-
-## Step 6: Open or update release PR
+## Step 5: Open or update release PR
 
 ```powershell
 gh pr create --base main --head preview --title "Release vX.Y.Z" --body-file "$env:TEMP\equipqr-release-pr-body.md"
@@ -131,17 +122,7 @@ Customer-facing summary: short user or operator outcomes since last release per 
 
 ---
 
-## Step 7: Publish evidence
-
-```powershell
-.\dev\pr-evidence\Invoke-PrEvidence.ps1 -Flow "<slug>" -Spec "e2e/pr-evidence/<feature>.spec.ts" -PrNumber <num> -Publish
-```
-
-Skip when Step 5 did not apply.
-
----
-
-## Step 8: Babysit until merge-ready
+## Step 6: Babysit until merge-ready
 
 Follow `.cursor/rules/pr-merge-ready-workflow.mdc` and `.cursor/skills/address-pr-feedback/SKILL.md`.
 
@@ -155,9 +136,9 @@ Fix on **`preview`**, push `origin/preview`, re-watch CI. Do not wait for Qodo.
 
 ---
 
-## Step 9: Handoff
+## Step 7: Handoff
 
-Report only when Step 8 passes:
+Report only when Step 6 passes:
 
 | Item | Value |
 |------|-------|

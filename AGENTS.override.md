@@ -92,7 +92,6 @@ Read the relevant existing documentation only when the task touches that area:
 
 - branching/release: `.cursor/rules/branching.mdc`, `docs/ops/git-and-deploy.md`
 - PR/CI publication: `.cursor/rules/pr-merge-ready-workflow.mdc`, `.cursor/rules/pr-ci-gate-before-open.mdc`
-- visual product evidence: `.cursor/rules/pr-visual-evidence.mdc`
 - secrets/access: root `AGENTS.md`, `docs/ops/agent-secrets-and-access.md`
 - local Windows dev stack: `.cursor/rules/dev-stack-lifecycle.mdc`
 - Supabase/cloud-agent operations: the applicable `docs/ops/**` runbook

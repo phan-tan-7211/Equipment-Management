@@ -1,6 +1,6 @@
 # PR visual evidence pipeline
 
-Agents **must** capture screenshots and an MP4 demo video from the local dev stack before opening or updating a product PR. Screenshots upload to preview Supabase Storage; the demo video uploads to **GitHub user-attachments** so PR bodies and comments render an inline player.
+This optional pipeline captures screenshots and an MP4 demo from the local dev stack when a reviewer or author needs visual evidence. PRs do not require these artifacts. Screenshots upload to preview Supabase Storage; the demo video uploads to **GitHub user-attachments** so PR bodies and comments render an inline player.
 
 ## Quick path
 
@@ -90,7 +90,3 @@ Local capture artifacts under `tmp/pr-evidence/{flow}/`:
 - `demo.mp4` (Playwright WebM → ffmpeg H.264)
 
 Markdown embeds the demo as a **bare GitHub URL on its own line** (required for inline video playback). Screenshots use `![label](https://...supabase.co/...)`.
-
-## Workflow-only exception
-
-Changes confined to `.cursor/**`, `AGENTS.md`, or `dev/mcp.template.json` do not require PR visual evidence.
