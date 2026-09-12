@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useState, useMemo } from 'react';
 import { handleKeyboardActivation, useMountFocus } from '@/components/a11y/keyboard';
 import { CheckCircle2, ChevronRight, ChevronLeft, Star, Search, Package } from 'lucide-react';
@@ -36,12 +37,13 @@ interface SelectedItem {
   quantity_on_hand: number;
 }
 
-const STEP_LABELS = ['Group Details', 'Select Parts', 'Review'] as const;
+const STEP_LABELS = ['stepDetails', 'stepSelectParts', 'stepReview'] as const;
 
 export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
   onSuccess,
   onCancel,
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { toast } = useAppToast();
 
@@ -103,17 +105,17 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
   const validateStep1 = () => {
     let valid = true;
     if (!name.trim()) {
-      setNameError('Name is required');
+      setNameError(t('alternateGroupDetail.nameRequired'));
       valid = false;
     } else if (name.trim().length > 200) {
-      setNameError('Name must be 200 characters or fewer');
+      setNameError(t('alternateGroupDetail.validationNameLength'));
       valid = false;
     } else {
       setNameError('');
     }
     const urlVal = evidenceUrl.trim();
     if (urlVal && !/^https?:\/\/.+/.test(urlVal)) {
-      setUrlError('Must be a valid URL starting with http:// or https://');
+      setUrlError(t('alternateGroupDetail.validationUrl'));
       valid = false;
     } else {
       setUrlError('');
@@ -174,11 +176,11 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
 
       if (failures.length > 0) {
         setPartialError(
-          `Group created. Could not add: ${failures.join(', ')}. You can add them from the group detail page.`
+          t('alternateGroupDetail.partialError', { items: failures.join(', ') })
         );
         toast({
-          title: 'Group created with partial membership',
-          description: `${failures.length} item${failures.length > 1 ? 's' : ''} could not be added.`,
+          title: t('alternateGroupDetail.partialTitle'),
+          description: t('alternateGroupDetail.partialCount', { count: failures.length }),
           variant: 'error',
         });
       }
@@ -224,7 +226,7 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
                 >
                   {isDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : stepNum}
                 </span>
-                <span className="hidden sm:inline">{label}</span>
+                <span className="hidden sm:inline">{t(`alternateGroupDetail.${label}`)}</span>
               </div>
             </React.Fragment>
           );
@@ -236,12 +238,12 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="wizard-name">
-              Name <span className="text-destructive">*</span>
+              {t('alternateGroupDetail.name')} <span className="text-destructive">*</span>
             </Label>
             <Input
               ref={nameInputRef}
               id="wizard-name"
-              placeholder="e.g., Oil Filter — CAT D6T Compatible"
+              placeholder={t('alternateGroupDetail.wizardNameExample')}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -249,10 +251,10 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wizard-description">Description</Label>
+            <Label htmlFor="wizard-description">{t('itemForm.description')}</Label>
             <Textarea
               id="wizard-description"
-              placeholder="Describe which OEM, aftermarket, or equivalent parts belong here."
+              placeholder={t('alternateGroupDetail.wizardDescription')}
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -260,7 +262,7 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wizard-status">Verification Status</Label>
+            <Label htmlFor="wizard-status">{t('alternateGroupDetail.verificationStatus')}</Label>
             <Select
               value={status}
               onValueChange={(v) => setStatus(v as VerificationStatus)}
@@ -269,21 +271,21 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="unverified">Unverified</SelectItem>
-                <SelectItem value="verified">Verified</SelectItem>
-                <SelectItem value="deprecated">Deprecated</SelectItem>
+                <SelectItem value="unverified">{t('alternateGroups.unverified')}</SelectItem>
+                <SelectItem value="verified">{t('alternateGroups.verified')}</SelectItem>
+                <SelectItem value="deprecated">{t('alternateGroups.deprecated')}</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Groups start as Unverified. Change to Verified after adding evidence and part numbers.
+              {t('alternateGroupDetail.newStatusHelp')}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wizard-notes">Verification Notes</Label>
+            <Label htmlFor="wizard-notes">{t('alternateGroupDetail.verificationNotes')}</Label>
             <Textarea
               id="wizard-notes"
-              placeholder="Evidence or notes supporting this alternate relationship..."
+              placeholder={t('alternateGroupDetail.notesPlaceholder')}
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -291,7 +293,7 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wizard-evidence-url">Evidence URL</Label>
+            <Label htmlFor="wizard-evidence-url">{t('alternateGroupDetail.evidenceUrl')}</Label>
             <Input
               id="wizard-evidence-url"
               type="url"
@@ -301,13 +303,13 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
             />
             {urlError && <p className="text-sm text-destructive">{urlError}</p>}
             <p className="text-xs text-muted-foreground">
-              Link to manufacturer cross-reference guide or other verification source.
+              {t('alternateGroupDetail.evidenceHelp')}
             </p>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
+              {t('alternateGroups.cancel')}
             </Button>
             <Button
               type="button"
@@ -315,7 +317,7 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
                 if (validateStep1()) setStep(2);
               }}
             >
-              Select Parts
+              {t('alternateGroupDetail.stepSelectParts')}
               <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
@@ -326,15 +328,14 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
       {step === 2 && (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Select inventory items that can substitute for each other. You can add more from the group
-            detail page after creation.
+            {t('alternateGroupDetail.selectPartsHelp')}
           </p>
 
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               ref={searchInputRef}
-              placeholder="Search by name or SKU..."
+              placeholder={t('alternateGroupDetail.wizardSearch')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -343,12 +344,12 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
 
           <div className="max-h-52 overflow-y-auto border rounded-md divide-y">
             {itemsLoading ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Loading inventory...</p>
+              <p className="text-sm text-muted-foreground text-center py-6">{t('alternateGroupDetail.loadingInventory')}</p>
             ) : filteredItems.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">
                 {inventoryItems.length === 0
-                  ? 'No inventory items found.'
-                  : 'No items match your search.'}
+                  ? t('alternateGroupDetail.noInventory')
+                  : t('alternateGroupDetail.noMatchingItems')}
               </p>
             ) : (
               filteredItems.map((item) => {
@@ -369,12 +370,12 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
                       checked={isSelected}
                       onCheckedChange={() => toggleItem(item.id)}
                       onClick={(e) => e.stopPropagation()}
-                      aria-label={`Select ${item.name}`}
+                      aria-label={t('alternateGroupDetail.selectItem', { name: item.name })}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{item.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {item.sku ? `SKU: ${item.sku} · ` : ''}Qty: {item.quantity_on_hand}
+                        {item.sku ? `SKU: ${item.sku} · ` : ''}{t('alternateGroupDetail.qty', { count: item.quantity_on_hand })}
                       </p>
                     </div>
                     {isSelected && (
@@ -389,10 +390,10 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
                             ? 'border-warning text-warning bg-warning/10'
                             : 'border-muted-foreground/30 text-muted-foreground hover:border-warning/60 hover:text-warning/70'
                         }`}
-                        aria-label={isPrimary ? 'Primary part' : `Mark ${item.name} as primary`}
+                        aria-label={isPrimary ? t('alternateGroupDetail.primaryPart') : t('alternateGroupDetail.markPrimary', { name: item.name })}
                       >
                         <Star className="h-3 w-3" />
-                        {isPrimary ? 'Primary' : 'Set primary'}
+                        {isPrimary ? t('alternateGroupDetail.primary') : t('alternateGroupDetail.setPrimary')}
                       </button>
                     )}
                   </div>
@@ -403,14 +404,14 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
 
           {selectedItemIds.size > 0 && (
             <p className="text-sm text-muted-foreground">
-              {selectedItemIds.size} part{selectedItemIds.size > 1 ? 's' : ''} selected
+              {t('alternateGroupDetail.selectedParts', { count: selectedItemIds.size })}
               {primaryItemId && (
                 <>
                   {' — '}
                   <span className="text-warning font-medium">
                     {inventoryItems.find((i) => i.id === primaryItemId)?.name ?? primaryItemId}
                   </span>{' '}
-                  marked as primary
+                  {t('alternateGroupDetail.markedPrimary')}
                 </>
               )}
             </p>
@@ -419,14 +420,14 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
           <div className="flex justify-between gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => setStep(1)}>
               <ChevronLeft className="mr-1 h-4 w-4" />
-              Back
+              {t('alternateGroupDetail.back')}
             </Button>
             <div className="flex gap-2">
               <Button type="button" variant="ghost" onClick={() => setStep(3)}>
-                Skip
+                {t('alternateGroupDetail.skip')}
               </Button>
               <Button type="button" onClick={() => setStep(3)}>
-                Review
+                {t('alternateGroupDetail.stepReview')}
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
@@ -448,7 +449,7 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
             {description && <p className="text-sm text-muted-foreground">{description}</p>}
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="outline" className="text-xs capitalize">
-                {status}
+                {t(`alternateGroups.${status}`)}
               </Badge>
             </div>
           </div>
@@ -456,13 +457,13 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
           {selectedItems.length > 0 ? (
             <div className="space-y-2">
               <p className="text-sm font-medium">
-                {selectedItems.length} part{selectedItems.length > 1 ? 's' : ''} to add:
+                {t('alternateGroupDetail.partsToAdd', { count: selectedItems.length })}
               </p>
               <div className="max-h-44 overflow-y-auto border rounded-md divide-y">
                 {selectedItems.map((item) => (
                   <div key={item.id} className="flex items-center gap-2 px-3 py-2">
                     {item.id === primaryItemId && (
-                      <Star className="h-3.5 w-3.5 text-warning shrink-0" aria-label="Primary" />
+                      <Star className="h-3.5 w-3.5 text-warning shrink-0" aria-label={t('alternateGroupDetail.primary')} />
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{item.name}</p>
@@ -477,21 +478,21 @@ export const AlternateGroupCreateWizard: React.FC<WizardProps> = ({
           ) : (
             <div className="flex items-center gap-2 text-sm text-muted-foreground border rounded-md p-3">
               <Package className="h-4 w-4 shrink-0" />
-              No parts selected — you can add them from the group detail page after creation.
+              {t('alternateGroupDetail.noPartsSelected')}
             </div>
           )}
 
           <div className="flex justify-between gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => setStep(2)}>
               <ChevronLeft className="mr-1 h-4 w-4" />
-              Back
+              {t('alternateGroupDetail.back')}
             </Button>
             <Button
               type="button"
               onClick={handleCreate}
               disabled={isSubmitting || createMutation.isPending}
             >
-              {isSubmitting ? 'Creating...' : 'Create Group'}
+              {isSubmitting ? t('alternateGroupDetail.creating') : t('alternateGroupDetail.createGroup')}
             </Button>
           </div>
         </div>

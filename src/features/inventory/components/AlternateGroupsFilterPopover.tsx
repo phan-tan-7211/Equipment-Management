@@ -41,6 +41,8 @@ const AlternateGroupsFilterPopover: React.FC<AlternateGroupsFilterPopoverProps> 
   return (
     <FilterPopoverShell
       ariaSubject={t('alternateGroups.group')}
+      triggerLabel={t('alternateGroups.filter')}
+      triggerAriaLabel={t('alternateGroups.filterAria', { count: activeFilterCount })}
       activeFilterCount={activeFilterCount}
       contentClassName="w-52 p-4"
       headerLabel={t('alternateGroups.status')}

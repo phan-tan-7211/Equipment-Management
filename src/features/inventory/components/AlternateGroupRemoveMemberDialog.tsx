@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import {
   AlertDialog,
@@ -22,24 +23,23 @@ export function AlternateGroupRemoveMemberDialog({
   onOpenChange,
   onConfirm,
 }: AlternateGroupRemoveMemberDialogProps) {
+  const { t } = useI18n();
   return (
     <AlertDialog open={!!member} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Remove from Group?</AlertDialogTitle>
+          <AlertDialogTitle>{t('alternateGroupDetail.removeTitle')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to remove "
-            {member?.inventory_name || member?.identifier_value || 'this item'}
-            " from the alternate group?
+            {t('alternateGroupDetail.removeDescription', { name: member?.inventory_name || member?.identifier_value || t('alternateGroupDetail.itemFallback') })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t('alternateGroups.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            Remove
+            {t('alternateGroupDetail.remove')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
