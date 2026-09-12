@@ -35,7 +35,7 @@ async function renderNotFoundPage(userRole: 'admin' | null) {
   );
 
   const versionHref = screen
-    .getByRole('link', { name: /view release notes for equipqr version/i })
+    .getByRole('link', { name: /view release notes for znteqr version/i })
     .getAttribute('href');
   const getStartedHref = screen.getByRole('link', { name: 'Get Started' }).getAttribute('href');
   const headingVisible = screen.getByRole('heading', { name: 'Page not found', level: 1 });

@@ -5,6 +5,7 @@ import NoteImageCarousel, {
 } from '@/components/common/NoteImageCarousel';
 import type { EquipmentImageData } from '@/features/equipment/services/equipmentImagesService';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 export interface EquipmentMediaCarouselProps {
   /** Pre-ordered: display image first, then newest→oldest. */
@@ -26,14 +27,15 @@ export function EquipmentMediaCarousel({
   emptyClassName,
   onImageClick,
 }: EquipmentMediaCarouselProps) {
+  const { t } = useI18n();
   const carouselImages: NoteCarouselImage[] = useMemo(
     () =>
       images.map((image) => ({
         id: image.id,
         file_url: image.file_url,
-        file_name: image.file_name || `${equipmentName} photo`,
+        file_name: image.file_name || t('equipmentMedia.photoFallbackName', { name: equipmentName }),
       })),
-    [images, equipmentName],
+    [images, equipmentName, t],
   );
 
   if (carouselImages.length === 0) {
@@ -45,7 +47,7 @@ export function EquipmentMediaCarousel({
           className,
         )}
         role="img"
-        aria-label={`${equipmentName} has no photos yet`}
+        aria-label={t('equipmentMedia.noPhotosAria', { name: equipmentName })}
       >
         <Forklift className="h-12 w-12 text-muted-foreground sm:h-16 sm:w-16" aria-hidden />
       </div>

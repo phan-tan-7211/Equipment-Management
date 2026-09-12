@@ -10,11 +10,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOfflineQueueOptional } from '@/contexts/OfflineQueueContext';
 import { toast } from 'sonner';
 import { equipment, equipmentWorkingHours } from '@/lib/queryKeys';
+import { useI18n } from '@/i18n';
 
 export const useEquipmentWorkingHoursHistory = (
-  equipmentId: string, 
-  page: number = 1, 
-  pageSize: number = 10
+  equipmentId: string,
+  page: number = 1,
+  pageSize: number = 10,
 ) => {
   return useQuery({
     queryKey: equipmentWorkingHours.history(equipmentId, page, pageSize),
@@ -36,6 +37,7 @@ export const useUpdateEquipmentWorkingHours = () => {
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
   const offlineCtx = useOfflineQueueOptional();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async (data: UpdateWorkingHoursData) => {
@@ -47,10 +49,10 @@ export const useUpdateEquipmentWorkingHours = () => {
     },
     onSuccess: (result, variables) => {
       if (result.queuedOffline) {
-        toast.success('Saved offline — working hours will sync when you reconnect.');
+        toast.success(t('equipmentMutation.hoursSavedOffline'));
         offlineCtx?.refresh();
       } else {
-        toast.success('Equipment working hours updated successfully');
+        toast.success(t('equipmentMutation.workingHoursUpdated'));
         queryClient.invalidateQueries({
           queryKey: equipmentWorkingHours.historyRoot(variables.equipmentId),
           exact: false,
@@ -66,7 +68,7 @@ export const useUpdateEquipmentWorkingHours = () => {
     },
     onError: (error) => {
       console.error('Error updating working hours:', error);
-      toast.error('Failed to update equipment working hours');
+      toast.error(t('equipmentMutation.workingHoursUpdateFailed'));
     },
   });
 };

@@ -3,6 +3,8 @@ import {
   type EquipmentPMStatus,
 } from '@/features/equipment/hooks/useEquipmentPMStatus';
 
+type EquipmentTranslate = (key: string, params?: Record<string, string | number>) => string;
+
 export interface EquipmentCardPmReadout {
   label: string;
   detail: string;
@@ -10,14 +12,15 @@ export interface EquipmentCardPmReadout {
 }
 
 export function getEquipmentCardPmReadout(
-  pmStatus: EquipmentPMStatus | null | undefined
+  pmStatus: EquipmentPMStatus | null | undefined,
+  translate?: EquipmentTranslate,
 ): EquipmentCardPmReadout {
   const level = getPMComplianceLevel(pmStatus);
 
   if (level === 'no_interval' || !pmStatus) {
     return {
       label: '—',
-      detail: 'No PM interval configured',
+      detail: translate ? translate('equipmentFinalize.noPmInterval') : 'No PM interval configured',
       valueClassName: 'text-muted-foreground',
     };
   }
@@ -25,12 +28,18 @@ export function getEquipmentCardPmReadout(
   if (level === 'overdue') {
     const overdueDetail =
       pmStatus.days_overdue != null
-        ? `${pmStatus.days_overdue} days overdue`
+        ? translate
+          ? translate('equipmentFinalize.daysOverdue', { count: pmStatus.days_overdue })
+          : `${pmStatus.days_overdue} days overdue`
         : pmStatus.hours_overdue != null
-          ? `${Math.round(pmStatus.hours_overdue)} hrs overdue`
-          : 'Overdue';
+          ? translate
+            ? translate('equipmentFinalize.hoursOverdue', { count: Math.round(pmStatus.hours_overdue) })
+            : `${Math.round(pmStatus.hours_overdue)} hrs overdue`
+          : translate
+            ? translate('equipmentFinalize.overdue')
+            : 'Overdue';
     return {
-      label: 'Overdue',
+      label: translate ? translate('equipmentFinalize.overdue') : 'Overdue',
       detail: `${pmStatus.template_name} · ${overdueDetail}`,
       valueClassName: 'text-destructive font-medium',
     };
@@ -39,10 +48,14 @@ export function getEquipmentCardPmReadout(
   if (level === 'due_soon') {
     const intervalHint =
       pmStatus.interval_type === 'days'
-        ? `${pmStatus.interval_value}-day interval`
-        : `${pmStatus.interval_value}-hr interval`;
+        ? translate
+          ? translate('equipmentFinalize.dayInterval', { count: pmStatus.interval_value })
+          : `${pmStatus.interval_value}-day interval`
+        : translate
+          ? translate('equipmentFinalize.hourInterval', { count: pmStatus.interval_value })
+          : `${pmStatus.interval_value}-hr interval`;
     return {
-      label: 'Due soon',
+      label: translate ? translate('equipmentFinalize.dueSoon') : 'Due soon',
       detail: `${pmStatus.template_name} · ${intervalHint}`,
       valueClassName: 'text-warning font-medium',
     };
@@ -50,11 +63,15 @@ export function getEquipmentCardPmReadout(
 
   const intervalHint =
     pmStatus.interval_type === 'days'
-      ? `${pmStatus.interval_value}-day interval`
-      : `${pmStatus.interval_value}-hr interval`;
+      ? translate
+        ? translate('equipmentFinalize.dayInterval', { count: pmStatus.interval_value })
+        : `${pmStatus.interval_value}-day interval`
+      : translate
+        ? translate('equipmentFinalize.hourInterval', { count: pmStatus.interval_value })
+        : `${pmStatus.interval_value}-hr interval`;
 
   return {
-    label: 'Current',
+    label: translate ? translate('equipmentFinalize.current') : 'Current',
     detail: `${pmStatus.template_name} · ${intervalHint}`,
     valueClassName: 'text-success font-medium',
   };

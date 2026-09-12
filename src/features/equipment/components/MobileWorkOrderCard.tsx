@@ -7,9 +7,9 @@ import { Calendar, Clock, User, Users, ChevronRight } from 'lucide-react';
 import { useUnifiedPermissions } from '@/hooks/useUnifiedPermissions';
 import WorkOrderCostSubtotal from '@/features/work-orders/components/WorkOrderCostSubtotal';
 import PMProgressIndicator from '@/features/work-orders/components/PMProgressIndicator';
-
 import { WorkOrder } from '@/services/supabaseDataService';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
+import { useI18n } from '@/i18n';
 
 interface ExtendedWorkOrder extends WorkOrder {
   created_date: string;
@@ -24,6 +24,7 @@ interface MobileWorkOrderCardProps {
 }
 
 const MobileWorkOrderCard: React.FC<MobileWorkOrderCardProps> = ({ workOrder }) => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const permissions = useUnifiedPermissions();
   const { formatDate } = useFormatTimestamp();
@@ -82,7 +83,6 @@ const MobileWorkOrderCard: React.FC<MobileWorkOrderCardProps> = ({ workOrder }) 
     >
       <CardContent standalone>
         <div className="space-y-3">
-          {/* Header */}
           <div className="space-y-2">
             <div className="flex items-start justify-between gap-2">
               <h3 className="font-semibold text-base leading-tight line-clamp-2">
@@ -90,7 +90,6 @@ const MobileWorkOrderCard: React.FC<MobileWorkOrderCardProps> = ({ workOrder }) 
               </h3>
               <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
             </div>
-            
             <div className="flex gap-2 flex-wrap">
               <Badge className={getPriorityColor(workOrder.priority)} variant="outline">
                 {workOrder.priority}
@@ -99,7 +98,6 @@ const MobileWorkOrderCard: React.FC<MobileWorkOrderCardProps> = ({ workOrder }) 
                 {formatStatus(workOrder.status)}
               </Badge>
             </div>
-            
             {workOrder.description && (
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {workOrder.description}
@@ -107,35 +105,26 @@ const MobileWorkOrderCard: React.FC<MobileWorkOrderCardProps> = ({ workOrder }) 
             )}
           </div>
 
-          {/* PM Progress */}
           {workOrder.has_pm && (
-            <PMProgressIndicator 
-              workOrderId={workOrder.id} 
-              hasPM={workOrder.has_pm} 
-            />
+            <PMProgressIndicator workOrderId={workOrder.id} hasPM={workOrder.has_pm} />
           )}
 
-          {/* Key Details */}
           <div className="space-y-2 text-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Calendar className="h-3 w-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Created</span>
+                <span className="text-muted-foreground">{t('equipmentFinalize.created')}</span>
               </div>
-              <span className="font-medium">
-                {formatDate(workOrder.created_date)}
-              </span>
+              <span className="font-medium">{formatDate(workOrder.created_date)}</span>
             </div>
 
             {workOrder.due_date && (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">Due</span>
+                  <span className="text-muted-foreground">{t('equipmentFinalize.due')}</span>
                 </div>
-                <span className="font-medium">
-                  {formatDate(workOrder.due_date)}
-                </span>
+                <span className="font-medium">{formatDate(workOrder.due_date)}</span>
               </div>
             )}
 
@@ -143,11 +132,9 @@ const MobileWorkOrderCard: React.FC<MobileWorkOrderCardProps> = ({ workOrder }) 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <User className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">Assigned</span>
+                  <span className="text-muted-foreground">{t('equipmentFinalize.assigned')}</span>
                 </div>
-                <span className="font-medium truncate max-w-32">
-                  {workOrder.assigneeName}
-                </span>
+                <span className="font-medium truncate max-w-32">{workOrder.assigneeName}</span>
               </div>
             )}
 
@@ -155,26 +142,19 @@ const MobileWorkOrderCard: React.FC<MobileWorkOrderCardProps> = ({ workOrder }) 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Users className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">Team</span>
+                  <span className="text-muted-foreground">{t('equipmentFinalize.team')}</span>
                 </div>
-                <span className="font-medium truncate max-w-32">
-                  {workOrder.teamName}
-                </span>
+                <span className="font-medium truncate max-w-32">{workOrder.teamName}</span>
               </div>
             )}
           </div>
 
-          {/* Footer */}
           <div className="flex items-center justify-between pt-2 border-t">
             {permissions.workOrders.getDetailedPermissions({ ...workOrder, organizationId: '' }).canEdit && (
-              <WorkOrderCostSubtotal 
-                workOrderId={workOrder.id}
-                className="text-sm"
-              />
+              <WorkOrderCostSubtotal workOrderId={workOrder.id} className="text-sm" />
             )}
-            
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
               onClick={(event) => {
                 event.stopPropagation();
@@ -182,7 +162,7 @@ const MobileWorkOrderCard: React.FC<MobileWorkOrderCardProps> = ({ workOrder }) 
               }}
               className="ml-auto"
             >
-              View Details
+              {t('equipmentFinalize.viewDetails')}
             </Button>
           </div>
         </div>
@@ -192,4 +172,3 @@ const MobileWorkOrderCard: React.FC<MobileWorkOrderCardProps> = ({ workOrder }) 
 };
 
 export default MobileWorkOrderCard;
-

@@ -6,12 +6,14 @@ type FilterPopoverClearAllFooterProps = {
   activeFilterCount: number;
   onClearFilters: () => void;
   onClose: () => void;
+  label?: string;
 };
 
 export function FilterPopoverClearAllFooter({
   activeFilterCount,
   onClearFilters,
   onClose,
+  label = 'Clear all filters',
 }: FilterPopoverClearAllFooterProps) {
   if (activeFilterCount <= 0) {
     return null;
@@ -30,7 +32,7 @@ export function FilterPopoverClearAllFooter({
         }}
       >
         <X className="h-3 w-3 mr-1.5" />
-        Clear all filters
+        {label}
       </Button>
     </>
   );

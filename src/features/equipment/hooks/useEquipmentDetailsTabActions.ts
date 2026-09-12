@@ -8,6 +8,7 @@ import { applyEquipmentUpdateRules } from '@/utils/object-utils';
 import { logger } from '@/utils/logger';
 import { persistEquipmentAssignedLocation } from '@/features/equipment/hooks/persistEquipmentAssignedLocation';
 import { invalidatePMScheduleQueries } from '@/features/equipment/hooks/useEquipmentPMTemplateAssignment';
+import { useI18n } from '@/i18n';
 
 type Equipment = Tables<'equipment'>;
 
@@ -27,6 +28,7 @@ export function useEquipmentDetailsTabActions({
   teams: EquipmentTeamSummary[];
   updateEquipmentMutation: UpdateEquipmentMutation;
 }) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   const invalidateInheritedPMSchedule = useCallback(() => {
@@ -44,14 +46,14 @@ export function useEquipmentDetailsTabActions({
           id: equipment.id,
           data: updateData,
         });
-        toast.success(`${String(field)} updated successfully`);
+        toast.success(t('equipmentMutation.updated'));
       } catch (error) {
         logger.error(`Error updating ${String(field)}`, error);
-        toast.error(`Failed to update ${String(field)}`);
+        toast.error(t('equipmentMutation.updateFailed'));
         throw error;
       }
     },
-    [equipment.id, updateEquipmentMutation]
+    [equipment.id, t, updateEquipmentMutation]
   );
 
   const handleCustomAttributesUpdate = useCallback(
@@ -64,14 +66,14 @@ export function useEquipmentDetailsTabActions({
           id: equipment.id,
           data: { custom_attributes: newAttributes },
         });
-        toast.success('Custom attributes updated successfully');
+        toast.success(t('equipmentMutation.customAttributesUpdated'));
       } catch (error) {
         logger.error('Error updating custom attributes', error);
-        toast.error('Failed to update custom attributes');
+        toast.error(t('equipmentMutation.customAttributesUpdateFailed'));
         throw error;
       }
     },
-    [equipment.id, updateEquipmentMutation]
+    [equipment.id, t, updateEquipmentMutation]
   );
 
   const handleTeamAssignment = useCallback(
@@ -86,14 +88,14 @@ export function useEquipmentDetailsTabActions({
           data: { team_id: teamValue },
         });
         invalidateInheritedPMSchedule();
-        toast.success('Team assignment updated successfully');
+        toast.success(t('equipmentMutation.teamAssignmentUpdated'));
       } catch (error) {
         logger.error('Error updating team assignment', error);
-        toast.error('Failed to update team assignment');
+        toast.error(t('equipmentMutation.teamAssignmentUpdateFailed'));
         throw error;
       }
     },
-    [equipment.id, invalidateInheritedPMSchedule, updateEquipmentMutation]
+    [equipment.id, invalidateInheritedPMSchedule, t, updateEquipmentMutation]
   );
 
   const saveAssignedLocation = useCallback(
@@ -105,17 +107,17 @@ export function useEquipmentDetailsTabActions({
 
   const teamOptions = useMemo(
     () => [
-      { value: 'unassigned', label: 'Unassigned' },
+      { value: 'unassigned', label: t('equipmentMutation.unassigned') },
       ...teams.map((team) => ({ value: team.id, label: team.name })),
     ],
-    [teams]
+    [t, teams]
   );
 
   const getCurrentTeamDisplay = useCallback(() => {
-    if (!equipment.team_id) return 'Unassigned';
-    const team = teams.find((t) => t.id === equipment.team_id);
-    return team?.name || 'Unknown Team';
-  }, [equipment.team_id, teams]);
+    if (!equipment.team_id) return t('equipmentMutation.unassigned');
+    const team = teams.find((item) => item.id === equipment.team_id);
+    return team?.name || t('equipmentMutation.unknownTeam');
+  }, [equipment.team_id, t, teams]);
 
   return {
     handleFieldUpdate,

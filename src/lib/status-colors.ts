@@ -31,7 +31,6 @@ const EQUIPMENT_STATUS_BORDER: Record<string, string> = {
   inactive: 'border-l-equipment-retired',
 };
 
-/** Fill classes for card left rails (avoids Card border-color overrides). */
 const EQUIPMENT_STATUS_RAIL: Record<string, string> = {
   maintenance: 'bg-equipment-maintenance',
   repair: 'bg-equipment-repair',
@@ -41,12 +40,12 @@ const EQUIPMENT_STATUS_RAIL: Record<string, string> = {
   inactive: 'bg-equipment-retired',
 };
 
-/** Card rail legend entries for equipment list filter UI (active = no rail). */
+/** Semantic card rail legend entries for equipment list filter UI (active = no rail). */
 export const EQUIPMENT_STATUS_RAIL_LEGEND = [
-  { status: 'active', label: 'Active', railClass: '' },
-  { status: 'maintenance', label: 'Maintenance', railClass: 'bg-equipment-maintenance' },
-  { status: 'inactive', label: 'Inactive', railClass: 'bg-equipment-retired' },
-  { status: 'out_of_service', label: 'Out of Service', railClass: 'bg-equipment-repair' },
+  { status: 'active', railClass: '' },
+  { status: 'maintenance', railClass: 'bg-equipment-maintenance' },
+  { status: 'inactive', railClass: 'bg-equipment-retired' },
+  { status: 'out_of_service', railClass: 'bg-equipment-repair' },
 ] as const;
 
 const PRIORITY_BADGE: Record<string, string> = {
@@ -69,7 +68,6 @@ const STATUS_BACKGROUND_TINT: Record<string, string> = {
 const getWorkOrderStatusBorderClass = (status: string): string =>
   lookupBorderClass(status, WORK_ORDER_STATUS_BORDER);
 
-// Work Order Status with Overdue Check
 export const getWorkOrderStatusBorderWithOverdue = (
   status: string,
   isOverdue: boolean
@@ -80,14 +78,12 @@ export const getWorkOrderStatusBorderWithOverdue = (
   return getWorkOrderStatusBorderClass(status);
 };
 
-// Equipment Status Border Colors — active/operational cards use no left rail
 export const getEquipmentStatusBorderClass = (status: string): string => {
   const key = status?.toLowerCase() ?? '';
   if (key === 'active' || key === 'operational') return '';
   return lookupBorderClass(status, EQUIPMENT_STATUS_BORDER);
 };
 
-/** Colored fill for equipment card left rail (use on an inner strip, not border-left). */
 export const getEquipmentStatusRailClass = (status: string): string => {
   const key = status?.toLowerCase() ?? '';
   if (key === 'active' || key === 'operational') return '';
@@ -109,7 +105,6 @@ export const getEquipmentStatusBackgroundTint = (status: string): string => {
   return EQUIPMENT_STATUS_TINT[key] ?? '';
 };
 
-// Work Order Status Background Tints (subtle card fills for active states)
 export const getStatusBackgroundTint = (status: string, isOverdue: boolean): string => {
   if (isOverdue && status?.toLowerCase() !== 'completed') {
     return 'bg-destructive/[0.03]';
@@ -118,7 +113,6 @@ export const getStatusBackgroundTint = (status: string, isOverdue: boolean): str
   return STATUS_BACKGROUND_TINT[key] ?? '';
 };
 
-// Priority Badge Colors
 export const getPriorityBadgeClass = (priority: string): string => {
   const key = priority?.toLowerCase() ?? '';
   return PRIORITY_BADGE[key] ?? 'bg-muted text-muted-foreground';

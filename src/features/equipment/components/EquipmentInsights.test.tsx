@@ -41,8 +41,8 @@ describe('EquipmentInsights', () => {
     // Verify status overview section is rendered
     expect(screen.getByText('Status Overview')).toBeInTheDocument();
     
-    // Verify active status count is displayed
-    expect(screen.getByText('active')).toBeInTheDocument();
+    // Verify active status count is displayed using the localized label
+    expect(screen.getByText('Active')).toBeInTheDocument();
   });
 
   it('handles empty data', () => {

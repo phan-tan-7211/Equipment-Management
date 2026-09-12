@@ -7,6 +7,7 @@ import type { EquipmentRecord } from '@/features/equipment/types/equipment';
 import { EquipmentPrimaryMediaPanel } from '@/features/equipment/components/media/EquipmentPrimaryMediaPanel';
 import { Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useI18n } from '@/i18n';
 
 type EquipmentDetailsDesktopSummaryProps = {
   equipment: EquipmentRecord;
@@ -37,6 +38,7 @@ export function EquipmentDetailsDesktopSummary({
   onCancelLocationEdit,
   onSaveLocation,
 }: EquipmentDetailsDesktopSummaryProps) {
+  const { t } = useI18n();
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <Card>
@@ -56,7 +58,7 @@ export function EquipmentDetailsDesktopSummary({
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Assigned Team
+            {t('equipmentFinalize.assignedTeam')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -85,12 +87,13 @@ export function EquipmentDetailsDesktopSummary({
 }
 
 function EquipmentTeamSummaryCard({ team }: { team: EquipmentTeamSummary | null }) {
+  const { t } = useI18n();
   if (!team) {
     return (
       <div className="flex flex-col items-center justify-center h-40 text-center">
         <Users className="h-8 w-8 text-muted-foreground/50 mb-2" />
-        <p className="text-sm font-medium text-muted-foreground">Unassigned</p>
-        <p className="text-xs text-muted-foreground mt-1">Assign a team in the Details tab</p>
+        <p className="text-sm font-medium text-muted-foreground">{t('equipmentFinalize.unassigned')}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t('equipmentFinalize.assignTeamInDetails')}</p>
       </div>
     );
   }
@@ -104,7 +107,7 @@ function EquipmentTeamSummaryCard({ team }: { team: EquipmentTeamSummary | null 
         {team.name}
       </Link>
       <p className="text-sm text-muted-foreground line-clamp-3">
-        {team.description || 'No description'}
+        {team.description || t('equipmentFinalize.noDescription')}
       </p>
     </>
   );

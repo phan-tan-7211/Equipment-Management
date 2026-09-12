@@ -9,6 +9,7 @@ import type { PMChecklistItem } from '@/features/pm-templates/services/preventat
 import { createSegmentsForSection } from '@/utils/pmChecklistHelpers';
 import { persistDashboardOrganizationSelection } from '@/utils/organizationSelection';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
+import { useI18n } from '@/i18n';
 
 function parseChecklistData(raw: unknown): PMChecklistItem[] {
   try {
@@ -50,13 +51,14 @@ const EquipmentQRLastPMCard: React.FC<EquipmentQRLastPMCardProps> = ({
   isLoading,
   isError,
 }) => {
+  const { t } = useI18n();
   const { formatDateTime, formatRelative } = useFormatTimestamp();
 
   if (isLoading) {
     return (
       <Card data-testid="equipment-qr-last-pm-loading">
         <CardHeader>
-          <CardTitle className="text-base">Last completed PM</CardTitle>
+          <CardTitle className="text-base">{t('equipmentQRScan.lastCompletedPm')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <Skeleton className="h-4 w-3/4" />
@@ -71,10 +73,10 @@ const EquipmentQRLastPMCard: React.FC<EquipmentQRLastPMCardProps> = ({
     return (
       <Card data-testid="equipment-qr-last-pm-error">
         <CardHeader>
-          <CardTitle className="text-base">Last completed PM</CardTitle>
+          <CardTitle className="text-base">{t('equipmentQRScan.lastCompletedPm')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">PM history unavailable.</p>
+          <p className="text-sm text-muted-foreground">{t('equipmentQRScan.pmHistoryUnavailable')}</p>
         </CardContent>
       </Card>
     );
@@ -84,10 +86,10 @@ const EquipmentQRLastPMCard: React.FC<EquipmentQRLastPMCardProps> = ({
     return (
       <Card data-testid="equipment-qr-last-pm-empty">
         <CardHeader>
-          <CardTitle className="text-base">Last completed PM</CardTitle>
+          <CardTitle className="text-base">{t('equipmentQRScan.lastCompletedPm')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">No completed PM records found.</p>
+          <p className="text-sm text-muted-foreground">{t('equipmentQRScan.noCompletedPm')}</p>
         </CardContent>
       </Card>
     );
@@ -118,7 +120,7 @@ const EquipmentQRLastPMCard: React.FC<EquipmentQRLastPMCardProps> = ({
   return (
     <Card data-testid="equipment-qr-last-pm-card">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-base">Last completed PM</CardTitle>
+        <CardTitle className="text-base">{t('equipmentQRScan.lastCompletedPm')}</CardTitle>
         <p className="text-xs text-muted-foreground">
           {dateLabel}
           {relativeLabel ? ` (${relativeLabel})` : ''}
@@ -126,16 +128,21 @@ const EquipmentQRLastPMCard: React.FC<EquipmentQRLastPMCardProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm">
-          <span className="font-medium">Completed by: </span>
-          <span>{details.completed_by_name?.trim() || 'Technician not recorded'}</span>
+          <span className="font-medium">{t('equipmentQRScan.completedBy')} </span>
+          <span>{details.completed_by_name?.trim() || t('equipmentQRScan.technicianNotRecorded')}</span>
         </div>
         <div className="text-sm">
-          <span className="font-medium">Work order: </span>
-          <span>{details.work_order_title?.trim() || 'PM work order'}</span>
+          <span className="font-medium">{t('equipmentQRScan.workOrder')} </span>
+          <span>{details.work_order_title?.trim() || t('equipmentQRScan.pmWorkOrder')}</span>
         </div>
         {warningCount > 0 ? (
           <p className="text-sm text-warning" data-testid="equipment-qr-last-pm-warnings">
-            {warningCount} checklist item{warningCount === 1 ? '' : 's'} flagged for review
+            {t(
+              warningCount === 1
+                ? 'equipmentQRScan.checklistItemFlagged'
+                : 'equipmentQRScan.checklistItemsFlagged',
+              { count: warningCount },
+            )}
           </p>
         ) : null}
         {sections.length > 0 ? (
@@ -159,7 +166,7 @@ const EquipmentQRLastPMCard: React.FC<EquipmentQRLastPMCardProps> = ({
             reloadDocument
             onClick={persistOrgBeforeDashboard}
           >
-            Open PM work order
+            {t('equipmentQRScan.openPmWorkOrder')}
           </Link>
         </Button>
       </CardContent>

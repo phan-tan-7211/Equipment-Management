@@ -35,10 +35,11 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
   onPageSizeChange,
   testId = 'list-pagination-footer',
 }) => {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const pageSizeSelectId = useId();
   const totalPages = getListPageCount(totalItems, pageSize);
   const { start, end } = getListPageRange(totalItems, page, pageSize);
+  const displayItemLabel = language === 'en' && totalItems !== 1 ? `${itemLabel}s` : itemLabel;
 
   if (totalItems === 0) {
     return null;
@@ -48,7 +49,7 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
     <div className="flex flex-col gap-4 border-t pt-4" data-testid={testId}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {t('commonPagination.showing', { start, end, total: totalItems, label: itemLabel })}
+          {t('commonPagination.showing', { start, end, total: totalItems, label: displayItemLabel })}
         </p>
 
         <div className="hidden md:flex items-center gap-2">

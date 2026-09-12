@@ -10,6 +10,7 @@ import { logger } from '@/utils/logger';
 import { cn } from '@/lib/utils';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useI18n } from '@/i18n';
 import {
   desktopHoverEditIconClassName,
   desktopInlineEditRowClassName,
@@ -18,12 +19,12 @@ import {
   mobileInlineEditValueClassName,
 } from './inlineEditStyles';
 
-/** Empty inline field: em dash in body style, not monospace (overrides parent font-mono on SKU/external ID). */
 function EmptyFieldDisplay({ className }: { className?: string }) {
+  const { t } = useI18n();
   return (
     <span
       className={cn('text-muted-foreground/50 not-italic font-sans', className)}
-      aria-label="No value set"
+      aria-label={t('equipmentInline.noValueSet')}
     >
       —
     </span>
@@ -40,12 +41,6 @@ interface InlineEditFieldProps {
   placeholder?: string;
   className?: string;
   displayNode?: React.ReactNode;
-  /**
-   * Accessible label for the inline edit trigger. Defaults to "Edit" for
-   * back-compat; pass a field-specific value (e.g. "Edit status") so assistive
-   * tech and automation can target the right row when several inline editors
-   * sit side-by-side.
-   */
   editAriaLabel?: string;
 }
 
@@ -61,6 +56,7 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
   displayNode,
   editAriaLabel
 }) => {
+  const { t } = useI18n();
   const { formatDate } = useFormatTimestamp();
   const isMobile = useIsMobile();
   const [isEditing, setIsEditing] = useState(false);
@@ -69,7 +65,6 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
   const textInputRef = useMountFocus<HTMLInputElement>(isEditing && type !== 'textarea' && type !== 'select');
   const textareaRef = useMountFocus<HTMLTextAreaElement>(isEditing && type === 'textarea');
 
-  // Update editValue when value prop changes
   React.useEffect(() => {
     setEditValue(value);
   }, [value]);
@@ -91,7 +86,7 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
       if (import.meta.env.DEV) {
         logger.error('Error saving field', error);
       }
-      setEditValue(value); // Reset to original value on error
+      setEditValue(value);
     } finally {
       setIsSaving(false);
     }
@@ -102,29 +97,28 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
     setIsEditing(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && type !== 'textarea') {
-      handleSave();
-    } else if (e.key === 'Escape') {
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' && type !== 'textarea') {
+      void handleSave();
+    } else if (event.key === 'Escape') {
       handleCancel();
     }
   };
 
-  // Format display value based on type
   const getDisplayContent = (): React.ReactNode => {
     if (!value) {
       return <EmptyFieldDisplay />;
     }
 
     if (type === 'select' && selectOptions) {
-      const option = selectOptions.find((opt) => opt.value === value);
+      const option = selectOptions.find((item) => item.value === value);
       return option ? option.label : value;
     }
 
     if (type === 'date') {
       try {
         const date = new Date(value);
-        if (!isNaN(date.getTime())) {
+        if (!Number.isNaN(date.getTime())) {
           return formatDate(date);
         }
       } catch (error) {
@@ -141,7 +135,7 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
     return <span className={className}>{resolvedDisplayNode}</span>;
   }
 
-  const editLabel = editAriaLabel ?? 'Edit';
+  const editLabel = editAriaLabel ?? t('equipmentInline.edit');
 
   if (!isEditing) {
     return (
@@ -174,7 +168,7 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
           ref={textareaRef}
           id={fieldId}
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={(event) => setEditValue(event.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className="min-h-[60px]"
@@ -199,7 +193,7 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
           type={type}
           inputMode={type === 'number' ? 'decimal' : undefined}
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={(event) => setEditValue(event.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
         />
@@ -209,9 +203,9 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
           variant="ghost"
           size="sm"
           className="h-6 w-6 p-0"
-          onClick={handleSave}
+          onClick={() => void handleSave()}
           disabled={isSaving}
-          aria-label="Save"
+          aria-label={t('equipmentInline.save')}
         >
           <Check className="h-3 w-3" />
         </Button>
@@ -221,7 +215,7 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
           className="h-6 w-6 p-0"
           onClick={handleCancel}
           disabled={isSaving}
-          aria-label="Cancel"
+          aria-label={t('equipmentInline.cancel')}
         >
           <X className="h-3 w-3" />
         </Button>

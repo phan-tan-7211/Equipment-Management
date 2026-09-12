@@ -30,6 +30,7 @@ import {
   STOCK_FILTER_OPTIONS,
 } from './types';
 import { createPartsSortChangeHandler, partsToolbarSortValue } from './partsSortHandlers';
+import { useI18n } from '@/i18n';
 
 interface MobilePartsToolbarProps {
   filters: PartsFiltersState;
@@ -52,51 +53,49 @@ export const MobilePartsToolbar: React.FC<MobilePartsToolbarProps> = ({
   onSortChange,
   onClearFilters,
 }) => {
+  const { t } = useI18n();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const currentSortValue = partsToolbarSortValue(filters.sortField, filters.sortOrder);
   const handleSortChange = createPartsSortChangeHandler(onSortChange);
 
   const getStockFilterLabel = (value: StockFilter) => {
-    return STOCK_FILTER_OPTIONS.find(opt => opt.value === value)?.label || value;
+    const option = STOCK_FILTER_OPTIONS.find((item) => item.value === value);
+    return option ? t(option.labelKey) : value;
   };
 
   return (
     <div className="space-y-3">
-      {/* Row 1: Search + Sort + Filter Button */}
       <div className="flex items-center gap-2">
-        {/* Search Input */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search parts..."
+            placeholder={t('equipmentParts.searchParts')}
             value={filters.search}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={(event) => onSearchChange(event.target.value)}
             className="h-10 pl-9"
           />
         </div>
 
-        {/* Sort Dropdown (compact) */}
         <Select value={currentSortValue} onValueChange={handleSortChange}>
           <SelectTrigger className="w-[120px] h-10">
-            <SelectValue placeholder="Sort" />
+            <SelectValue placeholder={t('equipmentParts.sort')} />
           </SelectTrigger>
           <SelectContent>
             {SORT_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
-                {option.label}
+                {t(option.labelKey)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        {/* Filter Button */}
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetTrigger asChild>
             <Button
               variant="outline"
               size="icon"
               className="relative h-10 w-10"
-              aria-label="Open filters"
+              aria-label={t('equipmentParts.openFilters')}
             >
               <Filter className="h-4 w-4" />
               {activeFilterCount > 0 && (
@@ -113,45 +112,41 @@ export const MobilePartsToolbar: React.FC<MobilePartsToolbarProps> = ({
           <SheetContent side="bottom" className="h-[60dvh] p-0">
             <div className="p-6 pb-0">
               <SheetHeader className="pb-4">
-                <SheetTitle>Filter Parts</SheetTitle>
-                <SheetDescription>
-                  Filter parts by stock status or alternates availability.
-                </SheetDescription>
+                <SheetTitle>{t('equipmentParts.filterParts')}</SheetTitle>
+                <SheetDescription>{t('equipmentParts.filterDescription')}</SheetDescription>
               </SheetHeader>
             </div>
 
             <ScrollArea className="h-[calc(60dvh-120px)] px-6">
               <div className="space-y-6 pb-6">
-                {/* Stock Status Filter */}
                 <div>
                   <Label className="mb-2 block text-sm font-medium">
-                    Stock Status
+                    {t('equipmentParts.stockStatusTitle')}
                   </Label>
                   <Select
                     value={filters.stockFilter}
                     onValueChange={(value) => onStockFilterChange(value as StockFilter)}
                   >
                     <SelectTrigger className="h-12">
-                      <SelectValue placeholder="All Stock Levels" />
+                      <SelectValue placeholder={t('equipmentParts.stockAll')} />
                     </SelectTrigger>
                     <SelectContent>
                       {STOCK_FILTER_OPTIONS.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                          {t(option.labelKey)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Alternates Toggle */}
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="mobile-alternates-toggle"
                     className="text-sm font-medium cursor-pointer flex items-center gap-2"
                   >
                     <RefreshCw className="h-4 w-4" />
-                    Show only parts with alternates
+                    {t('equipmentParts.showOnlyAlternates')}
                   </Label>
                   <Switch
                     id="mobile-alternates-toggle"
@@ -160,7 +155,6 @@ export const MobilePartsToolbar: React.FC<MobilePartsToolbarProps> = ({
                   />
                 </div>
 
-                {/* Clear All Button */}
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -169,7 +163,7 @@ export const MobilePartsToolbar: React.FC<MobilePartsToolbarProps> = ({
                   }}
                   className="h-12 w-full"
                 >
-                  Clear All Filters
+                  {t('equipmentParts.clearAllFilters')}
                 </Button>
               </div>
             </ScrollArea>
@@ -177,16 +171,12 @@ export const MobilePartsToolbar: React.FC<MobilePartsToolbarProps> = ({
         </Sheet>
       </div>
 
-      {/* Active Filter Badges */}
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-2">
           {filters.search && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              Search: {filters.search}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() => onSearchChange('')}
-              />
+              {t('equipmentParts.searchBadge', { query: filters.search })}
+              <X className="h-3 w-3 cursor-pointer" onClick={() => onSearchChange('')} />
             </Badge>
           )}
           {filters.stockFilter !== 'all' && (
@@ -201,7 +191,7 @@ export const MobilePartsToolbar: React.FC<MobilePartsToolbarProps> = ({
           {filters.hasAlternatesOnly && (
             <Badge variant="secondary" className="flex items-center gap-1">
               <RefreshCw className="h-3 w-3" />
-              Alternates only
+              {t('equipmentParts.alternatesOnly')}
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => onHasAlternatesChange(false)}

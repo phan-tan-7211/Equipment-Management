@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { PMIntervalType, PMSchedulePolicyFormState } from '@/features/pm-templates/services/pmIntervalPolicyService';
+import { useI18n } from '@/i18n';
 
 type PMSchedulePolicyFieldsProps = {
   value: PMSchedulePolicyFormState;
@@ -17,11 +18,12 @@ type PMSchedulePolicyFieldsProps = {
 export function PMSchedulePolicyFields({
   value,
   onChange,
-  inheritLabel = 'Inherit schedule',
+  inheritLabel,
   intervalError,
   disabled = false,
   compact = false,
 }: PMSchedulePolicyFieldsProps) {
+  const { t } = useI18n();
   const idBase = useId();
   const inheritId = `${idBase}-inherit`;
   const customId = `${idBase}-custom`;
@@ -34,9 +36,9 @@ export function PMSchedulePolicyFields({
     <div className={compact ? 'space-y-3' : 'space-y-3 rounded-md border p-4'}>
       {!compact && (
         <div>
-          <Label className="text-sm font-medium">PM Schedule</Label>
+          <Label className="text-sm font-medium">{t('equipmentPM.schedule')}</Label>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Control when equipment should be flagged for recurring preventive maintenance.
+            {t('equipmentPM.scheduleDescription')}
           </p>
         </div>
       )}
@@ -55,19 +57,19 @@ export function PMSchedulePolicyFields({
         <div className="flex items-center gap-2">
           <RadioGroupItem value="inherit" id={inheritId} />
           <Label htmlFor={inheritId} className="font-normal cursor-pointer">
-            {inheritLabel}
+            {inheritLabel ?? t('equipmentPM.inheritSchedule')}
           </Label>
         </div>
         <div className="flex items-center gap-2">
           <RadioGroupItem value="custom" id={customId} />
           <Label htmlFor={customId} className="font-normal cursor-pointer">
-            Custom interval
+            {t('equipmentPM.customInterval')}
           </Label>
         </div>
         <div className="flex items-center gap-2">
           <RadioGroupItem value="none" id={noneId} />
           <Label htmlFor={noneId} className="font-normal cursor-pointer">
-            No recurring PM
+            {t('equipmentPM.noRecurringPM')}
           </Label>
         </div>
       </RadioGroup>
@@ -76,7 +78,7 @@ export function PMSchedulePolicyFields({
         <div className="flex flex-wrap items-end gap-4 pt-1">
           <div className="flex-1 max-w-50">
             <Label htmlFor={intervalValueId} className="text-xs">
-              Every
+              {t('equipmentPM.every')}
             </Label>
             <div className="flex items-center gap-2">
               <Input
@@ -88,12 +90,14 @@ export function PMSchedulePolicyFields({
                   const parsed = e.target.value ? parseInt(e.target.value, 10) : null;
                   onChange({ ...value, intervalValue: parsed });
                 }}
-                placeholder="e.g. 90"
+                placeholder={t('equipmentPM.intervalPlaceholder')}
                 className={intervalError ? 'border-destructive' : ''}
                 disabled={disabled}
               />
               <span className="text-sm text-muted-foreground whitespace-nowrap">
-                {value.intervalType === 'hours' ? 'Working Hours' : 'Calendar Days'}
+                {value.intervalType === 'hours'
+                  ? t('equipmentPM.workingHours')
+                  : t('equipmentPM.calendarDays')}
               </span>
             </div>
             {intervalError && <p className="text-xs text-destructive mt-1">{intervalError}</p>}
@@ -107,13 +111,13 @@ export function PMSchedulePolicyFields({
             <div className="flex items-center gap-1.5">
               <RadioGroupItem value="days" id={daysId} />
               <Label htmlFor={daysId} className="text-sm font-normal cursor-pointer">
-                Calendar Days
+                {t('equipmentPM.calendarDays')}
               </Label>
             </div>
             <div className="flex items-center gap-1.5">
               <RadioGroupItem value="hours" id={hoursId} />
               <Label htmlFor={hoursId} className="text-sm font-normal cursor-pointer">
-                Working Hours
+                {t('equipmentPM.workingHours')}
               </Label>
             </div>
           </RadioGroup>

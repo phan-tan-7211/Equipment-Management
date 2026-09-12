@@ -56,7 +56,7 @@ describe('SignInForm', () => {
     expect(screen.getByRole('button', { name: /login with email & password/i })).toBeInTheDocument();
     expect(screen.queryByLabelText('Email')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Password')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
   });
 
   it('reveals email fields and hides Google after login with email and password', () => {
@@ -65,7 +65,7 @@ describe('SignInForm', () => {
 
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /login with google/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /back to google login/i })).toBeInTheDocument();
   });
@@ -129,7 +129,7 @@ describe('SignInForm', () => {
     // Fill form using fast helper
     fillFormFast();
     
-    const submitButton = screen.getByRole('button', { name: 'Sign In' });
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -144,7 +144,7 @@ describe('SignInForm', () => {
 
     fillFormFast('test@example.com', '  password123  ');
 
-    const submitButton = screen.getByRole('button', { name: 'Sign In' });
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -156,7 +156,7 @@ describe('SignInForm', () => {
     render(<SignInForm {...defaultProps} />);
     revealEmailSignIn();
 
-    const submitButton = screen.getByRole('button', { name: 'Sign In' });
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
     fireEvent.click(submitButton);
 
     // Form validation should prevent submission
@@ -169,7 +169,7 @@ describe('SignInForm', () => {
     // Enter invalid email - native HTML5 validation will prevent submission
     fillFormFast('invalid-email', 'password123');
     
-    const submitButton = screen.getByRole('button', { name: 'Sign In' });
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
     fireEvent.click(submitButton);
     
     // signIn should not be called due to HTML5 validation
@@ -184,7 +184,7 @@ describe('SignInForm', () => {
 
     fillFormFast('test@example.com', 'wrongpassword');
     
-    const submitButton = screen.getByRole('button', { name: 'Sign In' });
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -200,8 +200,8 @@ describe('SignInForm', () => {
     revealEmailSignIn();
 
     // When loading, the button's accessible name includes the loading spinner's aria-label
-    // So it becomes "Loading Sign In" instead of just "Sign In"
-    const submitButton = screen.getByRole('button', { name: /Sign In/i });
+    // So it becomes "Loading Sign in" instead of just "Sign in"
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
     expect(submitButton).toBeDisabled();
   });
 
@@ -263,7 +263,7 @@ describe('SignInForm', () => {
 
     fillFormFast();
     
-    const submitButton = screen.getByRole('button', { name: 'Sign In' });
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
     
     // Button should be enabled initially
     expect(submitButton).not.toBeDisabled();

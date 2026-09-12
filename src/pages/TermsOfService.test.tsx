@@ -60,13 +60,17 @@ describe('TermsOfService', () => {
       .find((a) => (a as HTMLAnchorElement).getAttribute('href') === '/privacy-policy');
     expect(privacyLink).toBeTruthy();
 
-    const links = screen.queryAllByText('ZNT LLC');
-    links.forEach((link) => {
-      expect(link.closest('a')).toHaveAttribute('href', 'https://columbiacloudworks.com');
-      expect(link.closest('a')).toHaveAttribute('target', '_blank');
-      expect(link.closest('a')).toHaveAttribute('rel', 'noopener noreferrer');
-    });
-    expect(screen.getByText(/nicholas\.king@columbiacloudworks\.com/i)).toBeInTheDocument();
-    expect(screen.getByText(/https:\/\/equipqr\.app/i)).toBeInTheDocument();
+    expect(screen.getAllByText('ZNT LLC')).toHaveLength(2);
+
+    const legalEmailLink = screen.getByRole('link', { name: /legal@columbiacloudworks\.com/i });
+    expect(legalEmailLink).toHaveAttribute('href', 'mailto:legal@columbiacloudworks.com');
+
+    const contactEmailLink = screen.getByRole('link', { name: /phantan7211@gmail\.com/i });
+    expect(contactEmailLink).toHaveAttribute('href', 'mailto:phantan7211@gmail.com');
+
+    const equipQrLink = screen.getByRole('link', { name: /equipqr\.app/i });
+    expect(equipQrLink).toHaveAttribute('href', 'https://equipqr.app');
+    expect(equipQrLink).toHaveAttribute('target', '_blank');
+    expect(equipQrLink).toHaveAttribute('rel', 'noopener noreferrer');
   });
 });

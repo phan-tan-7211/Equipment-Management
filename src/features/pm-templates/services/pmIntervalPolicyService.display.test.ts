@@ -4,8 +4,8 @@ import { getPMSchedulePolicyDisplay } from '@/features/pm-templates/services/pmI
 describe('getPMSchedulePolicyDisplay', () => {
   it('shows equipment overrides with schedule first', () => {
     expect(getPMSchedulePolicyDisplay(null, { teamName: 'Rental Fleet Team' })).toEqual({
-      primary: 'Inherited schedule',
-      secondary: 'Inherits from team (Rental Fleet Team)',
+      primary: { kind: 'inherited_schedule' },
+      secondary: { kind: 'inherit_source', teamName: 'Rental Fleet Team' },
     });
 
     expect(
@@ -26,8 +26,8 @@ describe('getPMSchedulePolicyDisplay', () => {
         updated_at: '',
       })
     ).toEqual({
-      primary: 'Every 30 days',
-      secondary: 'Equipment override',
+      primary: { kind: 'interval', value: 30, intervalType: 'days' },
+      secondary: { kind: 'equipment_override' },
     });
 
     expect(
@@ -48,8 +48,8 @@ describe('getPMSchedulePolicyDisplay', () => {
         updated_at: '',
       })
     ).toEqual({
-      primary: 'No recurring PM',
-      secondary: 'Equipment override',
+      primary: { kind: 'no_recurring_pm' },
+      secondary: { kind: 'equipment_override' },
     });
   });
 
@@ -65,8 +65,8 @@ describe('getPMSchedulePolicyDisplay', () => {
         },
       })
     ).toEqual({
-      primary: 'Every 500 hours',
-      secondary: 'From team (Rental Fleet Team)',
+      primary: { kind: 'interval', value: 500, intervalType: 'hours' },
+      secondary: { kind: 'team_source', teamName: 'Rental Fleet Team' },
     });
 
     expect(
@@ -75,7 +75,7 @@ describe('getPMSchedulePolicyDisplay', () => {
         inheritedEffectiveLoading: true,
       })
     ).toEqual({
-      primary: 'Loading…',
+      primary: { kind: 'loading' },
       secondary: null,
     });
   });
@@ -92,8 +92,8 @@ describe('getPMSchedulePolicyDisplay', () => {
         },
       })
     ).toEqual({
-      primary: 'No recurring PM',
-      secondary: 'From team (Rental Fleet Team)',
+      primary: { kind: 'no_recurring_pm' },
+      secondary: { kind: 'team_source', teamName: 'Rental Fleet Team' },
     });
 
     expect(
@@ -107,8 +107,8 @@ describe('getPMSchedulePolicyDisplay', () => {
         },
       })
     ).toEqual({
-      primary: 'No schedule configured',
-      secondary: 'Inherits from team (Rental Fleet Team)',
+      primary: { kind: 'no_schedule_configured' },
+      secondary: { kind: 'inherit_source', teamName: 'Rental Fleet Team' },
     });
 
     expect(
@@ -123,8 +123,8 @@ describe('getPMSchedulePolicyDisplay', () => {
         },
       })
     ).toEqual({
-      primary: 'Every 90 days',
-      secondary: 'From PM template (Forklift PM)',
+      primary: { kind: 'interval', value: 90, intervalType: 'days' },
+      secondary: { kind: 'pm_template_source', templateName: 'Forklift PM' },
     });
   });
 });

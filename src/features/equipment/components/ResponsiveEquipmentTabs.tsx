@@ -3,6 +3,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useI18n } from '@/i18n';
 
 interface TabCount {
   'work-orders'?: number;
@@ -45,6 +46,7 @@ const ResponsiveEquipmentTabs: React.FC<ResponsiveEquipmentTabsProps> = ({
   showPartsTab = true,
 }) => {
   const isMobile = useIsMobile();
+  const { t } = useI18n();
 
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
@@ -54,30 +56,30 @@ const ResponsiveEquipmentTabs: React.FC<ResponsiveEquipmentTabsProps> = ({
         <ScrollArea className="w-full">
           <TabsList className={`grid w-full ${isMobile ? 'grid-cols-3' : showPartsTab ? 'grid-cols-7' : 'grid-cols-6'} ${isMobile ? 'h-auto' : ''}`}>
             <TabsTrigger value="details" className={isMobile ? 'text-xs py-2' : ''}>
-              Details
+              {t('equipmentFinalize.tabsDetails')}
             </TabsTrigger>
             <TabsTrigger
               value="work-orders"
               className={isMobile ? 'text-xs py-2' : ''}
               onClick={() => onTabChange('work-orders')}
             >
-              <TabLabel label={isMobile ? 'Orders' : 'Work Orders'} count={counts?.['work-orders']} />
+              <TabLabel label={isMobile ? t('equipmentFinalize.tabsOrders') : t('equipmentFinalize.tabsWorkOrders')} count={counts?.['work-orders']} />
             </TabsTrigger>
             <TabsTrigger value="notes" className={isMobile ? 'text-xs py-2' : ''}>
-              <TabLabel label="Notes" count={counts?.notes} />
+              <TabLabel label={t('equipmentFinalize.tabsNotes')} count={counts?.notes} />
             </TabsTrigger>
             {!isMobile && (
               <>
                 {showPartsTab && (
                   <TabsTrigger value="parts">
-                    <TabLabel label="Parts" count={counts?.parts} />
+                    <TabLabel label={t('equipmentFinalize.tabsParts')} count={counts?.parts} />
                   </TabsTrigger>
                 )}
                 <TabsTrigger value="images">
-                  <TabLabel label="Images" count={counts?.images} />
+                  <TabLabel label={t('equipmentFinalize.tabsImages')} count={counts?.images} />
                 </TabsTrigger>
-                <TabsTrigger value="check-ins">Check-Ins</TabsTrigger>
-                <TabsTrigger value="scan-history">Scan History</TabsTrigger>
+                <TabsTrigger value="check-ins">{t('equipmentFinalize.tabsCheckIns')}</TabsTrigger>
+                <TabsTrigger value="scan-history">{t('equipmentFinalize.tabsScanHistory')}</TabsTrigger>
               </>
             )}
           </TabsList>
@@ -88,17 +90,17 @@ const ResponsiveEquipmentTabs: React.FC<ResponsiveEquipmentTabsProps> = ({
             <TabsList className={`grid w-full ${showPartsTab ? 'grid-cols-4' : 'grid-cols-3'} h-auto`}>
               {showPartsTab && (
                 <TabsTrigger value="parts" className="text-xs py-2">
-                  <TabLabel label="Parts" count={counts?.parts} />
+                  <TabLabel label={t('equipmentFinalize.tabsParts')} count={counts?.parts} />
                 </TabsTrigger>
               )}
               <TabsTrigger value="images" className="text-xs py-2">
-                <TabLabel label="Images" count={counts?.images} />
+                <TabLabel label={t('equipmentFinalize.tabsImages')} count={counts?.images} />
               </TabsTrigger>
               <TabsTrigger value="check-ins" className="text-xs py-2">
-                Check-Ins
+                {t('equipmentFinalize.tabsCheckIns')}
               </TabsTrigger>
               <TabsTrigger value="scan-history" className="text-xs py-2">
-                Scan History
+                {t('equipmentFinalize.tabsScanHistory')}
               </TabsTrigger>
             </TabsList>
           </div>

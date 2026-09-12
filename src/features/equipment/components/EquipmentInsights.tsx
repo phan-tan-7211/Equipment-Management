@@ -16,6 +16,7 @@ import {
   truncateText 
 } from "@/features/equipment/hooks/useEquipmentInsights";
 import { getStatusTextColor } from "@/features/equipment/utils/equipmentHelpers";
+import { useI18n } from '@/i18n';
 
 interface Equipment {
   id: string;
@@ -42,10 +43,17 @@ const STATUS_ICONS = {
   inactive: XCircle,
 } as const;
 
+const STATUS_LABEL_KEYS = {
+  active: 'equipmentInsights.active',
+  maintenance: 'equipmentInsights.maintenanceStatus',
+  inactive: 'equipmentInsights.inactive',
+} as const;
+
 const EquipmentInsights: React.FC<EquipmentInsightsProps> = ({
   equipment,
   filteredEquipment
 }) => {
+  const { t } = useI18n();
   const insights = useEquipmentInsights(equipment, filteredEquipment);
 
   const statusItems = [
@@ -57,22 +65,21 @@ const EquipmentInsights: React.FC<EquipmentInsightsProps> = ({
   return (
     <div className="space-y-4 mb-6">
       <div className="space-y-1">
-        <h2 className="text-lg font-semibold">Insights</h2>
-        <p className="text-sm text-muted-foreground">Key metrics across your equipment fleet.</p>
+        <h2 className="text-lg font-semibold">{t('equipmentInsights.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('equipmentInsights.description')}</p>
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-muted-foreground">
-        <span>Showing {insights.filteredTotal} of {insights.totalEquipment} equipment items</span>
+        <span>{t('equipmentInsights.showing', { filtered: insights.filteredTotal, total: insights.totalEquipment })}</span>
         {insights.hasFiltersApplied && (
-          <span className="text-xs sm:text-sm">{insights.filteredTotal} match current filters</span>
+          <span className="text-xs sm:text-sm">{t('equipmentInsights.matchingFilters', { count: insights.filteredTotal })}</span>
         )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Status Overview */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Forklift className="h-4 w-4 mr-2" />
-              Status Overview
+              {t('equipmentInsights.statusOverview')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -82,7 +89,7 @@ const EquipmentInsights: React.FC<EquipmentInsightsProps> = ({
                 <div key={status} className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Icon className={`h-4 w-4 mr-2 ${getStatusTextColor(status)}`} />
-                    <span className="text-sm capitalize">{status}</span>
+                    <span className="text-sm">{t(STATUS_LABEL_KEYS[status])}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{count}</span>
@@ -98,29 +105,28 @@ const EquipmentInsights: React.FC<EquipmentInsightsProps> = ({
           </CardContent>
         </Card>
 
-        {/* Maintenance Insights */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Wrench className="h-4 w-4 mr-2" />
-              Maintenance
+              {t('equipmentInsights.maintenance')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Needs Maintenance</span>
+              <span className="text-sm">{t('equipmentInsights.needsMaintenance')}</span>
               <Badge variant={insights.maintenanceInsights.needsMaintenance > 0 ? "destructive" : "secondary"}>
                 {insights.maintenanceInsights.needsMaintenance}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Recently Maintained</span>
+              <span className="text-sm">{t('equipmentInsights.recentlyMaintained')}</span>
               <Badge variant="secondary">{insights.maintenanceInsights.recentlyMaintained}</Badge>
             </div>
             {insights.filteredTotal > 0 && (
               <div className="pt-2">
                 <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                  <span>Maintenance Rate</span>
+                  <span>{t('equipmentInsights.maintenanceRate')}</span>
                   <span>{insights.maintenanceInsights.maintenanceRate}%</span>
                 </div>
                 <Progress value={insights.maintenanceInsights.maintenanceRate} className="h-2" />
@@ -129,23 +135,22 @@ const EquipmentInsights: React.FC<EquipmentInsightsProps> = ({
           </CardContent>
         </Card>
 
-        {/* Warranty Insights */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <AlertTriangle className="h-4 w-4 mr-2" />
-              Warranty Status
+              {t('equipmentInsights.warrantyStatus')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Expiring Soon</span>
+              <span className="text-sm">{t('equipmentInsights.expiringSoon')}</span>
               <Badge variant={insights.warrantyInsights.expiringSoon > 0 ? "destructive" : "secondary"}>
                 {insights.warrantyInsights.expiringSoon}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Expired</span>
+              <span className="text-sm">{t('equipmentInsights.expired')}</span>
               <Badge variant={insights.warrantyInsights.expired > 0 ? "destructive" : "secondary"}>
                 {insights.warrantyInsights.expired}
               </Badge>
@@ -153,18 +158,17 @@ const EquipmentInsights: React.FC<EquipmentInsightsProps> = ({
             {insights.warrantyInsights.hasWarrantyIssues && (
               <div className="text-xs text-muted-foreground">
                 <AlertTriangle className="h-3 w-3 inline mr-1" />
-                Attention required
+                {t('equipmentInsights.attentionRequired')}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Top Locations */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <MapPin className="h-4 w-4 mr-2" />
-              Top Locations
+              {t('equipmentInsights.topLocations')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -180,17 +184,16 @@ const EquipmentInsights: React.FC<EquipmentInsightsProps> = ({
                 </div>
               ))
             ) : (
-              <div className="text-sm text-muted-foreground">No data available</div>
+              <div className="text-sm text-muted-foreground">{t('equipmentInsights.noData')}</div>
             )}
           </CardContent>
         </Card>
 
-        {/* Top Manufacturers */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Forklift className="h-4 w-4 mr-2" />
-              Top Manufacturers
+              {t('equipmentInsights.topManufacturers')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -206,7 +209,7 @@ const EquipmentInsights: React.FC<EquipmentInsightsProps> = ({
                 </div>
               ))
             ) : (
-              <div className="text-sm text-muted-foreground">No data available</div>
+              <div className="text-sm text-muted-foreground">{t('equipmentInsights.noData')}</div>
             )}
           </CardContent>
         </Card>

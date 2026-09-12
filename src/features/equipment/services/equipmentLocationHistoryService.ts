@@ -17,13 +17,6 @@ export interface EquipmentLocationHistoryRow {
   created_at: string;
 }
 
-export const LOCATION_HISTORY_SOURCE_LABELS: Record<EquipmentLocationHistorySource, string> = {
-  scan: 'Scan GPS',
-  manual: 'Manual address',
-  team_sync: 'Team sync',
-  quickbooks: 'QuickBooks',
-};
-
 export interface LocationChangeParams {
   equipmentId: string;
   source: 'manual' | 'team_sync' | 'quickbooks';

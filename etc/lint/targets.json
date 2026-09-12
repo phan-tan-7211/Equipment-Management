@@ -106,12 +106,12 @@
       "batch": {
         "steps": [
           {
-            "argv": ["--format", "json", "--quiet", "--summary"],
-            "contract": { "kind": "fallow-unused", "maxIssues": 0 }
+            "argv": ["--format", "json", "--quiet", "--fail-on-issues"],
+            "contract": { "kind": "exit-code" }
           },
           {
-            "argv": ["dupes", "--format", "json", "--quiet"],
-            "contract": { "kind": "fallow-dupes", "maxCloneGroups": 0 }
+            "argv": ["dupes", "--format", "json", "--quiet", "--fail-on-issues"],
+            "contract": { "kind": "exit-code" }
           }
         ]
       }

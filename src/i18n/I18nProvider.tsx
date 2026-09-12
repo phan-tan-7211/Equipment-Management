@@ -15,15 +15,26 @@ import { equipmentDeleteResources } from './equipmentDeleteResources';
 import { equipmentDetailsResources } from './equipmentDetailsResources';
 import { equipmentPMResources } from './equipmentPMResources';
 import { equipmentInsightsResources } from './equipmentInsightsResources';
+import { equipmentQRScanResources } from './equipmentQRScanResources';
+import { equipmentScanResources } from './equipmentScanResources';
+import { equipmentGroupResources } from './equipmentGroupResources';
+import { equipmentMediaResources } from './equipmentMediaResources';
+import { equipmentMutationResources } from './equipmentMutationResources';
+import { equipmentScannerResources } from './equipmentScannerResources';
+import { equipmentPartsResources } from './equipmentPartsResources';
+import { equipmentInlineResources } from './equipmentInlineResources';
+import { equipmentListResources } from './equipmentListResources';
+import { equipmentMobileResources } from './equipmentMobileResources';
+import { equipmentFinalizeResources } from './equipmentFinalizeResources';
 
 export type Language = 'vi' | 'en' | 'ko';
 
 const STORAGE_KEY = 'znteqr-language';
 
 const resources = {
-  vi: { ...vi, ...coreResources.vi, ...dashboardWidgetResources.vi, ...equipmentResources.vi, ...equipmentFormResources.vi, ...equipmentBulkResources.vi, ...equipmentAuxResources.vi, ...equipmentImportResources.vi, ...equipmentLocationResources.vi, ...equipmentCustomAttributeResources.vi, ...equipmentDeleteResources.vi, ...equipmentDetailsResources.vi, ...equipmentPMResources.vi, ...equipmentInsightsResources.vi },
-  en: { ...en, ...coreResources.en, ...dashboardWidgetResources.en, ...equipmentResources.en, ...equipmentFormResources.en, ...equipmentBulkResources.en, ...equipmentAuxResources.en, ...equipmentImportResources.en, ...equipmentLocationResources.en, ...equipmentCustomAttributeResources.en, ...equipmentDeleteResources.en, ...equipmentDetailsResources.en, ...equipmentPMResources.en, ...equipmentInsightsResources.en },
-  ko: { ...ko, ...coreResources.ko, ...dashboardWidgetResources.ko, ...equipmentResources.ko, ...equipmentFormResources.ko, ...equipmentBulkResources.ko, ...equipmentAuxResources.ko, ...equipmentImportResources.ko, ...equipmentLocationResources.ko, ...equipmentCustomAttributeResources.ko, ...equipmentDeleteResources.ko, ...equipmentDetailsResources.ko, ...equipmentPMResources.ko, ...equipmentInsightsResources.ko },
+  vi: { ...vi, ...coreResources.vi, ...dashboardWidgetResources.vi, ...equipmentResources.vi, ...equipmentFormResources.vi, ...equipmentBulkResources.vi, ...equipmentAuxResources.vi, ...equipmentImportResources.vi, ...equipmentLocationResources.vi, ...equipmentCustomAttributeResources.vi, ...equipmentDeleteResources.vi, ...equipmentDetailsResources.vi, ...equipmentPMResources.vi, ...equipmentInsightsResources.vi, ...equipmentQRScanResources.vi, ...equipmentScanResources.vi, ...equipmentGroupResources.vi, ...equipmentMediaResources.vi, ...equipmentMutationResources.vi, ...equipmentScannerResources.vi, ...equipmentPartsResources.vi, ...equipmentInlineResources.vi, ...equipmentListResources.vi, ...equipmentMobileResources.vi, ...equipmentFinalizeResources.vi },
+  en: { ...en, ...coreResources.en, ...dashboardWidgetResources.en, ...equipmentResources.en, ...equipmentFormResources.en, ...equipmentBulkResources.en, ...equipmentAuxResources.en, ...equipmentImportResources.en, ...equipmentLocationResources.en, ...equipmentCustomAttributeResources.en, ...equipmentDeleteResources.en, ...equipmentDetailsResources.en, ...equipmentPMResources.en, ...equipmentInsightsResources.en, ...equipmentQRScanResources.en, ...equipmentScanResources.en, ...equipmentGroupResources.en, ...equipmentMediaResources.en, ...equipmentMutationResources.en, ...equipmentScannerResources.en, ...equipmentPartsResources.en, ...equipmentInlineResources.en, ...equipmentListResources.en, ...equipmentMobileResources.en, ...equipmentFinalizeResources.en },
+  ko: { ...ko, ...coreResources.ko, ...dashboardWidgetResources.ko, ...equipmentResources.ko, ...equipmentFormResources.ko, ...equipmentBulkResources.ko, ...equipmentAuxResources.ko, ...equipmentImportResources.ko, ...equipmentLocationResources.ko, ...equipmentCustomAttributeResources.ko, ...equipmentDeleteResources.ko, ...equipmentDetailsResources.ko, ...equipmentPMResources.ko, ...equipmentInsightsResources.ko, ...equipmentQRScanResources.ko, ...equipmentScanResources.ko, ...equipmentGroupResources.ko, ...equipmentMediaResources.ko, ...equipmentMutationResources.ko, ...equipmentScannerResources.ko, ...equipmentPartsResources.ko, ...equipmentInlineResources.ko, ...equipmentListResources.ko, ...equipmentMobileResources.ko, ...equipmentFinalizeResources.ko },
 } as const;
 
 type TranslationParams = Record<string, string | number>;
@@ -61,6 +72,18 @@ function interpolate(value: string, params?: TranslationParams): string {
   });
 }
 
+function translateEnglish(key: string, params?: TranslationParams): string {
+  const fallback = getNestedValue(resources.en, key);
+  const value = typeof fallback === 'string' ? fallback : key;
+  return interpolate(value, params);
+}
+
+const fallbackI18nContext: I18nContextValue = {
+  language: 'en',
+  setLanguage: () => undefined,
+  t: translateEnglish,
+};
+
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(resolveInitialLanguage);
   const setLanguage = useCallback((nextLanguage: Language) => {
@@ -84,7 +107,5 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export function useI18n(): I18nContextValue {
-  const context = useContext(I18nContext);
-  if (!context) throw new Error('useI18n must be used within I18nProvider');
-  return context;
+  return useContext(I18nContext) ?? fallbackI18nContext;
 }

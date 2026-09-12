@@ -32,6 +32,7 @@ import { useBrowserOnline } from '@/hooks/useBrowserOnline';
 import { useEquipmentById } from '@/features/equipment/hooks/useEquipment';
 import { useTeamMembership } from '@/features/teams/hooks/useTeamMembership';
 import { isOrgAdminRole } from '@/features/teams/utils/teamAccessScope';
+import { useI18n } from '@/i18n';
 
 type EquipmentStatus = Database['public']['Enums']['equipment_status'];
 
@@ -53,11 +54,8 @@ function getStatusClasses(status: EquipmentStatus): string {
   }
 }
 
-function getStatusLabel(status: EquipmentStatus): string {
-  return status.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-}
-
 const EquipmentQRScan = (): React.JSX.Element => {
+  const { t } = useI18n();
   const { equipmentId } = useParams<{ equipmentId: string }>();
   const [searchParams] = useSearchParams();
   const orgIdFromUrl = searchParams.get('org') ?? undefined;
@@ -125,9 +123,9 @@ const EquipmentQRScan = (): React.JSX.Element => {
           setPayloadLoadGeneration(g => g + 1);
         }
       })
-      .catch(loadError => {
+      .catch(() => {
         if (!cancelled) {
-          setError(loadError instanceof Error ? loadError.message : 'Unable to load equipment');
+          setError('load_failed');
         }
       })
       .finally(() => {
@@ -190,6 +188,7 @@ const EquipmentQRScan = (): React.JSX.Element => {
       const orgAllowsLocation = payload.organization.scan_location_collection_enabled;
       const userLimitedPi = await userLimitsSensitivePi(user.id);
 
+      // Scan notes are persisted canonical audit content, not presentation labels.
       if (!orgAllowsLocation || userLimitedPi || !('geolocation' in navigator)) {
         return logWithoutLocation('QR code scan');
       }
@@ -268,7 +267,7 @@ const EquipmentQRScan = (): React.JSX.Element => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-5 w-5" />
-              Unable to Open Equipment
+              {t('equipmentQRScan.unableOpen')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -276,8 +275,10 @@ const EquipmentQRScan = (): React.JSX.Element => {
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 {canOpenCachedEquipment
-                  ? 'You are offline. Open the cached equipment record from your last session, or reconnect to load live QR details.'
-                  : error || 'Equipment not found'}
+                  ? t('equipmentQRScan.offlineCached')
+                  : error
+                    ? t('equipmentQRScan.loadFailed')
+                    : t('equipmentQRScan.notFound')}
               </AlertDescription>
             </Alert>
             {canOpenCachedEquipment ? (
@@ -285,11 +286,11 @@ const EquipmentQRScan = (): React.JSX.Element => {
                 className="w-full"
                 onClick={() => window.location.assign(`/dashboard/equipment/${equipmentId}`)}
               >
-                Open Cached Equipment
+                {t('equipmentQRScan.openCached')}
               </Button>
             ) : null}
             <Button className="w-full" variant={canOpenCachedEquipment ? 'outline' : 'default'} onClick={() => window.location.assign('/dashboard')}>
-              Go to Dashboard
+              {t('equipmentQRScan.goDashboard')}
             </Button>
           </CardContent>
         </Card>
@@ -300,6 +301,14 @@ const EquipmentQRScan = (): React.JSX.Element => {
   const { equipment, organization } = payload;
   const currentYear = new Date().getFullYear();
   const heroImageSrc = heroImageUrl && !heroImageFailed ? heroImageUrl : null;
+  const statusLabel =
+    equipment.status === 'active'
+      ? t('equipmentDetails.active')
+      : equipment.status === 'maintenance'
+        ? t('equipmentDetails.maintenance')
+        : equipment.status === 'inactive'
+          ? t('equipmentDetails.inactive')
+          : equipment.status;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -308,16 +317,16 @@ const EquipmentQRScan = (): React.JSX.Element => {
           <a
             href={PRODUCTION_URL}
             className="flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            aria-label="Open EquipQR production site"
+            aria-label={t('equipmentQRScan.productionAria')}
           >
             <EquipQRIcon className="h-9 w-9" title="" />
             <div>
               <p className="text-sm font-semibold">EquipQR</p>
-              <p className="text-xs text-muted-foreground">Scanned equipment</p>
+              <p className="text-xs text-muted-foreground">{t('equipmentQRScan.scannedEquipment')}</p>
             </div>
           </a>
           <Badge variant="outline" className={getStatusClasses(equipment.status)}>
-            {getStatusLabel(equipment.status)}
+            {statusLabel}
           </Badge>
         </div>
 
@@ -353,26 +362,28 @@ const EquipmentQRScan = (): React.JSX.Element => {
               <div className="rounded-lg border bg-card p-3">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  Location
+                  {t('equipmentQRScan.location')}
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {equipment.location || 'No location set'}
+                  {equipment.location || t('equipmentQRScan.noLocation')}
                 </p>
               </div>
               <div className="rounded-lg border bg-card p-3">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  Working Hours
+                  {t('equipmentQRScan.workingHours')}
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {equipment.workingHours == null ? 'Not recorded' : `${equipment.workingHours} hours`}
+                  {equipment.workingHours == null
+                    ? t('equipmentQRScan.notRecorded')
+                    : t('equipmentQRScan.hoursValue', { count: equipment.workingHours })}
                 </p>
               </div>
             </div>
 
             {equipment.team && (
               <div className="rounded-lg border bg-card p-3">
-                <p className="text-sm font-medium">Assigned Team</p>
+                <p className="text-sm font-medium">{t('equipmentQRScan.assignedTeam')}</p>
                 <p className="mt-1 text-sm text-muted-foreground">{equipment.team.name}</p>
               </div>
             )}
@@ -380,13 +391,13 @@ const EquipmentQRScan = (): React.JSX.Element => {
             <div className="rounded-lg border bg-muted/40 p-3 text-sm">
               <p className="font-medium">
                 {scanStatus === 'logged'
-                  ? 'Scan recorded'
+                  ? t('equipmentQRScan.scanRecorded')
                   : scanStatus === 'failed'
-                    ? 'Equipment loaded, scan log failed'
-                    : 'Recording scan...'}
+                    ? t('equipmentQRScan.scanLogFailed')
+                    : t('equipmentQRScan.recordingScan')}
               </p>
               <p className="mt-1 text-muted-foreground">
-                Use quick actions below for field updates, or continue to the full dashboard record for parts, scans, and history.
+                {t('equipmentQRScan.quickActionsHint')}
               </p>
             </div>
 
@@ -411,7 +422,7 @@ const EquipmentQRScan = (): React.JSX.Element => {
                   scanId={scanId}
                   userRole={payload.userRole as Role}
                   userDisplayName={
-                    (user?.user_metadata?.name as string | undefined) || user?.email?.split('@')[0] || 'User'
+                    (user?.user_metadata?.name as string | undefined) || user?.email?.split('@')[0] || t('common.user')
                   }
                   onWorkingHoursUpdated={(newHours) =>
                     setPayload((prev) =>
@@ -423,15 +434,15 @@ const EquipmentQRScan = (): React.JSX.Element => {
             )}
 
             <Button className="w-full" size="lg" onClick={openDashboardRecord}>
-              Open Full Dashboard Record
+              {t('equipmentQRScan.openFullRecord')}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>
 
         <footer className="mt-5 text-center text-[11px] leading-relaxed text-muted-foreground">
-          <p>© {currentYear} ZNT LLC. All rights reserved.</p>
-          <p>EquipQR™ is a trademark of ZNT LLC.</p>
+          <p>© {currentYear} ZNT LLC. {t('equipmentQRScan.allRightsReserved')}</p>
+          <p>{t('equipmentQRScan.trademark')}</p>
         </footer>
       </main>
     </div>

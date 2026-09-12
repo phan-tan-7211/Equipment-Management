@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCreateScan } from '@/features/equipment/hooks/useEquipment';
 import type { Equipment } from '@/features/equipment/types/equipment';
+import { useI18n } from '@/i18n';
 
 type UseEquipmentScanLoggerParams = {
   equipmentId: string | undefined;
@@ -25,6 +26,7 @@ export function useEquipmentScanLogger({
   equipmentName,
   organizationName,
 }: UseEquipmentScanLoggerParams) {
+  const { t } = useI18n();
   const { user } = useAuth();
   const createScanMutation = useCreateScan(organizationId || '');
   const [scanLogged, setScanLogged] = useState(false);
@@ -61,10 +63,10 @@ export function useEquipmentScanLogger({
             includeProfile: false,
             notes: 'QR code scan',
           });
-          toast.success('Equipment scanned successfully!');
+          toast.success(t('equipmentScan.scannedSuccessfully'));
         } catch (error) {
           console.error('Failed to log scan:', error);
-          toast.error('Failed to log scan');
+          toast.error(t('equipmentScan.logFailed'));
         }
         return;
       }
@@ -81,10 +83,10 @@ export function useEquipmentScanLogger({
                 location,
                 notes: 'QR code scan with location',
               });
-              toast.success('Equipment scanned successfully!');
+              toast.success(t('equipmentScan.scannedSuccessfully'));
             } catch (error) {
               console.error('Failed to log scan with location:', error);
-              toast.error('Failed to log scan');
+              toast.error(t('equipmentScan.logFailed'));
             }
           },
           async () => {
@@ -94,10 +96,10 @@ export function useEquipmentScanLogger({
                 includeProfile: false,
                 notes: 'QR code scan (location denied)',
               });
-              toast.success('Equipment scanned successfully!');
+              toast.success(t('equipmentScan.scannedSuccessfully'));
             } catch (scanError) {
               console.error('Failed to log scan without location:', scanError);
-              toast.error('Failed to log scan');
+              toast.error(t('equipmentScan.logFailed'));
             }
           },
           {
@@ -113,15 +115,15 @@ export function useEquipmentScanLogger({
             includeProfile: false,
             notes: 'QR code scan (no location support)',
           });
-          toast.success('Equipment scanned successfully!');
+          toast.success(t('equipmentScan.scannedSuccessfully'));
         } catch (error) {
           console.error('Failed to log scan without location support:', error);
-          toast.error('Failed to log scan');
+          toast.error(t('equipmentScan.logFailed'));
         }
       }
     } catch (error) {
       console.error('Unexpected error during scan logging:', error);
-      toast.error('Failed to log scan');
+      toast.error(t('equipmentScan.logFailed'));
     }
   }, [
     equipmentId,
@@ -130,12 +132,16 @@ export function useEquipmentScanLogger({
     createScanMutation,
     userPrivacyPrefs,
     scanLocationCollectionEnabled,
+    t,
   ]);
 
   useEffect(() => {
     if (isQRScan && equipment && equipmentId && organizationId && !scanLogged && !privacyPrefsLoading) {
-      toast.success('QR Code scanned successfully!', {
-        description: `Viewing ${equipmentName} in ${organizationName}`,
+      toast.success(t('equipmentScan.qrScannedSuccessfully'), {
+        description: t('equipmentScan.viewingIn', {
+          equipment: equipmentName ?? '',
+          organization: organizationName ?? '',
+        }),
         duration: 4000,
       });
 
@@ -151,6 +157,7 @@ export function useEquipmentScanLogger({
     scanLogged,
     logScan,
     privacyPrefsLoading,
+    t,
   ]);
 
   return { privacyPrefsLoading };

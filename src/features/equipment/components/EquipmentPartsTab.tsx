@@ -10,6 +10,7 @@ import { usePartsFiltering } from '@/features/equipment/hooks/usePartsFiltering'
 import { DesktopPartsToolbar, MobilePartsToolbar } from './parts-tab';
 import type { PartialInventoryItem } from '@/features/inventory/types/inventory';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 interface EquipmentPartsTabProps {
   equipmentId: string;
@@ -23,23 +24,25 @@ interface PartCardProps {
 }
 
 const PartCard: React.FC<PartCardProps> = ({ part, onClick, isMobile }) => {
+  const { t } = useI18n();
   const isLowStock = part.quantity_on_hand < part.low_stock_threshold;
   const isOutOfStock = part.quantity_on_hand <= 0;
 
   return (
-    <Card 
+    <Card
       className={cn(
-        "cursor-pointer transition-colors hover:bg-accent/50",
-        isOutOfStock && "border-destructive/50"
+        'cursor-pointer transition-colors hover:bg-accent/50',
+        isOutOfStock && 'border-destructive/50',
       )}
       onClick={onClick}
     >
-      <CardContent className={cn("flex gap-4", isMobile ? "p-3" : "p-4")}>
-        {/* Image or placeholder */}
-        <div className={cn(
-          "flex-shrink-0 rounded-md bg-muted flex items-center justify-center overflow-hidden relative",
-          isMobile ? "h-12 w-12" : "h-16 w-16"
-        )}>
+      <CardContent className={cn('flex gap-4', isMobile ? 'p-3' : 'p-4')}>
+        <div
+          className={cn(
+            'flex-shrink-0 rounded-md bg-muted flex items-center justify-center overflow-hidden relative',
+            isMobile ? 'h-12 w-12' : 'h-16 w-16',
+          )}
+        >
           {part.image_url ? (
             <img
               src={part.image_url}
@@ -49,67 +52,63 @@ const PartCard: React.FC<PartCardProps> = ({ part, onClick, isMobile }) => {
               decoding="async"
             />
           ) : (
-            <Package className={cn("text-muted-foreground", isMobile ? "h-6 w-6" : "h-8 w-8")} />
+            <Package className={cn('text-muted-foreground', isMobile ? 'h-6 w-6' : 'h-8 w-8')} />
           )}
-          {/* Alternates indicator on image */}
           {part.hasAlternates && (
-            <div 
+            <div
               className="absolute -top-1 -right-1 h-4 w-4 bg-info rounded-full flex items-center justify-center"
-              title="Has alternates"
+              title={t('equipmentParts.hasAlternates')}
             >
               <RefreshCw className="h-2.5 w-2.5 text-primary-foreground" />
             </div>
           )}
         </div>
 
-        {/* Part details */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h4 className={cn(
-                  "font-medium truncate",
-                  isMobile ? "text-sm" : "text-base"
-                )}>
+                <h4 className={cn('font-medium truncate', isMobile ? 'text-sm' : 'text-base')}>
                   {part.name}
                 </h4>
-                {/* Alternates badge - shown on non-mobile for clarity */}
                 {part.hasAlternates && !isMobile && (
                   <Badge variant="outline" className="text-xs bg-info/10 text-info border-info/30 dark:bg-info/20 dark:text-info dark:border-info/40 shrink-0">
                     <RefreshCw className="h-3 w-3 mr-1" />
-                    Alternates
+                    {t('equipmentParts.alternates')}
                   </Badge>
                 )}
               </div>
               {part.sku && (
-                <p className="text-xs text-muted-foreground truncate">
-                  SKU: {part.sku}
-                </p>
+                <p className="text-xs text-muted-foreground truncate">SKU: {part.sku}</p>
               )}
             </div>
-            
-            {/* Stock badges */}
+
             <div className="flex-shrink-0 flex flex-col items-end gap-1">
               {isOutOfStock ? (
                 <Badge variant="destructive" className="text-xs">
-                  Out of Stock
+                  {t('equipmentParts.outOfStock')}
                 </Badge>
               ) : isLowStock ? (
                 <Badge variant="secondary" className="text-xs bg-warning/20 text-warning dark:bg-warning/20 dark:text-warning">
                   <AlertTriangle className="h-3 w-3 mr-1" />
-                  Low Stock
+                  {t('equipmentParts.lowStock')}
                 </Badge>
               ) : null}
-              <span className={cn(
-                "text-sm font-medium",
-                isOutOfStock ? "text-destructive" : isLowStock ? "text-warning dark:text-warning" : "text-foreground"
-              )}>
-                {part.quantity_on_hand} in stock
+              <span
+                className={cn(
+                  'text-sm font-medium',
+                  isOutOfStock
+                    ? 'text-destructive'
+                    : isLowStock
+                      ? 'text-warning dark:text-warning'
+                      : 'text-foreground',
+                )}
+              >
+                {t('equipmentParts.inStockCount', { count: part.quantity_on_hand })}
               </span>
             </div>
           </div>
 
-          {/* Location and mobile alternates indicator */}
           <div className="flex items-center gap-2 mt-1">
             {part.location && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -117,11 +116,10 @@ const PartCard: React.FC<PartCardProps> = ({ part, onClick, isMobile }) => {
                 <span className="truncate">{part.location}</span>
               </div>
             )}
-            {/* Alternates indicator for mobile */}
             {part.hasAlternates && isMobile && (
               <div className="flex items-center gap-1 text-xs text-info dark:text-info">
                 <RefreshCw className="h-3 w-3" />
-                <span>Alternates</span>
+                <span>{t('equipmentParts.alternates')}</span>
               </div>
             )}
           </div>
@@ -135,16 +133,15 @@ const EquipmentPartsTab: React.FC<EquipmentPartsTabProps> = ({
   equipmentId,
   organizationId,
 }) => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // Fetch compatible parts using the existing hook
   const { data: compatibleParts = [], isLoading } = useCompatibleInventoryItems(
     organizationId,
-    [equipmentId]
+    [equipmentId],
   );
 
-  // Filtering and sorting
   const {
     filters,
     filteredParts,
@@ -161,18 +158,14 @@ const EquipmentPartsTab: React.FC<EquipmentPartsTabProps> = ({
     navigate(`/dashboard/inventory/${itemId}`);
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className={isMobile ? "p-3" : "p-4"}>
+        {[...Array(3)].map((_, index) => (
+          <Card key={index}>
+            <CardContent className={isMobile ? 'p-3' : 'p-4'}>
               <div className="flex gap-4">
-                <div className={cn(
-                  "bg-muted animate-pulse rounded-md",
-                  isMobile ? "h-12 w-12" : "h-16 w-16"
-                )} />
+                <div className={cn('bg-muted animate-pulse rounded-md', isMobile ? 'h-12 w-12' : 'h-16 w-16')} />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
                   <div className="h-3 bg-muted animate-pulse rounded w-1/2" />
@@ -186,51 +179,50 @@ const EquipmentPartsTab: React.FC<EquipmentPartsTabProps> = ({
     );
   }
 
-  // No compatible parts at all
   if (compatibleParts.length === 0) {
     return (
       <div className="space-y-6">
         <div className={isMobile ? 'text-center' : ''}>
-          <h3 className={cn("font-semibold", isMobile ? "text-base" : "text-lg")}>
-            Compatible Parts
+          <h3 className={cn('font-semibold', isMobile ? 'text-base' : 'text-lg')}>
+            {t('equipmentParts.compatibleParts')}
           </h3>
           <p className="text-sm text-muted-foreground">
-            0 parts compatible with this equipment
+            {t('equipmentParts.compatibleCountPlural', { count: 0 })}
           </p>
         </div>
         <Card>
           <CardContent className="text-center py-12">
             <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No compatible parts</h3>
-            <p className="text-muted-foreground">
-              No inventory items have been linked to this equipment yet.
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Parts can be linked via compatibility rules based on manufacturer and model,
-              or directly from the inventory item details page.
-            </p>
+            <h3 className="text-lg font-semibold mb-2">{t('equipmentParts.noCompatibleParts')}</h3>
+            <p className="text-muted-foreground">{t('equipmentParts.noCompatiblePartsDescription')}</p>
+            <p className="text-sm text-muted-foreground mt-2">{t('equipmentParts.compatibilityHint')}</p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
+  const compatibleCountKey =
+    compatibleParts.length === 1
+      ? 'equipmentParts.compatibleCount'
+      : 'equipmentParts.compatibleCountPlural';
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className={isMobile ? 'text-center' : ''}>
-        <h3 className={cn("font-semibold", isMobile ? "text-base" : "text-lg")}>
-          Compatible Parts
+        <h3 className={cn('font-semibold', isMobile ? 'text-base' : 'text-lg')}>
+          {t('equipmentParts.compatibleParts')}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {hasActiveFilters 
-            ? `Showing ${filteredParts.length} of ${compatibleParts.length} parts`
-            : `${compatibleParts.length} ${compatibleParts.length === 1 ? 'part' : 'parts'} compatible with this equipment`
-          }
+          {hasActiveFilters
+            ? t('equipmentParts.showing', {
+                filtered: filteredParts.length,
+                total: compatibleParts.length,
+              })
+            : t(compatibleCountKey, { count: compatibleParts.length })}
         </p>
       </div>
 
-      {/* Toolbar */}
       {isMobile ? (
         <MobilePartsToolbar
           filters={filters}
@@ -254,18 +246,15 @@ const EquipmentPartsTab: React.FC<EquipmentPartsTabProps> = ({
         />
       )}
 
-      {/* Parts List */}
       <div className="space-y-3">
         {filteredParts.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
               <SearchX className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No parts match your filters</h3>
-              <p className="text-muted-foreground mb-4">
-                Try adjusting your search or filter criteria.
-              </p>
+              <h3 className="text-lg font-semibold mb-2">{t('equipmentParts.noFilterMatches')}</h3>
+              <p className="text-muted-foreground mb-4">{t('equipmentParts.adjustFilters')}</p>
               <Button variant="outline" onClick={clearFilters}>
-                Clear Filters
+                {t('equipmentParts.clearFilters')}
               </Button>
             </CardContent>
           </Card>
@@ -285,4 +274,3 @@ const EquipmentPartsTab: React.FC<EquipmentPartsTabProps> = ({
 };
 
 export default EquipmentPartsTab;
-

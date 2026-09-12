@@ -5,10 +5,6 @@ import { createMockSimpleOrgValue } from '@vitest-harness/utils/mock-provider-va
 import LegalFooter from './LegalFooter';
 import { useSimpleOrganizationSafe } from '@/hooks/useSimpleOrganization';
 
-vi.mock('@/lib/documentationUrl', () => ({
-  SUPPORT_DOCS_URL: 'http://localhost:5174/support',
-}));
-
 vi.mock('@/hooks/useSimpleOrganization', () => ({
   useSimpleOrganizationSafe: vi.fn(),
 }));
@@ -21,7 +17,7 @@ describe('LegalFooter', () => {
 
     expect(screen.getByRole('link', { name: 'Help Center' })).toHaveAttribute(
       'href',
-      'http://localhost:5174/support',
+      'https://equipqr.info/support',
     );
   });
 
@@ -30,7 +26,7 @@ describe('LegalFooter', () => {
 
     render(<LegalFooter />);
 
-    expect(screen.getByRole('link', { name: /view release notes for equipqr version/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /view release notes for znteqr version/i })).toHaveAttribute(
       'href',
       '/releases',
     );

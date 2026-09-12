@@ -128,7 +128,7 @@ export function EquipmentBasicInfoCard({
           </div>
 
           <div>
-            <span className="text-sm font-medium text-muted-foreground">Management Code</span>
+            <span className="text-sm font-medium text-muted-foreground">{t('equipmentGroups.managementCode')}</span>
             <div className="mt-1 min-h-9 rounded-md border bg-muted/30 px-3 py-2 font-mono text-sm font-semibold text-foreground">
               {managementCode || '—'}
             </div>

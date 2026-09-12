@@ -132,7 +132,7 @@ describe('SignUpForm', () => {
   });
 
   describe('Password Validation', () => {
-    it('should show password length validation error', async () => {
+    it('should show password validation error', async () => {
       const { user, passwordInput } = setupSignUpPasswordFields();
       await user.type(passwordInput, '123');
       fireEvent.blur(passwordInput);
@@ -140,7 +140,7 @@ describe('SignUpForm', () => {
       const fieldRoot = passwordInput.closest('div.space-y-2');
       const inlineError = fieldRoot?.querySelector('p.text-destructive');
       expect(inlineError).toBeTruthy();
-      expect(inlineError).toHaveTextContent(/At least 12 characters/i);
+      expect(inlineError).toHaveTextContent(/Password does not meet requirements/i);
     });
 
     it('should not show password length error for valid password', async () => {
@@ -706,7 +706,7 @@ describe('SignUpForm', () => {
     it('should show info banner when invitedOrgName is provided', () => {
       withRouter(<SignUpForm {...defaultSignUpFormProps} invitedOrgName="Acme Corporation" />);
 
-      expect(screen.getByText(/You'll join/i)).toBeInTheDocument();
+      expect(screen.getByText(/You[’']ll join/i)).toBeInTheDocument();
       expect(screen.getByText(/Acme Corporation/i)).toBeInTheDocument();
       expect(screen.getByText(/choose a different name for your own workspace/i)).toBeInTheDocument();
     });
@@ -796,7 +796,7 @@ describe('SignUpForm', () => {
     it('should not show banner when no invitation', () => {
       withRouter(<SignUpForm {...defaultSignUpFormProps} />);
 
-      expect(screen.queryByText(/You'll join/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/You[’']ll join/i)).not.toBeInTheDocument();
     });
   });
 });

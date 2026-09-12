@@ -36,6 +36,17 @@ export const MobileEquipmentFilters: React.FC<MobileEquipmentFiltersProps> = ({ 
   const mobileLocationFilterId = 'equipment-location-filter-mobile';
   const mobileSortSelectId = 'equipment-sort-select-mobile';
   const hasNonDefaultSort = sortConfig.field !== DEFAULT_SORT.field || sortConfig.direction !== DEFAULT_SORT.direction;
+  const localizedSortOptions = React.useMemo(
+    () => EQUIPMENT_SORT_FIELD_OPTIONS.map((option) => ({ ...option, label: t(option.labelKey) })),
+    [t],
+  );
+  const statusLabels: Record<string, string> = {
+    active: t('equipmentList.active'),
+    maintenance: t('equipmentList.maintenance'),
+    inactive: t('equipmentList.inactive'),
+    out_of_service: t('equipmentList.outOfService'),
+  };
+
   React.useEffect(() => { setIsFilterSheetOpen(showMobileFilters); }, [showMobileFilters]);
   const handleFilterSheetOpenChange = (open: boolean) => { setIsFilterSheetOpen(open); onShowMobileFiltersChange(open); };
   const handleSortFieldChange = (field: string) => { if (sortConfig.field === field) { onSortChange(field, sortConfig.direction === 'asc' ? 'desc' : 'asc'); return; } onSortChange(field, getEquipmentSortFieldDefaultOrder(field)); };
@@ -49,14 +60,14 @@ export const MobileEquipmentFilters: React.FC<MobileEquipmentFiltersProps> = ({ 
           <Input id={mobileSearchInputId} placeholder={t('equipment.searchPlaceholder')} value={filters.search} onChange={(e) => onFilterChange('search', e.target.value)} className="h-11 pl-9" aria-label={t('equipment.searchAria')} />
         </div>
         <MobileListPersonalizationSheet open={isPersonalizationOpen} onOpenChange={setIsPersonalizationOpen} hasNonDefaultSort={hasNonDefaultSort} description={t('equipment.sortDescription')}>
-          <div className="space-y-2"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('equipment.sortBy')}</p><ListSortFieldControls sortField={sortConfig.field} sortOrder={sortConfig.direction} options={EQUIPMENT_SORT_FIELD_OPTIONS} onFieldChange={handleSortFieldChange} onOrderToggle={toggleSortOrder} fieldSelectAriaLabel={t('equipment.sortFieldAria')} selectTriggerId={mobileSortSelectId} /></div>
+          <div className="space-y-2"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('equipment.sortBy')}</p><ListSortFieldControls sortField={sortConfig.field} sortOrder={sortConfig.direction} options={localizedSortOptions} onFieldChange={handleSortFieldChange} onOrderToggle={toggleSortOrder} fieldSelectAriaLabel={t('equipment.sortFieldAria')} selectTriggerId={mobileSortSelectId} /></div>
         </MobileListPersonalizationSheet>
         <Sheet open={isFilterSheetOpen} onOpenChange={handleFilterSheetOpenChange}>
           <SheetTrigger asChild><Button variant="outline" size="icon" className="relative h-11 w-11 shrink-0" aria-label={activeFilterCount > 0 ? t('equipment.openFiltersActive', { count: activeFilterCount }) : t('equipment.openFilters')}><Filter className="h-4 w-4" aria-hidden />{activeFilterCount > 0 && <Badge variant="secondary" className="absolute -right-1 -top-1 h-5 min-w-5 px-1 text-[10px]">{activeFilterCount}</Badge>}</Button></SheetTrigger>
           <MobileToolbarSheetContent className="flex flex-col overflow-hidden p-0">
             <div className="shrink-0 p-6 pb-4"><SheetHeader><SheetTitle>{t('equipment.filterEquipment')}</SheetTitle><SheetDescription>{t('equipment.filterDescription')}</SheetDescription></SheetHeader></div>
             <ScrollArea className="min-h-0 flex-1 px-6"><div className="space-y-6 pb-6">
-              <div className="space-y-3"><h3 className="text-sm font-medium">{t('equipment.quickFilters')}</h3><div className="flex flex-wrap gap-2">{EQUIPMENT_QUICK_FILTERS.map((preset) => { const isActive = activeQuickFilter === preset.value; return <Button key={preset.value} size="sm" variant={isActive ? 'default' : 'outline'} className="min-h-11 whitespace-nowrap" onClick={() => onQuickFilter(preset.value)}>{isActive && <Check className="mr-1 h-3 w-3" aria-hidden />}{preset.label}</Button>; })}</div></div>
+              <div className="space-y-3"><h3 className="text-sm font-medium">{t('equipment.quickFilters')}</h3><div className="flex flex-wrap gap-2">{EQUIPMENT_QUICK_FILTERS.map((preset) => { const isActive = activeQuickFilter === preset.value; return <Button key={preset.value} size="sm" variant={isActive ? 'default' : 'outline'} className="min-h-11 whitespace-nowrap" onClick={() => onQuickFilter(preset.value)}>{isActive && <Check className="mr-1 h-3 w-3" aria-hidden />}{t(preset.labelKey)}</Button>; })}</div></div>
               <div className="space-y-4"><h3 className="text-sm font-medium">{t('equipment.filters')}</h3><div className="space-y-3">
                 <div><label htmlFor={mobileStatusFilterId} className="mb-2 block text-sm font-medium">{t('equipment.status')}</label><EquipmentStatusSelect value={filters.status} onValueChange={(value) => onFilterChange('status', value)} placeholder={t('equipment.allStatus')} triggerId={mobileStatusFilterId} triggerClassName="h-12" /></div>
                 <div><label htmlFor={mobileManufacturerFilterId} className="mb-2 block text-sm font-medium">{t('equipment.manufacturer')}</label><EquipmentManufacturerSelect value={filters.manufacturer} onValueChange={(value) => onFilterChange('manufacturer', value)} manufacturers={filterOptions.manufacturers} triggerId={mobileManufacturerFilterId} triggerClassName="h-12" /></div>
@@ -67,7 +78,7 @@ export const MobileEquipmentFilters: React.FC<MobileEquipmentFiltersProps> = ({ 
         </Sheet>
       </div>
       {activeFilterCount > 0 && <div className="flex flex-wrap items-center gap-2"><span className="text-sm text-muted-foreground">{t('equipment.active')}:</span>
-        {filters.status !== 'all' && <Badge variant="secondary" className="flex shrink-0 items-center gap-1 whitespace-nowrap">{t('equipment.status')}: {filters.status}<X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => onFilterChange('status', 'all')} aria-label={t('equipment.clearStatusFilter')} /></Badge>}
+        {filters.status !== 'all' && <Badge variant="secondary" className="flex shrink-0 items-center gap-1 whitespace-nowrap">{t('equipment.status')}: {statusLabels[filters.status] ?? filters.status}<X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => onFilterChange('status', 'all')} aria-label={t('equipment.clearStatusFilter')} /></Badge>}
         {filters.manufacturer !== 'all' && <Badge variant="secondary" className="flex shrink-0 items-center gap-1 whitespace-nowrap">{t('equipment.manufacturer')}: {filters.manufacturer}<X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => onFilterChange('manufacturer', 'all')} aria-label={t('equipment.clearManufacturerFilter')} /></Badge>}
         {filters.location !== 'all' && <Badge variant="secondary" className="flex shrink-0 items-center gap-1 whitespace-nowrap">{t('equipment.location')}: {filters.location}<X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => onFilterChange('location', 'all')} aria-label={t('equipment.clearLocationFilter')} /></Badge>}
         <Button variant="ghost" size="sm" className="min-h-11 px-3 text-sm" onClick={onClearFilters}>{t('equipment.clearAll')}</Button>

@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import InlineNoteComposer from '@/components/common/InlineNoteComposer';
 import { createQREquipmentNote } from '@/features/equipment/services/equipmentQRActionService';
 import { canRunQRAction, type QRActionPermissionContext } from '@/features/equipment/services/equipmentQRPermissions';
+import { useI18n } from '@/i18n';
 
 interface QRNoteImageDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ const QRNoteImageDialog: React.FC<QRNoteImageDialogProps> = ({
   userDisplayName,
   onSuccess,
 }) => {
+  const { t } = useI18n();
   const [noteContent, setNoteContent] = useState('');
   const [attachedImages, setAttachedImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +55,7 @@ const QRNoteImageDialog: React.FC<QRNoteImageDialogProps> = ({
   }) => {
     let finalContent = data.content.trim();
     if (!finalContent && data.images.length > 0) {
+      // Persist a canonical audit note rather than language-specific UI text.
       finalContent =
         data.images.length === 1
           ? `${userDisplayName} uploaded 1 image.`
@@ -60,7 +63,7 @@ const QRNoteImageDialog: React.FC<QRNoteImageDialogProps> = ({
     }
 
     if (!finalContent) {
-      setError('Please add a note or attach at least one image.');
+      setError(t('equipmentQRScan.noteRequired'));
       return;
     }
 
@@ -68,7 +71,7 @@ const QRNoteImageDialog: React.FC<QRNoteImageDialogProps> = ({
       !permissionContext ||
       !canRunQRAction('note-image', permissionContext, equipmentTeamId)
     ) {
-      setError('Permission changed. Re-open this action to continue.');
+      setError(t('equipmentQRScan.permissionChanged'));
       return;
     }
 
@@ -84,10 +87,10 @@ const QRNoteImageDialog: React.FC<QRNoteImageDialogProps> = ({
         machineHours: data.machineHours,
         scanId,
       });
-      onSuccess('Note added to equipment.');
+      onSuccess(t('equipmentQRScan.noteAdded'));
       resetAndClose();
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Unable to add note.');
+    } catch {
+      setError(t('equipmentQRScan.addNoteFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -100,9 +103,9 @@ const QRNoteImageDialog: React.FC<QRNoteImageDialogProps> = ({
     >
       <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Note / Upload Image</DialogTitle>
+          <DialogTitle>{t('equipmentQRScan.addNoteImage')}</DialogTitle>
           <DialogDescription>
-            Attach field notes or images directly to {equipmentName}.
+            {t('equipmentQRScan.noteDescription', { name: equipmentName })}
           </DialogDescription>
         </DialogHeader>
 
@@ -126,14 +129,14 @@ const QRNoteImageDialog: React.FC<QRNoteImageDialogProps> = ({
               showMachineHours
               disabled={isSubmitting}
               isSubmitting={isSubmitting}
-              placeholder="Enter your equipment note..."
+              placeholder={t('equipmentQRScan.notePlaceholder')}
               userDisplayName={userDisplayName}
             />
           </CardContent>
         </Card>
 
         <Button type="button" variant="outline" onClick={resetAndClose} disabled={isSubmitting}>
-          Close
+          {t('equipmentQRScan.close')}
         </Button>
       </DialogContent>
     </Dialog>

@@ -2,6 +2,7 @@ import { getStatusColor, getStatusDisplayInfo, safeFormatDate } from "@/features
 import type { UserSettings } from "@/types/settings";
 
 const EMPTY_READOUT = '—';
+type EquipmentTranslate = (key: string, params?: Record<string, string | number>) => string;
 
 export interface EquipmentCardDisplayModel {
   imageAlt: string;
@@ -68,18 +69,22 @@ function daysSinceDateOnly(value: string): number | null {
 function buildLastMaintenanceMobileDisplay(
   rawDate: string | undefined,
   formattedDate: string | null,
+  translate?: EquipmentTranslate,
 ): string {
   if (!formattedDate || !rawDate?.trim()) return EMPTY_READOUT;
 
   const daysAgo = daysSinceDateOnly(rawDate);
   if (daysAgo === null) return formattedDate;
 
-  return `${formattedDate} (${daysAgo} d ago)`;
+  return translate
+    ? translate('equipmentFinalize.daysAgo', { date: formattedDate, count: daysAgo })
+    : `${formattedDate} (${daysAgo} d ago)`;
 }
 
 export function getEquipmentCardDisplayModel(
   equipment: EquipmentCardDisplayInput,
-  settings: UserSettings
+  settings: UserSettings,
+  translate?: EquipmentTranslate,
 ): EquipmentCardDisplayModel {
   const statusInfo = getStatusDisplayInfo(equipment.status);
   const lastMaintenanceDate = equipment.last_maintenance
@@ -89,18 +94,29 @@ export function getEquipmentCardDisplayModel(
   const hoursFormatted = hours.toLocaleString();
 
   return {
-    imageAlt: `${equipment.name} equipment`,
+    imageAlt: translate
+      ? translate('equipmentFinalize.imageAlt', { name: equipment.name })
+      : `${equipment.name} equipment`,
     imageFallbackSrc: "/images/ui/placeholder.svg",
     statusLabel: statusInfo.label,
     statusClassName: getStatusColor(equipment.status),
-    lastMaintenanceText: lastMaintenanceDate ? `Last maintenance: ${lastMaintenanceDate}` : undefined,
+    lastMaintenanceText: lastMaintenanceDate
+      ? translate
+        ? translate('equipmentFinalize.lastMaintenanceText', { date: lastMaintenanceDate })
+        : `Last maintenance: ${lastMaintenanceDate}`
+      : undefined,
     lastMaintenanceDisplay: lastMaintenanceDate ?? EMPTY_READOUT,
     lastMaintenanceMobileDisplay: buildLastMaintenanceMobileDisplay(
       equipment.last_maintenance,
       lastMaintenanceDate,
+      translate,
     ),
-    workingHoursText: `${hoursFormatted} hours`,
-    workingHoursShortText: `${hoursFormatted} hrs`,
+    workingHoursText: translate
+      ? translate('equipmentFinalize.workingHours', { count: hoursFormatted })
+      : `${hoursFormatted} hours`,
+    workingHoursShortText: translate
+      ? translate('equipmentFinalize.workingHoursShort', { count: hoursFormatted })
+      : `${hoursFormatted} hrs`,
     workingHoursDisplay: hoursFormatted,
     assetDescriptor: buildAssetDescriptor(equipment.manufacturer, equipment.model),
     serialDisplay: equipment.serial_number?.trim() ? equipment.serial_number : EMPTY_READOUT,

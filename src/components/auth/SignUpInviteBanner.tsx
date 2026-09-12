@@ -10,7 +10,7 @@ const SignUpInviteBanner: React.FC<SignUpInviteBannerProps> = ({ invitedOrgName 
 
   return (
     <div className="bg-info/10 border border-info/30 rounded-lg p-3 text-sm">
-      <p className="text-info">{t('auth.inviteMessage', { name: invitedOrgName })}</p>
+      <p className="text-info">{t('auth.inviteBanner', { name: invitedOrgName })}</p>
     </div>
   );
 };

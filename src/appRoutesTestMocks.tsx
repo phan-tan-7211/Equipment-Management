@@ -226,6 +226,7 @@ vi.mock('@/routes/lazyDashboardPages', () => ({
   Organization: () => <div data-testid="organization-page">Organization</div>,
   OrganizationMembers: () => null,
   OrganizationIntegrations: () => null,
+  EquipmentGroups: () => null,
   Settings: () => <div data-testid="settings-page">Settings</div>,
   Reports: () => null,
   DashboardSupport: () => null,
