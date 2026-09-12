@@ -5,6 +5,7 @@ import {
   FULL_AUDIT_EXPORT_OPTIONS,
 } from '@/features/operator-check-ins/services/operatorCheckinReportExportOptions';
 import { __operatorCheckinReportExportTestables } from '@/features/operator-check-ins/services/operatorCheckinReportExportHelpers';
+import { getOperatorCheckinExcelLabels } from '@/features/operator-check-ins/services/operatorCheckinExcelLabels';
 
 const {
   sanitizeFilenamePart,
@@ -100,6 +101,20 @@ describe('operatorCheckinReportExportHelpers', () => {
     expect(summary).toContain('2/2 required answered');
     expect(summary).toContain('1 pass');
     expect(summary).toContain('1 fail');
+  });
+
+  it('localizes PDF status, checklist totals and notes in Vietnamese and Korean', () => {
+    for (const language of ['vi', 'ko'] as const) {
+      const labels = getOperatorCheckinExcelLabels(language);
+      const compact = buildCompactSubmissionPdfLines(makeSubmission(), DEFAULT_COMPACT_EXPORT_OPTIONS, labels).join('\n');
+      const full = buildSubmissionPdfLines(makeSubmission(), FULL_AUDIT_EXPORT_OPTIONS, labels).join('\n');
+      expect(compact).toContain(labels.pdfRequiredAnswered);
+      expect(compact).toContain(labels.pdfFail);
+      expect(full).toContain(labels.pdfSubmitted);
+      expect(full).toContain(labels.pdfNote);
+      expect(full).toContain(labels.pdfPass);
+      expect(full).not.toContain('required answered');
+    }
   });
 
   it('omits passing checklist rows in exceptions mode', () => {

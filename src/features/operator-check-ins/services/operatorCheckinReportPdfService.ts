@@ -8,6 +8,9 @@ import {
 } from '@/features/operator-check-ins/services/operatorCheckinReportExportHelpers';
 import type { LedgerDateRange } from '@/features/operator-check-ins/utils/operatorCheckinLedgerScope';
 import { downloadBlob } from '@/utils/exportUtils';
+import type { Language } from '@/i18n/I18nProvider';
+import { getOperatorCheckinExcelLabels } from './operatorCheckinExcelLabels';
+import { registerOperatorCheckinPdfFont } from './operatorCheckinPdfFont';
 
 export async function downloadOperatorCheckinDailyPdf(
   submissions: OperatorCheckinSubmission[],
@@ -15,64 +18,51 @@ export async function downloadOperatorCheckinDailyPdf(
   templateName: string,
   equipmentLabel: string,
   options: OperatorCheckinReportExportOptions = DEFAULT_COMPACT_EXPORT_OPTIONS,
+  language: Language = 'en',
 ): Promise<void> {
   const { reportDateRangeLabel, dateRangeFilenamePart } = resolveReportDateRangeLabels(dateRange);
+  const labels = getOperatorCheckinExcelLabels(language);
 
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+  const fontFamily = await registerOperatorCheckinPdfFont(doc, language);
   const margin = 48;
   let y = margin;
+  const drawLine = (text: string, fontSize: number, lineHeight: number) => {
+    doc.setFont(fontFamily, 'normal');
+    doc.setFontSize(fontSize);
+    const wrapped: string[] = doc.splitTextToSize(text, 612 - 2 * margin);
+    for (const segment of wrapped) {
+      if (y > 744 - lineHeight) {
+        doc.addPage();
+        y = margin;
+      }
+      doc.text(segment, margin, y);
+      y += lineHeight;
+    }
+  };
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.text('Daily Operator Check-In Report', margin, y);
-  y += 22;
+  drawLine(labels.title, 16, 22);
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.text(`Report period: ${reportDateRangeLabel}`, margin, y);
-  y += 14;
-  doc.text(`Report template: ${templateName}`, margin, y);
-  y += 14;
-  doc.text(`Equipment: ${equipmentLabel}`, margin, y, { maxWidth: 520 });
-  y += 14;
-  doc.text(`Submissions: ${submissions.length}`, margin, y);
-  y += 14;
+  drawLine(`${labels.period}: ${reportDateRangeLabel}`, 10, 14);
+  drawLine(`${labels.template}: ${templateName}`, 10, 14);
+  drawLine(`${labels.equipment}: ${equipmentLabel}`, 10, 14);
+  drawLine(`${labels.submissions}: ${submissions.length}`, 10, 14);
 
   if (options.detailLevel === 'full') {
-    doc.text(
-      'This report supports safety and audit documentation. It does not certify legal or regulatory compliance.',
-      margin,
-      y,
-      { maxWidth: 520 },
-    );
-    y += 28;
+    drawLine(labels.pdfDisclaimer, 10, 14);
+    y += 14;
   } else {
     y += 8;
   }
 
   for (const submission of submissions) {
-    const lines = buildSubmissionPdfLines(submission, options);
+    const lines = buildSubmissionPdfLines(submission, options, labels);
 
     for (const line of lines) {
-      if (y > 720) {
-        doc.addPage();
-        y = margin;
-      }
-
       const isHeading = line === (submission.equipment?.name ?? submission.equipment_id)
         || (options.detailLevel === 'compact' && line.includes(' — '));
-
-      if (isHeading && options.detailLevel === 'full') {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-      } else {
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
-      }
-
-      doc.text(line, margin, y, { maxWidth: 520 });
-      y += options.detailLevel === 'compact' ? 13 : 14;
+      drawLine(line, isHeading && options.detailLevel === 'full' ? 12 : 10, options.detailLevel === 'compact' ? 13 : 14);
     }
 
     y += options.detailLevel === 'compact' ? 6 : 10;
