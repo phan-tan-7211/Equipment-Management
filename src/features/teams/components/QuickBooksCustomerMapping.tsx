@@ -47,6 +47,7 @@ import { useCustomerMutations, useCustomersByOrg } from '@/features/teams/hooks/
 import { useCustomer } from '@/features/teams/hooks/useCustomerAccount';
 import type { QBCustomerPayload } from '@/features/teams/services/customerAccountService';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 
 interface QuickBooksCustomerMappingProps {
   teamId: string;
@@ -81,6 +82,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
   customerId,
   embedded = false,
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<'closed' | 'import' | 'link'>('closed');
@@ -142,7 +144,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
       queryClient.invalidateQueries({ queryKey: ['quickbooks', 'resolved-mapping'] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Could not update QuickBooks customer mapping.');
+      toast.error(error.message || t('teamsCustomer.qbUpdateError'));
     },
   });
 
@@ -153,7 +155,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
       queryClient.invalidateQueries({ queryKey: ['quickbooks', 'resolved-mapping'] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Could not clear QuickBooks customer mapping.');
+      toast.error(error.message || t('teamsCustomer.qbClearError'));
     },
   });
 
@@ -189,7 +191,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
   const handleImportAndLink = async () => {
     if (!selectedCustomer || !currentOrganization) return;
     if (!showQuickBooksControls) {
-      toast.error('You do not have permission to manage QuickBooks customers.');
+      toast.error(t('teamsCustomer.qbDenied'));
       return;
     }
     try {
@@ -224,7 +226,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
       });
       const match = result.customers?.[0];
       if (!match) {
-        toast.error('Could not find the linked QuickBooks customer. It may have been deleted.');
+        toast.error(t('teamsCustomer.qbMissing'));
         return;
       }
       const payload = qbCustomerToPayload(match);
@@ -240,7 +242,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
 
   const handleLinkExisting = async (accountId: string) => {
     if (!canManageAccount) {
-      toast.error('You do not have permission to link customer accounts for this team.');
+      toast.error(t('teamsCustomer.linkDenied'));
       return;
     }
     try {
@@ -249,7 +251,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
       await syncLegacyQuickBooksMapping(account);
       invalidateTeamQueries();
       closeDialog();
-      toast.success(`Team "${teamName}" linked to account`);
+      toast.success(t('teamsCustomer.linkedToAccount', { name: teamName }));
     } catch {
       // Errors handled by mutation hooks
     }
@@ -257,17 +259,17 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
 
   const handleUnlink = async () => {
     if (!canManageAccount) {
-      toast.error('You do not have permission to unlink customer accounts for this team.');
+      toast.error(t('teamsCustomer.unlinkDenied'));
       return;
     }
-    if (!window.confirm('Remove the customer account link from this team?')) return;
+    if (!window.confirm(t('teamsCustomer.unlinkQuestion'))) return;
     try {
       await customerMutations.link.mutateAsync({ teamId, customerId: null });
       if (canWriteLegacyMapping) {
         await clearLegacyMapping.mutateAsync();
       }
       invalidateTeamQueries();
-      toast.success('Customer account unlinked');
+      toast.success(t('teamsCustomer.unlinked'));
     } catch {
       // Errors handled by mutation hooks
     }
@@ -301,7 +303,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
       {mappingLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <RefreshCw className="h-4 w-4 animate-spin" />
-          Loading...
+          {t('teamsCustomer.loading')}
         </div>
       ) : isLinked ? (
         <div className="space-y-3">
@@ -309,41 +311,41 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
             <Badge variant="outline" className="bg-success/10 text-success border-success/30">
               <CheckCircle className="h-3 w-3 mr-1" />
               {linkedCustomer.quickbooks_customer_id
-                ? 'Linked for invoice export'
-                : 'Customer account linked'}
+                ? t('teamsCustomer.linkedExport')
+                : t('teamsCustomer.accountLinked')}
             </Badge>
             {linkedCustomer.quickbooks_customer_id && (
               <span className="text-xs text-muted-foreground">
-                QB ID {linkedCustomer.quickbooks_customer_id}
+                {t('teamsCustomer.qbId', { id: linkedCustomer.quickbooks_customer_id })}
               </span>
             )}
             {linkedCustomer.quickbooks_synced_at && (
               <span className="text-xs text-muted-foreground">
-                Synced {new Date(linkedCustomer.quickbooks_synced_at).toLocaleDateString()}
+                {t('teamsCustomer.synced', { date: new Date(linkedCustomer.quickbooks_synced_at).toLocaleDateString() })}
               </span>
             )}
           </div>
           {linkedCustomer.quickbooks_display_name &&
             linkedCustomer.quickbooks_display_name !== linkedCustomer.name && (
               <p className="text-xs text-muted-foreground">
-                QuickBooks name: {linkedCustomer.quickbooks_display_name}
+                {t('teamsCustomer.qbName', { name: linkedCustomer.quickbooks_display_name })}
               </p>
             )}
           <div className="flex gap-2 flex-wrap">
             {showQuickBooksControls && linkedCustomer.quickbooks_customer_id && (
               <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                Sync from QuickBooks
+                {t('teamsCustomer.syncFromQb')}
               </Button>
             )}
             {showQuickBooksControls && (
               <Button variant="outline" size="sm" onClick={() => setMode('import')}>
-                Change QB customer
+                {t('teamsCustomer.changeQb')}
               </Button>
             )}
             {canManageAccount && (
               <Button variant="outline" size="sm" onClick={() => setMode('link')}>
-                Link different account
+                {t('teamsCustomer.linkDifferent')}
               </Button>
             )}
             {canManageAccount && (
@@ -354,7 +356,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
                 className="text-destructive hover:text-destructive"
               >
                 <X className="h-4 w-4 mr-1" />
-                Unlink
+                {t('teamsCustomer.unlink')}
               </Button>
             )}
           </div>
@@ -364,7 +366,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
               <AlertTriangle className="h-3 w-3 mr-1" />
-              Legacy mapping only
+              {t('teamsCustomer.legacyOnly')}
             </Badge>
           </div>
           <div className="flex items-center gap-2">
@@ -372,32 +374,31 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
             <span className="text-sm font-medium">{existingMapping.display_name}</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            Import this QuickBooks customer to create a full customer account and enable contact
-            sync.
+            {t('teamsCustomer.legacyDescription')}
           </p>
           <Button variant="outline" size="sm" onClick={() => setMode('import')}>
             <Download className="h-3.5 w-3.5 mr-1.5" />
-            Import as account
+            {t('teamsCustomer.importAsAccount')}
           </Button>
         </div>
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
             {showQuickBooksControls
-              ? 'Link a QuickBooks customer to enable invoice export for this team\'s work orders.'
-              : 'Link a customer account to this team. Connect QuickBooks on Integrations to enable invoice export.'}
+              ? t('teamsCustomer.linkQbDescription')
+              : t('teamsCustomer.linkAccountDescription')}
           </p>
           <div className="flex gap-2 flex-wrap">
             {showQuickBooksControls && (
               <Button variant="outline" size="sm" onClick={() => setMode('import')}>
                 <Download className="h-3.5 w-3.5 mr-1.5" />
-                Import from QuickBooks
+                {t('teamsCustomer.importFromQb')}
               </Button>
             )}
             {canManageAccount && (
               <Button variant="outline" size="sm" onClick={() => setMode('link')}>
                 <Link2 className="h-3.5 w-3.5 mr-1.5" />
-                Link existing account
+                {t('teamsCustomer.linkExisting')}
               </Button>
             )}
           </div>
@@ -413,19 +414,19 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {isChangingExisting ? 'Change QuickBooks customer' : 'Import from QuickBooks'}
+              {isChangingExisting ? t('teamsCustomer.changeQbCustomer') : t('teamsCustomer.importFromQb')}
             </DialogTitle>
             <DialogDescription>
               {isChangingExisting
-                ? `Choose a different QuickBooks customer for "${teamName}". The linked customer account will be updated in place.`
-                : `Search QuickBooks customers to import and link to "${teamName}"`}
+                ? t('teamsCustomer.changeQbDescription', { name: teamName })
+                : t('teamsCustomer.importQbDescription', { name: teamName })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search customers..."
+                placeholder={t('teamsCustomer.searchCustomers')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -441,14 +442,14 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
                   <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
                   <p className="text-sm text-muted-foreground">{customerSearchResult.error}</p>
                   <Button variant="outline" size="sm" className="mt-2" onClick={() => refetchCustomers()}>
-                    Retry
+                    {t('teamsCustomer.retry')}
                   </Button>
                 </div>
               ) : customers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <Building2 className="h-8 w-8 text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {searchQuery ? 'No customers found' : 'No customers in QuickBooks'}
+                    {searchQuery ? t('teamsCustomer.noCustomersFound') : t('teamsCustomer.noCustomersInQb')}
                   </p>
                 </div>
               ) : (
@@ -468,7 +469,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
                         <div className="font-medium text-sm">{c.DisplayName}</div>
                         {c.Taxable !== undefined && (
                           <Badge variant="outline" className="text-[10px]">
-                            {c.Taxable ? 'Taxable' : 'Tax Exempt'}
+                            {c.Taxable ? t('teamsCustomer.taxable') : t('teamsCustomer.taxExempt')}
                           </Badge>
                         )}
                       </div>
@@ -482,14 +483,14 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
             </ScrollArea>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={closeDialog}>
-                Cancel
+                {t('teamsDetail.cancel')}
               </Button>
               <Button
                 onClick={handleImportAndLink}
                 disabled={!selectedCustomer || isImportLinkPending}
               >
                 {isImportLinkPending && <RefreshCw className="h-4 w-4 animate-spin mr-2" />}
-                {isChangingExisting ? 'Update link' : 'Import & link'}
+                {isChangingExisting ? t('teamsCustomer.updateLink') : t('teamsCustomer.importLink')}
               </Button>
             </div>
           </div>
@@ -504,16 +505,16 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Link existing account</DialogTitle>
+            <DialogTitle>{t('teamsCustomer.linkExisting')}</DialogTitle>
             <DialogDescription>
-              Choose an existing EquipQR customer account to link to &ldquo;{teamName}&rdquo;
+              {t('teamsCustomer.linkExistingDescription', { name: teamName })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search accounts..."
+                placeholder={t('teamsCustomer.searchAccounts')}
                 value={accountSearchQuery}
                 onChange={(e) => setAccountSearchQuery(e.target.value)}
                 className="pl-9"
@@ -524,7 +525,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <Building2 className="h-8 w-8 text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {accountSearchQuery ? 'No accounts match' : 'No customer accounts yet'}
+                    {accountSearchQuery ? t('teamsCustomer.noAccountsMatch') : t('teamsCustomer.noAccountsYet')}
                   </p>
                 </div>
               ) : (
@@ -542,7 +543,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
                       )}
                       {acct.quickbooks_customer_id && (
                         <div className="text-xs text-muted-foreground mt-1">
-                          QuickBooks ID {acct.quickbooks_customer_id}
+                          {t('teamsCustomer.qbIdLong', { id: acct.quickbooks_customer_id })}
                         </div>
                       )}
                     </button>
@@ -552,7 +553,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
             </ScrollArea>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={closeDialog}>
-                Cancel
+                {t('teamsDetail.cancel')}
               </Button>
             </div>
           </div>
@@ -564,7 +565,7 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
   if (embedded) {
     return (
       <div className="border-t pt-3 mt-1 space-y-2">
-        <p className="text-xs font-medium text-muted-foreground">QuickBooks invoice export</p>
+        <p className="text-xs font-medium text-muted-foreground">{t('teamsCustomer.qbExport')}</p>
         {body}
       </div>
     );
@@ -575,10 +576,10 @@ export const QuickBooksCustomerMapping: React.FC<QuickBooksCustomerMappingProps>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Link2 className="h-4 w-4" />
-          QuickBooks invoice export
+          {t('teamsCustomer.qbExport')}
         </CardTitle>
         <CardDescription className="text-xs">
-          Connect this team&apos;s customer account to a QuickBooks customer for draft invoice export
+          {t('teamsCustomer.qbExportDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent>{body}</CardContent>

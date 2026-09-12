@@ -20,6 +20,7 @@ import { useGoogleMapsLoader } from '@/hooks/useGoogleMapsLoader';
 import { useGoogleMapsKey } from '@/hooks/useGoogleMapsKey';
 import { useIsDarkTheme, useThemeVersion } from '@/hooks/useThemeVersion';
 import { useToast } from '@/hooks/use-toast';
+import { useI18n } from '@/i18n';
 
 type TeamLocationEditorDialogProps = {
   open: boolean;
@@ -32,6 +33,7 @@ export function TeamLocationEditorDialog({
   onOpenChange,
   team,
 }: TeamLocationEditorDialogProps) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { isLoaded: isPlacesLoaded } = useGoogleMapsLoader();
@@ -75,35 +77,33 @@ export function TeamLocationEditorDialog({
       await queryClient.invalidateQueries({ queryKey: ['teams'] });
 
       toast({
-        title: 'Team location saved',
-        description: 'This team can now appear on the Fleet Map.',
+        title: t('teamsCards.locationSaved'),
+        description: t('teamsCards.locationSavedDescription'),
       });
       onOpenChange(false);
     } catch (error) {
       toast({
-        title: 'Unable to save team location',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        title: t('teamsCards.locationError'),
+        description: error instanceof Error ? error.message : t('teamsDetail.tryAgain'),
         variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
     }
-  }, [editor.isCleared, editor.pendingPlace, onOpenChange, queryClient, team.id, team.organization_id, toast]);
+  }, [editor.isCleared, editor.pendingPlace, onOpenChange, queryClient, team.id, team.organization_id, toast, t]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg" className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Set team location</DialogTitle>
+          <DialogTitle>{t('teamsCards.setTeamLocation')}</DialogTitle>
           <DialogDescription>
-            Search for an address or use your device location once, then pan the map so the pin sits
-            on the team yard or shop. Equipment without its own location inherits this address
-            automatically.
+            {t('teamsCards.locationInstructions')}
           </DialogDescription>
         </DialogHeader>
 
         <StructuredLocationEditorControls
-          locationLabel="Team address"
+          locationLabel={t('teamsCards.teamAddress')}
           locationAddress={editor.addressValue}
           onPlaceSelect={editor.handlePlaceSelect}
           onClear={editor.handleClear}
@@ -117,8 +117,8 @@ export function TeamLocationEditorDialog({
           isLiveCaptureOpen={editor.isLiveCaptureOpen}
           onLiveCaptureOpenChange={editor.setIsLiveCaptureOpen}
           onConfirmLiveLocation={editor.handleSaveLiveLocation}
-          liveCaptureTitle="Set team location from this device"
-          liveCaptureConfirmLabel="Use this location"
+          liveCaptureTitle={t('teamsCards.captureTitle')}
+          liveCaptureConfirmLabel={t('teamsCards.useLocation')}
           isSaving={isSaving}
         />
 
@@ -127,7 +127,7 @@ export function TeamLocationEditorDialog({
           onSave={handleSave}
           canSave={editor.canSave}
           isSaving={isSaving}
-          saveLabel="Save team location"
+          saveLabel={t('teamsCards.saveLocation')}
         />
       </DialogContent>
     </Dialog>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mail, Phone } from 'lucide-react';
 import { useExternalContacts } from '@/features/teams/hooks/useCustomerAccount';
+import { useI18n } from '@/i18n';
 
 interface CustomerContactActionsProps {
   customerId: string | null | undefined;
@@ -18,6 +19,7 @@ const CustomerContactActions: React.FC<CustomerContactActionsProps> = ({
   compact = false,
   emptyLabel,
 }) => {
+  const { t } = useI18n();
   const { data: allContacts = [], isLoading } = useExternalContacts(
     customerId ?? undefined
   );
@@ -45,7 +47,7 @@ const CustomerContactActions: React.FC<CustomerContactActionsProps> = ({
             {c.email && (
               <a
                 href={`mailto:${c.email}`}
-                aria-label={`Email ${c.name} (${c.role ?? 'contact'})`}
+                aria-label={t('teamsCustomer.emailContact', { name: c.name, role: c.role ?? t('teamsCustomer.contact') })}
                 className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors min-h-11 px-2"
               >
                 <Mail className="h-3.5 w-3.5" />
@@ -55,7 +57,7 @@ const CustomerContactActions: React.FC<CustomerContactActionsProps> = ({
             {c.phone && (
               <a
                 href={`tel:${c.phone}`}
-                aria-label={`Call ${c.name} (${c.role ?? 'contact'})`}
+                aria-label={t('teamsCustomer.callContact', { name: c.name, role: c.role ?? t('teamsCustomer.contact') })}
                 className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors min-h-11 px-2"
               >
                 <Phone className="h-3.5 w-3.5" />
@@ -79,7 +81,7 @@ const CustomerContactActions: React.FC<CustomerContactActionsProps> = ({
             {c.email && (
               <a
                 href={`mailto:${c.email}`}
-                aria-label={`Email ${c.email}`}
+                aria-label={t('teamsCustomer.email', { address: c.email })}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
               >
                 <Mail className="h-3 w-3" />
@@ -89,7 +91,7 @@ const CustomerContactActions: React.FC<CustomerContactActionsProps> = ({
             {c.phone && (
               <a
                 href={`tel:${c.phone}`}
-                aria-label={`Call ${c.phone}`}
+                aria-label={t('teamsCustomer.call', { number: c.phone })}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
               >
                 <Phone className="h-3 w-3" />

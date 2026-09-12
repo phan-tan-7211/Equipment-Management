@@ -15,6 +15,7 @@ import { buildTeamAddress } from '@/features/teams/utils/teamLocationUtils';
 import { useGoogleMapsKey } from '@/hooks/useGoogleMapsKey';
 import { useIsDarkTheme, useThemeVersion } from '@/hooks/useThemeVersion';
 import type { TeamWithMembers } from '@/features/teams/services/teamService';
+import { useI18n } from '@/i18n';
 
 interface TeamLocationCardProps {
   team: TeamWithMembers;
@@ -32,6 +33,7 @@ function TeamMapMarker({ position }: { position: { lat: number; lng: number } })
 }
 
 const TeamLocationCard: React.FC<TeamLocationCardProps> = ({ team, canEdit }) => {
+  const { t } = useI18n();
   const [editorOpen, setEditorOpen] = useState(false);
   const themeVersion = useThemeVersion();
   const isDark = useIsDarkTheme(themeVersion);
@@ -64,7 +66,7 @@ const TeamLocationCard: React.FC<TeamLocationCardProps> = ({ team, canEdit }) =>
           className="rounded-lg bg-muted/50 border flex items-center justify-center"
           style={{ height: MAP_HEIGHT }}
         >
-          <p className="text-xs text-muted-foreground">Loading map...</p>
+          <p className="text-xs text-muted-foreground">{t('teamsCards.loadingMap')}</p>
         </div>
       );
     }
@@ -81,7 +83,7 @@ const TeamLocationCard: React.FC<TeamLocationCardProps> = ({ team, canEdit }) =>
           <div className="text-center space-y-2 px-4">
             <MapPin className="h-8 w-8 text-muted-foreground/50 mx-auto" />
             <p className="text-xs text-muted-foreground">
-              Coordinates unavailable. Set a new address or use your current location.
+              {t('teamsCards.noCoordinates')}
             </p>
           </div>
         </div>
@@ -96,8 +98,7 @@ const TeamLocationCard: React.FC<TeamLocationCardProps> = ({ team, canEdit }) =>
         >
           <MapPin className="h-6 w-6 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">
-            Map preview unavailable until the Google Maps Map ID is configured. The address below
-            still drives Fleet Map placement.
+            {t('teamsCards.noMapPreview')}
           </p>
         </div>
       );
@@ -139,15 +140,15 @@ const TeamLocationCard: React.FC<TeamLocationCardProps> = ({ team, canEdit }) =>
               <MapPin className="h-6 w-6 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-sm font-medium">No location set</p>
+              <p className="text-sm font-medium">{t('teamsCards.noLocation')}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Add a location to see this team on the Fleet Map.
+                {t('teamsCards.addLocationHelp')}
               </p>
             </div>
             {canEdit && (
               <Button variant="outline" size="sm" onClick={openEditor} className="mt-1 gap-1.5">
                 <Navigation className="h-3.5 w-3.5" />
-                Set Location
+                {t('teamsCards.setLocation')}
               </Button>
             )}
           </CardContent>
@@ -167,7 +168,7 @@ const TeamLocationCard: React.FC<TeamLocationCardProps> = ({ team, canEdit }) =>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <MapPin className="h-5 w-5" />
-              Team Location
+              {t('teamsCards.teamLocation')}
             </CardTitle>
             {canEdit && (
               <Button
@@ -175,10 +176,10 @@ const TeamLocationCard: React.FC<TeamLocationCardProps> = ({ team, canEdit }) =>
                 size="sm"
                 onClick={openEditor}
                 className="gap-1.5 h-8 text-muted-foreground hover:text-foreground"
-                aria-label="Edit team location"
+                aria-label={t('teamsCards.editLocation')}
               >
                 <Edit className="h-3.5 w-3.5" />
-                Edit
+                {t('teamsCards.edit')}
               </Button>
             )}
           </div>

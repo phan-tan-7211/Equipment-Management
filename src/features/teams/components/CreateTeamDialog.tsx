@@ -16,6 +16,8 @@ import {
   resolveTeamCreateCustomerId,
 } from '@/features/teams/utils/teamCreateFields';
 
+import { useI18n } from '@/i18n';
+
 interface CreateTeamDialogProps {
   open: boolean;
   onClose: () => void;
@@ -23,6 +25,7 @@ interface CreateTeamDialogProps {
 }
 
 const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({ open, onClose, organizationId }) => {
+  const { t } = useI18n();
   const [fields, setFields] = useState(emptyTeamCreateFieldsValue);
   const [nameError, setNameError] = useState('');
   const { toast } = useToast();
@@ -40,14 +43,14 @@ const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({ open, onClose, orga
     e.preventDefault();
     
     if (!fields.name.trim()) {
-      setNameError('Team name is required');
+      setNameError(t('teamsDetail.nameRequired'));
       return;
     }
 
     if (!user?.id) {
       toast({
-        title: "Error",
-        description: "You must be logged in to create a team",
+        title: t('teamsDetail.error'),
+        description: t('teamsDetail.loginRequired'),
         variant: "destructive",
       });
       return;
@@ -66,8 +69,8 @@ const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({ open, onClose, orga
       });
 
       toast({
-        title: "Success",
-        description: "Team created successfully",
+        title: t('teamsDetail.success'),
+        description: t('teamsDetail.createdSuccess'),
       });
 
       queryClient.invalidateQueries({ queryKey: ['access-snapshot'] });
@@ -83,9 +86,9 @@ const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({ open, onClose, orga
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-120">
         <DialogHeader>
-          <DialogTitle>Create New Team</DialogTitle>
+          <DialogTitle>{t('teamsDetail.createTitle')}</DialogTitle>
           <DialogDescription>
-            Create a new team to organize your maintenance work and assign team members.
+            {t('teamsDetail.createDescription')}
           </DialogDescription>
         </DialogHeader>
         
@@ -103,10 +106,10 @@ const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({ open, onClose, orga
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t('teamsDetail.cancel')}
             </Button>
             <Button type="submit" disabled={createTeamWithCreator.isPending}>
-              {createTeamWithCreator.isPending ? 'Creating...' : 'Create Team'}
+              {createTeamWithCreator.isPending ? t('teamsDetail.creating') : t('teamsDetail.create')}
             </Button>
           </DialogFooter>
         </form>

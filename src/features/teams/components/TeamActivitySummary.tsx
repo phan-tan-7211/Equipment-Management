@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Activity, Forklift, ClipboardList, AlertTriangle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { TeamEquipmentStats, TeamWorkOrderStats } from '@/features/teams/services/teamStatsService';
+import { useI18n } from '@/i18n';
 
 interface TeamActivitySummaryProps {
   teamId: string;
@@ -81,22 +82,23 @@ const TeamActivitySummary: React.FC<TeamActivitySummaryProps> = ({
   workOrderStats,
   isLoading,
 }) => {
+  const { t } = useI18n();
   return (
     <Card className="shadow-elevation-2">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Activity className="h-5 w-5" />
-          Team Activity
+          {t('teamsCards.activity')}
         </CardTitle>
         <CardDescription>
-          Overview of equipment and work orders
+          {t('teamsCards.activityDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* Equipment Count */}
           <StatItem
-            label="Total Equipment"
+            label={t('teamsCards.totalEquipment')}
             value={equipmentStats?.totalEquipment ?? 0}
             icon={<Forklift className="h-5 w-5" />}
             href={`/dashboard/equipment?team=${teamId}`}
@@ -105,7 +107,7 @@ const TeamActivitySummary: React.FC<TeamActivitySummaryProps> = ({
           
           {/* Active Work Orders */}
           <StatItem
-            label="Active Work Orders"
+            label={t('teamsCards.activeWos')}
             value={workOrderStats?.activeWorkOrders ?? 0}
             icon={<ClipboardList className="h-5 w-5" />}
             href={`/dashboard/work-orders?team=${teamId}`}
@@ -114,7 +116,7 @@ const TeamActivitySummary: React.FC<TeamActivitySummaryProps> = ({
           
           {/* Overdue Work Orders */}
           <StatItem
-            label="Overdue"
+            label={t('teamsCards.overdue')}
             value={workOrderStats?.overdueWorkOrders ?? 0}
             icon={<AlertTriangle className="h-5 w-5" />}
             href={`/dashboard/work-orders?team=${teamId}&date=overdue`}
@@ -124,7 +126,7 @@ const TeamActivitySummary: React.FC<TeamActivitySummaryProps> = ({
           
           {/* Completed Work Orders */}
           <StatItem
-            label="Completed"
+            label={t('teamsCards.completed')}
             value={workOrderStats?.completedWorkOrders ?? 0}
             icon={<CheckCircle className="h-5 w-5" />}
             href={`/dashboard/work-orders?team=${teamId}&status=completed`}

@@ -5,6 +5,7 @@ import {
   usePMIntervalPolicy,
 } from '@/features/pm-templates/hooks/usePMIntervalPolicies';
 import { policyRowToFormState } from '@/features/pm-templates/services/pmIntervalPolicyService';
+import { useI18n } from '@/i18n';
 
 type TeamPMScheduleCardProps = {
   organizationId: string;
@@ -12,6 +13,7 @@ type TeamPMScheduleCardProps = {
 };
 
 export function TeamPMScheduleCard({ organizationId, teamId }: TeamPMScheduleCardProps) {
+  const { t } = useI18n();
   const { data: policy, isLoading } = usePMIntervalPolicy(
     organizationId,
     { scopeType: 'team', teamId }
@@ -19,21 +21,21 @@ export function TeamPMScheduleCard({ organizationId, teamId }: TeamPMScheduleCar
   const form = policyRowToFormState(policy);
 
   const summary = isLoading
-    ? 'Loading PM schedule...'
+    ? t('teamsCards.loadingPm')
     : form.mode === 'none'
-      ? 'No recurring PM for equipment on this team unless overridden per asset.'
+      ? t('teamsCards.noRecurringPm')
       : form.mode === 'custom'
         ? form.intervalValue !== null && form.intervalValue > 0
-          ? `Custom team interval: every ${form.intervalValue} ${form.intervalType === 'hours' ? 'working hours' : 'calendar days'}`
-          : 'Custom team interval configured'
-        : 'No team override: equipment uses its PM template schedule unless overridden per asset.';
+          ? t('teamsCards.customInterval', { value: form.intervalValue, unit: t(form.intervalType === 'hours' ? 'teamsCards.workingHours' : 'teamsCards.calendarDays') })
+          : t('teamsCards.customConfigured')
+        : t('teamsCards.noTeamOverride');
 
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <Timer className="h-4 w-4" />
-          PM Schedule
+          {t('teamsCards.pmSchedule')}
         </CardTitle>
       </CardHeader>
       <CardContent>

@@ -13,6 +13,8 @@ import type { TeamCreateFieldsValue } from '@/features/teams/utils/teamCreateFie
 
 export const TEAM_DESCRIPTION_MAX_LENGTH = 500;
 
+import { useI18n } from '@/i18n';
+
 interface TeamCreateFieldsProps {
   organizationId: string;
   value: TeamCreateFieldsValue;
@@ -32,6 +34,7 @@ export const TeamCreateFields: React.FC<TeamCreateFieldsProps> = ({
   showLocation = true,
   idPrefix = 'team-create',
 }) => {
+  const { t } = useI18n();
   const { isLoaded } = useGoogleMapsLoader();
   const { data: orgCustomers } = useCustomersByOrg(showCustomerAccount ? organizationId : undefined);
 
@@ -48,12 +51,12 @@ export const TeamCreateFields: React.FC<TeamCreateFieldsProps> = ({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-name`}>Team Name *</Label>
+        <Label htmlFor={`${idPrefix}-name`}>{t('teamsDetail.nameRequiredLabel')}</Label>
         <Input
           id={`${idPrefix}-name`}
           value={value.name}
           onChange={(e) => patch({ name: e.target.value })}
-          placeholder="Enter team name"
+          placeholder={t('teamsDetail.namePlaceholder')}
           className={nameError ? 'border-destructive focus-visible:ring-destructive' : ''}
           aria-invalid={!!nameError}
           aria-describedby={nameError ? `${idPrefix}-name-error` : undefined}
@@ -66,14 +69,14 @@ export const TeamCreateFields: React.FC<TeamCreateFieldsProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-description`}>Description</Label>
+        <Label htmlFor={`${idPrefix}-description`}>{t('teamsDetail.description')}</Label>
         <Textarea
           id={`${idPrefix}-description`}
           value={value.description}
           onChange={(e) =>
             patch({ description: e.target.value.slice(0, TEAM_DESCRIPTION_MAX_LENGTH) })
           }
-          placeholder="Enter team description (optional)"
+          placeholder={t('teamsDetail.descriptionPlaceholder')}
           rows={3}
           maxLength={TEAM_DESCRIPTION_MAX_LENGTH}
         />
@@ -84,13 +87,13 @@ export const TeamCreateFields: React.FC<TeamCreateFieldsProps> = ({
 
       {showCustomerAccount && (
         <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-customer-account`}>Customer Account</Label>
+          <Label htmlFor={`${idPrefix}-customer-account`}>{t('teamsDetail.customerAccount')}</Label>
           {value.showNewAccount ? (
             <div className="space-y-2">
               <Input
                 value={value.newAccountName}
                 onChange={(e) => patch({ newAccountName: e.target.value })}
-                placeholder="New account name"
+                placeholder={t('teamsDetail.newAccountName')}
               />
               <Button
                 type="button"
@@ -110,7 +113,7 @@ export const TeamCreateFields: React.FC<TeamCreateFieldsProps> = ({
                 value={value.selectedCustomerId ?? ''}
                 onChange={(e) => patch({ selectedCustomerId: e.target.value || null })}
               >
-                <option value="">None (no account)</option>
+                <option value="">{t('teamsDetail.noAccount')}</option>
                 {(orgCustomers ?? []).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -131,7 +134,7 @@ export const TeamCreateFields: React.FC<TeamCreateFieldsProps> = ({
                 }}
               >
                 <Plus className="h-3 w-3" />
-                Create new account
+                {t('teamsDetail.createNewAccount')}
               </Button>
             </div>
           )}
