@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useI18n } from '@/i18n';
 
 type InventoryListPageActionsProps = {
   canCreate: boolean;
@@ -22,6 +23,8 @@ export function InventoryListPageActions({
   onAddItem,
   onNavigateBulk,
 }: InventoryListPageActionsProps) {
+  const { t } = useI18n();
+
   return (
     <div className="flex items-center gap-2">
       {canManage && (
@@ -31,7 +34,7 @@ export function InventoryListPageActions({
           className="hidden sm:inline-flex"
         >
           <Users className="mr-2 h-4 w-4" />
-          Parts Access
+          {t('inventoryList.partsAccess')}
         </Button>
       )}
 
@@ -41,23 +44,22 @@ export function InventoryListPageActions({
             <DropdownMenuTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Item
+                {t('inventoryList.addItem')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onAddItem}>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Single Item
+                {t('inventoryList.addSingleItem')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onNavigateBulk}>
                 <Table2 className="mr-2 h-4 w-4" />
-                Bulk Add / Edit (Grid)
+                {t('inventoryList.bulkAddEdit')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       )}
-
     </div>
   );
 }

@@ -8,6 +8,7 @@ import InventoryFilterPopover from './InventoryFilterPopover';
 import InventoryDownloadMenu from './InventoryDownloadMenu';
 import { InventoryDensityToggle } from '@/features/inventory/components/InventoryDensityToggle';
 import type { InventoryFilters, InventoryItem, InventoryTableDensity } from '@/features/inventory/types/inventory';
+import { useI18n } from '@/i18n';
 
 interface InventoryToolbarProps {
   filters: InventoryFilters;
@@ -38,6 +39,7 @@ const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
   healthSummary,
   quickFilterChips,
 }) => {
+  const { t } = useI18n();
   const activeFilterCount = [
     !!filters.location,
     filters.lowStockOnly,
@@ -54,17 +56,17 @@ const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
           <div className="relative max-w-[300px] flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Search by name, SKU, or external ID..."
+              placeholder={t('inventoryList.searchPlaceholder')}
               value={filters.search ?? ''}
               onChange={(e) => onFilterChange({ search: e.target.value })}
               className="h-8 pl-8 text-sm bg-transparent"
-              aria-label="Search inventory by name, SKU, or external ID"
+              aria-label={t('inventoryList.searchAria')}
             />
             {filters.search && (
               <button
                 onClick={() => onFilterChange({ search: '' })}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                aria-label="Clear search"
+                aria-label={t('inventoryList.clearSearch')}
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -109,7 +111,7 @@ const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
 
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-1.5 px-1">
-          <span className="text-xs text-muted-foreground">Active:</span>
+          <span className="text-xs text-muted-foreground">{t('inventoryList.active')}</span>
 
           {filters.location && (
             <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">
@@ -118,7 +120,7 @@ const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
               <button
                 onClick={() => onFilterChange({ location: undefined })}
                 className="ml-0.5 hover:text-foreground"
-                aria-label="Clear location name filter"
+                aria-label={t('inventoryList.clearLocationFilter')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -128,11 +130,11 @@ const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
           {filters.lowStockOnly && (
             <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">
               <AlertTriangle className="h-3 w-3 text-destructive" />
-              Low Stock
+              {t('inventoryList.lowStock')}
               <button
                 onClick={() => onFilterChange({ lowStockOnly: false })}
                 className="ml-0.5 hover:text-foreground"
-                aria-label="Clear low stock filter"
+                aria-label={t('inventoryList.clearLowStockFilter')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -145,7 +147,7 @@ const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
               <button
                 onClick={() => onFilterChange({ search: '' })}
                 className="ml-0.5 hover:text-foreground"
-                aria-label="Clear search filter"
+                aria-label={t('inventoryList.clearSearchFilter')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -158,7 +160,7 @@ const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
             className="h-5 px-2 text-xs text-muted-foreground hover:text-foreground"
             onClick={onClearFilters}
           >
-            Clear all
+            {t('inventoryList.clearAll')}
           </Button>
         </div>
       )}

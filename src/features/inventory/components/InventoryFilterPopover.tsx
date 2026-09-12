@@ -6,6 +6,7 @@ import { FilterPopoverShell } from '@/components/filters/FilterPopoverShell';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import type { InventoryFilters } from '@/features/inventory/types/inventory';
+import { useI18n } from '@/i18n';
 
 interface InventoryFilterPopoverProps {
   filters: InventoryFilters;
@@ -22,18 +23,25 @@ const InventoryFilterPopover: React.FC<InventoryFilterPopoverProps> = ({
   onFilterChange,
   onClearFilters,
 }) => {
+  const { t } = useI18n();
+  const triggerAriaLabel = activeFilterCount > 0
+    ? t('inventoryList.filterAriaActive', { count: activeFilterCount })
+    : t('inventoryList.filterAria');
+
   return (
     <FilterPopoverShell
       ariaSubject="inventory"
       activeFilterCount={activeFilterCount}
       contentClassName="w-64 p-4"
+      headerLabel={t('inventoryList.filterHeader')}
+      triggerLabel={t('inventoryList.filterTrigger')}
+      triggerAriaLabel={triggerAriaLabel}
     >
       {({ close }) => (
         <>
-          {/* Location */}
           {uniqueLocations.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs text-muted-foreground">Location Name</span>
+              <span className="text-xs text-muted-foreground">{t('inventoryList.locationName')}</span>
               <InventoryLocationFilterSelect
                 value={filters.location ?? '__all__'}
                 onValueChange={(v) =>
@@ -45,7 +53,6 @@ const InventoryFilterPopover: React.FC<InventoryFilterPopoverProps> = ({
             </div>
           )}
 
-          {/* Low stock toggle */}
           <div className="flex items-center justify-between py-1">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
@@ -53,7 +60,7 @@ const InventoryFilterPopover: React.FC<InventoryFilterPopoverProps> = ({
                 htmlFor="inv-filter-low-stock"
                 className="text-sm font-medium cursor-pointer"
               >
-                Low Stock Only
+                {t('inventoryList.lowStockOnly')}
               </label>
             </div>
             <Switch
@@ -76,7 +83,7 @@ const InventoryFilterPopover: React.FC<InventoryFilterPopoverProps> = ({
                 }}
               >
                 <X className="h-3 w-3 mr-1.5" />
-                Clear all filters
+                {t('inventoryList.clearAllFilters')}
               </Button>
             </>
           )}
