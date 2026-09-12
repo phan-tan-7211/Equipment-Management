@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type Dra
 import { finishDragDrop, handleDragActiveState } from '@/components/common/drag-active-handlers';
 import { useAppToast } from '@/hooks/useAppToast';
 import { sanitizeBlobUrl } from '@/utils/sanitizeBlobUrl';
+import { useI18n } from '@/i18n';
 import {
   formatAcceptedTypesLabel,
   resolveImageUploadSession,
@@ -25,6 +26,7 @@ export function useSingleImageUpload({
   acceptedTypes,
   disabled,
 }: UseSingleImageUploadArgs) {
+  const { t } = useI18n();
   const appToast = useAppToast();
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -53,7 +55,9 @@ export function useSingleImageUpload({
   const handleFileSelect = (file: File) => {
     const result = validateImageFile(file, acceptedTypes, maxSizeMB);
     if (result.ok === false) {
-      appToast.error({ description: result.description });
+      appToast.error({ description: !acceptedTypes.includes(file.type)
+        ? t('sharedUi.unsupportedSingleImage', { name: file.name, formats: formatLabel })
+        : t('sharedUi.singleImageTooLarge', { name: file.name, size: maxSizeMB }) });
       return;
     }
     setPreviewFile(file);
@@ -83,10 +87,10 @@ export function useSingleImageUpload({
     try {
       await onUpload(previewFile);
       setPreviewFile(null);
-      appToast.success({ description: 'Image uploaded successfully' });
+      appToast.success({ description: t('sharedUi.singleUploadSuccess') });
     } catch (error) {
       appToast.error({
-        description: `Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: t('sharedUi.singleUploadFailed', { error: error instanceof Error ? error.message : t('sharedUi.unknownError') }),
       });
     } finally {
       setIsUploading(false);
@@ -98,10 +102,10 @@ export function useSingleImageUpload({
     setIsDeleting(true);
     try {
       await onDelete();
-      appToast.success({ description: 'Image removed' });
+      appToast.success({ description: t('sharedUi.singleRemoveSuccess') });
     } catch (error) {
       appToast.error({
-        description: `Failed to remove image: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: t('sharedUi.singleRemoveFailed', { error: error instanceof Error ? error.message : t('sharedUi.unknownError') }),
       });
     } finally {
       setIsDeleting(false);
