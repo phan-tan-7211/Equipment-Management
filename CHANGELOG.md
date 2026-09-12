@@ -7,7 +7,7 @@ All notable changes to EquipQR by ZNT LLC will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Entries through 3.28.0 are more verbose than the current policy. Newer notes are short customer-facing outcomes. Editorial rules live in `.cursor/rules/changelog.mdc`.
+Entries through 3.28.0 are more verbose than the current policy. Newer notes are short customer-facing outcomes. Use concise customer-facing entries under `[Unreleased]`.
 
 ## [Unreleased]
 

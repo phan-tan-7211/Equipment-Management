@@ -1,14 +1,12 @@
-# EquipQR — ChatGPT / Codex Cloud Instructions
+# EquipQR — ChatGPT / Codex Instructions
 
-These instructions are optimized for ChatGPT/Codex working directly with this GitHub repository.
-They intentionally override the root `AGENTS.md`, which is primarily a Cursor-on-Windows handbook.
+These are the repository's task instructions for ChatGPT/Codex. The root `AGENTS.md` points here.
 
 ## 1. Context discipline
 
-- Do not load the root `AGENTS.md` unless the current task specifically needs Cursor/local-machine instructions.
-- Do not load `.cursor/rules/**` or long `docs/ops/**` runbooks preemptively.
+- Do not load long `docs/ops/**` runbooks preemptively.
 - Read only the files and documentation required for the current task.
-- If the task concerns release, deployment, secrets, Supabase operations, Vercel, OAuth, local Windows tooling, or Cursor workflows, read the relevant runbook before acting.
+- If the task concerns release, deployment, secrets, Supabase operations, Vercel, OAuth, local Windows tooling, or repository workflows, read the relevant runbook before acting.
 
 ## 2. One request = one bounded task
 
@@ -90,11 +88,10 @@ Instead report the blocker, re-plan, or request one specific user decision.
 
 Read the relevant existing documentation only when the task touches that area:
 
-- branching/release: `.cursor/rules/branching.mdc`, `docs/ops/git-and-deploy.md`
-- PR/CI publication: `.cursor/rules/pr-merge-ready-workflow.mdc`, `.cursor/rules/pr-ci-gate-before-open.mdc`
-- visual product evidence: `.cursor/rules/pr-visual-evidence.mdc`
-- secrets/access: root `AGENTS.md`, `docs/ops/agent-secrets-and-access.md`
-- local Windows dev stack: `.cursor/rules/dev-stack-lifecycle.mdc`
+- branching/release: `docs/ops/git-and-deploy.md`
+- PR/CI publication: `docs/ops/ci-cd-pipeline.md`, `CONTRIBUTING.md`
+- secrets/access: `docs/ops/agent-secrets-and-access.md`
+- local development: `docs/getting-started/developer-onboarding.md`
 - Supabase/cloud-agent operations: the applicable `docs/ops/**` runbook
 
 Do not read these just because they exist.
