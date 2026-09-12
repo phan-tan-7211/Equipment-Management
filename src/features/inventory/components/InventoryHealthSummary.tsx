@@ -22,7 +22,11 @@ export function InventoryHealthSummary({
   const { t } = useI18n();
   const stats = [
     { label: t('inventoryList.total'), value: metadata.totalCount, tone: 'text-foreground' },
-    { label: t('inventoryList.lowStock'), value: metadata.lowStockCount, tone: 'text-warning' },
+    {
+      label: t('inventoryList.quickFilterLabels.low-stock'),
+      value: metadata.lowStockCount,
+      tone: 'text-warning',
+    },
     { label: t('inventoryList.outOfStock'), value: metadata.outOfStockCount, tone: 'text-destructive' },
     { label: t('inventoryList.negative'), value: metadata.negativeStockCount, tone: 'text-destructive' },
     {
