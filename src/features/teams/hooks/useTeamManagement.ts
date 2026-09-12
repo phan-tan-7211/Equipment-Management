@@ -11,6 +11,7 @@ import { useSession } from '@/hooks/useSession';
 import { useTeam as useTeamContext } from '@/features/teams/hooks/useTeam';
 import { team, teams } from '@/lib/queryKeys';
 import { logger } from '@/utils/logger';
+import { useI18n } from '@/i18n';
 
 /**
  * Primary hook for the Teams list — repository-backed with access-snapshot filtering.
@@ -76,6 +77,7 @@ export const useTeam = (teamId: string | undefined) => {
 
 // Hook for team mutations
 export const useTeamMutations = () => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { refreshSession } = useSession();
@@ -107,8 +109,8 @@ export const useTeamMutations = () => {
     },
     onError: (error: unknown) => {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create team",
+        title: t('teamsFeedback.error'),
+        description: error instanceof Error ? error.message : t('teamsFeedback.createFailed'),
         variant: "destructive"
       });
     }
@@ -121,14 +123,14 @@ export const useTeamMutations = () => {
       queryClient.invalidateQueries({ queryKey: teams(variables.organizationId).root });
       queryClient.removeQueries({ queryKey: team(variables.teamId).byOrg(variables.organizationId) });
       toast({
-        title: "Success",
-        description: "Team deleted successfully",
+        title: t('teamsFeedback.success'),
+        description: t('teamsFeedback.deleted'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete team",
+        title: t('teamsFeedback.error'),
+        description: error instanceof Error ? error.message : t('teamsFeedback.deleteFailed'),
         variant: "destructive"
       });
     }
@@ -142,6 +144,7 @@ export const useTeamMutations = () => {
 
 // Hook for team member management
 export const useTeamMembers = (teamId: string | undefined, organizationId: string | undefined) => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -161,14 +164,14 @@ export const useTeamMembers = (teamId: string | undefined, organizationId: strin
       queryClient.invalidateQueries({ queryKey: ['teams', organizationId] });
       queryClient.invalidateQueries({ queryKey: ['availableUsers', organizationId, teamId] });
       toast({
-        title: "Success",
-        description: "Team member added successfully",
+        title: t('teamsFeedback.success'),
+        description: t('teamsFeedback.memberAdded'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to add team member",
+        title: t('teamsFeedback.error'),
+        description: error instanceof Error ? error.message : t('teamsFeedback.memberAddFailed'),
         variant: "destructive"
       });
     }
@@ -183,14 +186,14 @@ export const useTeamMembers = (teamId: string | undefined, organizationId: strin
       queryClient.invalidateQueries({ queryKey: ['teams', organizationId] });
       queryClient.invalidateQueries({ queryKey: ['availableUsers', organizationId, teamId] });
       toast({
-        title: "Success",
-        description: "Team member removed successfully",
+        title: t('teamsFeedback.success'),
+        description: t('teamsFeedback.memberRemoved'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to remove team member",
+        title: t('teamsFeedback.error'),
+        description: error instanceof Error ? error.message : t('teamsFeedback.memberRemoveFailed'),
         variant: "destructive"
       });
     }
@@ -207,14 +210,14 @@ export const useTeamMembers = (teamId: string | undefined, organizationId: strin
       queryClient.invalidateQueries({ queryKey: ['team', teamId] });
       queryClient.invalidateQueries({ queryKey: ['teams', organizationId] });
       toast({
-        title: "Success",
-        description: "Team member role updated successfully",
+        title: t('teamsFeedback.success'),
+        description: t('teamsFeedback.roleUpdated'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update team member role",
+        title: t('teamsFeedback.error'),
+        description: error instanceof Error ? error.message : t('teamsFeedback.roleUpdateFailed'),
         variant: "destructive"
       });
     }
