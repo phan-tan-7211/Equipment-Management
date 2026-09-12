@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useState, useMemo } from 'react';
 import {
   Dialog,
@@ -60,6 +61,7 @@ const WorkOrderForm: React.FC<WorkOrderFormProps> = ({
   stayOnList = false,
   onCreated,
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { getUserTeamIds } = useSession();
   const { equipment: equipmentPerms } = useUnifiedPermissions();
@@ -172,7 +174,7 @@ const WorkOrderForm: React.FC<WorkOrderFormProps> = ({
 
   const handleClose = () => {
     if (checkForUnsavedChanges()) {
-      const confirmClose = window.confirm('You have unsaved changes. Are you sure you want to close?');
+      const confirmClose = window.confirm(t('workOrderForm.unsaved'));
       if (!confirmClose) return;
     }
     form.reset();
@@ -329,28 +331,28 @@ const WorkOrderForm: React.FC<WorkOrderFormProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-warning" />
-              Equipment Working Hours Not Updated
+              {t('workOrderForm.hoursWarningTitle')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <p>
-                  You're about to create a work order without updating the equipment's working hours.
+                  {t('workOrderForm.hoursWarningIntro')}
                 </p>
                 <p className="font-medium text-warning">
-                  Are you sure you want to start work on this machine without documenting the current hours?
+                  {t('workOrderForm.hoursWarningConfirm')}
                 </p>
                 <p>
-                  This information is important for maintenance scheduling and equipment lifecycle tracking.
+                  {t('workOrderForm.hoursWarningReason')}
                 </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancelSubmit}>
-              Go Back & Update Hours
+              {t('workOrderForm.goBackUpdateHours')}
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmSubmit} className="bg-warning hover:bg-warning/90">
-              Yes, Create Without Hours
+              {t('workOrderForm.createWithoutHours')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

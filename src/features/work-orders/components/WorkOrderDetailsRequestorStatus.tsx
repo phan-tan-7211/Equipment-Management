@@ -1,3 +1,5 @@
+import { useI18n } from '@/i18n';
+import { localizeWorkOrderStatus } from '@/features/work-orders/utils/workOrderI18nLabels';
 // fallow-ignore-file code-duplication
 // Duplication rationale: Requestor status mirrors manager status controls
 
@@ -10,7 +12,7 @@ import { Clock, Wrench, Clipboard } from 'lucide-react';
 import { WorkOrderData, EquipmentData, PermissionLevels, PMData } from '@/features/work-orders/types/workOrderDetails';
 import { formatDueDisplay, parseDue } from '@/features/work-orders/calendar';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
-import { formatStatus, getStatusColor } from '@/features/work-orders/utils/workOrderHelpers';
+import { getStatusColor } from '@/features/work-orders/utils/workOrderHelpers';
 import { getWorkOrderAssignmentDisplay } from '@/features/work-orders/utils/workOrderAssignmentDisplay';
 
 interface WorkOrderDetailsRequestorStatusProps {
@@ -28,6 +30,7 @@ export const WorkOrderDetailsRequestorStatus: React.FC<WorkOrderDetailsRequestor
   pmData,
   canViewInternalLabor = false,
 }) => {
+  const { t } = useI18n();
   const { formatDate, formatDateTime } = useFormatTimestamp();
   const dueLabel = formatDueDisplay(parseDue(workOrder), {
     formatDay: formatDate,
@@ -45,23 +48,23 @@ export const WorkOrderDetailsRequestorStatus: React.FC<WorkOrderDetailsRequestor
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Work Order Status</CardTitle>
+        <CardTitle className="text-lg">{t('workOrderDetail.workOrderStatus')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Current Status */}
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Current Status:</span>
+          <span className="text-sm font-medium">{t('workOrderDetail.currentStatus')}</span>
           <Badge className={getStatusColor(workOrder.status)}>
-            {formatStatus(workOrder.status)}
+            {localizeWorkOrderStatus(workOrder.status, t)}
           </Badge>
         </div>
 
         {/* Assignment Information */}
         <div className="space-y-2">
-          <span className="text-sm font-medium">{assignment.label}:</span>
+          <span className="text-sm font-medium">{t(assignment.type === 'user' ? 'workOrderDetail.assignedTo' : 'workOrderDetail.assignment')}:</span>
           <div className="flex items-center gap-2">
             <AssignmentIcon className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">{assignment.name}</span>
+            <span className="text-sm">{assignment.type === 'unassigned' ? t('workOrderDetail.notYetAssigned') : assignment.name}</span>
           </div>
         </div>
 
@@ -70,14 +73,14 @@ export const WorkOrderDetailsRequestorStatus: React.FC<WorkOrderDetailsRequestor
           {dueLabel && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>Due {dueLabel}</span>
+              <span>{t('workOrderDetail.due', { date: dueLabel })}</span>
             </div>
           )}
 
           {workOrder.completed_date && (
             <div className="flex items-center gap-2 text-sm text-success">
               <Clock className="h-4 w-4" />
-              <span>Completed {formatDate(workOrder.completed_date)}</span>
+              <span>{t('workOrderDetail.completed', { date: formatDate(workOrder.completed_date) })}</span>
             </div>
           )}
         </div>
@@ -85,13 +88,13 @@ export const WorkOrderDetailsRequestorStatus: React.FC<WorkOrderDetailsRequestor
         {/* Progress Information */}
         {workOrder.status === 'in_progress' && (
           <div className="text-sm text-info bg-info/10 p-2 rounded">
-            Work is currently in progress
+            {t('workOrderDetail.workInProgress')}
           </div>
         )}
 
         {workOrder.status === 'on_hold' && (
           <div className="text-sm text-warning bg-warning/10 p-2 rounded">
-            Work is temporarily on hold
+            {t('workOrderDetail.workOnHold')}
           </div>
         )}
 
@@ -107,14 +110,14 @@ export const WorkOrderDetailsRequestorStatus: React.FC<WorkOrderDetailsRequestor
               {workOrder.estimated_hours != null && canViewInternalLabor && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  <span>Estimated: {workOrder.estimated_hours}h</span>
+                  <span>{t('workOrderDetail.estimated', { hours: workOrder.estimated_hours })}</span>
                 </div>
               )}
 
               {workOrder.has_pm && pmData && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clipboard className="h-4 w-4" />
-                  <span>PM: {pmData.status.replace('_', ' ').toUpperCase()}</span>
+                  <span>{t('workOrderDetail.pmStatus', { status: pmData.status.replace('_', ' ').toUpperCase() })}</span>
                 </div>
               )}
 

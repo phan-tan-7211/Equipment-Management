@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ export const WorkOrderGeneralInfo: React.FC<WorkOrderGeneralInfoProps> = ({
   preSelectedEquipment,
   pmTemplateControl,
 }) => {
+  const { t } = useI18n();
   const titleFieldId = "work-order-title";
   const priorityFieldId = "work-order-priority";
   const descriptionFieldId = "work-order-description";
@@ -46,16 +48,16 @@ export const WorkOrderGeneralInfo: React.FC<WorkOrderGeneralInfoProps> = ({
     <Card>
       <CardContent className="pt-4 space-y-4">
         <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-          General Information
+          {t('workOrderForm.generalInformation')}
         </h3>
-        
+
         <div className="space-y-2">
-          <Label htmlFor={titleFieldId}>Title *</Label>
+          <Label htmlFor={titleFieldId}>{t('workOrderForm.fieldTitle')}</Label>
           <Input
             id={titleFieldId}
-            placeholder={preSelectedEquipment ? 
-              `Maintenance for ${preSelectedEquipment.name}` : 
-              "Brief description of the work needed"
+            placeholder={preSelectedEquipment ?
+              t('workOrderForm.maintenanceFor', { name: preSelectedEquipment.name || '' }) :
+              t('workOrderForm.workBrief')
             }
             value={values.title || ''}
             onChange={(e) => setValue('title', e.target.value)}
@@ -68,31 +70,31 @@ export const WorkOrderGeneralInfo: React.FC<WorkOrderGeneralInfoProps> = ({
         {pmTemplateControl}
 
         <div className="space-y-2">
-          <Label htmlFor={priorityFieldId}>Priority *</Label>
-          <Select 
-            value={values.priority} 
+          <Label htmlFor={priorityFieldId}>{t('workOrderForm.priority')}</Label>
+          <Select
+            value={values.priority}
             onValueChange={(value) => setValue('priority', value as WorkOrderFormData['priority'])}
           >
             <SelectTrigger id={priorityFieldId}>
-              <SelectValue placeholder="Select priority" />
+              <SelectValue placeholder={t('workOrderForm.selectPriority')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="low">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-success"></div>
-                  Low Priority
+                  {t('workOrderForm.lowPriority')}
                 </div>
               </SelectItem>
               <SelectItem value="medium">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-warning"></div>
-                  Medium Priority
+                  {t('workOrderForm.mediumPriority')}
                 </div>
               </SelectItem>
               <SelectItem value="high">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-destructive"></div>
-                  High Priority
+                  {t('workOrderForm.highPriority')}
                 </div>
               </SelectItem>
             </SelectContent>
@@ -103,13 +105,13 @@ export const WorkOrderGeneralInfo: React.FC<WorkOrderGeneralInfoProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={descriptionFieldId}>Description</Label>
+          <Label htmlFor={descriptionFieldId}>{t('workOrderForm.description')}</Label>
           <div className="relative">
             <Textarea
               id={descriptionFieldId}
-              placeholder={preSelectedEquipment ? 
-                `Describe the work needed for ${preSelectedEquipment.name}. Include any specific requirements, safety considerations, or special instructions...` :
-                "Provide detailed information about the work needed, including any specific requirements, safety considerations, or special instructions..."
+              placeholder={preSelectedEquipment ?
+                t('workOrderForm.describeEquipment', { name: preSelectedEquipment.name || '' }) :
+                t('workOrderForm.describeWork')
               }
               className="min-h-30 pb-12"
               value={values.description || ''}

@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,6 +46,7 @@ const WorkOrderDetailsInfo: React.FC<WorkOrderDetailsInfoProps> = ({
   onSaveDescription,
   equipmentLocationEdit,
 }) => {
+  const { t } = useI18n();
   const { formatDateTime } = useFormatTimestamp();
   const isMobile = useIsMobile();
   const [isEquipmentExpanded, setIsEquipmentExpanded] = React.useState(true);
@@ -63,13 +65,13 @@ const WorkOrderDetailsInfo: React.FC<WorkOrderDetailsInfoProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Work Order Details
+          {t('workOrderDetail.workOrderDetails')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="text-sm font-semibold text-foreground">Description</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t('workOrderDetail.description')}</h3>
             {descriptionLockMessage ? (
               <p className="text-xs text-muted-foreground">{descriptionLockMessage}</p>
             ) : null}
@@ -81,9 +83,9 @@ const WorkOrderDetailsInfo: React.FC<WorkOrderDetailsInfoProps> = ({
               onSave={onSaveDescription}
               canEdit={canEditDescription}
               type="textarea"
-              placeholder="Add a work order description"
+              placeholder={t('workOrderDetail.addDescription')}
               className="text-sm text-muted-foreground leading-relaxed"
-              editAriaLabel="Edit description"
+              editAriaLabel={t('workOrderDetail.editDescription')}
             />
           ) : (
             <p className="text-muted-foreground leading-relaxed text-sm">
@@ -100,7 +102,7 @@ const WorkOrderDetailsInfo: React.FC<WorkOrderDetailsInfoProps> = ({
               <CollapsibleTrigger className="flex items-center justify-between w-full group">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Wrench className="h-4 w-4" />
-                  Equipment Information
+                  {t('workOrderDetail.equipmentInformation')}
                 </h3>
                 <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
@@ -144,37 +146,37 @@ const WorkOrderDetailsInfo: React.FC<WorkOrderDetailsInfoProps> = ({
                     equipment.status === 'maintenance' ? 'border-warning/30 text-warning' :
                     'border-destructive/30 text-destructive'}
                   `}>
-                    {equipment.status}
+                    {({active: t('workOrderDetail.equipmentActive'), maintenance: t('workOrderDetail.equipmentMaintenance'), inactive: t('workOrderDetail.equipmentInactive')} as Record<string, string>)[equipment.status] || equipment.status}
                   </Badge>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium">Manufacturer:</span>
+                    <span className="font-medium">{t('workOrderDetail.manufacturer')}</span>
                     <span className="ml-2 text-muted-foreground wrap-break-word">{equipment.manufacturer}</span>
                   </div>
                   <div>
-                    <span className="font-medium">Model:</span>
+                    <span className="font-medium">{t('workOrderDetail.model')}</span>
                     <span className="ml-2 text-muted-foreground wrap-break-word">{equipment.model}</span>
                   </div>
                   <div className="sm:col-span-2">
-                    <span className="font-medium">Serial Number:</span>
+                    <span className="font-medium">{t('workOrderDetail.serialNumber')}</span>
                     <span className="ml-2 text-muted-foreground wrap-break-word">{equipment.serial_number}</span>
                   </div>
                   {/* Working Hours - standard data label */}
                   <div className="sm:col-span-2">
                     <span className="font-medium">
-                      {workOrder.equipment_working_hours_at_creation ? 'Meter Reading (at creation):' : 'Equipment Hours:'}
+                      {workOrder.equipment_working_hours_at_creation ? t('workOrderDetail.meterReadingCreation') : t('workOrderDetail.equipmentHours')}
                     </span>
                     <span className="ml-2 text-muted-foreground wrap-break-word">
                       {workingHoursLoading ? (
-                        <span className="animate-pulse">Loading...</span>
+                        <span className="animate-pulse">{t('workOrderDetail.loading')}</span>
                       ) : (
-                        `${workingHours?.toLocaleString() || 0} hrs`
+                        t('workOrderDetail.workingHours', { count: workingHours?.toLocaleString() || 0 })
                       )}
                     </span>
                     {workOrder.equipment_working_hours_at_creation && (
-                      <span className="text-xs text-muted-foreground ml-1">(historical snapshot)</span>
+                      <span className="text-xs text-muted-foreground ml-1">{t('workOrderDetail.historicalSnapshot')}</span>
                     )}
                   </div>
 
@@ -203,12 +205,12 @@ const WorkOrderDetailsInfo: React.FC<WorkOrderDetailsInfoProps> = ({
             <Separator />
             <Collapsible open={isCompletionExpanded} onOpenChange={setIsCompletionExpanded}>
               <CollapsibleTrigger className="flex items-center justify-between w-full group">
-                <h3 className="font-semibold">Completion Details</h3>
+                <h3 className="font-semibold">{t('workOrderDetail.completionDetails')}</h3>
                 <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
                 <p className="text-sm text-muted-foreground">
-                  Completed on {formatDateTime(workOrder.completed_date)}
+                  {t('workOrderDetail.completedOn', { date: formatDateTime(workOrder.completed_date) })}
                 </p>
               </CollapsibleContent>
             </Collapsible>

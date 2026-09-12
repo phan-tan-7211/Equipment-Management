@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,6 +26,7 @@ export const WorkOrderAssignment: React.FC<WorkOrderAssignmentProps> = ({
   organizationId,
   equipmentId
 }) => {
+  const { t } = useI18n();
   const { assignmentOptions, isLoading: isLoadingMembers, error: assignmentError, equipmentHasNoTeam, teamName } = useWorkOrderAssignmentOptions(organizationId, equipmentId);
   
   // Debug logging
@@ -52,18 +54,18 @@ export const WorkOrderAssignment: React.FC<WorkOrderAssignmentProps> = ({
     <Card>
       <CardContent className="pt-4 space-y-4">
         <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-          Assignment
+          {t('workOrderForm.assignment')}
         </h3>
         
         {teamName && (
           <div className="space-y-1">
             <div className="flex items-center gap-1.5">
-              <Label className="text-muted-foreground">Team</Label>
+              <Label className="text-muted-foreground">{t('workOrderForm.team')}</Label>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
-                <TooltipContent>Team is inherited from the selected equipment</TooltipContent>
+                <TooltipContent>{t('workOrderForm.teamInherited')}</TooltipContent>
               </Tooltip>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 rounded-md border bg-muted/40 text-sm">
@@ -77,17 +79,17 @@ export const WorkOrderAssignment: React.FC<WorkOrderAssignmentProps> = ({
           <Alert variant="default" className="border-warning/30 bg-warning/10 dark:border-warning/50 dark:bg-warning/15">
             <AlertTriangle className="h-4 w-4 text-warning" />
             <AlertDescription className="text-warning dark:text-warning">
-              This equipment has no team assigned. Assign a team to the equipment to enable work order assignments.
+              {t('workOrderForm.noTeamWarning')}
             </AlertDescription>
           </Alert>
         ) : (
           <div className="space-y-2">
-            <Label>Assignee</Label>
+            <Label>{t('workOrderForm.assignee')}</Label>
             <p className="text-xs text-muted-foreground">
-              Assignable: equipment team members + organization admins
+              {t('workOrderForm.assignableHint')}
             </p>
             {assignmentError && (
-              <p className="text-sm text-destructive">Error loading assignees: {assignmentError.message}</p>
+              <p className="text-sm text-destructive">{t('workOrderForm.loadingAssigneesError', { message: assignmentError.message })}</p>
             )}
             <Select
               value={values.assigneeId || 'unassigned'}
@@ -95,14 +97,14 @@ export const WorkOrderAssignment: React.FC<WorkOrderAssignmentProps> = ({
               disabled={isLoadingMembers}
             >
               <SelectTrigger>
-                <SelectValue placeholder={isLoadingMembers ? "Loading..." : "Select assignee..."} />
+                <SelectValue placeholder={isLoadingMembers ? t('workOrderForm.loading') : t('workOrderForm.selectAssignee')} />
               </SelectTrigger>
               <SelectContent>
                 {/* Unassigned option */}
                 <SelectItem value="unassigned">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    <span>Unassigned</span>
+                    <span>{t('workOrderForm.unassigned')}</span>
                   </div>
                 </SelectItem>
                 
