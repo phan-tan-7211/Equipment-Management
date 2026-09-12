@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Trash2, Package } from 'lucide-react';
 import { WorkOrderCostItem } from '@/features/work-orders/hooks/useWorkOrderCostsState';
+import { useI18n } from '@/i18n';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import {
@@ -24,6 +25,7 @@ const DesktopCostItem: React.FC<DesktopCostItemProps> = React.memo(({
   onUpdateCost,
   canRemove
 }) => {
+  const { t } = useI18n();
   const isFromInventory = !!cost.inventory_item_id;
 
   return (
@@ -35,13 +37,13 @@ const DesktopCostItem: React.FC<DesktopCostItemProps> = React.memo(({
               <TooltipTrigger asChild>
                 <Package className="h-4 w-4 text-info shrink-0" />
               </TooltipTrigger>
-              <TooltipContent>From inventory - removing will restore stock</TooltipContent>
+              <TooltipContent>{t('workOrderResidual.fromInventory')}</TooltipContent>
             </Tooltip>
           )}
           <Input
             value={cost.description}
             onChange={(e) => onUpdateCost(cost.id, 'description', e.target.value)}
-            placeholder="Enter description..."
+            placeholder={t('workOrderResidual.enterDescription')}
             className="h-8"
             readOnly={isFromInventory}
           />
@@ -52,7 +54,7 @@ const DesktopCostItem: React.FC<DesktopCostItemProps> = React.memo(({
           min="0.01"
           value={cost.quantity}
           onChange={(e) => onUpdateCost(cost.id, 'quantity', parseFloat(e.target.value) || 1)}
-          placeholder="Qty"
+          placeholder={t('workOrderResidual.qty')}
           className="h-8"
         />
         <div className="flex items-center gap-1">
@@ -78,6 +80,7 @@ const DesktopCostItem: React.FC<DesktopCostItemProps> = React.memo(({
             onClick={() => onRemoveCost(cost.id)}
             className="text-destructive hover:text-destructive"
             disabled={!canRemove}
+            aria-label={t('workOrderResidual.removeCostLine')}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -90,4 +93,3 @@ const DesktopCostItem: React.FC<DesktopCostItemProps> = React.memo(({
 DesktopCostItem.displayName = 'DesktopCostItem';
 
 export default DesktopCostItem;
-

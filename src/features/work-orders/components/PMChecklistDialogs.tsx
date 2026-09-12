@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useI18n } from '@/i18n';
 
 type PMChecklistDialogsProps = {
   showSetAllOKDialog: boolean;
@@ -33,22 +34,21 @@ export function PMChecklistDialogs({
   onConfirmRevert,
   willReopenWorkOrder = false,
 }: PMChecklistDialogsProps) {
+  const { t } = useI18n();
   return (
     <>
       <AlertDialog open={showSetAllOKDialog} onOpenChange={onSetAllOKDialogOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Set All Items to OK?</AlertDialogTitle>
+            <AlertDialogTitle>{t('workOrderResidual.setAllConfirm')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will set the condition of all checklist items to "OK". Any existing notes on the
-              items will be preserved. This action is useful when the equipment is already in good
-              working order.
+              {t('workOrderResidual.setAllDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSettingAllOK}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isSettingAllOK}>{t('workOrderResidual.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={onConfirmSetAllOK} disabled={isSettingAllOK}>
-              {isSettingAllOK ? 'Setting & Saving...' : 'Set All to OK & Save'}
+              {isSettingAllOK ? t('workOrderResidual.settingAndSaving') : t('workOrderResidual.setAllAndSave')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -57,15 +57,15 @@ export function PMChecklistDialogs({
       <AlertDialog open={showRevertPMDialog} onOpenChange={onRevertPMDialogOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Revert PM?</AlertDialogTitle>
+            <AlertDialogTitle>{t('workOrderResidual.revertConfirm')}</AlertDialogTitle>
             <AlertDialogDescription>
               {willReopenWorkOrder
-                ? 'This will set the PM checklist back to pending and reopen this work order to accepted so the checklist can be edited again. All checklist item assessments and notes will be preserved. This action can only be performed by an organization owner or administrator.'
-                : 'This will set the PM checklist back to pending. All checklist item assessments and notes will be preserved. This action can only be performed by an organization owner or administrator.'}
+                ? t('workOrderResidual.revertReopensDescription')
+                : t('workOrderResidual.revertDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isReverting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isReverting}>{t('workOrderResidual.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 onRevertPMDialogOpenChange(false);
@@ -74,7 +74,7 @@ export function PMChecklistDialogs({
               disabled={isReverting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isReverting ? 'Reverting...' : 'Yes, revert PM'}
+              {isReverting ? t('workOrderResidual.reverting') : t('workOrderResidual.confirmRevert')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

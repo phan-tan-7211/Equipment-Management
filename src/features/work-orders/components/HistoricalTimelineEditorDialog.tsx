@@ -31,6 +31,7 @@ import {
   type HistoricalTimelineEvent,
 } from '@/features/work-orders/utils/historicalTimeline';
 import type { WorkOrderTimelineHistoryRow } from '@/features/work-orders/services/historicalTimelineService';
+import { useI18n } from '@/i18n';
 
 type HistoricalTimelineEditorDialogProps = {
   open: boolean;
@@ -53,7 +54,7 @@ export function HistoricalTimelineEditorDialog({
   workOrderId,
   organizationId,
   equipmentId,
-  title = 'Timeline Editor',
+  title,
   historyRows,
   initialEvents,
   mode = 'edit',
@@ -61,6 +62,7 @@ export function HistoricalTimelineEditorDialog({
   historyReady = true,
   historicalStartDate,
 }: HistoricalTimelineEditorDialogProps) {
+  const { t } = useI18n();
   const replaceTimelineMutation = useReplaceHistoricalWorkOrderTimeline();
   const convertTimelineMutation = useConvertWorkOrderToHistorical();
   const { isManager } = useWorkOrderPermissionLevels();
@@ -108,7 +110,7 @@ export function HistoricalTimelineEditorDialog({
   );
   const canSave = validationErrors.length === 0 && draftEvents.length > 0 && !hasIncompleteRows;
   const isSaving = replaceTimelineMutation.isPending || convertTimelineMutation.isPending;
-  const saveLabel = 'Save Timeline';
+  const saveLabel = t('workOrderResidual.timelineSave');
 
   const performClose = () => {
     onOpenChange(false);
@@ -198,26 +200,15 @@ export function HistoricalTimelineEditorDialog({
           }}
         >
           <DialogHeader className="space-y-1 border-b px-6 py-4">
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>{title || t('workOrderResidual.timelineTitle')}</DialogTitle>
             <DialogDescription className="text-xs leading-snug">
-              {mode === 'convert' ? (
-                <>
-                  Backdate status events from paper records. The work order will be marked as a
-                  historical record and timeline dates can reflect when work actually happened in
-                  the field.
-                </>
-              ) : (
-                <>
-                  Operational timeline dates reflect when work happened. The organization Audit Log
-                  continues to record when edits were made in EquipQR.
-                </>
-              )}
+              {mode === 'convert' ? t('workOrderResidual.timelineConvertHelp') : t('workOrderResidual.timelineHelp')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-6 py-4">
             {isInitializing ? (
-              <p className="text-sm text-muted-foreground">Loading historical timeline…</p>
+              <p className="text-sm text-muted-foreground">{t('workOrderResidual.timelineLoading')}</p>
             ) : (
               <HistoricalTimelineEditor
                 initialEvents={editorSeedEvents}
@@ -236,14 +227,14 @@ export function HistoricalTimelineEditorDialog({
               onClick={handleRequestClose}
               disabled={isInvalid}
             >
-              Cancel
+              {t('workOrderResidual.cancel')}
             </Button>
             <Button
               type="button"
               onClick={handleSave}
               disabled={!canSave || isSaving}
             >
-              {isSaving ? 'Saving...' : saveLabel}
+              {isSaving ? t('workOrderResidual.saving') : saveLabel}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -252,14 +243,14 @@ export function HistoricalTimelineEditorDialog({
       <AlertDialog open={confirmDiscardOpen} onOpenChange={setConfirmDiscardOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Discard timeline changes?</AlertDialogTitle>
+            <AlertDialogTitle>{t('workOrderResidual.discardTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Your timeline edits have not been saved. Stay to keep editing, or discard to close without saving.
+              {t('workOrderResidual.discardHelp')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep editing</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDiscard}>Discard changes</AlertDialogAction>
+            <AlertDialogCancel>{t('workOrderResidual.keepEditing')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDiscard}>{t('workOrderResidual.discard')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

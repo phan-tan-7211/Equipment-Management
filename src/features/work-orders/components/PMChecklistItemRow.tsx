@@ -9,14 +9,15 @@ import { CheckCircle, Circle, MessageSquare, MessageSquareText } from 'lucide-re
 import { cn } from '@/lib/utils';
 import { PMChecklistItem, type PMChecklistCondition } from '@/features/pm-templates/services/preventativeMaintenanceService';
 import { PM_CONDITION_NOT_APPLICABLE } from '@/utils/pmChecklistHelpers';
+import { useI18n } from '@/i18n';
 
 const CONDITION_RATINGS = [
   { value: 1, label: 'OK', color: 'text-success' },
-  { value: PM_CONDITION_NOT_APPLICABLE, label: 'Not Applicable', color: 'text-muted-foreground' },
-  { value: 2, label: 'Adjusted', color: 'text-warning' },
-  { value: 3, label: 'Recommend Repairs', color: 'text-warning' },
-  { value: 4, label: 'Requires Immediate Repairs', color: 'text-destructive' },
-  { value: 5, label: 'Unsafe Condition Present', color: 'text-destructive' },
+  { value: PM_CONDITION_NOT_APPLICABLE, label: 'notApplicable', color: 'text-muted-foreground' },
+  { value: 2, label: 'adjusted', color: 'text-warning' },
+  { value: 3, label: 'recommendRepairs', color: 'text-warning' },
+  { value: 4, label: 'immediateRepairs', color: 'text-destructive' },
+  { value: 5, label: 'unsafeCondition', color: 'text-destructive' },
 ] as const;
 
 function getConditionColor(condition: number | null | undefined): string {
@@ -32,16 +33,16 @@ function getConditionColor(condition: number | null | undefined): string {
   }
 }
 
-function getConditionText(condition: number | null | undefined): string {
-  if (condition === null || condition === undefined) return 'Not Rated';
+function getConditionKey(condition: number | null | undefined): string {
+  if (condition === null || condition === undefined) return 'notRated';
   switch (condition) {
     case 1: return 'OK';
-    case PM_CONDITION_NOT_APPLICABLE: return 'Not Applicable';
-    case 2: return 'Adjusted';
-    case 3: return 'Recommend Repairs';
-    case 4: return 'Requires Immediate Repairs';
-    case 5: return 'Unsafe Condition Present';
-    default: return 'Unknown';
+    case PM_CONDITION_NOT_APPLICABLE: return 'notApplicable';
+    case 2: return 'adjusted';
+    case 3: return 'recommendRepairs';
+    case 4: return 'immediateRepairs';
+    case 5: return 'unsafeCondition';
+    default: return 'unknown';
   }
 }
 
@@ -70,6 +71,7 @@ const PMChecklistItemRow = React.memo<PMChecklistItemRowProps>(function PMCheckl
   borderClass,
   onNotesChange,
 }) {
+  const { t } = useI18n();
   const editable = !readOnly && pmStatus !== 'completed';
 
   return (
@@ -89,7 +91,7 @@ const PMChecklistItemRow = React.memo<PMChecklistItemRowProps>(function PMCheckl
             <span className="font-medium text-[15px]">{item.title}</span>
           </div>
           <span className={`text-sm font-medium shrink-0 ${getConditionColor(item.condition)}`}>
-            {getConditionText(item.condition)}
+            {item.condition === 1 ? 'OK' : t(`workOrderResidual.${getConditionKey(item.condition)}`)}
           </span>
         </div>
         {item.description && (
@@ -99,7 +101,7 @@ const PMChecklistItemRow = React.memo<PMChecklistItemRowProps>(function PMCheckl
         {editable && (
           <div className="flex items-start gap-2">
             <div className="flex-1 space-y-2">
-              <Label className="text-sm font-medium">Maintenance Assessment:</Label>
+              <Label className="text-sm font-medium">{t('workOrderResidual.assessment')}</Label>
               <Select
                 value={item.condition?.toString() || ''}
                 onValueChange={(value) => {
@@ -108,7 +110,7 @@ const PMChecklistItemRow = React.memo<PMChecklistItemRowProps>(function PMCheckl
                 }}
               >
                 <SelectTrigger className="w-full min-h-11 touch-manipulation">
-                  <SelectValue placeholder="Select assessment..." />
+                  <SelectValue placeholder={t('workOrderResidual.selectAssessment')} />
                 </SelectTrigger>
                 <SelectContent>
                   {CONDITION_RATINGS.map((rating) => (
@@ -117,7 +119,7 @@ const PMChecklistItemRow = React.memo<PMChecklistItemRowProps>(function PMCheckl
                       value={rating.value.toString()}
                       className={rating.color}
                     >
-                      {rating.label}
+                      {rating.value === 1 ? 'OK' : t(`workOrderResidual.${rating.label}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -131,10 +133,10 @@ const PMChecklistItemRow = React.memo<PMChecklistItemRowProps>(function PMCheckl
               onClick={() => onToggleNotes(item.id)}
               aria-label={
                 showNotes
-                  ? 'Hide notes'
+                  ? t('workOrderResidual.hideNotes')
                   : item.notes
-                    ? 'Show notes'
-                    : 'Add notes'
+                    ? t('workOrderResidual.showNotes')
+                    : t('workOrderResidual.addNotes')
               }
             >
               {item.notes ? (
@@ -155,7 +157,7 @@ const PMChecklistItemRow = React.memo<PMChecklistItemRowProps>(function PMCheckl
           >
             <div className="overflow-hidden min-h-0">
               <Textarea
-                placeholder="Add notes for this item..."
+                placeholder={t('workOrderResidual.itemNotesPlaceholder')}
                 value={item.notes || ''}
                 onChange={(e) => onNotesChange(item.id, e.target.value)}
                 className="mt-2"
@@ -166,7 +168,7 @@ const PMChecklistItemRow = React.memo<PMChecklistItemRowProps>(function PMCheckl
         )}
         {item.notes && (readOnly || pmStatus === 'completed') && (
           <div className="mt-2 p-2.5 bg-muted rounded text-sm text-foreground/90 border border-border/50">
-            <strong className="text-foreground">Notes:</strong> {item.notes}
+            <strong className="text-foreground">{t('workOrderResidual.notes')}</strong> {item.notes}
           </div>
         )}
       </div>
@@ -175,4 +177,3 @@ const PMChecklistItemRow = React.memo<PMChecklistItemRowProps>(function PMCheckl
 });
 
 export default PMChecklistItemRow;
-
