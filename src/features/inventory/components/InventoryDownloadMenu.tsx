@@ -58,8 +58,8 @@ const InventoryDownloadMenu: React.FC<InventoryDownloadMenuProps> = ({
   }
 
   const handleExportAllCsv = () => {
-    const rows = itemsToAllExportRows(items, formatDate);
-    const csv = arrayToCsv(getAllExportHeaders(), rows);
+    const rows = itemsToAllExportRows(items, formatDate, t);
+    const csv = arrayToCsv(getAllExportHeaders(t), rows);
     downloadCsv(csv, filenameWithDate('inventory', 'csv'));
   };
 
@@ -68,8 +68,8 @@ const InventoryDownloadMenu: React.FC<InventoryDownloadMenuProps> = ({
   };
 
   const handleExportSelectedCsv = () => {
-    const rows = itemsToAllExportRows(selectedItems, formatDate);
-    const csv = arrayToCsv(getAllExportHeaders(), rows);
+    const rows = itemsToAllExportRows(selectedItems, formatDate, t);
+    const csv = arrayToCsv(getAllExportHeaders(t), rows);
     downloadCsv(csv, filenameWithDate('inventory-selected', 'csv'));
   };
 

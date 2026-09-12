@@ -1,8 +1,10 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { enUS, vi, ko } from 'date-fns/locale';
 import { MessageSquare, User, Shield } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import type { Ticket, TicketComment } from '../hooks/useMyTickets';
+import { useI18n } from '@/i18n';
 
 interface TicketDetailProps {
   ticket: Ticket;
@@ -14,13 +16,14 @@ interface TicketDetailProps {
  * and a timeline of comments from the team.
  */
 const TicketDetail: React.FC<TicketDetailProps> = ({ ticket }) => {
+  const { t } = useI18n();
   const metadata = ticket.metadata as Record<string, unknown> | null;
 
   return (
     <div className="space-y-4 pt-3">
       {/* Original description */}
       <div>
-        <p className="text-xs font-medium text-muted-foreground uppercase mb-1">Description</p>
+        <p className="text-xs font-medium text-muted-foreground uppercase mb-1">{t('tickets.description')}</p>
         <p className="text-sm whitespace-pre-wrap bg-muted/50 rounded-md p-3">
           {ticket.description}
         </p>
@@ -29,29 +32,29 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket }) => {
       {/* Session diagnostics summary (if available) */}
       {metadata && (metadata.appVersion || metadata.currentUrl) && (
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase mb-1">Session Info</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase mb-1">{t('tickets.sessionInfo')}</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground bg-muted/30 rounded-md p-3">
             {metadata.appVersion && (
               <>
-                <span className="font-medium">Version</span>
+                <span className="font-medium">{t('tickets.version')}</span>
                 <span>{String(metadata.appVersion)}</span>
               </>
             )}
             {metadata.currentUrl && (
               <>
-                <span className="font-medium">Route</span>
+                <span className="font-medium">{t('tickets.route')}</span>
                 <span className="truncate">{String(metadata.currentUrl)}</span>
               </>
             )}
             {metadata.organizationPlan && (
               <>
-                <span className="font-medium">Plan</span>
+                <span className="font-medium">{t('tickets.plan')}</span>
                 <span>{String(metadata.organizationPlan)}</span>
               </>
             )}
             {metadata.userRole && (
               <>
-                <span className="font-medium">Role</span>
+                <span className="font-medium">{t('tickets.role')}</span>
                 <span>{String(metadata.userRole)}</span>
               </>
             )}
@@ -65,7 +68,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket }) => {
           <Separator className="my-2" />
           <p className="text-xs font-medium text-muted-foreground uppercase mb-2 flex items-center gap-1">
             <MessageSquare className="h-3 w-3" />
-            Responses ({ticket.ticket_comments.length})
+            {t('tickets.responses', { count: ticket.ticket_comments.length })}
           </p>
           <div className="space-y-3">
             {ticket.ticket_comments.map((comment: TicketComment) => (
@@ -77,7 +80,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket }) => {
 
       {ticket.ticket_comments.length === 0 && (
         <p className="text-xs text-muted-foreground italic">
-          No responses yet. Our team has been notified and will follow up.
+          {t('tickets.noResponses')}
         </p>
       )}
     </div>
@@ -88,7 +91,8 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket }) => {
  * A single comment in the ticket timeline.
  */
 const CommentItem: React.FC<{ comment: TicketComment }> = ({ comment }) => {
-  const timeAgo = formatDistanceToNow(new Date(comment.created_at), { addSuffix: true });
+  const { t, language } = useI18n();
+  const timeAgo = formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: language === 'vi' ? vi : language === 'ko' ? ko : enUS });
 
   return (
     <div className="flex gap-2">
@@ -110,7 +114,7 @@ const CommentItem: React.FC<{ comment: TicketComment }> = ({ comment }) => {
           </span>
           {comment.is_from_team && (
             <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
-              Team
+              {t('tickets.team')}
             </span>
           )}
           <span className="text-xs text-muted-foreground">{timeAgo}</span>

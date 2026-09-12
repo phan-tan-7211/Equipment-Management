@@ -1,3 +1,5 @@
+import { translateDsrCode } from '@/i18n/dsrResources';
+import { useI18n } from '@/i18n';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DsrRequest } from '@/features/dsr/api/dsrApi';
 
@@ -6,13 +8,14 @@ interface DsrChecklistPanelProps {
 }
 
 export function DsrChecklistPanel({ request }: DsrChecklistPanelProps) {
+  const { t } = useI18n();
   const requiredSteps = request.required_checklist_steps ?? [];
   const progress = (request.checklist_progress ?? {}) as Record<string, { completed_at?: string; actor_email?: string }>;
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Checklist</CardTitle>
+        <CardTitle className="text-base">{t('dsr.checklist')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {requiredSteps.map((step) => {
@@ -21,14 +24,14 @@ export function DsrChecklistPanel({ request }: DsrChecklistPanelProps) {
           return (
             <div key={step} className="rounded-md border p-2">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">{step}</p>
+                <p className="text-sm font-medium">{translateDsrCode(t, 'checklistSteps', step)}</p>
                 <span className={`text-xs ${done ? 'text-green-600' : 'text-muted-foreground'}`}>
-                  {done ? 'Completed' : 'Pending'}
+                  {done ? t('dsr.completed') : t('dsr.pending')}
                 </span>
               </div>
               {done && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  {info?.actor_email ?? 'admin'} at {new Date(info?.completed_at as string).toLocaleString()}
+                  {t('dsr.completedByAt', { actor: info?.actor_email ?? t('dsr.admin'), date: new Date(info?.completed_at as string).toLocaleString() })}
                 </p>
               )}
             </div>

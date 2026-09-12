@@ -57,18 +57,12 @@ export const useAddPartsConsumer = createAddPartsRoleMutation({
   addAssignee: addPartsConsumer,
   listQueryKey: partsRoles.consumers,
   statusQueryKey: partsRoles.isConsumer,
-  successTitle: 'Parts consumer added',
-  successDescription: 'The user can now view inventory and use part lookup.',
-  errorTitle: 'Error adding parts consumer',
-  errorFallback: 'Failed to add parts consumer',
+  messageKeyPrefix: 'consumerAdded',
 });
 
 export const useRemovePartsConsumer = createRemovePartsRoleMutation({
   removeAssignee: removePartsConsumer,
   listQueryKey: partsRoles.consumers,
   statusQueryKey: partsRoles.isConsumer,
-  successTitle: 'Parts consumer removed',
-  successDescription: 'The user can no longer view inventory or use part lookup.',
-  errorTitle: 'Error removing parts consumer',
-  errorFallback: 'Failed to remove parts consumer',
+  messageKeyPrefix: 'consumerRemoved',
 });

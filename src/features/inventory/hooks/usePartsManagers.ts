@@ -76,18 +76,12 @@ export const useAddPartsManager = createAddPartsRoleMutation({
   addAssignee: addPartsManager,
   listQueryKey: partsRoles.managers,
   statusQueryKey: partsRoles.isManager,
-  successTitle: 'Parts manager added',
-  successDescription: 'The user can now manage all inventory items.',
-  errorTitle: 'Error adding parts manager',
-  errorFallback: 'Failed to add parts manager',
+  messageKeyPrefix: 'managerAdded',
 });
 
 export const useRemovePartsManager = createRemovePartsRoleMutation({
   removeAssignee: removePartsManager,
   listQueryKey: partsRoles.managers,
   statusQueryKey: partsRoles.isManager,
-  successTitle: 'Parts manager removed',
-  successDescription: 'The user can no longer manage inventory items.',
-  errorTitle: 'Error removing parts manager',
-  errorFallback: 'Failed to remove parts manager',
+  messageKeyPrefix: 'managerRemoved',
 });
