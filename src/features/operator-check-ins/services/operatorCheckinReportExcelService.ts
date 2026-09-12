@@ -11,28 +11,8 @@ import {
 } from '@/features/operator-check-ins/services/operatorCheckinReportExportHelpers';
 import type { LedgerDateRange } from '@/features/operator-check-ins/utils/operatorCheckinLedgerScope';
 import { downloadBlob } from '@/utils/exportUtils';
-
-const SUBMISSION_HEADERS = [
-  'Equipment',
-  'Serial number',
-  'Template',
-  'Submitted at',
-  'Complete',
-  'Required answered',
-  'Summary',
-] as const;
-
-const CAPTURED_FIELD_HEADERS = ['Equipment', 'Label', 'Source', 'Value'] as const;
-
-const CHECKLIST_HEADERS = [
-  'Equipment',
-  'Template',
-  'Section',
-  'Item',
-  'Required',
-  'Result',
-  'Notes',
-] as const;
+import type { Language } from '@/i18n/I18nProvider';
+import { getOperatorCheckinExcelLabels } from './operatorCheckinExcelLabels';
 
 export async function downloadOperatorCheckinDailyExcel(
   submissions: OperatorCheckinSubmission[],
@@ -40,49 +20,56 @@ export async function downloadOperatorCheckinDailyExcel(
   templateName: string,
   equipmentLabel: string,
   options: OperatorCheckinReportExportOptions = DEFAULT_COMPACT_EXPORT_OPTIONS,
+  language: Language = 'en',
 ): Promise<void> {
   const { reportDateRangeLabel, dateRangeFilenamePart } = resolveReportDateRangeLabels(dateRange);
+  const labels = getOperatorCheckinExcelLabels(language);
 
   const XLSX = await import('xlsx');
   const workbook = XLSX.utils.book_new();
 
   const summarySheet = XLSX.utils.aoa_to_sheet(
-    buildSummarySheetRows(reportDateRangeLabel, templateName, equipmentLabel, submissions),
+    buildSummarySheetRows(reportDateRangeLabel, templateName, equipmentLabel, submissions, labels),
   );
-  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+  XLSX.utils.book_append_sheet(workbook, summarySheet, labels.summary);
 
   const submissionRows = submissions.map((submission) => {
     const row = buildSubmissionExportRow(submission, options);
+    const answers = Array.isArray(submission.checklist_answers) ? submission.checklist_answers : [];
+    const passCount = answers.filter((answer) => answer.passed).length;
+    const failCount = answers.filter((answer) => !answer.passed).length;
     return [
       row.equipmentName,
       row.serialNumber ?? '',
       row.templateName ?? '',
       row.submittedAt,
-      row.isComplete ? 'Yes' : 'No',
+      row.isComplete ? labels.yes : labels.no,
       row.requiredAnswered,
-      row.checklistSummary ?? '',
+      options.includeChecklist && language !== 'en'
+        ? (row.requiredAnswered ? `${labels.checklist}: ${row.requiredAnswered} ${labels.requiredAnswered}, ${passCount} ${labels.pass}, ${failCount} ${labels.fail}` : '')
+        : row.checklistSummary ?? '',
     ];
   });
   const submissionsSheet = XLSX.utils.aoa_to_sheet([
-    [...SUBMISSION_HEADERS],
+    [labels.equipment, labels.serial, labels.template, labels.submitted, labels.complete, labels.requiredAnswered, labels.summary],
     ...submissionRows,
   ]);
-  XLSX.utils.book_append_sheet(workbook, submissionsSheet, 'Submissions');
+  XLSX.utils.book_append_sheet(workbook, submissionsSheet, labels.submittedSheet);
 
   const capturedRows = submissions.flatMap((submission) =>
     buildCapturedFieldExportRows(submission, options).map((row) => [
       row.equipmentName,
       row.label,
-      row.source,
+      row.source === 'operator_input' ? labels.operatorInput : row.source === 'equipment_snapshot' ? labels.equipmentSnapshot : labels.clientContext,
       row.value,
     ]),
   );
   if (capturedRows.length > 0) {
     const capturedSheet = XLSX.utils.aoa_to_sheet([
-      [...CAPTURED_FIELD_HEADERS],
+      [labels.equipment, labels.label, labels.source, labels.value],
       ...capturedRows,
     ]);
-    XLSX.utils.book_append_sheet(workbook, capturedSheet, 'Captured Fields');
+    XLSX.utils.book_append_sheet(workbook, capturedSheet, labels.captured);
   }
 
   if (options.includeChecklist) {
@@ -92,17 +79,17 @@ export async function downloadOperatorCheckinDailyExcel(
         row.templateName ?? '',
         row.section,
         row.itemTitle,
-        row.required ? 'Yes' : 'No',
-        row.passed === null ? '' : row.passed ? 'Pass' : 'Fail',
+        row.required ? labels.yes : labels.no,
+        row.passed === null ? '' : row.passed ? labels.pass : labels.fail,
         row.notes ?? '',
       ]),
     );
     if (checklistRows.length > 0) {
       const checklistSheet = XLSX.utils.aoa_to_sheet([
-        [...CHECKLIST_HEADERS],
+        [labels.equipment, labels.template, labels.section, labels.item, labels.required, labels.result, labels.notes],
         ...checklistRows,
       ]);
-      XLSX.utils.book_append_sheet(workbook, checklistSheet, 'Checklist');
+      XLSX.utils.book_append_sheet(workbook, checklistSheet, labels.checklist);
     }
   }
 
@@ -120,6 +107,7 @@ export async function downloadOperatorCheckinDailyReport(
   templateName: string,
   equipmentLabel: string,
   options: OperatorCheckinReportExportOptions,
+  language: Language = 'en',
 ): Promise<void> {
   if (options.format === 'xlsx') {
     await downloadOperatorCheckinDailyExcel(
@@ -128,6 +116,7 @@ export async function downloadOperatorCheckinDailyReport(
       templateName,
       equipmentLabel,
       options,
+      language,
     );
     return;
   }

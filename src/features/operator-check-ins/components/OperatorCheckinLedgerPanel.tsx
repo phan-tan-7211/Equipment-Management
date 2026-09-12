@@ -63,7 +63,7 @@ export function OperatorCheckinLedgerPanel({
   allowDeletedVisibilityToggle = false,
 }: OperatorCheckinLedgerPanelProps) {
   const isEquipmentScoped = Boolean(equipmentId);
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { formatDateTime } = useFormatTimestamp();
   const { toast } = useAppToast();
   const defaultDateRange = useMemo(() => createDefaultLedgerDateRange(), []);
@@ -232,6 +232,7 @@ export function OperatorCheckinLedgerPanel({
         selectedTemplate.name,
         equipmentLabel,
         options,
+        language,
       );
       toast({
         title: t('operatorCheckinDetail.exportComplete'),

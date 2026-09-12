@@ -14,6 +14,7 @@ import {
 } from '@/features/operator-check-ins/utils/operatorCheckinLedgerScope';
 import { defaultUserSettings } from '@/types/settings';
 import { formatDateTime as formatDateTimeWithSettings } from '@/utils/dateFormatter';
+import type { OperatorCheckinExcelLabels } from './operatorCheckinExcelLabels';
 
 export interface ChecklistExportRow {
   submissionId: string;
@@ -296,16 +297,17 @@ export function buildSummarySheetRows(
   templateName: string,
   equipmentLabel: string,
   submissions: OperatorCheckinSubmission[],
+  labels?: OperatorCheckinExcelLabels,
 ): string[][] {
   const completeCount = submissions.filter((s) => s.is_complete).length;
   return [
-    ['Daily Operator Check-In Report'],
-    ['Report period', reportDateRangeLabel],
-    ['Report template', templateName],
-    ['Equipment', equipmentLabel],
-    ['Submissions', String(submissions.length)],
-    ['Complete', String(completeCount)],
-    ['Incomplete', String(submissions.length - completeCount)],
+    [labels?.title ?? 'Daily Operator Check-In Report'],
+    [labels?.period ?? 'Report period', reportDateRangeLabel],
+    [labels?.template ?? 'Report template', templateName],
+    [labels?.equipment ?? 'Equipment', equipmentLabel],
+    [labels?.submissions ?? 'Submissions', String(submissions.length)],
+    [labels?.complete ?? 'Complete', String(completeCount)],
+    [labels?.incomplete ?? 'Incomplete', String(submissions.length - completeCount)],
   ];
 }
 
