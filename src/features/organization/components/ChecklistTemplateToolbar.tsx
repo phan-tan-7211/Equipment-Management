@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -31,6 +32,7 @@ export function ChecklistTemplateToolbar({
   onEnableFocusSectionMode,
   onOpenAddSection,
 }: ChecklistTemplateToolbarProps) {
+  const { t } = useI18n();
   return (
     <div
       className={cn(
@@ -39,12 +41,11 @@ export function ChecklistTemplateToolbar({
       )}
     >
       <div className="text-sm text-muted-foreground">
-        {sectionCount} section{sectionCount !== 1 ? 's' : ''} · {totalItemCount} item
-        {totalItemCount !== 1 ? 's' : ''}
+        {t(sectionCount === 1 ? 'pmTemplates.editor.sectionCount' : 'pmTemplates.editor.sectionsCount', { count: sectionCount })} · {t(totalItemCount === 1 ? 'pmTemplates.editor.itemCount' : 'pmTemplates.editor.itemsCount', { count: totalItemCount })}
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Preview</span>
+          <span className="text-sm text-muted-foreground">{t('pmTemplates.editor.preview')}</span>
           <Switch checked={previewMode} onCheckedChange={onPreviewModeChange} />
         </div>
         {isLargeTemplate && (
@@ -53,37 +54,37 @@ export function ChecklistTemplateToolbar({
             variant="outline"
             onClick={focusSectionMode ? onExpandAll : onEnableFocusSectionMode}
           >
-            {focusSectionMode ? 'Show all sections' : 'Focus section'}
+            {focusSectionMode ? t('pmTemplates.editor.showAll') : t('pmTemplates.editor.focusSection')}
           </Button>
         )}
         {!focusSectionMode && (
           <>
             <Button size="sm" variant="ghost" onClick={onExpandAll} className="hidden md:inline-flex">
-              Expand all
+              {t('pmTemplates.editor.expandAll')}
             </Button>
             <Button size="sm" variant="ghost" onClick={onCollapseAll} className="hidden md:inline-flex">
-              Collapse all
+              {t('pmTemplates.editor.collapseAll')}
             </Button>
           </>
         )}
         <Button onClick={onOpenAddSection} size="sm">
           <Plus className="mr-1 h-3 w-3" />
-          Add Section
+          {t('pmTemplates.editor.addSection')}
         </Button>
         <Popover>
           <PopoverTrigger asChild>
-            <Button size="sm" variant="ghost" aria-label="Keyboard shortcuts">
+            <Button size="sm" variant="ghost" aria-label={t('pmTemplates.editor.keyboardShortcuts')}>
               <HelpCircle className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-72 text-sm" align="end">
-            <p className="font-medium mb-2">Keyboard shortcuts</p>
+            <p className="font-medium mb-2">{t('pmTemplates.editor.keyboardShortcuts')}</p>
             <ul className="space-y-1 text-muted-foreground">
               <li>
-                <kbd className="px-1 rounded bg-muted">Enter</kbd> — add item below
+                <kbd className="px-1 rounded bg-muted">Enter</kbd> — {t('pmTemplates.editor.shortcutAddBelow')}
               </li>
               <li>
-                <kbd className="px-1 rounded bg-muted">Esc</kbd> — collapse row
+                <kbd className="px-1 rounded bg-muted">Esc</kbd> — {t('pmTemplates.editor.shortcutCollapse')}
               </li>
             </ul>
           </PopoverContent>

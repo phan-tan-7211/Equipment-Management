@@ -1,5 +1,6 @@
 // fallow-ignore-file code-duplication
 // Duplication rationale: Large PM template editor mirrors read-only PMTemplateView layout by design
+import { useI18n } from '@/i18n';
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,6 +29,7 @@ interface ChecklistTemplateEditorProps {
 
 export const ChecklistTemplateEditor = forwardRef<ChecklistTemplateEditorHandle, ChecklistTemplateEditorProps>(
   function ChecklistTemplateEditor({ template, onSave, onCancel, layoutMode = 'standalone' }, ref) {
+  const { t } = useI18n();
     const isPageLayout = layoutMode === 'page';
     const editor = useChecklistTemplateEditorState({ template, onSave, onCancel });
 
@@ -129,7 +131,7 @@ export const ChecklistTemplateEditor = forwardRef<ChecklistTemplateEditorHandle,
           <Collapsible open={editor.settingsOpen} onOpenChange={editor.setSettingsOpen}>
             <CollapsibleTrigger asChild>
               <Button variant="outline" className="w-full justify-between">
-                <span>Template settings</span>
+                <span>{t('pmTemplates.editor.settings')}</span>
                 {editor.settingsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </Button>
             </CollapsibleTrigger>
@@ -144,8 +146,8 @@ export const ChecklistTemplateEditor = forwardRef<ChecklistTemplateEditorHandle,
         {template?.id ? (
           <Tabs defaultValue="checklist" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="checklist">Checklist Items</TabsTrigger>
-              <TabsTrigger value="compatibility">Compatibility Rules</TabsTrigger>
+              <TabsTrigger value="checklist">{t('pmTemplates.editor.checklistItems')}</TabsTrigger>
+              <TabsTrigger value="compatibility">{t('pmTemplates.editor.compatibilityRules')}</TabsTrigger>
             </TabsList>
             <TabsContent value="checklist" className="space-y-4">
               {checklistEditorContent}
@@ -169,11 +171,11 @@ export const ChecklistTemplateEditor = forwardRef<ChecklistTemplateEditorHandle,
           <div className="flex justify-end gap-2 pt-4 border-t pb-20 md:pb-0">
             <Button variant="outline" onClick={editor.handleCancel} disabled={editor.isLoading}>
               <X className="mr-2 h-4 w-4" />
-              Cancel
+              {t('pmTemplates.editor.cancel')}
             </Button>
             <Button onClick={() => void editor.handleSave()} disabled={editor.isLoading}>
               <Save className="mr-2 h-4 w-4" />
-              {template ? 'Update Template' : 'Create Template'}
+              {template ? t('pmTemplates.editor.update') : t('pmTemplates.editor.create')}
             </Button>
           </div>
         )}

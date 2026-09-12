@@ -1,5 +1,6 @@
 // fallow-ignore-file code-duplication
 // Duplication rationale: Read-only template view intentionally parallels editor compatibility UI
+import { useI18n } from '@/i18n';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePMTemplate, useClonePMTemplate } from '@/features/pm-templates/hooks/usePMTemplates';
@@ -38,6 +39,8 @@ const groupBySection = (items: PMChecklistItem[]) => {
 };
 
 const PMTemplateView: React.FC = () => {
+  const { t, language } = useI18n();
+  const dateLocale = { vi: 'vi-VN', en: 'en-US', ko: 'ko-KR' }[language];
   const { templateId = '' } = useParams();
   const navigate = useNavigate();
   const { data: template, isLoading } = usePMTemplate(templateId);
@@ -131,40 +134,40 @@ const PMTemplateView: React.FC = () => {
       {!currentOrganization && (
         <Card className="p-6">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold">PM Templates</h1>
-            <p className="text-muted-foreground">Please select an organization to manage PM templates.</p>
+            <h1 className="text-2xl font-semibold">{t('pmTemplates.list.title')}</h1>
+            <p className="text-muted-foreground">{t('pmTemplates.list.selectOrganization')}</p>
           </div>
         </Card>
       )}
       {currentOrganization && !isAdmin && (
         <Card className="p-6">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold">PM Templates</h1>
-            <p className="text-muted-foreground">You need administrator permissions to access this page.</p>
+            <h1 className="text-2xl font-semibold">{t('pmTemplates.list.title')}</h1>
+            <p className="text-muted-foreground">{t('pmTemplates.list.adminRequired')}</p>
           </div>
         </Card>
       )}
       {(!currentOrganization || !isAdmin) && null}
       <PageHeader
         density="compact"
-        title={template?.name || 'PM Template'}
+        title={template?.name || t('pmTemplates.view.template')}
         description={template?.description || undefined}
         breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'PM Templates', href: '/dashboard/pm-templates' },
-          { label: template?.name || 'View' }
+          { label: t('dashboard.title'), href: '/dashboard' },
+          { label: t('pmTemplates.list.title'), href: '/dashboard/pm-templates' },
+          { label: template?.name || t('pmTemplates.view.view') }
         ]}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleBack}>Back to Templates</Button>
+            <Button variant="outline" onClick={handleBack}>{t('pmTemplates.view.back')}</Button>
             {canEdit && (
               <Button
                 variant="outline"
                 onClick={handleEdit}
-                aria-label={template ? `Edit template ${template.name}` : 'Edit template'}
+                aria-label={template ? t('pmTemplates.view.editTemplate', { name: template.name }) : t('pmTemplates.view.editTemplateGeneric')}
               >
                 <Edit className="mr-2 h-4 w-4" />
-                Edit
+                {t('pmTemplates.view.edit')}
               </Button>
             )}
           </div>
@@ -182,10 +185,10 @@ const PMTemplateView: React.FC = () => {
       {!isLoading && template === null && (
         <Card className="p-6">
           <div className="space-y-2">
-            <h2 className="text-xl font-semibold">Template not found</h2>
-            <p className="text-muted-foreground">The requested template does not exist or you do not have access.</p>
+            <h2 className="text-xl font-semibold">{t('pmTemplates.view.notFound')}</h2>
+            <p className="text-muted-foreground">{t('pmTemplates.view.notFoundDetail')}</p>
             <div className="pt-2">
-              <Button variant="outline" onClick={handleBack}>Back to Templates</Button>
+              <Button variant="outline" onClick={handleBack}>{t('pmTemplates.view.back')}</Button>
             </div>
           </div>
         </Card>
@@ -211,24 +214,24 @@ const PMTemplateView: React.FC = () => {
                 <Badge><Globe className="h-3 w-3 mr-1" />EquipQR</Badge>
               )}
               {isOrgTemplate && (
-                <Badge variant="secondary">Organization</Badge>
+                <Badge variant="secondary">{t('pmTemplates.view.organization')}</Badge>
               )}
               {template.is_protected && (
-                <Badge variant="outline"><Shield className="h-3 w-3 mr-1" />Protected</Badge>
+                <Badge variant="outline"><Shield className="h-3 w-3 mr-1" />{t('pmTemplates.view.protected')}</Badge>
               )}
               {!canEdit && isOrgTemplate && (
-                <Badge variant="outline"><Lock className="h-3 w-3 mr-1" />Read-only</Badge>
+                <Badge variant="outline"><Lock className="h-3 w-3 mr-1" />{t('pmTemplates.view.readOnly')}</Badge>
               )}
             </div>
 
             <div className="text-sm text-muted-foreground">
-              <span>Created: {new Date(template.created_at).toLocaleString()}</span>
+              <span>{t('pmTemplates.view.created', { date: new Date(template.created_at).toLocaleString(dateLocale) })}</span>
               <span className="mx-2">•</span>
-              <span>Updated: {new Date(template.updated_at).toLocaleString()}</span>
+              <span>{t('pmTemplates.view.updated', { date: new Date(template.updated_at).toLocaleString(dateLocale) })}</span>
               <span className="mx-2">•</span>
-              <span>Sections: {sections.length}</span>
+              <span>{t('pmTemplates.view.sections', { count: sections.length })}</span>
               <span className="mx-2">•</span>
-              <span>Total items: {totalItems}</span>
+              <span>{t('pmTemplates.view.totalItems', { count: totalItems })}</span>
             </div>
 
             {/* PDF Download Options */}
@@ -242,14 +245,14 @@ const PMTemplateView: React.FC = () => {
                       onCheckedChange={(checked) => setIncludeHandwriting(checked as boolean)}
                     />
                     <Label htmlFor="include-handwriting" className="text-sm font-normal cursor-pointer">
-                      Include space for handwriting
+                      {t('pmTemplates.view.handwriting')}
                     </Label>
                   </div>
                   
                   {includeHandwriting && (
                     <div className="flex items-center gap-2">
                       <Label htmlFor="lines-per-item" className="text-sm whitespace-nowrap">
-                        Lines per item:
+                        {t('pmTemplates.view.linesPerItem')}
                       </Label>
                       <Input
                         id="lines-per-item"
@@ -268,13 +271,13 @@ const PMTemplateView: React.FC = () => {
                       templateId={template.id}
                       templateName={template.name}
                     />
-                    <Button variant="outline" onClick={handleClone} disabled={!canCreateCustomTemplates} title={!canCreateCustomTemplates ? 'Custom PM templates require user licenses' : ''}>
+                    <Button variant="outline" onClick={handleClone} disabled={!canCreateCustomTemplates} title={!canCreateCustomTemplates ? t('pmTemplates.view.licenseRequired') : ''}>
                       <Copy className="mr-2 h-4 w-4" />
-                      Clone Template
+                      {t('pmTemplates.view.clone')}
                     </Button>
                     <Button variant="outline" onClick={onDownloadPDF}>
                       <Download className="mr-2 h-4 w-4" />
-                      Download PDF
+                      {t('pmTemplates.view.downloadPDF')}
                     </Button>
                   </div>
                 </div>
@@ -301,7 +304,7 @@ const PMTemplateView: React.FC = () => {
                       ) : (
                         <Save className="mr-2 h-4 w-4" />
                       )}
-                      Save Compatibility Rules
+                      {t('pmTemplates.view.saveRules')}
                     </Button>
                   </div>
                 )}
@@ -314,7 +317,7 @@ const PMTemplateView: React.FC = () => {
                   <AccordionTrigger>
                     <div className="flex items-center justify-between w-full">
                       <div className="font-medium">{section.name}</div>
-                      <div className="text-sm text-muted-foreground">{section.items.length} items</div>
+                      <div className="text-sm text-muted-foreground">{t('pmTemplates.view.itemCount', { count: section.items.length })}</div>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
@@ -326,7 +329,7 @@ const PMTemplateView: React.FC = () => {
                               {idx + 1}. {item.title}
                             </div>
                             <Badge variant={item.required ? 'default' : 'outline'}>
-                              {item.required ? 'Required' : 'Optional'}
+                              {item.required ? t('pmTemplates.view.required') : t('pmTemplates.view.optional')}
                             </Badge>
                           </div>
                           {item.description && (
@@ -348,6 +351,3 @@ const PMTemplateView: React.FC = () => {
 };
 
 export default PMTemplateView;
-
-
-

@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Loader2, Save } from 'lucide-react';
 import { PMTemplateCompatibilityRulesEditor } from '@/features/pm-templates/components/PMTemplateCompatibilityRulesEditor';
@@ -20,6 +21,7 @@ export function ChecklistTemplateCompatibilityRulesPanel({
   onRulesChange,
   onSaveRules,
 }: ChecklistTemplateCompatibilityRulesPanelProps) {
+  const { t } = useI18n();
   if (isLoadingRules) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -43,7 +45,7 @@ export function ChecklistTemplateCompatibilityRulesPanel({
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
-            Save Compatibility Rules
+            {t('pmTemplates.rules.saveCompatibility')}
           </Button>
         </div>
       )}

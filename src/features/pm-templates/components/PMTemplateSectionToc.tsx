@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ export const PMTemplateSectionToc: React.FC<PMTemplateSectionTocProps> = ({
   onCollapseAll,
   expandedCount = 0,
 }) => {
+  const { t } = useI18n();
   const [activeSection, setActiveSection] = useState<string | null>(sections[0]?.name ?? null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -116,22 +118,22 @@ export const PMTemplateSectionToc: React.FC<PMTemplateSectionTocProps> = ({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 text-sm font-medium">
               <ListTree className="h-4 w-4" />
-              Table of Contents
+              {t('pmTemplates.editor.tableOfContents')}
             </div>
             {showExpandCollapse && onExpandAll && onCollapseAll && (
               expandedCount < sections.length ? (
                 <Button size="sm" variant="ghost" onClick={onExpandAll}>
-                  Expand all
+                  {t('pmTemplates.editor.expandAll')}
                 </Button>
               ) : (
                 <Button size="sm" variant="ghost" onClick={onCollapseAll}>
-                  Collapse all
+                  {t('pmTemplates.editor.collapseAll')}
                 </Button>
               )
             )}
           </div>
           <div className="max-h-[50vh] overflow-y-auto pr-2">
-            <nav aria-label="Template sections table of contents">
+            <nav aria-label={t('pmTemplates.editor.tableOfContentsAria')}>
               <ul className="space-y-1 text-sm">
                 {sections.map((section) => (
                   <li key={section.name}>
