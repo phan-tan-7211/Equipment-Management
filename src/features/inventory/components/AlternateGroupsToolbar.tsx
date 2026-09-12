@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ const AlternateGroupsToolbar: React.FC<AlternateGroupsToolbarProps> = ({
   viewMode = 'cards',
   onViewModeChange,
 }) => {
+  const { t } = useI18n();
   const activeFilterCount = statusFilter !== 'all' ? 1 : 0;
   const hasActiveFilters = activeFilterCount > 0;
 
@@ -53,13 +55,13 @@ const AlternateGroupsToolbar: React.FC<AlternateGroupsToolbarProps> = ({
             onChange={onSearchChange}
             placeholder={
               viewMode === 'table'
-                ? 'Search groups or parts...'
-                : 'Search by name or description...'
+                ? t('alternateGroups.searchTable')
+                : t('alternateGroups.searchCards')
             }
             ariaLabel={
               viewMode === 'table'
-                ? 'Search alternate groups or parts'
-                : 'Search alternate groups'
+                ? t('alternateGroups.searchTableAria')
+                : t('alternateGroups.searchCardsAria')
             }
             className="max-w-[280px]"
           />
@@ -102,13 +104,13 @@ const AlternateGroupsToolbar: React.FC<AlternateGroupsToolbarProps> = ({
       {/* Active filter badges row */}
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-1.5 px-1">
-          <span className="text-xs text-muted-foreground">Active:</span>
+          <span className="text-xs text-muted-foreground">{t('alternateGroups.active')}</span>
           <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2 capitalize">
-            Status: {statusFilter}
+            {t('alternateGroups.statusFilter', { status: t(`alternateGroups.${statusFilter}`) })}
             <button
               onClick={() => onStatusChange('all')}
               className="ml-0.5 hover:text-foreground"
-              aria-label="Clear status filter"
+              aria-label={t('alternateGroups.clearStatus')}
             >
               <X className="h-3 w-3" />
             </button>
@@ -119,7 +121,7 @@ const AlternateGroupsToolbar: React.FC<AlternateGroupsToolbarProps> = ({
             className="h-5 px-2 text-xs text-muted-foreground hover:text-foreground"
             onClick={() => onStatusChange('all')}
           >
-            Clear all
+            {t('alternateGroups.clearAll')}
           </Button>
         </div>
       )}

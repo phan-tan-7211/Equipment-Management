@@ -8,6 +8,9 @@ type CompatibilityRulesCardShellProps = {
   description: string;
   validRulesCount: number;
   matchCount: number;
+  matchesLabel?: string;
+  noEquipmentLabel?: string;
+  addEquipmentLabel?: string;
   isLoadingMfrs: boolean;
   hasManufacturers: boolean;
   children: React.ReactNode;
@@ -19,6 +22,9 @@ export function CompatibilityRulesCardShell({
   description,
   validRulesCount,
   matchCount,
+  matchesLabel,
+  noEquipmentLabel,
+  addEquipmentLabel,
   isLoadingMfrs,
   hasManufacturers,
   children,
@@ -34,7 +40,7 @@ export function CompatibilityRulesCardShell({
           </div>
           {validRulesCount > 0 && (
             <Badge variant="secondary" className="font-normal">
-              Matches {matchCount} equipment
+              {matchesLabel ?? `Matches ${matchCount} equipment`}
             </Badge>
           )}
         </CardTitle>
@@ -50,8 +56,8 @@ export function CompatibilityRulesCardShell({
         ) : !hasManufacturers ? (
           <div className="text-sm text-muted-foreground text-center py-4">
             <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>No equipment found in your organization.</p>
-            <p>Add equipment first to define compatibility rules.</p>
+            <p>{noEquipmentLabel ?? "No equipment found in your organization."}</p>
+            <p>{addEquipmentLabel ?? "Add equipment first to define compatibility rules."}</p>
           </div>
         ) : (
           <>

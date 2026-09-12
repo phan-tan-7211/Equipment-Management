@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useState } from 'react';
 import { Check, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,11 +17,11 @@ import { cn } from '@/lib/utils';
 
 type GroupSortOption = 'name-asc' | 'name-desc' | 'updated-desc' | 'updated-asc';
 
-const SORT_OPTIONS: { value: GroupSortOption; label: string }[] = [
-  { value: 'name-asc', label: 'Name (A–Z)' },
-  { value: 'name-desc', label: 'Name (Z–A)' },
-  { value: 'updated-desc', label: 'Recently Modified' },
-  { value: 'updated-asc', label: 'Oldest Modified' },
+const SORT_OPTIONS: { value: GroupSortOption; labelKey: string }[] = [
+  { value: 'name-asc', labelKey: 'sortNameAsc' },
+  { value: 'name-desc', labelKey: 'sortNameDesc' },
+  { value: 'updated-desc', labelKey: 'sortRecent' },
+  { value: 'updated-asc', labelKey: 'sortOldest' },
 ];
 
 interface AlternateGroupsSortPopoverProps {
@@ -32,9 +33,10 @@ const AlternateGroupsSortPopover: React.FC<AlternateGroupsSortPopoverProps> = ({
   sortBy,
   onSortChange,
 }) => {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
-  const currentLabel = SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? sortBy;
+  const currentLabel = t(`alternateGroups.${SORT_OPTIONS.find((o) => o.value === sortBy)?.labelKey ?? 'sortNameAsc'}`);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -43,7 +45,7 @@ const AlternateGroupsSortPopover: React.FC<AlternateGroupsSortPopoverProps> = ({
           variant="outline"
           size="sm"
           className="h-8 gap-1.5 text-sm font-normal"
-          aria-label="Sort alternate groups"
+          aria-label={t('alternateGroups.sortAria')}
         >
           <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="max-w-[140px] truncate">{currentLabel}</span>
@@ -63,7 +65,7 @@ const AlternateGroupsSortPopover: React.FC<AlternateGroupsSortPopoverProps> = ({
                   }}
                   className="flex items-center justify-between gap-2"
                 >
-                  <span>{option.label}</span>
+                  <span>{t(`alternateGroups.${option.labelKey}`)}</span>
                   <Check
                     className={cn(
                       'h-3.5 w-3.5 shrink-0',

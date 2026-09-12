@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useI18n } from '@/i18n';
 import type { UseFormReturn } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import type { InventoryItem } from '@/features/inventory/types/inventory';
@@ -30,6 +31,9 @@ export function useInventoryItemFormEditingLoad({
   form,
   toast,
 }: UseInventoryItemFormEditingLoadParams) {
+  const { t } = useI18n();
+  const tRef = useRef(t);
+  tRef.current = t;
   const [isEditingDataLoaded, setIsEditingDataLoaded] = useState(false);
   const [editingDataLoadError, setEditingDataLoadError] = useState(false);
   const currentEditingItemIdRef = useRef<string | null>(null);
@@ -107,9 +111,9 @@ export function useInventoryItemFormEditingLoad({
           if (!abortController.signal.aborted) {
             setEditingDataLoadError(true);
             toastRef.current({
-              title: 'Failed to load item data',
+              title: tRef.current('itemForm.failedLoad'),
               description:
-                'Could not load compatibility rules and settings. Please close and try again.',
+                tRef.current('itemForm.failedLoadDescription'),
               variant: 'error',
             });
           }

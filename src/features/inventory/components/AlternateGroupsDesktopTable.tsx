@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -49,10 +50,11 @@ function formatUnitCost(value: number | null): string {
 function formatLowStock(
   quantityOnHand: number | null,
   lowStockThreshold: number | null,
+  t: (key: string) => string,
 ): string {
   const isLowStock = isAlternateGroupMemberLowStock(quantityOnHand, lowStockThreshold);
   if (isLowStock == null) return '—';
-  return isLowStock ? 'Yes' : 'No';
+  return isLowStock ? t('alternateGroups.yes') : t('alternateGroups.no');
 }
 
 export function AlternateGroupsDesktopTable({
@@ -61,6 +63,7 @@ export function AlternateGroupsDesktopTable({
   sortOrder,
   onSortChange,
 }: AlternateGroupsDesktopTableProps) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [columnSizing, setColumnSizing] = usePersistedColumnSizing(
     COLUMN_SIZING_STORAGE_KEY,
@@ -89,8 +92,9 @@ export function AlternateGroupsDesktopTable({
         throw new Error(`Missing alternate group table column meta for ${columnKey}`);
       }
 
+      const localizedMeta = { ...meta, title: t(`alternateGroups.${({ verified: 'colVerified', group_name: 'colGroup', identifier_manufacturer: 'colManufacturer', item_name: 'colItem', identifier_value: 'colPartNumber', item_sku: 'colSku', default_unit_cost: 'colCost', quantity_on_hand: 'colQty', low_stock: 'colLowStock', location: 'colLocation' } as const)[columnKey]}`) };
       const column: ColumnDef<AlternateGroupTableRow> = {
-        ...createResizableSortableColumnBase(columnKey, columnSizing, meta, {
+        ...createResizableSortableColumnBase(columnKey, columnSizing, localizedMeta, {
           active: sortBy === meta.sortField,
           sortOrder: sortBy === meta.sortField ? sortOrder : undefined,
           onSort: () => onSortChange(meta.sortField),
@@ -130,7 +134,7 @@ export function AlternateGroupsDesktopTable({
                   )}
                   onClick={() => navigate(`/dashboard/inventory/${item.inventory_item_id}`)}
                 >
-                  {item.item_name ?? 'Unknown item'}
+                  {item.item_name ?? t('alternateGroups.unknownItem')}
                 </button>
               ) : (
                 <span className="block truncate text-muted-foreground">—</span>
@@ -176,7 +180,7 @@ export function AlternateGroupsDesktopTable({
                     ) && 'font-medium text-warning',
                   )}
                 >
-                  {formatLowStock(item.quantity_on_hand, item.low_stock_threshold)}
+                  {formatLowStock(item.quantity_on_hand, item.low_stock_threshold, t)}
                 </span>
               );
             case 'location':
@@ -191,7 +195,7 @@ export function AlternateGroupsDesktopTable({
 
       return column;
     });
-  }, [columnSizing, navigate, onSortChange, sortBy, sortOrder]);
+  }, [columnSizing, navigate, onSortChange, sortBy, sortOrder, t]);
 
   const table = useReactTable({
     data: rows,
@@ -206,7 +210,7 @@ export function AlternateGroupsDesktopTable({
   const tableWidth = getResizableTableWidth(table.getTotalSize());
 
   if (rows.length === 0) {
-    return <DataTableEmptyState message="No parts match the current filters." />;
+    return <DataTableEmptyState message={t('alternateGroups.noParts')} />;
   }
 
   return (
