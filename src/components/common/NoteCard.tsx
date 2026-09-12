@@ -1,3 +1,4 @@
+import { useNotePresentationText } from '@/components/common/notePresentationI18n';
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   onDelete,
   onToggleVisibility,
 }) => {
+  const noteText = useNotePresentationText();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const edited = isNoteEdited(note.created_at, note.updated_at, note.last_modified_at);
@@ -84,7 +86,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   {note.is_private ? (
                     <Badge variant="outline" className="text-xs">
                       <EyeOff className="mr-1 h-3 w-3" aria-hidden />
-                      Private
+                      {noteText('private', 'Private')}
                     </Badge>
                   ) : null}
                   {permissions.canToggleVisibility && onToggleVisibility ? (
@@ -95,7 +97,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                       className="h-8 w-8"
                       disabled={isSubmitting}
                       onClick={() => void onToggleVisibility(!note.is_private)}
-                      aria-label={note.is_private ? 'Make note public' : 'Make note private'}
+                      aria-label={note.is_private ? noteText('makePublic', 'Make note public') : noteText('makePrivate', 'Make note private')}
                     >
                       {note.is_private ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                     </Button>
@@ -108,7 +110,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                       className="h-8 w-8"
                       disabled={isSubmitting}
                       onClick={() => setEditOpen(true)}
-                      aria-label="Edit note"
+                      aria-label={noteText('editNote', 'Edit note')}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -121,7 +123,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                       className="h-8 w-8 text-destructive hover:text-destructive"
                       disabled={isSubmitting}
                       onClick={() => setDeleteOpen(true)}
-                      aria-label="Delete note"
+                      aria-label={noteText('deleteNote', 'Delete note')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -158,13 +160,13 @@ const NoteCard: React.FC<NoteCardProps> = ({
         <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete this note?</AlertDialogTitle>
+              <AlertDialogTitle>{noteText('deleteQuestion', 'Delete this note?')}</AlertDialogTitle>
               <AlertDialogDescription>
-                This permanently removes the note and its attached images. The action is recorded in the audit log.
+                {noteText('deleteDescription', 'This permanently removes the note and its attached images. The action is recorded in the audit log.')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel disabled={isSubmitting}>{noteText('cancel', 'Cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 disabled={isSubmitting}
                 onClick={(e) => {
@@ -172,7 +174,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   void onDelete().then(() => setDeleteOpen(false));
                 }}
               >
-                Delete
+                {noteText('delete', 'Delete')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

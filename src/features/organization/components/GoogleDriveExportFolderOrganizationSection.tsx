@@ -2,10 +2,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { FileText, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 import {
   buildGoogleDriveExportFolderPreview,
   formatGoogleDriveExportFolderPath,
-  getGoogleDriveExportFolderRoutingSummary,
   type GoogleDriveExportFolderPreviewSegment,
 } from '@/features/organization/utils/googleDriveExportFolderPreview';
 
@@ -51,27 +51,28 @@ export function GoogleDriveExportFolderOrganizationSection({
   onToggleTeam,
   onToggleEquipment,
 }: GoogleDriveExportFolderOrganizationSectionProps) {
+  const { t } = useI18n();
   const previewSegments = buildGoogleDriveExportFolderPreview({
     rootFolderName,
     folderByTeam,
     folderByEquipment,
+    exampleTeamName: t('organizationIntegrations.exampleTeam'),
+    exampleEquipmentName: t('organizationIntegrations.exampleEquipment'),
+    exampleFileName: t('organizationIntegrations.exampleFile'),
   });
   const previewPath = formatGoogleDriveExportFolderPath(previewSegments);
-  const routingSummary = getGoogleDriveExportFolderRoutingSummary({
-    folderByTeam,
-    folderByEquipment,
-  });
+  const routingSummary = t(folderByTeam
+    ? folderByEquipment ? 'organizationIntegrations.groupedBoth' : 'organizationIntegrations.groupedTeam'
+    : folderByEquipment ? 'organizationIntegrations.groupedEquipment' : 'organizationIntegrations.groupedNone');
 
   return (
-    <fieldset className="space-y-3" role="group" aria-label="Export subfolder routing">
-      <legend className="sr-only">Export subfolder routing</legend>
+    <fieldset className="space-y-3" role="group" aria-label={t('organizationIntegrations.routing')}>
+      <legend className="sr-only">{t('organizationIntegrations.routing')}</legend>
 
       <div className="space-y-1">
-        <p className="text-sm font-medium">Subfolder routing</p>
+        <p className="text-sm font-medium">{t('organizationIntegrations.routing')}</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          When you export a work order to Google Drive, EquipQR can create subfolders under your
-          organization folder using the work order&apos;s team and equipment names. Folders are
-          created automatically on first export and reused for later exports.
+          {t('organizationIntegrations.routingDescription')}
         </p>
       </div>
 
@@ -86,10 +87,10 @@ export function GoogleDriveExportFolderOrganizationSection({
           />
           <div className="space-y-0.5">
             <Label htmlFor="folder-by-team" className="text-sm leading-snug cursor-pointer">
-              Organize by team
+              {t('organizationIntegrations.byTeam')}
             </Label>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Adds a subfolder named after the work order&apos;s assigned team.
+              {t('organizationIntegrations.byTeamHelp')}
             </p>
           </div>
         </div>
@@ -104,10 +105,10 @@ export function GoogleDriveExportFolderOrganizationSection({
           />
           <div className="space-y-0.5">
             <Label htmlFor="folder-by-equipment" className="text-sm leading-snug cursor-pointer">
-              Organize by equipment
+              {t('organizationIntegrations.byEquipment')}
             </Label>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Adds a subfolder named after the equipment linked to the work order.
+              {t('organizationIntegrations.byEquipmentHelp')}
             </p>
           </div>
         </div>
@@ -118,13 +119,13 @@ export function GoogleDriveExportFolderOrganizationSection({
         aria-live="polite"
       >
         <div className="space-y-0.5">
-          <p className="text-xs font-medium">Example export path</p>
+          <p className="text-xs font-medium">{t('organizationIntegrations.examplePath')}</p>
           <p className="text-xs text-muted-foreground">{routingSummary}</p>
         </div>
 
         <p className="text-xs font-mono text-foreground break-words">{previewPath}</p>
 
-        <ol className="space-y-1 border-t border-border/60 pt-2" aria-label="Example folder tree">
+        <ol className="space-y-1 border-t border-border/60 pt-2" aria-label={t('organizationIntegrations.exampleTree')}>
           {previewSegments.map((segment) => (
             <li
               key={segment.kind}

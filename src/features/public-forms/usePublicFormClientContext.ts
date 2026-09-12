@@ -98,9 +98,9 @@ export function usePublicFormSubmission(options: {
 }
 
 /** Format a submission timestamp in the submitter's locale. */
-export function formatPublicSubmittedAt(value: string): string {
+export function formatPublicSubmittedAt(value: string, locale?: string): string {
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(locale, {
       dateStyle: 'medium',
       timeStyle: 'short',
     }).format(new Date(value));

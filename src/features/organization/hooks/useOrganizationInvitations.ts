@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 import { logger } from '@/utils/logger';
 import { getAuthClaims } from '@/lib/authClaims';
 import { logInvitationMutationFailure } from '@/features/organization/utils/logInvitationMutationFailure';
@@ -96,6 +97,7 @@ export const useOrganizationInvitations = (organizationId: string) => {
 // Optimized invitation creation without retry logic or client-side validation
 
 export const useCreateInvitation = (organizationId: string) => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -217,32 +219,33 @@ export const useCreateInvitation = (organizationId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organization-invitations', organizationId] });
       queryClient.invalidateQueries({ queryKey: ['slot-availability', organizationId] });
-      toast.success('Invitation sent successfully');
+      toast.success(t('organizationMembers.invitationSent'));
     },
     onError: (error: Error) => {
       logger.error('Error creating invitation', error);
       
       // Handle specific error types from the optimized function
       if (error.message?.includes('PERMISSION_DENIED')) {
-        toast.error('You do not have permission to invite members');
+        toast.error(t('organizationMembers.inviteDenied'));
       } else if (error.message?.includes('DUPLICATE_INVITATION')) {
-        toast.error('An invitation to this email already exists');
+        toast.error(t('organizationMembers.duplicateInvitation'));
       } else if (error.message?.includes('INVITATION_EMAIL_SEND_FAILED')) {
         queryClient.invalidateQueries({ queryKey: ['organization-invitations', organizationId] });
         queryClient.invalidateQueries({ queryKey: ['slot-availability', organizationId] });
         toast.error(
-          'Invitation was created but the email could not be sent. Use Resend after checking the address.'
+          t('organizationMembers.invitationEmailFailed')
         );
       } else if (error.message?.includes('INVITATION_ERROR')) {
-        toast.error('Failed to send invitation - please try again');
+        toast.error(t('organizationMembers.sendRetry'));
       } else {
-        toast.error('Failed to send invitation');
+        toast.error(t('organizationMembers.sendFailed'));
       }
     }
   });
 };
 
 export const useResendInvitation = (organizationId: string) => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -285,20 +288,21 @@ export const useResendInvitation = (organizationId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organization-invitations', organizationId] });
-      toast.success('Invitation resent successfully');
+      toast.success(t('organizationMembers.resent'));
     },
     onError: (error) => {
       logger.error('Error resending invitation', error);
       if (error instanceof Error && error.message === 'Failed to send invitation email') {
-        toast.error('Invitation was updated but the email could not be sent');
+        toast.error(t('organizationMembers.resendEmailFailed'));
       } else {
-        toast.error('Failed to resend invitation');
+        toast.error(t('organizationMembers.resendFailed'));
       }
     }
   });
 };
 
 export const useCancelInvitation = (organizationId: string) => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -320,11 +324,11 @@ export const useCancelInvitation = (organizationId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organization-invitations', organizationId] });
       queryClient.invalidateQueries({ queryKey: ['slot-availability', organizationId] });
-      toast.success('Invitation cancelled successfully');
+      toast.success(t('organizationMembers.cancelled'));
     },
     onError: (error) => {
       logger.error('Error cancelling invitation', error);
-      toast.error('Failed to cancel invitation');
+      toast.error(t('organizationMembers.cancelFailed'));
     }
   });
 };

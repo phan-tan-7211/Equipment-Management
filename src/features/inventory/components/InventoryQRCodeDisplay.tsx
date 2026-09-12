@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 
 import React from 'react';
 import AssetQRCodeDisplay from '@/components/common/AssetQRCodeDisplay';
@@ -10,12 +11,6 @@ interface InventoryQRCodeDisplayProps {
   itemName?: string;
 }
 
-const INVENTORY_QR_INSTRUCTIONS = [
-  'Print this QR code and attach it to the inventory item or storage location',
-  'Users can scan it with any QR code scanner',
-  "They'll be taken directly to this inventory item's details",
-  'Scans can be used to quickly access item information and transaction history',
-];
 
 const InventoryQRCodeDisplay: React.FC<InventoryQRCodeDisplayProps> = ({
   open,
@@ -23,6 +18,7 @@ const InventoryQRCodeDisplay: React.FC<InventoryQRCodeDisplayProps> = ({
   itemId,
   itemName,
 }) => {
+  const { t } = useI18n();
   const qrCodeUrl = qrFullUrl(inventoryQRPath(itemId));
 
   return (
@@ -31,12 +27,12 @@ const InventoryQRCodeDisplay: React.FC<InventoryQRCodeDisplayProps> = ({
       onClose={onClose}
       entityId={itemId}
       entityName={itemName}
-      title="Inventory Item QR Code"
-      resourceLabel="inventory item"
+      title={t('inventoryListAux.qrTitle')}
+      resourceLabel={t('inventoryListAux.qrResource')}
       qrCodeUrl={qrCodeUrl}
-      qrImageAlt="Inventory Item QR Code"
+      qrImageAlt={t('inventoryListAux.qrTitle')}
       defaultFilenameStem={`inventory-${itemId}`}
-      instructionBullets={INVENTORY_QR_INSTRUCTIONS}
+      instructionBullets={[t('inventoryListAux.qrPrint'), t('inventoryListAux.qrScan'), t('inventoryListAux.qrRedirect'), t('inventoryListAux.qrHistory')]}
     />
   );
 };

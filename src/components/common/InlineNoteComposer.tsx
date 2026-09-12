@@ -1,3 +1,4 @@
+import { useNotePresentationText } from '@/components/common/notePresentationI18n';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +23,7 @@ const ImageThumbnail: React.FC<{
   onRemove: () => void;
   disabled?: boolean;
 }> = ({ file, onRemove, disabled }) => {
+  const noteText = useNotePresentationText();
   const previewUrl = useFileObjectUrlPreview(file);
 
   if (!previewUrl) return null;
@@ -41,8 +43,8 @@ const ImageThumbnail: React.FC<{
           onClick={onRemove}
           disabled={disabled}
           className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-          title="Remove image"
-          aria-label="Remove image"
+          title={noteText('removeImageGeneric', 'Remove image')}
+          aria-label={noteText('removeImageGeneric', 'Remove image')}
         >
           <X className="h-3 w-3" />
         </Button>
@@ -109,6 +111,7 @@ const InlineNoteComposer: React.FC<InlineNoteComposerProps> = ({
   userDisplayName,
   requestAttachTrigger,
 }) => {
+  const noteText = useNotePresentationText();
   const [machineHours, setMachineHours] = useState<number>(0);
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [dragActive, setDragActive] = useState(false);
@@ -124,13 +127,13 @@ const InlineNoteComposer: React.FC<InlineNoteComposerProps> = ({
     for (const file of files) {
       // Check file type
       if (!acceptedImageTypes.includes(file.type)) {
-        toast.error(`${file.name} is not a supported image format`);
+        toast.error(noteText('unsupportedImage', `${file.name} is not a supported image format`, { name: file.name }));
         continue;
       }
       
       // Check file size
       if (file.size > maxFileSize) {
-        toast.error(`${file.name} is too large. Maximum size is ${(maxFileSize / 1024 / 1024).toFixed(0)}MB`);
+        toast.error(noteText('imageTooLarge', `${file.name} is too large. Maximum size is ${(maxFileSize / 1024 / 1024).toFixed(0)}MB`, { name: file.name, size: (maxFileSize / 1024 / 1024).toFixed(0) }));
         continue;
       }
       
@@ -141,12 +144,12 @@ const InlineNoteComposer: React.FC<InlineNoteComposerProps> = ({
 
     const totalFiles = attachedImages.length + validFiles.length;
     if (totalFiles > maxImages) {
-      toast.error(`Maximum ${maxImages} images allowed`);
+      toast.error(noteText('imageLimit', `Maximum ${maxImages} images allowed`, { count: maxImages }));
       return;
     }
 
     onImagesAdd?.(validFiles);
-  }, [attachedImages.length, maxImages, acceptedImageTypes, maxFileSize, onImagesAdd]);
+  }, [attachedImages.length, maxImages, acceptedImageTypes, maxFileSize, onImagesAdd, noteText]);
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -237,7 +240,7 @@ const InlineNoteComposer: React.FC<InlineNoteComposerProps> = ({
     
     // Validate that either content or images are provided
     if (!value.trim() && attachedImages.length === 0) {
-      toast.error('Please enter note content or attach images');
+      toast.error(noteText('noteRequired', 'Please enter note content or attach images'));
       return;
     }
 
@@ -256,7 +259,7 @@ const InlineNoteComposer: React.FC<InlineNoteComposerProps> = ({
       // Error handling is done by parent component
       logger.error('Failed to submit note', error);
     }
-  }, [value, attachedImages, machineHours, isPrivate, showMachineHours, showPrivateToggle, onSubmit]);
+  }, [value, attachedImages, machineHours, isPrivate, showMachineHours, showPrivateToggle, onSubmit, noteText]);
 
   const handleAttachClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -303,7 +306,7 @@ const InlineNoteComposer: React.FC<InlineNoteComposerProps> = ({
           disabled={disabled || isSubmitting}
           rows={3}
           className="min-h-20 resize-none border-0 focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 pb-12"
-          aria-label="Note content"
+          aria-label={noteText('noteContent', 'Note content')}
         />
         <VoiceInterimTranscript
           isListening={isListening}
@@ -327,8 +330,8 @@ const InlineNoteComposer: React.FC<InlineNoteComposerProps> = ({
           onClick={handleAttachClick}
           disabled={disabled || isSubmitting || attachedImages.length >= maxImages}
           className="absolute bottom-2 right-2 h-8 w-8 p-0"
-          title="Attach images"
-          aria-label="Attach images"
+          title={noteText('attachImages', 'Attach images')}
+          aria-label={noteText('attachImages', 'Attach images')}
         >
           <Image className="h-4 w-4" />
         </Button>
@@ -368,7 +371,7 @@ const InlineNoteComposer: React.FC<InlineNoteComposerProps> = ({
           {showMachineHours && (
             <div className="flex items-center gap-2">
               <Label htmlFor="machine-hours" className="text-xs text-muted-foreground whitespace-nowrap">
-                Machine Hours:
+                {noteText('machineHoursField', 'Machine Hours:')}
               </Label>
               <Input
                 id="machine-hours"
@@ -393,11 +396,11 @@ const InlineNoteComposer: React.FC<InlineNoteComposerProps> = ({
                 onCheckedChange={setIsPrivate}
                 disabled={disabled || isSubmitting}
               />
-              <Label htmlFor="private-note" className="text-xs text-muted-foreground cursor-pointer" title="Private notes are only visible to your team">
-                Private
+              <Label htmlFor="private-note" className="text-xs text-muted-foreground cursor-pointer" title={noteText('privateHint', 'Private notes are only visible to your team')}>
+                {noteText('private', 'Private')}
               </Label>
               <span className="text-[10px] text-muted-foreground/70 hidden sm:inline">
-                (team only)
+                {noteText('teamOnly', '(team only)')}
               </span>
             </div>
           )}
@@ -411,7 +414,7 @@ const InlineNoteComposer: React.FC<InlineNoteComposerProps> = ({
           disabled={disabled || isSubmitting || (!value.trim() && attachedImages.length === 0)}
           size="sm"
         >
-          {isSubmitting ? 'Adding...' : 'Add Note'}
+          {isSubmitting ? noteText('adding', 'Adding...') : noteText('addNote', 'Add Note')}
         </Button>
       </div>
     </form>
