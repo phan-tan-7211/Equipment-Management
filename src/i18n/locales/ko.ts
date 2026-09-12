@@ -12,6 +12,14 @@ const ko = {
     en: '영어',
     ko: '한국어',
   },
+  sharedUi: {
+    scanShort: '스캔', ordersShort: '작업', menu: '메뉴', primaryNavigation: '기본 탐색', openNavigationMenu: '탐색 메뉴 열기',
+    personalizeList: '목록 맞춤 설정', openPersonalization: '맞춤 설정 열기', customSortActive: '맞춤 설정 열기, 사용자 정렬 적용 중',
+    csvDescription: '쉼표로 구분된 값', jsonDescription: '구조화된 데이터 형식',
+    mapDirections: '탭하여 Google 지도에서 길찾기', mapAddressDirections: 'Google 지도에서 {{address}}까지 길찾기', mapCoordinatesDirections: 'Google 지도에서 {{coordinates}}까지 길찾기', mapLoading: '지도를 불러오는 중...', mapUnavailable: '지도를 사용할 수 없습니다', mapRetry: '다시 시도', useCurrentLocation: '현재 위치 사용', mapPreview: '지도 미리보기',
+    imageDropMultiple: '여기에 이미지를 놓거나 아래 버튼을 누르세요', imageFormats: 'JPEG, PNG, GIF, WebP 지원; 이미지당 최대 10MB', chooseFiles: '파일 선택', selectedImages: '선택한 이미지 ({{count}})', uploadImages: '이미지 {{count}}개 업로드', removeSelectedImage: '선택한 이미지 {{name}} 제거', unsupportedImage: '{{name}}은(는) 지원하지 않는 이미지 형식입니다', imageTooLarge: '{{name}}의 크기가 너무 큽니다. 최대 10MB입니다', maxFiles: '최대 {{count}}개의 파일만 선택할 수 있습니다', selectImage: '이미지를 하나 이상 선택하세요', uploadUnavailable: '업로드 기능이 설정되지 않았습니다', imagesUploaded: '이미지 업로드가 완료되었습니다!', imagesUploadFailed: '이미지 업로드 실패: {{error}}', unknownError: '알 수 없는 오류',
+    upload: '업로드', uploading: '업로드 중...', remove: '제거', removing: '제거 중...', replace: '교체', uploadPhoto: '사진 업로드', chooseFile: '파일 선택', cancel: '취소', preview: '미리보기', avatar: '프로필 사진', currentImage: '현재 이미지', preparingPreview: '미리보기 준비 중…', imageDropSingle: '여기에 이미지를 놓거나 클릭하여 선택하세요', formatSize: '{{formats}}; 최대 {{size}} MB', singleUploadSuccess: '이미지 업로드 완료', singleUploadFailed: '업로드 실패: {{error}}', singleRemoveSuccess: '이미지가 제거되었습니다', singleRemoveFailed: '이미지 제거 실패: {{error}}', unsupportedSingleImage: '지원하지 않는 형식: {{name}}. {{formats}} 형식을 사용하세요.', singleImageTooLarge: '파일이 너무 큽니다: {{name}}. 최대 {{size}} MB입니다.',
+  },
   navigation: {
     mainNavigation: '주요 탐색',
     groups: {

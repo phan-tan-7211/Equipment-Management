@@ -10,6 +10,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { MobileToolbarSheetContent } from '@/components/common/MobileToolbarSheetContent';
+import { useI18n } from '@/i18n';
 
 interface MobileListPersonalizationSheetProps {
   open: boolean;
@@ -26,6 +27,7 @@ export function MobileListPersonalizationSheet({
   description,
   children,
 }: MobileListPersonalizationSheetProps) {
+  const { t } = useI18n();
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
@@ -35,8 +37,8 @@ export function MobileListPersonalizationSheet({
           className="relative h-11 w-11 shrink-0"
           aria-label={
             hasNonDefaultSort
-              ? 'Open personalization, custom sort active'
-              : 'Open personalization'
+              ? t('sharedUi.customSortActive')
+              : t('sharedUi.openPersonalization')
           }
         >
           <SlidersHorizontal className="h-4 w-4" aria-hidden />
@@ -52,7 +54,7 @@ export function MobileListPersonalizationSheet({
       </SheetTrigger>
       <MobileToolbarSheetContent>
         <SheetHeader className="pb-2 text-left">
-          <SheetTitle>Personalize list</SheetTitle>
+          <SheetTitle>{t('sharedUi.personalizeList')}</SheetTitle>
           <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
         <div className="space-y-6 pb-8 pt-2">{children}</div>
