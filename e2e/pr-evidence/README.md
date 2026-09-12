@@ -1,16 +1,16 @@
 # PR visual evidence (Playwright)
 
-Every product PR must include **screenshots and at least one MP4 demo video** demonstrating the change on the **local dev stack** (`http://localhost:8080`). Agents capture artifacts here, upload screenshots to Supabase Storage, upload the demo video to GitHub user-attachments, and embed public URLs in the PR body and/or a dedicated PR comment.
+Use these Playwright specs when screenshots or a demo video would help review a UI change. They are optional for PRs. The capture tools use the local dev stack (`http://localhost:8080`) and can upload artifacts for display in the PR.
 
 ## When to add a spec
 
-| Change type | Spec requirement |
+| Change type | When using this optional pipeline |
 |-------------|------------------|
-| UI route, form, dialog, dashboard flow | **Required:** add `e2e/pr-evidence/<feature>.spec.ts` |
-| Edge-only / no UI | Use RPC/log proof in PR body; no Playwright spec |
-| Workflow-only (`.cursor/**`, `AGENTS.md`) | No PR evidence spec |
+| UI route, form, dialog, dashboard flow | Add `e2e/pr-evidence/<feature>.spec.ts` to capture the changed flow |
+| Edge-only / no UI | No Playwright spec needed |
+| Workflow-only (`.cursor/**`, `AGENTS.md`) | No Playwright spec needed |
 
-If no feature spec exists yet, `smoke-dashboard.spec.ts` is the fallback — **do not stop at the fallback** when the PR touches user-visible UI.
+If you choose to capture evidence and no feature spec exists, `smoke-dashboard.spec.ts` is a starting pattern; write a focused spec for the changed flow.
 
 ## Authoring a feature spec
 

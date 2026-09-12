@@ -1,5 +1,5 @@
 ---
-description: "Authoritative feature-branch PR workflow — open through merge (CI green, Supabase green or skipped, evidence). Same standard every time."
+description: "Authoritative feature-branch PR workflow — open through merge (CI green, Supabase green or skipped). Same standard every time."
 alwaysApply: true
 ---
 # PR Merge-Ready Workflow (authoritative)
@@ -19,7 +19,6 @@ Merge when **all** of the following are true. Do **not** wait for Qodo (retired 
 | Gate | Verify |
 |------|--------|
 | Local verify | Fallow clean, lint, type-check, targeted/`test:ci`, build when relevant, local E2E per change type |
-| PR visual evidence | Screenshots + MP4 demo in PR body; `-Publish` comment when product UI changed; when help/docs discovery changed, include proof from each surfaced entry point to the guide |
 | CI green | `gh pr checks <num> --watch` — every required job is success. Expected skips (for example Release Metadata on a `preview` base) are fine |
 | Supabase | `Validate Supabase Migrations` and `Supabase Preview` are **success**, **or** skipped / absent because the PR has no related `supabase/**` (or validator) changes |
 | Mergeable | `gh pr view <num> --json mergeable,mergeStateStatus` → `MERGEABLE` / `CLEAN` |
@@ -52,8 +51,8 @@ Run in order:
 1. Fallow (both scans)
 2. **`npm ci --prefer-offline --no-audit`** when lockfile/deps changed or before first PR open — on Windows, run `.\dev\dev-stop.bat` first if EPERM/EBUSY is possible (`dev-stack-lifecycle.mdc`). Linux CI is authoritative if local `npm ci` is blocked by file locks after a successful prior install.
 3. `npm run lint`, `npm run type-check`, `npm run test:ci`, `npm run build`, `npm run verify:spa-routing` when applicable
-4. Ensure stack healthy via batch files (`dev-stack-lifecycle.mdc`); use `.\dev\dev-start.bat -Force` when migrations/seeds affect E2E
-5. Local E2E / PR evidence capture per `local-verify-before-preview-push.mdc` and `pr-visual-evidence.mdc`
+4. When local E2E is required, ensure stack healthy via batch files (`dev-stack-lifecycle.mdc`); use `.\dev\dev-start.bat -Force` when migrations/seeds affect E2E
+5. Local E2E when applicable per `local-verify-before-preview-push.mdc`
 
 ## Phase 3 — Open PR
 
@@ -61,13 +60,12 @@ Run in order:
 git push -u origin HEAD
 ```
 
-Write PR body to a UTF-8 file (never inline `gh pr create --body` on Windows — `git-powershell.mdc`). Include visual evidence markdown from `tmp/pr-evidence/<flow>/evidence-markdown.md`.
+Write PR body to a UTF-8 file (never inline `gh pr create --body` on Windows — `git-powershell.mdc`).
 
 Day-to-day feature/fix PR:
 
 ```powershell
 gh pr create --base preview --head feat/<short-slug> --title "<conventional title>" --body-file "$env:TEMP\pr-<slug>-body.md"
-.\dev\pr-evidence\Invoke-PrEvidence.ps1 -Flow "<slug>" -Spec "e2e/pr-evidence/<feature>.spec.ts" -PrNumber <num> -Publish
 ```
 
 Release / promote PR (`preview` → `main` or `chore/release-v*`):
@@ -111,7 +109,6 @@ Post a short merge comment citing the green CI run URL and the Supabase result (
 ## Relationship to other rules
 
 - **`pr-ci-gate-before-open.mdc`:** CI parity install + green checks — subset of this workflow.
-- **`pr-visual-evidence.mdc`:** capture and publish requirements.
 - **`address-pr-feedback/SKILL.md`:** triage loop when the user asks to address review comments — not a preview merge gate.
 - **`branching.mdc`:** local-iterate vs publish; feat → preview → main. Never direct-push to `main` or `preview`.
 
