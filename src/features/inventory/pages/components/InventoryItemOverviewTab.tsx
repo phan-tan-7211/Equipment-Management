@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { FileText, Image as ImageIcon, Package2, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import InlineEditField from '@/features/equipment/components/InlineEditField';
 import ImageUploadWithNote from '@/components/common/ImageUploadWithNote';
 import { getStockHealthPresentation } from '@/features/inventory/utils/stockHealth';
+import { resolveStockHealthTier } from '@/features/inventory/utils/stockHealthLevels';
 import { InventoryItemEffectiveLocationBlock } from '@/features/inventory/pages/components/InventoryItemEffectiveLocationBlock';
 import type { InventoryStructuredLocationFields } from '@/features/inventory/utils/inventoryLocationUtils';
 import type { SessionOrganization } from '@/types/session';
@@ -45,6 +47,7 @@ const InventoryItemOverviewTab: React.FC<InventoryItemOverviewTabProps> = ({
   onUploadImages,
   onDeleteItemRequest,
 }) => {
+  const { t } = useI18n();
   const stockHealth = getStockHealthPresentation(item);
 
   return (
@@ -54,73 +57,72 @@ const InventoryItemOverviewTab: React.FC<InventoryItemOverviewTabProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight">
               <FileText className="h-5 w-5" />
-              Basic Information
+              {t('inventoryDetail.basicInformation')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-muted-foreground">Name</Label>
+              <Label className="text-sm font-medium text-muted-foreground">{t('inventoryDetail.name')}</Label>
               <div className="mt-0.5">
                 <InlineEditField
                   value={item.name || ''}
                   onSave={(value) => onFieldUpdate('name', value)}
                   canEdit={canEdit}
-                  placeholder="Enter item name"
+                  placeholder={t('inventoryDetail.enterItemName')}
                   className="text-base"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-muted-foreground">Description</Label>
+              <Label className="text-sm font-medium text-muted-foreground">{t('inventoryDetail.description')}</Label>
               <div className="mt-0.5">
                 <InlineEditField
                   value={item.description || ''}
                   onSave={(value) => onFieldUpdate('description', value)}
                   canEdit={canEdit}
                   type="textarea"
-                  placeholder="Enter description"
+                  placeholder={t('inventoryDetail.enterDescription')}
                   className="text-base"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-muted-foreground">SKU</Label>
+              <Label className="text-sm font-medium text-muted-foreground">{t('inventoryDetail.sku')}</Label>
               <div className="mt-0.5">
                 <InlineEditField
                   value={item.sku || ''}
                   onSave={(value) => onFieldUpdate('sku', value)}
                   canEdit={canEdit}
-                  placeholder="Enter SKU"
+                  placeholder={t('inventoryDetail.enterSku')}
                   className="text-base font-mono"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-muted-foreground">External ID</Label>
+              <Label className="text-sm font-medium text-muted-foreground">{t('inventoryDetail.externalId')}</Label>
               <div className="mt-0.5">
                 <InlineEditField
                   value={item.external_id || ''}
                   onSave={(value) => onFieldUpdate('external_id', value)}
                   canEdit={canEdit}
-                  placeholder="Enter external ID"
+                  placeholder={t('inventoryDetail.enterExternalId')}
                   className="text-base font-mono"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-muted-foreground">Location Name</Label>
+              <Label className="text-sm font-medium text-muted-foreground">{t('inventoryDetail.locationName')}</Label>
               <div className="mt-0.5">
                 <InlineEditField
                   value={item.location || ''}
                   onSave={(value) => onFieldUpdate('location', value)}
                   canEdit={canEdit}
-                  placeholder="Enter location name"
+                  placeholder={t('inventoryDetail.enterLocationName')}
                   className="text-base"
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Storage nickname for this part (for example Shelf A or Warehouse B - Ground Level).
-                The physical address inherits from your organization unless you override it below.
+                {t('inventoryDetail.locationHint')}
               </p>
             </div>
 
@@ -137,49 +139,49 @@ const InventoryItemOverviewTab: React.FC<InventoryItemOverviewTabProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight">
               <Package2 className="h-5 w-5" />
-              Stock Information
+              {t('inventoryDetail.stockInformation')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-1.5">
-              <Label className="text-muted-foreground">Quantity on Hand</Label>
+              <Label className="text-muted-foreground">{t('inventoryDetail.quantityOnHand')}</Label>
               <div className="flex flex-wrap items-center gap-2 mt-0.5">
                 <p className="text-2xl font-bold">{item.quantity_on_hand}</p>
                 <Badge variant="outline" className={cn('rounded-full px-2 py-0.5 text-xs font-medium', stockHealth.className)}>
-                  {stockHealth.label}
+                  {t(`inventoryList.stockHealth.${resolveStockHealthTier(item)}`)}
                 </Badge>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-muted-foreground">Low Stock Threshold</Label>
+              <Label className="text-muted-foreground">{t('inventoryDetail.lowStockThreshold')}</Label>
               <div className="mt-0.5">
                 <InlineEditField
                   value={String(item.low_stock_threshold)}
                   onSave={(value) => onNumericFieldUpdate('low_stock_threshold', value)}
                   canEdit={canEdit}
                   type="number"
-                  placeholder="Enter threshold"
+                  placeholder={t('inventoryDetail.enterThreshold')}
                   className="text-base font-medium"
-                  editAriaLabel="Edit low stock threshold"
+                  editAriaLabel={t('inventoryDetail.editThreshold')}
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-muted-foreground">Default Unit Cost</Label>
+              <Label className="text-muted-foreground">{t('inventoryDetail.defaultUnitCost')}</Label>
               <div className="mt-0.5">
                 <InlineEditField
                   value={item.default_unit_cost != null ? String(item.default_unit_cost) : ''}
                   onSave={(value) => onNumericFieldUpdate('default_unit_cost', value)}
                   canEdit={canEdit}
                   type="number"
-                  placeholder="Enter unit cost"
+                  placeholder={t('inventoryDetail.enterUnitCost')}
                   className="text-base font-medium"
                   displayNode={
                     item.default_unit_cost != null
                       ? `$${Number(item.default_unit_cost).toFixed(2)}`
                       : undefined
                   }
-                  editAriaLabel="Edit default unit cost"
+                  editAriaLabel={t('inventoryDetail.editUnitCost')}
                 />
               </div>
             </div>
@@ -191,7 +193,7 @@ const InventoryItemOverviewTab: React.FC<InventoryItemOverviewTabProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight">
             <ImageIcon className="h-5 w-5" />
-            Images
+            {t('inventoryDetail.images')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -213,7 +215,7 @@ const InventoryItemOverviewTab: React.FC<InventoryItemOverviewTabProps> = ({
                       type="button"
                       variant="destructive"
                       size="sm"
-                      aria-label={`Remove image ${img.file_name}`}
+                      aria-label={t('inventoryDetail.removeImage', { name: img.file_name })}
                       className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => onDeleteImage(img)}
                     >
@@ -235,7 +237,7 @@ const InventoryItemOverviewTab: React.FC<InventoryItemOverviewTabProps> = ({
                 loading="lazy"
                 decoding="async"
               />
-              <p className="text-xs text-muted-foreground mt-2">Legacy image (URL-based)</p>
+              <p className="text-xs text-muted-foreground mt-2">{t('inventoryDetail.legacyImage')}</p>
             </div>
           )}
 
@@ -248,7 +250,7 @@ const InventoryItemOverviewTab: React.FC<InventoryItemOverviewTabProps> = ({
           )}
 
           {!canEdit && itemImages.length === 0 && !item.image_url && (
-            <p className="text-sm text-muted-foreground">No images uploaded</p>
+            <p className="text-sm text-muted-foreground">{t('inventoryDetail.noImages')}</p>
           )}
         </CardContent>
       </Card>
@@ -259,12 +261,12 @@ const InventoryItemOverviewTab: React.FC<InventoryItemOverviewTabProps> = ({
           <Card className="border-destructive/80 bg-destructive/[0.06] dark:bg-destructive/10">
             <CardHeader>
               <CardTitle className="text-lg font-semibold tracking-tight text-destructive">
-                Delete Item
+                {t('inventoryDetail.deleteItem')}
               </CardTitle>
             </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Once you delete an inventory item, there is no going back. This action cannot be undone.
+              {t('inventoryDetail.deleteWarning')}
             </p>
             <Button
               variant="destructive"
@@ -272,7 +274,7 @@ const InventoryItemOverviewTab: React.FC<InventoryItemOverviewTabProps> = ({
               className="w-full sm:w-auto"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete Inventory Item
+              {t('inventoryDetail.deleteInventoryItem')}
             </Button>
           </CardContent>
         </Card>
