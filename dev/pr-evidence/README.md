@@ -1,6 +1,6 @@
 # PR visual evidence pipeline
 
-This optional pipeline captures screenshots and an MP4 demo from the local dev stack when a reviewer or author needs visual evidence. PRs do not require these artifacts. Screenshots upload to preview Supabase Storage; the demo video uploads to **GitHub user-attachments** so PR bodies and comments render an inline player.
+This pipeline captures screenshots and an MP4 demo from the local dev stack. Cursor product/runtime PRs follow the requirements in `.cursor/rules/pr-visual-evidence.mdc`; ChatGPT i18n-only PRs do not require these artifacts. Screenshots upload to preview Supabase Storage; the demo video uploads to **GitHub user-attachments** so PR bodies and comments render an inline player.
 
 ## Quick path
 

@@ -8,7 +8,7 @@ description: >-
   and only switches to Plan Mode
   for overly complex or assumption-heavy feedback. Verifies with lint,
   type-check, Fallow, and targeted tests; commits, pushes, posts inline replies
-  and a summary comment; watches CI until
+  and a summary comment with visual evidence when UI changed; watches CI until
   green before handoff. Use when PR feedback needs addressing, automated
   reviewers leave comments, or the user asks to fix, resolve, or respond to PR
   review comments.
@@ -57,9 +57,10 @@ If none apply, **do not** stop for a plan — proceed directly to implementation
 - [ ] Step 3b: (Conditional) Switch to Plan Mode only if the round is complex or assumption-heavy
 - [ ] Step 4: Implement fixes (CI/Supabase failures first, then other feedback)
 - [ ] Step 5: Self-review changes for regressions; verify locally (lint, type-check, Fallow, tests)
-- [ ] Step 6: Commit and push to the PR branch
-- [ ] Step 7: Post inline replies for every addressed thread + top-level summary comment
-- [ ] Step 8: Watch PR checks until green; fix forward if any fail
+- [ ] Step 6: Capture PR visual evidence when UI remediation is relevant
+- [ ] Step 7: Commit and push to the PR branch
+- [ ] Step 8: Post inline replies for every addressed thread + top-level summary comment
+- [ ] Step 9: Watch PR checks until green; fix forward if any fail
 ```
 
 ### Script helpers (EquipQR repository)
@@ -69,11 +70,12 @@ From the repo root, prefer the shared PowerShell drivers:
 | Step | Script |
 |------|--------|
 | 1 | [`dev/pr-feedback/Get-PrContext.ps1`](../../../dev/pr-feedback/Get-PrContext.ps1) |
-| 1b, 8 | [`dev/pr-feedback/Get-PrChecks.ps1`](../../../dev/pr-feedback/Get-PrChecks.ps1) — use `-Json` for structured status; `-Watch` (and `-FailFast` when diagnosing) to block until checks finish |
+| 1b, 9 | [`dev/pr-feedback/Get-PrChecks.ps1`](../../../dev/pr-feedback/Get-PrChecks.ps1) — use `-Json` for structured status; `-Watch` (and `-FailFast` when diagnosing) to block until checks finish |
 | 2 (inline threads) | [`dev/pr-feedback/Get-PrFeedbackThreads.ps1`](../../../dev/pr-feedback/Get-PrFeedbackThreads.ps1) |
 | 2b (review bodies) | [`dev/pr-feedback/Get-PrReviewBodies.ps1`](../../../dev/pr-feedback/Get-PrReviewBodies.ps1) |
 | 5 | [`dev/pr-feedback/Invoke-PrVerification.ps1`](../../../dev/pr-feedback/Invoke-PrVerification.ps1) (supplement with Fallow — see Step 5) |
-| 7 | [`dev/pr-feedback/Publish-PrFeedbackResponses.ps1`](../../../dev/pr-feedback/Publish-PrFeedbackResponses.ps1) |
+| 6 | [`dev/pr-evidence/Invoke-PrEvidence.ps1`](../../../dev/pr-evidence/Invoke-PrEvidence.ps1) |
+| 8 | [`dev/pr-feedback/Publish-PrFeedbackResponses.ps1`](../../../dev/pr-feedback/Publish-PrFeedbackResponses.ps1) |
 
 JSON manifest formats, dry-run behavior, and examples live in [`dev/pr-feedback/README.md`](../../../dev/pr-feedback/README.md).
 
@@ -281,7 +283,28 @@ Run checks in the PR worktree until all pass. **Do not commit with failing lint,
 
 Document commands run and pass/fail outcomes in the handoff.
 
-### Step 6: Commit and Push
+### Step 6: Capture PR Visual Evidence (when UI remediation is relevant)
+
+When fixes change user-visible behavior, capture fresh evidence per `.cursor/rules/pr-visual-evidence.mdc` **before** posting the summary comment:
+
+```powershell
+.\dev\pr-evidence\Invoke-PrEvidence.ps1 `
+  -Flow "<short-slug>" `
+  -Spec "e2e/pr-evidence/<feature>.spec.ts"
+
+# After push, publish hosted URLs for the summary comment:
+.\dev\pr-evidence\Invoke-PrEvidence.ps1 `
+  -Flow "<short-slug>" `
+  -Spec "e2e/pr-evidence/<feature>.spec.ts" `
+  -PrNumber <num> `
+  -Publish
+```
+
+- Author or update `e2e/pr-evidence/<feature>.spec.ts` when existing specs do not cover the remediated UI.
+- Merge screenshot/MP4 markdown from `tmp/pr-evidence/<slug>/evidence-markdown.md` into the **summary comment** (not only the PR body) so reviewers see remediation proof inline.
+- If capture fails, fix the spec or local stack before pushing — do not push UI fixes without evidence when the rule applies.
+
+### Step 7: Commit and Push
 
 Commit with a message referencing the PR (PowerShell-safe temp file for multi-line bodies):
 
@@ -298,7 +321,7 @@ Remove-Item ".git/COMMIT_MSG"
 
 Push to the PR branch proactively once verification passes (per `.cursor/rules/branching.mdc`).
 
-### Step 7: Inline Replies and Summary Comment
+### Step 8: Inline Replies and Summary Comment
 
 **Every addressed inline thread** gets an in-thread reply so the conversation can be resolved. Do not rely on the top-level summary alone.
 
@@ -312,7 +335,7 @@ Push to the PR branch proactively once verification passes (per `.cursor/rules/b
   -SummaryBodyFile .\tmp\pr-feedback-response.md
 ```
 
-#### 7a — Tracking issues for **Defer** items
+#### 8a — Tracking issues for **Defer** items
 
 Open a GitHub issue for each deferred theme (one issue can cover related items). Create issues **before** posting replies that link to them.
 
@@ -320,7 +343,7 @@ Open a GitHub issue for each deferred theme (one issue can cover related items).
 gh issue create --title "Deferred from PR #<number>: <short topic>" --body-file "$env:TEMP\equipqr-deferred-issue.md"
 ```
 
-#### 7b — In-thread replies (required for every triaged inline thread)
+#### 8b — In-thread replies (required for every triaged inline thread)
 
 | Bucket | Reply pattern |
 |--------|---------------|
@@ -340,9 +363,9 @@ Use the review comment `databaseId` from GraphQL as `in_reply_to`.
 
 **Race-condition rule:** If a reply returns `404` immediately after push (thread auto-resolved/outdated), treat as non-fatal and continue. **Always** still post the top-level summary.
 
-#### 7c — Top-level summary comment
+#### 8c — Top-level summary comment
 
-Post via `--body-file`. Include every triaged item in exactly one section.
+Post via `--body-file`. Include every triaged item in exactly one section. Embed visual evidence markdown when Step 6 ran.
 
 ```powershell
 @"
@@ -364,6 +387,9 @@ Post via `--body-file`. Include every triaged item in exactly one section.
 ### Rejected
 - **{summary}**: {why this feedback does not apply}
 
+### Visual evidence
+{paste evidence-markdown.md section when UI changed}
+
 ### Verification
 - lint: pass
 - type-check: pass
@@ -378,7 +404,7 @@ gh pr comment <pr_number> --body-file "$env:TEMP\pr-feedback-response.md"
 
 Omit empty sections. **Deferred / tracked** lines must include issue links.
 
-### Step 8: Watch PR Checks Until Green (mandatory handoff gate)
+### Step 9: Watch PR Checks Until Green (mandatory handoff gate)
 
 After every push, **watch** until all attached checks pass. Do not mark the feedback round complete on local verify alone.
 
@@ -390,7 +416,7 @@ If checks fail:
 
 1. Read `failedChecks` from `-Json` output or `gh pr checks <num> --json name,bucket,state,workflow,link`.
 2. Fix forward on the same branch (CI failures outrank remaining comment threads).
-3. Re-run Step 1b → local verify → push → Step 8 until `isGreen: true`.
+3. Re-run Step 1b → local verify → push → Step 9 until `isGreen: true`.
 
 **Handoff must cite final CI status** — include `gh pr checks` output or a link to the green workflow run (per `.cursor/rules/pr-ci-gate-before-open.mdc`).
 

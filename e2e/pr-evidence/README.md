@@ -1,10 +1,10 @@
 # PR visual evidence (Playwright)
 
-Use these Playwright specs when screenshots or a demo video would help review a UI change. They are optional for PRs. The capture tools use the local dev stack (`http://localhost:8080`) and can upload artifacts for display in the PR.
+Use these Playwright specs when screenshots or a demo video would help review a UI change. Cursor product/runtime PRs follow `.cursor/rules/pr-visual-evidence.mdc`; ChatGPT i18n-only PRs do not require visual artifacts. The capture tools use the local dev stack (`http://localhost:8080`) and can upload artifacts for display in the PR.
 
 ## When to add a spec
 
-| Change type | When using this optional pipeline |
+| Change type | Evidence spec |
 |-------------|------------------|
 | UI route, form, dialog, dashboard flow | Add `e2e/pr-evidence/<feature>.spec.ts` to capture the changed flow |
 | Edge-only / no UI | No Playwright spec needed |
