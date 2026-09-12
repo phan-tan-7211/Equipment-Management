@@ -10,8 +10,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { INVENTORY_BUILT_IN_VIEWS } from '@/features/inventory/constants/inventoryListBuiltInViews';
+import {
+  INVENTORY_BUILT_IN_VIEWS,
+  isBuiltInViewId,
+} from '@/features/inventory/constants/inventoryListBuiltInViews';
 import type { InventorySavedView } from '@/features/inventory/types/inventory';
+import { useI18n } from '@/i18n';
 
 type InventorySavedViewsMenuProps = {
   savedViews: InventorySavedView[];
@@ -28,10 +32,15 @@ export function InventorySavedViewsMenu({
   onSaveCurrentView,
   onDeleteView,
 }: InventorySavedViewsMenuProps) {
+  const { t } = useI18n();
   const [newViewName, setNewViewName] = useState('');
 
   const allViews = [...INVENTORY_BUILT_IN_VIEWS, ...savedViews];
   const activeView = allViews.find((v) => v.id === activeViewId);
+  const getDisplayName = (view: InventorySavedView) =>
+    isBuiltInViewId(view.id)
+      ? t(`inventoryList.builtInViewNames.${view.id}`)
+      : view.name;
 
   return (
     <DropdownMenu>
@@ -41,18 +50,18 @@ export function InventorySavedViewsMenu({
           variant="outline"
           size="sm"
           className="h-8 gap-1.5"
-          aria-label="Saved views"
+          aria-label={t('inventoryList.savedViews')}
         >
           <Bookmark className="h-3.5 w-3.5" aria-hidden />
           <span className="hidden sm:inline max-w-[120px] truncate">
-            {activeView?.name ?? 'Views'}
+            {activeView ? getDisplayName(activeView) : t('inventoryList.views')}
           </span>
           <ChevronDown className="h-3 w-3 text-muted-foreground" aria-hidden />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-64">
         <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-          Built-in views
+          {t('inventoryList.builtInViews')}
         </DropdownMenuLabel>
         {INVENTORY_BUILT_IN_VIEWS.map((view) => (
           <DropdownMenuItem
@@ -60,7 +69,7 @@ export function InventorySavedViewsMenu({
             onSelect={() => onApplyView(view)}
             className={activeViewId === view.id ? 'bg-muted' : undefined}
           >
-            {view.name}
+            {getDisplayName(view)}
           </DropdownMenuItem>
         ))}
 
@@ -68,7 +77,7 @@ export function InventorySavedViewsMenu({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-              Your views
+              {t('inventoryList.yourViews')}
             </DropdownMenuLabel>
             {savedViews.map((view) => (
               <DropdownMenuItem
@@ -82,7 +91,7 @@ export function InventorySavedViewsMenu({
                 <button
                   type="button"
                   className="rounded-sm p-1 hover:bg-muted"
-                  aria-label={`Delete view ${view.name}`}
+                  aria-label={t('inventoryList.deleteView', { name: view.name })}
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeleteView(view.id);
@@ -100,9 +109,9 @@ export function InventorySavedViewsMenu({
           <Input
             value={newViewName}
             onChange={(e) => setNewViewName(e.target.value)}
-            placeholder="Save current view as..."
+            placeholder={t('inventoryList.saveViewPlaceholder')}
             className="h-8 text-sm"
-            aria-label="New saved view name"
+            aria-label={t('inventoryList.newSavedViewName')}
           />
           <Button
             type="button"
@@ -115,7 +124,7 @@ export function InventorySavedViewsMenu({
             }}
           >
             <Plus className="mr-1 h-3.5 w-3.5" aria-hidden />
-            Save view
+            {t('inventoryList.saveView')}
           </Button>
         </div>
       </DropdownMenuContent>

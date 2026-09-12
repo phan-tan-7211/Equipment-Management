@@ -18,18 +18,19 @@ import { ListSortFieldControls } from '@/components/common/ListSortFieldControls
 import type { ListSortFieldKind } from '@/components/common/listSortFieldKind';
 import { InventoryLocationFilterSelect } from '@/features/inventory/components/InventoryLocationFilterSelect';
 import type { InventoryFilters } from '@/features/inventory/types/inventory';
+import { useI18n } from '@/i18n';
 
-const SORT_OPTIONS: {
+const SORT_FIELDS: {
   value: NonNullable<InventoryFilters['sortBy']>;
-  label: string;
+  labelKey: string;
   kind: ListSortFieldKind;
 }[] = [
-  { value: 'name', label: 'Name', kind: 'text' },
-  { value: 'sku', label: 'SKU', kind: 'text' },
-  { value: 'external_id', label: 'External ID', kind: 'text' },
-  { value: 'quantity_on_hand', label: 'Quantity', kind: 'numeric' },
-  { value: 'location', label: 'Location Name', kind: 'text' },
-  { value: 'status', label: 'Status', kind: 'default' },
+  { value: 'name', labelKey: 'inventoryList.sortName', kind: 'text' },
+  { value: 'sku', labelKey: 'inventoryList.sortSku', kind: 'text' },
+  { value: 'external_id', labelKey: 'inventoryList.sortExternalId', kind: 'text' },
+  { value: 'quantity_on_hand', labelKey: 'inventoryList.sortQuantity', kind: 'numeric' },
+  { value: 'location', labelKey: 'inventoryList.sortLocationName', kind: 'text' },
+  { value: 'status', labelKey: 'inventoryList.sortStatus', kind: 'default' },
 ];
 
 export interface MobileInventoryToolbarProps {
@@ -48,6 +49,7 @@ const MobileInventoryToolbar: React.FC<MobileInventoryToolbarProps> = ({
   onClearFilters,
   uniqueLocations,
 }) => {
+  const { t } = useI18n();
   const [isPersonalizationOpen, setIsPersonalizationOpen] = React.useState(false);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false);
 
@@ -55,6 +57,11 @@ const MobileInventoryToolbar: React.FC<MobileInventoryToolbarProps> = ({
   const sortOrder = filters.sortOrder ?? DEFAULT_SORT_ORDER;
   const hasNonDefaultSort = sortBy !== DEFAULT_SORT_BY || sortOrder !== DEFAULT_SORT_ORDER;
   const sheetFilterCount = (filters.lowStockOnly ? 1 : 0) + (filters.location ? 1 : 0);
+  const sortOptions = SORT_FIELDS.map((option) => ({
+    value: option.value,
+    label: t(option.labelKey),
+    kind: option.kind,
+  }));
 
   const toggleSortOrder = () => {
     onFilterChange({
@@ -71,6 +78,9 @@ const MobileInventoryToolbar: React.FC<MobileInventoryToolbarProps> = ({
   };
 
   const canClearFilters = !!filters.location || filters.lowStockOnly;
+  const openFiltersAria = sheetFilterCount > 0
+    ? t('inventoryList.openFiltersActive', { count: sheetFilterCount })
+    : t('inventoryList.openFilters');
 
   return (
     <div className="space-y-3">
@@ -78,11 +88,11 @@ const MobileInventoryToolbar: React.FC<MobileInventoryToolbarProps> = ({
         <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name, SKU, or ID…"
+            placeholder={t('inventoryList.searchPlaceholderMobile')}
             value={filters.search || ''}
             onChange={(e) => onFilterChange({ search: e.target.value })}
             className="h-11 pl-9"
-            aria-label="Search inventory by name, SKU, or ID"
+            aria-label={t('inventoryList.searchAriaMobile')}
           />
         </div>
 
@@ -90,19 +100,19 @@ const MobileInventoryToolbar: React.FC<MobileInventoryToolbarProps> = ({
           open={isPersonalizationOpen}
           onOpenChange={setIsPersonalizationOpen}
           hasNonDefaultSort={hasNonDefaultSort}
-          description="Change how inventory is sorted on this device."
+          description={t('inventoryList.mobilePersonalizationDescription')}
         >
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Sort by
+              {t('inventoryList.sortBy')}
             </p>
             <ListSortFieldControls
               sortField={sortBy}
               sortOrder={sortOrder}
-              options={SORT_OPTIONS}
+              options={sortOptions}
               onFieldChange={handleSortFieldChange}
               onOrderToggle={toggleSortOrder}
-              fieldSelectAriaLabel="Sort inventory by field"
+              fieldSelectAriaLabel={t('inventoryList.sortInventoryByField')}
             />
           </div>
         </MobileListPersonalizationSheet>
@@ -113,11 +123,7 @@ const MobileInventoryToolbar: React.FC<MobileInventoryToolbarProps> = ({
               variant="outline"
               size="icon"
               className="relative h-11 w-11 shrink-0"
-              aria-label={
-                sheetFilterCount > 0
-                  ? `Open filters, ${sheetFilterCount} active`
-                  : 'Open filters'
-              }
+              aria-label={openFiltersAria}
             >
               <Filter className="h-4 w-4" aria-hidden />
               {sheetFilterCount > 0 && (
@@ -132,16 +138,16 @@ const MobileInventoryToolbar: React.FC<MobileInventoryToolbarProps> = ({
           </SheetTrigger>
           <MobileToolbarSheetContent>
             <SheetHeader className="pb-2 text-left">
-              <SheetTitle>Filter inventory</SheetTitle>
+              <SheetTitle>{t('inventoryList.filterInventory')}</SheetTitle>
               <SheetDescription>
-                Narrow the list by location name or stock level.
+                {t('inventoryList.filterInventoryDescription')}
               </SheetDescription>
             </SheetHeader>
             <div className="space-y-6 pb-8 pt-2">
               {uniqueLocations.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Location Name
+                    {t('inventoryList.locationName')}
                   </p>
                   <InventoryLocationFilterSelect
                     value={filters.location ?? '__all__'}
@@ -151,7 +157,6 @@ const MobileInventoryToolbar: React.FC<MobileInventoryToolbarProps> = ({
                     uniqueLocations={uniqueLocations}
                     triggerClassName="h-11"
                     iconClassName="mr-2 h-4 w-4 shrink-0 text-muted-foreground"
-                    allLocationsLabel="All location names"
                   />
                 </div>
               )}
@@ -160,7 +165,7 @@ const MobileInventoryToolbar: React.FC<MobileInventoryToolbarProps> = ({
                 <div className="flex min-w-0 items-center gap-2">
                   <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" aria-hidden />
                   <Label htmlFor="low-stock-mobile-sheet" className="text-base font-medium">
-                    Low stock only
+                    {t('inventoryList.lowStockOnly')}
                   </Label>
                 </div>
                 <Switch
@@ -176,7 +181,7 @@ const MobileInventoryToolbar: React.FC<MobileInventoryToolbarProps> = ({
                 disabled={!canClearFilters}
                 onClick={onClearFilters}
               >
-                Clear all filters
+                {t('inventoryList.clearAllFilters')}
               </Button>
             </div>
           </MobileToolbarSheetContent>

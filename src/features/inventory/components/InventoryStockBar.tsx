@@ -1,5 +1,6 @@
 import { computeInventoryStockBarState } from '@/features/inventory/utils/inventoryStockBar';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 type InventoryStockBarProps = {
   quantityOnHand: number;
@@ -12,8 +13,24 @@ export function InventoryStockBar({
   lowStockThreshold,
   className,
 }: InventoryStockBarProps) {
-  const { fillPercent, notchPercent, ariaLabel, ariaValueMin, ariaValueMax, ariaValueNow } =
+  const { t } = useI18n();
+  const { fillPercent, notchPercent, ariaValueMin, ariaValueMax, ariaValueNow } =
     computeInventoryStockBarState(quantityOnHand, lowStockThreshold);
+  const threshold = Math.max(lowStockThreshold, 1);
+  const ratio = quantityOnHand / threshold;
+  const ariaLabel = quantityOnHand <= 0
+    ? t('inventoryList.stockBarOnHandThreshold', { quantity: quantityOnHand, threshold })
+    : ratio <= 1
+      ? t('inventoryList.stockBarPercentThreshold', {
+          quantity: quantityOnHand,
+          threshold,
+          percent: fillPercent,
+        })
+      : t('inventoryList.stockBarOverThreshold', {
+          quantity: quantityOnHand,
+          threshold,
+          ratio: Math.round(ratio * 10) / 10,
+        });
 
   return (
     <div className={cn('relative flex h-3 w-full items-center', className)}>
