@@ -6,6 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { User, UserMinus, Check, X } from 'lucide-react';
 import { useWorkOrderContextualAssignment, type AssignmentWorkOrderContext } from '@/features/work-orders/hooks/useWorkOrderContextualAssignment';
 import { useQuickWorkOrderAssignment } from '@/hooks/useQuickWorkOrderAssignment';
+import { useI18n } from '@/i18n';
+
+const roleKeys: Record<string, string> = {
+  owner: 'roleOwner',
+  admin: 'roleAdmin',
+  manager: 'roleManager',
+  technician: 'roleTechnician',
+};
 
 interface WorkOrderAssignmentSelectorProps {
   workOrder: AssignmentWorkOrderContext & {
@@ -24,6 +32,7 @@ const WorkOrderAssignmentSelector: React.FC<WorkOrderAssignmentSelectorProps> = 
   onCancel,
   disabled = false
 }) => {
+  const { t } = useI18n();
   const [selectedValue, setSelectedValue] = useState<string>('');
   const currentAssigneeId = workOrder.assignee_id ?? workOrder.assigneeId ?? '';
   
@@ -73,7 +82,7 @@ const WorkOrderAssignmentSelector: React.FC<WorkOrderAssignmentSelectorProps> = 
     <div className="space-y-4">
       <div>
         <label htmlFor="work-order-assignment-select" className="text-sm font-medium text-muted-foreground mb-2 block">
-          Change Assignment
+          {t('workOrderAssignment.changeAssignment')}
         </label>
         <Select
           value={selectedValue}
@@ -81,14 +90,14 @@ const WorkOrderAssignmentSelector: React.FC<WorkOrderAssignmentSelectorProps> = 
           disabled={disabled || optionsLoading || quickAssignmentMutation.isPending}
         >
           <SelectTrigger id="work-order-assignment-select">
-            <SelectValue placeholder="Select new assignee..." />
+            <SelectValue placeholder={t('workOrderAssignment.selectAssignee')} />
           </SelectTrigger>
           <SelectContent>
             {/* Unassign option */}
             <SelectItem value="unassign">
               <div className="flex items-center gap-2">
                 <UserMinus className="h-4 w-4 text-muted-foreground" />
-                <span>Unassign</span>
+                <span>{t('workOrderAssignment.unassign')}</span>
               </div>
             </SelectItem>
 
@@ -96,7 +105,7 @@ const WorkOrderAssignmentSelector: React.FC<WorkOrderAssignmentSelectorProps> = 
             {assignmentOptions.length > 0 && (
               <>
                 <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-t">
-                  {!equipmentHasNoTeam ? 'Team Members' : 'Organization Admins'}
+                  {t(equipmentHasNoTeam ? 'workOrderAssignment.organizationAdmins' : 'workOrderAssignment.teamMembers')}
                 </div>
                 {assignmentOptions.map((option) => (
                   <SelectItem key={option.id} value={option.id}>
@@ -106,7 +115,7 @@ const WorkOrderAssignmentSelector: React.FC<WorkOrderAssignmentSelectorProps> = 
                         <div className="flex items-center gap-1">
                           <span>{option.name}</span>
                               {currentAssigneeId === option.id && (
-                            <Badge variant="outline" className="text-xs">Current</Badge>
+                            <Badge variant="outline" className="text-xs">{t('workOrderAssignment.current')}</Badge>
                           )}
                         </div>
                         {option.email && (
@@ -115,7 +124,7 @@ const WorkOrderAssignmentSelector: React.FC<WorkOrderAssignmentSelectorProps> = 
                       </div>
                       {option.role && (
                         <Badge variant="secondary" className="text-xs">
-                          {option.role}
+                          {roleKeys[option.role] ? t(`workOrderAssignment.${roleKeys[option.role]}`) : option.role}
                         </Badge>
                       )}
                     </div>
@@ -135,7 +144,7 @@ const WorkOrderAssignmentSelector: React.FC<WorkOrderAssignmentSelectorProps> = 
           className="flex-1"
         >
           <Check className="h-4 w-4 mr-1" />
-          {quickAssignmentMutation.isPending ? 'Updating...' : 'Update Assignment'}
+          {t(quickAssignmentMutation.isPending ? 'workOrderAssignment.updating' : 'workOrderAssignment.updateAssignment')}
         </Button>
         <Button
           onClick={onCancel}
@@ -144,7 +153,7 @@ const WorkOrderAssignmentSelector: React.FC<WorkOrderAssignmentSelectorProps> = 
           disabled={quickAssignmentMutation.isPending}
         >
           <X className="h-4 w-4 mr-1" />
-          Cancel
+          {t('workOrderAssignment.cancel')}
         </Button>
       </div>
     </div>

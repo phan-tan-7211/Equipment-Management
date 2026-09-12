@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, UserMinus, Edit3, Clock } from 'lucide-react';
 import WorkOrderAssignmentSelector from './WorkOrderAssignmentSelector';
 import type { AssignmentWorkOrderContext } from '@/features/work-orders/hooks/useWorkOrderContextualAssignment';
+import { useI18n } from '@/i18n';
 
 interface WorkOrderAssigneeDisplayProps {
   workOrder: AssignmentWorkOrderContext & {
@@ -27,6 +28,7 @@ const WorkOrderAssigneeDisplay: React.FC<WorkOrderAssigneeDisplayProps> = ({
   canManageAssignment,
   showEditControls = true
 }) => {
+  const { language, t } = useI18n();
   const [isEditing, setIsEditing] = useState(false);
   const assigneeId = workOrder.assignee_id ?? workOrder.assigneeId ?? null;
   const acceptanceDate = workOrder.acceptance_date ?? workOrder.acceptanceDate ?? null;
@@ -45,7 +47,7 @@ const WorkOrderAssigneeDisplay: React.FC<WorkOrderAssigneeDisplayProps> = ({
     
     return {
       type: 'unassigned',
-      name: 'Unassigned',
+      name: t('workOrderAssignment.unassigned'),
       icon: UserMinus,
       color: 'bg-muted text-foreground border-border'
     };
@@ -58,7 +60,7 @@ const WorkOrderAssigneeDisplay: React.FC<WorkOrderAssigneeDisplayProps> = ({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Change Assignment</CardTitle>
+          <CardTitle className="text-lg">{t('workOrderAssignment.changeAssignment')}</CardTitle>
         </CardHeader>
         <CardContent>
           <WorkOrderAssignmentSelector
@@ -75,13 +77,13 @@ const WorkOrderAssigneeDisplay: React.FC<WorkOrderAssigneeDisplayProps> = ({
     <Card>
       <CardHeader>
         <CardTitle className="text-lg flex items-center justify-between">
-          Assignment
+          {t('workOrderAssignment.assignment')}
           {canManageAssignment && showEditControls && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsEditing(true)}
-              aria-label="Edit assignment"
+              aria-label={t('workOrderAssignment.editAssignment')}
               className="h-8 w-8 p-0"
             >
               <Edit3 className="h-4 w-4" />
@@ -97,13 +99,11 @@ const WorkOrderAssigneeDisplay: React.FC<WorkOrderAssigneeDisplayProps> = ({
           <div className="flex-1">
             <div className="font-medium">{assignment.name}</div>
             <div className="text-sm text-muted-foreground">
-              {assignment.type === 'user' && 'Individual assignee'}
-              {assignment.type === 'unassigned' && 'No one assigned'}
+              {t(assignment.type === 'user' ? 'workOrderAssignment.individualAssignee' : 'workOrderAssignment.noOneAssigned')}
             </div>
           </div>
           <Badge className={assignment.color}>
-            {assignment.type === 'user' && 'Assigned'}
-            {assignment.type === 'unassigned' && 'Open'}
+            {t(assignment.type === 'user' ? 'workOrderAssignment.assigned' : 'workOrderAssignment.open')}
           </Badge>
         </div>
 
@@ -112,7 +112,7 @@ const WorkOrderAssigneeDisplay: React.FC<WorkOrderAssigneeDisplayProps> = ({
           <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t">
             <Clock className="h-4 w-4" />
             <span>
-              Accepted {new Date(acceptanceDate).toLocaleDateString()}
+              {t('workOrderAssignment.acceptedOn', { date: new Date(acceptanceDate).toLocaleDateString(language === 'en' ? undefined : language) })}
             </span>
           </div>
         )}
@@ -126,7 +126,7 @@ const WorkOrderAssigneeDisplay: React.FC<WorkOrderAssigneeDisplayProps> = ({
             className="w-full"
           >
             <User className="h-4 w-4 mr-2" />
-            Assign Work Order
+            {t('workOrderAssignment.assignWorkOrder')}
           </Button>
         )}
       </CardContent>
