@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,6 +39,7 @@ import { OperatorCheckinChecklistItemRow } from '@/features/operator-check-ins/c
 
 export default function OperatorCheckInPublicPage() {
   const { token = '' } = useParams<{ token: string }>();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState('');
@@ -98,7 +100,7 @@ export default function OperatorCheckInPublicPage() {
           setSubmittedAt(data.lastSubmittedAt ?? null);
         }
       } catch {
-        if (!cancelled) setLoadError('This check-in link is not available.');
+        if (!cancelled) setLoadError(t('operatorCheckinPublic.unavailable'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -107,7 +109,7 @@ export default function OperatorCheckInPublicPage() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, t]);
 
   const answerList = useMemo(() => Object.values(answers), [answers]);
   const checklistValidation = useMemo(
@@ -145,16 +147,16 @@ export default function OperatorCheckInPublicPage() {
       return formatCapturedFieldValue(preview?.value);
     }
     if (field.source === 'client_context' && field.clientKey === 'gps_location') {
-      if (gpsStatus === 'pending') return 'Requesting location…';
+      if (gpsStatus === 'pending') return t('operatorCheckinPublic.requestingLocation');
       if (gpsStatus === 'granted' && coords) return `${coords.lat}, ${coords.lng}`;
-      if (gpsStatus === 'denied') return 'Not provided';
-      return 'Not requested';
+      if (gpsStatus === 'denied') return t('operatorCheckinPublic.notProvided');
+      return t('operatorCheckinPublic.notRequested');
     }
     if (field.source === 'client_context' && field.clientKey === 'browser_timezone') {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
     }
     if (field.source === 'client_context' && field.clientKey === 'submitted_timestamp') {
-      return 'Recorded when you submit';
+      return t('operatorCheckinPublic.recordedOnSubmit');
     }
     return '—';
   }
@@ -176,7 +178,7 @@ export default function OperatorCheckInPublicPage() {
       setSubmittedAt(result.submittedAt);
       setSubmitted(true);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to submit check-in.';
+      const message = err instanceof Error ? err.message : t('operatorCheckinPublic.submitError');
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -201,7 +203,7 @@ export default function OperatorCheckInPublicPage() {
   }
 
   if (loading) {
-    return <PublicFormLoadingState message="Loading check-in form…" />;
+    return <PublicFormLoadingState message={t('operatorCheckinPublic.loading')} />;
   }
 
   if (loadError) {
@@ -210,27 +212,26 @@ export default function OperatorCheckInPublicPage() {
 
   if (submitted) {
     return (
-      <PublicFormSuccessCard title="Check-in complete">
+      <PublicFormSuccessCard title={t('operatorCheckinPublic.complete')}>
         <p>
-          Your <strong className="text-foreground">{templateName}</strong> check-in was saved
-          {submittedAt ? ` at ${formatPublicSubmittedAt(submittedAt)}` : ''}.
+          {t('operatorCheckinPublic.saved', { name: templateName, time: submittedAt ? t('operatorCheckinPublic.savedAt', { time: formatPublicSubmittedAt(submittedAt) }) : '' })}
         </p>
         <p>{complianceNotice}</p>
-        <p className="text-xs">You can close this page. Submit again tomorrow with the same QR code.</p>
+        <p className="text-xs">{t('operatorCheckinPublic.closePage')}</p>
       </PublicFormSuccessCard>
     );
   }
 
   return (
     <>
-      <PageSEO title={`Daily Check-In — ${templateName}`} noindex />
+      <PageSEO title={t('operatorCheckinPublic.seoTitle', { name: templateName })} noindex />
       <div className="min-h-screen bg-background p-4 pb-24 max-w-lg mx-auto space-y-4">
         <div>
           <h1 className="text-2xl font-semibold">{templateName}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Daily operator check-in</p>
+          <p className="text-sm text-muted-foreground mt-1">{t('operatorCheckinPublic.subtitle')}</p>
           <p className="text-sm mt-2">
             <ExternalLink href={OPERATOR_DAILY_CHECK_INS_DOCS_URL}>
-              What is a daily operator check-in?
+              {t('operatorCheckinPublic.documentation')}
             </ExternalLink>
           </p>
         </div>
@@ -242,7 +243,7 @@ export default function OperatorCheckInPublicPage() {
         {captchaMisconfigured && (
           <Alert variant="destructive">
             <AlertDescription>
-              This check-in form cannot accept submissions right now because CAPTCHA is not configured for this environment.
+              {t('operatorCheckinPublic.captchaUnavailable')}
             </AlertDescription>
           </Alert>
         )}
@@ -250,7 +251,7 @@ export default function OperatorCheckInPublicPage() {
         {(operatorFields.length > 0 || readOnlyFields.length > 0) && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Check-in details</CardTitle>
+              <CardTitle className="text-base">{t('operatorCheckinPublic.details')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {operatorFields.map((field) => (
@@ -278,7 +279,7 @@ export default function OperatorCheckInPublicPage() {
 
         {items.length > 0 && (
           <p className="text-sm text-muted-foreground">
-            Swipe right for Pass, left for Fail. You can also tap Pass or Fail.
+            {t('operatorCheckinPublic.swipeInstructions')}
           </p>
         )}
 
@@ -320,7 +321,7 @@ export default function OperatorCheckInPublicPage() {
         )}
 
         {captchaRequired && !hcaptchaToken && !captchaMisconfigured && (
-          <p className="text-xs text-muted-foreground text-center">Complete the CAPTCHA below to submit.</p>
+          <p className="text-xs text-muted-foreground text-center">{t('operatorCheckinPublic.captchaPrompt')}</p>
         )}
 
         {hasFormProgress && (
@@ -330,12 +331,12 @@ export default function OperatorCheckInPublicPage() {
             className="w-full min-h-[44px] touch-manipulation"
             onClick={handleResetForm}
           >
-            Reset form
+            {t('operatorCheckinPublic.reset')}
           </Button>
         )}
 
         <Button className="w-full" size="lg" disabled={!canSubmit || submitting} onClick={() => void handleSubmit()}>
-          {submitting ? 'Submitting…' : 'Submit daily check-in'}
+          {submitting ? t('operatorCheckinPublic.submitting') : t('operatorCheckinPublic.submit')}
         </Button>
       </div>
     </>
