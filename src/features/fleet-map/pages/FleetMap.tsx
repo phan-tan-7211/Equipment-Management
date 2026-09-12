@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useI18n } from '@/i18n';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, PanelLeftOpen, PanelLeftClose, Forklift } from 'lucide-react';
@@ -27,6 +28,7 @@ import { useSelectedTeam } from '@/hooks/useSelectedTeam';
 import { UNASSIGNED_TEAM_ID } from '@/contexts/selected-team-context';
 
 const FleetMap: React.FC = () => {
+  const { t } = useI18n();
   const {
     googleMapsKey,
     mapId: googleMapsMapId,
@@ -144,13 +146,13 @@ const FleetMap: React.FC = () => {
       ? error
       : error instanceof Error
         ? error.message
-        : 'Failed to load fleet data';
+        : t('fleetMap.loadFailed');
 
     if (errorMessage?.trim()) {
       return (
         <Page maxWidth="7xl" padding="responsive">
           <div className="space-y-4">
-            <PageHeader title="Fleet Map" description="Unable to load fleet map data" />
+            <PageHeader title={t('fleetMap.title')} description={t('fleetMap.unableLoad')} />
             <FleetMapErrorBoundary error={errorMessage} onRetry={() => window.location.reload()} isRetrying={false} />
           </div>
         </Page>
@@ -164,8 +166,8 @@ const FleetMap: React.FC = () => {
       <Page maxWidth="7xl" padding="responsive">
         <div className="space-y-4">
           <PageHeader
-            title="Fleet Map"
-            description={teamFleetLoading ? 'Loading fleet data...' : 'Loading map...'}
+            title={t('fleetMap.title')}
+            description={teamFleetLoading ? t('fleetMap.loadingFleet') : t('fleetMap.loadingMap')}
           />
           <Skeleton className="h-[600px] w-full rounded-lg" />
         </div>
@@ -175,11 +177,11 @@ const FleetMap: React.FC = () => {
 
   // ── No API key ──
   if (!googleMapsKey && !mapsKeyLoading) {
-    const errorMessage = mapsKeyError || 'Google Maps API key not available.';
+    const errorMessage = mapsKeyError || t('fleetMap.apiKeyUnavailable');
     return (
       <Page maxWidth="7xl" padding="responsive">
         <div className="space-y-4">
-          <PageHeader title="Fleet Map" description={errorMessage} />
+          <PageHeader title={t('fleetMap.title')} description={errorMessage} />
           <FleetMapErrorBoundary error={errorMessage} onRetry={retryMapsKey} isRetrying={mapsKeyLoading} />
         </div>
       </Page>
@@ -191,19 +193,19 @@ const FleetMap: React.FC = () => {
     return (
       <Page maxWidth="7xl" padding="responsive">
         <div className="space-y-4">
-          <PageHeader title="Fleet Map" description="No equipment with location data found" />
+          <PageHeader title={t('fleetMap.title')} description={t('fleetMap.noLocationDescription')} />
           <Card>
             <CardContent className="py-16 flex flex-col items-center text-center">
               <div className="p-4 rounded-full bg-muted mb-4">
                 <MapPin className="h-10 w-10 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">No Locations Yet</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('fleetMap.noLocations')}</h3>
               <p className="text-sm text-muted-foreground max-w-md mb-4">
-                Add addresses to your equipment or teams to see them on the fleet map.
+                {t('fleetMap.emptyHint')}
               </p>
               <Button variant="outline" onClick={() => window.location.href = '/dashboard/equipment'}>
                 <Forklift className="h-4 w-4 mr-2" />
-                Manage Equipment
+                {t('fleetMap.manageEquipment')}
               </Button>
             </CardContent>
           </Card>
@@ -228,7 +230,7 @@ const FleetMap: React.FC = () => {
             className="gap-1.5 h-8 bg-background"
           >
             {panelOpen ? <PanelLeftClose className="h-3.5 w-3.5" /> : <PanelLeftOpen className="h-3.5 w-3.5" />}
-            <span className="hidden sm:inline">{panelOpen ? 'Hide Panel' : 'Equipment'}</span>
+            <span className="hidden sm:inline">{panelOpen ? t('fleetMap.hidePanel') : t('fleetMap.equipment')}</span>
           </Button>
         </div>
 
@@ -238,12 +240,7 @@ const FleetMap: React.FC = () => {
         <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
           <div className="w-px h-4 bg-border/40" />
           <MapPin className="h-3.5 w-3.5" />
-          <span>
-            <span className="font-semibold text-foreground">{equipmentLocations.length}</span>
-            {' of '}
-            <span className="font-semibold text-foreground">{totalEquipmentCount}</span>
-            {' located'}
-          </span>
+          <span>{t('fleetMap.locatedSummary', { located: equipmentLocations.length, total: totalEquipmentCount })}</span>
         </div>
       </div>
 
@@ -285,7 +282,7 @@ const FleetMap: React.FC = () => {
             <div className="h-full w-full bg-muted/50 flex items-center justify-center">
               <div className="text-center">
                 <MapPin className="h-8 w-8 text-muted-foreground/50 mx-auto animate-pulse mb-2" />
-                <p className="text-sm text-muted-foreground">Loading map...</p>
+                <p className="text-sm text-muted-foreground">{t('fleetMap.loadingMap')}</p>
               </div>
             </div>
           )}

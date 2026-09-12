@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { useI18n } from '@/i18n';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
@@ -33,6 +34,7 @@ interface FleetMapErrorBoundaryBoundaryProps {
 type FleetMapErrorBoundaryProps =
   | FleetMapErrorBoundaryPresentationalProps
   | FleetMapErrorBoundaryBoundaryProps;
+type Translate = ReturnType<typeof useI18n>['t'];
 
 interface State {
   hasError: boolean;
@@ -54,10 +56,10 @@ interface State {
  *
  * See issue #617.
  */
-export class FleetMapErrorBoundary extends Component<FleetMapErrorBoundaryProps, State> {
+class FleetMapErrorBoundaryInner extends Component<FleetMapErrorBoundaryProps & { t: Translate }, State> {
   private fallbackRef = React.createRef<HTMLDivElement>();
 
-  constructor(props: FleetMapErrorBoundaryProps) {
+  constructor(props: FleetMapErrorBoundaryProps & { t: Translate }) {
     super(props);
     this.state = { hasError: false };
   }
@@ -89,6 +91,7 @@ export class FleetMapErrorBoundary extends Component<FleetMapErrorBoundaryProps,
         message: this.props.error,
         onRetry: this.props.onRetry,
         isRetrying: this.props.isRetrying ?? false,
+        t: this.props.t,
       });
     }
 
@@ -102,12 +105,13 @@ export class FleetMapErrorBoundary extends Component<FleetMapErrorBoundaryProps,
 
       const caughtMessage =
         this.state.caughtError?.message?.trim() ||
-        'The Fleet Map crashed unexpectedly while rendering.';
+        this.props.t('fleetMap.crashed');
       return renderCard({
         ref: this.fallbackRef,
         message: caughtMessage,
         onRetry: this.handleBoundaryReset,
         isRetrying: false,
+        t: this.props.t,
       });
     }
 
@@ -115,14 +119,20 @@ export class FleetMapErrorBoundary extends Component<FleetMapErrorBoundaryProps,
   }
 }
 
+export const FleetMapErrorBoundary: React.FC<FleetMapErrorBoundaryProps> = (props) => {
+  const { t } = useI18n();
+  return <FleetMapErrorBoundaryInner {...props} t={t} />;
+};
+
 interface CardProps {
   ref: React.Ref<HTMLDivElement>;
   message: string;
   onRetry: () => void;
   isRetrying: boolean;
+  t: Translate;
 }
 
-function renderCard({ ref, message, onRetry, isRetrying }: CardProps): ReactNode {
+function renderCard({ ref, message, onRetry, isRetrying, t }: CardProps): ReactNode {
   return (
     <div
       ref={ref}
@@ -136,25 +146,25 @@ function renderCard({ ref, message, onRetry, isRetrying }: CardProps): ReactNode
           <div className="flex justify-center mb-4">
             <AlertTriangle className="h-12 w-12 text-destructive" />
           </div>
-          <CardTitle className="text-xl">Fleet Map Error</CardTitle>
+          <CardTitle className="text-xl">{t('fleetMap.errorTitle')}</CardTitle>
           <CardDescription>
-            There was a problem loading the fleet map
+            {t('fleetMap.errorDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-            <p className="text-sm text-destructive font-medium">Error Details:</p>
+            <p className="text-sm text-destructive font-medium">{t('fleetMap.errorDetails')}</p>
             <p className="text-sm text-muted-foreground mt-1">{message}</p>
           </div>
 
           <div className="text-sm text-muted-foreground">
-            <p className="font-medium mb-2">Common causes:</p>
+            <p className="font-medium mb-2">{t('fleetMap.commonCauses')}</p>
             <ul className="space-y-1 list-disc list-inside">
-              <li>Missing Google Maps API key configuration</li>
-              <li>Google Cloud API key HTTP-referrer allowlist missing this URL</li>
-              <li>Edge function deployment issues</li>
-              <li>Network connectivity problems</li>
-              <li>Subscription or permissions issues</li>
+              <li>{t('fleetMap.missingApiKey')}</li>
+              <li>{t('fleetMap.missingReferrer')}</li>
+              <li>{t('fleetMap.edgeIssue')}</li>
+              <li>{t('fleetMap.networkIssue')}</li>
+              <li>{t('fleetMap.permissionsIssue')}</li>
             </ul>
           </div>
 
@@ -167,12 +177,12 @@ function renderCard({ ref, message, onRetry, isRetrying }: CardProps): ReactNode
             {isRetrying ? (
               <>
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Retrying...
+                {t('fleetMap.retrying')}
               </>
             ) : (
               <>
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Try Again
+                {t('fleetMap.tryAgain')}
               </>
             )}
           </Button>

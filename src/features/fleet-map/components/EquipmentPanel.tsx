@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -24,17 +25,18 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
+import { vi, ko, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { filterFleetEquipmentBySearch } from '@/features/fleet-map/utils/filterFleetEquipmentBySearch';
-import { FLEET_MAP_SOURCE_LABELS, type FleetMapSource } from '@/utils/effectiveLocation';
+import type { FleetMapSource } from '@/utils/effectiveLocation';
 import type { EquipmentLocation } from './MapView';
 
 const SOURCE_BADGE: Record<FleetMapSource, { badge: string; label: string }> = {
-  team: { badge: 'bg-info text-info-foreground', label: FLEET_MAP_SOURCE_LABELS.team },
-  manual: { badge: 'bg-primary text-primary-foreground', label: FLEET_MAP_SOURCE_LABELS.manual },
-  scan: { badge: 'bg-success text-success-foreground', label: FLEET_MAP_SOURCE_LABELS.scan },
-  legacy: { badge: 'bg-warning text-warning-foreground', label: FLEET_MAP_SOURCE_LABELS.legacy },
-  geocoded: { badge: 'bg-warning text-warning-foreground', label: FLEET_MAP_SOURCE_LABELS.geocoded },
+  team: { badge: 'bg-info text-info-foreground', label: 'teamSource' },
+  manual: { badge: 'bg-primary text-primary-foreground', label: 'manualSource' },
+  scan: { badge: 'bg-success text-success-foreground', label: 'scanSource' },
+  legacy: { badge: 'bg-warning text-warning-foreground', label: 'legacySource' },
+  geocoded: { badge: 'bg-warning text-warning-foreground', label: 'geocodedSource' },
 };
 
 // ── Types ─────────────────────────────────────────────────────
@@ -69,6 +71,8 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({
   selectedEquipmentId,
   onEquipmentSelect,
 }) => {
+  const { t, language } = useI18n();
+  const dateLocale = { vi, ko, en: enUS }[language];
   const [search, setSearch] = useState('');
   const [showUnlocated, setShowUnlocated] = useState(false);
 
@@ -101,10 +105,10 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({
     if (!mostRecent) return null;
     const isStale = Date.now() - mostRecent.getTime() > 24 * 60 * 60 * 1000;
     return {
-      label: formatDistanceToNow(mostRecent, { addSuffix: true }),
+      label: formatDistanceToNow(mostRecent, { addSuffix: true, locale: dateLocale }),
       isStale,
     };
-  }, [locatedEquipment]);
+  }, [locatedEquipment, dateLocale]);
 
   return (
     <div
@@ -119,9 +123,9 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Forklift className="h-5 w-5 text-primary" />
-              <h2 className="font-semibold text-sm">Fleet Equipment</h2>
+              <h2 className="font-semibold text-sm">{t('fleetMap.fleetEquipment')}</h2>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose} className="h-7 w-7 p-0" aria-label="Close equipment panel">
+            <Button variant="ghost" size="sm" onClick={onClose} className="h-7 w-7 p-0" aria-label={t('fleetMap.closePanel')}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -130,7 +134,7 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
-                <span className="font-semibold text-foreground">{locatedCount}</span> of {totalEquipmentCount} located
+                {t('fleetMap.locatedSummary', { located: locatedCount, total: totalEquipmentCount })}
               </span>
               <span className="font-mono text-muted-foreground">{coveragePct}%</span>
             </div>
@@ -148,12 +152,12 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({
               lastUpdatedInfo.isStale ? (
                 <div className="inline-flex items-center gap-1 bg-warning/15 text-warning border border-warning/30 rounded-md px-1.5 py-0.5 text-[10px] font-medium">
                   <AlertTriangle className="h-2.5 w-2.5 flex-shrink-0" />
-                  <span>Stale · {lastUpdatedInfo.label}</span>
+                  <span>{t('fleetMap.stale', { time: lastUpdatedInfo.label })}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
                   <RefreshCw className="h-2.5 w-2.5" />
-                  <span>Updated {lastUpdatedInfo.label}</span>
+                  <span>{t('fleetMap.updated', { time: lastUpdatedInfo.label })}</span>
                 </div>
               )
             )}
@@ -165,7 +169,7 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search equipment..."
+              placeholder={t('fleetMap.searchEquipment')}
               className="h-8 pl-8 text-xs"
             />
             {search && (
@@ -174,7 +178,7 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({
                 size="sm"
                 onClick={() => setSearch('')}
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 p-0"
-                aria-label="Clear search"
+                aria-label={t('fleetMap.clearSearch')}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -189,7 +193,7 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({
               <div className="py-8 text-center">
                 <MapPin className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-xs text-muted-foreground">
-                  {search ? 'No equipment matches your search' : 'No equipment found'}
+                  {search ? t('fleetMap.noMatch') : t('fleetMap.noEquipment')}
                 </p>
               </div>
             ) : (
@@ -224,7 +228,7 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({
                             badge.badge
                           )}
                         >
-                          {badge.label}
+                          {t(`fleetMap.${badge.label}`)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2.5 mt-2">
@@ -251,7 +255,7 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({
                     <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 mt-1 rounded-lg hover:bg-accent/60 transition-colors">
                       <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                         <AlertCircle className="h-3.5 w-3.5 text-warning" />
-                        Unlocated ({filteredUnlocated.length})
+                        {t('fleetMap.unlocated', { count: filteredUnlocated.length })}
                       </span>
                       <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', showUnlocated ? 'rotate-180' : '')} />
                     </CollapsibleTrigger>
