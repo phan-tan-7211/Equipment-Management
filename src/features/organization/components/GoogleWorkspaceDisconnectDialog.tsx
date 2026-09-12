@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import { useI18n } from '@/i18n';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,19 +24,18 @@ export function GoogleWorkspaceDisconnectDialog({
   onConfirm,
   isPending = false,
 }: GoogleWorkspaceDisconnectDialogProps) {
+  const { t } = useI18n();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Disconnect Google Workspace?</AlertDialogTitle>
+          <AlertDialogTitle>{t('organizationIntegrations.disconnectGoogleTitle')}</AlertDialogTitle>
           <AlertDialogDescription>
-            This removes EquipQR&apos;s Google OAuth access, clears the cached Workspace directory,
-            and releases your domain claim. Organization members and EquipQR data are kept. You can
-            start Google Workspace onboarding again after disconnecting.
+            {t('organizationIntegrations.disconnectGoogleDescription')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>{t('organizationIntegrations.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={(event) => {
               event.preventDefault();
@@ -47,10 +47,10 @@ export function GoogleWorkspaceDisconnectDialog({
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Disconnecting...
+                {t('organizationIntegrations.disconnecting')}
               </>
             ) : (
-              'Disconnect Google Workspace'
+              t('organizationIntegrations.disconnectGoogle')
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

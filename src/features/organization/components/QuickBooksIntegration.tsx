@@ -27,6 +27,7 @@ import {
 } from '@/services/quickbooks';
 import { useQuickBooksAccess } from '@/hooks/useQuickBooksAccess';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 import { QuickBooksMarkIcon } from '@/components/icons/QuickBooksMarkIcon';
 import { IntegrationLoadingCard } from '@/features/organization/components/IntegrationLoadingCard';
 import { IntegrationNotConfiguredCard } from '@/features/organization/components/IntegrationNotConfiguredCard';
@@ -48,6 +49,7 @@ export const QuickBooksIntegration = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   currentUserRole: _currentUserRole,
 }: QuickBooksIntegrationProps) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const queryClient = useQueryClient();
   const [isConnecting, setIsConnecting] = useState(false);
@@ -70,11 +72,11 @@ export const QuickBooksIntegration = ({
   const disconnectMutation = useMutation({
     mutationFn: () => disconnectQuickBooks(currentOrganization!.id),
     onSuccess: () => {
-      toast.success('QuickBooks disconnected successfully');
+      toast.success(t('organizationIntegrations.quickBooksDisconnected'));
       queryClient.invalidateQueries({ queryKey: ['quickbooks', 'connection'] });
     },
     onError: (error: Error) => {
-      toast.error(`Failed to disconnect: ${error.message}`);
+      toast.error(t('organizationIntegrations.disconnectFailed', { message: error.message }));
     },
   });
 
@@ -89,14 +91,14 @@ export const QuickBooksIntegration = ({
       });
       window.location.href = authUrl;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to start OAuth flow';
+      const message = error instanceof Error ? error.message : t('organizationIntegrations.oauthStartFailed');
       toast.error(message);
       setIsConnecting(false);
     }
   };
 
   const handleDisconnect = () => {
-    if (window.confirm('Are you sure you want to disconnect QuickBooks? Team-customer mappings will be preserved.')) {
+    if (window.confirm(t('organizationIntegrations.quickBooksConfirm'))) {
       disconnectMutation.mutate();
     }
   };
@@ -106,14 +108,14 @@ export const QuickBooksIntegration = ({
   }
 
   if (permissionLoading || statusLoading) {
-    return <IntegrationLoadingCard label="Loading QuickBooks..." />;
+    return <IntegrationLoadingCard label={t('organizationIntegrations.quickBooksLoading')} />;
   }
 
   if (!isConfigured) {
     return (
       <IntegrationNotConfiguredCard
         title="QuickBooks Online"
-        description="Export work orders as draft invoices"
+        description={t('organizationIntegrations.quickBooksDescription')}
         icon={quickBooksMark}
       />
     );
@@ -124,12 +126,12 @@ export const QuickBooksIntegration = ({
       <IntegrationCardLayout>
         <IntegrationCardHeader
           title="QuickBooks Online"
-          description="Export work orders as draft invoices"
+          description={t('organizationIntegrations.quickBooksDescription')}
           icon={quickBooksMark}
         />
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>Failed to check connection status.</AlertDescription>
+          <AlertDescription>{t('organizationIntegrations.connectionFailed')}</AlertDescription>
         </Alert>
       </IntegrationCardLayout>
     );
@@ -142,17 +144,17 @@ export const QuickBooksIntegration = ({
     <IntegrationCardLayout>
       <IntegrationCardHeader
         title="QuickBooks Online"
-        description="Export work orders as draft invoices"
+        description={t('organizationIntegrations.quickBooksDescription')}
         icon={quickBooksMark}
         badge={
           isConnected ? (
             <Badge variant="outline" className="bg-success/10 text-success border-success/30 text-xs">
               <CheckCircle className="h-3 w-3 mr-1" />
-              Connected
+              {t('organizationIntegrations.connected')}
             </Badge>
           ) : (
             <Badge variant="secondary" className="text-xs">
-              Not connected
+              {t('organizationIntegrations.notConnected')}
             </Badge>
           )
         }
@@ -167,7 +169,7 @@ export const QuickBooksIntegration = ({
                   disabled={isConnecting}
                 >
                   {isConnecting && <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-                  Reconnect
+                  {t('organizationIntegrations.reconnect')}
                 </Button>
               ) : (
                 <Button
@@ -182,7 +184,7 @@ export const QuickBooksIntegration = ({
                   ) : (
                     <Unlink className="h-3.5 w-3.5 mr-1.5" />
                   )}
-                  Disconnect
+                  {t('organizationIntegrations.disconnect')}
                 </Button>
               )}
               <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" asChild>
@@ -190,7 +192,7 @@ export const QuickBooksIntegration = ({
                   href="https://appcenter.intuit.com/app/connect"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Manage QuickBooks connections (opens in new tab)"
+                  aria-label={t('organizationIntegrations.quickBooksManage')}
                 >
                   <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                 </a>
@@ -208,7 +210,7 @@ export const QuickBooksIntegration = ({
               ) : (
                 <Link2 className="h-3.5 w-3.5 mr-1.5" />
               )}
-              Connect
+              {t('organizationIntegrations.connect')}
             </Button>
           )
         }
@@ -218,7 +220,7 @@ export const QuickBooksIntegration = ({
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            Authorization expired. Reconnect QuickBooks to continue exporting invoices.
+            {t('organizationIntegrations.authorizationExpired')}
           </AlertDescription>
         </Alert>
       )}
