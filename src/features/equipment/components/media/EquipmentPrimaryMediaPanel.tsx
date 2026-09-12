@@ -2,6 +2,7 @@ import React from 'react';
 import { EquipmentMediaCarousel } from '@/features/equipment/components/media/EquipmentMediaCarousel';
 import { useEquipmentMediaLibrary } from '@/features/equipment/hooks/useEquipmentMediaLibrary';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 interface EquipmentPrimaryMediaPanelProps {
   equipmentId: string;
@@ -30,6 +31,7 @@ export function EquipmentPrimaryMediaPanel({
   enabled = true,
   mediaStyle,
 }: EquipmentPrimaryMediaPanelProps) {
+  const { t } = useI18n();
   const { displayOrderedImages, isLoading } = useEquipmentMediaLibrary({
     equipmentId,
     organizationId,
@@ -43,7 +45,7 @@ export function EquipmentPrimaryMediaPanel({
         className={cn('animate-pulse rounded-lg bg-muted', emptyClassName ?? 'h-64', className)}
         style={mediaStyle}
         aria-busy="true"
-        aria-label={`Loading photos for ${equipmentName}`}
+        aria-label={t('equipmentResidual.loadingPhotos', { name: equipmentName })}
       />
     );
   }
