@@ -36,7 +36,7 @@ const EquipmentWorkOrdersTab: React.FC<EquipmentWorkOrdersTabProps> = ({
   equipment,
   assignedTeamName,
 }) => {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const navigate = useNavigate();
   const [showWorkOrderForm, setShowWorkOrderForm] = useState(false);
   const { data: workOrders = [], isLoading } = useEquipmentWorkOrders(organizationId, equipmentId);
@@ -45,6 +45,9 @@ const EquipmentWorkOrdersTab: React.FC<EquipmentWorkOrdersTabProps> = ({
   const canEdit = equipment
     ? permissions.equipment.getPermissions(equipment.team_id || undefined).canEdit
     : false;
+  const workOrderCountLabel = workOrders.length === 1
+    ? `${workOrders.length} ${t('equipment.workOrder').toLocaleLowerCase(language)}`
+    : t('equipmentFinalize.workOrderCount', { count: workOrders.length });
 
   const getCurrentTeamDisplay = useCallback(() => {
     if (assignedTeamName) {
@@ -93,7 +96,7 @@ const EquipmentWorkOrdersTab: React.FC<EquipmentWorkOrdersTabProps> = ({
         <div className={isMobile ? 'text-center' : ''}>
           <h3 className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>{t('equipmentFinalize.workOrdersTitle')}</h3>
           <p className="text-sm text-muted-foreground">
-            {t('equipmentFinalize.workOrderCount', { count: workOrders.length })}
+            {workOrderCountLabel}
           </p>
         </div>
         <Button onClick={handleCreateWorkOrder} size={isMobile ? 'sm' : 'default'} className={isMobile ? 'w-full' : ''}>
