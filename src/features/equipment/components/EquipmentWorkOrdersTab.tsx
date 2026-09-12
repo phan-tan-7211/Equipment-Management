@@ -12,6 +12,7 @@ import MobileWorkOrderCard from './MobileWorkOrderCard';
 import DesktopWorkOrderCard from '@/features/work-orders/components/DesktopWorkOrderCard';
 import { HistoricalWorkOrderBadge } from '@/features/work-orders/components/HistoricalWorkOrderBadge';
 import EquipmentPMInfo from './EquipmentPMInfo';
+import { useI18n } from '@/i18n';
 
 interface EquipmentWorkOrdersTabProps {
   equipmentId: string;
@@ -35,6 +36,7 @@ const EquipmentWorkOrdersTab: React.FC<EquipmentWorkOrdersTabProps> = ({
   equipment,
   assignedTeamName,
 }) => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [showWorkOrderForm, setShowWorkOrderForm] = useState(false);
   const { data: workOrders = [], isLoading } = useEquipmentWorkOrders(organizationId, equipmentId);
@@ -49,10 +51,10 @@ const EquipmentWorkOrdersTab: React.FC<EquipmentWorkOrdersTabProps> = ({
       return assignedTeamName;
     }
     if (!equipment?.team_id) {
-      return 'Unassigned';
+      return t('equipmentFinalize.unassigned');
     }
-    return 'Unknown Team';
-  }, [assignedTeamName, equipment?.team_id]);
+    return t('equipmentFinalize.unknownTeam');
+  }, [assignedTeamName, equipment?.team_id, t]);
 
   const handleCreateWorkOrder = () => {
     if (onCreateWorkOrder) {
@@ -87,39 +89,36 @@ const EquipmentWorkOrdersTab: React.FC<EquipmentWorkOrdersTabProps> = ({
         />
       ) : null}
 
-      {/* Header */}
       <div className={`flex items-center justify-between ${isMobile ? 'flex-col gap-3' : ''}`}>
         <div className={isMobile ? 'text-center' : ''}>
-          <h3 className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>Work Orders</h3>
+          <h3 className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>{t('equipmentFinalize.workOrdersTitle')}</h3>
           <p className="text-sm text-muted-foreground">
-            {workOrders.length} {workOrders.length === 1 ? 'work order' : 'work orders'}
+            {t('equipmentFinalize.workOrderCount', { count: workOrders.length })}
           </p>
         </div>
         <Button onClick={handleCreateWorkOrder} size={isMobile ? 'sm' : 'default'} className={isMobile ? 'w-full' : ''}>
           <Plus className="h-4 w-4 mr-2" />
-          {isMobile ? 'Create' : 'Create Work Order'}
+          {isMobile ? t('equipmentFinalize.create') : t('equipmentFinalize.createWorkOrder')}
         </Button>
       </div>
 
-      {/* Work Orders List */}
       <div className="space-y-4">
         {workOrders.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
               <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No work orders</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('equipmentFinalize.noWorkOrders')}</h3>
               <p className="text-muted-foreground mb-4">
-                No work orders have been created for this equipment yet.
+                {t('equipmentFinalize.noWorkOrdersDescription')}
               </p>
               <Button onClick={handleCreateWorkOrder}>
                 <Plus className="h-4 w-4 mr-2" />
-                Create First Work Order
+                {t('equipmentFinalize.createFirstWorkOrder')}
               </Button>
             </CardContent>
           </Card>
         ) : (
           workOrders.map((workOrder) => {
-            // Type adapter for work order data
             const adaptedWorkOrder = {
               ...workOrder,
               equipmentId: workOrder.equipment_id || '',
@@ -140,11 +139,9 @@ const EquipmentWorkOrdersTab: React.FC<EquipmentWorkOrdersTabProps> = ({
                   <HistoricalWorkOrderBadge workOrder={workOrder} />
                 )}
                 {isMobile ? (
-                  <MobileWorkOrderCard 
-                    workOrder={adaptedWorkOrder} 
-                  />
+                  <MobileWorkOrderCard workOrder={adaptedWorkOrder} />
                 ) : (
-                  <DesktopWorkOrderCard 
+                  <DesktopWorkOrderCard
                     workOrder={adaptedWorkOrder}
                     onNavigate={(id) => navigate(`/dashboard/work-orders/${id}`)}
                   />
@@ -155,7 +152,6 @@ const EquipmentWorkOrdersTab: React.FC<EquipmentWorkOrdersTabProps> = ({
         )}
       </div>
 
-      {/* Enhanced Work Order Form */}
       <WorkOrderForm
         open={showWorkOrderForm}
         onClose={() => setShowWorkOrderForm(false)}

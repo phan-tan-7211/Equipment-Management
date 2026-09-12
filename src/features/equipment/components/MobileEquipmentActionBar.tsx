@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { MessageSquarePlus } from 'lucide-react';
 import { useEquipmentPMStatus } from '@/features/equipment/hooks/useEquipmentPMStatus';
 import { EquipmentCardWorkOrderMenu } from '@/features/equipment/components/EquipmentCardWorkOrderMenu';
+import { useI18n } from '@/i18n';
 
 interface MobileEquipmentActionBarProps {
   equipmentId: string;
@@ -15,6 +16,7 @@ const MobileEquipmentActionBar: React.FC<MobileEquipmentActionBarProps> = ({
   onCreateWorkOrder,
   onAddNote,
 }) => {
+  const { t } = useI18n();
   const { data: pmStatus } = useEquipmentPMStatus(equipmentId);
 
   return (
@@ -33,7 +35,7 @@ const MobileEquipmentActionBar: React.FC<MobileEquipmentActionBarProps> = ({
           className="shrink-0 min-h-[44px] gap-1.5 px-3"
         >
           <MessageSquarePlus className="h-4 w-4 shrink-0" aria-hidden="true" />
-          Note
+          {t('equipmentFinalize.note')}
         </Button>
       </div>
     </div>

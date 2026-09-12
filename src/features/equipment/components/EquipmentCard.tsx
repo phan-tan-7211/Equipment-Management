@@ -36,8 +36,8 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({ equipment, onShowQRCode, 
   const navigate = useNavigate();
   const { beginTransition, activeEquipmentId } = useEquipmentCardTransition();
   const { settings } = useUserSettings();
-  const display = getEquipmentCardDisplayModel(equipment, settings);
-  const pmReadout = getEquipmentCardPmReadout(pmStatus);
+  const display = getEquipmentCardDisplayModel(equipment, settings, t);
+  const pmReadout = getEquipmentCardPmReadout(pmStatus, t);
   const statusRailClass = getEquipmentStatusRailClass(equipment.status);
   const statusTintClass = viewMode === 'grid' ? getEquipmentStatusBackgroundTint(equipment.status) : '';
   const imageLoading = listIndex < EQUIPMENT_ABOVE_FOLD_IMAGE_COUNT ? ('eager' as const) : ('lazy' as const);
