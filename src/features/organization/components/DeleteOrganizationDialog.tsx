@@ -34,6 +34,7 @@ import {
   useOrganizationDeletionStats 
 } from '@/features/organization/hooks/useDeleteOrganization';
 import type { SimpleOrganization } from '@/contexts/SimpleOrganizationContext';
+import { useI18n } from '@/i18n';
 
 interface DeleteOrganizationDialogProps {
   open: boolean;
@@ -46,6 +47,7 @@ export const DeleteOrganizationDialog: React.FC<DeleteOrganizationDialogProps> =
   onOpenChange,
   organization,
 }) => {
+  const { t } = useI18n();
   const [confirmationName, setConfirmationName] = useState('');
   const [confirmed, setConfirmed] = useState(false);
   const [forceDelete, setForceDelete] = useState(false);
@@ -94,10 +96,10 @@ export const DeleteOrganizationDialog: React.FC<DeleteOrganizationDialogProps> =
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <Trash2 className="h-5 w-5" />
-            Delete Organization
+            {t('organizationAdmin.delete')}
           </DialogTitle>
           <DialogDescription>
-            Permanently delete <strong>{organization.name}</strong> and all its data.
+            {t('organizationAdmin.deletingName', { name: organization.name })}
           </DialogDescription>
         </DialogHeader>
 
@@ -105,17 +107,16 @@ export const DeleteOrganizationDialog: React.FC<DeleteOrganizationDialogProps> =
           {/* Severe Warning */}
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Danger Zone</AlertTitle>
+            <AlertTitle>{t('organizationAdmin.danger')}</AlertTitle>
             <AlertDescription>
-              This action is <strong>permanent and irreversible</strong>. 
-              All data will be deleted immediately and cannot be recovered.
+              {t('organizationAdmin.deleteWarning', { permanent: t('organizationAdmin.permanent') })}
             </AlertDescription>
           </Alert>
 
           {/* Deletion Stats */}
           <div className="rounded-lg border border-destructive/50 p-4 space-y-3">
             <h4 className="font-medium text-sm text-destructive">
-              The following will be permanently deleted:
+              {t('organizationAdmin.willDelete')}
             </h4>
             
             {statsLoading ? (
@@ -129,25 +130,25 @@ export const DeleteOrganizationDialog: React.FC<DeleteOrganizationDialogProps> =
                 <div className="flex items-center gap-2">
                   <Package className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    <strong>{stats.equipment_count}</strong> equipment
+                    {t('organizationAdmin.equipmentCount', { count: stats.equipment_count })}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <ClipboardList className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    <strong>{stats.work_order_count}</strong> work orders
+                    {t('organizationAdmin.workOrdersCount', { count: stats.work_order_count })}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    <strong>{stats.team_count}</strong> teams
+                    {t('organizationAdmin.teamsCount', { count: stats.team_count })}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Boxes className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    <strong>{stats.inventory_count}</strong> inventory items
+                    {t('organizationAdmin.inventoryCount', { count: stats.inventory_count })}
                   </span>
                 </div>
               </div>
@@ -158,8 +159,7 @@ export const DeleteOrganizationDialog: React.FC<DeleteOrganizationDialogProps> =
               <Alert className="border-warning/50 bg-warning/10">
                 <AlertTriangle className="h-4 w-4 text-warning" />
                 <AlertDescription className="text-warning dark:text-warning">
-                  This organization has <strong>{stats.member_count} other member(s)</strong>.
-                  They will lose access when the organization is deleted.
+                  {t('organizationAdmin.otherMembers', { count: stats.member_count })}
                   <div className="mt-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -171,7 +171,7 @@ export const DeleteOrganizationDialog: React.FC<DeleteOrganizationDialogProps> =
                         htmlFor="force-delete" 
                         className="text-sm cursor-pointer"
                       >
-                        I understand members will lose access
+                        {t('organizationAdmin.membersLoseAccess')}
                       </Label>
                     </div>
                   </div>
@@ -183,7 +183,7 @@ export const DeleteOrganizationDialog: React.FC<DeleteOrganizationDialogProps> =
           {/* Confirmation Input */}
           <div className="space-y-2">
             <Label htmlFor="confirm-delete-name">
-              Type <strong className="text-destructive">{organization.name}</strong> to confirm deletion
+              {t('organizationAdmin.typeToDelete', { name: organization.name })}
             </Label>
             <Input
               id="confirm-delete-name"
@@ -205,14 +205,14 @@ export const DeleteOrganizationDialog: React.FC<DeleteOrganizationDialogProps> =
               htmlFor="confirm-delete" 
               className="text-sm leading-tight cursor-pointer"
             >
-              I understand this action is permanent and all organization data will be deleted forever.
+              {t('organizationAdmin.deleteAcknowledgement')}
             </Label>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('organizationAdmin.cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -222,12 +222,12 @@ export const DeleteOrganizationDialog: React.FC<DeleteOrganizationDialogProps> =
             {deleteOrganization.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Deleting...
+                {t('organizationAdmin.deleting')}
               </>
             ) : (
               <>
                 <Trash2 className="h-4 w-4 mr-2" />
-                Delete Organization Forever
+                {t('organizationAdmin.deleteForever')}
               </>
             )}
           </Button>
