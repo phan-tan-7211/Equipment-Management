@@ -33,9 +33,11 @@ import {
 import { InventoryItemActionsMenu } from '@/features/inventory/components/InventoryItemActionsMenu';
 import type { InventoryFilters, InventoryItem, InventorySortField, InventoryTableDensity } from '@/features/inventory/types/inventory';
 import { getStockHealthPresentation } from '@/features/inventory/utils/stockHealth';
+import { resolveStockHealthTier } from '@/features/inventory/utils/stockHealthLevels';
 import type { InventoryTableRowViewModel } from '@/features/inventory/utils/inventoryListViewModel';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 const ACTIONS_COLUMN_ID = '__actions';
 const NAME_COLUMN_ID = 'name';
@@ -79,6 +81,7 @@ export function InventoryListDesktopTable({
   onEditItem,
   onManageAlternateGroups,
 }: InventoryListDesktopTableProps) {
+  const { t } = useI18n();
   const { formatDate, formatDateTime } = useFormatTimestamp();
   const isCompact = density === 'compact';
   const headDensityClass = isCompact ? 'h-9 px-2 text-xs' : '';
@@ -93,6 +96,7 @@ export function InventoryListDesktopTable({
       if (!meta) continue;
 
       const sortField = key as InventorySortField;
+      const columnTitle = t(`inventoryList.columns.${key}`);
       const col: ColumnDef<InventoryTableRowViewModel> = {
         id: key,
         accessorKey: key,
@@ -103,21 +107,23 @@ export function InventoryListDesktopTable({
         header: () =>
           meta.sortable ? (
             <DataTableSortableHeaderButton
-              title={meta.title}
+              title={columnTitle}
               align={meta.align}
               active={filters.sortBy === sortField}
               sortOrder={filters.sortBy === sortField ? filters.sortOrder : undefined}
               onClick={() => onSortChange(sortField)}
             />
           ) : (
-            <DataTableStaticHeaderLabel title={meta.title} />
+            <DataTableStaticHeaderLabel title={columnTitle} />
           ),
         cell: ({ row }) => {
           const vm = row.original;
           const item = vm.item;
           const stockHealth = getStockHealthPresentation(item);
-          const stockStatusLabel =
-            stockHealth.label === 'Healthy' ? 'In Stock' : stockHealth.label;
+          const stockHealthTier = resolveStockHealthTier(item);
+          const stockStatusLabel = stockHealthTier === 'healthy'
+            ? t('inventoryList.stockHealth.inStock')
+            : t(`inventoryList.stockHealth.${stockHealthTier}`);
 
           switch (key) {
             case 'name':
@@ -133,8 +139,9 @@ export function InventoryListDesktopTable({
                   {vm.alternateGroupCount > 0 && (
                     <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                       <Layers className="h-3 w-3" aria-hidden />
-                      {vm.alternateGroupCount} alternate group
-                      {vm.alternateGroupCount > 1 ? 's' : ''}
+                      {vm.alternateGroupCount === 1
+                        ? t('inventoryList.alternateGroup', { count: vm.alternateGroupCount })
+                        : t('inventoryList.alternateGroups', { count: vm.alternateGroupCount })}
                     </p>
                   )}
                 </div>
@@ -229,7 +236,7 @@ export function InventoryListDesktopTable({
       minSize: 56,
       maxSize: 56,
       enableResizing: false,
-      header: () => <span className="sr-only">Actions</span>,
+      header: () => <span className="sr-only">{t('inventoryList.actions')}</span>,
       cell: ({ row }) => {
         const item = row.original.item;
         return (
@@ -239,7 +246,7 @@ export function InventoryListDesktopTable({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                aria-label={`Actions for ${item.name}`}
+                aria-label={t('inventoryList.actionsFor', { name: item.name })}
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreVertical className="h-4 w-4" />
@@ -279,6 +286,7 @@ export function InventoryListDesktopTable({
     onShowQR,
     onSortChange,
     onViewItem,
+    t,
   ]);
 
   const table = useReactTable({
@@ -323,7 +331,7 @@ export function InventoryListDesktopTable({
           table={table}
           tableWidth={tableWidth}
           scrollClassName="w-full overflow-x-auto rounded-sm border"
-          emptyMessage="No inventory items match your filters."
+          emptyMessage={t('inventoryList.emptyTable')}
           emptyColSpan={dataColumns.length}
           emptyCellClassName={cn('py-8 text-center text-muted-foreground', cellDensityClass)}
           getRowClassName={() => 'group hover:bg-muted/50'}

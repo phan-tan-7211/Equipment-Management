@@ -2,8 +2,8 @@ import { X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { InventoryQuickFilterKey } from '@/features/inventory/types/inventory';
-import { QUICK_FILTER_LABELS } from '@/features/inventory/utils/inventoryQuickFilters';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 type InventoryQuickFilterChipsProps = {
   activeQuickFilters: InventoryQuickFilterKey[];
@@ -30,12 +30,18 @@ export function InventoryQuickFilterChips({
   onClear,
   className,
 }: InventoryQuickFilterChipsProps) {
+  const { t } = useI18n();
+
   return (
     <div className={cn('flex flex-wrap items-center gap-1.5', className)}>
-      <span className="text-xs text-muted-foreground">Quick filters:</span>
+      <span className="text-xs text-muted-foreground">{t('inventoryList.quickFilters')}</span>
       {DESKTOP_QUICK_FILTERS.map((filter) => {
         const active = activeQuickFilters.includes(filter);
         const count = counts[filter];
+        const label = t(`inventoryList.quickFilterLabels.${filter}`);
+        const ariaLabel = count == null
+          ? label
+          : t('inventoryList.quickFilterAria', { label, count });
         return (
           <button
             key={filter}
@@ -43,13 +49,13 @@ export function InventoryQuickFilterChips({
             onClick={() => onToggle(filter)}
             className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
             aria-pressed={active}
-            aria-label={`${QUICK_FILTER_LABELS[filter]}${count != null ? `, ${count} items` : ''}`}
+            aria-label={ariaLabel}
           >
             <Badge
               variant={active ? 'default' : 'secondary'}
               className="cursor-pointer text-xs h-6 px-2"
             >
-              {QUICK_FILTER_LABELS[filter]}
+              {label}
               {count != null && count > 0 ? ` (${count})` : ''}
             </Badge>
           </button>
@@ -64,7 +70,7 @@ export function InventoryQuickFilterChips({
           onClick={onClear}
         >
           <X className="mr-1 h-3 w-3" aria-hidden />
-          Clear quick filters
+          {t('inventoryList.clearQuickFilters')}
         </Button>
       )}
     </div>
