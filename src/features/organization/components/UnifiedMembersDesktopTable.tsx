@@ -16,6 +16,7 @@ import type { UnifiedMembersListViewProps } from '@/features/organization/compon
 import {
   getUnifiedMemberStatusBadgeVariant,
   getStatusIcon,
+  getUnifiedMemberDisplayName,
 } from '@/features/organization/utils/unifiedMemberPresentation';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { getRoleBadgeVariant } from '@/utils/badgeVariants';
@@ -54,6 +55,11 @@ export function UnifiedMembersDesktopTable({
     ? t(`organizationMembers.${role}`) : role;
   const statusLabel = (status: string) => status === 'active' ? t('organizationMembers.active')
     : status === 'pending_invite' ? t('organizationMembers.pendingInvite') : t('organizationMembers.pendingGoogle');
+  const displayNameLabels = {
+    pendingInvite: t('organizationMembers.pendingInvite'),
+    pendingGoogle: t('organizationMembers.pendingGoogleName'),
+    unknown: t('organizationMembers.unknownName'),
+  };
   const { isOwner, quickBooksEnabled, canManagePartsManagers, canManagePartsConsumers } =
     permissionContext;
   const showQuickBooksColumn = isOwner && quickBooksEnabled;
@@ -118,7 +124,7 @@ export function UnifiedMembersDesktopTable({
                 <div className="flex items-center gap-3">
                   <UnifiedMemberAvatar member={member} />
                   <div>
-                    <div className="text-sm font-medium">{member.name}</div>
+                    <div className="text-sm font-medium">{getUnifiedMemberDisplayName(member, displayNameLabels)}</div>
                     {member.joinedDate && (
                       <div className="text-xs text-muted-foreground">
                         {t('organizationMembers.joined', { date: formatDate(member.joinedDate) })}
