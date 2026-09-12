@@ -31,6 +31,8 @@ import {
 import { usePMIntervalPolicy } from '@/features/pm-templates/hooks/usePMIntervalPolicies';
 import { pmIntervalPolicyService } from '@/features/pm-templates/services/pmIntervalPolicyService';
 
+import { useI18n } from '@/i18n';
+
 interface TeamMetadataEditorProps {
   open: boolean;
   onClose: () => void;
@@ -57,6 +59,7 @@ const TeamMetadataEditor: React.FC<TeamMetadataEditorProps> = ({
   onClose, 
   team 
 }) => {
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
   const [descriptionLength, setDescriptionLength] = useState(team.description?.length ?? 0);
   const [locationData, setLocationData] = useState<PlaceLocationData | null>(null);
@@ -115,8 +118,8 @@ const TeamMetadataEditor: React.FC<TeamMetadataEditorProps> = ({
 
     if (!canEditTeam) {
       toast({
-        title: 'Permission denied',
-        description: 'You do not have permission to edit this team.',
+        title: t('teamsDetail.permissionDenied'),
+        description: t('teamsDetail.editDenied'),
         variant: 'destructive',
       });
       return;
@@ -148,7 +151,7 @@ const TeamMetadataEditor: React.FC<TeamMetadataEditorProps> = ({
     }
 
     if (pmScheduleForm.mode === 'custom' && (!pmScheduleForm.intervalValue || pmScheduleForm.intervalValue < 1)) {
-      setPmScheduleError('Enter a value of 1 or greater');
+      setPmScheduleError(t('teamsDetail.minInterval'));
       return;
     }
     setPmScheduleError(null);
@@ -180,11 +183,11 @@ const TeamMetadataEditor: React.FC<TeamMetadataEditorProps> = ({
         } catch (policyError) {
           pmScheduleSaved = false;
           toast({
-            title: 'Team updated, but PM schedule was not saved',
+            title: t('teamsDetail.pmSavePartial'),
             description:
               policyError instanceof Error
                 ? policyError.message
-                : 'Failed to save PM schedule. Please try again.',
+                : t('teamsDetail.pmSaveError'),
             variant: 'destructive',
           });
         }
@@ -192,15 +195,15 @@ const TeamMetadataEditor: React.FC<TeamMetadataEditorProps> = ({
 
       if (pmScheduleSaved) {
         toast({
-          title: 'Team updated',
-          description: 'Team information has been successfully updated.',
+          title: t('teamsDetail.updated'),
+          description: t('teamsDetail.updatedDescription'),
         });
         onClose();
       }
     } catch (error) {
       toast({
-        title: 'Error updating team',
-        description: error instanceof Error ? error.message : 'Failed to update team. Please try again.',
+        title: t('teamsDetail.updateError'),
+        description: error instanceof Error ? error.message : t('teamsDetail.updateErrorDescription'),
         variant: 'destructive',
       });
     } finally {
@@ -212,9 +215,9 @@ const TeamMetadataEditor: React.FC<TeamMetadataEditorProps> = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit Team Information</DialogTitle>
+          <DialogTitle>{t('teamsDetail.editInformation')}</DialogTitle>
           <DialogDescription>
-            Update the team's basic information and location
+            {t('teamsDetail.editDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -222,24 +225,24 @@ const TeamMetadataEditor: React.FC<TeamMetadataEditorProps> = ({
           <Card>
             <CardContent className="pt-4 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Team Name *</Label>
+                <Label htmlFor="name">{t('teamsDetail.nameRequiredLabel')}</Label>
                 <Input
                   id="name"
                   name="name"
                   defaultValue={team.name}
-                  placeholder="e.g., Maintenance Team"
+                  placeholder={t('teamsDetail.exampleName')}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t('teamsDetail.description')}</Label>
                 <Textarea
                   id="description"
                   name="description"
                   defaultValue={team.description ?? ''}
                   onChange={(e) => setDescriptionLength(e.target.value.length)}
-                  placeholder="Brief description of the team's responsibilities..."
+                  placeholder={t('teamsDetail.exampleDescription')}
                   className="min-h-25"
                   maxLength={DESCRIPTION_MAX_LENGTH}
                 />
@@ -254,13 +257,12 @@ const TeamMetadataEditor: React.FC<TeamMetadataEditorProps> = ({
                 onDelete={handleTeamImageDelete}
                 maxSizeMB={5}
                 disabled={isLoading}
-                label="Team Image"
-                helpText="Upload a logo or photo to identify this team"
+                label={t('teamsDetail.image')}
+                helpText={t('teamsDetail.imageHelp')}
               />
 
               <p className="text-xs text-muted-foreground">
-                Customer accounts and QuickBooks invoice linking are managed on the team page under
-                Customer account.
+                {t('teamsDetail.customerAccountNote')}
               </p>
 
               <TeamLocationFormFields
@@ -273,13 +275,13 @@ const TeamMetadataEditor: React.FC<TeamMetadataEditorProps> = ({
               <PMSchedulePolicyFields
                 value={pmScheduleForm}
                 onChange={setPmScheduleForm}
-                inheritLabel="Inherit from assigned PM template"
+                inheritLabel={t('teamsDetail.inheritPm')}
                 intervalError={pmScheduleError}
                 disabled={isLoading || !canEditPMSchedule}
               />
               {!canEditPMSchedule && (
                 <p className="text-xs text-muted-foreground">
-                  Only org admins can edit the PM schedule.
+                  {t('teamsDetail.pmAdminOnly')}
                 </p>
               )}
             </CardContent>
@@ -287,10 +289,10 @@ const TeamMetadataEditor: React.FC<TeamMetadataEditorProps> = ({
 
           <div className="flex gap-2 justify-end">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancel
+              {t('teamsDetail.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || !canEditTeam}>
-              {isLoading ? "Saving..." : "Save Changes"}
+              {isLoading ? t('teamsDetail.saving') : t('teamsDetail.saveChanges')}
             </Button>
           </div>
         </form>

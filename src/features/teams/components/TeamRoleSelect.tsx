@@ -2,6 +2,7 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { TeamRole } from '@/types/permissions';
+import { useI18n } from '@/i18n';
 
 export type TeamRoleSelectOption = {
   value: TeamRole | string;
@@ -26,12 +27,13 @@ export function TeamRoleSelect({
   options,
   required,
 }: TeamRoleSelectProps) {
+  const { t } = useI18n();
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
       <Select value={value} onValueChange={onValueChange} required={required}>
         <SelectTrigger>
-          <SelectValue placeholder="Select a role" />
+          <SelectValue placeholder={t('teamsDetail.selectRole')} />
         </SelectTrigger>
         <SelectContent>
           {options.map((role) => (

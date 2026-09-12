@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   TEAM_VIEWS,
-  TEAM_VIEW_DESCRIPTIONS,
-  TEAM_VIEW_LABELS,
   isTeamView,
   type TeamView,
 } from '@/features/teams/types/team';
+
+import { useI18n } from '@/i18n';
 
 const VIEW_ICONS: Record<TeamView, LucideIcon> = {
   internal: Briefcase,
@@ -38,6 +38,7 @@ export function TeamViewSwitcher({
   onViewChange,
   onSetPreferred,
 }: TeamViewSwitcherProps) {
+  const { t } = useI18n();
   return (
     <div className="space-y-2">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -48,15 +49,15 @@ export function TeamViewSwitcher({
           onValueChange={(value) => {
             if (isTeamView(value)) onViewChange(value);
           }}
-          aria-label="Team view"
+          aria-label={t('teamsDetail.viewAria')}
           className="justify-start"
         >
           {TEAM_VIEWS.map((view) => {
             const Icon = VIEW_ICONS[view];
             return (
-              <ToggleGroupItem key={view} value={view} aria-label={`${TEAM_VIEW_LABELS[view]} view`}>
+              <ToggleGroupItem key={view} value={view} aria-label={t('teamsDetail.viewLabel', { view: t(`teamsDetail.views.${view}`) })}>
                 <Icon className="mr-1.5 h-4 w-4" aria-hidden />
-                {TEAM_VIEW_LABELS[view]}
+                {t(`teamsDetail.views.${view}`)}
               </ToggleGroupItem>
             );
           })}
@@ -71,11 +72,11 @@ export function TeamViewSwitcher({
             onClick={() => onSetPreferred(activeView)}
           >
             <Check className="mr-1.5 h-4 w-4" aria-hidden />
-            {isSavingPreferred ? 'Saving…' : 'Set as team default'}
+            {isSavingPreferred ? t('teamsDetail.saving') : t('teamsDetail.setDefault')}
           </Button>
         )}
       </div>
-      <p className="text-sm text-muted-foreground">{TEAM_VIEW_DESCRIPTIONS[activeView]}</p>
+      <p className="text-sm text-muted-foreground">{t(`teamsDetail.viewDescriptions.${activeView}`)}</p>
     </div>
   );
 }

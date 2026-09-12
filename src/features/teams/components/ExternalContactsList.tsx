@@ -19,6 +19,7 @@ import {
 } from '@/features/teams/hooks/useCustomerAccount';
 import type { ExternalContactListRow } from '@/features/teams/types/team';
 import type { TeamWithMembers } from '@/features/teams/services/teamService';
+import { useI18n } from '@/i18n';
 
 interface ExternalContactsListProps {
   organizationId: string;
@@ -45,16 +46,12 @@ function isEditableExternalContact(contact: ExternalContactListRow): boolean {
   );
 }
 
-const TEAM_ROLE_CONTACT_LABELS: Record<string, string> = {
-  manager: 'Team Manager',
-  requestor: 'Requestor',
-};
-
 function TeamRoleContacts({
   members,
 }: {
   members: TeamWithMembers['members'];
 }) {
+  const { t } = useI18n();
   const roleContacts = members.filter((member) => member.role === 'manager' || member.role === 'requestor');
 
   if (roleContacts.length === 0) {
@@ -65,12 +62,12 @@ function TeamRoleContacts({
     <div className="space-y-3">
       <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
         <Users className="h-3.5 w-3.5" />
-        Team contacts
+        {t('teamsCustomer.teamContacts')}
       </p>
       {roleContacts.map((member) => {
-        const name = member.profiles?.name ?? 'Team member';
+        const name = member.profiles?.name ?? t('teamsCustomer.teamMember');
         const email = member.profiles?.email;
-        const roleLabel = TEAM_ROLE_CONTACT_LABELS[member.role] ?? member.role;
+        const roleLabel = t(`teamsCustomer.contactRoles.${member.role}`);
 
         return (
           <div
@@ -84,7 +81,7 @@ function TeamRoleContacts({
                   {roleLabel}
                 </span>
                 <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
-                  EquipQR user
+                  {t('teamsCustomer.equipqrUser')}
                 </Badge>
               </div>
               {email && (
@@ -110,6 +107,7 @@ const ExternalContactsList: React.FC<ExternalContactsListProps> = ({
   canManage,
   teamMembers = [],
 }) => {
+  const { t } = useI18n();
   const { data: contacts = [], isLoading } = useExternalContacts(customerId);
   const mutations = useExternalContactMutations(organizationId, customerId);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -166,7 +164,7 @@ const ExternalContactsList: React.FC<ExternalContactsListProps> = ({
 
   const handleDelete = async (contactId: string) => {
     if (!canManage) return;
-    if (!window.confirm('Remove this contact?')) return;
+    if (!window.confirm(t('teamsCustomer.confirmRemoveContact'))) return;
     try {
       await mutations.remove.mutateAsync(contactId);
     } catch {
@@ -184,17 +182,16 @@ const ExternalContactsList: React.FC<ExternalContactsListProps> = ({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Contact className="h-5 w-5" />
-                Customer contacts
+                {t('teamsCustomer.customerContacts')}
               </CardTitle>
               <CardDescription>
-                Team managers and requestors are listed automatically. Team managers can add and edit
-                manual external contacts; QuickBooks-synced contacts stay read-only.
+                {t('teamsCustomer.contactsDescription')}
               </CardDescription>
             </div>
             {canManage && (
               <Button size="sm" onClick={openCreate} className="gap-1.5">
                 <Plus className="h-4 w-4" />
-                Add contact
+                {t('teamsCustomer.addContact')}
               </Button>
             )}
           </div>
@@ -204,12 +201,12 @@ const ExternalContactsList: React.FC<ExternalContactsListProps> = ({
 
           {contacts.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              No external contacts yet
+              {t('teamsCustomer.noExternalContacts')}
             </p>
           ) : (
             <div className="space-y-3">
               {contacts.length > 0 && teamMembers.some((m) => m.role === 'manager' || m.role === 'requestor') ? (
-                <p className="text-xs font-medium text-muted-foreground">External &amp; synced contacts</p>
+                <p className="text-xs font-medium text-muted-foreground">{t('teamsCustomer.externalSynced')}</p>
               ) : null}
               {contacts.map((c) => {
                 const isQBO = c.source === 'quickbooks';
@@ -258,7 +255,7 @@ const ExternalContactsList: React.FC<ExternalContactsListProps> = ({
                       <div className="flex gap-1 shrink-0">
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(c)}>
                           <Pencil className="h-3.5 w-3.5" />
-                          <span className="sr-only">Edit {c.name}</span>
+                          <span className="sr-only">{t('teamsCustomer.editContactFor', { name: c.name })}</span>
                         </Button>
                         <Button
                           variant="ghost"
@@ -267,7 +264,7 @@ const ExternalContactsList: React.FC<ExternalContactsListProps> = ({
                           onClick={() => handleDelete(c.id)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
-                          <span className="sr-only">Delete {c.name}</span>
+                          <span className="sr-only">{t('teamsCustomer.deleteContactFor', { name: c.name })}</span>
                         </Button>
                       </div>
                     )}
@@ -282,26 +279,26 @@ const ExternalContactsList: React.FC<ExternalContactsListProps> = ({
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit contact' : 'Add contact'}</DialogTitle>
+            <DialogTitle>{editingId ? t('teamsCustomer.editContact') : t('teamsCustomer.addContact')}</DialogTitle>
             <DialogDescription>
               {editingId
-                ? 'Update the contact details'
-                : 'Add an external contact for this customer account'}
+                ? t('teamsCustomer.updateContactDescription')
+                : t('teamsCustomer.addContactDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="contact-name">Name *</Label>
+              <Label htmlFor="contact-name">{t('teamsCustomer.nameRequired')}</Label>
               <Input
                 id="contact-name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Contact name"
+                placeholder={t('teamsCustomer.contactName')}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="contact-email">Email</Label>
+                <Label htmlFor="contact-email">{t('teamsCustomer.emailLabel')}</Label>
                 <Input
                   id="contact-email"
                   type="email"
@@ -311,7 +308,7 @@ const ExternalContactsList: React.FC<ExternalContactsListProps> = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contact-phone">Phone</Label>
+                <Label htmlFor="contact-phone">{t('teamsCustomer.phone')}</Label>
                 <Input
                   id="contact-phone"
                   value={form.phone}
@@ -321,18 +318,18 @@ const ExternalContactsList: React.FC<ExternalContactsListProps> = ({
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="contact-role">Role</Label>
+              <Label htmlFor="contact-role">{t('teamsCustomer.role')}</Label>
               <Input
                 id="contact-role"
                 value={form.role}
                 onChange={(e) => setForm({ ...form, role: e.target.value })}
-                placeholder="e.g. Site Manager, Billing"
+                placeholder={t('teamsCustomer.roleExample')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {t('teamsDetail.cancel')}
             </Button>
             <Button
               onClick={handleSave}
@@ -342,7 +339,7 @@ const ExternalContactsList: React.FC<ExternalContactsListProps> = ({
                 mutations.update.isPending
               }
             >
-              {editingId ? 'Save' : 'Add'}
+              {editingId ? t('teamsCustomer.save') : t('teamsCustomer.add')}
             </Button>
           </DialogFooter>
         </DialogContent>

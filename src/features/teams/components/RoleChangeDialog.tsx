@@ -20,6 +20,8 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { logger } from '@/utils/logger';
 import { TeamRoleSelect } from '@/features/teams/components/TeamRoleSelect';
 
+import { useI18n } from '@/i18n';
+
 type TeamRole = 'manager' | 'technician' | 'requestor' | 'viewer';
 
 type RoleChangeMember = (TeamWithMembers['members'][number] & {
@@ -40,6 +42,7 @@ const RoleChangeDialog: React.FC<RoleChangeDialogProps> = ({
   member,
   team 
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { updateRole } = useTeamMembers(team.id, currentOrganization?.id);
   const memberUserId = member?.user_id;
@@ -67,30 +70,30 @@ const RoleChangeDialog: React.FC<RoleChangeDialogProps> = ({
       onClose();
     } catch (error) {
       logger.error('Failed to update member role', error);
-      toast.error('Could not update team role. Check your connection and try again.');
+      toast.error(t('teamsDetail.roleUpdateError'));
     }
   };
 
   const roleOptions: Array<{ value: TeamRole; label: string; description: string }> = [
-    { value: 'manager', label: 'Manager', description: 'Can manage team members and assign work orders' },
-    { value: 'technician', label: 'Technician', description: 'Can update work orders and record maintenance' },
-    { value: 'requestor', label: 'Requestor', description: 'Can create work orders and view assigned equipment' },
-    { value: 'viewer', label: 'Viewer', description: 'Read-only access to team resources' },
+    { value: 'manager', label: t('teamsDetail.roles.manager'), description: t('teamsDetail.roleDescriptions.manager') },
+    { value: 'technician', label: t('teamsDetail.roles.technician'), description: t('teamsDetail.roleDescriptions.technician') },
+    { value: 'requestor', label: t('teamsDetail.roles.requestor'), description: t('teamsDetail.roleDescriptions.requestor') },
+    { value: 'viewer', label: t('teamsDetail.roles.viewer'), description: t('teamsDetail.roleDescriptions.viewer') },
   ];
 
   if (!member) return null;
 
   // Handle both nested and direct member data structures
-  const memberName = member.profiles?.name || member.name || 'Unknown';
-  const memberEmail = member.profiles?.email || member.email || 'No email';
+  const memberName = member.profiles?.name || member.name || t('teamsDetail.unknown');
+  const memberEmail = member.profiles?.email || member.email || t('teamsDetail.noEmail');
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Change Team Role</DialogTitle>
+          <DialogTitle>{t('teamsDetail.changeRoleTitle')}</DialogTitle>
           <DialogDescription>
-            Update the team role for {memberName}
+            {t('teamsDetail.changeRoleDescription', { name: memberName })}
           </DialogDescription>
         </DialogHeader>
 
@@ -114,7 +117,7 @@ const RoleChangeDialog: React.FC<RoleChangeDialogProps> = ({
               </div>
 
               <TeamRoleSelect
-                label="New Team Role *"
+                label={t('teamsDetail.newRoleLabel')}
                 value={selectedRole}
                 onValueChange={(value) => {
                   const nextRole = roleOptions.find((option) => option.value === value)?.value;
@@ -129,7 +132,7 @@ const RoleChangeDialog: React.FC<RoleChangeDialogProps> = ({
               {selectedRole !== member.role && (
                 <div className="p-3 bg-info/10 border border-info/30 rounded-lg">
                   <p className="text-sm text-info">
-                    <strong>Role Change:</strong> {member.role} → {selectedRole}
+                    <strong>{t('teamsDetail.roleChange')}</strong> {t(`teamsDetail.roles.${member.role}`)} → {t(`teamsDetail.roles.${selectedRole}`)}
                   </p>
                 </div>
               )}
@@ -138,13 +141,13 @@ const RoleChangeDialog: React.FC<RoleChangeDialogProps> = ({
 
           <div className="flex gap-2 justify-end">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t('teamsDetail.cancel')}
             </Button>
             <Button 
               type="submit"
               disabled={selectedRole === member.role || updateRole.isPending}
             >
-              {updateRole.isPending ? 'Updating...' : 'Update Role'}
+              {updateRole.isPending ? t('teamsDetail.updating') : t('teamsDetail.updateRole')}
             </Button>
           </div>
         </form>

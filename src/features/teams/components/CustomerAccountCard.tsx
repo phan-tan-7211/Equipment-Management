@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Building2, Mail, Phone } from 'lucide-react';
 import { useCustomer } from '@/features/teams/hooks/useCustomerAccount';
 import { QuickBooksCustomerMapping } from '@/features/teams/components/QuickBooksCustomerMapping';
+import { useI18n } from '@/i18n';
 
 interface CustomerAccountCardProps {
   customerId: string;
@@ -23,6 +24,7 @@ const CustomerAccountCard: React.FC<CustomerAccountCardProps> = ({
   teamId,
   teamName,
 }) => {
+  const { t } = useI18n();
   const { data: customer, isLoading } = useCustomer(customerId);
 
   if (isLoading || !customer) return null;
@@ -34,10 +36,10 @@ const CustomerAccountCard: React.FC<CustomerAccountCardProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Building2 className="h-4 w-4" />
-          Customer account
+          {t('teamsCustomer.account')}
         </CardTitle>
         <CardDescription className="text-xs">
-          Billing and service identity for this team. QuickBooks sync lives here — not in Edit Team.
+          {t('teamsCustomer.accountDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -53,14 +55,17 @@ const CustomerAccountCard: React.FC<CustomerAccountCardProps> = ({
                     : 'text-xs bg-muted text-muted-foreground border-border'
                 }
               >
-                {customer.is_tax_exempt ? 'Tax Exempt' : 'Taxable'}
+                {customer.is_tax_exempt ? t('teamsCustomer.taxExempt') : t('teamsCustomer.taxable')}
               </Badge>
             )}
             <Badge
               variant="outline"
               className={`text-xs ${statusStyles[status] ?? statusStyles.active}`}
             >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
+              {(() => {
+                const label = t(`teamsCustomer.statuses.${status}`);
+                return label.startsWith('teamsCustomer.') ? status : label;
+              })()}
             </Badge>
           </div>
         </div>

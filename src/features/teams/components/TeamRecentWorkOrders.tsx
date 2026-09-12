@@ -7,6 +7,7 @@ import { TeamRecentListSkeleton } from '@/features/teams/components/TeamRecentLi
 import { ClipboardList, ChevronRight, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RecentWorkOrderItem } from '@/features/teams/services/teamStatsService';
+import { useI18n } from '@/i18n';
 
 interface TeamRecentWorkOrdersProps {
   teamId: string;
@@ -19,10 +20,6 @@ function getWorkOrderStatusBadgeVariant(status: string): 'default' | 'secondary'
   if (status === 'in_progress') return 'secondary';
   if (status === 'cancelled') return 'destructive';
   return 'outline';
-}
-
-function formatWorkOrderStatus(status: string): string {
-  return status.replace(/_/g, ' ');
 }
 
 function getPriorityColor(priority: string): string {
@@ -51,6 +48,7 @@ const TeamRecentWorkOrders: React.FC<TeamRecentWorkOrdersProps> = ({
   workOrders,
   isLoading,
 }) => {
+  const { t } = useI18n();
   // Don't render if no work orders and not loading
   if (!isLoading && workOrders.length === 0) {
     return null;
@@ -61,10 +59,10 @@ const TeamRecentWorkOrders: React.FC<TeamRecentWorkOrdersProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <ClipboardList className="h-5 w-5" />
-          Recent Work Orders
+          {t('teamsCards.recentWos')}
         </CardTitle>
         <CardDescription>
-          Latest work order activity for this team
+          {t('teamsCards.recentWosDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -94,17 +92,23 @@ const TeamRecentWorkOrders: React.FC<TeamRecentWorkOrdersProps> = ({
                     </div>
                     <p className="text-sm text-muted-foreground">
                       <span className={getPriorityColor(order.priority)}>
-                        {order.priority}
+                        {(() => {
+                          const label = t(`teamsCards.priorities.${order.priority}`);
+                          return label.startsWith('teamsCards.') ? order.priority : label;
+                        })()}
                       </span>
-                      {' priority • '}
-                      {order.assigneeName || 'Unassigned'}
+                      {` ${t('teamsCards.priority')} • `}
+                      {order.assigneeName || t('teamsCards.unassigned')}
                     </p>
                   </div>
                   <Badge
                     variant={getWorkOrderStatusBadgeVariant(order.status)}
                     className="ml-2 shrink-0"
                   >
-                    {formatWorkOrderStatus(order.status)}
+                    {(() => {
+                      const label = t(`teamsCards.woStatuses.${order.status}`);
+                      return label.startsWith('teamsCards.') ? order.status.replace(/_/g, ' ') : label;
+                    })()}
                   </Badge>
                 </Link>
               );
@@ -119,7 +123,7 @@ const TeamRecentWorkOrders: React.FC<TeamRecentWorkOrdersProps> = ({
               to={`/dashboard/work-orders?team=${teamId}`}
               className="inline-flex items-center justify-center gap-2"
             >
-              View all work orders
+              {t('teamsCards.viewAllWos')}
               <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>

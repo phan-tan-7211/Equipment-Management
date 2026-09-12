@@ -22,6 +22,8 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { logger } from '@/utils/logger';
 import RoleChangeDialog from './RoleChangeDialog';
 
+import { useI18n } from '@/i18n';
+
 interface TeamMembersListProps {
   team: TeamWithMembers;
 }
@@ -29,6 +31,7 @@ interface TeamMembersListProps {
 type TeamMemberWithProfile = TeamWithMembers['members'][number];
 
 const TeamMembersList: React.FC<TeamMembersListProps> = ({ team }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { removeMember } = useTeamMembers(team.id, currentOrganization?.id);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
@@ -99,17 +102,17 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ team }) => {
 
   // Ensure members array exists and has the expected structure
   const members = team.members || [];
-  const pendingRemovalName = memberPendingRemoval?.profiles?.name || 'this member';
+  const pendingRemovalName = memberPendingRemoval?.profiles?.name || t('teamsDetail.thisMember');
 
   return (
     <div className="space-y-4">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Member</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Email</TableHead>
-            {canManage && <TableHead className="text-right">Actions</TableHead>}
+            <TableHead>{t('teamsDetail.member')}</TableHead>
+            <TableHead>{t('teamsDetail.role')}</TableHead>
+            <TableHead>{t('teamsDetail.email')}</TableHead>
+            {canManage && <TableHead className="text-right">{t('teamsDetail.actions')}</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -119,14 +122,14 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ team }) => {
                 <div className="flex items-center gap-3">
                    <Avatar className="h-8 w-8">
                      {(member.profiles as { avatar_url?: string | null })?.avatar_url && (
-                       <AvatarImage src={(member.profiles as { avatar_url?: string | null }).avatar_url!} alt={member.profiles?.name || 'User'} />
+                       <AvatarImage src={(member.profiles as { avatar_url?: string | null }).avatar_url!} alt={member.profiles?.name || t('teamsDetail.user')} />
                      )}
                      <AvatarFallback className="text-sm">
                        {(member.profiles?.name || 'U').split(' ').map(n => n[0]).join('')}
                      </AvatarFallback>
                    </Avatar>
                    <div>
-                     <p className="font-medium">{member.profiles?.name || 'Unknown'}</p>
+                     <p className="font-medium">{member.profiles?.name || t('teamsDetail.unknown')}</p>
                    </div>
                 </div>
               </TableCell>
@@ -136,13 +139,13 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ team }) => {
                     type="button"
                     onClick={() => handleChangeRole(member)}
                     className="inline-flex"
-                    title="Click to change role"
-                    aria-label={`Change role for ${member.profiles?.name || 'team member'}`}
+                    title={t('teamsDetail.clickRole')}
+                    aria-label={t('teamsDetail.changeRoleFor', { name: member.profiles?.name || t('teamsDetail.thisMember') })}
                   >
                     <Badge className={`${getRoleColor(member.role)} cursor-pointer hover:opacity-80 transition-opacity`} variant="outline">
                       <div className="flex items-center gap-1">
                         {getRoleIcon(member.role)}
-                        {member.role}
+                        {t(`teamsDetail.roles.${member.role}`)}
                       </div>
                     </Badge>
                   </button>
@@ -150,13 +153,13 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ team }) => {
                   <Badge className={getRoleColor(member.role)} variant="outline">
                     <div className="flex items-center gap-1">
                       {getRoleIcon(member.role)}
-                      {member.role}
+                      {t(`teamsDetail.roles.${member.role}`)}
                     </div>
                   </Badge>
                 )}
               </TableCell>
               <TableCell>
-                <span className="text-muted-foreground">{member.profiles?.email || 'No email'}</span>
+                <span className="text-muted-foreground">{member.profiles?.email || t('teamsDetail.noEmail')}</span>
               </TableCell>
               {canManage && (
                 <TableCell className="text-right">
@@ -165,7 +168,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ team }) => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        aria-label={`Actions for ${member.profiles?.name || 'team member'}`}
+                        aria-label={t('teamsDetail.actionsFor', { name: member.profiles?.name || t('teamsDetail.thisMember') })}
                       >
                         <Settings className="h-4 w-4" />
                       </Button>
@@ -176,7 +179,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ team }) => {
                         className="flex items-center gap-2"
                       >
                         <Users className="h-4 w-4" />
-                        Change Role
+                        {t('teamsDetail.changeRole')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onSelect={() => handleRequestRemoveMember(member)}
@@ -184,7 +187,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ team }) => {
                         disabled={removeMember.isPending}
                       >
                         <Trash2 className="h-4 w-4" />
-                        {removeMember.isPending ? 'Removing...' : 'Remove from Team'}
+                        {removeMember.isPending ? t('teamsDetail.removing') : t('teamsDetail.removeFromTeam')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -198,9 +201,9 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ team }) => {
       {members.length === 0 && (
         <div className="text-center py-8">
           <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No team members</h3>
+          <h3 className="text-lg font-semibold mb-2">{t('teamsDetail.noMembers')}</h3>
           <p className="text-muted-foreground">
-            This team doesn't have any members yet.
+            {t('teamsDetail.noMembersDescription')}
           </p>
         </div>
       )}
@@ -218,23 +221,21 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ team }) => {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove member from team?</AlertDialogTitle>
+            <AlertDialogTitle>{t('teamsDetail.removeQuestion')}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3">
                 <p>
-                  Remove <strong>{pendingRemovalName}</strong> from{' '}
-                  <strong>{team.name}</strong>?
+                  {t('teamsDetail.removeDescription', { member: pendingRemovalName, team: team.name })}
                 </p>
                 <p>
-                  This only removes their membership from this team. Their
-                  organization access stays unchanged.
+                  {t('teamsDetail.removeNotice')}
                 </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={removeMember.isPending}>
-              Cancel
+              {t('teamsDetail.cancel')}
             </AlertDialogCancel>
             <Button
               type="button"
@@ -242,7 +243,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ team }) => {
               disabled={removeMember.isPending}
               onClick={handleConfirmRemoveMember}
             >
-              {removeMember.isPending ? 'Removing...' : 'Remove from Team'}
+              {removeMember.isPending ? t('teamsDetail.removing') : t('teamsDetail.removeFromTeam')}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

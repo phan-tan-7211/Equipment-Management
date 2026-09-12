@@ -32,7 +32,8 @@ import CustomerAccountCard from '@/features/teams/components/CustomerAccountCard
 import TeamExternalContactsSection from '@/features/teams/components/TeamExternalContactsSection';
 import { TeamViewSwitcher } from '@/features/teams/components/TeamViewSwitcher';
 import { updateTeam } from '@/features/teams/services/teamService';
-import { TEAM_VIEW_LABELS, isTeamView, type TeamView } from '@/features/teams/types/team';
+import { isTeamView, type TeamView } from '@/features/teams/types/team';
+import { useI18n } from '@/i18n';
 
 /** Section ordering per dedicated team view (issue #1132). */
 const VIEW_SECTION_ORDER: Record<TeamView, string[]> = {
@@ -72,6 +73,7 @@ const VIEW_SECTION_ORDER: Record<TeamView, string[]> = {
 };
 
 const TeamDetails = () => {
+  const { t } = useI18n();
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -91,7 +93,7 @@ const TeamDetails = () => {
   const setPreferredView = useMutation({
     mutationFn: (view: TeamView) => {
       if (!teamId || !currentOrganization?.id) {
-        throw new Error('Team could not be updated. You may not have permission to edit this team.');
+        throw new Error(t('teamsDetail.updateDenied'));
       }
       return updateTeam(teamId, { preferred_view: view }, currentOrganization.id);
     },
@@ -99,14 +101,14 @@ const TeamDetails = () => {
       await queryClient.invalidateQueries({ queryKey: ['team', teamId] });
       await queryClient.invalidateQueries({ queryKey: ['teams'] });
       toast({
-        title: 'Team default view saved',
-        description: `Everyone now lands on the ${TEAM_VIEW_LABELS[view]} view for this team.`,
+        title: t('teamsDetail.defaultSaved'),
+        description: t('teamsDetail.defaultSavedDescription', { view: t(`teamsDetail.views.${view}`) }),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Unable to save team default view',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        title: t('teamsDetail.defaultSaveError'),
+        description: error instanceof Error ? error.message : t('teamsDetail.tryAgain'),
         variant: 'destructive',
       });
     },
@@ -148,16 +150,16 @@ const TeamDetails = () => {
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Teams
+          {t('teamsDetail.back')}
         </Button>
         <Card>
           <CardContent className="text-center py-12">
-            <h3 className="text-lg font-semibold mb-2">Team not found</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('teamsDetail.notFound')}</h3>
             <p className="text-muted-foreground mb-4">
-              The team you're looking for doesn't exist or you don't have permission to view it.
+              {t('teamsDetail.notFoundDescription')}
             </p>
             <Button onClick={() => navigate('/dashboard/teams')}>
-              Return to Teams
+              {t('teamsDetail.return')}
             </Button>
           </CardContent>
         </Card>
@@ -195,19 +197,19 @@ const TeamDetails = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Settings className="h-5 w-5" />
-          Team Information
+          {t('teamsDetail.information')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <span className="text-sm font-medium text-muted-foreground">Description</span>
-          <p className="text-sm">{team.description || 'No description provided'}</p>
+          <span className="text-sm font-medium text-muted-foreground">{t('teamsDetail.description')}</span>
+          <p className="text-sm">{team.description || t('teamsList.noDescription')}</p>
         </div>
 
         {/* Stats grid - responsive: 2 cols on mobile, 3 on tablet, 5 on desktop */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           <div className="p-3 rounded-lg bg-muted/30">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Members</span>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('teamsDetail.members')}</span>
             <p className="text-xl sm:text-2xl font-bold text-primary mt-1">{team.members.length}</p>
           </div>
           <Link 
@@ -216,7 +218,7 @@ const TeamDetails = () => {
           >
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1 group-hover:text-primary transition-colors">
               <Forklift className="h-3 w-3" />
-              Equipment
+              {t('teamsDetail.equipment')}
             </span>
             {isLoadingEquipmentStats ? (
               <Skeleton className="h-7 w-10 mt-1" />
@@ -231,7 +233,7 @@ const TeamDetails = () => {
           >
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1 group-hover:text-primary transition-colors">
               <ClipboardList className="h-3 w-3" />
-              Active WOs
+              {t('teamsDetail.activeWos')}
             </span>
             {isLoadingWorkOrderStats ? (
               <Skeleton className="h-7 w-10 mt-1" />
@@ -241,15 +243,15 @@ const TeamDetails = () => {
             <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
           <div className="p-3 rounded-lg bg-muted/30">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Created</span>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('teamsDetail.created')}</span>
             <p className="text-sm text-foreground mt-1">
               {new Date(team.created_at).toLocaleDateString()}
             </p>
           </div>
           <div className="p-3 rounded-lg bg-muted/30">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</span>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('teamsDetail.status')}</span>
             <Badge className="bg-success/20 text-success border-success/30 mt-1">
-              Active
+              {t('teamsDetail.active')}
             </Badge>
           </div>
         </div>
@@ -264,10 +266,10 @@ const TeamDetails = () => {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Team Members
+              {t('teamsDetail.teamMembers')}
             </CardTitle>
             <CardDescription>
-              Manage team members and their roles
+              {t('teamsDetail.manageMembers')}
             </CardDescription>
           </div>
           {canManageMembers && (
@@ -277,7 +279,7 @@ const TeamDetails = () => {
               className="gap-1.5"
             >
               <Plus className="h-4 w-4" />
-              Add Member
+              {t('teamsDetail.addMember')}
             </Button>
           )}
         </div>
@@ -294,12 +296,12 @@ const TeamDetails = () => {
       <header className="space-y-4">
         {/* Breadcrumbs + Actions */}
         <div className="flex items-center justify-between">
-          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground" aria-label="Breadcrumb">
+          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground" aria-label={t('teamsDetail.breadcrumb')}>
             <Link
               to="/dashboard/teams"
               className="hover:text-foreground hover:underline underline-offset-4 decoration-muted-foreground/40 transition-colors"
             >
-              Teams
+              {t('teamsList.title')}
             </Link>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
             <span className="text-foreground font-medium truncate max-w-[20ch] sm:max-w-none" aria-current="page" title={team.name}>
@@ -314,10 +316,10 @@ const TeamDetails = () => {
                 size="sm"
                 onClick={() => setShowMetadataEditor(true)}
                 className="gap-1.5"
-                aria-label="Edit team"
+                aria-label={t('teamsDetail.edit')}
               >
                 <Edit className="h-4 w-4" />
-                <span className="hidden sm:inline">Edit Team</span>
+                <span className="hidden sm:inline">{t('teamsDetail.edit')}</span>
               </Button>
             )}
             {canDelete && (
@@ -325,7 +327,7 @@ const TeamDetails = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
                     <MoreVertical className="h-4 w-4" />
-                    <span className="sr-only">More actions</span>
+                    <span className="sr-only">{t('teamsDetail.moreActions')}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -334,7 +336,7 @@ const TeamDetails = () => {
                     className="text-destructive focus:text-destructive"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Team
+                    {t('teamsDetail.delete')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -363,7 +365,7 @@ const TeamDetails = () => {
             </h1>
           </div>
           <p className="text-sm text-muted-foreground">
-            {team.member_count} {team.member_count === 1 ? 'member' : 'members'}
+            {t(team.member_count === 1 ? 'teamsDetail.memberCountSingle' : 'teamsDetail.memberCount', { count: team.member_count })}
           </p>
         </div>
       </header>
@@ -439,10 +441,9 @@ const TeamDetails = () => {
                   <CardContent className="py-8 text-center space-y-4">
                     <Handshake className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
                     <div>
-                      <h3 className="mb-1 text-base font-semibold">No customer account linked</h3>
+                      <h3 className="mb-1 text-base font-semibold">{t('teamsDetail.noCustomer')}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Link a customer account to track the external organization, contacts, and
-                        invoicing behind the equipment you service.
+                        {t('teamsDetail.noCustomerDescription')}
                       </p>
                     </div>
                     <QuickBooksCustomerMapping
