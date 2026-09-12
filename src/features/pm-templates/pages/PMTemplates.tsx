@@ -427,7 +427,7 @@ const PMTemplates = () => {
         <Alert>
           <Lock className="h-4 w-4" />
           <AlertDescription>
-            {t('pmTemplates.list.licenseNotice')} 
+            {t('pmTemplates.list.licenseNotice')}
             <strong> {t('pmTemplates.list.licenseAction')}</strong>
           </AlertDescription>
         </Alert>

@@ -11,6 +11,8 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+- **Work Orders mobile list localization** — Mobile search, filters, sorting, work-order cards, and auto-assignment prompts now display in Vietnamese, English, and Korean.
+
 - **Work Orders list localization** — Work Orders browsing now supports Vietnamese, English, and Korean across desktop search, filters, sorting, active filter labels, empty states, and list/calendar view controls. (#4)
 
 ## [3.32.1] - 2026-09-12
