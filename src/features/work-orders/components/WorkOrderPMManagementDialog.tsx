@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Dialog,
@@ -43,6 +44,7 @@ export function WorkOrderPMManagementDialog({
   isUpdating = false,
   onSave,
 }: WorkOrderPMManagementDialogProps) {
+  const { t } = useI18n();
   const [pmTemplateId, setPmTemplateId] = useState<string | null>(
     pmData?.template_id ?? null,
   );
@@ -80,7 +82,7 @@ export function WorkOrderPMManagementDialog({
     if (!equipment) {
       return {
         id: equipmentId,
-        name: 'Equipment',
+        name: t('workOrderForm.equipment'),
         default_pm_template_id: null as string | null,
       };
     }
@@ -89,7 +91,7 @@ export function WorkOrderPMManagementDialog({
       name: equipment.name,
       default_pm_template_id: equipment.default_pm_template_id ?? null,
     };
-  }, [equipment, equipmentId]);
+  }, [equipment, equipmentId, t]);
 
   const handleSave = async () => {
     const formData: WorkOrderFormData = {
@@ -115,11 +117,10 @@ export function WorkOrderPMManagementDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wrench className="h-5 w-5" />
-            Manage PM Checklist
+            {t('workOrderOperations.managePmChecklist')}
           </DialogTitle>
           <DialogDescription>
-            Add, change, or remove the preventative maintenance template on this work order.
-            Work order photos, notes, and costs stay attached when you change the PM template.
+            {t('workOrderOperations.pmManagementDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -137,17 +138,17 @@ export function WorkOrderPMManagementDialog({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground"
           >
-            Learn more in the Help Center
+            {t('workOrderOperations.helpCenter')}
             <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </a>
         </p>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={isUpdating}>
-            Cancel
+            {t('workOrderOperations.cancel')}
           </Button>
           <Button type="button" onClick={() => { void handleSave(); }} disabled={isUpdating || !pmReady}>
-            {isUpdating ? 'Saving…' : 'Save PM Changes'}
+            {isUpdating ? t('workOrderOperations.saving') : t('workOrderOperations.savePmChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>

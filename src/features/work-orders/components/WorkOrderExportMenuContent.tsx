@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import {
   DropdownMenuItem,
@@ -56,6 +57,7 @@ export const WorkOrderExportMenuContent: React.FC<WorkOrderExportMenuContentProp
   isExportingToSheets,
   isExportBusy,
 }) => {
+  const { t } = useI18n();
   const showAdminExports = exportAudience === 'admin';
   const showCustomerSafeExports = exportAudience === 'customer-safe';
 
@@ -71,14 +73,14 @@ export const WorkOrderExportMenuContent: React.FC<WorkOrderExportMenuContentProp
           ) : (
             <Download className="h-4 w-4 mr-2" />
           )}
-          Service Report PDF
+          {t('workOrderOperations.serviceReportPdf')}
         </DropdownMenuItem>
       )}
 
       {showAdminExports && (
         <>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Download</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>{t('workOrderOperations.download')}</DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuItem
                 onClick={onDownloadDocx}

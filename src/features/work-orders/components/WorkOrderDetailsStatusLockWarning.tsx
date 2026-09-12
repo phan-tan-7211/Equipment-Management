@@ -1,3 +1,5 @@
+import { useI18n } from '@/i18n';
+import { localizeWorkOrderStatus } from '@/features/work-orders/utils/workOrderI18nLabels';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RotateCcw } from 'lucide-react';
@@ -31,6 +33,7 @@ export const WorkOrderDetailsStatusLockWarning: React.FC<WorkOrderDetailsStatusL
   isAdmin = false,
   onStatusUpdate
 }) => {
+  const { t } = useI18n();
   const { toast } = useToast();
   const [isReverting, setIsReverting] = useState(false);
   const [showReopenDialog, setShowReopenDialog] = useState(false);
@@ -45,22 +48,22 @@ export const WorkOrderDetailsStatusLockWarning: React.FC<WorkOrderDetailsStatusL
       
       if (result.success) {
         toast({
-          title: "Work Order Reopened",
-          description: `Status changed from ${result.old_status} to ${result.new_status}`,
+          title: t('workOrderActivity.workOrderReopened'),
+          description: t('workOrderActivity.statusChanged', { from: localizeWorkOrderStatus(result.old_status, t), to: localizeWorkOrderStatus(result.new_status, t) }),
         });
         onStatusUpdate?.('accepted');
       } else {
         toast({
-          title: "Reopen Failed",
-          description: result.error || "Failed to reopen work order",
+          title: t('workOrderActivity.reopenFailed'),
+          description: result.error || t('workOrderActivity.reopenFailedMessage'),
           variant: "destructive",
         });
       }
     } catch (error) {
       logger.error('Failed to reopen work order', error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: t('workOrderActivity.error'),
+        description: t('workOrderActivity.unexpectedError'),
         variant: "destructive",
       });
     } finally {
@@ -77,14 +80,13 @@ export const WorkOrderDetailsStatusLockWarning: React.FC<WorkOrderDetailsStatusL
       <div className="flex items-start gap-2 text-warning dark:text-warning">
         <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
         <p className="text-sm font-medium">
-          This work order is {workOrder.status}. Notes, images, and costs cannot be modified.
+          {t('workOrderActivity.lockedHint', { status: localizeWorkOrderStatus(workOrder.status, t) })}
         </p>
       </div>
       {canRevert && (
         <div className="space-y-2">
           <p className="text-xs text-warning/90 dark:text-warning">
-            Need to edit the work order without changing the PM checklist? Reopen work order.
-            The PM stays completed.
+            {t('workOrderActivity.reopenHint')}
           </p>
           <Button
             variant="outline"
@@ -94,20 +96,18 @@ export const WorkOrderDetailsStatusLockWarning: React.FC<WorkOrderDetailsStatusL
             className="w-full border-warning/40 text-warning hover:bg-warning/20 dark:border-warning/50 dark:text-warning dark:hover:bg-warning/20"
           >
             <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-            {isReverting ? 'Reopening...' : 'Reopen work order'}
+            {isReverting ? t('workOrderActivity.reopening') : t('workOrderActivity.reopenWorkOrder')}
           </Button>
           <AlertDialog open={showReopenDialog} onOpenChange={setShowReopenDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Reopen work order?</AlertDialogTitle>
+                <AlertDialogTitle>{t('workOrderActivity.reopenQuestion')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will change the work order status from {workOrder.status} back to accepted.
-                  The PM checklist stays completed. This action can only be performed by an
-                  organization owner or administrator.
+                  {t('workOrderActivity.reopenDescription', { status: localizeWorkOrderStatus(workOrder.status, t) })}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel disabled={isReverting}>Cancel</AlertDialogCancel>
+                <AlertDialogCancel disabled={isReverting}>{t('workOrderActivity.cancel')}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => {
                     setShowReopenDialog(false);
@@ -115,7 +115,7 @@ export const WorkOrderDetailsStatusLockWarning: React.FC<WorkOrderDetailsStatusL
                   }}
                   disabled={isReverting}
                 >
-                  {isReverting ? 'Reopening...' : 'Yes, reopen work order'}
+                  {isReverting ? t('workOrderActivity.reopening') : t('workOrderActivity.yesReopen')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

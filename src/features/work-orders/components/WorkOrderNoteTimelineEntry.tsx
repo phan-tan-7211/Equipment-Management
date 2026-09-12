@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +33,7 @@ export function WorkOrderNoteTimelineEntry({
   contentClassName,
   contentTextClassName,
 }: WorkOrderNoteTimelineEntryProps) {
+  const { t } = useI18n();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draftDate, setDraftDate] = useState<Date | undefined>(() => new Date(note.created_at));
   const updateTimestampMutation = useUpdateHistoricalWorkOrderNoteTimestamp();
@@ -76,10 +78,10 @@ export function WorkOrderNoteTimelineEntry({
               size="sm"
               className="h-8"
               onClick={openEditor}
-              aria-label={`Edit timestamp for note by ${note.author_name}`}
+              aria-label={t('workOrderActivity.editNoteTimeAria', { name: note.author_name })}
             >
               <CalendarClock className="mr-2 h-4 w-4" />
-              Edit time
+              {t('workOrderActivity.editTime')}
             </Button>
           </div>
         ) : null}
@@ -88,27 +90,27 @@ export function WorkOrderNoteTimelineEntry({
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit note timestamp</DialogTitle>
+            <DialogTitle>{t('workOrderActivity.editNoteTimestamp')}</DialogTitle>
             <DialogDescription>
-              Adjust when this note appears on the historical work order. The organization Audit Log keeps a record of this edit.
+              {t('workOrderActivity.editNoteTimestampHint')}
             </DialogDescription>
           </DialogHeader>
           <DateTimePicker
             date={draftDate}
             onDateChange={setDraftDate}
             showShortcuts
-            placeholder="Pick note date and time"
+            placeholder={t('workOrderActivity.pickNoteDate')}
           />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {t('workOrderActivity.cancel')}
             </Button>
             <Button
               type="button"
               onClick={handleSave}
               disabled={!draftDate || updateTimestampMutation.isPending}
             >
-              {updateTimestampMutation.isPending ? 'Saving...' : 'Save timestamp'}
+              {updateTimestampMutation.isPending ? t('workOrderActivity.saving') : t('workOrderActivity.saveTimestamp')}
             </Button>
           </DialogFooter>
         </DialogContent>

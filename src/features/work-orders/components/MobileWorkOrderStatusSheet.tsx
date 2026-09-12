@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,7 +8,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { formatStatus } from '@/features/work-orders/utils/workOrderHelpers';
+import { localizeWorkOrderStatus, localizeWorkOrderActionLabel, localizeWorkOrderActionDescription } from '@/features/work-orders/utils/workOrderI18nLabels';
 import type { WorkOrderStatusAction } from '@/features/work-orders/utils/buildWorkOrderStatusActions';
 
 export interface MobileWorkOrderStatusSheetProps {
@@ -25,13 +26,14 @@ export function MobileWorkOrderStatusSheet({
   actions,
   isPending = false,
 }: MobileWorkOrderStatusSheetProps) {
+  const { t } = useI18n();
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="pb-safe-bottom">
         <SheetHeader>
-          <SheetTitle>Change status</SheetTitle>
+          <SheetTitle>{t('workOrderActivity.changeStatus')}</SheetTitle>
           <SheetDescription>
-            Current status: {formatStatus(currentStatus)}. Choose how to update this work order.
+            {t('workOrderActivity.currentStatusHint', { status: localizeWorkOrderStatus(currentStatus, t) })}
           </SheetDescription>
         </SheetHeader>
 
@@ -58,16 +60,16 @@ export function MobileWorkOrderStatusSheet({
                     }}
                   >
                     <Icon className="mr-2 h-4 w-4 shrink-0" aria-hidden />
-                    {action.label}
+                    {localizeWorkOrderActionLabel(action.label, t)}
                   </Button>
-                  <p className="ml-6 mt-1 text-xs text-muted-foreground">{action.description}</p>
+                  <p className="ml-6 mt-1 text-xs text-muted-foreground">{localizeWorkOrderActionDescription(action.description, t)}</p>
                 </div>
               );
             })}
           </div>
         ) : (
           <p className="mt-4 text-sm text-muted-foreground">
-            No status changes are available for this work order.
+            {t('workOrderActivity.noStatusChanges')}
           </p>
         )}
       </SheetContent>
