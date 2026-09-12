@@ -3,8 +3,23 @@ import { render, screen, fireEvent } from '@vitest-harness/utils/test-utils';
 import { describe, it, expect, vi } from 'vitest';
 import { AuditLogTimeRangePicker } from './AuditLogTimeRangePicker';
 import { DEFAULT_AUDIT_TIME_PRESET } from '@/types/audit';
+import { I18nProvider } from '@/i18n/I18nProvider';
 
 describe('AuditLogTimeRangePicker', () => {
+  it.each([
+    ['vi', 'Mọi lúc', 'Khoảng ngày tùy chỉnh'],
+    ['ko', '전체 기간', '사용자 지정 날짜 범위'],
+  ])('translates the preset and custom date controls in %s', (language, allTime, custom) => {
+    window.localStorage.setItem('znteqr-language', language);
+    try {
+      render(<I18nProvider><AuditLogTimeRangePicker preset="all" onChange={vi.fn()} /></I18nProvider>);
+      expect(screen.getByRole('radio', { name: allTime })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: custom })).toBeInTheDocument();
+    } finally {
+      window.localStorage.removeItem('znteqr-language');
+    }
+  });
+
   it('renders the All time preset control alongside rolling-window presets', () => {
     const onChange = vi.fn();
     render(

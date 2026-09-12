@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface AuditLogDownloadMenuProps {
   onExportCsv: () => void;
@@ -26,6 +27,7 @@ const AuditLogDownloadMenu: React.FC<AuditLogDownloadMenuProps> = ({
   exportProgressLabel,
   canExport,
 }) => {
+  const { t } = useI18n();
   if (!canExport) {
     return (
       <Tooltip>
@@ -37,12 +39,12 @@ const AuditLogDownloadMenu: React.FC<AuditLogDownloadMenuProps> = ({
             disabled
           >
             <Download className="h-3.5 w-3.5 text-muted-foreground" />
-            Download
+            {t('auditLogControls.download')}
             <ChevronDown className="h-3 w-3 text-muted-foreground" />
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          Export is available to organization owners and admins only
+          {t('auditLogControls.exportRestricted')}
         </TooltipContent>
       </Tooltip>
     );
@@ -57,20 +59,20 @@ const AuditLogDownloadMenu: React.FC<AuditLogDownloadMenuProps> = ({
             size="sm"
             className="h-8 gap-1.5 text-sm font-normal"
             disabled={isExporting}
-            aria-label="Download audit log"
+            aria-label={t('auditLogControls.downloadAudit')}
           >
             {isExporting ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
             ) : (
               <Download className="h-3.5 w-3.5 text-muted-foreground" />
             )}
-            Download
+            {t('auditLogControls.download')}
             <ChevronDown className="h-3 w-3 text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-            Export format
+            {t('auditLogControls.exportFormat')}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -81,7 +83,7 @@ const AuditLogDownloadMenu: React.FC<AuditLogDownloadMenuProps> = ({
             <FileSpreadsheet className="h-4 w-4 text-success" />
             <div className="flex flex-col">
               <span className="text-sm">CSV</span>
-              <span className="text-[10px] text-muted-foreground">Comma-separated values</span>
+              <span className="text-[10px] text-muted-foreground">{t('auditLogControls.csvDescription')}</span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -92,7 +94,7 @@ const AuditLogDownloadMenu: React.FC<AuditLogDownloadMenuProps> = ({
             <FileJson className="h-4 w-4 text-info" />
             <div className="flex flex-col">
               <span className="text-sm">JSON</span>
-              <span className="text-[10px] text-muted-foreground">Structured data format</span>
+              <span className="text-[10px] text-muted-foreground">{t('auditLogControls.jsonDescription')}</span>
             </div>
           </DropdownMenuItem>
         </DropdownMenuContent>

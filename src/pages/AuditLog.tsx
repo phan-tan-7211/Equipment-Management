@@ -19,11 +19,13 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { AuditExplorer } from '@/components/audit/explorer';
 import { OrganizationSubnav } from '@/features/organization/components/OrganizationSubnav';
 import { AUDIT_ENTITY_TYPES, type AuditEntityType, type AuditLogFilters } from '@/types/audit';
+import { useI18n } from '@/i18n/I18nProvider';
 
 /**
  * Audit Log Page Component
  */
 function AuditLog() {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const [searchParams] = useSearchParams();
 
@@ -44,9 +46,9 @@ function AuditLog() {
       <Page maxWidth="7xl" padding="responsive">
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>No Organization Selected</AlertTitle>
+          <AlertTitle>{t('auditLogControls.noOrganization')}</AlertTitle>
           <AlertDescription>
-            Please select an organization to view the audit log.
+            {t('auditLogControls.chooseOrganization')}
           </AlertDescription>
         </Alert>
       </Page>
@@ -61,10 +63,9 @@ function AuditLog() {
       <Page maxWidth="7xl" padding="responsive">
         <Alert variant="destructive">
           <ShieldAlert className="h-4 w-4" />
-          <AlertTitle>Access Denied</AlertTitle>
+          <AlertTitle>{t('auditLogControls.accessDenied')}</AlertTitle>
           <AlertDescription>
-            The audit log contains sensitive, high-privilege information and is only available to
-            organization owners and administrators.
+            {t('auditLogControls.adminOnly')}
           </AlertDescription>
         </Alert>
       </Page>
@@ -79,20 +80,18 @@ function AuditLog() {
         <div className="flex items-center gap-2">
           <History className="h-7 w-7 text-primary shrink-0" />
           <div>
-            <h1 className="text-2xl font-bold leading-tight">Audit Log</h1>
+            <h1 className="text-2xl font-bold leading-tight">{t('auditLogControls.title')}</h1>
             <p className="text-sm text-muted-foreground">
-              Track all changes made to your organization's data for compliance and accountability.{' '}
+              {t('auditLogControls.introduction')}{' '}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button className="inline-flex items-center gap-0.5 text-muted-foreground hover:text-foreground underline decoration-dotted underline-offset-2 text-sm">
                     <Shield className="h-3 w-3" />
-                    Regulatory compliance
+                    {t('auditLogControls.regulatory')}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-xs text-xs">
-                  This audit log helps you comply with OSHA, DOT, and other regulatory requirements
-                  by maintaining a complete record of all equipment, work order, and inventory changes.
-                  Records are immutable and cannot be modified or deleted.
+                  {t('auditLogControls.regulatoryHelp')}
                 </TooltipContent>
               </Tooltip>
             </p>

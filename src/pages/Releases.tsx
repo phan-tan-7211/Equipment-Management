@@ -125,7 +125,7 @@ export function Releases(): JSX.Element {
             <div className="container mx-auto max-w-5xl space-y-4 px-4">
               <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
                 <p>
-                  {t('publicChrome.releases.showing', {
+                  {t(visibleReleases.length === 1 ? 'publicChrome.releases.showingOne' : 'publicChrome.releases.showing', {
                     count: visibleReleases.length,
                     filter: selectedFilter === 'all' ? '' : t('publicChrome.releases.filterSuffix', { filter: filterLabel(selectedFilter).toLowerCase() }),
                   })}
@@ -139,7 +139,7 @@ export function Releases(): JSX.Element {
                   >
                     {showOlderReleases
                       ? t('publicChrome.releases.hideOlder')
-                      : t('publicChrome.releases.showOlder', { count: olderReleaseCount })}
+                      : t(olderReleaseCount === 1 ? 'publicChrome.releases.showOlderOne' : 'publicChrome.releases.showOlder', { count: olderReleaseCount })}
                   </Button>
                 ) : null}
               </div>
@@ -199,7 +199,7 @@ export function Releases(): JSX.Element {
                                 ) : null}
                                 {visibleEntryCount > 0 ? (
                                   <Badge variant="secondary">
-                                    {t('publicChrome.releases.updates', { count: visibleEntryCount })}
+                                    {t(visibleEntryCount === 1 ? 'publicChrome.releases.updatesOne' : 'publicChrome.releases.updates', { count: visibleEntryCount })}
                                   </Badge>
                                 ) : null}
                               </div>

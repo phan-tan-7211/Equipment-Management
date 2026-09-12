@@ -5,6 +5,7 @@ const MobileFirstDesignFeature = () => (
   <StandardFeaturePage
     seoPath="/features/mobile-first-design"
     content={content}
+    translationKey="mobileFirstDesign"
     benefits={benefits}
     steps={steps}
     showcases={showcases}

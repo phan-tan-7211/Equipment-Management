@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useEffect } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { PageSEO } from '@/components/seo/PageSEO';
@@ -27,6 +28,7 @@ const Landing = lazy(() => import('@/pages/Landing'));
  */
 const SmartLanding = () => {
   const { user, isLoading } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,8 +57,8 @@ const SmartLanding = () => {
   return (
     <>
       <PageSEO
-        title="EquipQR | Free Work Order Software for Heavy Equipment Repair Shops"
-        description="Stop losing money to lost work orders. EquipQR gives heavy equipment repair shops secure QR code equipment tracking, team-based access, and one-click QuickBooks work order invoicing."
+        title={t('publicChrome.landing.seoTitle')}
+        description={t('publicChrome.landing.seoDescription')}
         path="/"
       />
       <Suspense
@@ -64,7 +66,7 @@ const SmartLanding = () => {
           <div
             className="flex min-h-[50vh] items-center justify-center bg-background"
             role="status"
-            aria-label="Loading page"
+            aria-label={t('publicChrome.landing.loading')}
           >
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>

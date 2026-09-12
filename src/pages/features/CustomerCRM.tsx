@@ -5,6 +5,7 @@ const CustomerCRMFeature = () => (
   <StandardFeaturePage
     seoPath="/features/customer-crm"
     content={content}
+    translationKey="customerCrm"
     benefits={benefits}
     steps={steps}
     showcases={showcases}
