@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { tickets } from '@/lib/queryKeys';
 import type { SessionDiagnostics } from '../utils/sessionDiagnostics';
+import { useI18n } from '@/i18n';
 
 interface SubmitTicketPayload {
   title: string;
@@ -20,6 +21,7 @@ interface SubmitTicketResponse {
  * and inserts a record in the tickets table.
  */
 export function useSubmitTicket() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -29,14 +31,14 @@ export function useSubmitTicket() {
       });
 
       if (error) {
-        throw new Error(error.message || 'Failed to submit ticket');
+        throw new Error(error.message || t('tickets.submitFailed'));
       }
 
       // supabase.functions.invoke returns data as parsed JSON
       const result = data as SubmitTicketResponse;
 
       if (!result?.success) {
-        throw new Error('Failed to submit ticket');
+        throw new Error(t('tickets.submitFailed'));
       }
 
       return result;

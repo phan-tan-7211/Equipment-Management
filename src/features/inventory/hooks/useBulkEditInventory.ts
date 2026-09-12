@@ -1,3 +1,5 @@
+import { useI18n } from '@/i18n';
+import { useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -45,8 +47,8 @@ export type UseBulkEditInventoryResult = BulkEditCommitHookResult<
 // Defined independently to avoid the `.refine()` wrapper on inventoryItemFormSchema
 // ============================================
 
-const bulkEditSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255).optional(),
+const createBulkEditSchema = (t: (key: string) => string) => z.object({
+  name: z.string().min(1, t('inventoryMutation.bulkNameRequired')).max(255).optional(),
   sku: z.string().max(100).nullable().optional(),
   external_id: z.string().max(100).nullable().optional(),
   location: z.string().max(255).nullable().optional(),
@@ -55,7 +57,7 @@ const bulkEditSchema = z.object({
   default_unit_cost: z.number().min(0).max(999999.99).nullable().optional(),
 }).partial();
 
-type BulkEditSchemaInput = z.infer<typeof bulkEditSchema>;
+type BulkEditSchemaInput = z.infer<ReturnType<typeof createBulkEditSchema>>;
 
 // ============================================
 // Hook
@@ -68,6 +70,8 @@ export const useBulkEditInventory = (
   const { currentOrganization } = useOrganization();
   const { canManageInventory } = usePermissions();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
+  const bulkEditSchema = useMemo(() => createBulkEditSchema(t), [t]);
 
   const rowState = useBulkEditRowState<InventoryItem, InventoryRowDelta>(initialRows);
   const { dirtyRows, clearSucceededDirtyFields } = rowState;
@@ -75,10 +79,10 @@ export const useBulkEditInventory = (
   const commitMutation = useMutation({
     mutationFn: async () => {
       const orgId = currentOrganization?.id;
-      if (!orgId) throw new Error('Organization not selected');
+      if (!orgId) throw new Error(t('inventoryMutation.bulkOrgMissing'));
       const canCommit = options.canCommit ?? canManageInventory(false);
       if (!canCommit) {
-        throw new Error('You do not have permission to bulk edit inventory');
+        throw new Error(t('inventoryMutation.bulkDenied'));
       }
 
       type RowSummary = {
@@ -168,7 +172,7 @@ export const useBulkEditInventory = (
           const existing = rowSummaries.get(id) ?? { metadataSuccess: true, quantitySuccess: true };
           rowSummaries.set(id, { ...existing, quantitySuccess: true });
         } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Quantity adjustment failed';
+          const msg = err instanceof Error ? err.message : t('inventoryMutation.bulkAdjustFailed');
           const existing = rowSummaries.get(id) ?? { metadataSuccess: true, quantitySuccess: false };
           rowSummaries.set(id, { ...existing, quantitySuccess: false, quantityError: msg });
         }
@@ -234,12 +238,12 @@ export const useBulkEditInventory = (
       const { succeeded, failed, attempted, submittedMetaById, submittedQtyById } = summary;
 
       if (failed.length === 0) {
-        toast.success(`Updated ${succeeded.length} ${succeeded.length === 1 ? 'item' : 'items'}`);
+        toast.success(t('inventoryMutation.bulkUpdated', { count: succeeded.length }));
       } else if (succeeded.length === 0) {
-        toast.error(`Failed to update ${failed.length} of ${attempted} ${attempted === 1 ? 'item' : 'items'}`);
+        toast.error(t('inventoryMutation.bulkFailed', { failed: failed.length, attempted }));
       } else {
         toast.warning(
-          `Updated ${succeeded.length} of ${attempted}; ${failed.length} failed`
+          t('inventoryMutation.bulkPartial', { succeeded: succeeded.length, attempted, failed: failed.length })
         );
       }
 

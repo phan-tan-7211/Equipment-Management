@@ -1,3 +1,5 @@
+import { useI18n } from '@/i18n';
+import { localizeQuickBooksTooltip } from '@/features/work-orders/utils/localizeExportAvailability';
 // fallow-ignore-file code-duplication
 // Duplication rationale: Export button repeats guarded action blocks per target
 /**
@@ -71,6 +73,7 @@ export const QuickBooksExportButton: React.FC<QuickBooksExportButtonProps> = ({
   onExportSuccess,
   showStatusDetails = false,
 }) => {
+  const { t } = useI18n();
   const { formatDateTime } = useFormatTimestamp();
 
   const { currentOrganization } = useOrganization();
@@ -150,7 +153,7 @@ export const QuickBooksExportButton: React.FC<QuickBooksExportButtonProps> = ({
 
   const formatTimestamp = (log: QuickBooksExportLog) => {
     const timestamp = log.exported_at ?? log.created_at;
-    return timestamp ? formatDateTime(timestamp) : 'Unknown';
+    return timestamp ? formatDateTime(timestamp) : t('workOrderExportUi.unknown');
   };
 
   const handleCopy = async (label: string, value?: string | null) => {
@@ -160,8 +163,8 @@ export const QuickBooksExportButton: React.FC<QuickBooksExportButtonProps> = ({
 
     if (!navigator?.clipboard?.writeText) {
       showErrorToast({
-        title: 'Copy not supported',
-        description: 'Your browser does not support clipboard access.',
+        title: t('workOrderExportUi.copyUnsupported'),
+        description: t('workOrderExportUi.clipboardUnsupported'),
       });
       return;
     }
@@ -169,12 +172,12 @@ export const QuickBooksExportButton: React.FC<QuickBooksExportButtonProps> = ({
     try {
       await navigator.clipboard.writeText(value);
       showSuccessToast({
-        title: `${label} copied`,
+        title: t('workOrderExportUi.copied', { label }),
         description: value,
       });
     } catch {
       showErrorToast({
-        title: `Failed to copy ${label.toLowerCase()}`,
+        title: t('workOrderExportUi.copyFailed', { label }),
       });
     }
   };
@@ -226,7 +229,7 @@ export const QuickBooksExportButton: React.FC<QuickBooksExportButtonProps> = ({
             </DropdownMenuItem>
           </TooltipTrigger>
           <TooltipContent side="left">
-            <p className="max-w-xs">{tooltipMessage}</p>
+            <p className="max-w-xs">{localizeQuickBooksTooltip(tooltipMessage, invoiceDisplay, t)}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -246,7 +249,7 @@ export const QuickBooksExportButton: React.FC<QuickBooksExportButtonProps> = ({
               </span>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="max-w-xs">{tooltipMessage}</p>
+              <p className="max-w-xs">{localizeQuickBooksTooltip(tooltipMessage, invoiceDisplay, t)}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -258,13 +261,13 @@ export const QuickBooksExportButton: React.FC<QuickBooksExportButtonProps> = ({
                 size="icon"
                 className="h-8 w-8"
                 onClick={handleViewInvoice}
-                aria-label="View invoice in QuickBooks"
+                aria-label={t('workOrderExportUi.viewInvoice')}
               >
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Open Invoice {invoiceDisplay} in QuickBooks</p>
+              <p>{t('workOrderExportUi.invoiceOpenLinked', { number: invoiceDisplay ?? '' })}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -284,7 +287,7 @@ export const QuickBooksExportButton: React.FC<QuickBooksExportButtonProps> = ({
           </span>
         </TooltipTrigger>
         <TooltipContent>
-          <p className="max-w-xs">{tooltipMessage}</p>
+          <p className="max-w-xs">{localizeQuickBooksTooltip(tooltipMessage, invoiceDisplay, t)}</p>
         </TooltipContent>
       </Tooltip>
       {statusDetails}

@@ -1,3 +1,5 @@
+import { translateDsrCode } from '@/i18n/dsrResources';
+import { useI18n } from '@/i18n';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,10 +17,11 @@ function getBadgeVariant(slaBucket?: string): 'default' | 'destructive' | 'secon
 }
 
 export function DsrQueueRail({ requests, selectedRequestId }: DsrQueueRailProps) {
+  const { t } = useI18n();
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Queue</CardTitle>
+        <CardTitle className="text-base">{t('dsr.queue')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {requests.length === 0 && (
@@ -27,7 +30,7 @@ export function DsrQueueRail({ requests, selectedRequestId }: DsrQueueRailProps)
               to="/do-not-sell-or-share"
               className="text-primary underline-offset-4 hover:underline"
             >
-              No active requests.
+              {t('dsr.noActiveRequests')}
             </Link>
           </p>
         )}
@@ -44,12 +47,12 @@ export function DsrQueueRail({ requests, selectedRequestId }: DsrQueueRailProps)
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium truncate">{request.requester_email}</span>
-                <Badge variant={getBadgeVariant(request.sla_bucket)}>{request.sla_bucket ?? 'on_track'}</Badge>
+                <Badge variant={getBadgeVariant(request.sla_bucket)}>{translateDsrCode(t, 'sla', request.sla_bucket ?? 'on_track')}</Badge>
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
-                <div>Type: {request.request_type}</div>
-                <div>Status: {request.status}</div>
-                <div>Due: {new Date(dueDate).toLocaleDateString()}</div>
+                <div>{t('dsr.type')}: {translateDsrCode(t, 'requestTypes', request.request_type)}</div>
+                <div>{t('dsr.status')}: {translateDsrCode(t, 'statuses', request.status)}</div>
+                <div>{t('dsr.due', { date: new Date(dueDate).toLocaleDateString() })}</div>
               </div>
             </Link>
           );

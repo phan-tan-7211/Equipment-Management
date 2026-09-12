@@ -18,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSimpleOrganizationSafe } from '@/hooks/useSimpleOrganization';
 import { useSubmitTicket } from '../hooks/useSubmitTicket';
 import { collectSessionDiagnostics } from '../utils/sessionDiagnostics';
+import { useI18n } from '@/i18n';
 
 interface SubmitTicketDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ const SubmitTicketDialog: React.FC<SubmitTicketDialogProps> = ({
   open,
   onOpenChange,
 }) => {
+  const { t } = useI18n();
   const { mutate: submitTicket, isPending } = useSubmitTicket();
   const queryClient = useQueryClient();
   const orgContext = useSimpleOrganizationSafe();
@@ -53,17 +55,17 @@ const SubmitTicketDialog: React.FC<SubmitTicketDialogProps> = ({
     const trimmedDescription = description.trim();
 
     if (!trimmedTitle || !trimmedDescription) {
-      toast.error('Please fill in both title and description.');
+      toast.error(t('tickets.titleDescriptionRequired'));
       return;
     }
 
     if (trimmedTitle.length < 5) {
-      toast.error('Title must be at least 5 characters.');
+      toast.error(t('tickets.titleTooShort'));
       return;
     }
 
     if (trimmedDescription.length < 10) {
-      toast.error('Description must be at least 10 characters.');
+      toast.error(t('tickets.descriptionTooShort'));
       return;
     }
 
@@ -84,13 +86,13 @@ const SubmitTicketDialog: React.FC<SubmitTicketDialogProps> = ({
       },
       {
         onSuccess: () => {
-          toast.success('Issue reported successfully! Our team will review it shortly.');
+          toast.success(t('tickets.submittedSuccess'));
           resetForm();
           onOpenChange(false);
         },
         onError: (error) => {
           console.error('Failed to submit ticket:', error);
-          toast.error('Failed to submit issue. Please try again or email support.');
+          toast.error(t('tickets.submittedFailed'));
         },
       }
     );
@@ -109,21 +111,19 @@ const SubmitTicketDialog: React.FC<SubmitTicketDialogProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-125">
         <DialogHeader>
-          <DialogTitle>Report an Issue</DialogTitle>
+          <DialogTitle>{t('tickets.reportIssue')}</DialogTitle>
           <DialogDescription>
-            Describe the problem you encountered. Our team will be notified and
-            will follow up. Session diagnostics are automatically captured to
-            help us investigate faster.
+            {t('tickets.reportDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="ticket-title">Title</Label>
+            <Label htmlFor="ticket-title">{t('tickets.title')}</Label>
             <Input
               ref={titleInputRef}
               id="ticket-title"
-              placeholder="Brief summary of the issue"
+              placeholder={t('tickets.titlePlaceholder')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={200}
@@ -132,10 +132,10 @@ const SubmitTicketDialog: React.FC<SubmitTicketDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="ticket-description">Description / Steps to Reproduce</Label>
+            <Label htmlFor="ticket-description">{t('tickets.descriptionSteps')}</Label>
             <Textarea
               id="ticket-description"
-              placeholder="What happened? What did you expect to happen? How can we reproduce this?"
+              placeholder={t('tickets.descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={5}
@@ -151,16 +151,16 @@ const SubmitTicketDialog: React.FC<SubmitTicketDialogProps> = ({
               onClick={() => handleOpenChange(false)}
               disabled={isPending}
             >
-              Cancel
+              {t('tickets.cancel')}
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  {t('tickets.submitting')}
                 </>
               ) : (
-                'Submit Report'
+                t('tickets.submitReport')
               )}
             </Button>
           </DialogFooter>

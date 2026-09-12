@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
 import Page from '@/components/layout/Page';
@@ -18,12 +19,13 @@ export function DsrAdminAccessGate({
   restrictedDescription,
   children,
 }: DsrAdminAccessGateProps) {
+  const { t } = useI18n();
   if (!hasOrganization) {
     return (
       <Page maxWidth="7xl" padding="responsive">
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>No Organization Selected</AlertTitle>
+          <AlertTitle>{t('dsr.noOrg')}</AlertTitle>
           <AlertDescription>{noOrganizationDescription}</AlertDescription>
         </Alert>
       </Page>
@@ -35,7 +37,7 @@ export function DsrAdminAccessGate({
       <Page maxWidth="7xl" padding="responsive">
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Restricted</AlertTitle>
+          <AlertTitle>{t('dsr.restricted')}</AlertTitle>
           <AlertDescription>{restrictedDescription}</AlertDescription>
         </Alert>
       </Page>
