@@ -31,7 +31,8 @@ const WorkOrderSortPopover: React.FC<WorkOrderSortPopoverProps> = ({
     ...option,
     label: t(labelKeys[option.value] ?? 'workOrders.list.sortAria'),
   }));
-  const currentLabel = sortOptions.find((option) => option.value === compositeValue)?.label ?? compositeValue;
+  const currentLabel =
+    sortOptions.find((option) => option.value === compositeValue)?.label ?? compositeValue;
 
   return (
     <ListSortPopover
