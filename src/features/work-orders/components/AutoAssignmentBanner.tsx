@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n";
 
 interface AutoAssignmentBannerProps {
   unassignedCount: number;
@@ -13,6 +14,7 @@ export const AutoAssignmentBanner: React.FC<AutoAssignmentBannerProps> = ({
   onAssignAll,
   isAssigning
 }) => {
+  const { t } = useI18n();
   if (unassignedCount === 0) return null;
 
   return (
@@ -21,10 +23,10 @@ export const AutoAssignmentBanner: React.FC<AutoAssignmentBannerProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-medium text-info dark:text-info">
-              {unassignedCount} unassigned work order{unassignedCount !== 1 ? 's' : ''} found
+              {t(unassignedCount === 1 ? 'workOrderMobile.unassignedOne' : 'workOrderMobile.unassignedMany', { count: unassignedCount })}
             </h3>
             <p className="text-sm text-info dark:text-info mt-1">
-              Since you're the only member, these can be automatically assigned to you.
+              {t('workOrderMobile.autoAssignDescription')}
             </p>
           </div>
           <Button
@@ -32,7 +34,7 @@ export const AutoAssignmentBanner: React.FC<AutoAssignmentBannerProps> = ({
             disabled={isAssigning}
             className="bg-info hover:bg-info/90 text-primary-foreground"
           >
-            {isAssigning ? 'Assigning...' : 'Assign All to Me'}
+            {t(isAssigning ? 'workOrderMobile.assigning' : 'workOrderMobile.assignAll')}
           </Button>
         </div>
       </CardContent>
