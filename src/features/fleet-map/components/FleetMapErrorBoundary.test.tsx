@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@vitest-harness/utils/test-utils';
 import { FleetMapErrorBoundary } from './FleetMapErrorBoundary';
+import { I18nProvider } from '@/i18n';
 
 // Silence the React-internal "The above error occurred in the <Throw>
 // component" log that would otherwise spam test output. The boundary itself
@@ -28,6 +29,23 @@ describe('FleetMapErrorBoundary', () => {
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
+    window.localStorage.removeItem('znteqr-language');
+  });
+
+  it.each([
+    ['vi', 'Lỗi bản đồ đội thiết bị', 'Thử lại'],
+    ['ko', '장비 지도 오류', '다시 시도'],
+  ])('renders diagnostics in %s', (language, title, retry) => {
+    window.localStorage.setItem('znteqr-language', language);
+    render(
+      <I18nProvider>
+        <FleetMapErrorBoundary error="raw API error" onRetry={vi.fn()} />
+      </I18nProvider>,
+    );
+
+    expect(screen.getByText(title)).toBeInTheDocument();
+    expect(screen.getByText('raw API error')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: retry })).toBeInTheDocument();
   });
 
   describe('Boundary mode', () => {
