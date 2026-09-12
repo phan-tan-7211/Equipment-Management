@@ -11,8 +11,10 @@ import { WorkspaceMergeRequestsCard } from '@/features/organization/components/W
 import Page from '@/components/layout/Page';
 import { Users } from 'lucide-react';
 import { useMemo } from 'react';
+import { useI18n } from '@/i18n';
 
 const OrganizationMembers = () => {
+  const { t } = useI18n();
   const { currentOrganization, isLoading } = useOrganization();
   const { data: members = [], isLoading: membersLoading } = useOrganizationMembersQuery(
     currentOrganization?.id || '',
@@ -37,8 +39,8 @@ const OrganizationMembers = () => {
       <Page maxWidth="7xl" padding="responsive">
         <div className="space-y-4 sm:space-y-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Members</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Loading...</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('organizationHub.members')}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">{t('organizationHub.loading')}</p>
           </div>
         </div>
       </Page>
@@ -51,9 +53,9 @@ const OrganizationMembers = () => {
         <Page maxWidth="7xl" padding="responsive">
           <div className="space-y-4 sm:space-y-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Personal Organization Merge</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('organizationHub.mergeTitle')}</h1>
               <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Review a request to merge your personal data into {currentOrganization.name}.
+                {t('organizationHub.mergeDescription', { name: currentOrganization.name })}
               </p>
             </div>
             {currentOrganizationId && (
@@ -92,9 +94,9 @@ const OrganizationMembers = () => {
               <Users className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Members</h1>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{t('organizationHub.members')}</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Invite teammates and import users from Google Workspace for {currentOrganization.name}.
+                {t('organizationHub.membersDescription', { name: currentOrganization.name })}
               </p>
             </div>
           </div>

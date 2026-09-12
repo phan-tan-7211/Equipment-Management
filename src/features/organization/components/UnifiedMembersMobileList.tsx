@@ -7,9 +7,9 @@ import type { UnifiedMembersListViewProps } from '@/features/organization/compon
 import {
   getUnifiedMemberStatusBadgeVariant,
   getStatusIcon,
-  getStatusLabel,
 } from '@/features/organization/utils/unifiedMemberPresentation';
 import { getRoleBadgeVariant } from '@/utils/badgeVariants';
+import { useI18n } from '@/i18n';
 
 export function UnifiedMembersMobileList({
   unifiedMembers,
@@ -36,6 +36,11 @@ export function UnifiedMembersMobileList({
   onRequestDataMerge,
   onRemoveMember,
 }: UnifiedMembersListViewProps) {
+  const { t } = useI18n();
+  const roleLabel = (role: string) => role === 'owner' || role === 'admin' || role === 'member'
+    ? t(`organizationMembers.${role}`) : role;
+  const statusLabel = (status: string) => status === 'active' ? t('organizationMembers.active')
+    : status === 'pending_invite' ? t('organizationMembers.pendingInvite') : t('organizationMembers.pendingGoogle');
   return (
     <div className="sm:hidden space-y-3">
       {unifiedMembers.map((member) => (
@@ -52,7 +57,7 @@ export function UnifiedMembersMobileList({
               <Badge variant={getUnifiedMemberStatusBadgeVariant(member.status)} className="capitalize text-xs">
                 <div className="flex items-center gap-1">
                   {getStatusIcon(member.status)}
-                  {getStatusLabel(member.status)}
+                  {statusLabel(member.status)}
                 </div>
               </Badge>
               <UnifiedMemberRowActions
@@ -75,20 +80,20 @@ export function UnifiedMembersMobileList({
           <div className="flex items-center gap-2 flex-wrap">
             {canManageMembers && member.organizationRole !== 'owner' && member.type === 'member' ? (
               <Select
-                value={member.organizationRole}
+                value={roleLabel(member.organizationRole)}
                 onValueChange={(value) => onRoleChange(member.id, value as 'admin' | 'member')}
               >
                 <SelectTrigger className="w-24 h-7 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="member">Member</SelectItem>
+                  <SelectItem value="admin">{t('organizationMembers.admin')}</SelectItem>
+                  <SelectItem value="member">{t('organizationMembers.member')}</SelectItem>
                 </SelectContent>
               </Select>
             ) : (
               <Badge variant={getRoleBadgeVariant(member.organizationRole)} className="capitalize text-xs">
-                {member.organizationRole}
+                {roleLabel(member.organizationRole)}
               </Badge>
             )}
           </div>

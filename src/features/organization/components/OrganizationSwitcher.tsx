@@ -14,11 +14,9 @@ import { Badge } from '@/components/ui/badge';
 import WorkspaceAvatar from '@/components/layout/WorkspaceAvatar';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
-/** Helper to format role for display */
-const formatRole = (role: string) => {
-  return role.charAt(0).toUpperCase() + role.slice(1);
-};
+
 
 interface OrganizationSwitcherProps {
   className?: string;
@@ -35,7 +33,12 @@ const OrganizationSwitcher: React.FC<OrganizationSwitcherProps> = ({
   className,
   variant = 'sidebar',
 }) => {
+  const { t } = useI18n();
   const { currentOrganization, userOrganizations, switchOrganization, isLoading } = useOrganization();
+  const formatRole = (role: string) =>
+    role === 'owner' || role === 'admin' || role === 'member'
+      ? t(`organizationHub.roles.${role}`)
+      : role;
   const navigate = useNavigate();
   const [logoError, setLogoError] = useState(false);
 
@@ -80,7 +83,7 @@ const OrganizationSwitcher: React.FC<OrganizationSwitcherProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            aria-label={`Switch organization (current: ${currentOrganization.name})`}
+            aria-label={t('organizationHub.switchCurrent', { name: currentOrganization.name })}
             className={cn(
               'inline-flex max-w-full items-center justify-center sm:justify-start gap-1.5 h-8 px-2 sm:max-w-[14rem] text-foreground hover:text-foreground',
               className
@@ -110,7 +113,7 @@ const OrganizationSwitcher: React.FC<OrganizationSwitcherProps> = ({
                 {currentOrganization.logo && !logoError ? (
                   <img
                     src={currentOrganization.logo}
-                    alt={`${currentOrganization.name} logo`}
+                    alt={t('organizationHub.logoAlt', { name: currentOrganization.name })}
                     className="w-full h-full object-cover"
                     onError={() => setLogoError(true)}
                   />
@@ -132,7 +135,7 @@ const OrganizationSwitcher: React.FC<OrganizationSwitcherProps> = ({
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56 sm:w-64" align="start" side="bottom">
-        <DropdownMenuLabel className="text-xs sm:text-sm">Switch Organization</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs sm:text-sm">{t('organizationHub.switchOrganization')}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {userOrganizations.map((organization) => (
           <DropdownMenuItem
@@ -159,7 +162,9 @@ const OrganizationSwitcher: React.FC<OrganizationSwitcherProps> = ({
                 </span>
                 {organization.userStatus !== 'active' && (
                   <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
-                    {organization.userStatus}
+                    {organization.userStatus === 'pending' || organization.userStatus === 'inactive' || organization.userStatus === 'suspended'
+                      ? t(`organizationHub.statuses.${organization.userStatus}`)
+                      : organization.userStatus}
                   </Badge>
                 )}
               </div>
