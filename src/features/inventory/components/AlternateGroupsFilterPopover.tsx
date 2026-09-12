@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { X, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,20 +8,20 @@ import { cn } from '@/lib/utils';
 
 type GroupStatusFilter = 'all' | 'verified' | 'unverified' | 'deprecated';
 
-const STATUS_OPTIONS: { value: GroupStatusFilter; label: string; icon?: React.ReactNode }[] = [
-  { value: 'all', label: 'All' },
+const STATUS_OPTIONS: { value: GroupStatusFilter; labelKey: string; icon?: React.ReactNode }[] = [
+  { value: 'all', labelKey: 'all' },
   {
     value: 'verified',
-    label: 'Verified',
+    labelKey: 'verified',
     icon: <CheckCircle2 className="h-3 w-3 text-success" />,
   },
   {
     value: 'unverified',
-    label: 'Unverified',
+    labelKey: 'unverified',
   },
   {
     value: 'deprecated',
-    label: 'Deprecated',
+    labelKey: 'deprecated',
     icon: <AlertTriangle className="h-3 w-3 text-warning" />,
   },
 ];
@@ -36,12 +37,13 @@ const AlternateGroupsFilterPopover: React.FC<AlternateGroupsFilterPopoverProps> 
   onStatusChange,
   activeFilterCount,
 }) => {
+  const { t } = useI18n();
   return (
     <FilterPopoverShell
-      ariaSubject="groups"
+      ariaSubject={t('alternateGroups.group')}
       activeFilterCount={activeFilterCount}
       contentClassName="w-52 p-4"
-      headerLabel="Status"
+      headerLabel={t('alternateGroups.status')}
     >
       {({ close }) => (
         <>
@@ -61,7 +63,7 @@ const AlternateGroupsFilterPopover: React.FC<AlternateGroupsFilterPopoverProps> 
                 )}
               >
                 {option.icon}
-                {option.label}
+                {t(`alternateGroups.${option.labelKey}`)}
               </button>
             ))}
           </div>
@@ -79,7 +81,7 @@ const AlternateGroupsFilterPopover: React.FC<AlternateGroupsFilterPopoverProps> 
                 }}
               >
                 <X className="h-3 w-3 mr-1.5" />
-                Clear filter
+                {t('alternateGroups.clearFilter')}
               </Button>
             </>
           )}

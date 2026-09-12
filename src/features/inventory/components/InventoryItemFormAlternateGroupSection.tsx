@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +37,7 @@ export function InventoryItemFormAlternateGroupSection({
   alternateGroups,
   isFormDisabled,
 }: InventoryItemFormAlternateGroupSectionProps) {
+  const { t } = useI18n();
   const [alternateGroupOpen, setAlternateGroupOpen] = useState(false);
 
   return (
@@ -49,9 +51,9 @@ export function InventoryItemFormAlternateGroupSection({
             >
               <CardTitle className="text-base flex items-center gap-2">
                 <Layers className="h-4 w-4" />
-                Alternate Parts Group
+                {t('itemForm.alternateGroup')}
                 <Badge variant="outline" className="ml-2 font-normal">
-                  Optional
+                  {t('itemForm.optional')}
                 </Badge>
               </CardTitle>
               {alternateGroupOpen ? (
@@ -62,7 +64,7 @@ export function InventoryItemFormAlternateGroupSection({
             </button>
           </CollapsibleTrigger>
           <p className="text-sm text-muted-foreground mt-1">
-            Add this part to a group of interchangeable parts for cross-reference lookups.
+            {t('itemForm.alternateHelp')}
           </p>
         </CardHeader>
         <CollapsibleContent>
@@ -81,19 +83,19 @@ export function InventoryItemFormAlternateGroupSection({
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="none" id="alt-none" />
                         <Label htmlFor="alt-none" className="font-normal cursor-pointer">
-                          Don't add to a group
+                          {t('itemForm.noGroup')}
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="existing" id="alt-existing" />
                         <Label htmlFor="alt-existing" className="font-normal cursor-pointer">
-                          Add to existing group
+                          {t('itemForm.existingGroup')}
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="new" id="alt-new" />
                         <Label htmlFor="alt-new" className="font-normal cursor-pointer">
-                          Create new group
+                          {t('itemForm.newGroup')}
                         </Label>
                       </div>
                     </RadioGroup>
@@ -109,7 +111,7 @@ export function InventoryItemFormAlternateGroupSection({
                 name="alternateGroupId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Select Group</FormLabel>
+                    <FormLabel>{t('itemForm.selectGroup')}</FormLabel>
                     <FormControl>
                       <Select
                         value={field.value || ''}
@@ -117,12 +119,12 @@ export function InventoryItemFormAlternateGroupSection({
                         disabled={isFormDisabled}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose an alternate group..." />
+                          <SelectValue placeholder={t('itemForm.chooseGroup')} />
                         </SelectTrigger>
                         <SelectContent>
                           {alternateGroups.length === 0 ? (
                             <SelectItem value="" disabled>
-                              No groups available
+                              {t('itemForm.noGroups')}
                             </SelectItem>
                           ) : (
                             alternateGroups.map((group) => (
@@ -132,7 +134,7 @@ export function InventoryItemFormAlternateGroupSection({
                                   {group.status === 'verified' && (
                                     <Badge variant="secondary" className="text-xs">
                                       <Check className="h-3 w-3 mr-1" />
-                                      Verified
+                                      {t('itemForm.verified')}
                                     </Badge>
                                   )}
                                 </div>
@@ -154,17 +156,17 @@ export function InventoryItemFormAlternateGroupSection({
                 name="newAlternateGroupName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>New Group Name</FormLabel>
+                    <FormLabel>{t('itemForm.newGroupName')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="e.g., Oil Filter - CAT D6T Compatible"
+                        placeholder={t('itemForm.groupExample')}
                         {...field}
                         value={field.value || ''}
                         disabled={isFormDisabled}
                       />
                     </FormControl>
                     <FormDescription>
-                      A descriptive name for this group of interchangeable parts.
+                      {t('itemForm.groupHelp')}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

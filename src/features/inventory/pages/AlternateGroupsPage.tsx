@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -79,6 +80,7 @@ type GroupStatusFilter = 'all' | 'verified' | 'unverified' | 'deprecated';
 type GroupSortOption = 'name-asc' | 'name-desc' | 'updated-desc' | 'updated-asc';
 
 const AlternateGroupsPage: React.FC = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { currentOrganization, canEdit } = useInventoryPartsManagerAccess();
@@ -198,8 +200,8 @@ const AlternateGroupsPage: React.FC = () => {
     return (
       <Page maxWidth="7xl" padding="responsive">
         <PageHeader
-          title="Alternate Part Groups"
-          description="Please select an organization."
+          title={t('alternateGroups.title')}
+          description={t('alternateGroups.selectOrganization')}
         />
       </Page>
     );
@@ -209,14 +211,14 @@ const AlternateGroupsPage: React.FC = () => {
     <Page maxWidth="7xl" padding="responsive">
       <div className="space-y-6">
         <PageHeader
-          title="Alternate Part Groups"
-          description="Manage groups of interchangeable parts. Parts in the same group can substitute for each other."
+          title={t('alternateGroups.title')}
+          description={t('alternateGroups.description')}
           hideDescriptionOnMobile
           actions={
             canEdit && (
               <Button onClick={() => setShowCreateDialog(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                New Alternate Part Group
+                {t('alternateGroups.newGroup')}
               </Button>
             )
           }
@@ -269,22 +271,22 @@ const AlternateGroupsPage: React.FC = () => {
               <Layers className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               {groups.length === 0 ? (
                 <>
-                  <h3 className="text-lg font-semibold mb-2">No alternate groups yet</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('alternateGroups.noGroupsYet')}</h3>
                   <p className="text-muted-foreground mb-4">
-                    Group interchangeable or compatible parts — OEM, aftermarket, or equivalent substitutes that technicians can swap for each other.
+                    {t('alternateGroups.emptyDescription')}
                   </p>
                   {canEdit && (
                     <Button onClick={() => setShowCreateDialog(true)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      New Alternate Part Group
+                      {t('alternateGroups.newGroup')}
                     </Button>
                   )}
                 </>
               ) : (
                 <>
-                  <h3 className="text-lg font-semibold mb-2">No groups found</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('alternateGroups.noGroupsFound')}</h3>
                   <p className="text-muted-foreground">
-                    No groups match "{search}". Try a different search term.
+                    {t('alternateGroups.noGroupsSearch', { search })}
                   </p>
                 </>
               )}
@@ -303,7 +305,7 @@ const AlternateGroupsPage: React.FC = () => {
               page={safeTablePage}
               pageSize={tablePageSize}
               pageSizeOptions={ALTERNATE_GROUP_TABLE_PAGE_SIZE_OPTIONS}
-              itemLabel="part"
+              itemLabel={t('alternateGroups.part')}
               onPageChange={setTablePage}
               onPageSizeChange={setTablePageSize}
             />
@@ -337,14 +339,14 @@ const AlternateGroupsPage: React.FC = () => {
                                 e.stopPropagation();
                                 setActionMenuGroup(group);
                               }}
-                              aria-label={`More options for ${group.name}`}
+                              aria-label={t('alternateGroups.moreOptions', { name: group.name })}
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           ) : (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <Button variant="ghost" size="icon" className="shrink-0" aria-label={`More options for ${group.name}`}>
+                                <Button variant="ghost" size="icon" className="shrink-0" aria-label={t('alternateGroups.moreOptions', { name: group.name })}>
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -356,7 +358,7 @@ const AlternateGroupsPage: React.FC = () => {
                                   }}
                                 >
                                   <Eye className="h-4 w-4 mr-2" />
-                                  View Details
+                                  {t('alternateGroups.viewDetails')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={(e) => {
@@ -365,7 +367,7 @@ const AlternateGroupsPage: React.FC = () => {
                                   }}
                                 >
                                   <Pencil className="h-4 w-4 mr-2" />
-                                  Edit
+                                  {t('alternateGroups.edit')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={(e) => {
@@ -375,7 +377,7 @@ const AlternateGroupsPage: React.FC = () => {
                                   className="text-destructive focus:text-destructive"
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
+                                  {t('alternateGroups.delete')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -399,7 +401,7 @@ const AlternateGroupsPage: React.FC = () => {
               page={safeCardPage}
               pageSize={cardPageSize}
               pageSizeOptions={ALTERNATE_GROUP_CARD_PAGE_SIZE_OPTIONS}
-              itemLabel="group"
+              itemLabel={t('alternateGroups.group')}
               onPageChange={setCardPage}
               onPageSizeChange={setCardPageSize}
             />
@@ -410,7 +412,7 @@ const AlternateGroupsPage: React.FC = () => {
       <Drawer open={!!actionMenuGroup} onOpenChange={(open) => !open && setActionMenuGroup(null)}>
         <DrawerContent className="max-h-[50dvh]">
           <DrawerHeader>
-            <DrawerTitle>Group Actions</DrawerTitle>
+            <DrawerTitle>{t('alternateGroups.groupActions')}</DrawerTitle>
             <DrawerDescription>{actionMenuGroup?.name}</DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-4 space-y-2">
@@ -425,7 +427,7 @@ const AlternateGroupsPage: React.FC = () => {
               }}
             >
               <Eye className="h-4 w-4 mr-2" />
-              View Details
+              {t('alternateGroups.viewDetails')}
             </Button>
             <Button
               type="button"
@@ -438,7 +440,7 @@ const AlternateGroupsPage: React.FC = () => {
               }}
             >
               <Pencil className="h-4 w-4 mr-2" />
-              Edit
+              {t('alternateGroups.edit')}
             </Button>
             <Button
               type="button"
@@ -451,7 +453,7 @@ const AlternateGroupsPage: React.FC = () => {
               }}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete
+              {t('alternateGroups.delete')}
             </Button>
           </div>
         </DrawerContent>
@@ -462,9 +464,9 @@ const AlternateGroupsPage: React.FC = () => {
         <Drawer open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DrawerContent className="max-h-[92dvh]">
             <DrawerHeader>
-              <DrawerTitle>New Alternate Part Group</DrawerTitle>
+              <DrawerTitle>{t('alternateGroups.newGroup')}</DrawerTitle>
               <DrawerDescription>
-                Group interchangeable or compatible parts — OEM, aftermarket, or equivalent substitutes.
+                {t('alternateGroups.createDescription')}
               </DrawerDescription>
             </DrawerHeader>
             <div className="px-4 pb-4 overflow-y-auto">
@@ -482,9 +484,9 @@ const AlternateGroupsPage: React.FC = () => {
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>New Alternate Part Group</DialogTitle>
+              <DialogTitle>{t('alternateGroups.newGroup')}</DialogTitle>
               <DialogDescription>
-                Group interchangeable or compatible parts — OEM, aftermarket, or equivalent substitutes.
+                {t('alternateGroups.createDescription')}
               </DialogDescription>
             </DialogHeader>
             <AlternateGroupCreateWizard
@@ -503,9 +505,9 @@ const AlternateGroupsPage: React.FC = () => {
         <Drawer open={!!editingGroup} onOpenChange={(open) => !open && setEditingGroup(null)}>
           <DrawerContent className="max-h-[85dvh]">
             <DrawerHeader>
-              <DrawerTitle>Edit Alternate Group</DrawerTitle>
+              <DrawerTitle>{t('alternateGroups.editTitle')}</DrawerTitle>
               <DrawerDescription>
-                Update the group details. Changes will apply immediately.
+                {t('alternateGroups.editDescription')}
               </DrawerDescription>
             </DrawerHeader>
             {editingGroup && (
@@ -523,9 +525,9 @@ const AlternateGroupsPage: React.FC = () => {
         <Dialog open={!!editingGroup} onOpenChange={() => setEditingGroup(null)}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Edit Alternate Group</DialogTitle>
+              <DialogTitle>{t('alternateGroups.editTitle')}</DialogTitle>
               <DialogDescription>
-                Update the group details. Changes will apply immediately.
+                {t('alternateGroups.editDescription')}
               </DialogDescription>
             </DialogHeader>
             {editingGroup && (
@@ -543,19 +545,18 @@ const AlternateGroupsPage: React.FC = () => {
       <AlertDialog open={!!deletingGroup} onOpenChange={() => setDeletingGroup(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Alternate Group?</AlertDialogTitle>
+            <AlertDialogTitle>{t('alternateGroups.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deletingGroup?.name}"? This will remove
-              all part associations in this group. This action cannot be undone.
+              {t('alternateGroups.deleteDescription', { name: deletingGroup?.name ?? '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('alternateGroups.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteGroup}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t('alternateGroups.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
