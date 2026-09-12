@@ -98,7 +98,19 @@ Read the relevant existing documentation only when the task touches that area:
 
 Do not read these just because they exist.
 
-## 9. Final response
+## 9. Module-scoped i18n
+
+For an i18n-only task, work only on the named module and its direct i18n registration.
+Follow the repository's existing resource and `I18nProvider` patterns; do not install
+Claude/Cursor skills or introduce a translation service merely to apply these rules.
+
+- Compare the module's source keys with the current branch and translate only new or meaningfully changed UI text. Reuse valid existing translations; do not rewrite unrelated keys.
+- Keep VI / EN / KO key sets aligned and preserve each interpolation token, nested reference, and formatting marker across locales. Translate meaning in the UI context; never use an untranslated source string as a placeholder for an unfinished locale.
+- Translate presentation text only. Preserve DB enums, status codes, IDs, persisted content, API payloads, and business logic.
+- Before finishing, inspect the scoped diff for unrelated files and check key parity, missing or empty translations, and placeholder parity. Run focused lint/tests where available; report checks actually run.
+- Static i18n verification does not require screenshots or MP4. Use a browser check only when the task changes interactions or layout and it would verify that change.
+
+## 10. Final response
 
 When finished, state concisely:
 
