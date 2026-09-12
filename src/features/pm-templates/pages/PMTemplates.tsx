@@ -19,6 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import Page from '@/components/layout/Page';
+import { useI18n } from '@/i18n';
 
 // Enhanced Template Card Component
 interface TemplateCardProps {
@@ -61,16 +62,17 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
   const canClone = canCreateCustomTemplates;
 
   const navigate = useNavigate();
+  const { t } = useI18n();
   const handleView = () => navigate(`/dashboard/pm-templates/${template.id}`);
 
   const sectionCount = sections.length;
   const intervalLabel =
     template.interval_value && template.interval_type
-      ? `Every ${template.interval_value} ${template.interval_type === 'hours' ? 'hrs' : 'days'}`
+      ? t('pmTemplates.list.everyInterval', { count: template.interval_value, unit: t(template.interval_type === 'hours' ? 'pmTemplates.list.hoursAbbrev' : 'pmTemplates.list.days') })
       : null;
   const summaryParts = [
-    `${sectionCount} section${sectionCount === 1 ? '' : 's'}`,
-    `${totalItems} item${totalItems === 1 ? '' : 's'}`,
+    t(sectionCount === 1 ? 'pmTemplates.list.sectionCount' : 'pmTemplates.list.sectionsCount', { count: sectionCount }),
+    t(totalItems === 1 ? 'pmTemplates.list.itemCount' : 'pmTemplates.list.itemsCount', { count: totalItems }),
     intervalLabel,
   ].filter(Boolean);
 
@@ -91,7 +93,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
             handleView();
           }
         }}
-        aria-label={`Open details for template ${template.name}`}
+        aria-label={t('pmTemplates.list.openTemplate', { name: template.name })}
       >
         <div className="space-y-2">
           <CardTitle className="min-w-0 text-base leading-tight line-clamp-2 break-words">
@@ -108,7 +110,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
               {showProtectedBadge && (
                 <Badge variant="outline" className="text-xs">
                   <Shield className="w-3 h-3 mr-1" />
-                  Protected
+                  {t('pmTemplates.list.protected')}
                 </Badge>
               )}
             </div>
@@ -133,8 +135,8 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           />
           <p className="text-xs text-muted-foreground text-center px-1">
             {isOrgTemplate
-              ? 'Bulk-set as the default PM template on selected equipment'
-              : 'Ready to use — assign directly, no clone needed'}
+              ? t('pmTemplates.list.bulkDefaultHint')
+              : t('pmTemplates.list.readyHint')}
           </p>
           
           <div className="flex gap-2">
@@ -144,11 +146,11 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
               onClick={() => onClone(template.id)}
               className="flex-1"
               disabled={!canClone}
-              title={!canClone ? 'Custom PM templates require user licenses' : ''}
+              title={!canClone ? t('pmTemplates.list.licenseRequired') : ''}
             >
               {!canClone && <Lock className="mr-1 h-3 w-3" />}
               <Copy className="mr-1 h-3 w-3" />
-              Clone
+              {t('pmTemplates.list.clone')}
             </Button>
             
             {canEdit && (
@@ -157,10 +159,10 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                 size="sm"
                 onClick={() => onEdit(template.id)}
                 className="flex-1"
-                aria-label={`Edit template ${template.name}`}
+                aria-label={t('pmTemplates.list.editTemplate', { name: template.name })}
               >
                 <Edit className="mr-1 h-3 w-3" />
-                Edit
+                {t('pmTemplates.list.edit')}
               </Button>
             )}
 
@@ -170,10 +172,10 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                 size="sm"
                 onClick={() => onConfigureRules(template.id)}
                 className="flex-1"
-                aria-label={`Configure compatibility rules for ${template.name}`}
+                aria-label={t('pmTemplates.list.configureRules', { name: template.name })}
               >
                 <Settings2 className="mr-1 h-3 w-3" />
-                Rules
+                {t('pmTemplates.list.rules')}
               </Button>
             )}
             
@@ -184,27 +186,27 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                     variant="outline"
                     size="sm"
                     className="min-h-11 min-w-11 md:min-h-0 md:min-w-0 px-2"
-                    aria-label={`Delete template ${template.name}`}
+                    aria-label={t('pmTemplates.list.deleteTemplate', { name: template.name })}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Template</AlertDialogTitle>
+                    <AlertDialogTitle>{t('pmTemplates.list.deleteTitle')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete "{template.name}"? This action cannot be undone.
-                      {!isOrgTemplate && " Global templates cannot be deleted."}
-                      {template.is_protected && " Protected templates cannot be deleted."}
+                      {t('pmTemplates.list.deleteConfirm', { name: template.name })}
+                      {!isOrgTemplate && ` ${t('pmTemplates.list.globalDeleteBlocked')}`}
+                      {template.is_protected && ` ${t('pmTemplates.list.protectedDeleteBlocked')}`}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t('pmTemplates.list.cancel')}</AlertDialogCancel>
                     <AlertDialogAction 
                       onClick={() => onDelete(template.id)}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                      Delete
+                      {t('pmTemplates.list.delete')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -282,6 +284,7 @@ const CollapsibleTemplateSection: React.FC<CollapsibleTemplateSectionProps> = ({
 };
 
 const PMTemplates = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { currentOrganization } = useOrganization();
@@ -307,9 +310,9 @@ const PMTemplates = () => {
       <Page maxWidth="7xl" padding="responsive">
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold">PM Templates</h1>
+            <h1 className="text-3xl font-bold">{t('pmTemplates.list.title')}</h1>
             <p className="text-muted-foreground">
-              Please select an organization to manage PM templates.
+              {t('pmTemplates.list.selectOrganization')}
             </p>
           </div>
         </div>
@@ -322,9 +325,9 @@ const PMTemplates = () => {
       <Page maxWidth="7xl" padding="responsive">
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold">PM Templates</h1>
+            <h1 className="text-3xl font-bold">{t('pmTemplates.list.title')}</h1>
             <p className="text-muted-foreground">
-              You need administrator permissions to access this page.
+              {t('pmTemplates.list.adminRequired')}
             </p>
           </div>
         </div>
@@ -398,24 +401,24 @@ const PMTemplates = () => {
       <div className={cn('space-y-6', showMobileFab && 'pb-28')}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">PM Templates</h1>
+            <h1 className="text-3xl font-bold">{t('pmTemplates.list.title')}</h1>
             <p className="text-muted-foreground mt-1">
               <span className="hidden sm:inline">
-                Manage PM checklist templates and assign them as the default on equipment in bulk.
+                {t('pmTemplates.list.subtitleDesktop')}
               </span>
-              <span className="sm:hidden">Manage PM templates and assign them to equipment.</span>
+              <span className="sm:hidden">{t('pmTemplates.list.subtitleMobile')}</span>
             </p>
           </div>
           {isAdmin && (
             <Button 
               onClick={handleCreateTemplate}
               disabled={!canCreateCustomTemplates}
-              title={!canCreateCustomTemplates ? 'Custom PM templates require user licenses' : ''}
+              title={!canCreateCustomTemplates ? t('pmTemplates.list.licenseRequired') : ''}
               className="hidden sm:inline-flex"
             >
               {!canCreateCustomTemplates && <Lock className="mr-2 h-4 w-4" />}
               <Plus className="mr-2 h-4 w-4" />
-              New Template
+              {t('pmTemplates.list.newTemplate')}
             </Button>
           )}
         </div>
@@ -424,8 +427,8 @@ const PMTemplates = () => {
         <Alert>
           <Lock className="h-4 w-4" />
           <AlertDescription>
-            Custom PM templates require user licenses. You can still use global templates like the Forklift PM checklist. 
-            <strong> Purchase user licenses to create, edit, and clone custom PM templates.</strong>
+            {t('pmTemplates.list.licenseNotice')}
+            <strong> {t('pmTemplates.list.licenseAction')}</strong>
           </AlertDescription>
         </Alert>
       )}
@@ -437,7 +440,7 @@ const PMTemplates = () => {
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search templates..."
+            placeholder={t('pmTemplates.list.searchPlaceholder')}
             className="pl-9"
           />
         </div>
@@ -464,8 +467,8 @@ const PMTemplates = () => {
           {/* Global Templates */}
           {globalTemplates.length > 0 && (
             <CollapsibleTemplateSection
-              title="EquipQR Templates"
-              description="Best-in-class PM checklists included with EquipQR for heavy equipment, machinery, and vehicles. Assign them to equipment directly — clone only when you want to customize."
+              title={t('pmTemplates.list.equipqrTemplates')}
+              description={t('pmTemplates.list.equipqrDescription')}
               icon={<Globe className="h-5 w-5" aria-hidden />}
               count={globalTemplates.length}
               defaultOpen={!hasVisibleOrgTemplates}
@@ -490,8 +493,8 @@ const PMTemplates = () => {
           {/* Organization Templates */}
           {orgTemplates.length > 0 && canCreateCustomTemplates && (
             <CollapsibleTemplateSection
-              title="Organization Templates"
-              description="Custom templates created by your organization."
+              title={t('pmTemplates.list.organizationTemplates')}
+              description={t('pmTemplates.list.organizationDescription')}
               icon={<Users className="h-5 w-5" aria-hidden />}
               count={orgTemplates.length}
               defaultOpen
@@ -517,16 +520,16 @@ const PMTemplates = () => {
         <Card className="text-center py-12">
           <CardContent>
             <Wrench className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Templates Available</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('pmTemplates.list.noTemplates')}</h3>
             <p className="text-muted-foreground mb-6">
               {canCreateCustomTemplates 
-                ? 'Create your first PM checklist template to get started.'
-                : 'Purchase user licenses to create custom PM templates, or use the available global templates.'}
+                ? t('pmTemplates.list.createFirst')
+                : t('pmTemplates.list.purchaseOrGlobal')}
             </p>
             {isAdmin && canCreateCustomTemplates && (
               <Button onClick={handleCreateTemplate}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Template
+                {t('pmTemplates.list.createTemplate')}
               </Button>
             )}
           </CardContent>
@@ -537,31 +540,31 @@ const PMTemplates = () => {
       <Dialog open={!!cloneDialogOpen} onOpenChange={(open) => !open && setCloneDialogOpen(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Clone Template</DialogTitle>
+            <DialogTitle>{t('pmTemplates.list.cloneTitle')}</DialogTitle>
             <DialogDescription>
-              Create a copy of this template that you can customize for your organization.
+              {t('pmTemplates.list.cloneDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="clone-name">New Template Name</Label>
+              <Label htmlFor="clone-name">{t('pmTemplates.list.newTemplateName')}</Label>
               <Input
                 id="clone-name"
                 value={cloneName}
                 onChange={(e) => setCloneName(e.target.value)}
-                placeholder="Enter name for cloned template"
+                placeholder={t('pmTemplates.list.cloneNamePlaceholder')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCloneDialogOpen(null)}>
-              Cancel
+              {t('pmTemplates.list.cancel')}
             </Button>
             <Button 
               onClick={handleConfirmClone}
               disabled={!cloneName.trim() || cloneTemplateMutation.isPending}
             >
-              {cloneTemplateMutation.isPending ? 'Cloning...' : 'Clone Template'}
+              {t(cloneTemplateMutation.isPending ? 'pmTemplates.list.cloning' : 'pmTemplates.list.cloneTemplate')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -582,7 +585,7 @@ const PMTemplates = () => {
           type="button"
           size="icon"
           onClick={handleCreateTemplate}
-          aria-label="New template"
+          aria-label={t('pmTemplates.list.newTemplate')}
           className={cn(
             'fixed bottom-19.5 right-4 z-fixed h-14 w-14 rounded-full shadow-elevation-3',
             'touch-manipulation transition-transform duration-100 active:scale-[0.97]',
