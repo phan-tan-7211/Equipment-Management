@@ -67,7 +67,12 @@ export const alternateGroupListResources = {
       "csvUpdated": "Updated At",
       "verifiedDescription": "Interchangeability confirmed with evidence. Shown with higher priority in search results.",
       "unverifiedDescription": "Not yet confirmed. Add evidence and part numbers, then mark as verified.",
-      "deprecatedDescription": "No longer recommended for use as an alternate."
+      "deprecatedDescription": "No longer recommended for use as an alternate.",
+      "filter": "Filter",
+      "filterAria": "Filter groups, {{count}} active",
+      "cardView": "Card view",
+      "tableView": "Table view",
+      "viewMode": "View mode"
     }
   },
   "vi": {
@@ -138,7 +143,12 @@ export const alternateGroupListResources = {
       "csvUpdated": "Ngày cập nhật",
       "verifiedDescription": "Đã có bằng chứng xác nhận có thể thay thế. Được ưu tiên hiển thị trong kết quả tìm kiếm.",
       "unverifiedDescription": "Chưa được xác nhận. Thêm bằng chứng và mã phụ tùng, sau đó đánh dấu đã xác minh.",
-      "deprecatedDescription": "Không còn được khuyến nghị dùng làm phụ tùng thay thế."
+      "deprecatedDescription": "Không còn được khuyến nghị dùng làm phụ tùng thay thế.",
+      "filter": "Lọc",
+      "filterAria": "Lọc nhóm, {{count}} bộ lọc đang áp dụng",
+      "cardView": "Xem dạng thẻ",
+      "tableView": "Xem dạng bảng",
+      "viewMode": "Chế độ xem"
     }
   },
   "ko": {
@@ -209,7 +219,12 @@ export const alternateGroupListResources = {
       "csvUpdated": "수정일",
       "verifiedDescription": "증거를 통해 상호 대체 가능성이 확인되었습니다. 검색 결과에서 우선 표시됩니다.",
       "unverifiedDescription": "아직 확인되지 않았습니다. 증거와 부품 번호를 추가한 후 검증됨으로 표시하세요.",
-      "deprecatedDescription": "대체 부품으로 더 이상 사용을 권장하지 않습니다."
+      "deprecatedDescription": "대체 부품으로 더 이상 사용을 권장하지 않습니다.",
+      "filter": "필터",
+      "filterAria": "그룹 필터, {{count}}개 적용 중",
+      "cardView": "카드 보기",
+      "tableView": "표 보기",
+      "viewMode": "보기 방식"
     }
   }
 } as const;

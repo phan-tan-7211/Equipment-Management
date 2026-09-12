@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -39,6 +40,7 @@ import { AlternateGroupRemoveMemberDialog } from '@/features/inventory/component
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const AlternateGroupDetail: React.FC = () => {
+  const { t } = useI18n();
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -61,7 +63,7 @@ const AlternateGroupDetail: React.FC = () => {
   if (!currentOrganization) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <PageHeader title="Alternate Group" description="Please select an organization." />
+        <PageHeader title={t('alternateGroupDetail.detailTitle')} description={t('alternateGroups.selectOrganization')} />
       </Page>
     );
   }
@@ -87,11 +89,11 @@ const AlternateGroupDetail: React.FC = () => {
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground mb-4">
-              Alternate group not found or you don't have access.
+              {t('alternateGroupDetail.notFound')}
             </p>
             <Button onClick={() => navigate('/dashboard/alternate-groups')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Groups
+              {t('alternateGroupDetail.backGroups')}
             </Button>
           </CardContent>
         </Card>
@@ -112,25 +114,25 @@ const AlternateGroupDetail: React.FC = () => {
           title={group.name}
           description={group.description || undefined}
           breadcrumbs={[
-            { label: 'Alternate Groups', href: '/dashboard/alternate-groups' },
+            { label: t('alternateGroupDetail.groupsBreadcrumb'), href: '/dashboard/alternate-groups' },
           ]}
           meta={
             <>
               {group.status === 'verified' && (
                 <Badge className="bg-success">
                   <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Verified
+                  {t('alternateGroups.verified')}
                 </Badge>
               )}
               {group.status === 'deprecated' && (
                 <Badge variant="outline" className="border-warning text-warning bg-warning/10">
                   <AlertTriangle className="h-3 w-3 mr-1" />
-                  Deprecated
+                  {t('alternateGroups.deprecated')}
                 </Badge>
               )}
               {group.status === 'unverified' && (
                 <Badge variant="outline" className="text-muted-foreground">
-                  Unverified
+                  {t('alternateGroups.unverified')}
                 </Badge>
               )}
             </>
@@ -139,7 +141,7 @@ const AlternateGroupDetail: React.FC = () => {
             canEdit ? (
               <Button variant="outline" onClick={() => dialogs.setShowEditDialog(true)}>
                 <Pencil className="h-4 w-4 mr-2" />
-                Edit Group
+                {t('alternateGroupDetail.editGroup')}
               </Button>
             ) : undefined
           }
@@ -148,7 +150,7 @@ const AlternateGroupDetail: React.FC = () => {
         {(group.notes || group.evidence_url) && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Verification Info</CardTitle>
+              <CardTitle className="text-base">{t('alternateGroupDetail.verificationInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {group.notes && <p className="text-sm">{group.notes}</p>}
@@ -158,9 +160,9 @@ const AlternateGroupDetail: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-primary hover:underline flex items-center gap-1"
-                  aria-label="View evidence (opens in new tab)"
+                  aria-label={t('alternateGroupDetail.evidenceAria')}
                 >
-                  View Evidence
+                  {t('alternateGroupDetail.viewEvidence')}
                   <ExternalLink className="h-3 w-3" aria-hidden="true" />
                 </a>
               )}
@@ -183,8 +185,8 @@ const AlternateGroupDetail: React.FC = () => {
         <Drawer open={dialogs.showEditDialog} onOpenChange={dialogs.setShowEditDialog}>
           <DrawerContent className="max-h-[85dvh]">
             <DrawerHeader>
-              <DrawerTitle>Edit Alternate Group</DrawerTitle>
-              <DrawerDescription>Update the group details.</DrawerDescription>
+              <DrawerTitle>{t('alternateGroups.editTitle')}</DrawerTitle>
+              <DrawerDescription>{t('alternateGroupDetail.updateDescription')}</DrawerDescription>
             </DrawerHeader>
             <div className="px-4 pb-4 overflow-y-auto">
               <AlternateGroupForm
@@ -199,8 +201,8 @@ const AlternateGroupDetail: React.FC = () => {
         <Dialog open={dialogs.showEditDialog} onOpenChange={dialogs.setShowEditDialog}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Edit Alternate Group</DialogTitle>
-              <DialogDescription>Update the group details.</DialogDescription>
+              <DialogTitle>{t('alternateGroups.editTitle')}</DialogTitle>
+              <DialogDescription>{t('alternateGroupDetail.updateDescription')}</DialogDescription>
             </DialogHeader>
             <AlternateGroupForm
               group={group}

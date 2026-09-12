@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,15 +23,15 @@ import {
 import type { PartAlternateGroup, VerificationStatus } from '@/features/inventory/types/inventory';
 
 // Form validation schema
-const alternateGroupSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(200, 'Name is too long'),
-  description: z.string().max(1000, 'Description is too long').optional(),
+const createAlternateGroupSchema = (t: (key: string) => string) => z.object({
+  name: z.string().min(1, t('alternateGroupDetail.nameRequired')).max(200, t('alternateGroupDetail.nameLong')),
+  description: z.string().max(1000, t('alternateGroupDetail.descriptionLong')).optional(),
   status: z.enum(['unverified', 'verified', 'deprecated']),
-  notes: z.string().max(2000, 'Notes are too long').optional(),
-  evidence_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  notes: z.string().max(2000, t('alternateGroupDetail.notesLong')).optional(),
+  evidence_url: z.string().url(t('alternateGroupDetail.invalidUrl')).optional().or(z.literal('')),
 });
 
-type AlternateGroupFormData = z.infer<typeof alternateGroupSchema>;
+type AlternateGroupFormData = z.infer<ReturnType<typeof createAlternateGroupSchema>>;
 
 interface AlternateGroupFormProps {
   group?: PartAlternateGroup;
@@ -43,6 +44,7 @@ export const AlternateGroupForm: React.FC<AlternateGroupFormProps> = ({
   onSuccess,
   onCancel,
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const createMutation = useCreateAlternateGroup();
   const updateMutation = useUpdateAlternateGroup();
@@ -57,7 +59,7 @@ export const AlternateGroupForm: React.FC<AlternateGroupFormProps> = ({
     watch,
     formState: { errors },
   } = useForm<AlternateGroupFormData>({
-    resolver: zodResolver(alternateGroupSchema),
+    resolver: zodResolver(createAlternateGroupSchema(t)),
     defaultValues: {
       name: group?.name || '',
       description: group?.description || '',
@@ -108,11 +110,11 @@ export const AlternateGroupForm: React.FC<AlternateGroupFormProps> = ({
       {/* Name */}
       <div className="space-y-2">
         <Label htmlFor="name">
-          Name <span className="text-destructive">*</span>
+          {t('alternateGroupDetail.name')} <span className="text-destructive">*</span>
         </Label>
         <Input
           id="name"
-          placeholder="e.g., Oil Filter - CAT D6T Compatible"
+          placeholder={t('alternateGroupDetail.groupNameExample')}
           {...register('name')}
           disabled={isPending}
         />
@@ -123,10 +125,10 @@ export const AlternateGroupForm: React.FC<AlternateGroupFormProps> = ({
 
       {/* Description */}
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t('itemForm.description')}</Label>
         <Textarea
           id="description"
-          placeholder="Optional description of this alternate group..."
+          placeholder={t('alternateGroupDetail.groupDescription')}
           rows={2}
           {...register('description')}
           disabled={isPending}
@@ -138,7 +140,7 @@ export const AlternateGroupForm: React.FC<AlternateGroupFormProps> = ({
 
       {/* Status */}
       <div className="space-y-2">
-        <Label htmlFor="status">Verification Status</Label>
+        <Label htmlFor="status">{t('alternateGroupDetail.verificationStatus')}</Label>
         <Select
           value={status}
           onValueChange={(value) => setValue('status', value as VerificationStatus)}
@@ -151,36 +153,36 @@ export const AlternateGroupForm: React.FC<AlternateGroupFormProps> = ({
             <SelectItem value="unverified">
               <span className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-warning" />
-                Unverified
+                {t('alternateGroups.unverified')}
               </span>
             </SelectItem>
             <SelectItem value="verified">
               <span className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-success" />
-                Verified
+                {t('alternateGroups.verified')}
               </span>
             </SelectItem>
             <SelectItem value="deprecated">
               <span className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-                Deprecated
+                {t('alternateGroups.deprecated')}
               </span>
             </SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
           {isEditing
-            ? 'Verified groups are shown with higher priority in search results.'
-            : 'Groups start as Unverified. Change to Verified after adding evidence and part numbers.'}
+            ? t('alternateGroupDetail.editStatusHelp')
+            : t('alternateGroupDetail.newStatusHelp')}
         </p>
       </div>
 
       {/* Notes */}
       <div className="space-y-2">
-        <Label htmlFor="notes">Verification Notes</Label>
+        <Label htmlFor="notes">{t('alternateGroupDetail.verificationNotes')}</Label>
         <Textarea
           id="notes"
-          placeholder="Evidence or notes supporting this alternate relationship..."
+          placeholder={t('alternateGroupDetail.notesPlaceholder')}
           rows={3}
           {...register('notes')}
           disabled={isPending}
@@ -192,7 +194,7 @@ export const AlternateGroupForm: React.FC<AlternateGroupFormProps> = ({
 
       {/* Evidence URL */}
       <div className="space-y-2">
-        <Label htmlFor="evidence_url">Evidence URL</Label>
+        <Label htmlFor="evidence_url">{t('alternateGroupDetail.evidenceUrl')}</Label>
         <Input
           id="evidence_url"
           type="url"
@@ -204,17 +206,17 @@ export const AlternateGroupForm: React.FC<AlternateGroupFormProps> = ({
           <p className="text-sm text-destructive">{errors.evidence_url.message}</p>
         )}
         <p className="text-xs text-muted-foreground">
-          Link to manufacturer cross-reference guide or other verification source.
+          {t('alternateGroupDetail.evidenceHelp')}
         </p>
       </div>
 
       {/* Actions */}
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
-          Cancel
+          {t('alternateGroups.cancel')}
         </Button>
         <Button type="submit" disabled={isPending}>
-          {isPending ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Group'}
+          {isPending ? t('alternateGroupDetail.saving') : isEditing ? t('alternateGroupDetail.saveChanges') : t('alternateGroupDetail.createGroup')}
         </Button>
       </div>
     </form>

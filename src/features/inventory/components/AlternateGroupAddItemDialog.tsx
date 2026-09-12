@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { handleKeyboardActivation } from '@/components/a11y/keyboard';
 import { Search, CheckCircle2 } from 'lucide-react';
@@ -38,12 +39,13 @@ function AddItemDialogBody({
   onSubmit,
   isPending,
 }: Omit<AlternateGroupAddItemDialogProps, 'isMobile' | 'open' | 'onOpenChange'>) {
+  const { t } = useI18n();
   return (
     <div className="space-y-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          placeholder="Search inventory items..."
+          placeholder={t('alternateGroupDetail.searchItems')}
           value={itemSearch}
           onChange={(e) => onItemSearchChange(e.target.value)}
           className="pl-9"
@@ -54,10 +56,10 @@ function AddItemDialogBody({
         {filteredItems.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
             {!itemSearch.trim() && availableItemsCount > 0
-              ? 'Search to find inventory items to add'
+              ? t('alternateGroupDetail.searchItemsHint')
               : availableItemsCount === 0
-                ? 'All inventory items are already in this group'
-                : 'No items found matching your search'}
+                ? t('alternateGroupDetail.allItemsAdded')
+                : t('alternateGroupDetail.noItemsSearch')}
           </p>
         ) : (
           filteredItems.map((item) => (
@@ -78,7 +80,7 @@ function AddItemDialogBody({
                   <p className="font-medium">{item.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {item.sku && `SKU: ${item.sku} • `}
-                    Qty: {item.quantity_on_hand}
+                    {t('alternateGroupDetail.qty', { count: item.quantity_on_hand })}
                   </p>
                 </div>
                 {selectedItemId === item.id && (
@@ -97,16 +99,16 @@ function AddItemDialogBody({
           onCheckedChange={(checked) => onPrimaryItemChange(checked as boolean)}
         />
         <Label htmlFor="is-primary" className="text-sm">
-          Mark as primary part in this group
+          {t('alternateGroupDetail.primaryPart')}
         </Label>
       </div>
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
-          Cancel
+          {t('alternateGroups.cancel')}
         </Button>
         <Button onClick={onSubmit} disabled={!selectedItemId || isPending}>
-          {isPending ? 'Adding...' : 'Add Item'}
+          {isPending ? t('alternateGroupDetail.adding') : t('alternateGroupDetail.addItem')}
         </Button>
       </div>
     </div>
@@ -114,6 +116,7 @@ function AddItemDialogBody({
 }
 
 export function AlternateGroupAddItemDialog(props: AlternateGroupAddItemDialogProps) {
+  const { t } = useI18n();
   const { isMobile, open, onOpenChange } = props;
 
   return (
@@ -121,8 +124,8 @@ export function AlternateGroupAddItemDialog(props: AlternateGroupAddItemDialogPr
       isMobile={isMobile}
       open={open}
       onOpenChange={onOpenChange}
-      title="Add Inventory Item"
-      description="Select an inventory item to add to this alternate group."
+      title={t('alternateGroupDetail.addItemTitle')}
+      description={t('alternateGroupDetail.addItemDescription')}
     >
       <AddItemDialogBody {...props} />
     </AlternateGroupResponsiveDialog>

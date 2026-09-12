@@ -94,6 +94,9 @@ const AlternateGroupsToolbar: React.FC<AlternateGroupsToolbarProps> = ({
                 viewMode={viewMode}
                 onViewModeChange={onViewModeChange}
                 gridValue="cards"
+                gridAriaLabel={t('alternateGroups.cardView')}
+                tableAriaLabel={t('alternateGroups.tableView')}
+                viewModeAriaLabel={t('alternateGroups.viewMode')}
                 tableValue="table"
               />
             )}
