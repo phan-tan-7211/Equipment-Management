@@ -20,6 +20,7 @@ import {
 import { useCreateInvitation } from '@/features/organization/hooks/useOrganizationInvitations';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 
 interface SimplifiedInvitationDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ export const SimplifiedInvitationDialog: React.FC<SimplifiedInvitationDialogProp
   open,
   onOpenChange,
 }) => {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'admin' | 'member'>('member');
   const { currentOrganization } = useOrganization();
@@ -39,12 +41,12 @@ export const SimplifiedInvitationDialog: React.FC<SimplifiedInvitationDialogProp
     e.preventDefault();
     
     if (!currentOrganization?.id) {
-      toast.error('No organization selected');
+      toast.error(t('organizationMembers.noOrganization'));
       return;
     }
 
     if (!email.trim()) {
-      toast.error('Email is required');
+      toast.error(t('organizationMembers.emailRequired'));
       return;
     }
 
@@ -71,19 +73,19 @@ export const SimplifiedInvitationDialog: React.FC<SimplifiedInvitationDialogProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Invite New Member</DialogTitle>
+          <DialogTitle>{t('organizationMembers.invitationTitle')}</DialogTitle>
           <DialogDescription>
-            Send an invitation to join your organization.
+            {t('organizationMembers.invitationDescription')}
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="email">{t('organizationMembers.emailAddress')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="Enter email address"
+              placeholder={t('organizationMembers.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -91,14 +93,14 @@ export const SimplifiedInvitationDialog: React.FC<SimplifiedInvitationDialogProp
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
+            <Label htmlFor="role">{t('organizationMembers.role')}</Label>
             <Select value={role} onValueChange={(value: 'admin' | 'member') => setRole(value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
+                <SelectValue placeholder={t('organizationMembers.selectRole')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="member">{t('organizationMembers.member')}</SelectItem>
+                <SelectItem value="admin">{t('organizationMembers.admin')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -109,13 +111,13 @@ export const SimplifiedInvitationDialog: React.FC<SimplifiedInvitationDialogProp
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('organizationMembers.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={createInvitation.isPending}
             >
-              {createInvitation.isPending ? 'Sending...' : 'Send Invitation'}
+              {createInvitation.isPending ? t('organizationMembers.sending') : t('organizationMembers.send')}
             </Button>
           </div>
         </form>
@@ -123,4 +125,3 @@ export const SimplifiedInvitationDialog: React.FC<SimplifiedInvitationDialogProp
     </Dialog>
   );
 };
-
