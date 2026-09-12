@@ -102,7 +102,7 @@ export const TeamCreateFields: React.FC<TeamCreateFieldsProps> = ({
                 className="text-xs"
                 onClick={() => patch({ showNewAccount: false, newAccountName: '' })}
               >
-                Cancel new account
+                {t('teamsDetail.cancelNewAccount')}
               </Button>
             </div>
           ) : (
