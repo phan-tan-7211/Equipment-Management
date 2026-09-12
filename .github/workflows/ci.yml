@@ -712,7 +712,7 @@ jobs:
     # Note: Test coverage is already validated in the Coverage Merge job.
     # Quality Gates validates build artifacts and bundle sizes only.
     # VI/EN/KO UI copy brought dist just over the former 12 MiB cap;
-    # retain a 13 MiB total-output guardrail for the localized app.
+    # retain a 13 MiB app guardrail plus 3 MiB exclusively for the PDF font.
 
     - name: Check bundle size limits (Windows)
       if: runner.os == 'Windows'
@@ -723,11 +723,14 @@ jobs:
           npm run build
         }
         $buildSize = (Get-ChildItem -Path dist -Recurse -File | Measure-Object -Property Length -Sum).Sum
+        $fontSize = (Get-ChildItem -Path dist/assets -Filter 'EquipQR-Report-KR-VI-*.ttf' -File | Measure-Object -Property Length -Sum).Sum
+        $appSize = $buildSize - $fontSize
         $maxSize = 13MB
+        $maxFontSize = 3MB
         Write-Host "Build size: {0:N2}MB" -f ($buildSize/1MB)
-        Write-Host "Maximum allowed: 13MB"
-        if ($buildSize -gt $maxSize) {
-          Write-Host "❌ Build size {0:N2}MB exceeds maximum of 13MB" -f ($buildSize/1MB)
+        Write-Host ("App size: {0:N2} MiB / 13 MiB; PDF font: {1:N2} MiB / 3 MiB" -f ($appSize/1MB), ($fontSize/1MB))
+        if ($appSize -gt $maxSize -or $fontSize -gt $maxFontSize) {
+          Write-Host "❌ App exceeds 13 MiB or PDF font exceeds 3 MiB"
           Write-Host "Large files in build (>1MB):"
           Get-ChildItem -Path dist -Recurse -File | Where-Object { $_.Length -gt 1MB } | Sort-Object Length -Descending | Select-Object -First 10 | ForEach-Object { "{0:N2}MB `t {1}" -f ($_.Length/1MB), $_.FullName }
           exit 1
@@ -744,13 +747,16 @@ jobs:
         fi
 
         build_size=$(du -sb dist/ | cut -f1)
-        max_size=$((13 * 1024 * 1024)) # 13MB in bytes
+        font_size=$(find dist/assets -maxdepth 1 -type f -name 'EquipQR-Report-KR-VI-*.ttf' -printf '%s\n' | awk '{sum += $1} END {print sum+0}')
+        app_size=$((build_size - font_size))
+        max_size=$((13 * 1024 * 1024))
+        max_font_size=$((3 * 1024 * 1024))
 
         echo "Build size: $((build_size / 1024 / 1024))MB"
-        echo "Maximum allowed: $((max_size / 1024 / 1024))MB"
+        echo "App: ${app_size} bytes / ${max_size}; PDF font: ${font_size} bytes / ${max_font_size}"
 
-        if [ "$build_size" -gt "$max_size" ]; then
-          echo "❌ Build size $((build_size / 1024 / 1024))MB exceeds maximum of $((max_size / 1024 / 1024))MB"
+        if [ "$app_size" -gt "$max_size" ] || [ "$font_size" -gt "$max_font_size" ]; then
+          echo "❌ App exceeds 13 MiB or PDF font exceeds 3 MiB"
           echo "Large files in build:"
           find dist/ -type f -size +1M -exec du -sh {} \; | sort -hr | head -10
           exit 1
