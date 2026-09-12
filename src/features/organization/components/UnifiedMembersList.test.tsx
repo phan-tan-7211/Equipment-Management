@@ -257,7 +257,7 @@ describe('UnifiedMembersList', () => {
 
     expect(screen.getByText('Bob Member')).toBeInTheDocument();
 
-    const partsManagerSwitch = screen.getByRole('switch', { name: 'Parts manager' });
+    const partsManagerSwitch = screen.getByRole('switch', { name: 'Parts Manager' });
     fireEvent.click(partsManagerSwitch);
 
     expect(mockAddPartsManager).toHaveBeenCalledWith({
@@ -280,7 +280,7 @@ describe('UnifiedMembersList', () => {
 
     expect(screen.getByText('Bob Member')).toBeInTheDocument();
 
-    const partsConsumerSwitch = screen.getByRole('switch', { name: 'Parts consumer' });
+    const partsConsumerSwitch = screen.getByRole('switch', { name: 'Parts Consumer' });
     fireEvent.click(partsConsumerSwitch);
 
     expect(mockAddPartsConsumer).toHaveBeenCalledWith({
