@@ -1,4 +1,5 @@
 import { useEffect, type JSX } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 import { Link, useLocation } from 'react-router-dom';
 import LandingHeader from '@/components/landing/LandingHeader';
 import { PageBackButton } from '@/components/layout/PageBackButton';
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button';
 
 function NotFound(): JSX.Element {
   const location = useLocation();
+  const { t } = useI18n();
 
   useEffect(() => {
     console.error('404 Error: User attempted to access non-existent route:', location.pathname);
@@ -16,8 +18,8 @@ function NotFound(): JSX.Element {
   return (
     <>
       <PageSEO
-        title="Page not found"
-        description="The requested EquipQR page could not be found."
+        title={t('publicChrome.notFound.seoTitle')}
+        description={t('publicChrome.notFound.seoDescription')}
         noindex
       />
       <div className="flex min-h-screen flex-col bg-background">
@@ -30,7 +32,7 @@ function NotFound(): JSX.Element {
           <section className="relative bg-linear-to-br from-background via-background to-primary/5 pb-16 pt-32">
             <div className="container mx-auto px-4">
               <div className="mx-auto max-w-3xl">
-                <PageBackButton className="mb-6" />
+                <PageBackButton className="mb-6" label={t('publicChrome.back')} />
                 <div className="rounded-3xl border border-border/60 bg-card/80 px-6 py-12 text-center shadow-xs sm:px-10">
                   <p className="text-sm font-medium uppercase tracking-wide text-primary">404</p>
                   <h1
@@ -38,19 +40,17 @@ function NotFound(): JSX.Element {
                     tabIndex={-1}
                     className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl"
                   >
-                    Page not found
+                    {t('publicChrome.notFound.title')}
                   </h1>
                   <p className="mt-4 text-base text-muted-foreground sm:text-lg">
-                    We couldn&apos;t find the public EquipQR page at{' '}
-                    <span className="font-mono text-sm text-foreground">{location.pathname}</span>.
-                    Check the address or jump back to a known page.
+                    {t('publicChrome.notFound.description', { path: location.pathname })}
                   </p>
                   <div className="mt-8 flex flex-wrap justify-center gap-3">
                     <Button asChild>
-                      <Link to="/">Return home</Link>
+                      <Link to="/">{t('publicChrome.notFound.home')}</Link>
                     </Button>
                     <Button asChild variant="outline">
-                      <Link to="/releases">View releases</Link>
+                      <Link to="/releases">{t('publicChrome.notFound.releases')}</Link>
                     </Button>
                   </div>
                 </div>

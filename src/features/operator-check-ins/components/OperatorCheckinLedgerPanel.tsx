@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n/I18nProvider';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -62,6 +63,7 @@ export function OperatorCheckinLedgerPanel({
   allowDeletedVisibilityToggle = false,
 }: OperatorCheckinLedgerPanelProps) {
   const isEquipmentScoped = Boolean(equipmentId);
+  const { t } = useI18n();
   const { formatDateTime } = useFormatTimestamp();
   const { toast } = useAppToast();
   const defaultDateRange = useMemo(() => createDefaultLedgerDateRange(), []);
@@ -185,12 +187,13 @@ export function OperatorCheckinLedgerPanel({
 
   const equipmentLabel = useMemo(() => {
     if (isEquipmentScoped && equipmentName) return equipmentName;
-    return buildEquipmentScopeLabel(assignedEquipmentOptions, selectedEquipmentIds);
+    return buildEquipmentScopeLabel(assignedEquipmentOptions, selectedEquipmentIds, t);
   }, [
     assignedEquipmentOptions,
     equipmentName,
     isEquipmentScoped,
     selectedEquipmentIds,
+    t,
   ]);
 
   const reportDateRangeLabel = useMemo(
@@ -231,15 +234,15 @@ export function OperatorCheckinLedgerPanel({
         options,
       );
       toast({
-        title: 'Export complete',
+        title: t('operatorCheckinDetail.exportComplete'),
         description: options.format === 'xlsx'
-          ? 'Daily check-in workbook downloaded.'
-          : 'Daily check-in PDF downloaded.',
+          ? t('operatorCheckinDetail.workbookDownloaded')
+          : t('operatorCheckinDetail.pdfDownloaded'),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to export daily report.';
+      const message = error instanceof Error ? error.message : t('operatorCheckinDetail.exportError');
       toast({
-        title: 'Export failed',
+        title: t('operatorCheckinDetail.exportFailed'),
         description: message,
         variant: 'error',
       });
@@ -249,33 +252,33 @@ export function OperatorCheckinLedgerPanel({
 
   function resolveBodyFallback(): ReactNode | undefined {
     if (isScopeLoading) {
-      return <LedgerEmptyMessage>Loading report scope…</LedgerEmptyMessage>;
+      return <LedgerEmptyMessage>{t('operatorCheckinDetail.loadingScope')}</LedgerEmptyMessage>;
     }
     if (isEquipmentScoped && reportTemplates.length === 0) {
       return (
         <LedgerEmptyMessage>
-          No daily check-in reports are assigned to this equipment yet.
+          {t('operatorCheckinDetail.noAssignedReports')}
         </LedgerEmptyMessage>
       );
     }
     if (!selectedTemplateId) {
       return (
         <LedgerEmptyMessage>
-          Select a report template to review daily check-ins.
+          {t('operatorCheckinDetail.selectReportHelp')}
         </LedgerEmptyMessage>
       );
     }
     if (assignedEquipmentOptions.length === 0) {
       return (
         <LedgerEmptyMessage>
-          No equipment is assigned to {selectedTemplate?.name ?? 'this report template'} yet.
+          {t('operatorCheckinDetail.noAssignedEquipment', { name: selectedTemplate?.name ?? t('operatorCheckinDetail.thisReport') })}
         </LedgerEmptyMessage>
       );
     }
     if (selectedEquipmentIds.length === 0) {
       return (
         <LedgerEmptyMessage>
-          Select at least one equipment record to review submissions.
+          {t('operatorCheckinDetail.selectEquipmentHelp')}
         </LedgerEmptyMessage>
       );
     }
@@ -285,7 +288,7 @@ export function OperatorCheckinLedgerPanel({
     if (submissions.length === 0) {
       return (
         <LedgerEmptyMessage>
-          No operator check-ins for the selected date range, report template, and equipment scope.
+          {t('operatorCheckinDetail.noSubmissionsInScope')}
         </LedgerEmptyMessage>
       );
     }
@@ -297,13 +300,13 @@ export function OperatorCheckinLedgerPanel({
       {!isShowDeletedControlled && allowDeletedVisibilityToggle && (
         <div className="flex items-center justify-between gap-3 rounded-md border border-dashed px-3 py-2">
           <Label htmlFor="show-deleted-checkins-ledger" className="text-sm font-normal">
-            Show deleted check-ins
+            {t('operatorCheckinDetail.showDeleted')}
           </Label>
           <Switch
             id="show-deleted-checkins-ledger"
             checked={showDeletedCheckins}
             onCheckedChange={setShowDeletedCheckins}
-            aria-label="Show deleted check-ins"
+            aria-label={t('operatorCheckinDetail.showDeleted')}
           />
         </div>
       )}
@@ -316,7 +319,7 @@ export function OperatorCheckinLedgerPanel({
       >
       <div className="space-y-1.5">
         <Label id={TEMPLATE_LABEL_ID} htmlFor={TEMPLATE_SELECT_ID} className="text-xs">
-          Report template
+          {t('operatorCheckinDetail.reportTemplate')}
         </Label>
         <Select
           value={selectedTemplateId}
@@ -324,12 +327,12 @@ export function OperatorCheckinLedgerPanel({
           disabled={isTemplatesLoading || reportTemplates.length === 0}
         >
           <SelectTrigger id={TEMPLATE_SELECT_ID} aria-labelledby={TEMPLATE_LABEL_ID}>
-            <SelectValue placeholder="Select report template" />
+            <SelectValue placeholder={t('operatorCheckinDetail.selectReport')} />
           </SelectTrigger>
           <SelectContent>
             {reportTemplates.map((template) => (
               <SelectItem key={template.id} value={template.id}>
-                {template.is_active ? template.name : `${template.name} (deleted)`}
+                {template.is_active ? template.name : `${template.name} (${t('operatorCheckinDetail.deleted')})`}
               </SelectItem>
             ))}
           </SelectContent>
@@ -346,7 +349,7 @@ export function OperatorCheckinLedgerPanel({
 
       {!isEquipmentScoped && (
         <div className="space-y-1.5 sm:col-span-2 xl:col-span-1">
-          <Label className="text-xs">Equipment records</Label>
+          <Label className="text-xs">{t('operatorCheckinDetail.equipmentRecords')}</Label>
           <OperatorCheckinLedgerEquipmentSelector
             options={assignedEquipmentOptions}
             selectedEquipmentIds={selectedEquipmentIds}
@@ -386,7 +389,7 @@ export function OperatorCheckinLedgerPanel({
             onClick={() => setExportDialogOpen(true)}
           >
             <Download className="mr-2 h-4 w-4" aria-hidden />
-            Export
+            {t('operatorCheckinDetail.export')}
           </Button>
         }
       />
@@ -395,7 +398,7 @@ export function OperatorCheckinLedgerPanel({
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
         reportDateRangeLabel={reportDateRangeLabel}
-        templateName={selectedTemplate?.name ?? 'No report selected'}
+        templateName={selectedTemplate?.name ?? t('operatorCheckinDetail.noReport')}
         equipmentLabel={equipmentLabel}
         submissions={submissions}
         onExport={handleExport}

@@ -27,6 +27,10 @@ import {
   type PlaceholderRemap,
 } from './offlineQueuePlaceholders';
 import { collectImageRefIds } from './offlineQueueImageRefs';
+import { offlineQueueResources } from '@/i18n/offlineQueueResources';
+
+type OfflineCopyKey = keyof typeof offlineQueueResources.en.offlineQueue;
+type OfflineTranslator = (key: `offlineQueue.${OfflineCopyKey}`, params?: Record<string, string | number>) => string;
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -438,8 +442,12 @@ function buildCompactedQueue(state: OfflineQueueCompactionState): OfflineQueueIt
 export class OfflineQueueService {
   private storageKey: string;
 
-  constructor(userId: string, orgId: string) {
+  constructor(userId: string, orgId: string, private readonly translate?: OfflineTranslator) {
     this.storageKey = `${STORAGE_KEY_PREFIX}_${userId}_${orgId}`;
+  }
+
+  private copy(key: OfflineCopyKey): string {
+    return this.translate?.(`offlineQueue.${key}`) ?? offlineQueueResources.en.offlineQueue[key];
   }
 
   // ── Read operations ──────────────────────────────────────────────────────
@@ -506,8 +514,8 @@ export class OfflineQueueService {
     // Guard: binary / base64 data
     if (OfflineQueueService.containsBinaryData(serialized)) {
       logger.warn('Blocked offline queue item containing binary data');
-      toast.error('Cannot save offline', {
-        description: 'This item contains file data that cannot be saved locally.',
+      toast.error(this.copy('cannotSaveOffline'), {
+        description: this.copy('fileData'),
       });
       throw new OfflineQueuePayloadError('Payload contains binary data');
     }
@@ -515,8 +523,8 @@ export class OfflineQueueService {
     // Guard: single-item size
     if (sizeBytes > MAX_ITEM_SIZE_BYTES) {
       logger.warn(`Offline queue item too large: ${sizeBytes} bytes (limit: ${MAX_ITEM_SIZE_BYTES})`);
-      toast.error('Cannot save offline', {
-        description: 'This item is too large to save locally. Try again when online.',
+      toast.error(this.copy('cannotSaveOffline'), {
+        description: this.copy('tooLarge'),
       });
       throw new OfflineQueuePayloadError(`Payload exceeds ${MAX_ITEM_SIZE_BYTES / 1024}KB limit`);
     }
@@ -548,8 +556,8 @@ export class OfflineQueueService {
     const currentTotalSize = currentQueue.reduce((sum, qi) => sum + qi.payloadSizeBytes, 0);
     if (currentTotalSize + sizeBytes > MAX_QUEUE_SIZE_BYTES) {
       logger.warn('Offline queue storage budget exceeded');
-      toast.error('Offline queue full', {
-        description: 'Clear synced items or wait for connection to free space.',
+      toast.error(this.copy('queueFull'), {
+        description: this.copy('clearSpace'),
       });
       throw new OfflineQueuePayloadError('Queue storage budget exceeded');
     }
@@ -560,7 +568,7 @@ export class OfflineQueueService {
       const oldestPendingIdx = queue.findIndex(qi => qi.status === 'pending');
       if (oldestPendingIdx !== -1) {
         queue.splice(oldestPendingIdx, 1);
-        toast.warning('Oldest offline item removed to make room for new item.');
+        toast.warning(this.copy('oldestRemoved'));
       }
     }
 
@@ -772,8 +780,8 @@ export class OfflineQueueService {
     } catch (e) {
       if (e instanceof DOMException && e.name === 'QuotaExceededError') {
         logger.error('localStorage quota exceeded during offline queue write');
-        toast.error('Device storage full', {
-          description: 'Cannot save offline. Free storage and try again.',
+        toast.error(this.copy('storageFull'), {
+          description: this.copy('freeStorage'),
         });
         throw new OfflineQueuePayloadError('localStorage quota exceeded');
       }

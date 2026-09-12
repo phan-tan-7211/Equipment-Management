@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ensureElementFromPointMock } from '@vitest-harness/utils/test-utils';
 import MFASettings from './MFASettings';
+import { I18nProvider } from '@/i18n/I18nProvider';
 
 ensureElementFromPointMock();
 
@@ -59,6 +60,20 @@ describe('MFASettings', () => {
     mockOrgContext = {
       currentOrganization: { userRole: 'member' },
     };
+  });
+
+  it.each([
+    ['vi', 'Xác thực hai yếu tố', 'Thiết lập xác thực hai yếu tố'],
+    ['ko', '2단계 인증', '2단계 인증 설정'],
+  ])('renders MFA controls in %s', (language, title, setup) => {
+    window.localStorage.setItem('znteqr-language', language);
+    try {
+      render(<I18nProvider><MFASettings /></I18nProvider>);
+      expect(screen.getByText(title)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: setup })).toBeInTheDocument();
+    } finally {
+      window.localStorage.removeItem('znteqr-language');
+    }
   });
 
   it('shows "Disabled" badge when MFA is not enrolled', () => {

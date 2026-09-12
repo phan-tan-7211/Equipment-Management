@@ -39,7 +39,7 @@ async function renderNotFoundPage(userRole: 'admin' | null) {
     .getAttribute('href');
   const getStartedHref = screen.getByRole('link', { name: 'Get Started' }).getAttribute('href');
   const headingVisible = screen.getByRole('heading', { name: 'Page not found', level: 1 });
-  const missingPathVisible = screen.getByText('/this-is-not-a-route');
+  const missingPathVisible = screen.getByText(/we couldn't find the public equipqr page at \/this-is-not-a-route/i);
   await user.click(screen.getByRole('button', { name: /legal links/i }));
 
   return {

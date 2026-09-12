@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -14,6 +15,7 @@ export const SensitivePrivacySettings: React.FC<SensitivePrivacySettingsProps> =
   currentLimitSensitivePi = false,
   onUpdate,
 }) => {
+  const { t } = useI18n();
   const { user } = useAuth();
   const [limitSensitivePi, setLimitSensitivePi] = useState(currentLimitSensitivePi);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,12 +37,12 @@ export const SensitivePrivacySettings: React.FC<SensitivePrivacySettingsProps> =
 
       toast.success(
         newValue
-          ? 'GPS data collection has been disabled for your scans'
-          : 'GPS data collection has been re-enabled for your scans',
+          ? t('settingsForms.gpsDisabled')
+          : t('settingsForms.gpsEnabled'),
       );
     } catch (error) {
       console.error('Failed to update sensitive PI preference:', error);
-      toast.error('Failed to update privacy settings');
+      toast.error(t('settingsForms.sensitivePrivacyFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -49,8 +51,8 @@ export const SensitivePrivacySettings: React.FC<SensitivePrivacySettingsProps> =
   return (
     <SettingsToggleRow
       id="limit-sensitive-pi"
-      label="Disable GPS collection for my scans"
-      description="When enabled, your QR code scans will not capture GPS coordinates even if your organization has location collection turned on"
+      label={t('settingsForms.disableGps')}
+      description={t('settingsForms.disableGpsHint')}
       checked={limitSensitivePi}
       onCheckedChange={handleUpdate}
       loading={isLoading}

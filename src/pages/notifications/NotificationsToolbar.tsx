@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -48,6 +49,7 @@ const NotificationsToolbar: React.FC<NotificationsToolbarProps> = ({
   onFilterReadChange,
   onClearFilters,
 }) => {
+  const { t } = useI18n();
   const activeFilterCount = [
     filterType !== 'all',
     filterRead !== 'all',
@@ -63,17 +65,17 @@ const NotificationsToolbar: React.FC<NotificationsToolbarProps> = ({
         <div className="relative flex-1 max-w-70">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search notifications..."
+            placeholder={t('notificationPage.search')}
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="h-8 pl-8 text-sm bg-transparent"
-            aria-label="Search notifications"
+            aria-label={t('notificationPage.searchAria')}
           />
           {searchTerm && (
             <button
               onClick={() => onSearchChange('')}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
+              aria-label={t('notificationPage.clearSearch')}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -101,23 +103,22 @@ const NotificationsToolbar: React.FC<NotificationsToolbarProps> = ({
           aria-live="polite"
           aria-atomic="true"
         >
-          <span className="font-medium text-foreground">{resultCount}</span>
-          {' notifications'}
+          {t('notificationPage.count', { count: resultCount })}
         </span>
       </div>
 
       {/* Active filter badges row */}
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-1.5 px-1">
-          <span className="text-xs text-muted-foreground">Active:</span>
+          <span className="text-xs text-muted-foreground">{t('notificationPage.active')}</span>
 
           {filterType !== 'all' && (
             <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">
-              {typeLabels[filterType] ?? filterType}
+              {t(`notificationPage.${filterType}`) === `notificationPage.${filterType}` ? (typeLabels[filterType] ?? filterType) : t(`notificationPage.${filterType}`)}
               <button
                 onClick={() => onFilterTypeChange('all')}
                 className="ml-0.5 hover:text-foreground"
-                aria-label="Clear type filter"
+                aria-label={t('notificationPage.clearType')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -126,11 +127,11 @@ const NotificationsToolbar: React.FC<NotificationsToolbarProps> = ({
 
           {filterRead !== 'all' && (
             <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">
-              {filterRead === 'unread' ? 'Unread' : 'Read'}
+              {t(`notificationPage.${filterRead === 'unread' ? 'unread' : 'read'}`)}
               <button
                 onClick={() => onFilterReadChange('all')}
                 className="ml-0.5 hover:text-foreground"
-                aria-label="Clear read status filter"
+                aria-label={t('notificationPage.clearRead')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -143,7 +144,7 @@ const NotificationsToolbar: React.FC<NotificationsToolbarProps> = ({
             className="h-5 px-2 text-xs text-muted-foreground hover:text-foreground"
             onClick={onClearFilters}
           >
-            Clear all
+            {t('notificationPage.clearAll')}
           </Button>
         </div>
       )}

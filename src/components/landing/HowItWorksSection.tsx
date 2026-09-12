@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n/I18nProvider';
 import { Printer, ScanLine, FileCheck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import LandingReveal from './LandingReveal';
@@ -5,35 +6,33 @@ import LandingReveal from './LandingReveal';
 interface Step {
   number: number;
   icon: LucideIcon;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
 }
 
 const steps: Step[] = [
   {
     number: 1,
     icon: Printer,
-    title: 'Print & stick QR labels',
-    description:
-      'Generate labels in EquipQR and stick them on your machines. Takes minutes, not hours.',
+    titleKey: 'printTitle',
+    descriptionKey: 'printText',
   },
   {
     number: 2,
     icon: ScanLine,
-    title: 'Techs scan on the job',
-    description:
-      'Your crew scans with their phone to pull up history, log work, or start a new work order.',
+    titleKey: 'scanTitle',
+    descriptionKey: 'scanText',
   },
   {
     number: 3,
     icon: FileCheck,
-    title: 'Jobs close & invoices generate',
-    description:
-      'Completed work orders export to QuickBooks as draft invoices in one click.',
+    titleKey: 'closeTitle',
+    descriptionKey: 'closeText',
   },
 ];
 
 export default function HowItWorksSection() {
+  const { t } = useI18n();
   return (
     <section
       aria-labelledby="how-it-works-title"
@@ -44,14 +43,14 @@ export default function HowItWorksSection() {
           id="how-it-works-title"
           className="text-2xl sm:text-3xl font-bold text-foreground mb-10 text-center"
         >
-          How It Works
+          {t('landingSections.how.heading')}
         </h2>
 
         <ol
-          aria-label="How EquipQR works"
+          aria-label={t('landingSections.how.aria')}
           className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6"
         >
-          {steps.map(({ number, icon: Icon, title, description }, index) => (
+          {steps.map(({ number, icon: Icon, titleKey, descriptionKey }, index) => (
             <li key={number} className="list-none">
               <LandingReveal delayMs={index * 70}>
                 <div className="flex h-full flex-col items-center rounded-3xl border border-border/70 bg-background/70 px-5 py-6 text-center shadow-sm shadow-primary/5">
@@ -62,10 +61,10 @@ export default function HowItWorksSection() {
                     <Icon className="h-4 w-4 text-primary" aria-hidden />
                   </div>
                   <h3 className="mb-2 text-lg font-semibold text-foreground">
-                    {title}
+                    {t(`landingSections.how.${titleKey}`)}
                   </h3>
                   <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-                    {description}
+                    {t(`landingSections.how.${descriptionKey}`)}
                   </p>
                 </div>
               </LandingReveal>

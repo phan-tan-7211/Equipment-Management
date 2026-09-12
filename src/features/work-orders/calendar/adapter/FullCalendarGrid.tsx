@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
+import viLocale from '@fullcalendar/core/locales/vi';
+import koLocale from '@fullcalendar/core/locales/ko';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -7,6 +9,7 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Plus } from 'lu
 import { bindCalendarHover } from '@/features/work-orders/calendar/hover/bindCalendarHover';
 import '@/features/work-orders/calendar/hover/calendarHover.css';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n';
 import { calendarDayToIso, type CalendarDay } from '@/features/work-orders/calendar/dueDate';
 import type { CalendarIntent } from '@/features/work-orders/calendar/intent';
 import type { CalendarItem } from '@/features/work-orders/calendar/placement';
@@ -37,14 +40,14 @@ function daysEqual(a: CalendarDay, b: CalendarDay): boolean {
   return a.y === b.y && a.m === b.m && a.d === b.d;
 }
 
-function jumpLabel(range: CalendarRange, direction: 'previous' | 'next'): string {
+function jumpLabel(range: CalendarRange, direction: 'previous' | 'next', t: (key: string) => string): string {
   switch (range) {
     case 'month':
-      return direction === 'previous' ? 'Previous year' : 'Next year';
+      return t(direction === 'previous' ? 'workOrderCalendar.previousYear' : 'workOrderCalendar.nextYear');
     case 'week':
-      return direction === 'previous' ? 'Previous 4 weeks' : 'Next 4 weeks';
+      return t(direction === 'previous' ? 'workOrderCalendar.previousFourWeeks' : 'workOrderCalendar.nextFourWeeks');
     case 'day':
-      return direction === 'previous' ? 'Previous 7 days' : 'Next 7 days';
+      return t(direction === 'previous' ? 'workOrderCalendar.previousSevenDays' : 'workOrderCalendar.nextSevenDays');
     default: {
       const _never: never = range;
       return _never;
@@ -61,13 +64,14 @@ export function FullCalendarGrid({
   onVisibleAnchorChange,
   onMoreLinkDay,
 }: FullCalendarGridProps) {
+  const { language, t } = useI18n();
   const calendarRef = useRef<FullCalendar>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const cueRef = useRef<HTMLDivElement>(null);
   const [viewTitle, setViewTitle] = useState('');
   const [todayDisabled, setTodayDisabled] = useState(false);
   const events = items.map((item) => {
-    const event = toFullCalendarEvent(item);
+    const event = toFullCalendarEvent(item, t('workOrderCalendar.unscheduled'));
     return {
       ...event,
       classNames: [
@@ -111,7 +115,7 @@ export function FullCalendarGrid({
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            aria-label={jumpLabel(range, 'previous')}
+            aria-label={jumpLabel(range, 'previous', t)}
             onClick={() => onVisibleAnchorChange(shiftCalendarAnchor(range, anchor, -1))}
           >
             <ChevronsLeft className="h-4 w-4" />
@@ -121,7 +125,7 @@ export function FullCalendarGrid({
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            aria-label="Previous"
+            aria-label={t('workOrderCalendar.previous')}
             onClick={() => calendarRef.current?.getApi().prev()}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -137,14 +141,14 @@ export function FullCalendarGrid({
             disabled={todayDisabled}
             onClick={() => calendarRef.current?.getApi().today()}
           >
-            Today
+            {t('workOrderCalendar.today')}
           </Button>
           <Button
             type="button"
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            aria-label="Next"
+            aria-label={t('workOrderCalendar.next')}
             onClick={() => calendarRef.current?.getApi().next()}
           >
             <ChevronRight className="h-4 w-4" />
@@ -154,7 +158,7 @@ export function FullCalendarGrid({
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            aria-label={jumpLabel(range, 'next')}
+            aria-label={jumpLabel(range, 'next', t)}
             onClick={() => onVisibleAnchorChange(shiftCalendarAnchor(range, anchor, 1))}
           >
             <ChevronsRight className="h-4 w-4" />
@@ -164,6 +168,7 @@ export function FullCalendarGrid({
       <FullCalendar
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        locale={language === 'vi' ? viLocale : language === 'ko' ? koLocale : 'en'}
         initialView={rangeToFullCalendarView(range)}
         initialDate={calendarDayToIso(anchor)}
         timeZone="local"
@@ -174,7 +179,7 @@ export function FullCalendarGrid({
         selectable
         selectMirror
         dayMaxEvents
-        firstDay={localeFirstDay()}
+        firstDay={language === 'vi' ? 1 : language === 'ko' ? 0 : localeFirstDay()}
         headerToolbar={false}
         events={events}
         eventClassNames={(arg) => (arg.event.allDay ? ['eq-cal-chip'] : ['eq-cal-block'])}

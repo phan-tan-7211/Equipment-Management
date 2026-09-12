@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n/I18nProvider';
 import { useMemo, useState } from 'react';
 import {
   Dialog,
@@ -33,19 +34,19 @@ interface OperatorCheckinReportExportDialogProps {
   onExport: (options: OperatorCheckinReportExportOptions) => Promise<void>;
 }
 
-function describeIncludedSections(options: OperatorCheckinReportExportOptions): string {
+function describeIncludedSections(options: OperatorCheckinReportExportOptions, t: (key: string) => string): string {
   const parts: string[] = [];
-  if (options.includeOperatorFields) parts.push('operator fields');
-  if (options.includeEquipmentSnapshot) parts.push('equipment snapshot');
-  if (options.includeClientContext) parts.push('client context');
+  if (options.includeOperatorFields) parts.push(t('operatorCheckinDetail.operatorFields'));
+  if (options.includeEquipmentSnapshot) parts.push(t('operatorCheckinDetail.snapshot'));
+  if (options.includeClientContext) parts.push(t('operatorCheckinDetail.context'));
   if (options.includeChecklist) {
     parts.push(
       options.checklistMode === 'exceptions'
-        ? 'checklist exceptions only'
-        : 'full checklist',
+        ? t('operatorCheckinDetail.exceptions')
+        : t('operatorCheckinDetail.fullChecklist'),
     );
   }
-  return parts.length > 0 ? parts.join(', ') : 'summary only';
+  return parts.length > 0 ? parts.join(', ') : t('operatorCheckinDetail.summaryOnly');
 }
 
 export function OperatorCheckinReportExportDialog({
@@ -57,6 +58,7 @@ export function OperatorCheckinReportExportDialog({
   submissions,
   onExport,
 }: OperatorCheckinReportExportDialogProps) {
+  const { t } = useI18n();
   const [options, setOptions] = useState<OperatorCheckinReportExportOptions>(
     DEFAULT_COMPACT_EXPORT_OPTIONS,
   );
@@ -83,7 +85,7 @@ export function OperatorCheckinReportExportDialog({
       await onExport(options);
       onOpenChange(false);
     } catch (error) {
-      setExportError(error instanceof Error ? error.message : 'Export failed.');
+      setExportError(error instanceof Error ? error.message : t('operatorCheckinDetail.exportFailed'));
     } finally {
       setIsExporting(false);
     }
@@ -95,29 +97,29 @@ export function OperatorCheckinReportExportDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Export daily report
+            {t('operatorCheckinDetail.exportTitle')}
           </DialogTitle>
           <DialogDescription>
-            Download a compact review copy or a full audit export for the filtered submissions below.
+            {t('operatorCheckinDetail.exportIntro')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-2">
           <div className="rounded-lg border bg-muted/40 p-4 text-sm space-y-1">
-            <p><span className="font-medium">Date range:</span> {reportDateRangeLabel}</p>
-            <p><span className="font-medium">Report template:</span> {templateName}</p>
-            <p><span className="font-medium">Equipment:</span> {equipmentLabel}</p>
+            <p><span className="font-medium">{t('operatorCheckinDetail.dateRange')}</span> {reportDateRangeLabel}</p>
+            <p><span className="font-medium">{t('operatorCheckinDetail.reportTemplateLabel')}</span> {templateName}</p>
+            <p><span className="font-medium">{t('operatorCheckinDetail.equipmentLabel')}</span> {equipmentLabel}</p>
             <p>
-              <span className="font-medium">Submissions:</span> {submissions.length}
-              {' '}({completeCount} complete)
+              <span className="font-medium">{t('operatorCheckinDetail.submissionsLabel')}</span> {submissions.length}
+              {' '}({t('operatorCheckinDetail.completeCount', { count: completeCount })})
             </p>
             <p className="text-muted-foreground pt-1">
-              Includes: {describeIncludedSections(options)}
+              {t('operatorCheckinDetail.includes')} {describeIncludedSections(options, t)}
             </p>
           </div>
 
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Format</Label>
+            <Label className="text-sm font-medium">{t('operatorCheckinDetail.format')}</Label>
             <RadioGroup
               value={options.format}
               onValueChange={(value) => updateOptions({ format: value as OperatorCheckinReportFormat })}
@@ -132,14 +134,14 @@ export function OperatorCheckinReportExportDialog({
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="xlsx" id="export-format-xlsx" />
                 <Label htmlFor="export-format-xlsx" className="font-normal cursor-pointer">
-                  Excel workbook
+                  {t('operatorCheckinDetail.excelWorkbook')}
                 </Label>
               </div>
             </RadioGroup>
           </div>
 
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Detail preset</Label>
+            <Label className="text-sm font-medium">{t('operatorCheckinDetail.detailPreset')}</Label>
             <RadioGroup
               value={options.detailLevel}
               onValueChange={(value) => handlePresetChange(value as OperatorCheckinReportDetailLevel)}
@@ -149,10 +151,10 @@ export function OperatorCheckinReportExportDialog({
                 <RadioGroupItem value="compact" id="export-preset-compact" className="mt-1" />
                 <div>
                   <Label htmlFor="export-preset-compact" className="font-normal cursor-pointer">
-                    Compact review
+                    {t('operatorCheckinDetail.compactReview')}
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Paper-friendly summary with operator fields and checklist exceptions only.
+                    {t('operatorCheckinDetail.compactHelp')}
                   </p>
                 </div>
               </div>
@@ -160,10 +162,10 @@ export function OperatorCheckinReportExportDialog({
                 <RadioGroupItem value="full" id="export-preset-full" className="mt-1" />
                 <div>
                   <Label htmlFor="export-preset-full" className="font-normal cursor-pointer">
-                    Full audit detail
+                    {t('operatorCheckinDetail.fullAudit')}
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    All sections, all checklist items, and equipment/client context.
+                    {t('operatorCheckinDetail.fullAuditHelp')}
                   </p>
                 </div>
               </div>
@@ -174,8 +176,8 @@ export function OperatorCheckinReportExportDialog({
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Include sections</Label>
-              <Badge variant="secondary" className="text-[10px]">Optional</Badge>
+              <Label className="text-sm font-medium">{t('operatorCheckinDetail.includeSections')}</Label>
+              <Badge variant="secondary" className="text-[10px]">{t('operatorCheckinDetail.optional')}</Badge>
             </div>
 
             <div className="space-y-2">
@@ -187,7 +189,7 @@ export function OperatorCheckinReportExportDialog({
                     updateOptions({ includeOperatorFields: checked === true })}
                 />
                 <Label htmlFor="include-operator-fields" className="font-normal cursor-pointer">
-                  Operator-entered fields
+                  {t('operatorCheckinDetail.operatorEnteredFields')}
                 </Label>
               </div>
 
@@ -199,7 +201,7 @@ export function OperatorCheckinReportExportDialog({
                     updateOptions({ includeEquipmentSnapshot: checked === true })}
                 />
                 <Label htmlFor="include-equipment-snapshot" className="font-normal cursor-pointer">
-                  Equipment snapshot fields
+                  {t('operatorCheckinDetail.snapshotFields')}
                 </Label>
               </div>
 
@@ -211,7 +213,7 @@ export function OperatorCheckinReportExportDialog({
                     updateOptions({ includeClientContext: checked === true })}
                 />
                 <Label htmlFor="include-client-context" className="font-normal cursor-pointer">
-                  Client context (timestamp, timezone, GPS)
+                  {t('operatorCheckinDetail.contextFields')}
                 </Label>
               </div>
 
@@ -223,7 +225,7 @@ export function OperatorCheckinReportExportDialog({
                     updateOptions({ includeChecklist: checked === true })}
                 />
                 <Label htmlFor="include-checklist" className="font-normal cursor-pointer">
-                  Checklist results
+                  {t('operatorCheckinDetail.checklistResults')}
                 </Label>
               </div>
 
@@ -237,7 +239,7 @@ export function OperatorCheckinReportExportDialog({
                         updateOptions({ checklistMode: checked ? 'exceptions' : 'all' })}
                     />
                     <Label htmlFor="checklist-exceptions-only" className="font-normal cursor-pointer">
-                      Failures and notes only
+                      {t('operatorCheckinDetail.failuresOnly')}
                     </Label>
                   </div>
                   <div className="flex items-center gap-2">
@@ -248,7 +250,7 @@ export function OperatorCheckinReportExportDialog({
                         updateOptions({ includeNotes: checked === true })}
                     />
                     <Label htmlFor="include-notes" className="font-normal cursor-pointer">
-                      Include checklist notes
+                      {t('operatorCheckinDetail.includeNotes')}
                     </Label>
                   </div>
                 </div>
@@ -263,13 +265,13 @@ export function OperatorCheckinReportExportDialog({
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isExporting}>
-            Cancel
+            {t('operatorCheckinDetail.cancel')}
           </Button>
           <Button onClick={() => void handleExport()} disabled={isExporting || submissions.length === 0}>
             {isExporting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Exporting…
+                {t('operatorCheckinDetail.exporting')}
               </>
             ) : (
               <>
@@ -278,7 +280,7 @@ export function OperatorCheckinReportExportDialog({
                 ) : (
                   <FileText className="mr-2 h-4 w-4" />
                 )}
-                Download report
+                {t('operatorCheckinDetail.downloadReport')}
               </>
             )}
           </Button>

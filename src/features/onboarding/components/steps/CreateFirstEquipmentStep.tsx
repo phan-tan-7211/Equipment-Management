@@ -15,6 +15,7 @@ import { OfflineAwareWorkOrderService } from '@/services/offlineAwareService';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import TeamPickerWithCreate from '@/features/teams/components/TeamPickerWithCreate';
+import { useI18n } from '@/i18n';
 
 interface CreateFirstEquipmentStepProps {
   defaultTeamId?: string;
@@ -27,6 +28,7 @@ export const CreateFirstEquipmentStep: React.FC<CreateFirstEquipmentStepProps> =
   onEquipmentCreated,
   onBack,
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -43,11 +45,11 @@ export const CreateFirstEquipmentStep: React.FC<CreateFirstEquipmentStepProps> =
 
   const validate = () => {
     const next: Record<string, string> = {};
-    if (!teamId) next.team_id = 'Select or create a team';
-    if (!manufacturer.trim()) next.manufacturer = 'Manufacturer is required';
-    if (!model.trim()) next.model = 'Model is required';
-    if (!serialNumber.trim()) next.serial_number = 'Serial number is required';
-    if (!location.trim()) next.location = 'Location is required';
+    if (!teamId) next.team_id = t('productOnboarding.selectTeam');
+    if (!manufacturer.trim()) next.manufacturer = t('productOnboarding.manufacturerRequired');
+    if (!model.trim()) next.model = t('productOnboarding.modelRequired');
+    if (!serialNumber.trim()) next.serial_number = t('productOnboarding.serialRequired');
+    if (!location.trim()) next.location = t('productOnboarding.locationRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -78,8 +80,8 @@ export const CreateFirstEquipmentStep: React.FC<CreateFirstEquipmentStepProps> =
 
       if (result.queuedOffline) {
         toast({
-          title: 'Saved offline',
-          description: 'Equipment will be created when you reconnect.',
+          title: t('productOnboarding.offlineSaved'),
+          description: t('productOnboarding.offlineDescription'),
           variant: 'destructive',
         });
         return;
@@ -96,8 +98,8 @@ export const CreateFirstEquipmentStep: React.FC<CreateFirstEquipmentStepProps> =
     } catch (error) {
       console.error('Create first equipment failed:', error);
       toast({
-        title: 'Could not create equipment',
-        description: 'Please try again.',
+        title: t('productOnboarding.equipmentCreateFailed'),
+        description: t('productOnboarding.tryAgain'),
         variant: 'destructive',
       });
     } finally {
@@ -118,7 +120,7 @@ export const CreateFirstEquipmentStep: React.FC<CreateFirstEquipmentStepProps> =
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="onboarding-manufacturer">Manufacturer *</Label>
+          <Label htmlFor="onboarding-manufacturer">{t('productOnboarding.manufacturer')}</Label>
           <Input
             id="onboarding-manufacturer"
             value={manufacturer}
@@ -129,7 +131,7 @@ export const CreateFirstEquipmentStep: React.FC<CreateFirstEquipmentStepProps> =
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="onboarding-model">Model *</Label>
+          <Label htmlFor="onboarding-model">{t('productOnboarding.model')}</Label>
           <Input
             id="onboarding-model"
             value={model}
@@ -138,7 +140,7 @@ export const CreateFirstEquipmentStep: React.FC<CreateFirstEquipmentStepProps> =
           {errors.model && <p className="text-sm text-destructive">{errors.model}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="onboarding-serial">Serial Number *</Label>
+          <Label htmlFor="onboarding-serial">{t('productOnboarding.serial')}</Label>
           <Input
             id="onboarding-serial"
             value={serialNumber}
@@ -149,25 +151,25 @@ export const CreateFirstEquipmentStep: React.FC<CreateFirstEquipmentStepProps> =
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="onboarding-location">Location *</Label>
+          <Label htmlFor="onboarding-location">{t('productOnboarding.location')}</Label>
           <Input
             id="onboarding-location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="Yard, job site, or address"
+            placeholder={t('productOnboarding.locationPlaceholder')}
           />
           {errors.location && <p className="text-sm text-destructive">{errors.location}</p>}
         </div>
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="onboarding-status">Status</Label>
+          <Label htmlFor="onboarding-status">{t('productOnboarding.status')}</Label>
           <Select value={status} onValueChange={(v: 'active' | 'maintenance' | 'inactive') => setStatus(v)}>
             <SelectTrigger id="onboarding-status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="maintenance">Maintenance</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="active">{t('productOnboarding.active')}</SelectItem>
+              <SelectItem value="maintenance">{t('productOnboarding.maintenance')}</SelectItem>
+              <SelectItem value="inactive">{t('productOnboarding.inactive')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -175,10 +177,10 @@ export const CreateFirstEquipmentStep: React.FC<CreateFirstEquipmentStepProps> =
 
       <div className="flex justify-between">
         <Button type="button" variant="outline" onClick={onBack}>
-          Back
+          {t('productOnboarding.back')}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating equipment...' : 'Continue'}
+          {isSubmitting ? t('productOnboarding.creatingEquipment') : t('productOnboarding.continue')}
         </Button>
       </div>
     </form>

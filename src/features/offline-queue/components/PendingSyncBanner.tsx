@@ -19,8 +19,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { WifiOff, Wifi, RefreshCw, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import { useOfflineQueue } from '@/contexts/OfflineQueueContext';
+import { useOfflineQueueCopy } from '../hooks/useOfflineQueueCopy';
 
 export const PendingSyncBanner: React.FC = () => {
+  const t = useOfflineQueueCopy();
   const {
     pendingCount,
     failedCount,
@@ -44,9 +46,9 @@ export const PendingSyncBanner: React.FC = () => {
       <BannerWrapper variant="info">
         <Loader2 className="h-4 w-4 animate-spin shrink-0" />
         <div className="flex-1 min-w-0">
-          <AlertTitle className="text-sm font-medium">Syncing</AlertTitle>
+          <AlertTitle className="text-sm font-medium">{t('offlineQueue.syncing')}</AlertTitle>
           <AlertDescription className="text-xs">
-            Syncing {pendingCount} offline item{pendingCount !== 1 ? 's' : ''}...
+            {t(pendingCount === 1 ? 'offlineQueue.syncingItem' : 'offlineQueue.syncingItems', { count: pendingCount })}
           </AlertDescription>
         </div>
       </BannerWrapper>
@@ -59,10 +61,9 @@ export const PendingSyncBanner: React.FC = () => {
       <BannerWrapper variant="warning">
         <WifiOff className="h-4 w-4 shrink-0" />
         <div className="flex-1 min-w-0">
-          <AlertTitle className="text-sm font-medium">You are offline</AlertTitle>
+          <AlertTitle className="text-sm font-medium">{t('offlineQueue.offline')}</AlertTitle>
           <AlertDescription className="text-xs">
-            {totalActionable} item{totalActionable !== 1 ? 's' : ''} saved locally.
-            They will sync automatically when your connection returns.
+            {t(totalActionable === 1 ? 'offlineQueue.savedLocallyOne' : 'offlineQueue.savedLocally', { count: totalActionable })}
           </AlertDescription>
         </div>
       </BannerWrapper>
@@ -76,7 +77,7 @@ export const PendingSyncBanner: React.FC = () => {
         <WifiOff className="h-4 w-4 shrink-0" />
         <div className="flex-1 min-w-0">
           <AlertDescription className="text-xs">
-            You are currently offline. Changes will be saved locally.
+            {t('offlineQueue.offlineEmpty')}
           </AlertDescription>
         </div>
       </BannerWrapper>
@@ -89,10 +90,10 @@ export const PendingSyncBanner: React.FC = () => {
       <BannerWrapper variant="destructive">
         <AlertTriangle className="h-4 w-4 shrink-0" />
         <div className="flex-1 min-w-0">
-          <AlertTitle className="text-sm font-medium">Sync issue</AlertTitle>
+          <AlertTitle className="text-sm font-medium">{t('offlineQueue.syncIssue')}</AlertTitle>
           <AlertDescription className="text-xs">
-            {failedCount} item{failedCount !== 1 ? 's' : ''} failed to sync after retries.
-            {pendingCount > 0 && ` ${pendingCount} more pending.`}
+            {t(failedCount === 1 ? 'offlineQueue.failedItem' : 'offlineQueue.failedItems', { count: failedCount })}
+            {pendingCount > 0 && t('offlineQueue.morePending', { count: pendingCount })}
           </AlertDescription>
         </div>
         <div className="flex gap-2 shrink-0">
@@ -103,7 +104,7 @@ export const PendingSyncBanner: React.FC = () => {
             onClick={() => retryFailed()}
           >
             <RefreshCw className="h-3 w-3 mr-1" />
-            Retry
+            {t('offlineQueue.retry')}
           </Button>
           <Button
             variant="ghost"
@@ -111,7 +112,7 @@ export const PendingSyncBanner: React.FC = () => {
             className="h-7 text-xs"
             onClick={clearQueue}
           >
-            Dismiss
+            {t('offlineQueue.dismiss')}
           </Button>
         </div>
       </BannerWrapper>
@@ -124,9 +125,9 @@ export const PendingSyncBanner: React.FC = () => {
       <BannerWrapper variant="success">
         <Wifi className="h-4 w-4 shrink-0" />
         <div className="flex-1 min-w-0">
-          <AlertTitle className="text-sm font-medium">Back online</AlertTitle>
+          <AlertTitle className="text-sm font-medium">{t('offlineQueue.backOnline')}</AlertTitle>
           <AlertDescription className="text-xs">
-            {pendingCount} item{pendingCount !== 1 ? 's' : ''} pending sync.
+            {t(pendingCount === 1 ? 'offlineQueue.pendingItem' : 'offlineQueue.pendingItems', { count: pendingCount })}
           </AlertDescription>
         </div>
         <Button
@@ -136,7 +137,7 @@ export const PendingSyncBanner: React.FC = () => {
           onClick={() => syncNow()}
         >
           <CheckCircle className="h-3 w-3 mr-1" />
-          Sync Now
+          {t('offlineQueue.syncNow')}
         </Button>
       </BannerWrapper>
     );
@@ -169,4 +170,3 @@ const BannerWrapper: React.FC<{
     {children}
   </Alert>
 );
-

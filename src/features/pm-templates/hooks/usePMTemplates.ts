@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useI18n } from '@/i18n/I18nProvider';
 import { pmChecklistTemplatesService, PMTemplate, PMTemplateSummary, templateToSummary } from '@/features/pm-templates/services/pmChecklistTemplatesService';
 import { PMChecklistItem } from '@/features/pm-templates/services/preventativeMaintenanceService';
 import { queryKeys } from '@/lib/queryKeys';
@@ -58,6 +59,7 @@ export const usePMTemplate = (templateId: string) => {
 
 // Mutation hook for creating a new template
 export const useCreatePMTemplate = () => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
@@ -90,14 +92,14 @@ export const useCreatePMTemplate = () => {
           queryKey: queryKeys.pmTemplates.list(currentOrganization.id) 
         });
       }
-      toast.success('Template created successfully');
+      toast.success(t('pmTemplateMutation.created'));
     },
     onError: (error) => {
       console.error('Error creating template:', error);
       if (error.message?.includes('insufficient privileges') || error.message?.includes('permission')) {
-        toast.error('Custom PM templates require user licenses. Please upgrade your plan.');
+        toast.error(t('pmTemplateMutation.licenseRequired'));
       } else {
-        toast.error('Failed to create template');
+        toast.error(t('pmTemplateMutation.createFailed'));
       }
     }
   });
@@ -105,6 +107,7 @@ export const useCreatePMTemplate = () => {
 
 // Mutation hook for updating a template
 export const useUpdatePMTemplate = () => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
@@ -141,14 +144,14 @@ export const useUpdatePMTemplate = () => {
       queryClient.invalidateQueries({ 
         queryKey: queryKeys.pmTemplates.byId(updatedTemplate.id) 
       });
-      toast.success('Template updated successfully');
+      toast.success(t('pmTemplateMutation.updated'));
     },
     onError: (error) => {
       console.error('Error updating template:', error);
       if (error.message?.includes('insufficient privileges') || error.message?.includes('permission')) {
-        toast.error('Custom PM templates require user licenses. Please upgrade your plan.');
+        toast.error(t('pmTemplateMutation.licenseRequired'));
       } else {
-        toast.error('Failed to update template');
+        toast.error(t('pmTemplateMutation.updateFailed'));
       }
     }
   });
@@ -156,6 +159,7 @@ export const useUpdatePMTemplate = () => {
 
 // Mutation hook for deleting a template
 export const useDeletePMTemplate = () => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { currentOrganization } = useOrganization();
 
@@ -167,15 +171,15 @@ export const useDeletePMTemplate = () => {
           queryKey: queryKeys.pmTemplates.list(currentOrganization.id) 
         });
       }
-      toast.success('Template deleted successfully');
+      toast.success(t('pmTemplateMutation.deleted'));
     },
     onError: (error: unknown) => {
       console.error('Error deleting template:', error);
       const errorMessage = error instanceof Error ? error.message : '';
       if (errorMessage.includes('protected')) {
-        toast.error('Cannot delete protected template');
+        toast.error(t('pmTemplateMutation.protectedDelete'));
       } else {
-        toast.error('Failed to delete template');
+        toast.error(t('pmTemplateMutation.deleteFailed'));
       }
     }
   });
@@ -183,6 +187,7 @@ export const useDeletePMTemplate = () => {
 
 // Mutation hook for cloning a template
 export const useClonePMTemplate = () => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { currentOrganization } = useOrganization();
 
@@ -219,7 +224,7 @@ export const useClonePMTemplate = () => {
             );
           } catch (policyError) {
             console.error('Error syncing cloned template PM schedule policy:', policyError);
-            toast.error('Template cloned, but PM schedule policy was not synced');
+            toast.error(t('pmTemplateMutation.clonePolicyFailed'));
           }
         }
         queryClient.invalidateQueries({ 
@@ -232,14 +237,14 @@ export const useClonePMTemplate = () => {
           ),
         });
       }
-      toast.success('Template cloned successfully');
+      toast.success(t('pmTemplateMutation.cloned'));
     },
     onError: (error) => {
       console.error('Error cloning template:', error);
       if (error.message?.includes('insufficient privileges') || error.message?.includes('permission')) {
-        toast.error('Custom PM templates require user licenses. Please upgrade your plan.');
+        toast.error(t('pmTemplateMutation.licenseRequired'));
       } else {
-        toast.error('Failed to clone template');
+        toast.error(t('pmTemplateMutation.cloneFailed'));
       }
     }
   });

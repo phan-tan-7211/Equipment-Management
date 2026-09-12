@@ -24,6 +24,7 @@ import {
 vi.mock('@/contexts/OrganizationContext');
 vi.mock('@/hooks/useAuth');
 vi.mock('@/features/pm-templates/services/pmChecklistTemplatesService');
+vi.mock('@/features/pm-templates/services/pmIntervalPolicyService');
 vi.mock('sonner');
 
 const mockTemplates: PMTemplate[] = [
@@ -133,6 +134,8 @@ describe('usePMTemplates', () => {
     vi.mocked(pmChecklistTemplatesService.updateTemplate).mockResolvedValue(mockTemplates[0]);
     vi.mocked(pmChecklistTemplatesService.deleteTemplate).mockResolvedValue(undefined);
     vi.mocked(pmChecklistTemplatesService.cloneTemplate).mockResolvedValue(mockTemplates[1]);
+    const { pmIntervalPolicyService } = await import('@/features/pm-templates/services/pmIntervalPolicyService');
+    vi.mocked(pmIntervalPolicyService.upsertPolicy).mockResolvedValue({} as Awaited<ReturnType<typeof pmIntervalPolicyService.upsertPolicy>>);
     vi.mocked(templateToSummary).mockImplementation((template) =>
       mockTemplateSummaries.find(s => s.id === template.id)!
     );
@@ -380,6 +383,24 @@ describe('usePMTemplates', () => {
   });
 
   describe('useClonePMTemplate', () => {
+    it('warns when the cloned schedule policy cannot be synchronized', async () => {
+      const { pmChecklistTemplatesService } = await import('@/features/pm-templates/services/pmChecklistTemplatesService');
+      const { pmIntervalPolicyService } = await import('@/features/pm-templates/services/pmIntervalPolicyService');
+      const { toast } = await import('sonner');
+      vi.mocked(pmChecklistTemplatesService.cloneTemplate).mockResolvedValue({
+        ...mockTemplates[1], interval_value: 30, interval_type: 'days',
+      });
+      vi.mocked(pmIntervalPolicyService.upsertPolicy).mockRejectedValue(new Error('Policy unavailable'));
+
+      const { result } = renderHook(() => useClonePMTemplate(), { wrapper });
+      await act(async () => {
+        await result.current.mutateAsync({ sourceId: 'template-1' });
+      });
+
+      expect(toast.error).toHaveBeenCalledWith('Template cloned, but PM schedule policy was not synced');
+      expect(toast.success).toHaveBeenCalledWith('Template cloned successfully');
+    });
+
     it('clones template successfully', async () => {
       const { result } = renderHook(() => useClonePMTemplate(), { wrapper });
 

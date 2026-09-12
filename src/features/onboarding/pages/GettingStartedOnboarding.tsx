@@ -16,8 +16,9 @@ import {
 import { useEquipmentList } from '@/features/equipment/hooks/useEquipment';
 import { useTeams } from '@/features/teams/hooks/useTeams';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
-const STEP_LABELS = ['Create your first team', 'Add your first equipment', 'Affix the QR code'] as const;
+const STEP_KEYS = ['teamStep', 'equipmentStep', 'qrStep'] as const;
 
 function resolveInitialStep(teamsCount: number, equipmentCount: number): number {
   if (teamsCount === 0) {
@@ -30,7 +31,8 @@ function resolveInitialStep(teamsCount: number, equipmentCount: number): number 
 }
 
 const GettingStartedOnboarding = () => {
-  useDocumentTitle('Getting Started');
+  const { t } = useI18n();
+  useDocumentTitle(t('productOnboarding.pageTitle'));
   const navigate = useNavigate();
   const { toast } = useAppToast();
   const { organizationId } = useOrganization();
@@ -102,20 +104,20 @@ const GettingStartedOnboarding = () => {
     try {
       await completeOnboarding.mutateAsync();
       toast({
-        title: 'Setup complete',
-        description: 'Your organization is ready. Scan the QR code you printed to try it in the field.',
+        title: t('productOnboarding.setupComplete'),
+        description: t('productOnboarding.setupCompleteDescription'),
         variant: 'success',
       });
       navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('Complete onboarding failed:', error);
       toast({
-        title: 'Could not finish setup',
-        description: 'Please try again.',
+        title: t('productOnboarding.finishFailed'),
+        description: t('productOnboarding.tryAgain'),
         variant: 'destructive',
       });
     }
-  }, [completeOnboarding, navigate, toast]);
+  }, [completeOnboarding, navigate, toast, t]);
 
   const statusPending = isPending || isLoading || (!isFetched && !isError);
 
@@ -124,7 +126,7 @@ const GettingStartedOnboarding = () => {
       <div className="flex min-h-[50vh] items-center justify-center">
         <Loader2
           className="h-8 w-8 animate-spin text-muted-foreground"
-          aria-label="Loading onboarding"
+          aria-label={t('productOnboarding.loading')}
         />
       </div>
     );
@@ -137,18 +139,18 @@ const GettingStartedOnboarding = () => {
   return (
     <Page maxWidth="2xl" padding="responsive" data-testid="getting-started-onboarding">
       <PageHeader
-        title="Welcome to EquipQR"
-        description="Complete these steps to connect your equipment to the field."
+        title={t('productOnboarding.welcome')}
+        description={t('productOnboarding.description')}
       />
 
       <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        {STEP_LABELS.map((label, index) => {
+        {STEP_KEYS.map((key, index) => {
           const stepNumber = index + 1;
           const isActive = step === stepNumber;
           const isComplete = step > stepNumber;
           return (
             <div
-              key={label}
+              key={key}
               className={cn(
                 'flex items-center gap-2 text-sm',
                 isActive && 'font-medium text-foreground',
@@ -165,7 +167,7 @@ const GettingStartedOnboarding = () => {
               >
                 {stepNumber}
               </span>
-              <span>{label}</span>
+              <span>{t(`productOnboarding.${key}`)}</span>
             </div>
           );
         })}

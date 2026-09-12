@@ -1,35 +1,37 @@
+import { useI18n } from '@/i18n/I18nProvider';
 import { History, ScanLine, Receipt, UserCheck, KeyRound } from 'lucide-react';
 import LandingReveal from './LandingReveal';
 
 const bullets = [
   {
     icon: History,
-    title: 'One scan, full history',
-    text: 'Any tech can pull up a machine\u2019s complete service record from their phone. No calling the office.',
+    titleKey: 'historyTitle',
+    textKey: 'historyText',
   },
   {
     icon: ScanLine,
-    title: 'Customers request work without calling you',
-    text: 'They scan the QR on their machine, submit a job request, and it lands in your queue automatically.',
+    titleKey: 'requestTitle',
+    textKey: 'requestText',
   },
   {
     icon: Receipt,
-    title: 'Finished job \u2192 QuickBooks invoice in one click',
-    text: 'Stop re-entering billable hours into your accounting software.',
+    titleKey: 'invoiceTitle',
+    textKey: 'invoiceText',
   },
   {
     icon: UserCheck,
-    title: 'You always know who touched what',
-    text: 'Every scan is logged with name, time, and location. No more \u201CI don\u2019t know who worked on it last.\u201D',
+    titleKey: 'auditTitle',
+    textKey: 'auditText',
   },
   {
     icon: KeyRound,
-    title: 'Your team signs in with Google',
-    text: 'No new passwords to forget. They use the same login they already have.',
+    titleKey: 'googleTitle',
+    textKey: 'googleText',
   },
 ];
 
 export default function WhyDifferentSection() {
+  const { t } = useI18n();
   return (
     <section
       aria-labelledby="why-different-title"
@@ -40,11 +42,11 @@ export default function WhyDifferentSection() {
           id="why-different-title"
           className="text-2xl sm:text-3xl font-semibold text-foreground mb-6 text-center"
         >
-          Why EquipQR is Different
+          {t('landingSections.why.heading')}
         </h2>
         <ul className="mx-auto max-w-4xl space-y-4">
-          {bullets.map(({ icon: Icon, title, text }, index) => (
-            <li key={title} className="list-none">
+          {bullets.map(({ icon: Icon, titleKey, textKey }, index) => (
+            <li key={titleKey} className="list-none">
               <LandingReveal delayMs={index * 60}>
                 <div className="flex min-w-0 items-start gap-4 rounded-2xl border border-border/70 bg-background/60 px-4 py-4 text-left shadow-sm shadow-primary/5">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 text-primary shadow-sm shadow-primary/10">
@@ -52,10 +54,10 @@ export default function WhyDifferentSection() {
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-base font-semibold text-foreground sm:text-lg">
-                      {title}
+                      {t(`landingSections.why.${titleKey}`)}
                     </h3>
                     <p className="mt-1 text-sm leading-relaxed text-muted-foreground wrap-break-word sm:text-base">
-                      {text}
+                      {t(`landingSections.why.${textKey}`)}
                     </p>
                   </div>
                 </div>

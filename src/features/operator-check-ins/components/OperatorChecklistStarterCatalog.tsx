@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 import { ChevronDown, ChevronRight, Gauge, Sparkles, Truck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ export function OperatorChecklistStarterCatalog({
   isCloning,
   onClone,
 }: OperatorChecklistStarterCatalogProps) {
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(() =>
     resolveInitialExpanded(organizationId, hasExistingTemplates),
   );
@@ -78,13 +80,13 @@ export function OperatorChecklistStarterCatalog({
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <Sparkles className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                  <CardTitle className="text-base">Starter Template Catalog</CardTitle>
+                  <CardTitle className="text-base">{t('operatorCheckinDetail.starterTitle')}</CardTitle>
                   <Badge variant="secondary" className="font-normal">
-                    {starterCount} available
+                    {t('operatorCheckinDetail.starterAvailable', { count: starterCount })}
                   </Badge>
                 </div>
                 <CardDescription>
-                  Clone a ready-made checklist to get started quickly.
+                  {t('operatorCheckinDetail.starterHelp')}
                 </CardDescription>
               </div>
               {expanded ? (
@@ -113,9 +115,11 @@ export function OperatorChecklistStarterCatalog({
                         {resolveStarterIcon(starter.icon)}
                       </div>
                       <div className="min-w-0 space-y-1">
-                        <CardTitle className="text-base leading-tight">{starter.name}</CardTitle>
+                        <CardTitle className="text-base leading-tight">
+                          {t(starter.id === 'starter-odometer-log' ? 'operatorCheckinDetail.odometerName' : 'operatorCheckinDetail.dvirName')}
+                        </CardTitle>
                         <CardDescription className="text-xs leading-snug">
-                          {starter.description}
+                          {t(starter.id === 'starter-odometer-log' ? 'operatorCheckinDetail.odometerDescription' : 'operatorCheckinDetail.dvirDescription')}
                         </CardDescription>
                       </div>
                     </div>
@@ -123,12 +127,10 @@ export function OperatorChecklistStarterCatalog({
                   <CardContent className="mt-auto flex flex-col gap-3 pt-0">
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="secondary" className="font-normal">
-                        {starter.templateData.dataFields.length} data field
-                        {starter.templateData.dataFields.length === 1 ? '' : 's'}
+                        {t('operatorCheckinDetail.starterFields', { count: starter.templateData.dataFields.length })}
                       </Badge>
                       <Badge variant="outline" className="font-normal">
-                        {starter.templateData.checklistItems.length} checklist item
-                        {starter.templateData.checklistItems.length === 1 ? '' : 's'}
+                        {t('operatorCheckinDetail.starterItems', { count: starter.templateData.checklistItems.length })}
                       </Badge>
                     </div>
                     <Button
@@ -139,7 +141,7 @@ export function OperatorChecklistStarterCatalog({
                       disabled={isCloning}
                       onClick={() => onClone(starter.id)}
                     >
-                      {cloningStarterId === starter.id ? 'Cloning…' : 'Clone template'}
+                      {cloningStarterId === starter.id ? t('operatorCheckinDetail.cloning') : t('operatorCheckinDetail.clone')}
                     </Button>
                   </CardContent>
                 </Card>

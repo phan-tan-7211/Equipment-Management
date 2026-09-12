@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -29,6 +30,7 @@ import DeleteAccountDialog from '@/components/settings/DeleteAccountDialog';
 
 
 const SettingsContent = () => {
+  const { t } = useI18n();
   const { resetSettings } = useSettings();
   const { user } = useAuth();
   const { currentUser } = useUser();
@@ -58,7 +60,7 @@ const SettingsContent = () => {
 
   const handleResetSettings = () => {
     resetSettings();
-    appToast.success({ description: 'Settings have been reset to default values' });
+    appToast.success({ description: t('settingsPage.resetSuccess') });
   };
 
   const initials = userDisplayInitials(currentUser?.name);
@@ -70,9 +72,9 @@ const SettingsContent = () => {
     <div className="space-y-6">
       {/* Page header with user identity */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('settingsPage.title')}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Manage your account preferences and application settings.
+          {t('settingsPage.description')}
         </p>
         {currentUser && (
           <div className="flex items-center gap-3 mt-3">
@@ -99,9 +101,9 @@ const SettingsContent = () => {
           <section id="profile" className="pb-8 scroll-mt-20">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
               <div className="pt-0.5">
-                <h2 className="text-sm font-semibold">Profile</h2>
+                <h2 className="text-sm font-semibold">{t('settingsPage.profile')}</h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Your display name, avatar, and account email
+                  {t('settingsPage.profileDescription')}
                 </p>
               </div>
               <div className="md:col-span-2 space-y-5">
@@ -114,9 +116,9 @@ const SettingsContent = () => {
           <section id="personalization" className="py-8 scroll-mt-20">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
               <div className="pt-0.5">
-                <h2 className="text-sm font-semibold">Personalization</h2>
+                <h2 className="text-sm font-semibold">{t('settingsPage.personalization')}</h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Theme, timezone, and date format preferences
+                  {t('settingsPage.personalizationDescription')}
                 </p>
               </div>
               <div className="md:col-span-2 space-y-5">
@@ -129,9 +131,9 @@ const SettingsContent = () => {
           <section id="notifications" className="py-8 scroll-mt-20">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
               <div className="pt-0.5">
-                <h2 className="text-sm font-semibold">Notifications</h2>
+                <h2 className="text-sm font-semibold">{t('settingsPage.notifications')}</h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Configure work order notification preferences per team
+                  {t('settingsPage.notificationsDescription')}
                 </p>
               </div>
               <div className="md:col-span-2">
@@ -144,9 +146,9 @@ const SettingsContent = () => {
           <section id="privacy" className="py-8 scroll-mt-20">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
               <div className="pt-0.5">
-                <h2 className="text-sm font-semibold">Privacy</h2>
+                <h2 className="text-sm font-semibold">{t('settingsPage.privacy')}</h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Control your email visibility and data collection preferences
+                  {t('settingsPage.privacyDescription')}
                 </p>
               </div>
               <div className="md:col-span-2 space-y-4">
@@ -163,21 +165,21 @@ const SettingsContent = () => {
                 {/* Privacy Rights */}
                 <div className="pt-2 space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    You can exercise your privacy rights or learn more about our data practices.
+                    {t('settingsPage.privacyRights')}
                   </p>
                   <div className="flex flex-col sm:flex-row flex-wrap gap-2">
                     <Button variant="outline" size="sm" asChild>
-                      <Link to="/privacy-request">Submit Privacy Request</Link>
+                      <Link to="/privacy-request">{t('settingsPage.submitRequest')}</Link>
                     </Button>
                     <Button variant="ghost" size="sm" asChild>
                       <Link to="/privacy-policy">
                         <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                        View Privacy Policy
+                        {t('settingsPage.viewPolicy')}
                       </Link>
                     </Button>
                     {canManageDsr ? (
                       <Button variant="ghost" size="sm" asChild>
-                        <Link to="/dashboard/dsr">DSR Cockpit</Link>
+                        <Link to="/dashboard/dsr">{t('settingsPage.dsrCockpit')}</Link>
                       </Button>
                     ) : null}
                   </div>
@@ -190,9 +192,9 @@ const SettingsContent = () => {
           <section id="security" className="py-8 scroll-mt-20">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
               <div className="pt-0.5">
-                <h2 className="text-sm font-semibold">Security</h2>
+                <h2 className="text-sm font-semibold">{t('settingsPage.security')}</h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Monitor your session and account security status
+                  {t('settingsPage.securityDescription')}
                 </p>
               </div>
               <div className="md:col-span-2 space-y-4">
@@ -209,14 +211,14 @@ const SettingsContent = () => {
               <div className="bg-destructive/5 border-b border-destructive/30 px-4 py-3">
                 <h3 className="text-sm font-semibold text-destructive flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" />
-                  Danger Zone
+                  {t('settingsPage.dangerZone')}
                 </h3>
               </div>
               <div className="px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">Reset All Settings</p>
+                  <p className="text-sm font-medium">{t('settingsPage.resetTitle')}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Reset all settings to their default values. This action cannot be undone.
+                    {t('settingsPage.resetDescription')}
                   </p>
                 </div>
                 <div className="shrink-0">
@@ -226,16 +228,15 @@ const SettingsContent = () => {
                     onClick={handleResetSettings}
                     className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground w-full sm:w-auto"
                   >
-                    Reset
+                    {t('settingsPage.resetButton')}
                   </Button>
                 </div>
               </div>
               <div className="border-t border-destructive/30 px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">Delete Account</p>
+                  <p className="text-sm font-medium">{t('settingsPage.deleteTitle')}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Permanently delete your EquipQR login and personal data. Organization work history
-                    you contributed stays with those organizations.
+                    {t('settingsPage.deleteDescription')}
                   </p>
                 </div>
                 <div className="shrink-0">
@@ -245,7 +246,7 @@ const SettingsContent = () => {
                     onClick={() => setDeleteAccountOpen(true)}
                     className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground w-full sm:w-auto"
                   >
-                    Delete account
+                    {t('settingsPage.deleteButton')}
                   </Button>
                 </div>
               </div>

@@ -193,16 +193,17 @@ export function buildLedgerSubmissionFilters(
 export function buildEquipmentScopeLabel(
   options: LedgerAssignedEquipmentOption[],
   selectedEquipmentIds: string[],
+  translate?: (key: string, params?: Record<string, string | number>) => string,
 ): string {
-  if (selectedEquipmentIds.length === 0) return 'No equipment selected';
+  if (selectedEquipmentIds.length === 0) return translate?.('operatorCheckinDetail.noEquipmentSelected') ?? 'No equipment selected';
   if (selectedEquipmentIds.length === options.length && options.length > 0) {
-    return `All assigned equipment (${options.length})`;
+    return translate?.('operatorCheckinDetail.allAssigned', { count: options.length }) ?? `All assigned equipment (${options.length})`;
   }
   if (selectedEquipmentIds.length === 1) {
     const match = options.find((option) => option.equipmentId === selectedEquipmentIds[0]);
-    return match?.name ?? '1 selected equipment record';
+    return match?.name ?? translate?.('operatorCheckinDetail.oneEquipment') ?? '1 selected equipment record';
   }
-  return `${selectedEquipmentIds.length} selected equipment records`;
+  return translate?.('operatorCheckinDetail.selectedEquipment', { count: selectedEquipmentIds.length }) ?? `${selectedEquipmentIds.length} selected equipment records`;
 }
 
 export function isLedgerQueryEnabled(filters: OperatorCheckinSubmissionFilters | null): boolean {
