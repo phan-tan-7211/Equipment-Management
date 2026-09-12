@@ -711,6 +711,8 @@ jobs:
 
     # Note: Test coverage is already validated in the Coverage Merge job.
     # Quality Gates validates build artifacts and bundle sizes only.
+    # VI/EN/KO UI copy brought dist just over the former 12 MiB cap;
+    # retain a 13 MiB total-output guardrail for the localized app.
 
     - name: Check bundle size limits (Windows)
       if: runner.os == 'Windows'
@@ -721,11 +723,11 @@ jobs:
           npm run build
         }
         $buildSize = (Get-ChildItem -Path dist -Recurse -File | Measure-Object -Property Length -Sum).Sum
-        $maxSize = 12MB
+        $maxSize = 13MB
         Write-Host "Build size: {0:N2}MB" -f ($buildSize/1MB)
-        Write-Host "Maximum allowed: 12MB"
+        Write-Host "Maximum allowed: 13MB"
         if ($buildSize -gt $maxSize) {
-          Write-Host "❌ Build size {0:N2}MB exceeds maximum of 12MB" -f ($buildSize/1MB)
+          Write-Host "❌ Build size {0:N2}MB exceeds maximum of 13MB" -f ($buildSize/1MB)
           Write-Host "Large files in build (>1MB):"
           Get-ChildItem -Path dist -Recurse -File | Where-Object { $_.Length -gt 1MB } | Sort-Object Length -Descending | Select-Object -First 10 | ForEach-Object { "{0:N2}MB `t {1}" -f ($_.Length/1MB), $_.FullName }
           exit 1
@@ -742,7 +744,7 @@ jobs:
         fi
 
         build_size=$(du -sb dist/ | cut -f1)
-        max_size=$((12 * 1024 * 1024)) # 12MB in bytes
+        max_size=$((13 * 1024 * 1024)) # 13MB in bytes
 
         echo "Build size: $((build_size / 1024 / 1024))MB"
         echo "Maximum allowed: $((max_size / 1024 / 1024))MB"
