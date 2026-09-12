@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import type {
   OperatorChecklistAnswer,
@@ -45,6 +46,7 @@ export function OperatorCheckinChecklistItemRow({
   answer,
   onAnswer,
 }: OperatorCheckinChecklistItemRowProps) {
+  const { t } = useI18n();
   const pointerStartX = useRef<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
   const status = getChecklistItemAnswerStatus(answer);
@@ -100,7 +102,7 @@ export function OperatorCheckinChecklistItemRow({
           {item.description && (
             <p className="text-sm text-muted-foreground">{item.description}</p>
           )}
-          {item.required && <p className="text-xs text-muted-foreground">Required</p>}
+          {item.required && <p className="text-xs text-muted-foreground">{t('operatorCheckinPublic.required')}</p>}
         </div>
         <span
           data-testid={`checklist-item-status-${item.id}`}
@@ -111,7 +113,7 @@ export function OperatorCheckinChecklistItemRow({
             status === 'fail' && 'bg-destructive/15 text-destructive',
           )}
         >
-          {status === 'pass' ? 'Pass' : status === 'fail' ? 'Fail' : 'Not checked'}
+          {status === 'pass' ? t('operatorCheckinPublic.pass') : status === 'fail' ? t('operatorCheckinPublic.fail') : t('operatorCheckinPublic.unchecked')}
         </span>
       </div>
       <div className="flex gap-2">
@@ -121,11 +123,11 @@ export function OperatorCheckinChecklistItemRow({
           variant={status === 'pass' ? 'default' : 'outline'}
           className="min-h-[44px] flex-1 touch-manipulation"
           aria-pressed={status === 'pass'}
-          aria-label={`Pass: ${item.title}`}
+          aria-label={t('operatorCheckinPublic.passItem', { name: item.title })}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={() => onAnswer(true)}
         >
-          Pass
+          {t('operatorCheckinPublic.pass')}
         </Button>
         <Button
           type="button"
@@ -133,11 +135,11 @@ export function OperatorCheckinChecklistItemRow({
           variant={status === 'fail' ? 'destructive' : 'outline'}
           className="min-h-[44px] flex-1 touch-manipulation"
           aria-pressed={status === 'fail'}
-          aria-label={`Fail: ${item.title}`}
+          aria-label={t('operatorCheckinPublic.failItem', { name: item.title })}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={() => onAnswer(false)}
         >
-          Fail
+          {t('operatorCheckinPublic.fail')}
         </Button>
       </div>
     </div>
