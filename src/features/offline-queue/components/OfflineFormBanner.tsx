@@ -12,8 +12,10 @@
 import React from 'react';
 import { WifiOff } from 'lucide-react';
 import { useBrowserOnline } from '@/hooks/useBrowserOnline';
+import { useOfflineQueueCopy } from '../hooks/useOfflineQueueCopy';
 
 export const OfflineFormBanner: React.FC = () => {
+  const t = useOfflineQueueCopy();
   const isOnline = useBrowserOnline();
 
   if (isOnline) return null;
@@ -26,9 +28,8 @@ export const OfflineFormBanner: React.FC = () => {
     >
       <WifiOff className="h-4 w-4 shrink-0" />
       <span className="text-xs">
-        You're offline — your changes will be saved locally and synced automatically when you reconnect.
+        {t('offlineQueue.formOffline')}
       </span>
     </div>
   );
 };
-

@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 // fallow-ignore-file code-duplication
 // Duplication rationale: Notifications page reuses display formatting helpers
 import React, { useState } from 'react';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Check, Calendar, ArrowRight } from 'lucide-react';
 import NotificationsToolbar from './notifications/NotificationsToolbar';
-import { format } from 'date-fns';
+import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { useNavigate } from 'react-router-dom';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { 
@@ -29,6 +30,8 @@ import {
 } from '@/utils/notifications/notificationDestination';
 
 const Notifications: React.FC = () => {
+  const { t } = useI18n();
+  const { formatDate, formatTime } = useFormatTimestamp();
   const { organizationId, switchOrganization } = useOrganization();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -90,9 +93,9 @@ const Notifications: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Notifications</h1>
+          <h1 className="text-3xl font-bold">{t('notificationPage.title')}</h1>
           <p className="text-muted-foreground mt-2">
-            Your notification history
+            {t('notificationPage.historySubtitle')}
           </p>
         </div>
         <Card>
@@ -110,20 +113,20 @@ const Notifications: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Bell className="h-8 w-8" />
-            Notifications
+            {t('notificationPage.title')}
             {unreadCount > 0 && (
-              <Badge variant="destructive">{unreadCount} unread</Badge>
+              <Badge variant="destructive">{t('notificationPage.unreadCount', { count: unreadCount })}</Badge>
             )}
           </h1>
           <p className="text-muted-foreground mt-2">
-            Your notification history • Notifications are kept for 30 days
+            {t('notificationPage.retentionSubtitle')}
           </p>
         </div>
         
         {unreadCount > 0 && (
           <Button onClick={handleMarkAllAsRead} variant="outline">
             <Check className="h-4 w-4 mr-2" />
-            Mark All Read
+            {t('notificationPage.markAllRead')}
           </Button>
         )}
       </div>
@@ -149,19 +152,19 @@ const Notifications: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Notification History
-            <Badge variant="secondary">{filteredNotifications.length} notifications</Badge>
+            {t('notificationPage.historyTitle')}
+            <Badge variant="secondary">{t('notificationPage.count', { count: filteredNotifications.length })}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {filteredNotifications.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Bell className="h-16 w-16 mx-auto mb-4 opacity-30" />
-              <p className="text-lg font-medium mb-2">No notifications found</p>
+              <p className="text-lg font-medium mb-2">{t('notificationPage.empty')}</p>
               <p className="text-sm">
                 {searchTerm || filterType !== 'all' || filterRead !== 'all'
-                  ? 'Try adjusting your filters'
-                  : 'You\'ll see work order notifications here'
+                  ? t('notificationPage.adjustFilters')
+                  : t('notificationPage.emptyDefault')
                 }
               </p>
             </div>
@@ -206,16 +209,16 @@ const Notifications: React.FC = () => {
                             )}
                           </h3>
                           <Badge variant="outline" className="text-xs mt-1">
-                            {getNotificationTypeLabel(notification.type)}
+                            {t(`notificationPage.${notification.type}`) === `notificationPage.${notification.type}` ? getNotificationTypeLabel(notification.type) : t(`notificationPage.${notification.type}`)}
                           </Badge>
                         </div>
                         
                         <div className="text-right shrink-0">
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(notification.created_at), 'MMM d, yyyy')}
+                            {formatDate(notification.created_at)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(notification.created_at), 'h:mm a')}
+                            {formatTime(notification.created_at)}
                           </p>
                         </div>
                       </div>

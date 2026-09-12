@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n/I18nProvider';
 import { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -39,6 +40,7 @@ export function OperatorChecklistTemplateDialog({
   templateId,
 }: OperatorChecklistTemplateDialogProps) {
   const isEdit = Boolean(templateId);
+  const { t } = useI18n();
   const { data: existing } = useOperatorChecklistTemplate(templateId ?? undefined, organizationId);
   const createMutation = useCreateOperatorChecklistTemplate(organizationId);
   const updateMutation = useUpdateOperatorChecklistTemplate(organizationId);
@@ -66,7 +68,7 @@ export function OperatorChecklistTemplateDialog({
 
   async function handleSave() {
     if (!name.trim()) {
-      toast.error('Template name is required.');
+      toast.error(t('operatorCheckinDetail.templateNameRequired'));
       return;
     }
     const templateData = { dataFields, checklistItems: items };
@@ -88,10 +90,10 @@ export function OperatorChecklistTemplateDialog({
           templateData,
         });
       }
-      toast.success('Template saved.');
+      toast.success(t('operatorCheckinDetail.templateSaved'));
       onOpenChange(false);
     } catch {
-      toast.error('Unable to save template.');
+      toast.error(t('operatorCheckinDetail.templateSaveError'));
     }
   }
 
@@ -101,31 +103,30 @@ export function OperatorChecklistTemplateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit operator checklist' : 'New operator checklist'}</DialogTitle>
+          <DialogTitle>{isEdit ? t('operatorCheckinDetail.editChecklist') : t('operatorCheckinDetail.newChecklist')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Template details</CardTitle>
+              <CardTitle className="text-base">{t('operatorCheckinDetail.templateDetails')}</CardTitle>
               <CardDescription>
-                Name and description help admins identify this checklist when assigning it to
-                equipment.
+                {t('operatorCheckinDetail.templateDetailsHelp')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-0">
               <div className="space-y-2">
-                <Label htmlFor="template-name">Name</Label>
+                <Label htmlFor="template-name">{t('operatorCheckinDetail.name')}</Label>
                 <Input id="template-name" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="template-description">Description</Label>
+                <Label htmlFor="template-description">{t('operatorCheckinDetail.description')}</Label>
                 <Textarea
                   id="template-description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={2}
-                  placeholder="Optional internal note for other admins"
+                  placeholder={t('operatorCheckinDetail.internalNote')}
                 />
               </div>
             </CardContent>
@@ -142,13 +143,13 @@ export function OperatorChecklistTemplateDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('operatorCheckinDetail.cancel')}
           </Button>
           <Button
             onClick={() => void handleSave()}
             disabled={createMutation.isPending || updateMutation.isPending}
           >
-            Save
+            {t('operatorCheckinDetail.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -2,8 +2,10 @@ import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useI18n } from '@/i18n';
 
 const DebugAuth = () => {
+  const { t } = useI18n();
   const { user, session, isLoading, signOut } = useAuth();
 
   const handleClearStorage = () => {
@@ -17,22 +19,22 @@ const DebugAuth = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Authentication Debug</CardTitle>
+            <CardTitle>{t('authRoutes.debugAuthTitle')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <strong>Loading State:</strong> {isLoading ? 'true' : 'false'}
+              <strong>{t('authRoutes.loadingState')}</strong> {isLoading ? 'true' : 'false'}
             </div>
             
             <div>
-              <strong>User:</strong> 
+              <strong>{t('authRoutes.user')}</strong>
               <pre className="mt-2 p-2 bg-muted rounded text-sm overflow-auto">
                 {user ? JSON.stringify(user, null, 2) : 'null'}
               </pre>
             </div>
             
             <div>
-              <strong>Session:</strong>
+              <strong>{t('authRoutes.session')}</strong>
               <pre className="mt-2 p-2 bg-muted rounded text-sm overflow-auto">
                 {session ? JSON.stringify(session, null, 2) : 'null'}
               </pre>
@@ -40,13 +42,13 @@ const DebugAuth = () => {
 
             <div className="flex gap-2">
               <Button onClick={signOut} variant="outline">
-                Sign Out
+                {t('authRoutes.signOut')}
               </Button>
               <Button onClick={handleClearStorage} variant="destructive">
-                Clear All Storage
+                {t('authRoutes.clearStorage')}
               </Button>
               <Button onClick={() => window.location.href = '/auth'} variant="secondary">
-                Go to Auth
+                {t('authRoutes.goToAuth')}
               </Button>
             </div>
           </CardContent>

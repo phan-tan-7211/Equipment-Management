@@ -1,3 +1,6 @@
+import { useI18n } from '@/i18n/I18nProvider';
+import { format as formatDate } from 'date-fns';
+import { enUS, ko as koLocale, vi as viLocale } from 'date-fns/locale';
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +24,7 @@ import MFAEnrollment from '@/components/auth/MFAEnrollment';
 const MFA_REQUIRED_ROLES = ['owner', 'admin'] as const;
 
 const MFASettings: React.FC = () => {
+  const { t, language } = useI18n();
   const { factors, isEnrolled, isLoading, unenrollFactor, refreshMFAStatus } = useMFA();
   const orgContext = useSimpleOrganizationSafe();
   const toast = useAppToast();
@@ -41,16 +45,16 @@ const MFASettings: React.FC = () => {
 
     if (error) {
       toast.error({
-        title: 'Failed to Remove',
-        description: 'Could not remove the authenticator. Please try again.',
+        title: t('settingsSecurity.removeFailed'),
+        description: t('settingsSecurity.removeFailedHelp'),
       });
     } else {
       toast.success({
-        title: 'Authenticator Removed',
-        description: 'Two-factor authentication has been disabled.',
+        title: t('settingsSecurity.authenticatorRemoved'),
+        description: t('settingsSecurity.mfaDisabled'),
       });
     }
-  }, [unenrollFactor, toast]);
+  }, [unenrollFactor, toast, t]);
 
   const handleEnrollmentComplete = useCallback(async () => {
     setShowEnrollment(false);
@@ -59,7 +63,7 @@ const MFASettings: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-4" role="status" aria-label="Loading MFA status">
+      <div className="flex items-center justify-center py-4" role="status" aria-label={t('settingsSecurity.loadingMfa')}>
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
@@ -86,18 +90,18 @@ const MFASettings: React.FC = () => {
           ) : (
             <ShieldOff className="h-5 w-5 text-muted-foreground" />
           )}
-          <span className="text-sm font-medium">Two-Factor Authentication</span>
+          <span className="text-sm font-medium">{t('settingsSecurity.mfaTitle')}</span>
         </div>
         <Badge variant={isEnrolled ? 'default' : 'secondary'}>
-          {isEnrolled ? 'Enabled' : 'Disabled'}
+          {isEnrolled ? t('settingsSecurity.enabled') : t('settingsSecurity.disabled')}
         </Badge>
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Add an extra layer of security to your account with a time-based one-time password (TOTP).
+        {t('settingsSecurity.mfaHelp')}
         {isMFARequired ? (
           <span className="block mt-1 text-primary font-medium">
-            Required for your role ({userRole}).
+            {t('settingsSecurity.requiredForRole', { role: t(`settingsSecurity.${userRole === 'owner' ? 'roleOwner' : 'roleAdmin'}`) })}
           </span>
         ) : null}
       </p>
@@ -111,10 +115,10 @@ const MFASettings: React.FC = () => {
             >
               <div className="flex flex-col">
                 <span className="text-sm font-medium">
-                  {factor.friendly_name || 'Authenticator App'}
+                  {factor.friendly_name || t('settingsSecurity.authenticatorApp')}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  Added {new Date(factor.created_at).toLocaleDateString()}
+                  {t('settingsSecurity.addedDate', { date: formatDate(new Date(factor.created_at), 'P', { locale: language === 'vi' ? viLocale : language === 'ko' ? koLocale : enUS }) })}
                 </span>
               </div>
               <AlertDialog>
@@ -124,7 +128,7 @@ const MFASettings: React.FC = () => {
                     size="icon"
                     className="h-8 w-8 text-destructive hover:text-destructive"
                     disabled={removingFactorId === factor.id || isMFARequired}
-                    aria-label="Remove authenticator"
+                    aria-label={t('settingsSecurity.removeAuthenticator')}
                   >
                     {removingFactorId === factor.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -135,19 +139,18 @@ const MFASettings: React.FC = () => {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Remove Authenticator?</AlertDialogTitle>
+                    <AlertDialogTitle>{t('settingsSecurity.removeAuthenticatorTitle')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will disable two-factor authentication on your account.
-                      You will need to set it up again if you want to re-enable it.
+                      {t('settingsSecurity.removeAuthenticatorHelp')}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t('settingsSecurity.cancel')}</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => handleRemoveFactor(factor.id)}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                      Remove
+                      {t('settingsSecurity.remove')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -156,13 +159,13 @@ const MFASettings: React.FC = () => {
           ))}
           {isMFARequired ? (
             <p className="text-xs text-muted-foreground">
-              Two-factor authentication cannot be removed for admin and owner accounts.
+              {t('settingsSecurity.mfaRequiredHelp')}
             </p>
           ) : null}
         </div>
       ) : (
         <Button onClick={() => setShowEnrollment(true)} size="sm">
-          Set Up Two-Factor Authentication
+          {t('settingsSecurity.setupMfa')}
         </Button>
       )}
     </div>

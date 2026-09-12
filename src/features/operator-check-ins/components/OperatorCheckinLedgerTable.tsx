@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n/I18nProvider';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -39,19 +40,21 @@ interface OperatorCheckinLedgerTableProps {
 }
 
 function StatusBadge({ status }: { status: LedgerTableRow['status'] }) {
+  const { t } = useI18n();
   return status === 'complete' ? (
-    <Badge>Complete</Badge>
+    <Badge>{t('operatorCheckinDetail.complete')}</Badge>
   ) : (
-    <Badge variant="destructive">Incomplete</Badge>
+    <Badge variant="destructive">{t('operatorCheckinDetail.incomplete')}</Badge>
   );
 }
 
 function ChecklistCell({ value, notes }: { value: unknown; notes?: unknown }) {
+  const { t } = useI18n();
   if (value === 'pass') {
     return (
       <div className="space-y-0.5 text-center">
         <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">
-          Pass
+          {t('operatorCheckinDetail.pass')}
         </Badge>
         {typeof notes === 'string' && notes ? (
           <p className="text-xs text-muted-foreground">{notes}</p>
@@ -62,7 +65,7 @@ function ChecklistCell({ value, notes }: { value: unknown; notes?: unknown }) {
   if (value === 'fail') {
     return (
       <div className="space-y-0.5 text-center">
-        <Badge variant="destructive">Fail</Badge>
+        <Badge variant="destructive">{t('operatorCheckinDetail.fail')}</Badge>
         {typeof notes === 'string' && notes ? (
           <p className="text-xs text-muted-foreground">{notes}</p>
         ) : null}
@@ -73,11 +76,12 @@ function ChecklistCell({ value, notes }: { value: unknown; notes?: unknown }) {
 }
 
 function ChecklistValue({ value, notes }: { value: unknown; notes?: unknown }) {
+  const { t } = useI18n();
   if (value === 'pass') {
     return (
       <span className="inline-flex flex-wrap items-center gap-2">
         <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">
-          Pass
+          {t('operatorCheckinDetail.pass')}
         </Badge>
         {typeof notes === 'string' && notes ? (
           <span className="text-muted-foreground">{notes}</span>
@@ -88,7 +92,7 @@ function ChecklistValue({ value, notes }: { value: unknown; notes?: unknown }) {
   if (value === 'fail') {
     return (
       <span className="inline-flex flex-wrap items-center gap-2">
-        <Badge variant="destructive">Fail</Badge>
+        <Badge variant="destructive">{t('operatorCheckinDetail.fail')}</Badge>
         {typeof notes === 'string' && notes ? (
           <span className="text-muted-foreground">{notes}</span>
         ) : null}
@@ -116,10 +120,11 @@ function LedgerSubmissionCard({
   dataFields: OperatorChecklistDataField[];
   checklistItems: OperatorChecklistTemplateItem[];
 }) {
+  const { t } = useI18n();
   return (
     <article
       className="rounded-lg border border-border/60 bg-card p-4 shadow-sm touch-manipulation"
-      aria-label={`${row.equipmentName} check-in`}
+      aria-label={t('operatorCheckinDetail.submissionCard', { name: row.equipmentName })}
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -161,6 +166,7 @@ function LedgerPaginationFooter({
   pageSize: number;
   onPageChange: (page: number) => void;
 }) {
+  const { t } = useI18n();
   const totalPages = getLedgerPageCount(totalRows, pageSize);
   const rangeStart = totalRows === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min(page * pageSize, totalRows);
@@ -171,11 +177,11 @@ function LedgerPaginationFooter({
       data-testid="ledger-pagination-footer"
     >
       <p className="text-sm text-muted-foreground">
-        {totalRows} submission{totalRows === 1 ? '' : 's'} · {completeCount} complete
+        {t('operatorCheckinDetail.submissionSummary', { total: totalRows, complete: completeCount })}
         {totalRows > 0 ? (
           <>
             {' '}
-            · Showing {rangeStart}–{rangeEnd}
+            {t('operatorCheckinDetail.showingRange', { start: rangeStart, end: rangeEnd })}
           </>
         ) : null}
       </p>
@@ -190,10 +196,10 @@ function LedgerPaginationFooter({
             onClick={() => onPageChange(page - 1)}
           >
             <ChevronLeft className="h-4 w-4" aria-hidden />
-            Previous
+            {t('operatorCheckinDetail.previous')}
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+            {t('operatorCheckinDetail.pageOf', { page, total: totalPages })}
           </span>
           <Button
             type="button"
@@ -202,7 +208,7 @@ function LedgerPaginationFooter({
             disabled={page >= totalPages}
             onClick={() => onPageChange(page + 1)}
           >
-            Next
+            {t('operatorCheckinDetail.next')}
             <ChevronRight className="h-4 w-4" aria-hidden />
           </Button>
         </div>
@@ -222,6 +228,7 @@ export function OperatorCheckinLedgerTable({
   headerActions,
   bodyFallback,
 }: OperatorCheckinLedgerTableProps) {
+  const { t } = useI18n();
   const [sortBy, setSortBy] = useState(DEFAULT_LEDGER_SORT_BY);
   const [sortOrder, setSortOrder] = useState<LedgerSortOrder>(DEFAULT_LEDGER_SORT_ORDER);
   const [page, setPage] = useState(1);
@@ -273,14 +280,14 @@ export function OperatorCheckinLedgerTable({
     const cols: Column<LedgerTableRow>[] = [
       {
         key: 'equipmentName',
-        title: 'Equipment',
+        title: t('operatorCheckinDetail.equipment'),
         width: '220px',
         sortable: true,
         render: (value) => <span className="font-medium">{String(value ?? '—')}</span>,
       },
       {
         key: 'submittedAtIso',
-        title: 'Submitted',
+        title: t('operatorCheckinDetail.submitted'),
         width: '160px',
         mono: true,
         sortable: true,
@@ -314,7 +321,7 @@ export function OperatorCheckinLedgerTable({
 
     cols.push({
       key: 'status',
-      title: 'Status',
+      title: t('operatorCheckinDetail.status'),
       width: '110px',
       align: 'center',
       sortable: true,
@@ -322,7 +329,7 @@ export function OperatorCheckinLedgerTable({
     });
 
     return cols;
-  }, [displayDataFields, templateData.checklistItems]);
+  }, [displayDataFields, templateData.checklistItems, t]);
 
   const completeCount = submissions.filter((submission) => submission.is_complete).length;
   const hasRows = sortedRows.length > 0;
@@ -337,7 +344,7 @@ export function OperatorCheckinLedgerTable({
     <Card data-testid="operator-checkin-ledger">
       <CardHeader className="gap-4 space-y-0 pb-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <CardTitle className="text-base">Daily ledger</CardTitle>
+          <CardTitle className="text-base">{t('operatorCheckinDetail.dailyLedger')}</CardTitle>
           {headerActions ? (
             <div className="flex shrink-0 items-center gap-2">{headerActions}</div>
           ) : null}
@@ -353,7 +360,7 @@ export function OperatorCheckinLedgerTable({
 
       <CardContent className="pt-0">
         {isLoading ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">Loading ledger…</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t('operatorCheckinDetail.loadingLedger')}</p>
         ) : bodyFallback ? (
           bodyFallback
         ) : hasRows ? (
@@ -382,7 +389,7 @@ export function OperatorCheckinLedgerTable({
                   sortOrder,
                   onSortChange: handleSortChange,
                 }}
-                emptyMessage="No operator check-ins for the selected scope."
+                emptyMessage={t('operatorCheckinDetail.noCheckins')}
                 className="min-w-full rounded-md border"
               />
             </div>
@@ -397,7 +404,7 @@ export function OperatorCheckinLedgerTable({
           </>
         ) : (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            No operator check-ins for the selected scope.
+            {t('operatorCheckinDetail.noCheckins')}
           </p>
         )}
       </CardContent>

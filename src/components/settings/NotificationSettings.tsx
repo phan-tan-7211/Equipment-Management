@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n/I18nProvider';
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -14,13 +15,13 @@ import {
 } from '@/hooks/useNotificationSettings';
 
 const WORK_ORDER_STATUSES = [
-  { value: 'submitted', label: 'Submitted' },
-  { value: 'accepted', label: 'Accepted' },
-  { value: 'assigned', label: 'Assigned' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'on_hold', label: 'On Hold' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'submitted', labelKey: 'submitted' },
+  { value: 'accepted', labelKey: 'accepted' },
+  { value: 'assigned', labelKey: 'assigned' },
+  { value: 'in_progress', labelKey: 'inProgress' },
+  { value: 'on_hold', labelKey: 'onHold' },
+  { value: 'completed', labelKey: 'completed' },
+  { value: 'cancelled', labelKey: 'cancelled' },
 ];
 
 interface TeamNotificationSettingProps {
@@ -34,6 +35,7 @@ const TeamNotificationSetting: React.FC<TeamNotificationSettingProps> = ({
   setting,
   onUpdate
 }) => {
+  const { t } = useI18n();
   const [isEnabled, setIsEnabled] = useState(setting?.enabled || false);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(setting?.statuses || []);
 
@@ -60,7 +62,7 @@ const TeamNotificationSetting: React.FC<TeamNotificationSettingProps> = ({
             <div>
               <CardTitle className="text-sm font-medium">{team.team_name}</CardTitle>
               <CardDescription className="text-xs">
-                {team.organization_name} &bull; {team.user_role}
+                {team.organization_name} &bull; {team.user_role === 'owner' ? t('settingsSecurity.roleOwner') : team.user_role === 'admin' ? t('settingsSecurity.roleAdmin') : team.user_role === 'member' ? t('settingsSecurity.roleMember') : team.user_role}
               </CardDescription>
             </div>
           </div>
@@ -68,7 +70,7 @@ const TeamNotificationSetting: React.FC<TeamNotificationSettingProps> = ({
             <Switch
               checked={isEnabled}
               onCheckedChange={handleEnabledChange}
-              aria-label={`Enable notifications for ${team.team_name}`}
+              aria-label={t('settingsSecurity.enableTeam', { team: team.team_name })}
             />
           </div>
         </div>
@@ -78,7 +80,7 @@ const TeamNotificationSetting: React.FC<TeamNotificationSettingProps> = ({
         <CardContent className="pt-0">
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground mb-3">
-              Notify me when work orders are:
+              {t('settingsSecurity.notifyWhen')}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {WORK_ORDER_STATUSES.map((status) => (
@@ -94,7 +96,7 @@ const TeamNotificationSetting: React.FC<TeamNotificationSettingProps> = ({
                     htmlFor={`${team.team_id}-${status.value}`}
                     className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    {status.label}
+                    {t(`settingsSecurity.${status.labelKey}`)}
                   </label>
                 </div>
               ))}
@@ -107,6 +109,7 @@ const TeamNotificationSetting: React.FC<TeamNotificationSettingProps> = ({
 };
 
 const NotificationSettings: React.FC = () => {
+  const { t } = useI18n();
   const { data: userTeams = [], isLoading: teamsLoading } = useUserTeamsForNotifications();
   const { data: notificationSettings = [], isLoading: settingsLoading } = useNotificationSettings();
   const updateSettingsMutation = useUpdateNotificationSettings();
@@ -158,9 +161,9 @@ const NotificationSettings: React.FC = () => {
     return (
       <div className="text-center py-8 text-muted-foreground">
         <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <p>You&apos;re not a member of any teams yet</p>
+        <p>{t('settingsSecurity.noTeams')}</p>
         <p className="text-sm mt-2">
-          Join teams to configure notification preferences
+          {t('settingsSecurity.joinTeams')}
         </p>
       </div>
     );
@@ -169,7 +172,7 @@ const NotificationSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       {enabledTeamsCount > 0 && (
-        <Badge variant="secondary">{enabledTeamsCount} team{enabledTeamsCount !== 1 ? 's' : ''} enabled</Badge>
+        <Badge variant="secondary">{t('settingsSecurity.teamsEnabled', { count: enabledTeamsCount })}</Badge>
       )}
 
       {Object.entries(teamsByOrganization).map(([orgId, teams]) => (
@@ -193,14 +196,14 @@ const NotificationSettings: React.FC = () => {
       <Collapsible>
         <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
           <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
-          How notifications work
+          {t('settingsSecurity.howNotificationsWork')}
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="mt-2 pl-6 border-l-2 border-muted text-xs text-muted-foreground space-y-1">
-            <p>You&apos;ll only receive notifications for teams you enable</p>
-            <p>Choose which work order status changes trigger notifications</p>
-            <p>Organization admins and owners can see all teams but can still customize preferences</p>
-            <p>Notifications appear in real-time and are kept for 30 days</p>
+            <p>{t('settingsSecurity.notificationsTeams')}</p>
+            <p>{t('settingsSecurity.notificationsStatuses')}</p>
+            <p>{t('settingsSecurity.notificationsAdmins')}</p>
+            <p>{t('settingsSecurity.notificationsRetention')}</p>
           </div>
         </CollapsibleContent>
       </Collapsible>

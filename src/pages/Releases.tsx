@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 import LandingHeader from '@/components/landing/LandingHeader';
 import LegalFooter from '@/components/layout/LegalFooter';
 import { PageBackButton } from '@/components/layout/PageBackButton';
@@ -14,18 +15,17 @@ import {
   isPublicReleaseFilter,
   useReleasesPageState,
 } from '@/features/releases/hooks/useReleasesPageState';
-import { PUBLIC_RELEASE_FILTER_LABELS } from '@/features/releases/lib/publicReleases';
 import type { PublicReleaseFilter } from '@/features/releases/lib/publicReleaseTypes';
 
 const FILTER_ORDER: readonly PublicReleaseFilter[] = ['all', 'features', 'fixes', 'security'];
 
-function formatReleaseDate(date: string): string {
+function formatReleaseDate(date: string, language: string): string {
   const parsed = new Date(`${date}T00:00:00Z`);
   if (Number.isNaN(parsed.getTime())) {
     return date;
   }
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(({ en: 'en-US', vi: 'vi-VN', ko: 'ko-KR' } as Record<string, string>)[language] ?? 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -34,6 +34,8 @@ function formatReleaseDate(date: string): string {
 }
 
 export function Releases(): JSX.Element {
+  const { t, language } = useI18n();
+  const filterLabel = (filter: PublicReleaseFilter) => t(`publicChrome.releases.${filter}`);
   const {
     isEmptyFilteredState,
     olderReleaseCount,
@@ -49,8 +51,8 @@ export function Releases(): JSX.Element {
   return (
     <>
       <PageSEO
-        title="Releases · EquipQR"
-        description="Customer-facing changes in each published EquipQR release."
+        title={t('publicChrome.releases.seoTitle')}
+        description={t('publicChrome.releases.seoDescription')}
         path="/releases"
       />
       <div className="flex min-h-screen flex-col bg-background">
@@ -62,10 +64,10 @@ export function Releases(): JSX.Element {
         >
           <section className="border-b border-border/50 bg-linear-to-br from-background via-background to-primary/5 pb-10 pt-32">
             <div className="container mx-auto max-w-5xl px-4">
-              <PageBackButton className="mb-6" />
+              <PageBackButton className="mb-6" label={t('publicChrome.back')} />
               <div className="space-y-4">
                 <p className="text-sm font-medium uppercase tracking-wide text-primary">
-                  Public release history
+                  {t('publicChrome.releases.subtitle')}
                 </p>
                 <div className="flex flex-wrap items-center gap-3">
                   <h1
@@ -73,16 +75,14 @@ export function Releases(): JSX.Element {
                     tabIndex={-1}
                     className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl"
                   >
-                    Releases
+                    {t('publicChrome.releases.title')}
                   </h1>
                   <Badge variant="secondary" className="text-xs uppercase tracking-wide">
-                    Build-time from `CHANGELOG.md`
+                    {t('publicChrome.releases.source')}
                   </Badge>
                 </div>
                 <p className="max-w-3xl text-base text-muted-foreground sm:text-lg">
-                  Customer-facing changes in each published EquipQR release. We omit the in-progress
-                  Unreleased section and collapse internal-only maintenance so this page stays useful
-                  to operators, admins, and evaluators.
+                  {t('publicChrome.releases.description')}
                 </p>
               </div>
             </div>
@@ -92,9 +92,9 @@ export function Releases(): JSX.Element {
             <div className="container mx-auto max-w-5xl px-4 py-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Filter visible releases</p>
+                  <p className="text-sm font-medium text-foreground">{t('publicChrome.releases.filterTitle')}</p>
                   <p className="text-xs text-muted-foreground">
-                    Chips apply to the releases currently shown on the page.
+                    {t('publicChrome.releases.filterHelp')}
                   </p>
                 </div>
                 <ToggleGroup
@@ -108,12 +108,12 @@ export function Releases(): JSX.Element {
                   }}
                   size="sm"
                   variant="outline"
-                  aria-label="Release note filters"
+                  aria-label={t('publicChrome.releases.filters')}
                   className="flex flex-wrap justify-start sm:justify-end"
                 >
                   {FILTER_ORDER.map((filter) => (
-                    <ToggleGroupItem key={filter} value={filter} aria-label={PUBLIC_RELEASE_FILTER_LABELS[filter]}>
-                      {PUBLIC_RELEASE_FILTER_LABELS[filter]}
+                    <ToggleGroupItem key={filter} value={filter} aria-label={filterLabel(filter)}>
+                      {filterLabel(filter)}
                     </ToggleGroupItem>
                   ))}
                 </ToggleGroup>
@@ -125,9 +125,10 @@ export function Releases(): JSX.Element {
             <div className="container mx-auto max-w-5xl space-y-4 px-4">
               <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
                 <p>
-                  Showing {visibleReleases.length} release{visibleReleases.length === 1 ? '' : 's'}
-                  {selectedFilter === 'all' ? '' : ` with ${PUBLIC_RELEASE_FILTER_LABELS[selectedFilter].toLowerCase()} notes`}
-                  .
+                  {t('publicChrome.releases.showing', {
+                    count: visibleReleases.length,
+                    filter: selectedFilter === 'all' ? '' : t('publicChrome.releases.filterSuffix', { filter: filterLabel(selectedFilter).toLowerCase() }),
+                  })}
                 </p>
                 {olderReleaseCount > 0 && !isEmptyFilteredState ? (
                   <Button
@@ -137,8 +138,8 @@ export function Releases(): JSX.Element {
                     onClick={() => setShowOlderReleases((currentValue) => !currentValue)}
                   >
                     {showOlderReleases
-                      ? 'Hide older releases'
-                      : `Show ${olderReleaseCount} older release${olderReleaseCount === 1 ? '' : 's'}`}
+                      ? t('publicChrome.releases.hideOlder')
+                      : t('publicChrome.releases.showOlder', { count: olderReleaseCount })}
                   </Button>
                 ) : null}
               </div>
@@ -148,8 +149,8 @@ export function Releases(): JSX.Element {
                   className="px-5 py-6"
                   title={
                     selectedFilter === 'all'
-                      ? 'No release notes are visible in the current release set.'
-                      : `No ${PUBLIC_RELEASE_FILTER_LABELS[selectedFilter]} notes are visible in the current release set.`
+                      ? t('publicChrome.releases.emptyAll')
+                      : t('publicChrome.releases.emptyFiltered', { filter: filterLabel(selectedFilter) })
                   }
                   action={
                     selectedFilter === 'all' ? undefined : (
@@ -159,7 +160,7 @@ export function Releases(): JSX.Element {
                         size="sm"
                         onClick={() => setSelectedFilter('all')}
                       >
-                        All
+                        {filterLabel('all')}
                       </Button>
                     )
                   }
@@ -193,17 +194,17 @@ export function Releases(): JSX.Element {
                                 </span>
                                 {release.isLatest ? (
                                   <Badge className="bg-primary text-primary-foreground hover:bg-primary">
-                                    Latest
+                                    {t('publicChrome.releases.latest')}
                                   </Badge>
                                 ) : null}
                                 {visibleEntryCount > 0 ? (
                                   <Badge variant="secondary">
-                                    {visibleEntryCount} update{visibleEntryCount === 1 ? '' : 's'}
+                                    {t('publicChrome.releases.updates', { count: visibleEntryCount })}
                                   </Badge>
                                 ) : null}
                               </div>
                               <p className="text-sm text-muted-foreground">
-                                {release.date ? formatReleaseDate(release.date) : 'Release date unavailable'}
+                                {release.date ? formatReleaseDate(release.date, language) : t('publicChrome.releases.dateUnavailable')}
                               </p>
                             </div>
                           </div>
@@ -211,7 +212,7 @@ export function Releases(): JSX.Element {
                         <AccordionContent className="px-5 pb-5">
                           {visibleSections.length === 0 ? (
                             <p className="text-sm leading-6 text-muted-foreground">
-                              No customer-facing release notes were published for this version.
+                              {t('publicChrome.releases.noNotes')}
                             </p>
                           ) : (
                             <div className="space-y-5">
@@ -221,7 +222,9 @@ export function Releases(): JSX.Element {
                                     id={`${release.version}-${section.id}`}
                                     className="mb-2 text-sm font-semibold uppercase tracking-wide text-foreground"
                                   >
-                                    {section.label}
+                                    {['added', 'changed', 'deprecated', 'removed', 'fixed', 'security'].includes(section.id)
+                                      ? t(`publicChrome.releases.${section.id === 'security' ? 'sectionSecurity' : section.id}`)
+                                      : section.label}
                                   </h2>
                                   <ul className="space-y-2">
                                     {section.entries.map((entry, index) => (
