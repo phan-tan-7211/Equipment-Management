@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, FileDown, Wrench } from "lucide-react";
+import { useI18n } from '@/i18n';
 
 interface PMChangeWarningDialogProps {
   open: boolean;
@@ -31,15 +32,16 @@ export const PMChangeWarningDialog: React.FC<PMChangeWarningDialogProps> = ({
   hasExistingNotes = false,
   hasCompletedItems = false,
 }) => {
+  const { t } = useI18n();
   const isDisabling = changeType === 'disable';
   
   const title = isDisabling 
-    ? "Disable Preventative Maintenance?" 
-    : "Change PM Checklist Template?";
+    ? t('workOrderAudit.disablePmTitle')
+    : t('workOrderAudit.changePmTitle');
   
   const description = isDisabling
-    ? "This work order has an existing PM checklist with data that will be removed. Work order photos, notes, and costs will stay attached."
-    : "Changing the PM template will replace the existing checklist. PM inspection data will be reset, but work order photos, notes, and costs will stay attached.";
+    ? t('workOrderAudit.disablePmDescription')
+    : t('workOrderAudit.changePmDescription');
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -56,10 +58,10 @@ export const PMChangeWarningDialog: React.FC<PMChangeWarningDialogProps> = ({
               <Alert variant="destructive" className="mt-3">
                 <Wrench className="h-4 w-4" />
                 <AlertDescription className="text-sm">
-                  <strong>Warning:</strong> This PM checklist contains:
+                  <strong>{t('workOrderAudit.warning')}</strong> {t('workOrderAudit.checklistContains')}
                   <ul className="list-disc ml-4 mt-1">
-                    {hasCompletedItems && <li>Completed inspection items</li>}
-                    {hasExistingNotes && <li>Technician notes and observations</li>}
+                    {hasCompletedItems && <li>{t('workOrderAudit.completedItems')}</li>}
+                    {hasExistingNotes && <li>{t('workOrderAudit.technicianNotes')}</li>}
                   </ul>
                 </AlertDescription>
               </Alert>
@@ -69,7 +71,7 @@ export const PMChangeWarningDialog: React.FC<PMChangeWarningDialogProps> = ({
               <div className="flex items-start gap-2">
                 <FileDown className="h-4 w-4 text-warning mt-0.5 shrink-0" />
                 <div className="text-sm text-warning dark:text-warning">
-                  <strong>Recommendation:</strong> Before proceeding, go to the work order details page and download the PM checklist PDF to preserve any critical notes or inspection data.
+                  <strong>{t('workOrderAudit.recommendation')}</strong> {t('workOrderAudit.downloadPmPdf')}
                 </div>
               </div>
             </div>
@@ -77,20 +79,19 @@ export const PMChangeWarningDialog: React.FC<PMChangeWarningDialogProps> = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onCancel}>
-            Cancel
+            {t('workOrderAudit.cancel')}
           </AlertDialogCancel>
           <AlertDialogAction 
             onClick={onConfirm}
             className="bg-destructive hover:bg-destructive/90"
           >
-            Yes, {isDisabling ? "Disable PM" : "Change Template"}
+            {isDisabling ? t('workOrderAudit.yesDisablePm') : t('workOrderAudit.yesChangeTemplate')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 };
-
 
 
 
