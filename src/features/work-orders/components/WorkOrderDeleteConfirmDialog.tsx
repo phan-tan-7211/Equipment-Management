@@ -12,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useI18n } from '@/i18n';
 
 type WorkOrderDeleteImageSummary = {
   count: number;
@@ -40,6 +41,7 @@ export function WorkOrderDeleteConfirmDialog({
   onConfirmTextChange,
   confirmInputId = 'work-order-delete-confirm',
 }: WorkOrderDeleteConfirmDialogProps) {
+  const { t } = useI18n();
   const handleOpenChange = (nextOpen: boolean) => {
     onOpenChange(nextOpen);
     if (!nextOpen) onConfirmTextChange?.('');
@@ -52,36 +54,36 @@ export function WorkOrderDeleteConfirmDialog({
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Work Order</AlertDialogTitle>
+          <AlertDialogTitle>{t('workOrderAudit.deleteTitle')}</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-4">
               <p>
-                Are you sure you want to delete this work order? This action is irreversible and will permanently remove:
+                {t('workOrderAudit.deleteQuestion')}
               </p>
               <ul className="space-y-1 text-sm">
-                <li>• Work order details and description</li>
-                <li>• All notes and comments</li>
-                <li>• Cost records and estimates</li>
-                <li>• Status history</li>
-                <li>• Preventative maintenance records</li>
+                <li>• {t('workOrderAudit.workOrderDetails')}</li>
+                <li>• {t('workOrderAudit.notes')}</li>
+                <li>• {t('workOrderAudit.costs')}</li>
+                <li>• {t('workOrderAudit.statusHistory')}</li>
+                <li>• {t('workOrderAudit.pmRecords')}</li>
                 {imageData && imageData.count > 0 && (
                   <li className="flex items-center gap-2">
-                    • All uploaded images
+                    • {t('workOrderAudit.uploadedImages')}
                     <Badge variant="destructive" className="text-xs">
-                      {imageData.count} image{imageData.count !== 1 ? 's' : ''}
+                      {imageData.count} {imageData.count === 1 ? t('workOrderAudit.image') : t('workOrderAudit.images')}
                     </Badge>
                   </li>
                 )}
               </ul>
               {requireTypedConfirm && onConfirmTextChange ? (
                 <div className="space-y-2">
-                  <Label htmlFor={confirmInputId}>Type DELETE to confirm</Label>
+                  <Label htmlFor={confirmInputId}>{t('workOrderAudit.typeDelete')}</Label>
                   <Input
                     id={confirmInputId}
                     autoComplete="off"
                     value={confirmText}
                     onChange={(e) => onConfirmTextChange(e.target.value)}
-                    placeholder="DELETE"
+                    placeholder={t('workOrderAudit.deletePlaceholder')}
                     className="font-mono"
                   />
                 </div>
@@ -90,13 +92,13 @@ export function WorkOrderDeleteConfirmDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>{t('workOrderAudit.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={confirmDisabled}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+            {isDeleting ? t('workOrderAudit.deleting') : t('workOrderAudit.deletePermanently')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

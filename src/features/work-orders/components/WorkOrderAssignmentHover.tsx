@@ -7,6 +7,7 @@ import { useWorkOrderContextualAssignment, type AssignmentWorkOrderContext } fro
 import { useQuickWorkOrderAssignment } from '@/hooks/useQuickWorkOrderAssignment';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/utils/logger';
+import { useI18n } from '@/i18n';
 
 interface WorkOrderAssignmentHoverProps {
   workOrder: AssignmentWorkOrderContext & {
@@ -22,6 +23,7 @@ export const WorkOrderAssignmentHover: React.FC<WorkOrderAssignmentHoverProps> =
   disabled = false
 }) => {
   const { toast } = useToast();
+  const { t } = useI18n();
   const [isAssigning, setIsAssigning] = useState(false);
   
   const { assignmentOptions, isLoading, equipmentHasNoTeam } = useWorkOrderContextualAssignment(workOrder);
@@ -40,8 +42,8 @@ export const WorkOrderAssignmentHover: React.FC<WorkOrderAssignmentHoverProps> =
       const organizationId = workOrder.organization_id ?? workOrder.organizationId;
       if (!organizationId) {
         toast({
-          title: "Missing organization",
-          description: "Cannot update assignment without an organization context.",
+          title: t('workOrderAudit.missingOrganization'),
+          description: t('workOrderAudit.missingOrganizationDescription'),
           variant: "destructive",
         });
         return;
@@ -55,16 +57,16 @@ export const WorkOrderAssignmentHover: React.FC<WorkOrderAssignmentHoverProps> =
       });
       
       toast({
-        title: "Assignment Updated",
+        title: t('workOrderAudit.assignmentUpdated'),
         description: assignmentData.type === 'unassign' 
-          ? "Work order unassigned successfully"
-          : `Work order assigned successfully`,
+          ? t('workOrderAudit.unassignedSuccess')
+          : t('workOrderAudit.assignedSuccess'),
       });
     } catch (error) {
       logger.error('Failed to update assignment', error);
       toast({
-        title: "Error",
-        description: "Failed to update assignment",
+        title: t('workOrderAudit.error'),
+        description: t('workOrderAudit.assignmentFailed'),
         variant: "destructive",
       });
     } finally {
@@ -84,22 +86,22 @@ export const WorkOrderAssignmentHover: React.FC<WorkOrderAssignmentHoverProps> =
       </PopoverTrigger>
       <PopoverContent className="w-80 p-4" side="top">
         <div className="space-y-3">
-          <div className="text-sm font-medium">Quick Assignment</div>
+          <div className="text-sm font-medium">{t('workOrderAudit.quickAssignment')}</div>
           
           {isLoading ? (
-            <div className="text-xs text-muted-foreground">Loading options...</div>
+            <div className="text-xs text-muted-foreground">{t('workOrderAudit.loadingOptions')}</div>
           ) : isAssignmentBlocked ? (
             <div className="flex items-start gap-2 text-xs text-warning">
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>No team assigned to equipment. Assign a team to enable assignments.</span>
+              <span>{t('workOrderAudit.noTeamAssignment')}</span>
             </div>
           ) : assignmentOptions.length === 0 ? (
-            <div className="text-xs text-muted-foreground">No assignees available</div>
+            <div className="text-xs text-muted-foreground">{t('workOrderAudit.noAssignees')}</div>
           ) : (
             <>
               <div className="space-y-2">
                 <div className="text-xs text-muted-foreground">
-                  Assignable: team members + org admins
+                  {t('workOrderAudit.assignable')}
                 </div>
                 <Select 
                   onValueChange={(value) => {
@@ -108,7 +110,7 @@ export const WorkOrderAssignmentHover: React.FC<WorkOrderAssignmentHoverProps> =
                   disabled={isAssigning}
                 >
                   <SelectTrigger className="h-8">
-                    <SelectValue placeholder="Select assignee..." />
+                    <SelectValue placeholder={t('workOrderAudit.selectAssignee')} />
                   </SelectTrigger>
                   <SelectContent>
                     {assignmentOptions.map((assignee) => (
@@ -138,7 +140,7 @@ export const WorkOrderAssignmentHover: React.FC<WorkOrderAssignmentHoverProps> =
                 className="w-full h-8"
               >
                 <UserX className="h-3 w-3 mr-1" />
-                Unassign
+                {t('workOrderAudit.unassign')}
               </Button>
             </>
           )}
@@ -147,5 +149,4 @@ export const WorkOrderAssignmentHover: React.FC<WorkOrderAssignmentHoverProps> =
     </Popover>
   );
 };
-
 

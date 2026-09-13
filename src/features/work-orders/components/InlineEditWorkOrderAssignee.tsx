@@ -11,6 +11,7 @@ import {
   mobileInlineEditValueClassName,
 } from '@/features/equipment/components/inlineEditStyles';
 import type { WorkOrderStatus } from '@/features/work-orders/types/workOrder';
+import { useI18n } from '@/i18n';
 
 type InlineEditWorkOrderAssigneeProps = {
   workOrder: AssignmentWorkOrderContext & {
@@ -33,9 +34,10 @@ export function InlineEditWorkOrderAssignee({
   const [selectedValue, setSelectedValue] = useState('');
   const { assignmentOptions, isLoading, equipmentHasNoTeam } = useWorkOrderContextualAssignment(workOrder);
   const assignmentMutation = useQuickWorkOrderAssignment();
+  const { t } = useI18n();
 
   const currentAssigneeId = workOrder.assignee_id ?? '';
-  const displayName = workOrder.assigneeName?.trim() || 'Unassigned';
+  const displayName = workOrder.assigneeName?.trim() || t('workOrderAudit.unassigned');
 
   const handleSave = async () => {
     if (!selectedValue || selectedValue === currentAssigneeId) {
@@ -63,7 +65,7 @@ export function InlineEditWorkOrderAssignee({
     return (
       <div className={cn('space-y-2', className)}>
         <label className="text-sm font-medium text-muted-foreground" htmlFor={`assignee-${workOrder.id}`}>
-          Assignee
+          {t('workOrderAudit.assignee')}
         </label>
         <Select
           value={selectedValue}
@@ -71,13 +73,13 @@ export function InlineEditWorkOrderAssignee({
           disabled={isLoading || assignmentMutation.isPending}
         >
           <SelectTrigger id={`assignee-${workOrder.id}`} className="min-h-11 w-full touch-manipulation">
-            <SelectValue placeholder={isLoading ? 'Loading assignees...' : 'Select assignee'} />
+            <SelectValue placeholder={isLoading ? t('workOrderAudit.loadingAssignees') : t('workOrderAudit.selectAssignee')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="unassign">
               <span className="inline-flex items-center gap-2">
                 <UserMinus className="h-4 w-4" aria-hidden />
-                Unassigned
+                {t('workOrderAudit.unassigned')}
               </span>
             </SelectItem>
             {assignmentOptions.map((option) => (
@@ -88,7 +90,7 @@ export function InlineEditWorkOrderAssignee({
           </SelectContent>
         </Select>
         {equipmentHasNoTeam ? (
-          <p className="text-xs text-muted-foreground">Equipment has no team. Showing organization admins.</p>
+          <p className="text-xs text-muted-foreground">{t('workOrderAudit.noTeamAdmins')}</p>
         ) : null}
         <div className="flex gap-2">
           <Button
@@ -99,7 +101,7 @@ export function InlineEditWorkOrderAssignee({
             disabled={!selectedValue || assignmentMutation.isPending}
           >
             <Check className="h-4 w-4 mr-1" aria-hidden />
-            {assignmentMutation.isPending ? 'Saving...' : 'Save'}
+            {assignmentMutation.isPending ? t('workOrderAudit.saving') : t('workOrderAudit.save')}
           </Button>
           <Button
             type="button"
@@ -110,7 +112,7 @@ export function InlineEditWorkOrderAssignee({
             disabled={assignmentMutation.isPending}
           >
             <X className="h-4 w-4" aria-hidden />
-            <span className="sr-only">Cancel</span>
+            <span className="sr-only">{t('workOrderAudit.cancel')}</span>
           </Button>
         </div>
       </div>
@@ -121,7 +123,7 @@ export function InlineEditWorkOrderAssignee({
     <div className={cn(mobileInlineEditRowClassName, className)}>
       <div className={cn('flex min-w-0 items-center gap-2 text-base', mobileInlineEditValueClassName)}>
         <User className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
-        <span className="font-medium text-foreground">Assigned to</span>
+        <span className="font-medium text-foreground">{t('workOrderAudit.assignedTo')}</span>
         <span className="truncate text-muted-foreground">{displayName}</span>
       </div>
       {canEdit ? (
@@ -131,7 +133,7 @@ export function InlineEditWorkOrderAssignee({
           size="icon"
           className={inlineEditIconClassName}
           onClick={() => setIsEditing(true)}
-          aria-label="Edit assignee"
+          aria-label={t('workOrderAudit.editAssignee')}
         >
           <Edit2 className="h-4 w-4" aria-hidden />
         </Button>

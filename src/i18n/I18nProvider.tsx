@@ -95,6 +95,7 @@ import { publicFeatureOpsResources } from './publicFeatureOpsResources';
 import { auditExplorerResources } from './auditExplorerResources';
 import { publicFeaturePmTeamsResources } from './publicFeaturePmTeamsResources';
 import { workOrderAssignmentResources } from './workOrderAssignmentResources';
+import { i18nAuditResources } from './i18nAuditResources';
 
 
 export type Language = 'vi' | 'en' | 'ko';
@@ -107,6 +108,13 @@ const resources = {
   en: { ...en, ...coreResources.en, ...dashboardWidgetResources.en, ...equipmentResources.en, ...equipmentFormResources.en, ...equipmentBulkResources.en, ...equipmentAuxResources.en, ...equipmentImportResources.en, ...equipmentLocationResources.en, ...equipmentCustomAttributeResources.en, ...equipmentDeleteResources.en, ...equipmentDetailsResources.en, ...equipmentPMResources.en, ...equipmentInsightsResources.en, ...equipmentQRScanResources.en, ...equipmentScanResources.en, ...equipmentGroupResources.en, ...equipmentMediaResources.en, ...equipmentMutationResources.en, ...equipmentScannerResources.en, ...equipmentPartsResources.en, ...equipmentInlineResources.en, ...equipmentListResources.en, ...equipmentMobileResources.en, ...equipmentFinalizeResources.en, ...equipmentResidualResources.en, ...inventoryListResources.en, ...inventoryDetailResources.en, ...workOrderResources.en, ...teamsListResources.en, ...workOrderMobileResources.en, ...pmTemplateResources.en, ...operatorCheckinPublicResources.en, ...operatorCheckinAdminResources.en, ...workOrderFormResources.en, ...workOrderDetailResources.en, ...workOrderOperationsResources.en, ...workOrderResidualResources.en, ...workOrderActivityResources.en, ...inventoryFormBulkResources.en, ...alternateGroupListResources.en, ...alternateGroupDetailResources.en, ...organizationHubResources.en, ...organizationMembersResources.en, ...organizationIntegrationsResources.en, ...organizationAdminResources.en, ...teamsDetailResources.en, ...teamsCardsResources.en, ...teamsCustomerResources.en, ...teamsFeedbackResources.en, ...fleetMapResources.en, ...organizationImportResources.en, ...workspaceOnboardingResources.en, ...organizationNoticesResources.en, ...partLookupResources.en, ...inventoryListAuxResources.en, ...workOrderTimelineNoteResources.en, ...reportsResources.en, ...quickFormsResources.en, ...dsrResources.en, ...ticketsResources.en, ...supportPrivacyResources.en, ...workOrderExportUiResources.en, ...inventoryMutationResources.en, ...productOnboardingResources.en, ...operatorCheckinDetailResources.en, ...operatorEquipmentResources.en, ...workOrderCalendarResources.en, ...notificationPageResources.en, ...settingsPageResources.en, ...offlineQueueResources.en, ...settingsFormsResources.en, ...settingsSecurityResources.en, ...publicChromeResources.en, ...invitationAcceptResources.en, ...pmTemplateMutationResources.en, ...landingSectionsResources.en, ...workOrderQRResources.en, ...marketingTrustResources.en, ...landingDetailResources.en, ...authRouteResources.en, ...landingAnimationResources.en, ...auditLogControlsResources.en, ...workOrderFieldActionResources.en, ...notificationExtrasResources.en, ...workOrderMobileSummaryResources.en, ...authFlowResources.en, ...auditExplorerResources.en, ...workOrderAssignmentResources.en, publicFeatures: { ...publicFeaturePagesResources.en.publicFeatures, ...publicFeatureFleetBooksResources.en.publicFeatures, ...publicFeatureOpsResources.en.publicFeatures, ...publicFeaturePmTeamsResources.en.publicFeatures } },
   ko: { ...ko, ...coreResources.ko, ...dashboardWidgetResources.ko, ...equipmentResources.ko, ...equipmentFormResources.ko, ...equipmentBulkResources.ko, ...equipmentAuxResources.ko, ...equipmentImportResources.ko, ...equipmentLocationResources.ko, ...equipmentCustomAttributeResources.ko, ...equipmentDeleteResources.ko, ...equipmentDetailsResources.ko, ...equipmentPMResources.ko, ...equipmentInsightsResources.ko, ...equipmentQRScanResources.ko, ...equipmentScanResources.ko, ...equipmentGroupResources.ko, ...equipmentMediaResources.ko, ...equipmentMutationResources.ko, ...equipmentScannerResources.ko, ...equipmentPartsResources.ko, ...equipmentInlineResources.ko, ...equipmentListResources.ko, ...equipmentMobileResources.ko, ...equipmentFinalizeResources.ko, ...equipmentResidualResources.ko, ...inventoryListResources.ko, ...inventoryDetailResources.ko, ...workOrderResources.ko, ...teamsListResources.ko, ...workOrderMobileResources.ko, ...pmTemplateResources.ko, ...operatorCheckinPublicResources.ko, ...operatorCheckinAdminResources.ko, ...workOrderFormResources.ko, ...workOrderDetailResources.ko, ...workOrderOperationsResources.ko, ...workOrderResidualResources.ko, ...workOrderActivityResources.ko, ...inventoryFormBulkResources.ko, ...alternateGroupListResources.ko, ...alternateGroupDetailResources.ko, ...organizationHubResources.ko, ...organizationMembersResources.ko, ...organizationIntegrationsResources.ko, ...organizationAdminResources.ko, ...teamsDetailResources.ko, ...teamsCardsResources.ko, ...teamsCustomerResources.ko, ...teamsFeedbackResources.ko, ...fleetMapResources.ko, ...organizationImportResources.ko, ...workspaceOnboardingResources.ko, ...organizationNoticesResources.ko, ...partLookupResources.ko, ...inventoryListAuxResources.ko, ...workOrderTimelineNoteResources.ko, ...reportsResources.ko, ...quickFormsResources.ko, ...dsrResources.ko, ...ticketsResources.ko, ...supportPrivacyResources.ko, ...workOrderExportUiResources.ko, ...inventoryMutationResources.ko, ...productOnboardingResources.ko, ...operatorCheckinDetailResources.ko, ...operatorEquipmentResources.ko, ...workOrderCalendarResources.ko, ...notificationPageResources.ko, ...settingsPageResources.ko, ...offlineQueueResources.ko, ...settingsFormsResources.ko, ...settingsSecurityResources.ko, ...publicChromeResources.ko, ...invitationAcceptResources.ko, ...pmTemplateMutationResources.ko, ...landingSectionsResources.ko, ...workOrderQRResources.ko, ...marketingTrustResources.ko, ...landingDetailResources.ko, ...authRouteResources.ko, ...landingAnimationResources.ko, ...auditLogControlsResources.ko, ...workOrderFieldActionResources.ko, ...notificationExtrasResources.ko, ...workOrderMobileSummaryResources.ko, ...authFlowResources.ko, ...auditExplorerResources.ko, ...workOrderAssignmentResources.ko, publicFeatures: { ...publicFeaturePagesResources.ko.publicFeatures, ...publicFeatureFleetBooksResources.ko.publicFeatures, ...publicFeatureOpsResources.ko.publicFeatures, ...publicFeaturePmTeamsResources.ko.publicFeatures } },
 
+} as const;
+
+const localizedResources = {
+  ...resources,
+  vi: { ...resources.vi, ...i18nAuditResources.vi },
+  en: { ...resources.en, ...i18nAuditResources.en },
+  ko: { ...resources.ko, ...i18nAuditResources.ko },
 } as const;
 
 type TranslationParams = Record<string, string | number>;
@@ -145,7 +153,7 @@ function interpolate(value: string, params?: TranslationParams): string {
 }
 
 function translateEnglish(key: string, params?: TranslationParams): string {
-  const fallback = getNestedValue(resources.en, key);
+  const fallback = getNestedValue(localizedResources.en, key);
   const value = typeof fallback === 'string' ? fallback : key;
   return interpolate(value, params);
 }
@@ -168,8 +176,8 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [language]);
 
   const t = useCallback((key: string, params?: TranslationParams) => {
-    const localized = getNestedValue(resources[language], key);
-    const fallback = getNestedValue(resources.en, key);
+    const localized = getNestedValue(localizedResources[language], key);
+    const fallback = getNestedValue(localizedResources.en, key);
     const value = typeof localized === 'string' ? localized : typeof fallback === 'string' ? fallback : key;
     return interpolate(value, params);
   }, [language]);

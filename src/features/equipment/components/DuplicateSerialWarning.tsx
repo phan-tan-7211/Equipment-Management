@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, ArrowUpRight } from 'lucide-react';
 import type { DuplicateEquipmentMatch } from '@/features/equipment/services/EquipmentService';
+import { useI18n } from '@/i18n';
 
 interface DuplicateSerialWarningProps {
   match: DuplicateEquipmentMatch;
@@ -10,12 +11,6 @@ interface DuplicateSerialWarningProps {
   /** Optional click handler (e.g. close the form dialog) when the link is followed. */
   onNavigate?: () => void;
 }
-
-const STATUS_LABEL: Record<DuplicateEquipmentMatch['status'], string> = {
-  active: 'Active',
-  maintenance: 'Maintenance',
-  inactive: 'Inactive',
-};
 
 /**
  * Non-blocking "possible duplicate" notice. Shows at-a-glance details of the
@@ -27,7 +22,9 @@ export const DuplicateSerialWarning: React.FC<DuplicateSerialWarningProps> = ({
   inline = false,
   onNavigate,
 }) => {
+  const { t } = useI18n();
   const makeModel = [match.manufacturer, match.model].filter(Boolean).join(' ');
+  const statusLabel = t(`equipmentDetails.${match.status}`);
 
   return (
     <div
@@ -40,17 +37,17 @@ export const DuplicateSerialWarning: React.FC<DuplicateSerialWarningProps> = ({
         <div className="min-w-0 flex-1 space-y-1">
           <p className="text-sm font-medium">
             {inline
-              ? 'Possible duplicate — equipment with this serial already exists'
-              : 'This serial number already exists in your organization'}
+              ? t('equipmentAudit.duplicateInline')
+              : t('equipmentAudit.duplicateExisting')}
           </p>
           <div className="text-xs text-foreground/80 space-y-0.5">
             <p className="font-medium text-foreground">{match.name}</p>
             {makeModel && <p>{makeModel}</p>}
             <p>
-              Serial: <span className="font-mono">{match.serial_number}</span>
+              {t('equipmentAudit.serial')}: <span className="font-mono">{match.serial_number}</span>
             </p>
             <p>
-              Team: {match.team_name ?? 'Unassigned'} · Status: {STATUS_LABEL[match.status]}
+              {t('equipmentAudit.team')}: {match.team_name ?? t('equipmentAudit.unassigned')} · {t('equipmentAudit.status')}: {statusLabel}
             </p>
           </div>
           <Link
@@ -58,7 +55,7 @@ export const DuplicateSerialWarning: React.FC<DuplicateSerialWarningProps> = ({
             onClick={onNavigate}
             className="inline-flex items-center gap-1 text-xs font-medium underline underline-offset-2 hover:opacity-80"
           >
-            View existing equipment
+            {t('equipmentAudit.viewExisting')}
             <ArrowUpRight className="h-3 w-3" />
           </Link>
         </div>

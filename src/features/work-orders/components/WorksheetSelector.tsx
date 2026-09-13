@@ -5,6 +5,7 @@ import {
   WORKSHEET_NAMES,
   type WorksheetKey,
 } from '@/features/work-orders/types/workOrderExcel';
+import { useI18n } from '@/i18n';
 
 interface WorksheetSelectorProps {
   selectedWorksheets: WorksheetKey[];
@@ -21,6 +22,7 @@ export const WorksheetSelector: React.FC<WorksheetSelectorProps> = ({
   onChange,
   className,
 }) => {
+  const { t } = useI18n();
   const items = useMemo(
     () =>
       ALL_WORKSHEET_KEYS.map((key) => ({
@@ -32,11 +34,11 @@ export const WorksheetSelector: React.FC<WorksheetSelectorProps> = ({
 
   return (
     <ExportCollapsibleCheckboxPicker
-      title="Worksheets to export"
+    title={t('workOrderAudit.worksheetTitle')}
       items={items}
       selectedKeys={selectedWorksheets}
       onChange={(keys) => onChange(keys as WorksheetKey[])}
-      noneSelectedMessage="Select at least one worksheet to export."
+    noneSelectedMessage={t('workOrderAudit.worksheetNone')}
       idPrefix="worksheet"
       className={className}
     />
