@@ -1,9 +1,10 @@
 import React from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@vitest-harness/utils/test-utils';
 import WorkOrderCard from './WorkOrderCard';
 import type { WorkOrder } from '@/features/work-orders/types/workOrder';
+import { I18nProvider } from '@/i18n';
 
 const mockOnNavigate = vi.fn();
 const mockGetDetailedPermissions = vi.fn();
@@ -130,6 +131,8 @@ const baseWorkOrder: WorkOrder = {
 };
 
 describe('WorkOrderCard', () => {
+  afterEach(() => window.localStorage.removeItem('znteqr-language'));
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetDetailedPermissions.mockReturnValue({
@@ -140,6 +143,20 @@ describe('WorkOrderCard', () => {
   });
 
   describe('desktop variant', () => {
+    it('localizes status and priority in Vietnamese', () => {
+      window.localStorage.setItem('znteqr-language', 'vi');
+
+      render(
+        <I18nProvider>
+          <WorkOrderCard workOrder={baseWorkOrder} onNavigate={mockOnNavigate} />
+        </I18nProvider>,
+      );
+
+      expect(screen.getByText('Đang thực hiện')).toBeInTheDocument();
+      expect(screen.getByText('Cao')).toBeInTheDocument();
+      expect(screen.queryByText('In Progress')).not.toBeInTheDocument();
+    });
+
     it('shows a clock only when the due is timed', () => {
       render(
         <WorkOrderCard
@@ -368,6 +385,27 @@ describe('WorkOrderCard', () => {
       expect(screen.getByText(/Due: 2026-12-10/)).toBeInTheDocument();
       expect(screen.queryByText(/12:00 AM/i)).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'View Details' })).toBeInTheDocument();
+    });
+
+    it('localizes card labels, status, and priority in Korean', () => {
+      window.localStorage.setItem('znteqr-language', 'ko');
+
+      render(
+        <I18nProvider>
+          <WorkOrderCard
+            workOrder={baseWorkOrder}
+            variant="compact"
+            onNavigate={mockOnNavigate}
+          />
+        </I18nProvider>,
+      );
+
+      expect(screen.getByText('진행 중')).toBeInTheDocument();
+      expect(screen.getByText('우선순위: 높음')).toBeInTheDocument();
+      expect(screen.getByText(/생성됨:/)).toBeInTheDocument();
+      expect(screen.getByText(/기한:/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '상세 보기' })).toBeInTheDocument();
+      expect(screen.queryByText('View Details')).not.toBeInTheDocument();
     });
   });
 });
