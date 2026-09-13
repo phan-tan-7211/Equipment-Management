@@ -16,6 +16,7 @@ import type { WorkOrder } from '@/features/work-orders/types/workOrder';
 import type { WorkOrderLike } from '@/features/work-orders/utils/workOrderTypeConversion';
 import type { WorkOrderFileExportHandlers } from '@/features/work-orders/types/workOrderFileExportHandlers';
 import type { UseMutationResult } from '@tanstack/react-query';
+import { useI18n } from '@/i18n';
 
 type WorkOrderDetailsOverlaysProps = {
   isMobile: boolean;
@@ -134,6 +135,7 @@ export function WorkOrderDetailsOverlays({
   onRetrySync,
   onShowWorkOrderQr,
 }: WorkOrderDetailsOverlaysProps) {
+  const { t } = useI18n();
   const quickActions = buildWorkOrderSheetQuickActions({
     workOrderStatus: workOrder.status,
     assigneeId: workOrder.assignee_id,
@@ -209,34 +211,34 @@ export function WorkOrderDetailsOverlays({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-success" />
-              Complete Work Order
+              {t('workOrderAudit.completeTitle')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
-                <p>Are you sure you want to mark this work order as completed?</p>
+                <p>{t('workOrderAudit.completeQuestion')}</p>
                 {workTimer.elapsedSeconds > 0 && (
                   <p className="text-sm">
-                    Timer: <span className="font-medium text-foreground">{workTimer.displayTime}</span> ({(workTimer.elapsedSeconds / 3600).toFixed(2)}h)
+                    {t('workOrderAudit.timer')} <span className="font-medium text-foreground">{workTimer.displayTime}</span> ({(workTimer.elapsedSeconds / 3600).toFixed(2)}h)
                   </p>
                 )}
-                <p className="text-sm font-medium text-foreground">Before completing, please confirm:</p>
+                <p className="text-sm font-medium text-foreground">{t('workOrderAudit.beforeCompleting')}</p>
                 <ul className="text-sm space-y-1 list-disc pl-4">
-                  <li>All hours have been logged</li>
-                  <li>All cost items have been recorded</li>
-                  <li>Notes and photos are up to date</li>
+                  <li>{t('workOrderAudit.hoursLogged')}</li>
+                  <li>{t('workOrderAudit.costsRecorded')}</li>
+                  <li>{t('workOrderAudit.notesPhotosUpdated')}</li>
                 </ul>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={mobileStatusMutation.isPending}>
-              Go Back
+              {t('workOrderAudit.goBack')}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={mobileStatusMutation.isPending}
               onClick={onCompleteMobileWorkOrder}
             >
-              {mobileStatusMutation.isPending ? 'Completing...' : 'Mark as Complete'}
+              {mobileStatusMutation.isPending ? t('workOrderAudit.completing') : t('workOrderAudit.markComplete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -269,7 +271,7 @@ export function WorkOrderDetailsOverlays({
           type="button"
           size="icon"
           onClick={() => onMobileActionSheetOpenChange(true)}
-          aria-label="Open work order quick actions"
+          aria-label={t('workOrderAudit.openQuickActions')}
           className={cn(
             'fixed right-4 z-fixed h-14 w-14 rounded-full shadow-elevation-3',
             showMobileSyncBanner
