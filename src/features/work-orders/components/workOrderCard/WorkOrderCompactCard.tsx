@@ -8,10 +8,10 @@ import ClickableAddress from '@/components/ui/ClickableAddress';
 import { cn } from '@/lib/utils';
 import {
   getStatusColor,
-  formatStatus,
   isOverdue,
   isTerminalStatus,
 } from '@/features/work-orders/utils/workOrderHelpers';
+import { localizeWorkOrderPriority, localizeWorkOrderStatus } from '@/features/work-orders/utils/workOrderI18nLabels';
 import { formatDueDisplay, parseDue } from '@/features/work-orders/calendar';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { getWorkOrderStatusBorderWithOverdue } from '@/lib/status-colors';
@@ -64,11 +64,13 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
               {workOrder.title}
             </CardTitle>
             <span className="text-xs text-muted-foreground capitalize">
-              {workOrder.priority} priority
+              {t('workOrderDetail.priorityLabel', {
+                priority: localizeWorkOrderPriority(workOrder.priority, t),
+              })}
             </span>
           </div>
           <Badge className={getStatusColor(workOrder.status)}>
-            {formatStatus(workOrder.status)}
+            {localizeWorkOrderStatus(workOrder.status, t)}
           </Badge>
         </div>
       </CardHeader>
@@ -133,7 +135,7 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            Created: {computedData.formattedCreatedDate}
+            {t('workOrderAudit.created')}: {computedData.formattedCreatedDate}
           </div>
 
           {computedData.formattedDueDate !== '—' && (
@@ -145,10 +147,10 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
                   <TooltipTrigger asChild>
                     <AlertTriangle className="h-3.5 w-3.5" />
                   </TooltipTrigger>
-                  <TooltipContent>Overdue &mdash; due date has passed</TooltipContent>
+                  <TooltipContent>{t('workOrderAudit.overdue')}</TooltipContent>
                 </Tooltip>
               )}
-              Due: {computedData.formattedDueDate}
+              {t('workOrderAudit.due')}: {computedData.formattedDueDate}
             </div>
           )}
         </div>
@@ -160,7 +162,7 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
             className="flex-1"
             onClick={() => onNavigate?.(workOrder.id)}
           >
-            View Details
+            {t('workOrderAudit.viewDetails')}
           </Button>
         </div>
       </CardContent>
