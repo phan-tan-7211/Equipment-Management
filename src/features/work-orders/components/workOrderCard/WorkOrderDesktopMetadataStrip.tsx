@@ -8,6 +8,7 @@ import WorkOrderCostSubtotal from '../WorkOrderCostSubtotal';
 import { formatDueDisplay, parseDue } from '@/features/work-orders/calendar';
 import type { WorkOrder } from '@/features/work-orders/types/workOrder';
 import type { AssignmentWorkOrderContext } from '@/features/work-orders/hooks/useWorkOrderContextualAssignment';
+import { useI18n } from '@/i18n';
 
 type WorkOrderDesktopMetadataStripProps = {
   workOrder: WorkOrder;
@@ -30,6 +31,7 @@ export const WorkOrderDesktopMetadataStrip: React.FC<WorkOrderDesktopMetadataStr
   canEditAssignment,
   canEdit,
 }) => {
+  const { t } = useI18n();
   const equipmentTeamName = workOrder.equipmentTeamName ?? workOrder.teamName;
   const createdDateValue = workOrder.created_date;
   const due = parseDue(workOrder);
@@ -50,13 +52,13 @@ export const WorkOrderDesktopMetadataStrip: React.FC<WorkOrderDesktopMetadataStr
       {dueLabel && (
         <span className={cn('inline-flex items-center gap-1', isWorkOrderOverdue && 'text-destructive font-medium')}>
           <Clock className="h-3.5 w-3.5 shrink-0" />
-          Due {dueLabel}
+          {t('workOrderAudit.due')} {dueLabel}
           {isWorkOrderOverdue && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <AlertTriangle className="h-3 w-3" />
               </TooltipTrigger>
-              <TooltipContent>Overdue &mdash; due date has passed</TooltipContent>
+              <TooltipContent>{t('workOrderAudit.overdue')}</TooltipContent>
             </Tooltip>
           )}
         </span>
@@ -79,7 +81,7 @@ export const WorkOrderDesktopMetadataStrip: React.FC<WorkOrderDesktopMetadataStr
           ) : (
             <>
               <UserX className="h-3.5 w-3.5 shrink-0" />
-              Unassigned
+              {t('workOrderAudit.unassigned')}
             </>
           )}
         </span>

@@ -21,12 +21,14 @@ import {
   WORK_ORDER_CARD_NAVIGABLE_CLASS,
 } from './workOrderCardNavigation';
 import type { WorkOrderCardProps } from '../WorkOrderCard';
+import { useI18n } from '@/i18n';
 
 export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
   workOrder,
   onNavigate,
 }) => {
   const { formatDate, formatDateTime } = useFormatTimestamp();
+  const { t } = useI18n();
 
   const computedData = useMemo(() => {
     const fmtDate = (v?: string | null) => (v ? formatDate(v) : '—');
@@ -88,7 +90,7 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
         <div className="space-y-2 text-sm">
           {workOrder.equipmentName && (
             <div className="flex items-center gap-2">
-              <span className="font-medium">Equipment:</span>
+              <span className="font-medium">{t('workOrderAudit.equipmentLabel')}</span>
               <span className="text-muted-foreground truncate">
                 {workOrder.equipmentName}
               </span>
@@ -106,7 +108,7 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
 
           {(workOrder.teamName || workOrder.equipmentTeamName) && (
             <div className="flex items-center gap-2">
-              <span className="font-medium">Team:</span>
+              <span className="font-medium">{t('workOrderAudit.teamLabel')}</span>
               <span className="text-muted-foreground truncate">
                 {workOrder.teamName || workOrder.equipmentTeamName}
               </span>

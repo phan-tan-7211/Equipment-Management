@@ -5,6 +5,7 @@ import { Wrench, CheckCircle2, CircleDashed } from 'lucide-react';
 import { usePMByWorkOrderId } from '@/features/pm-templates/hooks/usePMData';
 import { getItemStatus } from '@/utils/pmChecklistHelpers';
 import type { PMChecklistItem } from '@/features/pm-templates/services/preventativeMaintenanceService';
+import { useI18n } from '@/i18n';
 
 interface PMProgressIndicatorProps {
   workOrderId: string;
@@ -21,6 +22,7 @@ const PMProgressIndicator: React.FC<PMProgressIndicatorProps> = ({
   variant = 'default',
 }) => {
   const { data: pmData } = usePMByWorkOrderId(workOrderId);
+  const { t } = useI18n();
 
   // Parse checklist data and create segments for all items
   // Must be called before early return to follow Rules of Hooks
@@ -71,13 +73,13 @@ const PMProgressIndicator: React.FC<PMProgressIndicatorProps> = ({
           <button
             type="button"
             className="inline-flex shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label="Preventive Maintenance Checklist"
+            aria-label={t('workOrderAudit.pmChecklist')}
           >
             <Wrench className="h-4 w-4 text-muted-foreground" />
           </button>
         </TooltipTrigger>
         <TooltipContent side="top">
-          <p className="text-sm">Preventive Maintenance Checklist</p>
+          <p className="text-sm">{t('workOrderAudit.pmChecklist')}</p>
         </TooltipContent>
       </Tooltip>
 
@@ -101,7 +103,7 @@ const PMProgressIndicator: React.FC<PMProgressIndicatorProps> = ({
           <button
             type="button"
             className="inline-flex shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={isCompleted ? 'Checklist complete' : 'Checklist incomplete'}
+            aria-label={isCompleted ? t('workOrderAudit.checklistComplete') : t('workOrderAudit.checklistIncomplete')}
           >
             {isCompleted ? (
               <CheckCircle2 className="h-4 w-4 text-success" />
@@ -112,7 +114,7 @@ const PMProgressIndicator: React.FC<PMProgressIndicatorProps> = ({
         </TooltipTrigger>
         <TooltipContent side="top">
           <p className="text-sm">
-            {isCompleted ? 'Checklist complete' : 'Checklist incomplete'}
+            {isCompleted ? t('workOrderAudit.checklistComplete') : t('workOrderAudit.checklistIncomplete')}
           </p>
         </TooltipContent>
       </Tooltip>
@@ -122,5 +124,4 @@ const PMProgressIndicator: React.FC<PMProgressIndicatorProps> = ({
 };
 
 export default PMProgressIndicator;
-
 

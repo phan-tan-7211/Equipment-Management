@@ -17,6 +17,7 @@ import {
   toWorkOrderEquipmentTeamSummary,
   type WorkOrderLocationEquipment,
 } from '@/components/location/workOrderEquipmentLocationContext';
+import { useI18n } from '@/i18n';
 
 type FieldContextItemProps = {
   icon: React.ReactNode;
@@ -144,6 +145,7 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
 }) => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isEquipmentDetailsExpanded, setIsEquipmentDetailsExpanded] = useState(false);
+  const { t } = useI18n();
 
   const { data: currentWorkingHours, isLoading: workingHoursLoading } = useEquipmentCurrentWorkingHours(
     equipment?.id || '',
@@ -163,7 +165,7 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
           <div className="divide-y divide-border/50">
             {equipment ? (
               <div className="space-y-2 py-3">
-                <FieldContextItem icon={<Forklift className="h-4 w-4" aria-hidden />} label="Equipment">
+                <FieldContextItem icon={<Forklift className="h-4 w-4" aria-hidden />} label={t('workOrderAudit.equipment')}>
                   <Link
                     to={`/dashboard/equipment/${equipment.id}`}
                     className="font-semibold text-primary underline-offset-4 hover:underline"
@@ -172,7 +174,7 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
                   </Link>
                 </FieldContextItem>
                 {equipStatus ? (
-                  <FieldContextNestedItem label="Status">
+                  <FieldContextNestedItem label={t('workOrderAudit.status')}>
                     <span className={cn('font-medium', equipStatus.textClassName)}>{equipStatus.label}</span>
                   </FieldContextNestedItem>
                 ) : null}
@@ -181,7 +183,7 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
 
             {team ? (
               <div className="py-3">
-                <FieldContextItem icon={<Users className="h-4 w-4" aria-hidden />} label="Team">
+                <FieldContextItem icon={<Users className="h-4 w-4" aria-hidden />} label={t('workOrderAudit.team')}>
                   <Link to={`/dashboard/teams/${team.id}`} className="font-semibold text-primary hover:underline">
                     {team.name}
                   </Link>
@@ -191,7 +193,7 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
 
             {locationSummary ? (
               <div className="py-3">
-                <FieldContextItem icon={<MapPin className="h-4 w-4" aria-hidden />} label="Location">
+                <FieldContextItem icon={<MapPin className="h-4 w-4" aria-hidden />} label={t('workOrderAudit.location')}>
                   <span className="text-muted-foreground">{locationSummary}</span>
                 </FieldContextItem>
               </div>
@@ -199,7 +201,7 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
 
             {workOrder.estimated_hours != null ? (
               <div className="py-3">
-                <FieldContextItem icon={<Clock className="h-4 w-4" aria-hidden />} label="Estimated">
+                <FieldContextItem icon={<Clock className="h-4 w-4" aria-hidden />} label={t('workOrderAudit.estimated')}>
                   <span className="text-muted-foreground">{workOrder.estimated_hours}h</span>
                 </FieldContextItem>
               </div>
@@ -208,7 +210,7 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
             <div className="py-3">
               <FieldContextItem
                 icon={<Wrench className="h-4 w-4" aria-hidden />}
-                label={workOrder.equipment_working_hours_at_creation ? 'Meter at creation' : 'Equipment hours'}
+                label={workOrder.equipment_working_hours_at_creation ? t('workOrderAudit.meterAtCreation') : t('workOrderAudit.equipmentHours')}
               >
                 <span className="text-muted-foreground">
                   {workingHoursLoading ? (
@@ -234,7 +236,7 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
                 >
                   <span className="inline-flex items-center gap-2 text-base font-semibold">
                     <Clipboard className="h-4 w-4 text-muted-foreground" />
-                    Description
+                    {t('workOrderAudit.description')}
                   </span>
                   {isDescriptionExpanded ? (
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -253,9 +255,9 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
                     onSave={onSaveDescription}
                     canEdit={canEditDescription}
                     type="textarea"
-                    placeholder="Add a work order description"
+                    placeholder={t('workOrderAudit.addDescription')}
                     className="w-full text-[15px] leading-relaxed text-foreground/80"
-                    editAriaLabel="Edit description"
+                    editAriaLabel={t('workOrderAudit.editDescription')}
                   />
                 ) : (
                   <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/80">{workOrder.description}</p>
@@ -280,7 +282,7 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
                 >
                   <span className="inline-flex items-center gap-2 text-base font-semibold">
                     <Wrench className="h-4 w-4 text-muted-foreground" />
-                    Equipment Details
+                    {t('workOrderAudit.equipmentDetails')}
                   </span>
                   {isEquipmentDetailsExpanded ? (
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -311,7 +313,7 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
 
                 {equipment.manufacturer && equipment.model ? (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Model</span>
+                    <span className="text-muted-foreground">{t('workOrderAudit.model')}</span>
                     <span>
                       {equipment.manufacturer} {equipment.model}
                     </span>
@@ -319,13 +321,13 @@ export const WorkOrderDetailsMobile: React.FC<WorkOrderDetailsMobileProps> = ({
                 ) : null}
                 {equipment.serial_number ? (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Serial</span>
+                    <span className="text-muted-foreground">{t('workOrderAudit.serial')}</span>
                     <span className="font-mono">{equipment.serial_number}</span>
                   </div>
                 ) : null}
                 {workOrder.equipment_working_hours_at_creation ? (
                   <div className="mt-2 rounded bg-muted p-2 text-xs text-muted-foreground">
-                    Hours shown are from work order creation time
+                    {t('workOrderAudit.hoursAtCreation')}
                   </div>
                 ) : null}
                 {equipment.custom_attributes && Object.keys(equipment.custom_attributes).length > 0 ? (

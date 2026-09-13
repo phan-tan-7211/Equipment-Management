@@ -4,6 +4,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import { useParams, useSearchParams, Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWorkOrderDetailsData } from '@/features/work-orders/components/hooks/useWorkOrderDetailsData';
+import { useI18n } from '@/i18n';
 import { useWorkOrderDetailsActions } from '@/features/work-orders/hooks/useWorkOrderDetailsActions';
 import { useWorkOrderEquipment } from '@/features/work-orders/hooks/useWorkOrderEquipment';
 import { logNavigationEvent } from '@/utils/navigationDebug';
@@ -57,6 +58,7 @@ const WorkOrderDetails = () => {
   const { workOrderId } = useParams<{ workOrderId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
+  const { t } = useI18n();
 
   const actionParam = searchParams.get('action');
   const shouldAutoOpenNoteForm = actionParam === 'add-note';
@@ -315,8 +317,8 @@ const WorkOrderDetails = () => {
   if (workOrderLoading || !currentOrganization) {
     logNavigationEvent('LOADING_STATE', { workOrderLoading, hasOrganization: !!currentOrganization });
     return (
-      <div className="space-y-6 p-4" role="status" aria-label="Loading work order details">
-        <span className="sr-only">Loading work order details...</span>
+      <div className="space-y-6 p-4" role="status" aria-label={t('workOrderAudit.loadingDetails')}>
+        <span className="sr-only">{t('workOrderAudit.loadingDetails')}...</span>
         <div className="h-8 bg-muted animate-pulse rounded" aria-hidden="true" />
         <div className="h-64 bg-muted animate-pulse rounded" aria-hidden="true" />
       </div>

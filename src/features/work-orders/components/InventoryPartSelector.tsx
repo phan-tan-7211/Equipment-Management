@@ -21,6 +21,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useCompatibleInventoryItems } from '@/features/inventory/hooks/useInventory';
+import { useI18n } from '@/i18n';
 
 type SortOption = 'default' | 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
 
@@ -38,6 +39,7 @@ export const InventoryPartSelector: React.FC<InventoryPartSelectorProps> = ({
   onSelect
 }) => {
   const { currentOrganization } = useOrganization();
+  const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -117,9 +119,9 @@ export const InventoryPartSelector: React.FC<InventoryPartSelectorProps> = ({
     <Dialog open={open} onOpenChange={handleCancel}>
       <DialogContent className="max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Part from Inventory</DialogTitle>
+          <DialogTitle>{t('inventoryAudit.addPart')}</DialogTitle>
           <DialogDescription>
-            Select a compatible part from your inventory
+            {t('inventoryAudit.selectCompatible')}
           </DialogDescription>
         </DialogHeader>
 
@@ -129,7 +131,7 @@ export const InventoryPartSelector: React.FC<InventoryPartSelectorProps> = ({
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search by name, SKU, or external ID..."
+                placeholder={t('inventoryAudit.search')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -141,20 +143,20 @@ export const InventoryPartSelector: React.FC<InventoryPartSelectorProps> = ({
                 <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                 <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
                   <SelectTrigger className="w-55">
-                    <SelectValue placeholder="Sort by..." />
+                    <SelectValue placeholder={t('inventoryAudit.sortBy')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="default">Default (Alternates, Cheapest)</SelectItem>
-                    <SelectItem value="name-asc">Name: A → Z</SelectItem>
-                    <SelectItem value="name-desc">Name: Z → A</SelectItem>
-                    <SelectItem value="price-asc">Price: Low → High</SelectItem>
-                    <SelectItem value="price-desc">Price: High → Low</SelectItem>
+                    <SelectItem value="default">{t('inventoryAudit.defaultSort')}</SelectItem>
+                    <SelectItem value="name-asc">{t('inventoryAudit.nameAsc')}</SelectItem>
+                    <SelectItem value="name-desc">{t('inventoryAudit.nameDesc')}</SelectItem>
+                    <SelectItem value="price-asc">{t('inventoryAudit.priceLowHigh')}</SelectItem>
+                    <SelectItem value="price-desc">{t('inventoryAudit.priceHighLow')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <p className="text-sm text-muted-foreground">
-                {filteredAndSortedItems.length} {filteredAndSortedItems.length === 1 ? 'part' : 'parts'} found
+                {t(filteredAndSortedItems.length === 1 ? 'inventoryAudit.partFound' : 'inventoryAudit.partsFound', { count: filteredAndSortedItems.length })}
               </p>
             </div>
           </div>
@@ -175,11 +177,11 @@ export const InventoryPartSelector: React.FC<InventoryPartSelectorProps> = ({
             <Card>
               <CardContent className="py-12 text-center">
                 <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No compatible parts</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('inventoryAudit.noCompatibleParts')}</h3>
                 <p className="text-muted-foreground">
                   {searchTerm
-                    ? 'No parts match your search.'
-                    : 'No parts are linked to the work order equipment.'}
+                    ? t('inventoryAudit.noPartsMatch')
+                    : t('inventoryAudit.noPartsLinked')}
                 </p>
               </CardContent>
             </Card>
@@ -203,22 +205,22 @@ export const InventoryPartSelector: React.FC<InventoryPartSelectorProps> = ({
                             {item.hasAlternates && (
                               <Badge variant="outline" className="text-xs bg-info/10 text-info border-info/30 dark:bg-info/20 dark:text-info dark:border-info/40">
                                 <RefreshCw className="h-3 w-3 mr-1" />
-                                Alternates
+                                {t('inventoryAudit.alternates')}
                               </Badge>
                             )}
                             {item.isLowStock && (
                               <Badge variant="destructive" className="text-xs">
                                 <AlertTriangle className="h-3 w-3 mr-1" />
-                                Low Stock
+                                {t('inventoryAudit.lowStock')}
                               </Badge>
                             )}
                           </div>
                           {item.sku && (
-                            <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>
+                            <p className="text-sm text-muted-foreground">{t('inventoryAudit.sku')}: {item.sku}</p>
                           )}
                           {item.external_id && (
                             <p className="text-sm text-muted-foreground font-mono">
-                              External ID: {item.external_id}
+                              {t('inventoryAudit.externalId')}: {item.external_id}
                             </p>
                           )}
                           {item.location && (
@@ -227,7 +229,7 @@ export const InventoryPartSelector: React.FC<InventoryPartSelectorProps> = ({
                         </div>
                         <div className="text-right ml-4">
                           <p className="font-medium">
-                            Qty: {item.quantity_on_hand}
+                            {t('inventoryAudit.quantity')}: {item.quantity_on_hand}
                           </p>
                           {item.default_unit_cost && (
                             <p className="text-sm text-muted-foreground">
@@ -248,14 +250,14 @@ export const InventoryPartSelector: React.FC<InventoryPartSelectorProps> = ({
             <Card className="bg-muted/50">
               <CardContent className="p-4 space-y-4">
                 <div>
-                  <Label>Selected Part</Label>
+                  <Label>{t('inventoryAudit.selectedPart')}</Label>
                   <p className="font-medium">{selectedItem.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    Available: {selectedItem.quantity_on_hand}
+                    {t('inventoryAudit.available')}: {selectedItem.quantity_on_hand}
                   </p>
                 </div>
                 <div>
-                  <Label htmlFor="quantity">Quantity</Label>
+                  <Label htmlFor="quantity">{t('inventoryAudit.quantity')}</Label>
                   <Input
                     id="quantity"
                     type="number"
@@ -271,7 +273,7 @@ export const InventoryPartSelector: React.FC<InventoryPartSelectorProps> = ({
                 </div>
                 {selectedItem.default_unit_cost && (
                   <div>
-                    <Label>Estimated Cost</Label>
+                    <Label>{t('inventoryAudit.estimatedCost')}</Label>
                     <p className="font-medium">
                       ${(quantity * Number(selectedItem.default_unit_cost)).toFixed(2)}
                     </p>
@@ -284,13 +286,13 @@ export const InventoryPartSelector: React.FC<InventoryPartSelectorProps> = ({
           {/* Actions */}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleCancel}>
-              Cancel
+              {t('inventoryAudit.cancel')}
             </Button>
             <Button
               onClick={handleSelect}
               disabled={!selectedItem || quantity < 1}
             >
-              Add to Work Order
+              {t('inventoryAudit.addToWorkOrder')}
             </Button>
           </div>
         </div>
@@ -298,7 +300,5 @@ export const InventoryPartSelector: React.FC<InventoryPartSelectorProps> = ({
     </Dialog>
   );
 };
-
-
 
 
