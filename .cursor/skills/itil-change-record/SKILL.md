@@ -1,6 +1,6 @@
 ---
 name: itil-change-record
-description: Simple implementation planning workflow for EquipQR. Use when the user asks for a plan, change record, implementation outline, or approval-ready scope before code. Produces a Composer 2.5 executable plan with XML boundaries, checkbox tracking, authorized commands, test-first verification, summary checkpoints, and stop conditions, then hands execution to itil-issue-resolver after approval.
+description: Simple implementation planning workflow for ZNTEQR. Use when the user asks for a plan, change record, implementation outline, or approval-ready scope before code. Produces a Composer 2.5 executable plan with XML boundaries, checkbox tracking, authorized commands, test-first verification, summary checkpoints, and stop conditions, then hands execution to itil-issue-resolver after approval.
 ---
 
 # ITIL Change Plan
