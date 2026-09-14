@@ -123,5 +123,3 @@ export const useUpdatePM = () => {
     },
   });
 };
-
-export { usePMsByWorkOrderId };
