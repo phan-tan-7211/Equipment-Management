@@ -6,7 +6,7 @@ function Get-PrFeedbackScriptDirectory {
     return Split-Path -Parent $InvocationPath
 }
 
-function Get-EquipQrRepoRootFromScript {
+function Get-ZnteqrRepoRootFromScript {
     param([string]$ScriptDirectory)
     return (Resolve-Path (Join-Path $ScriptDirectory '..\..')).Path
 }
