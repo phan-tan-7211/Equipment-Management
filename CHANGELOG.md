@@ -15,8 +15,6 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ### Changed
 
-### Changed
-
 - **Member roster localization** — Placeholder names for pending invitations, Google Workspace claims, and unknown members now display in Vietnamese, English, and Korean.
 
 - **Equipment localization follow-up** — Remaining equipment form hints, bulk-edit controls, loading text, media labels, and note confirmation now display in Vietnamese, English, and Korean.
