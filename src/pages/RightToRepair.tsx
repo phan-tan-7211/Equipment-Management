@@ -9,20 +9,20 @@ import { PageSEO } from '@/components/seo/PageSEO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RightToRepairLandscape } from '@/pages/legal/right-to-repair/RightToRepairLandscape';
 import {
-  EQUIPQR_REPAIR_COMMITMENTS,
+  ZNTEQR_REPAIR_COMMITMENTS,
   RIGHT_TO_REPAIR_REVIEWED_ON,
   RIGHT_TO_REPAIR_SEO,
 } from '@/pages/legal/right-to-repair/rightToRepairContent';
-import type { EquipQrCommitmentId } from '@/pages/legal/right-to-repair/types';
+import type { ZnteqrCommitmentId } from '@/pages/legal/right-to-repair/types';
 import { useI18n } from '@/i18n/I18nProvider';
 
-const COMMITMENT_ICONS: Record<EquipQrCommitmentId, LucideIcon> = {
+const COMMITMENT_ICONS: Record<ZnteqrCommitmentId, LucideIcon> = {
   export: Download,
   'no-hostage': Unlock,
   'no-pairing': Wrench,
 };
 
-const COMMITMENT_COPY_KEYS: Record<EquipQrCommitmentId, { title: string; body: string }> = {
+const COMMITMENT_COPY_KEYS: Record<ZnteqrCommitmentId, { title: string; body: string }> = {
   export: { title: 'exportTitle', body: 'exportBody' },
   'no-hostage': { title: 'noHostageTitle', body: 'noHostageBody' },
   'no-pairing': { title: 'noPairingTitle', body: 'noPairingBody' },
@@ -88,7 +88,7 @@ export function RightToRepair(): JSX.Element {
                 {t('marketingTrust.repair.commitments')}
               </h2>
               <ul className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
-                {EQUIPQR_REPAIR_COMMITMENTS.map((commitment) => {
+                {ZNTEQR_REPAIR_COMMITMENTS.map((commitment) => {
                   const Icon = COMMITMENT_ICONS[commitment.id];
                   return (
                     <li key={commitment.id}>
