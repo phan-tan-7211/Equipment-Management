@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { seedInvitations } from '../shared/seed-data';
 
 test.describe('invitation accept @full', () => {
