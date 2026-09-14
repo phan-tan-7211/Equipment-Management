@@ -1,6 +1,6 @@
 ---
 name: issue-clarification
-description: Clarifies one open EquipQR GitHub issue before implementation by defining affected users, problem, success criteria, and codebase findings, then rewrites the issue title and body on GitHub. Use when the user asks to clarify, triage, scope, or document an issue, or invokes /issue-clarification. Requires a valid open issue number or URL. Ask product questions via AskQuestion when needed; do not wait for a separate approve step before gh issue edit. Does not implement fixes.
+description: Clarifies one open ZNTEQR GitHub issue before implementation by defining affected users, problem, success criteria, and codebase findings, then rewrites the issue title and body on GitHub. Use when the user asks to clarify, triage, scope, or document an issue, or invokes /issue-clarification. Requires a valid open issue number or URL. Ask product questions via AskQuestion when needed; do not wait for a separate approve step before gh issue edit. Does not implement fixes.
 disable-model-invocation: true
 ---
 
@@ -102,8 +102,8 @@ Classify who is impacted. List users **in order of priority** (highest first). U
 
 1. Potential New Customers
 2. Developer
-3. EquipQR Org Owners/Admins Only
-4. EquipQR Users
+3. ZNTEQR Org Owners/Admins Only
+4. ZNTEQR Users
 5. Quickbooks Users
 6. Google Drive Users
 7. Unauthenticated Users
@@ -197,7 +197,7 @@ Write the complete proposed **new title** and **full body** to a persistent draf
 
 **Title:** Rewrite so it accurately and concisely reflects the clarified problem statement (not the original vague title).
 
-**Body rules (canonical EquipQR format):**
+**Body rules (canonical ZNTEQR format):**
 
 1. Begin with exactly one triage line:
 
