@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { newPersonaPage, pinContextToApex, gotoDashboardRoute } from '../user/shared/auth-helpers';
 import { expectNavigationLinkHidden } from '../user/shared/page-helpers';
 import { seedEquipment, seedTeams, seedWorkOrders } from '../user/shared/seed-data';
