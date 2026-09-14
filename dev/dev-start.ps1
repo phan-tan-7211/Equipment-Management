@@ -393,9 +393,9 @@ Write-Host "        All pre-flight checks passed."
 # ---------- 1b. 1Password sync ----------
 Write-Host ""
 Write-Host " [1b/11] Syncing 1Password item env files early..."
-$OP_APP_ITEM = $env:EQUIPQR_OP_APP_ITEM
+$OP_APP_ITEM = $env:ZNTEQR_OP_APP_ITEM
 if (-not $OP_APP_ITEM) { $OP_APP_ITEM = $DEFAULT_OP_APP_ITEM }
-$OP_EDGE_ITEM = $env:EQUIPQR_OP_EDGE_ITEM
+$OP_EDGE_ITEM = $env:ZNTEQR_OP_EDGE_ITEM
 if (-not $OP_EDGE_ITEM) { $OP_EDGE_ITEM = $DEFAULT_OP_EDGE_ITEM }
 
 $opCli = Get-Command op -ErrorAction SilentlyContinue
