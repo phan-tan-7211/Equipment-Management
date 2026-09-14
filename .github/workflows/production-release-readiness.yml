@@ -21,7 +21,7 @@ permissions:
   contents: read
 
 env:
-  SUPABASE_PROJECT_REF: ymxkzronkhwxzcdcbnwq
+  SUPABASE_PROJECT_REF: wgynakhoppqkrutnslmv
 
 jobs:
   production-release-readiness:
