@@ -1,22 +1,22 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useAuth } from '@/hooks/useAuth';
-import { showErrorToast, getErrorMessage } from '@/utils/errorHandling';
+import { showErrorToast } from '@/utils/errorHandling';
 import { useOfflineQueueOptional } from '@/contexts/OfflineQueueContext';
 import { OfflineAwareWorkOrderService } from '@/services/offlineAwareService';
 import { invalidateWorkOrderCaches } from '@/features/work-orders/utils/invalidateWorkOrderQueries';
+import { useI18n } from '@/i18n';
+import { getFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditCopy';
+import { getFinalHardcodedAuditExtraCopy } from '@/i18n/finalHardcodedAuditExtraCopy';
 
 interface StatusUpdateData {
   workOrderId: string;
   newStatus: Database["public"]["Enums"]["work_order_status"];
-  /** The work order's `updated_at` value as seen by the client before this change. Used for conflict detection when the update is queued offline. */
   serverUpdatedAt?: string;
 }
 
-/** Result shape from mutationFn. */
 interface StatusUpdateResult {
   data: Record<string, unknown> | null;
   queuedOffline: boolean;
@@ -27,12 +27,15 @@ export const useWorkOrderStatusUpdate = () => {
   const { toast } = useToast();
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
+  const { language, t } = useI18n();
+  const copy = getFinalHardcodedAuditCopy(language);
+  const extra = getFinalHardcodedAuditExtraCopy(language);
   const offlineCtx = useOfflineQueueOptional();
 
   return useMutation({
     mutationFn: async ({ workOrderId, newStatus, serverUpdatedAt }: StatusUpdateData): Promise<StatusUpdateResult> => {
       if (!currentOrganization?.id || !user?.id) {
-        throw new Error('Organization or user not available');
+        throw new Error(copy.workOrderStatusUpdateFailed);
       }
 
       const svc = new OfflineAwareWorkOrderService(currentOrganization.id, user.id);
@@ -48,8 +51,8 @@ export const useWorkOrderStatusUpdate = () => {
     onSuccess: ({ queuedOffline }, { workOrderId }) => {
       if (queuedOffline) {
         toast({
-          title: 'Saved offline',
-          description: 'Status change will sync when your connection returns.',
+          title: extra.savedOffline,
+          description: extra.statusSyncLater,
         });
         return;
       }
@@ -59,29 +62,18 @@ export const useWorkOrderStatusUpdate = () => {
       }
 
       toast({
-        title: "Status Updated",
-        description: "Work order status has been successfully updated.",
+        title: extra.workOrderStatusUpdatedTitle,
+        description: extra.workOrderStatusUpdatedDescription,
       });
     },
     onError: (error: Error) => {
       console.error('Status update error:', error);
-      const errorMessage = getErrorMessage(error);
-      const specificMessage = errorMessage.includes('permission')
-        ? "You don't have permission to change this work order status. Contact your administrator."
-        : errorMessage.includes('not found')
-        ? "Work order not found. It may have been deleted or moved."
-        : errorMessage.includes('invalid')
-        ? "Invalid status transition. Please refresh the page and try again."
-        : "Failed to update work order status. Please check your connection and try again.";
-      
       toast({
-        title: "Status Update Failed",
-        description: specificMessage,
-        variant: "destructive",
+        title: extra.workOrderStatusUpdateFailedTitle,
+        description: copy.workOrderStatusUpdateFailed,
+        variant: 'destructive',
       });
-      
-      showErrorToast(error, 'Work Order Status Update');
-    }
+      showErrorToast(error, t('workOrderForm.editTitle'));
+    },
   });
 };
-
