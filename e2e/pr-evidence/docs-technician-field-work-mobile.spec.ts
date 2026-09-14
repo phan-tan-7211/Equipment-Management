@@ -14,7 +14,7 @@
  *     -Collection technician-field-work -Variant mobile
  */
 
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { seedEquipment, seedWorkOrders } from '../user/shared/seed-data';
 import { evidenceScreenshot } from './shared/evidence-helpers';
 import { focusAndClick, focusAndFill, focusControl, settleForDemo } from './shared/docs-demo-helpers';
