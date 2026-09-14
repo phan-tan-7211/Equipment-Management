@@ -9,7 +9,7 @@ ENV_BACKUP_FILE="${CLOUD_AGENT_ENV_BACKUP:-${STATE_DIR}/.env.pre-ephemeral}"
 DEFAULT_TTL_HOURS="${CLOUD_AGENT_BRANCH_TTL_HOURS:-4}"
 BRANCH_NAME_PREFIX="${CLOUD_AGENT_BRANCH_PREFIX:-agent}"
 # ZNTEQR Agents vault UUID (spaced names break some op CLI paths).
-OP_EQUIPQR_AGENTS_VAULT_ID="${CLOUD_AGENT_OP_VAULT_ID:-tgo2m6qbct5otqeqirjocn3joa}"
+OP_ZNTEQR_AGENTS_VAULT_ID="${CLOUD_AGENT_OP_VAULT_ID:-tgo2m6qbct5otqeqirjocn3joa}"
 
 ca_log() { echo "  [cloud-agent] $*"; }
 ca_ok() { echo "  [cloud-agent] OK   $*"; }
@@ -40,10 +40,10 @@ ca_load_supabase_access_token() {
   fi
 
   local token
-  token="$(op read "op://${OP_EQUIPQR_AGENTS_VAULT_ID}/supabase-write/SUPABASE_ACCESS_TOKEN" 2>/dev/null || true)"
+  token="$(op read "op://${OP_ZNTEQR_AGENTS_VAULT_ID}/supabase-write/SUPABASE_ACCESS_TOKEN" 2>/dev/null || true)"
   token="$(printf '%s' "$token" | tr -d '\r\n')"
   if [[ -z "$token" ]]; then
-    ca_fail "Could not read op://${OP_EQUIPQR_AGENTS_VAULT_ID}/supabase-write/SUPABASE_ACCESS_TOKEN"
+    ca_fail "Could not read op://${OP_ZNTEQR_AGENTS_VAULT_ID}/supabase-write/SUPABASE_ACCESS_TOKEN"
     return 1
   fi
 
