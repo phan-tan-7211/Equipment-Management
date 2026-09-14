@@ -19,7 +19,7 @@ $ErrorActionPreference = 'Continue'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $repoRoot
 
-. (Join-Path $PSScriptRoot 'Release-EquipQrNodeModuleLocks.ps1')
+. (Join-Path $PSScriptRoot 'Release-ZnteqrNodeModuleLocks.ps1')
 
 $stopFail = $false
 
@@ -46,7 +46,7 @@ Stop-ProcessesMatchingCommandLine -ProcessNames @('powershell') -Label 'E2E shel
 $browserRegex = 'ms-playwright|playwright.*\\chromium|playwright.*\\chrome'
 Stop-ProcessesMatchingCommandLine -ProcessNames @('chrome', 'chromium') -Label 'Playwright browser' -MatchRegex $browserRegex -ExcludeRegex 'DOES_NOT_MATCH'
 
-Stop-EquipQrDevToolingProcesses -RepoRoot $repoRoot
+Stop-ZnteqrDevToolingProcesses -RepoRoot $repoRoot
 
 Write-Host ''
 Write-Host ' [Dev stack] Running dev-stop.ps1...'
