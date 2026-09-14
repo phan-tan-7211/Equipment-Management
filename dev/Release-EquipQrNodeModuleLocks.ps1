@@ -5,10 +5,10 @@
   (tailwindcss-oxide, lightningcss, vite, vitest, eslint) before npm ci.
 
   Dot-source from other scripts:
-    . (Join-Path $PSScriptRoot 'Release-EquipQrNodeModuleLocks.ps1')
+    . (Join-Path $PSScriptRoot 'Release-ZnteqrNodeModuleLocks.ps1')
 #>
 
-function Get-EquipQrRepoRoot {
+function Get-ZnteqrRepoRoot {
     param([string]$FromScriptRoot = $PSScriptRoot)
 
     $root = Split-Path -Parent $FromScriptRoot
@@ -59,7 +59,7 @@ function Stop-ProcessesMatchingCommandLine {
     }
 }
 
-function Stop-EquipQrDevToolingProcesses {
+function Stop-ZnteqrDevToolingProcesses {
     param(
         [Parameter(Mandatory)][string]$RepoRoot
     )
@@ -91,7 +91,7 @@ function Stop-EquipQrDevToolingProcesses {
         -ProcessNames @('node', 'cmd', 'powershell') `
         -Label 'Node tooling' `
         -MatchRegex $strictMatch `
-        -ExcludeRegex '(?i)Release-EquipQrNodeModuleLocks|Invoke-SafeNpmCi|stop-dev-and-e2e'
+        -ExcludeRegex '(?i)Release-ZnteqrNodeModuleLocks|Invoke-SafeNpmCi|stop-dev-and-e2e'
 
     # Cursor Vitest/ESLint helpers often load native binaries without a full repo path in argv.
     $broadMatch = "$repoNamePattern.*node_modules|node_modules.*$repoNamePattern"
@@ -99,7 +99,7 @@ function Stop-EquipQrDevToolingProcesses {
         -ProcessNames @('node') `
         -Label 'Workspace node_modules' `
         -MatchRegex $broadMatch `
-        -ExcludeRegex '(?i)Release-EquipQrNodeModuleLocks|Invoke-SafeNpmCi|stop-dev-and-e2e|npm-cli\.js'
+        -ExcludeRegex '(?i)Release-ZnteqrNodeModuleLocks|Invoke-SafeNpmCi|stop-dev-and-e2e|npm-cli\.js'
 }
 
 function Remove-RepoNodeModulesScrap {
@@ -166,7 +166,7 @@ function Remove-LockedNodeModules {
 
     $leaf = Split-Path -Leaf $NodeModulesPath
     Write-Host " [Recovery] Deleting locked $leaf ..."
-    Stop-EquipQrDevToolingProcesses -RepoRoot $RepoRoot
+    Stop-ZnteqrDevToolingProcesses -RepoRoot $RepoRoot
     Start-Sleep -Seconds 2
 
     if (Remove-NodeModulesTree -NodeModulesPath $NodeModulesPath) {
@@ -224,7 +224,7 @@ function Remove-KnownLockedNativePackageDirs {
     }
 }
 
-function Invoke-EquipQrSafeNpmCi {
+function Invoke-ZnteqrSafeNpmCi {
     param(
         [Parameter(Mandatory)][string]$WorkingDirectory,
         [string]$NpmPrefix = '',
@@ -233,7 +233,7 @@ function Invoke-EquipQrSafeNpmCi {
         [switch]$SkipToolingStop
     )
 
-    $repoRoot = (Get-EquipQrRepoRoot -FromScriptRoot $PSScriptRoot)
+    $repoRoot = (Get-ZnteqrRepoRoot -FromScriptRoot $PSScriptRoot)
     $nodeModulesPath = if ($NpmPrefix) {
         Join-Path $WorkingDirectory (Join-Path $NpmPrefix 'node_modules')
     } else {
@@ -251,7 +251,7 @@ function Invoke-EquipQrSafeNpmCi {
         for ($attempt = 1; $attempt -le 3; $attempt++) {
             Write-Host " [$label] Attempt $attempt/3..."
             if ($attempt -gt 1 -and -not $SkipToolingStop) {
-                Stop-EquipQrDevToolingProcesses -RepoRoot $repoRoot
+                Stop-ZnteqrDevToolingProcesses -RepoRoot $repoRoot
                 Start-Sleep -Seconds 2
             }
             if ($attempt -eq 2) {
