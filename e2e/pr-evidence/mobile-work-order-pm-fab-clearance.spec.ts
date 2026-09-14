@@ -1,4 +1,4 @@
-import { test, expect, quickLogin, type Locator, type Page } from '../user/fixtures/equipqr-test';
+import { test, expect, quickLogin, type Locator, type Page } from '../user/fixtures/znteqr-test';
 import { pinContextToOrg } from '../user/shared/auth-helpers';
 import { apexOrgId } from '../user/shared/seed-data';
 import {
