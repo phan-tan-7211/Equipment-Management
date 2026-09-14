@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 
 /**
  * Opt-in only: set E2E_PWA_PREVIEW_URL to a `vite preview` URL after `npm run build`.
