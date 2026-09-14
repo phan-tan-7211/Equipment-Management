@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { seedTeams } from '../shared/seed-data';
 
 test.describe('team detail management @full', () => {
