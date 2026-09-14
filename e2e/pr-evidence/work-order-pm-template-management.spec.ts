@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '../user/fixtures/equipqr-test';
+import { test, expect, type Page } from '../user/fixtures/znteqr-test';
 import { pinContextToOrg } from '../user/shared/auth-helpers';
 import { apexOrgId, authStatePath, seedWorkOrders } from '../user/shared/seed-data';
 import { selectRadixOption } from '../user/shared/ui-form-helpers';
