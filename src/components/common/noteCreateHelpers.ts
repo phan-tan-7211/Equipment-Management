@@ -2,8 +2,8 @@ import { toast } from 'sonner';
 import type { QueuedNoteCreateResult } from '@/components/common/noteSubmitTypes';
 import type { NoteCreateMutationInput } from '@/components/common/noteCreateMutationTypes';
 import { logger } from '@/utils/logger';
+import { getRuntimeFinalHardcodedAuditExtraCopy } from '@/i18n/finalHardcodedAuditExtraRuntime';
 
-/** Whether note creation should use the offline queue path (text-only when offline). */
 export type { NoteCreateMutationInput };
 
 export async function runOfflineAwareNoteCreate<TData>(options: {
@@ -35,27 +35,21 @@ export function shouldUseOfflineNotePath(images: File[]): boolean {
 }
 
 export type QueuedNoteToastOptions = {
-  /** Equipment-style combined message when images were dropped offline. */
   combinedOfflineMessage?: boolean;
-  /** Work-order-style separate photo warning after offline save. */
   photoWarningMessage?: string;
 };
 
-/** Toast feedback after a queued offline note create succeeds. */
 export function showQueuedNoteCreateToasts(
   hadImages: boolean,
   options: QueuedNoteToastOptions = {},
 ): void {
+  const copy = getRuntimeFinalHardcodedAuditExtraCopy();
   if (options.combinedOfflineMessage) {
-    toast.success(
-      hadImages
-        ? 'Note saved offline — text and photos will sync when you reconnect.'
-        : 'Note saved offline — will sync when you reconnect.',
-    );
+    toast.success(hadImages ? copy.noteSavedOfflineWithPhotos : copy.noteSavedOffline);
     return;
   }
 
-  toast.success('Note saved offline — will sync when you reconnect.');
+  toast.success(copy.noteSavedOffline);
   if (hadImages && options.photoWarningMessage) {
     toast.warning(options.photoWarningMessage);
   }
@@ -98,7 +92,7 @@ export function createNoteCreateMutationCallbacks(options: {
     onSuccess: (result: unknown) => handleNoteCreateMutationSuccess(result, options),
     onError: (error: unknown) => {
       logger.error('Failed to create note', error);
-      toast.error('Failed to create note');
+      toast.error(getRuntimeFinalHardcodedAuditExtraCopy().noteCreateFailed);
     },
   };
 }

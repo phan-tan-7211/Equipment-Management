@@ -1,12 +1,29 @@
 import { toast } from 'sonner';
 import type { NoteEditSubmitPayload } from '@/components/common/NoteEditDialog';
 import type { NoteActionPermissions } from '@/components/common/noteCardPermissions';
+import { finalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditCopy';
+import { getRuntimeFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditRuntime';
 
 type NoteForPermissions = {
   id: string;
   author_id: string;
   created_at: string;
 };
+
+type NoteMutationMessages = Pick<
+  typeof finalHardcodedAuditCopy.en,
+  | 'noteUpdated'
+  | 'noteUpdateFailed'
+  | 'noteDeleted'
+  | 'noteDeleteFailed'
+  | 'notePrivate'
+  | 'notePublic'
+  | 'noteVisibilityFailed'
+  | 'noteNoEditPermission'
+  | 'noteNoImagePermission'
+  | 'noteNoDeletePermission'
+  | 'noteNoVisibilityPermission'
+>;
 
 interface NoteMutationDeps<TNote extends NoteForPermissions> {
   organizationId?: string;
@@ -20,6 +37,7 @@ interface NoteMutationDeps<TNote extends NoteForPermissions> {
   deleteNote: (note: TNote) => Promise<void>;
   deleteNoteImage: (imageId: string) => Promise<void>;
   addNoteImages: (note: TNote, files: File[]) => Promise<void>;
+  messages?: NoteMutationMessages;
 }
 
 function denyMutation(message: string): never {
@@ -30,17 +48,19 @@ function denyMutation(message: string): never {
 export function createNoteMutationHandlers<TNote extends NoteForPermissions>(
   deps: NoteMutationDeps<TNote>,
 ) {
+  const messages = deps.messages ?? getRuntimeFinalHardcodedAuditCopy();
+
   const handleEditNote = async (note: TNote, payload: NoteEditSubmitPayload) => {
     if (!deps.organizationId) return;
     const perms = deps.resolvePermissions(note);
     if (!perms.canEdit) {
-      denyMutation('You do not have permission to edit this note');
+      denyMutation(messages.noteNoEditPermission);
     }
     if (
       (payload.removedImageIds.length > 0 || payload.newImages.length > 0) &&
       !perms.canManageImages
     ) {
-      denyMutation('You do not have permission to modify note images');
+      denyMutation(messages.noteNoImagePermission);
     }
 
     deps.setMutatingNoteId(note.id);
@@ -56,13 +76,21 @@ export function createNoteMutationHandlers<TNote extends NoteForPermissions>(
         await deps.addNoteImages(note, payload.newImages);
       }
       deps.invalidateNotes();
-      toast.success('Note updated');
+      toast.success(messages.noteUpdated);
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith('You do not have permission')) {
+      if (
+        error instanceof Error &&
+        [
+          messages.noteNoEditPermission,
+          messages.noteNoImagePermission,
+          messages.noteNoDeletePermission,
+          messages.noteNoVisibilityPermission,
+        ].includes(error.message)
+      ) {
         throw error;
       }
       console.error('Failed to update note:', error);
-      toast.error('Failed to update note');
+      toast.error(messages.noteUpdateFailed);
       throw error;
     } finally {
       deps.setMutatingNoteId(null);
@@ -73,20 +101,20 @@ export function createNoteMutationHandlers<TNote extends NoteForPermissions>(
     if (!deps.organizationId) return;
     const perms = deps.resolvePermissions(note);
     if (!perms.canDelete) {
-      denyMutation('You do not have permission to delete this note');
+      denyMutation(messages.noteNoDeletePermission);
     }
 
     deps.setMutatingNoteId(note.id);
     try {
       await deps.deleteNote(note);
       deps.invalidateNotes();
-      toast.success('Note deleted');
+      toast.success(messages.noteDeleted);
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith('You do not have permission')) {
+      if (error instanceof Error && error.message === messages.noteNoDeletePermission) {
         throw error;
       }
       console.error('Failed to delete note:', error);
-      toast.error('Failed to delete note');
+      toast.error(messages.noteDeleteFailed);
       throw error;
     } finally {
       deps.setMutatingNoteId(null);
@@ -97,20 +125,20 @@ export function createNoteMutationHandlers<TNote extends NoteForPermissions>(
     if (!deps.organizationId) return;
     const perms = deps.resolvePermissions(note);
     if (!perms.canToggleVisibility) {
-      denyMutation('You do not have permission to change note visibility');
+      denyMutation(messages.noteNoVisibilityPermission);
     }
 
     deps.setMutatingNoteId(note.id);
     try {
       await deps.updateNote(note, { isPrivate });
       deps.invalidateNotes();
-      toast.success(isPrivate ? 'Note marked private' : 'Note marked public');
+      toast.success(isPrivate ? messages.notePrivate : messages.notePublic);
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith('You do not have permission')) {
+      if (error instanceof Error && error.message === messages.noteNoVisibilityPermission) {
         throw error;
       }
       console.error('Failed to update note visibility:', error);
-      toast.error('Failed to update note visibility');
+      toast.error(messages.noteVisibilityFailed);
       throw error;
     } finally {
       deps.setMutatingNoteId(null);
