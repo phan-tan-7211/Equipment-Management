@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { buildCreationRunData } from '../shared/create-flow-data';
 import {
   addInventoryCompatibilityRule,
