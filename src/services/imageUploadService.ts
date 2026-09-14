@@ -64,10 +64,10 @@ function normalizeSignedStorageUrlForChecks(url: string): string {
 }
 
 /**
- * True when `url` is (or was) a Supabase signed URL for an ZNTEQR private bucket.
+ * True when `url` is (or was) a Supabase signed URL for a ZNTEQR private bucket.
  * Expired or orphaned signed URLs must not be used as `<img src>` fallbacks (#1171).
  */
-export function isEquipQrPrivateStorageUrl(url: string): boolean {
+export function isZnteqrPrivateStorageUrl(url: string): boolean {
   const normalized = normalizeSignedStorageUrlForChecks(url);
   return PRIVATE_STORAGE_SIGN_MARKERS.some((marker) => normalized.includes(marker));
 }
@@ -79,7 +79,7 @@ export function isEquipQrPrivateStorageUrl(url: string): boolean {
 export function isFetchableSignedStorageUrl(url: string): boolean {
   const normalized = normalizeSignedStorageUrlForChecks(url);
   if (!/^https?:\/\//i.test(normalized)) return false;
-  if (!isEquipQrPrivateStorageUrl(normalized)) return true;
+  if (!isZnteqrPrivateStorageUrl(normalized)) return true;
   try {
     const token = new URL(normalized).searchParams.get('token');
     return typeof token === 'string' && token.length > 0;
@@ -420,7 +420,7 @@ export function displayUrlForStoredPrivateImage(
   }
   const s = String(stored ?? '').trim();
   if (/^https?:\/\//i.test(s)) {
-    return isEquipQrPrivateStorageUrl(s) ? null : s;
+    return isZnteqrPrivateStorageUrl(s) ? null : s;
   }
   return null;
 }
