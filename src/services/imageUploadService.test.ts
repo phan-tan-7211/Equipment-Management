@@ -65,7 +65,7 @@ import {
   batchResolveWorkOrderImageDisplayUrls,
   displayUrlForStoredPrivateImage,
   displayableImageSrc,
-  isEquipQrPrivateStorageUrl,
+  isZnteqrPrivateStorageUrl,
   isFetchableSignedStorageUrl,
   toAbsoluteSignedStorageUrl,
   DEFAULT_SIGNED_URL_TTL_SECONDS,
@@ -349,14 +349,14 @@ describe('imageUploadService', () => {
       const stale =
         'https://supabase.equipqr.app/storage/v1/object/sign/work-order-images/u/wo/n.jpg?token=expired';
       expect(displayUrlForStoredPrivateImage(null, stale)).toBeNull();
-      expect(isEquipQrPrivateStorageUrl(stale)).toBe(true);
+      expect(isZnteqrPrivateStorageUrl(stale)).toBe(true);
     });
 
     it('drops tokenless ZNTEQR sign URLs instead of using them as img src', () => {
       const unsigned =
         'http://localhost:54321/storage/v1/object/sign/equipment-note-images/u/eq/n.jpg';
       expect(displayUrlForStoredPrivateImage(unsigned, 'u/eq/n.jpg')).toBeNull();
-      expect(isEquipQrPrivateStorageUrl(unsigned)).toBe(true);
+      expect(isZnteqrPrivateStorageUrl(unsigned)).toBe(true);
       expect(isFetchableSignedStorageUrl(unsigned)).toBe(false);
     });
 
