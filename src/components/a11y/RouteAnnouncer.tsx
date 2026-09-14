@@ -49,12 +49,12 @@ export const RouteAnnouncer: FC = () => {
 
     prevRef.current = { pathname, search, hash };
 
-    const stripEquipQrSuffix = (t: string): string => {
+    const stripZnteqrSuffix = (t: string): string => {
       const suffix = ' | ZNTEQR';
       return t.endsWith(suffix) ? t.slice(0, -suffix.length).trim() : t.trim();
     };
 
-    const message = `Navigated to ${stripEquipQrSuffix(document.title) || pathname}`;
+    const message = `Navigated to ${stripZnteqrSuffix(document.title) || pathname}`;
 
     const region = regionRef.current;
     if (region) {
