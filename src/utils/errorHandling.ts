@@ -1,5 +1,9 @@
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
+import {
+  formatErrorHandlingCopy,
+  getErrorHandlingCopy,
+} from '@/i18n/errorHandlingResources';
 
 export type ErrorSeverity = 'info' | 'warning' | 'error' | 'critical';
 export type ErrorCategory = 'network' | 'permission' | 'validation' | 'server' | 'unknown';
@@ -14,7 +18,8 @@ export interface StandardError {
   context?: Record<string, unknown>;
 }
 
-// Common error patterns for Supabase
+// Common error patterns for Supabase. These are protocol/server matching tokens,
+// not user-facing copy, so they intentionally remain in their source language.
 const SUPABASE_ERROR_PATTERNS: Record<
   string,
   { category: ErrorCategory; severity: ErrorSeverity }
@@ -42,10 +47,7 @@ const SUPABASE_ERROR_PATTERNS: Record<
  * whether to save data locally instead of losing it.
  */
 export const isNetworkError = (error?: unknown): boolean => {
-  // Primary signal: browser definitively reports offline
   if (typeof navigator !== 'undefined' && !navigator.onLine) return true;
-
-  // Secondary: match known network error message patterns
   if (!error) return false;
   const msg = error instanceof Error ? error.message : String(error);
   return /Failed to fetch|Load failed|NetworkError|ERR_INTERNET|ERR_NETWORK|net::|TypeError: Failed|Operation failed/i.test(msg);
@@ -55,7 +57,6 @@ export const classifyError = (error: unknown): StandardError => {
   const errorMessage = getErrorMessage(error);
   const errorId = generateErrorId();
 
-  // Fast-path: check for network errors first (most common offline scenario)
   if (isNetworkError(error)) {
     return {
       id: errorId,
@@ -67,8 +68,7 @@ export const classifyError = (error: unknown): StandardError => {
       context: { originalError: error },
     };
   }
-  
-  // Check for known Supabase patterns
+
   for (const [pattern, classification] of Object.entries(SUPABASE_ERROR_PATTERNS)) {
     if (errorMessage.toLowerCase().includes(pattern.toLowerCase())) {
       return {
@@ -78,20 +78,19 @@ export const classifyError = (error: unknown): StandardError => {
         severity: classification.severity,
         action: getActionForError(classification.category),
         retryable: isRetryable(classification.category),
-        context: { originalError: error }
+        context: { originalError: error },
       };
     }
   }
-  
-  // Default classification
+
   return {
     id: errorId,
     message: errorMessage,
     category: 'unknown',
     severity: 'error',
-    action: 'Please try again or contact support if the problem persists.',
+    action: getErrorHandlingCopy().retryOrSupport,
     retryable: true,
-    context: { originalError: error }
+    context: { originalError: error },
   };
 };
 
@@ -101,7 +100,7 @@ export const getErrorMessage = (error: unknown): string => {
   if (error && typeof error === 'object' && 'message' in error) {
     return String(error.message);
   }
-  return 'An unexpected error occurred';
+  return getErrorHandlingCopy().unexpected;
 };
 
 export const generateErrorId = (): string => {
@@ -109,17 +108,18 @@ export const generateErrorId = (): string => {
 };
 
 export const getActionForError = (category: ErrorCategory): string => {
+  const copy = getErrorHandlingCopy();
   switch (category) {
     case 'network':
-      return 'Check your internet connection and try again.';
+      return copy.networkAction;
     case 'permission':
-      return 'Contact your administrator for access permissions.';
+      return copy.permissionAction;
     case 'validation':
-      return 'Please check your input and correct any errors.';
+      return copy.validationAction;
     case 'server':
-      return 'Our servers are experiencing issues. Please try again in a few minutes.';
+      return copy.serverAction;
     default:
-      return 'Please try again or contact support if the problem persists.';
+      return copy.retryOrSupport;
   }
 };
 
@@ -129,10 +129,12 @@ export const isRetryable = (category: ErrorCategory): boolean => {
 
 export const showErrorToast = (error: unknown, context?: string): StandardError => {
   const standardError = classifyError(error);
-  
-  const title = context ? `${context} Failed` : 'Operation Failed';
+  const copy = getErrorHandlingCopy();
+  const title = context
+    ? formatErrorHandlingCopy(copy.contextFailed, context)
+    : copy.operationFailed;
   const description = `${standardError.message}${standardError.action ? ` ${standardError.action}` : ''}`;
-  
+
   switch (standardError.severity) {
     case 'critical':
     case 'error':
@@ -145,25 +147,24 @@ export const showErrorToast = (error: unknown, context?: string): StandardError 
       toast.info(title, { description });
       break;
   }
-  
-  // Log error for debugging
+
   logger.error(`[${standardError.id}] ${context || 'Error'}`, {
     ...standardError,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
-  
+
   return standardError;
 };
 
 export const createRetryFunction = <T>(
   fn: () => Promise<T>,
   maxRetries = 3,
-  delay = 1000
+  delay = 1000,
 ): (() => Promise<T>) => {
   return async (): Promise<T> => {
     let lastError: unknown;
 
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
       try {
         return await fn();
       } catch (error) {
@@ -174,9 +175,8 @@ export const createRetryFunction = <T>(
           throw error;
         }
 
-        // Exponential backoff
-        await new Promise(resolve =>
-          setTimeout(resolve, delay * Math.pow(2, attempt - 1))
+        await new Promise((resolve) =>
+          setTimeout(resolve, delay * Math.pow(2, attempt - 1)),
         );
       }
     }
