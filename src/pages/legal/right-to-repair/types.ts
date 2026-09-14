@@ -31,10 +31,10 @@ export type LandscapeFilters = {
   query: string;
 };
 
-export type EquipQrCommitmentId = 'export' | 'no-hostage' | 'no-pairing';
+export type ZnteqrCommitmentId = 'export' | 'no-hostage' | 'no-pairing';
 
-export type EquipQrCommitment = {
-  id: EquipQrCommitmentId;
+export type ZnteqrCommitment = {
+  id: ZnteqrCommitmentId;
   title: string;
   body: string;
 };
