@@ -3,19 +3,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getAuthClaims } from '@/lib/authClaims';
 import { workOrders } from '@/lib/queryKeys';
+import { useI18n } from '@/i18n';
+import {
+  formatRemainingCopy,
+  getFinalHardcodedAuditRemainingCopy,
+} from '@/i18n/finalHardcodedAuditRemainingCopy';
 
 export const useBatchAssignUnassignedWorkOrders = () => {
   const queryClient = useQueryClient();
+  const { language } = useI18n();
+  const copy = getFinalHardcodedAuditRemainingCopy(language);
 
   return useMutation({
     mutationFn: async (organizationId: string) => {
-      // Get current user
       const claims = await getAuthClaims();
-      if (!claims) {
-        throw new Error('User not authenticated');
-      }
+      if (!claims) throw new Error(copy.batchAssignFailed);
 
-      // Check if this is a single-user organization
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .select('member_count')
@@ -23,12 +26,8 @@ export const useBatchAssignUnassignedWorkOrders = () => {
         .single();
 
       if (orgError) throw orgError;
+      if (orgData.member_count !== 1) throw new Error(copy.batchAssignFailed);
 
-      if (orgData.member_count !== 1) {
-        throw new Error('This function is only for single-user organizations');
-      }
-
-      // Get all unassigned submitted work orders
       const { data: unassignedOrders, error: ordersError } = await supabase
         .from('work_orders')
         .select('id')
@@ -39,18 +38,16 @@ export const useBatchAssignUnassignedWorkOrders = () => {
       if (ordersError) throw ordersError;
 
       if (unassignedOrders && unassignedOrders.length > 0) {
-        // Batch update all unassigned work orders
         const { error: updateError } = await supabase
           .from('work_orders')
           .update({
             assignee_id: claims.sub,
             status: 'assigned',
-            acceptance_date: new Date().toISOString()
+            acceptance_date: new Date().toISOString(),
           })
-          .in('id', unassignedOrders.map(order => order.id));
+          .in('id', unassignedOrders.map((order) => order.id));
 
         if (updateError) throw updateError;
-
         return unassignedOrders.length;
       }
 
@@ -58,11 +55,11 @@ export const useBatchAssignUnassignedWorkOrders = () => {
     },
     onSuccess: (count, organizationId) => {
       if (count > 0) {
-        toast.success(`Assigned ${count} work order${count !== 1 ? 's' : ''} to you`);
+        toast.success(formatRemainingCopy(copy.batchAssigned, { count }));
       } else {
-        toast.info('No unassigned work orders found');
+        toast.info(copy.noUnassignedWorkOrders);
       }
-      
+
       queryClient.invalidateQueries({ queryKey: workOrders.pagedList(organizationId) });
       queryClient.invalidateQueries({ queryKey: ['enhanced-work-orders', organizationId] });
       queryClient.invalidateQueries({ queryKey: ['workOrders', organizationId] });
@@ -71,8 +68,7 @@ export const useBatchAssignUnassignedWorkOrders = () => {
     },
     onError: (error) => {
       console.error('Error batch assigning work orders:', error);
-      toast.error('Failed to assign work orders');
+      toast.error(copy.batchAssignFailed);
     },
   });
 };
-
