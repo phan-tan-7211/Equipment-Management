@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { evidenceScreenshot, evidencePause } from './shared/evidence-helpers';
 
 test.describe('v3.10.0 QA bug fixes @pr-evidence', () => {
