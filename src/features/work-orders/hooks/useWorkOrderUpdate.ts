@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { showErrorToast } from '@/utils/errorHandling';
+import { getErrorMessage, showErrorToast } from '@/utils/errorHandling';
 import { useOfflineQueueOptional } from '@/contexts/OfflineQueueContext';
 import { OfflineAwareWorkOrderService } from '@/services/offlineAwareService';
 import type { WorkOrderServerSnapshot } from '@/services/offlineQueueService';
@@ -30,7 +30,7 @@ interface UpdateWorkOrderResult {
 export const useUpdateWorkOrder = () => {
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
-  const { language, t } = useI18n();
+  const { language } = useI18n();
   const extra = getFinalHardcodedAuditExtraCopy(language);
   const copy = getFinalHardcodedAuditRemainingCopy(language);
   const queryClient = useQueryClient();
@@ -81,12 +81,24 @@ export const useUpdateWorkOrder = () => {
     },
     onError: (error) => {
       console.error('Update work order error:', error);
+      const errorMessage = getErrorMessage(error);
+      const specificMessage = errorMessage.includes('permission')
+        ? copy.workOrderUpdatePermission
+        : errorMessage.includes('not found')
+          ? copy.workOrderUpdateNotFound
+          : errorMessage.includes('validation') || errorMessage.includes('required')
+            ? copy.workOrderUpdateValidation
+            : copy.workOrderUpdateFailed;
+
       toast({
-        title: extra.workOrderStatusUpdateFailedTitle,
-        description: copy.workOrderUpdateFailed,
+        title: copy.workOrderUpdateFailedTitle,
+        description: specificMessage,
         variant: 'destructive',
       });
-      showErrorToast(error, t('workOrderForm.editTitle'));
+
+      if (language === 'en') {
+        showErrorToast(error, 'Work Order Update');
+      }
     },
   });
 };
