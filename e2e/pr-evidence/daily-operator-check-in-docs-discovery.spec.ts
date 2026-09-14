@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { pinContextToApex } from '../user/shared/auth-helpers';
 import { seedEquipment } from '../user/shared/seed-data';
 import { evidenceScreenshot, evidencePause, assertDocsDevServerReady } from './shared/evidence-helpers';
