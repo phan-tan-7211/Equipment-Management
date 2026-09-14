@@ -4,7 +4,7 @@
 
 <img src="public/images/brand/icons/ZNTEQR-Icon-Purple-Medium.png" alt="ZNTEQR - Equipment Management by Phan Tan" width="150" />
 
-![Version](https://img.shields.io/badge/version-3.32.0-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.34.2-blue?style=for-the-badge)
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
