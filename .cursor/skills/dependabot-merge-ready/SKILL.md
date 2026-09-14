@@ -33,7 +33,7 @@ gh pr view <number> --json author,title,headRefName,baseRefName,url
 |-------|-------------|
 | Author | `author.login` is `app/dependabot` |
 | PR input | User supplied PR number or Dependabot PR URL |
-| Base branch | Expected `preview` (EquipQR Dependabot / integration train) |
+| Base branch | Expected `preview` (ZNTEQR Dependabot / integration train) |
 
 Report the PR URL and dependency from the title, then proceed.
 
@@ -52,7 +52,7 @@ Execute the following phases sequentially. **Do not proceed to the next phase un
 2. Parse `package.json` (or equivalent) diff to identify the exact dependency and version bump.
 3. Run `npm install` (or your package manager's equivalent) to sync the local environment.
 
-### EquipQR Phase 1 commands
+### ZNTEQR Phase 1 commands
 
 ```powershell
 git fetch origin
@@ -72,7 +72,7 @@ Record: dependency name, from-version, to-version, dev vs prod.
 2. Run local type checks (e.g., `tsc --noEmit`), linting, and the local test suite.
 3. Attempt a local production build to catch compilation regressions.
 
-### EquipQR Phase 2 commands
+### ZNTEQR Phase 2 commands
 
 Search `src/`, `supabase/functions/`, `e2e/`, `dev/` for package name and known import paths.
 
@@ -121,7 +121,7 @@ This is **not** a versioned release. Dependabot PRs target **`preview`**. Do **n
 
 Preview release-metadata CI treats `package.json` and `package-lock.json` as release-relevant, so add one short `[Unreleased]` Changed note. Follow `.cursor/rules/changelog.mdc`. At the next `/release`, the curator batches that note into one dependency bullet or drops it.
 
-### EquipQR release metadata (required for merge-ready to `preview`)
+### ZNTEQR release metadata (required for merge-ready to `preview`)
 
 1. Keep the existing root `package.json` version unchanged vs `origin/preview`.
 2. Add one short Changed bullet under CHANGELOG `## [Unreleased]` for the lockfile or `package.json` diff.
@@ -143,7 +143,7 @@ Remove-Item Env:RELEASE_METADATA_MODE, Env:RELEASE_METADATA_BASE_SHA -ErrorActio
 5. Review linter or review-thread findings only when the user asked to address feedback.
 6. If CI or Supabase fails, return to Phase 3. If all CIs are green and Supabase is green or skipped, merge per `pr-merge-ready-workflow.mdc`. Do not wait for Qodo.
 
-### EquipQR Phase 6 extensions
+### ZNTEQR Phase 6 extensions
 
 **Fallow (before commit):**
 
