@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { newPersonaPage, pinContextToApex, gotoDashboardRoute } from '../shared/auth-helpers';
 import {
   expectNavigationLinkHidden,
