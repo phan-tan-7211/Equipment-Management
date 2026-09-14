@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, test } from '../user/fixtures/equipqr-test';
+import { expect, test } from '../user/fixtures/znteqr-test';
 import {
   assertEvidenceFrameReady,
   evidencePause,
