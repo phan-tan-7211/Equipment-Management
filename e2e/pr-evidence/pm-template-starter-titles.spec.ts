@@ -1,4 +1,4 @@
-import { test, expect, quickLogin } from '../user/fixtures/equipqr-test';
+import { test, expect, quickLogin } from '../user/fixtures/znteqr-test';
 import { evidencePause, evidenceScreenshot, expandZnteqrTemplatesIfCollapsed } from './shared/evidence-helpers';
 
 const starterTemplateMatchers = [
