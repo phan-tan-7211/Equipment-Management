@@ -15,7 +15,7 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ### Changed
 
-- **ZNTEQR naming cleanup** — Accessibility labels, internal helpers, test fixtures, documentation tokens, and developer configuration now consistently use the ZNTEQR name while legacy production URLs and immutable migration history remain unchanged.
+- **ZNTEQR brand consistency** — Customers, assistive technologies, and public documentation now consistently identify the equipment platform as ZNTEQR.
 
 ## [3.34.1] - 2026-09-15
 
