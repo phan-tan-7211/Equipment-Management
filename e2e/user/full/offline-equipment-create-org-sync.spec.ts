@@ -1,5 +1,5 @@
 import { type BrowserContext, type Page } from '@playwright/test';
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { newPersonaPage, pinContextToOrg } from '../shared/auth-helpers';
 import { apexOrgId } from '../shared/seed-data';
 import {
