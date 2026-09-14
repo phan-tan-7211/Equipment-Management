@@ -1,4 +1,4 @@
-import { test } from '../fixtures/equipqr-test';
+import { test } from '../fixtures/znteqr-test';
 import { assertNoAxeViolations } from '../shared/axe-helpers';
 import { seedWorkOrders } from '../shared/seed-data';
 
