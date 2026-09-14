@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.3] - 2026-09-15
+
+### Changed
+
+- **ZNTEQR brand consistency** — Customers, assistive technologies, and public documentation now consistently identify the equipment platform as ZNTEQR.
+
 ## [3.34.2] - 2026-09-15
 
 ### Changed
