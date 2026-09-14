@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { seedEquipment } from '../shared/seed-data';
 
 /** Wait for the paginated equipment list to finish its initial load. */
