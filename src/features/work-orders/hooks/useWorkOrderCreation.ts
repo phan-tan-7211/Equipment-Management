@@ -10,7 +10,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
-import { showErrorToast } from '@/utils/errorHandling';
+import { getErrorMessage, showErrorToast } from '@/utils/errorHandling';
 import { useOfflineQueueOptional } from '@/contexts/OfflineQueueContext';
 import { OfflineAwareWorkOrderService } from '@/services/offlineAwareService';
 import { attachWorkOrderCreationImages } from '@/features/work-orders/services/workOrderNotesService';
@@ -18,6 +18,7 @@ import { workOrders as workOrderQueryKeys, workOrderMetrics } from '@/lib/queryK
 import type { WorkOrder } from '@/features/work-orders/types/workOrder';
 import { useI18n } from '@/i18n';
 import { getFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditCopy';
+import { getFinalHardcodedAuditRemainingCopy } from '@/i18n/finalHardcodedAuditRemainingCopy';
 
 export interface CreateWorkOrderData {
   title: string;
@@ -46,6 +47,7 @@ export const useCreateWorkOrder = (options?: { onSuccess?: (workOrder: WorkOrder
   const { user } = useAuth();
   const { language, t } = useI18n();
   const copy = getFinalHardcodedAuditCopy(language);
+  const remainingCopy = getFinalHardcodedAuditRemainingCopy(language);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const offlineCtx = useOfflineQueueOptional();
@@ -142,7 +144,9 @@ export const useCreateWorkOrder = (options?: { onSuccess?: (workOrder: WorkOrder
     },
     onSuccess: (result) => {
       if (result.queuedOffline) {
-        toast.info(t('workOrderFieldAction.savedOffline'));
+        toast.info(remainingCopy.savedOfflineTitle, {
+          description: remainingCopy.workOrderSyncLater,
+        });
         if (!options?.onSuccess) navigate('/dashboard/work-orders');
         return;
       }
@@ -170,7 +174,13 @@ export const useCreateWorkOrder = (options?: { onSuccess?: (workOrder: WorkOrder
     },
     onError: (error) => {
       logger.error('Error creating work order', error);
-      showErrorToast(error, t('workOrderForm.createTitle'));
+      if (language === 'en') {
+        showErrorToast(error, 'Work Order Creation');
+      } else {
+        toast.error(remainingCopy.workOrderCreationFailedTitle, {
+          description: getErrorMessage(error),
+        });
+      }
     },
   });
 };
