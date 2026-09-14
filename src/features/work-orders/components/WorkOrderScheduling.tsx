@@ -14,6 +14,7 @@ import {
   persistDue,
 } from '@/features/work-orders/calendar';
 import { WorkOrderFormData } from '@/features/work-orders/hooks/useWorkOrderForm';
+import { getFinalHardcodedAuditExtraCopy } from '@/i18n/finalHardcodedAuditExtraCopy';
 
 interface WorkOrderSchedulingProps {
   values: Pick<WorkOrderFormData, 'dueDate' | 'dueDateHasTime' | 'estimatedHours'>;
@@ -26,7 +27,8 @@ export const WorkOrderScheduling: React.FC<WorkOrderSchedulingProps> = ({
   errors,
   setValue
 }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const copy = getFinalHardcodedAuditExtraCopy(language);
   const due = parseDue({
     dueDate: values.dueDate,
     dueDateHasTime: values.dueDateHasTime ?? false,
@@ -106,7 +108,7 @@ export const WorkOrderScheduling: React.FC<WorkOrderSchedulingProps> = ({
             min="0"
             max="10000"
             step="0.5"
-            placeholder="e.g., 2.5"
+            placeholder={copy.estimatedHoursExample}
             value={values.estimatedHours != null ? values.estimatedHours.toString() : ''}
             onChange={handleEstimatedHoursChange}
           />
