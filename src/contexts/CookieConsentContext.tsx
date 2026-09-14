@@ -17,6 +17,8 @@ import {
   isPreferenceStorageAllowed,
   type CookieConsentDecision,
 } from '@/lib/cookieConsent';
+import { useI18n } from '@/i18n';
+import { getFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditCopy';
 
 interface CookieConsentContextValue {
   decision: CookieConsentDecision | null;
@@ -29,6 +31,8 @@ interface CookieConsentContextValue {
 const CookieConsentContext = createContext<CookieConsentContextValue | undefined>(undefined);
 
 export const CookieConsentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { language } = useI18n();
+  const copy = getFinalHardcodedAuditCopy(language);
   const [decision, setDecision] = useState<CookieConsentDecision | null>(() =>
     getCookieConsentDecision(),
   );
@@ -43,7 +47,6 @@ export const CookieConsentProvider: React.FC<{ children: React.ReactNode }> = ({
       setDecision(isCookieConsentDecision(next) ? next : getCookieConsentDecision());
     };
     window.addEventListener('storage', onStorage);
-    // Same-tab clears (e.g. DevTools) won't fire `storage`; focus re-syncs.
     window.addEventListener('focus', syncFromStorage);
     return () => {
       window.removeEventListener('storage', onStorage);
@@ -53,22 +56,20 @@ export const CookieConsentProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const accept = useCallback(() => {
     if (!applyCookieConsentDecision('accepted')) {
-      toast.error('Could not save your cookie preference. Please try again.');
+      toast.error(copy.cookiePreferenceSaveFailed);
       return;
     }
     setDecision('accepted');
-  }, []);
+  }, [copy.cookiePreferenceSaveFailed]);
 
   const reject = useCallback(() => {
     if (!applyCookieConsentDecision('rejected')) {
-      toast.error('Could not save your cookie preference. Please try again.');
+      toast.error(copy.cookiePreferenceSaveFailed);
       return;
     }
     setDecision('rejected');
-  }, []);
+  }, [copy.cookiePreferenceSaveFailed]);
 
-  // Prefer React `decision` as the sole gate — re-reading storage inside the
-  // memo could disagree with state after same-tab clears until focus sync.
   const value = useMemo<CookieConsentContextValue>(
     () => ({
       decision,
@@ -93,13 +94,6 @@ export function useCookieConsent(): CookieConsentContextValue {
   return ctx;
 }
 
-/**
- * Runs `onAllowed` when preference storage becomes allowed mid-session
- * (Accept). Does not re-run on mount when consent was already accepted —
- * mount-time loaders should keep using their existing initializers.
- *
- * Safe outside CookieConsentProvider (falls back to storage + consent event).
- */
 export function useWhenPreferenceStorageAllowed(onAllowed: () => void): void {
   const ctx = useContext(CookieConsentContext);
   const allowed = ctx?.canUsePreferences ?? isPreferenceStorageAllowed();
