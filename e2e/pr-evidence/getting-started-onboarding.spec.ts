@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { pinContextToOrg } from '../user/shared/auth-helpers';
 import { resetFreshStartOnboardingFixture } from '../user/shared/fresh-start-reset';
 import { authStatePath, freshStartOrgId } from '../user/shared/seed-data';
