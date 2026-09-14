@@ -1,4 +1,4 @@
-import { test } from '../fixtures/equipqr-test';
+import { test } from '../fixtures/znteqr-test';
 import { openDashboardAsPersona } from '../shared/auth-helpers';
 
 test.describe('authentication @critical', () => {
