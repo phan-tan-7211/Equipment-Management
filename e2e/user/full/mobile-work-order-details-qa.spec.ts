@@ -1,5 +1,5 @@
 import { type BrowserContext, type Locator, type Page } from '@playwright/test';
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { assertNoAxeViolations } from '../shared/axe-helpers';
 import { seedWorkOrders } from '../shared/seed-data';
 import { clickWithDemoCue } from '../shared/page-helpers';
