@@ -6,7 +6,7 @@ import {
   assertQuickBooksConnected,
   isQuickBooksConnected,
   openIntegrationsPage,
-  waitForEquipQrDashboardShell,
+  waitForZnteqrDashboardShell,
 } from '../shared/quickbooks-auth-helpers';
 
 const SIGN_IN_TIMEOUT_MS = 600_000;
@@ -44,7 +44,7 @@ setup('capture QuickBooks local integration @quickbooks-auth-setup', async ({ pa
         '',
       ].join('\n'),
     );
-    await waitForEquipQrDashboardShell(page);
+    await waitForZnteqrDashboardShell(page);
   }
 
   await openIntegrationsPage(page, baseUrl);
@@ -59,7 +59,7 @@ setup('capture QuickBooks local integration @quickbooks-auth-setup', async ({ pa
         '',
       ].join('\n'),
     );
-    await waitForEquipQrDashboardShell(page);
+    await waitForZnteqrDashboardShell(page);
     await openIntegrationsPage(page, baseUrl);
   }
 
