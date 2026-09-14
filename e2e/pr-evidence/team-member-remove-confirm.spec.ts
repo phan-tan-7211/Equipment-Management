@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { pinContextToOrg } from '../user/shared/auth-helpers';
 import { apexOrgId, seedTeams } from '../user/shared/seed-data';
 import { evidencePause, evidenceScreenshot } from './shared/evidence-helpers';
