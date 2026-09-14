@@ -1,6 +1,6 @@
 ---
 name: itil-incident-record
-description: Lightweight bug intake for EquipQR. Use when the user reports a bug, asks to reproduce a symptom, or wants an incident documented. Captures one symptom, gathers only the evidence needed, and hands off to implementation or deeper triage without requiring the old multi-stage ITIL ceremony.
+description: Lightweight bug intake for ZNTEQR. Use when the user reports a bug, asks to reproduce a symptom, or wants an incident documented. Captures one symptom, gathers only the evidence needed, and hands off to implementation or deeper triage without requiring the old multi-stage ITIL ceremony.
 ---
 
 # ITIL Incident Intake
