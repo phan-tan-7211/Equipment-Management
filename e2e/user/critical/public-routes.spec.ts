@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { expectPublicQrRouteHealthy } from '../shared/auth-helpers';
 import { assertRouteHealthy } from '../shared/page-helpers';
 import { PUBLIC_MARKETING_PATHS } from '../shared/marketing-routes';
