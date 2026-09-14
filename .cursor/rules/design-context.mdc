@@ -1,5 +1,5 @@
 ---
-description: "EquipQR brand, user, and UX design principles — apply for all UI component and page work."
+description: "ZNTEQR brand, user, and UX design principles — apply for all UI component and page work."
 globs: "src/**/*.{ts,tsx}"
 alwaysApply: false
 ---
@@ -7,7 +7,7 @@ alwaysApply: false
 
 ### Users
 
-- EquipQR serves multi-tenant fleet and equipment management teams, with primary emphasis on field technicians working on mobile devices in real job-site conditions.
+- ZNTEQR serves multi-tenant fleet and equipment management teams, with primary emphasis on field technicians working on mobile devices in real job-site conditions.
 - Secondary users include shop and operations staff on desktop, but core interaction decisions should prioritize technician speed and legibility first.
 - The core job to be done is to complete equipment, work order, and status updates quickly and accurately with minimal friction, even under time pressure.
 
@@ -22,7 +22,7 @@ alwaysApply: false
 - Visual direction: clean enterprise, structured and data-forward.
 - Use both light and dark mode as first-class experiences with equal polish.
 - Use balanced brand accents with semantic status colors; avoid over-saturating large surfaces with brand color.
-- Continue using existing EquipQR design tokens, shadcn/ui primitives, and Tailwind semantic classes as the default implementation path.
+- Continue using existing ZNTEQR design tokens, shadcn/ui primitives, and Tailwind semantic classes as the default implementation path.
 
 ### Design Principles
 
