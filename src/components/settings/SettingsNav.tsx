@@ -1,22 +1,23 @@
+import { useI18n } from '@/i18n';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { User, Palette, Bell, Shield, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SettingsSection {
   id: string;
-  label: string;
   icon: React.ReactNode;
 }
 
 const SETTINGS_SECTIONS: SettingsSection[] = [
-  { id: 'profile', label: 'Profile', icon: <User className="h-4 w-4" /> },
-  { id: 'personalization', label: 'Personalization', icon: <Palette className="h-4 w-4" /> },
-  { id: 'notifications', label: 'Notifications', icon: <Bell className="h-4 w-4" /> },
-  { id: 'privacy', label: 'Privacy', icon: <Shield className="h-4 w-4" /> },
-  { id: 'security', label: 'Security', icon: <Lock className="h-4 w-4" /> },
+  { id: 'profile', icon: <User className="h-4 w-4" /> },
+  { id: 'personalization', icon: <Palette className="h-4 w-4" /> },
+  { id: 'notifications', icon: <Bell className="h-4 w-4" /> },
+  { id: 'privacy', icon: <Shield className="h-4 w-4" /> },
+  { id: 'security', icon: <Lock className="h-4 w-4" /> },
 ];
 
 export const SettingsNav: React.FC = () => {
+  const { t } = useI18n();
   const [activeSection, setActiveSection] = useState(SETTINGS_SECTIONS[0].id);
   const isClickScrolling = useRef(false);
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -67,7 +68,7 @@ export const SettingsNav: React.FC = () => {
   return (
     <>
       {/* Desktop: vertical sticky sidebar */}
-      <nav className="hidden md:block w-48 shrink-0" aria-label="Settings sections">
+      <nav className="hidden md:block w-48 shrink-0" aria-label={t('settingsPage.navAria')}>
         <div className="sticky top-20 space-y-0.5">
           {SETTINGS_SECTIONS.map((section) => (
             <button
@@ -81,7 +82,7 @@ export const SettingsNav: React.FC = () => {
               )}
             >
               {section.icon}
-              {section.label}
+              {t(`settingsPage.${section.id}`)}
             </button>
           ))}
         </div>
@@ -90,7 +91,7 @@ export const SettingsNav: React.FC = () => {
       {/* Mobile: horizontal scrollable chip bar */}
       <nav
         className="md:hidden flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none"
-        aria-label="Settings sections"
+        aria-label={t('settingsPage.navAria')}
       >
         {SETTINGS_SECTIONS.map((section) => (
           <button
@@ -104,7 +105,7 @@ export const SettingsNav: React.FC = () => {
             )}
           >
             {section.icon}
-            {section.label}
+            {t(`settingsPage.${section.id}`)}
           </button>
         ))}
       </nav>

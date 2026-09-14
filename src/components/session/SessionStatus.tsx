@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
+import { enUS, ko as koLocale, vi as viLocale } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,17 +24,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export const SessionStatus = () => {
+  const { t, language } = useI18n();
+  const dateLocale = language === 'vi' ? viLocale : language === 'ko' ? koLocale : enUS;
   const { sessionData, isLoading, error, refreshSession } = useSession();
   const { user, signOut } = useAuth();
 
   const getSessionAge = () => {
-    if (!sessionData?.lastUpdated) return 'Unknown';
-    return formatDistanceToNow(new Date(sessionData.lastUpdated), { addSuffix: true });
+    if (!sessionData?.lastUpdated) return t('settingsSecurity.unknown');
+    return formatDistanceToNow(new Date(sessionData.lastUpdated), { addSuffix: true, locale: dateLocale });
   };
 
   const getLastSignIn = () => {
-    if (!user?.last_sign_in_at) return 'Unknown';
-    return formatDistanceToNow(new Date(user.last_sign_in_at), { addSuffix: true });
+    if (!user?.last_sign_in_at) return t('settingsSecurity.unknown');
+    return formatDistanceToNow(new Date(user.last_sign_in_at), { addSuffix: true, locale: dateLocale });
   };
 
   const handleSignOutAllSessions = async () => {
@@ -41,10 +45,10 @@ export const SessionStatus = () => {
       if (globalSignOutError) throw globalSignOutError;
 
       await signOut();
-      toast.success('Signed out of all sessions');
+      toast.success(t('settingsSecurity.signedOutAll'));
       window.location.assign('/auth');
     } catch (globalError) {
-      toast.error(globalError instanceof Error ? globalError.message : 'Failed to sign out all sessions');
+      toast.error(globalError instanceof Error ? globalError.message : t('settingsSecurity.signOutFailed'));
     }
   };
 
@@ -60,7 +64,7 @@ export const SessionStatus = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Database className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Session Status</span>
+          <span className="text-sm font-medium">{t('settingsSecurity.sessionStatus')}</span>
         </div>
         <TooltipProvider>
           <Tooltip>
@@ -71,12 +75,12 @@ export const SessionStatus = () => {
                 className="h-7 w-7"
                 onClick={() => void refreshSession()}
                 disabled={isLoading}
-                aria-label="Refresh session"
+                aria-label={t('settingsSecurity.sessionRefresh')}
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Refresh session</TooltipContent>
+            <TooltipContent>{t('settingsSecurity.sessionRefresh')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
@@ -84,10 +88,10 @@ export const SessionStatus = () => {
       <div className="flex items-center justify-between min-h-8">
         <div className="flex items-center gap-2">
           {getStatusIcon()}
-          <span className="text-sm">Session Data</span>
+          <span className="text-sm">{t('settingsSecurity.sessionData')}</span>
         </div>
         <Badge variant={sessionData ? 'default' : 'secondary'}>
-          {sessionData ? 'Loaded' : 'Not Available'}
+          {sessionData ? t('settingsSecurity.loaded') : t('settingsSecurity.unavailable')}
         </Badge>
       </div>
 
@@ -96,7 +100,7 @@ export const SessionStatus = () => {
           <div className="flex items-center justify-between min-h-8">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Last Updated</span>
+              <span className="text-sm">{t('settingsSecurity.lastUpdated')}</span>
             </div>
             <span className="text-xs text-muted-foreground">{getSessionAge()}</span>
           </div>
@@ -104,7 +108,7 @@ export const SessionStatus = () => {
           <div className="flex items-center justify-between min-h-8">
             <div className="flex items-center gap-2">
               <ShieldAlert className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Last Sign In</span>
+              <span className="text-sm">{t('settingsSecurity.lastSignIn')}</span>
             </div>
             <span className="text-xs text-muted-foreground">{getLastSignIn()}</span>
           </div>
@@ -112,7 +116,7 @@ export const SessionStatus = () => {
           <div className="flex items-center justify-between min-h-8">
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Organizations</span>
+              <span className="text-sm">{t('settingsSecurity.organizations')}</span>
             </div>
             <span className="text-sm font-medium">{sessionData.organizations.length}</span>
           </div>
@@ -120,7 +124,7 @@ export const SessionStatus = () => {
           <div className="flex items-center justify-between min-h-8">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Team Memberships</span>
+              <span className="text-sm">{t('settingsSecurity.teamMemberships')}</span>
             </div>
             <span className="text-sm font-medium">{sessionData.teamMemberships.length}</span>
           </div>
@@ -129,20 +133,20 @@ export const SessionStatus = () => {
             <AlertDialogTrigger asChild>
               <Button variant="outline" size="sm" className="w-full mt-1">
                 <LogOut className="h-4 w-4 mr-2" />
-                Sign out all sessions
+                {t('settingsSecurity.signOutAll')}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Sign out all active sessions?</AlertDialogTitle>
+                <AlertDialogTitle>{t('settingsSecurity.signOutTitle')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This revokes your active sessions across all devices. You will need to sign in again everywhere.
+                  {t('settingsSecurity.signOutHelp')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{t('settingsSecurity.cancel')}</AlertDialogCancel>
                 <AlertDialogAction onClick={() => void handleSignOutAllSessions()}>
-                  Sign out everywhere
+                  {t('settingsSecurity.signOutEverywhere')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -159,7 +163,7 @@ export const SessionStatus = () => {
       {!error && sessionData && (
         <div className="p-3 bg-success/10 border border-success/30 rounded-md">
           <p className="text-xs text-success">
-            Session data loaded successfully. Using cached data for improved performance.
+            {t('settingsSecurity.sessionSuccess')}
           </p>
         </div>
       )}

@@ -29,6 +29,7 @@ import { WorkOrderQuickActions } from '../WorkOrderQuickActions';
 import type { WorkOrderCardProps } from '../WorkOrderCard';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 
 type WorkOrderMobileCardProps = Pick<
   WorkOrderCardProps,
@@ -44,7 +45,17 @@ export const WorkOrderMobileCard: React.FC<WorkOrderMobileCardProps> = memo(({
   onDeleteClick,
 }) => {
   const { formatDate, formatRelative } = useFormatTimestamp();
+  const { t } = useI18n();
   const canViewCosts = useCanViewWorkOrderCostsForWorkOrder(workOrder);
+  const statusLabels: Record<string, string> = {
+    submitted: t('workOrders.list.submitted'), accepted: t('workOrders.list.accepted'),
+    assigned: t('workOrders.list.assigned'), in_progress: t('workOrders.list.inProgress'),
+    on_hold: t('workOrders.list.onHold'), completed: t('workOrders.list.completed'),
+    cancelled: t('workOrders.list.cancelled'),
+  };
+  const priorityLabels: Record<string, string> = {
+    high: t('workOrders.list.high'), medium: t('workOrders.list.medium'), low: t('workOrders.list.low'),
+  };
   const dueDateValue = workOrder.due_date;
   const createdDateValue = workOrder.created_date;
   const machineHours = formatWorkOrderMachineHours(workOrder.equipmentWorkingHours);
@@ -69,7 +80,7 @@ export const WorkOrderMobileCard: React.FC<WorkOrderMobileCardProps> = memo(({
     formatTimed: formatRelative,
   });
   const dateLabel = dueLabel
-    ? (isWorkOrderOverdue ? `Overdue ${dueLabel}` : `Due ${dueLabel}`)
+    ? (isWorkOrderOverdue ? t('workOrderMobile.overdueDate', { date: dueLabel }) : t('workOrderMobile.dueDate', { date: dueLabel }))
     : formatRelative(createdDateValue);
 
   const isPendingSync = Boolean((workOrder as MergedWorkOrder)._isPendingSync);
@@ -79,8 +90,8 @@ export const WorkOrderMobileCard: React.FC<WorkOrderMobileCardProps> = memo(({
   const handleQRClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isPendingSync) {
-      toast.info('Pending sync', {
-        description: 'QR codes and printable worksheets are available after the work order syncs.',
+      toast.info(t('workOrders.list.pendingSync'), {
+        description: t('workOrderMobile.qrAfterSync'),
       });
       return;
     }
@@ -129,7 +140,7 @@ export const WorkOrderMobileCard: React.FC<WorkOrderMobileCardProps> = memo(({
                 className={cn(getStatusColor(workOrder.status), 'rounded-full px-1.5 py-0 text-[10px] leading-4')}
                 variant="outline"
               >
-                {formatStatus(workOrder.status)}
+                {statusLabels[workOrder.status] ?? formatStatus(workOrder.status)}
               </Badge>
               {workOrder.priority && workOrder.priority !== 'medium' && (
                 <Badge
@@ -139,7 +150,7 @@ export const WorkOrderMobileCard: React.FC<WorkOrderMobileCardProps> = memo(({
                     getPriorityBadgeClass(workOrder.priority),
                   )}
                 >
-                  {formatWorkOrderPriorityLabel(workOrder.priority)}
+                  {priorityLabels[workOrder.priority] ?? formatWorkOrderPriorityLabel(workOrder.priority)}
                 </Badge>
               )}
             </div>
@@ -152,7 +163,7 @@ export const WorkOrderMobileCard: React.FC<WorkOrderMobileCardProps> = memo(({
                 size="icon"
                 className="h-8 w-8 shrink-0 -mr-1 text-muted-foreground hover:text-foreground"
                 onClick={handleQRClick}
-                aria-label={`Show QR code and print options for ${workOrder.title}`}
+                aria-label={t("workOrderMobile.showQr", { title: workOrder.title })}
               >
                 <QrCode className="h-4 w-4" aria-hidden />
               </Button>
@@ -207,7 +218,7 @@ export const WorkOrderMobileCard: React.FC<WorkOrderMobileCardProps> = memo(({
                   </AvatarFallback>
                 </Avatar>
                 <span className="truncate text-xs text-muted-foreground">
-                  {assigneeName || 'Unassigned'}
+                  {assigneeName || t('workOrders.list.unassigned')}
                 </span>
               </div>
               <span

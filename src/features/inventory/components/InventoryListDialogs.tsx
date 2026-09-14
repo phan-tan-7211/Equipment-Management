@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { InventoryItemForm } from '@/features/inventory/components/InventoryItemForm';
@@ -33,6 +34,7 @@ export function InventoryListDialogs({
   onManagersSheetOpenChange,
   onAddItem,
 }: InventoryListDialogsProps) {
+  const { t } = useI18n();
   return (
     <>
       {showForm && (
@@ -62,7 +64,7 @@ export function InventoryListDialogs({
           type="button"
           size="icon"
           onClick={onAddItem}
-          aria-label="Add inventory item"
+          aria-label={t('inventoryListAux.addItem')}
           className={cn(
             'fixed bottom-[78px] right-4 z-fixed h-14 w-14 rounded-full shadow-elevation-3',
             'touch-manipulation transition-transform duration-100 active:scale-[0.97]',

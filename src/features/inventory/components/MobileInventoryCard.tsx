@@ -19,6 +19,7 @@ import {
 import { InventoryStockBar } from '@/features/inventory/components/InventoryStockBar';
 import type { InventoryItem } from '@/features/inventory/types/inventory';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 /** Quantity display: out of stock vs low-but-available vs healthy. */
 function getQuantityClassName(item: InventoryItem): string {
@@ -50,10 +51,14 @@ const MobileInventoryCard: React.FC<MobileInventoryCardProps> = ({
   onManageAlternateGroups,
   groupCount = 0,
 }) => {
+  const { t } = useI18n();
   const handleQRClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onShowQR(item);
   };
+  const groupLabel = groupCount === 1
+    ? t('inventoryList.group', { count: groupCount })
+    : t('inventoryList.groups', { count: groupCount });
 
   return (
     <Card
@@ -67,7 +72,7 @@ const MobileInventoryCard: React.FC<MobileInventoryCardProps> = ({
       onKeyDown={(e) => onKeyDown(e, item.id)}
       role="button"
       tabIndex={0}
-      aria-label={`Open inventory item ${item.name}`}
+      aria-label={t('inventoryList.openInventoryItem', { name: item.name })}
     >
       <CardContent className="px-3 py-3">
         <div className="grid min-w-0 grid-cols-[1fr_auto] gap-x-2.5 gap-y-1">
@@ -83,7 +88,7 @@ const MobileInventoryCard: React.FC<MobileInventoryCardProps> = ({
               size="icon"
               className="h-8 w-8 shrink-0 -mr-1 text-muted-foreground hover:text-foreground"
               onClick={handleQRClick}
-              aria-label={`Show QR code for ${item.name}`}
+              aria-label={t('inventoryList.showQrFor', { name: item.name })}
             >
               <QrCode className="h-4 w-4" aria-hidden />
             </Button>
@@ -96,7 +101,10 @@ const MobileInventoryCard: React.FC<MobileInventoryCardProps> = ({
                 <span className="text-muted-foreground/40" aria-hidden>
                   ·
                 </span>
-                <span className="inline-flex min-w-0 items-center gap-1" title={`Location name: ${item.location}`}>
+                <span
+                  className="inline-flex min-w-0 items-center gap-1"
+                  title={t('inventoryList.locationNameValue', { location: item.location })}
+                >
                   <MapPin className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
                   <span className="truncate">{item.location}</span>
                 </span>
@@ -109,7 +117,7 @@ const MobileInventoryCard: React.FC<MobileInventoryCardProps> = ({
                 </span>
                 <span className="inline-flex items-center gap-1">
                   <Layers className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
-                  {groupCount} group{groupCount > 1 ? 's' : ''}
+                  {groupLabel}
                 </span>
               </>
             )}
@@ -126,7 +134,7 @@ const MobileInventoryCard: React.FC<MobileInventoryCardProps> = ({
                 {item.quantity_on_hand}
               </span>
               <span className="pb-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                on hand
+                {t('inventoryList.onHand')}
               </span>
             </div>
             <InventoryStockBar
@@ -142,7 +150,7 @@ const MobileInventoryCard: React.FC<MobileInventoryCardProps> = ({
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-                  aria-label={`More actions for ${item.name}`}
+                  aria-label={t('inventoryList.moreActionsFor', { name: item.name })}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MoreVertical className="h-4 w-4" aria-hidden />

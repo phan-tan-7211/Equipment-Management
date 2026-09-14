@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -40,10 +41,11 @@ const PMTemplateSelector: React.FC<PMTemplateSelectorProps> = ({
   assignedTemplate,
   equipmentName,
 }) => {
+  const { t } = useI18n();
   if (isLoading) {
     return (
       <div className="rounded-lg border bg-muted/30 p-3">
-        <p className="text-sm text-muted-foreground">Loading templates...</p>
+        <p className="text-sm text-muted-foreground">{t('workOrderForm.loadingTemplates')}</p>
       </div>
     );
   }
@@ -54,11 +56,11 @@ const PMTemplateSelector: React.FC<PMTemplateSelectorProps> = ({
       onValueChange={onTemplateChange}
       disabled={isLoading}
     >
-      <SelectTrigger id="pm-template-select" aria-label="PM template">
-        <SelectValue placeholder="Select a PM template..." />
+      <SelectTrigger id="pm-template-select" aria-label={t('workOrderForm.pmTemplate')}>
+        <SelectValue placeholder={t('workOrderForm.selectPmTemplate')} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={PM_TEMPLATE_NONE_VALUE}>None</SelectItem>
+        <SelectItem value={PM_TEMPLATE_NONE_VALUE}>{t('workOrderForm.none')}</SelectItem>
         {templates.map((template) => (
           <SelectItem key={template.id} value={template.id}>
             <div className="flex items-center gap-2">
@@ -66,18 +68,18 @@ const PMTemplateSelector: React.FC<PMTemplateSelectorProps> = ({
               {template.organization_id === null && (
                 <div className="flex items-center gap-1">
                   <Globe className="h-3 w-3" />
-                  <span className="text-xs text-muted-foreground">(Global)</span>
+                  <span className="text-xs text-muted-foreground">{t('workOrderForm.global')}</span>
                 </div>
               )}
               {assignedTemplate?.id === template.id && equipmentName && (
-                <span className="text-xs text-muted-foreground">(Equipment default)</span>
+                <span className="text-xs text-muted-foreground">{t('workOrderForm.equipmentDefault')}</span>
               )}
             </div>
           </SelectItem>
         ))}
         {showLicenseFooter && !canCreateCustomPMTemplates && templates.some(t => t.organization_id) && (
           <div className="border-t px-2 py-1 text-xs text-muted-foreground">
-            Custom templates require user licenses
+            {t('workOrderForm.customLicense')}
           </div>
         )}
       </SelectContent>
@@ -100,6 +102,7 @@ export const WorkOrderPMChecklist: React.FC<WorkOrderPMChecklistProps> = ({
   allowTemplateOverride = false,
   autoDefaultFromEquipment = false,
 }) => {
+  const { t } = useI18n();
   const {
     templates,
     selectedTemplate,
@@ -122,13 +125,13 @@ export const WorkOrderPMChecklist: React.FC<WorkOrderPMChecklistProps> = ({
   return (
     <div className="space-y-3">
       <div className="space-y-2">
-        <Label htmlFor="pm-template-select">PM Template</Label>
+        <Label htmlFor="pm-template-select">{t('workOrderForm.pmTemplate')}</Label>
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
             {templates.length === 0 && !isLoading && !hasPmSelected ? (
               <div className="rounded-lg border bg-muted/30 p-3">
                 <p className="text-sm text-muted-foreground">
-                  No PM templates available. Ask an admin to add templates or assign one on the equipment record.
+                  {t('workOrderForm.noPmTemplates')}
                 </p>
               </div>
             ) : (
@@ -149,7 +152,7 @@ export const WorkOrderPMChecklist: React.FC<WorkOrderPMChecklistProps> = ({
               type="button"
               variant="outline"
               size="icon"
-              aria-label="Remove PM template"
+              aria-label={t('workOrderForm.removePmTemplate')}
               onClick={handleClearTemplate}
               className="shrink-0"
             >
@@ -159,7 +162,7 @@ export const WorkOrderPMChecklist: React.FC<WorkOrderPMChecklistProps> = ({
         </div>
         {assignedTemplate && selectedEquipment && hasPmSelected && values.pmTemplateId === assignedTemplate.id && (
           <p className="text-xs text-muted-foreground">
-            Defaults to the PM template assigned to {selectedEquipment.name}. Choose another template or remove PM if this work order does not need a checklist.
+            {t('workOrderForm.pmEquipmentDefaultHint', { name: selectedEquipment.name })}
           </p>
         )}
       </div>
@@ -169,7 +172,7 @@ export const WorkOrderPMChecklist: React.FC<WorkOrderPMChecklistProps> = ({
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              This work order includes a preventative maintenance checklist that must be completed before the work order can be marked as finished.
+              {t('workOrderForm.pmChecklistHint')}
             </AlertDescription>
           </Alert>
 
@@ -177,12 +180,12 @@ export const WorkOrderPMChecklist: React.FC<WorkOrderPMChecklistProps> = ({
             <div className="rounded-lg border bg-muted/30 p-3">
               <div className="mb-2 flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">PM Checklist Preview</span>
-                <span className="text-xs text-muted-foreground">({selectedTemplate.itemCount} items)</span>
+                <span className="text-sm font-medium">{t('workOrderForm.pmChecklistPreview')}</span>
+                <span className="text-xs text-muted-foreground">{t('workOrderForm.items', { count: selectedTemplate.itemCount })}</span>
               </div>
               <div className="space-y-1 text-xs text-muted-foreground">
                 {selectedTemplate.sections.map((section) => (
-                  <div key={section.name}>• {section.name} ({section.count} items)</div>
+                  <div key={section.name}>• {section.name} {t('workOrderForm.items', { count: section.count })}</div>
                 ))}
               </div>
             </div>

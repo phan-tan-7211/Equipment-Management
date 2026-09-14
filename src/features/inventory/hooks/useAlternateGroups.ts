@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -102,6 +103,7 @@ export interface CreateAlternateGroupInput {
 export const useCreateAlternateGroup = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -118,14 +120,14 @@ export const useCreateAlternateGroup = () => {
         queryKey: ['alternate-groups', variables.organizationId],
       });
       toast({
-        title: 'Alternate group created',
-        description: `"${data.name}" has been created.`,
+        title: t('inventoryMutation.groupCreated'),
+        description: t('inventoryMutation.groupCreatedDescription', { name: data.name }),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error creating alternate group',
-        description: error instanceof Error ? error.message : 'Failed to create group',
+        title: t('inventoryMutation.groupCreateError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.groupCreateFailed'),
         variant: 'error',
       });
     },
@@ -138,6 +140,7 @@ export const useCreateAlternateGroup = () => {
 export const useUpdateAlternateGroup = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -159,14 +162,14 @@ export const useUpdateAlternateGroup = () => {
         queryKey: ['alternate-group', variables.organizationId, variables.groupId],
       });
       toast({
-        title: 'Alternate group updated',
-        description: `"${data.name}" has been updated.`,
+        title: t('inventoryMutation.groupUpdated'),
+        description: t('inventoryMutation.groupUpdatedDescription', { name: data.name }),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error updating alternate group',
-        description: error instanceof Error ? error.message : 'Failed to update group',
+        title: t('inventoryMutation.groupUpdateError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.groupUpdateFailed'),
         variant: 'error',
       });
     },
@@ -179,6 +182,7 @@ export const useUpdateAlternateGroup = () => {
 export const useDeleteAlternateGroup = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -198,14 +202,14 @@ export const useDeleteAlternateGroup = () => {
         queryKey: ['inventory-group-membership-counts', variables.organizationId],
       });
       toast({
-        title: 'Alternate group deleted',
-        description: 'The alternate group has been removed.',
+        title: t('inventoryMutation.groupDeleted'),
+        description: t('inventoryMutation.groupDeletedDescription'),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error deleting alternate group',
-        description: error instanceof Error ? error.message : 'Failed to delete group',
+        title: t('inventoryMutation.groupDeleteError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.groupDeleteFailed'),
         variant: 'error',
       });
     },
@@ -218,6 +222,7 @@ export const useDeleteAlternateGroup = () => {
 export const useAddInventoryItemToGroup = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -250,14 +255,14 @@ export const useAddInventoryItemToGroup = () => {
         queryKey: ['part-alternates'],
       });
       toast({
-        title: 'Item added to group',
-        description: 'The inventory item has been added to the alternate group.',
+        title: t('inventoryMutation.itemAdded'),
+        description: t('inventoryMutation.itemAddedDescription'),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error adding item to group',
-        description: error instanceof Error ? error.message : 'Failed to add item',
+        title: t('inventoryMutation.itemAddError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.itemAddFailed'),
         variant: 'error',
       });
     },
@@ -271,6 +276,7 @@ export const useAddPartIdentifierToGroup = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -288,7 +294,7 @@ export const useAddPartIdentifierToGroup = () => {
       manufacturer?: string;
       inventoryItemId?: string;
     }) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error(t('inventoryMutation.notAuthenticated'));
       
       // First create the identifier
       const identifier = await createPartIdentifier(organizationId, {
@@ -314,14 +320,14 @@ export const useAddPartIdentifierToGroup = () => {
         queryKey: ['part-alternates'],
       });
       toast({
-        title: 'Part number added',
-        description: 'The part number has been added to the alternate group.',
+        title: t('inventoryMutation.identifierAdded'),
+        description: t('inventoryMutation.identifierAddedDescription'),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error adding part number',
-        description: error instanceof Error ? error.message : 'Failed to add part number',
+        title: t('inventoryMutation.identifierAddError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.identifierAddFailed'),
         variant: 'error',
       });
     },
@@ -334,6 +340,7 @@ export const useAddPartIdentifierToGroup = () => {
 export const useRemoveGroupMember = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -362,14 +369,14 @@ export const useRemoveGroupMember = () => {
         queryKey: ['part-alternates'],
       });
       toast({
-        title: 'Member removed',
-        description: 'The item has been removed from the alternate group.',
+        title: t('inventoryMutation.memberRemoved'),
+        description: t('inventoryMutation.memberRemovedDescription'),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error removing member',
-        description: error instanceof Error ? error.message : 'Failed to remove member',
+        title: t('inventoryMutation.memberRemoveError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.memberRemoveFailed'),
         variant: 'error',
       });
     },

@@ -58,6 +58,7 @@ import {
   INVENTORY_DESKTOP_PAGE_SIZE_OPTIONS,
   INVENTORY_MOBILE_PAGE_SIZE_OPTIONS,
 } from '@/features/inventory/utils/inventoryListPagination';
+import { useI18n } from '@/i18n';
 
 const EMPTY_METADATA: InventoryListMetadata = {
   uniqueLocations: [],
@@ -80,6 +81,7 @@ const InventoryList = () => {
   const { canManageInventory, canManagePartsManagers } = usePermissions();
   const isMobile = useIsMobile();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   const [showForm, setShowForm] = useState(false);
   const [showManagersSheet, setShowManagersSheet] = useState(false);
@@ -299,8 +301,8 @@ const InventoryList = () => {
       density: tablePrefs.density,
     });
     toast({
-      title: 'View saved',
-      description: `"${name}" is now available in Saved views.`,
+      title: t('inventoryList.viewSaved'),
+      description: t('inventoryList.viewSavedDescription', { name }),
     });
   };
 
@@ -314,8 +316,8 @@ const InventoryList = () => {
     return (
       <Page maxWidth="7xl" padding="responsive">
         <PageHeader
-          title="Inventory"
-          description="Please select an organization to view inventory."
+          title={t('inventoryList.title')}
+          description={t('inventoryList.selectOrganization')}
         />
       </Page>
     );
@@ -324,7 +326,7 @@ const InventoryList = () => {
   if (isInventoryPending && items.length === 0) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <PageHeader title="Inventory" />
+        <PageHeader title={t('inventoryList.title')} />
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -374,8 +376,8 @@ const InventoryList = () => {
         )}
       >
         <PageHeader
-          title="Inventory"
-          description={`Manage inventory items for ${currentOrganization.name}`}
+          title={t('inventoryList.title')}
+          description={t('inventoryList.description', { organization: currentOrganization.name })}
           actions={
             <InventoryListPageActions
               canCreate={canCreate}
@@ -425,16 +427,16 @@ const InventoryList = () => {
           <Card>
             <CardContent className="py-12 text-center">
               <Package className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <h3 className="mb-2 text-lg font-semibold">No inventory items</h3>
+              <h3 className="mb-2 text-lg font-semibold">{t('inventoryList.emptyTitle')}</h3>
               <p className="mb-4 text-muted-foreground">
                 {hasActiveFilters
-                  ? 'No items match your filters.'
-                  : 'Get started by adding your first inventory item.'}
+                  ? t('inventoryList.emptyFiltered')
+                  : t('inventoryList.emptyStart')}
               </p>
               {canCreate && (
                 <Button onClick={handleAddItem}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Item
+                  {t('inventoryList.addItem')}
                 </Button>
               )}
             </CardContent>
@@ -459,7 +461,7 @@ const InventoryList = () => {
               page={safeMobilePage}
               pageSize={mobilePageSize}
               pageSizeOptions={INVENTORY_MOBILE_PAGE_SIZE_OPTIONS}
-              itemLabel="item"
+              itemLabel={t('inventoryList.itemLabel')}
               onPageChange={setMobilePage}
               onPageSizeChange={setMobilePageSize}
             />
@@ -469,31 +471,31 @@ const InventoryList = () => {
             <InventoryListDesktopTable
               rows={paginatedDesktopRows}
               filters={filters}
-            columnVisibility={tablePrefs.columnVisibility}
-            columnOrder={tablePrefs.columnOrder}
-            columnSizing={tablePrefs.columnSizing}
-            density={tablePrefs.density}
-            canCreate={canCreate}
-            adjustPending={adjustMutation.isPending}
-            onColumnVisibilityChange={(visibility) =>
-              tablePrefs.setColumnVisibility(visibility as Record<string, boolean>)
-            }
-            onColumnOrderChange={tablePrefs.setColumnOrder}
-            onColumnSizingChange={tablePrefs.setColumnSizing}
-            onSortChange={handleSortChange}
-            onViewItem={handleViewItem}
-            onQuickAdjust={handleQuickAdjust}
-            onShowQR={handleShowQRCode}
-            onEditItem={handleEditItem}
-            onManageAlternateGroups={handleManageAlternateGroups}
-          />
+              columnVisibility={tablePrefs.columnVisibility}
+              columnOrder={tablePrefs.columnOrder}
+              columnSizing={tablePrefs.columnSizing}
+              density={tablePrefs.density}
+              canCreate={canCreate}
+              adjustPending={adjustMutation.isPending}
+              onColumnVisibilityChange={(visibility) =>
+                tablePrefs.setColumnVisibility(visibility as Record<string, boolean>)
+              }
+              onColumnOrderChange={tablePrefs.setColumnOrder}
+              onColumnSizingChange={tablePrefs.setColumnSizing}
+              onSortChange={handleSortChange}
+              onViewItem={handleViewItem}
+              onQuickAdjust={handleQuickAdjust}
+              onShowQR={handleShowQRCode}
+              onEditItem={handleEditItem}
+              onManageAlternateGroups={handleManageAlternateGroups}
+            />
             <ListPaginationFooter
               testId="inventory-list-pagination-footer"
               totalItems={viewModels.length}
               page={safeDesktopPage}
               pageSize={desktopPageSize}
               pageSizeOptions={INVENTORY_DESKTOP_PAGE_SIZE_OPTIONS}
-              itemLabel="item"
+              itemLabel={t('inventoryList.itemLabel')}
               onPageChange={setDesktopPage}
               onPageSizeChange={setDesktopPageSize}
             />

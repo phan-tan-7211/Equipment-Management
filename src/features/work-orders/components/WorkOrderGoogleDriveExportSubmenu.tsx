@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import {
   DropdownMenuItem,
@@ -12,6 +13,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Download, ExternalLink, FileSpreadsheet, FileText, Loader2, RefreshCw } from 'lucide-react';
+import { localizeDriveTooltip } from '@/features/work-orders/utils/localizeExportAvailability';
 import type { GoogleDriveExportRowConfig } from '@/features/work-orders/components/googleDriveExportRowTypes';
 import { useWorkOrderGoogleDriveExportState } from '@/features/work-orders/hooks/useWorkOrderGoogleDriveExportState';
 import {
@@ -48,6 +50,7 @@ function GoogleDriveFormatSubmenu({
   onUpdate,
   deferActions = false,
 }: GoogleDriveFormatSubmenuProps) {
+  const { t } = useI18n();
   const createAvailability = getGoogleDriveCreateAvailability({
     canExport,
     isBusy,
@@ -99,7 +102,7 @@ function GoogleDriveFormatSubmenu({
               </DropdownMenuItem>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p className="max-w-xs">{createAvailability.tooltip}</p>
+              <p className="max-w-xs">{localizeDriveTooltip(createAvailability.tooltip, label, t)}</p>
             </TooltipContent>
           </Tooltip>
 
@@ -118,7 +121,7 @@ function GoogleDriveFormatSubmenu({
               </DropdownMenuItem>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p className="max-w-xs">{updateAvailability.tooltip}</p>
+              <p className="max-w-xs">{localizeDriveTooltip(updateAvailability.tooltip, label, t)}</p>
             </TooltipContent>
           </Tooltip>
 
@@ -130,7 +133,7 @@ function GoogleDriveFormatSubmenu({
               </DropdownMenuItem>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p className="max-w-xs">{openAvailability.tooltip}</p>
+              <p className="max-w-xs">{localizeDriveTooltip(openAvailability.tooltip, label, t)}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -162,6 +165,7 @@ export const WorkOrderGoogleDriveExportSubmenu: React.FC<WorkOrderGoogleDriveExp
   onExportSheets,
   isExportingSheets,
 }) => {
+  const { t } = useI18n();
   const {
     isConnected,
     hasDestination,
@@ -183,10 +187,10 @@ export const WorkOrderGoogleDriveExportSubmenu: React.FC<WorkOrderGoogleDriveExp
       <DropdownMenuSubTrigger>Google Drive</DropdownMenuSubTrigger>
       <DropdownMenuSubContent>
         <GoogleDriveFormatSubmenu
-          label="Docs"
-          createLabel="Create Google Doc"
-          updateLabel="Update Google Doc"
-          openLabel="Open Google Doc"
+          label={t('workOrderExportUi.docs')}
+          createLabel={t('workOrderExportUi.createDoc')}
+          updateLabel={t('workOrderExportUi.updateDoc')}
+          openLabel={t('workOrderExportUi.openDoc')}
           canExport={canExportDocs}
           isBusy={isExportingDocs}
           hasLinkedArtifact={docsDisplay.hasLinkedArtifact}
@@ -198,10 +202,10 @@ export const WorkOrderGoogleDriveExportSubmenu: React.FC<WorkOrderGoogleDriveExp
         />
 
         <GoogleDriveFormatSubmenu
-          label="PDF"
-          createLabel="Save to Drive"
-          updateLabel="Update on Drive"
-          openLabel="Open PDF"
+          label={t('workOrderExportUi.pdf')}
+          createLabel={t('workOrderExportUi.saveDrive')}
+          updateLabel={t('workOrderExportUi.updateDrive')}
+          openLabel={t('workOrderExportUi.openPdf')}
           canExport={canExportPdf}
           isBusy={isPdfBusy}
           hasLinkedArtifact={pdfDisplay.hasLinkedArtifact}
@@ -214,10 +218,10 @@ export const WorkOrderGoogleDriveExportSubmenu: React.FC<WorkOrderGoogleDriveExp
         />
 
         <GoogleDriveFormatSubmenu
-          label="Sheets"
-          createLabel="Create Google Sheet"
-          updateLabel="Update Google Sheet"
-          openLabel="Open Google Sheet"
+          label={t('workOrderExportUi.sheets')}
+          createLabel={t('workOrderExportUi.createSheet')}
+          updateLabel={t('workOrderExportUi.updateSheet')}
+          openLabel={t('workOrderExportUi.openSheet')}
           canExport={canExportSheets}
           isBusy={isExportingSheets}
           hasLinkedArtifact={sheetsDisplay.hasLinkedArtifact}

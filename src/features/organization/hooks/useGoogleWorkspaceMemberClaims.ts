@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 /**
  * Hook to manage Google Workspace member claims
  * 
@@ -116,6 +117,7 @@ export const useGoogleWorkspaceMemberClaims = (organizationId: string) => {
 export const useRevokeGoogleWorkspaceMemberClaim = (organizationId: string) => {
   const queryClient = useQueryClient();
   const appToast = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async (claimId: string) => {
@@ -138,11 +140,11 @@ export const useRevokeGoogleWorkspaceMemberClaim = (organizationId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: googleWorkspace.memberClaims(organizationId) });
-      appToast.success({ description: 'Pending member removed' });
+      appToast.success({ description: t('organizationNotices.pendingRemoved') });
     },
     onError: (error) => {
       logger.error('Error revoking GWS member claim', error);
-      appToast.error({ description: 'Failed to remove pending member' });
+      appToast.error({ description: t('organizationNotices.pendingRemoveFailed') });
     },
   });
 };

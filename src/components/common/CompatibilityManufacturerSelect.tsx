@@ -12,6 +12,7 @@ type CompatibilityManufacturerSelectProps = {
   onValueChange: (value: string) => void;
   manufacturers: string[];
   disabled?: boolean;
+  placeholder?: string;
 };
 
 export function CompatibilityManufacturerSelect({
@@ -19,11 +20,12 @@ export function CompatibilityManufacturerSelect({
   onValueChange,
   manufacturers,
   disabled,
+  placeholder = 'Select manufacturer...',
 }: CompatibilityManufacturerSelectProps) {
   return (
     <Select value={value} onValueChange={onValueChange} disabled={disabled}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select manufacturer..." />
+        <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
         {manufacturers.map((mfr) => (

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 import { ChevronDown, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -89,9 +90,10 @@ export function OperatorChecklistRowCard({
 }
 
 export function RequiredBadge() {
+  const { t } = useI18n();
   return (
     <Badge variant="secondary" className="font-normal">
-      Required
+      {t('operatorCheckinDetail.required')}
     </Badge>
   );
 }

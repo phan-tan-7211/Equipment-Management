@@ -10,6 +10,8 @@ import { FeatureShowcaseList } from '@/components/landing/features/FeatureShowca
 import { FeatureCTA } from '@/components/landing/features/FeatureCTA';
 import { CapabilitiesGrid } from '@/components/landing/features/CapabilitiesGrid';
 import { getFeatureSeoByPath } from '@/lib/featureSeoContent';
+import { useI18n } from '@/i18n';
+import { translateFeaturePage } from '@/pages/features/data/featurePageTranslations';
 import type {
   Benefit,
   Capability,
@@ -30,6 +32,7 @@ export interface StandardFeaturePageProps {
   capabilities?: Capability[];
   afterBenefits?: ReactNode;
   afterSteps?: ReactNode;
+  translationKey?: string;
 }
 
 export const StandardFeaturePage = ({
@@ -42,32 +45,37 @@ export const StandardFeaturePage = ({
   capabilities,
   afterBenefits,
   afterSteps,
+  translationKey,
 }: StandardFeaturePageProps) => {
+  const { t } = useI18n();
   const seo = getFeatureSeoByPath(seoPath);
   if (!seo) {
     throw new Error(`Missing feature SEO config for path: ${seoPath}`);
   }
 
-  const primaryCta = content.ctaPrimaryText ?? DEFAULT_PRIMARY_CTA;
+  const localized = translationKey
+    ? translateFeaturePage(t, translationKey, content, benefits, steps, showcases, seo)
+    : { content, benefits, steps, showcases, seo };
+  const primaryCta = localized.content.ctaPrimaryText ?? DEFAULT_PRIMARY_CTA;
 
   return (
     <>
-      <PageSEO title={seo.pageTitle} description={seo.description} path={seo.path} />
-      <FeaturePageLayout howToSteps={steps}>
+      <PageSEO title={localized.seo.pageTitle} description={localized.seo.description} path={seo.path} />
+      <FeaturePageLayout howToSteps={localized.steps} seoOverride={translationKey ? localized.seo : undefined}>
         <FeatureHero
           icon={heroIcon}
-          title={seo.heroTitle}
-          description={seo.heroDescription}
+          title={localized.seo.heroTitle}
+          description={localized.seo.heroDescription}
           ctaText={primaryCta}
         />
 
         <FeatureSection
-          title={content.benefitsTitle}
-          description={content.benefitsDescription}
+          title={localized.content.benefitsTitle}
+          description={localized.content.benefitsDescription}
           className="bg-muted/30"
         >
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 max-w-6xl mx-auto">
-            {benefits.map((benefit) => (
+            {localized.benefits.map((benefit) => (
               <BenefitCard key={benefit.title} {...benefit} />
             ))}
           </div>
@@ -77,36 +85,36 @@ export const StandardFeaturePage = ({
 
         {capabilities && capabilities.length > 0 && (
           <FeatureSection
-            title={content.capabilitiesTitle!}
-            description={content.capabilitiesDescription!}
+            title={localized.content.capabilitiesTitle!}
+            description={localized.content.capabilitiesDescription!}
           >
             <CapabilitiesGrid capabilities={capabilities} />
           </FeatureSection>
         )}
 
         <FeatureSection
-          title={content.stepsTitle}
-          description={content.stepsDescription}
-          className={content.stepsClassName}
+          title={localized.content.stepsTitle}
+          description={localized.content.stepsDescription}
+          className={localized.content.stepsClassName}
         >
-          <StepList steps={steps} />
+          <StepList steps={localized.steps} />
         </FeatureSection>
 
         {afterSteps}
 
         <FeatureSection
-          title={content.showcaseTitle}
-          description={content.showcaseDescription}
-          className={content.showcaseClassName}
+          title={localized.content.showcaseTitle}
+          description={localized.content.showcaseDescription}
+          className={localized.content.showcaseClassName}
         >
-          <FeatureShowcaseList items={showcases} />
+          <FeatureShowcaseList items={localized.showcases} />
         </FeatureSection>
 
         <FeatureCTA
-          title={content.ctaTitle}
-          description={content.ctaDescription}
+          title={localized.content.ctaTitle}
+          description={localized.content.ctaDescription}
           primaryCtaText={primaryCta}
-          className={content.ctaClassName}
+          className={localized.content.ctaClassName}
         />
       </FeaturePageLayout>
     </>

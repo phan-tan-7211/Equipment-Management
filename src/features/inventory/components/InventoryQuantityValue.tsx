@@ -5,8 +5,9 @@ import {
 } from '@/components/ui/tooltip';
 import type { InventoryItem } from '@/features/inventory/types/inventory';
 import { getQuantityClassName } from '@/features/inventory/utils/inventoryListPresentation';
-import { getStockHealthPresentation } from '@/features/inventory/utils/stockHealth';
+import { resolveStockHealthTier } from '@/features/inventory/utils/stockHealthLevels';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 type InventoryQuantityValueProps = {
   item: InventoryItem;
@@ -14,8 +15,10 @@ type InventoryQuantityValueProps = {
 };
 
 export function InventoryQuantityValue({ item, className }: InventoryQuantityValueProps) {
-  const stockHealth = getStockHealthPresentation(item);
-  const isColored = stockHealth.label !== 'Healthy';
+  const { t } = useI18n();
+  const tier = resolveStockHealthTier(item);
+  const stockHealthLabel = t(`inventoryList.stockHealth.${tier}`);
+  const isColored = tier !== 'healthy';
   const quantityClassName = getQuantityClassName(item);
 
   if (!isColored) {
@@ -31,12 +34,15 @@ export function InventoryQuantityValue({ item, className }: InventoryQuantityVal
       <TooltipTrigger asChild>
         <span
           className={cn('tabular-nums cursor-default', quantityClassName, className)}
-          aria-label={`${stockHealth.label}: ${item.quantity_on_hand}`}
+          aria-label={t('inventoryList.stockQuantityAria', {
+            status: stockHealthLabel,
+            quantity: item.quantity_on_hand,
+          })}
         >
           {item.quantity_on_hand}
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top">{stockHealth.label}</TooltipContent>
+      <TooltipContent side="top">{stockHealthLabel}</TooltipContent>
     </Tooltip>
   );
 }

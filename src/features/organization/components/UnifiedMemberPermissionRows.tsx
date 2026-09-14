@@ -14,6 +14,7 @@ import {
 } from '@/features/organization/utils/unifiedMemberPermissionRules';
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
+import { useI18n } from '@/i18n';
 
 type UnifiedMemberPermissionRowsProps = {
   member: UnifiedMember;
@@ -125,6 +126,7 @@ export function UnifiedMemberQuickBooksControl({
   UnifiedMemberPermissionRowsProps,
   'member' | 'context' | 'quickBooksPending' | 'onQuickBooksToggle' | 'layout'
 >) {
+  const { t } = useI18n();
   const display = getQuickBooksPermissionDisplay(member, context);
   const icon = <QuickBooksMarkIcon />;
 
@@ -138,10 +140,10 @@ export function UnifiedMemberQuickBooksControl({
         <div className="flex items-center justify-between gap-3 min-h-[44px] rounded-md border border-border/60 bg-muted/20 px-3 py-2">
           <PermissionLabel
             icon={icon}
-            label="QuickBooks"
-            description="Always enabled for owners"
+            label={t('organizationMembers.quickBooks')}
+            description={t('organizationMembers.alwaysForOwner')}
           />
-          <span className="text-xs text-muted-foreground italic shrink-0">Always</span>
+          <span className="text-xs text-muted-foreground italic shrink-0">{t('organizationMembers.always')}</span>
         </div>
       );
     }
@@ -149,12 +151,12 @@ export function UnifiedMemberQuickBooksControl({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <DesktopPermissionControl icon={icon} label="QuickBooks">
-            <span className="text-xs text-muted-foreground italic">Always</span>
+          <DesktopPermissionControl icon={icon} label={t('organizationMembers.quickBooks')}>
+            <span className="text-xs text-muted-foreground italic">{t('organizationMembers.always')}</span>
           </DesktopPermissionControl>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Owners always have QuickBooks management permission</p>
+          <p>{t('organizationMembers.ownerQuickBooks')}</p>
         </TooltipContent>
       </Tooltip>
     );
@@ -162,7 +164,7 @@ export function UnifiedMemberQuickBooksControl({
 
   if (display === 'not-applicable') {
     return layout === 'desktop' ? (
-      <DesktopPermissionControl icon={icon} label="QuickBooks">
+      <DesktopPermissionControl icon={icon} label={t('organizationMembers.quickBooks')}>
         <span className="text-xs text-muted-foreground">—</span>
       </DesktopPermissionControl>
     ) : null;
@@ -176,7 +178,7 @@ export function UnifiedMemberQuickBooksControl({
         onQuickBooksToggle(member.userId, checked);
       }}
       disabled={quickBooksPending}
-      aria-label="Toggle QuickBooks management permission"
+      aria-label={t('organizationMembers.toggleQuickBooks')}
     />
   );
 
@@ -184,12 +186,12 @@ export function UnifiedMemberQuickBooksControl({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <DesktopPermissionControl icon={icon} label="QuickBooks">
+          <DesktopPermissionControl icon={icon} label={t('organizationMembers.quickBooks')}>
             {switchControl}
           </DesktopPermissionControl>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{member.canManageQuickBooks ? 'Revoke QuickBooks access' : 'Grant QuickBooks access'}</p>
+          <p>{t(member.canManageQuickBooks ? 'organizationMembers.revokeQuickBooks' : 'organizationMembers.grantQuickBooks')}</p>
         </TooltipContent>
       </Tooltip>
     );
@@ -199,8 +201,8 @@ export function UnifiedMemberQuickBooksControl({
     <PermissionToggleRow
       id={`qb-${member.id}`}
       icon={icon}
-      label="QuickBooks"
-      description="Manage integration and export invoices"
+      label={t('organizationMembers.quickBooks')}
+      description={t('organizationMembers.manageQuickBooks')}
       checked={member.canManageQuickBooks ?? false}
       disabled={quickBooksPending}
       onCheckedChange={(checked) => {
@@ -222,6 +224,7 @@ export function UnifiedMemberPartsManagerControl({
   UnifiedMemberPermissionRowsProps,
   'member' | 'context' | 'isPartsManager' | 'partsManagerPending' | 'onPartsManagerToggle' | 'layout'
 >) {
+  const { t } = useI18n();
   const display = getPartsManagerPermissionDisplay(member, context);
   const icon = <PartsManagerMarkIcon />;
 
@@ -231,7 +234,7 @@ export function UnifiedMemberPartsManagerControl({
 
   if (display === 'not-applicable') {
     return layout === 'desktop' ? (
-      <DesktopPermissionControl icon={icon} label="Parts manager">
+      <DesktopPermissionControl icon={icon} label={t('organizationMembers.partsManager')}>
         <span className="text-xs text-muted-foreground">—</span>
       </DesktopPermissionControl>
     ) : null;
@@ -239,7 +242,7 @@ export function UnifiedMemberPartsManagerControl({
 
   if (layout === 'desktop') {
     return (
-      <DesktopPermissionControl icon={icon} label="Parts manager">
+      <DesktopPermissionControl icon={icon} label={t('organizationMembers.partsManager')}>
         <Switch
           checked={isPartsManager}
           onCheckedChange={(checked) => {
@@ -247,7 +250,7 @@ export function UnifiedMemberPartsManagerControl({
             onPartsManagerToggle(member.userId, checked);
           }}
           disabled={partsManagerPending}
-          aria-label="Toggle parts manager permission"
+          aria-label={t('organizationMembers.toggleManager')}
         />
       </DesktopPermissionControl>
     );
@@ -257,8 +260,8 @@ export function UnifiedMemberPartsManagerControl({
     <PermissionToggleRow
       id={`pm-${member.id}`}
       icon={icon}
-      label="Parts manager"
-      description="Create and edit inventory items"
+      label={t('organizationMembers.partsManager')}
+      description={t('organizationMembers.managerDescription')}
       checked={isPartsManager}
       disabled={partsManagerPending}
       onCheckedChange={(checked) => {
@@ -285,6 +288,7 @@ export function UnifiedMemberPartsConsumerControl({
   | 'onPartsConsumerToggle'
   | 'layout'
 >) {
+  const { t } = useI18n();
   const display = getPartsConsumerPermissionDisplay(member, context);
   const icon = <PartsConsumerMarkIcon />;
 
@@ -294,7 +298,7 @@ export function UnifiedMemberPartsConsumerControl({
 
   if (display === 'not-applicable') {
     return layout === 'desktop' ? (
-      <DesktopPermissionControl icon={icon} label="Parts consumer">
+      <DesktopPermissionControl icon={icon} label={t('organizationMembers.partsConsumer')}>
         <span className="text-xs text-muted-foreground">—</span>
       </DesktopPermissionControl>
     ) : null;
@@ -302,7 +306,7 @@ export function UnifiedMemberPartsConsumerControl({
 
   if (layout === 'desktop') {
     return (
-      <DesktopPermissionControl icon={icon} label="Parts consumer">
+      <DesktopPermissionControl icon={icon} label={t('organizationMembers.partsConsumer')}>
         <Switch
           checked={isPartsConsumer}
           onCheckedChange={(checked) => {
@@ -310,7 +314,7 @@ export function UnifiedMemberPartsConsumerControl({
             onPartsConsumerToggle(member.userId, checked);
           }}
           disabled={partsConsumerPending}
-          aria-label="Toggle parts consumer permission"
+          aria-label={t('organizationMembers.toggleConsumer')}
         />
       </DesktopPermissionControl>
     );
@@ -320,8 +324,8 @@ export function UnifiedMemberPartsConsumerControl({
     <PermissionToggleRow
       id={`pc-${member.id}`}
       icon={icon}
-      label="Parts consumer"
-      description="View inventory, part lookup, and alternates"
+      label={t('organizationMembers.partsConsumer')}
+      description={t('organizationMembers.consumerDescription')}
       checked={isPartsConsumer}
       disabled={partsConsumerPending}
       onCheckedChange={(checked) => {
@@ -345,6 +349,7 @@ export function UnifiedMemberPermissionRows({
   onPartsConsumerToggle,
   layout = 'mobile',
 }: UnifiedMemberPermissionRowsProps) {
+  const { t } = useI18n();
   if (layout === 'desktop') {
     return null;
   }
@@ -356,7 +361,7 @@ export function UnifiedMemberPermissionRows({
   return (
     <div className="space-y-2 pt-1 border-t border-border/60">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        Permissions
+        {t('organizationMembers.permissions')}
       </p>
       <div className="space-y-2">
         <UnifiedMemberQuickBooksControl

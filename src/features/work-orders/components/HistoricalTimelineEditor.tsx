@@ -22,7 +22,7 @@ import {
   type HistoricalTimelineEvent,
   type WorkOrderStatus,
 } from '@/features/work-orders/utils/historicalTimeline';
-import { formatStatus } from '@/features/work-orders/utils/workOrderHelpers';
+import { useI18n } from '@/i18n';
 
 type HistoricalTimelineEditorProps = {
   initialEvents?: HistoricalTimelineEvent[];
@@ -41,6 +41,20 @@ export function HistoricalTimelineEditor({
   onChange,
   onIncompleteRowsChange,
 }: HistoricalTimelineEditorProps) {
+  const { t } = useI18n();
+  const statusLabel = (status: WorkOrderStatus) => t(`workOrders.list.${status === 'in_progress' ? 'inProgress' : status === 'on_hold' ? 'onHold' : status}`);
+  const validationLabel = (field: string, message: string) => {
+    if (message === 'Timeline must include at least one event.') return t('workOrderResidual.timelineRequired');
+    if (message === 'Timeline must begin with submitted.') return t('workOrderResidual.timelineStartSubmitted');
+    if (field === 'assignee') return t('workOrderResidual.timelineAssigneeRequired');
+    if (field === 'dates') return t('workOrderResidual.timelineChronological');
+    const transition = /^Invalid transition from (\w+) to (\w+)\.$/.exec(message);
+    if (transition) return t('workOrderResidual.timelineInvalidTransition', {
+      from: transition[1] === 'created' ? t('workOrderResidual.created') : statusLabel(transition[1] as WorkOrderStatus),
+      to: statusLabel(transition[2] as WorkOrderStatus),
+    });
+    return message;
+  };
   const [rows, setRows] = useState<HistoricalTimelineEditorRow[]>(() => {
     if (initialEvents && initialEvents.length > 0) {
       return timelineEventsToRows(initialEvents);
@@ -115,7 +129,7 @@ export function HistoricalTimelineEditor({
   return (
     <div className="space-y-3">
       <ol
-        aria-label="Operational timeline events"
+        aria-label={t('workOrderResidual.timelineEvents')}
         className="relative m-0 list-none space-y-2 p-0"
       >
         {rows.map((row, rowIndex) => {
@@ -131,7 +145,7 @@ export function HistoricalTimelineEditor({
               <div className="flex w-7 shrink-0 flex-col items-center self-stretch pt-1">
                 {isFirstRow ? (
                   <span
-                    aria-label={`Timeline step ${rowIndex + 1}`}
+                    aria-label={t('workOrderResidual.timelineStep', { number: rowIndex + 1 })}
                     className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-muted text-xs font-semibold text-foreground"
                   >
                     {rowIndex + 1}
@@ -140,7 +154,7 @@ export function HistoricalTimelineEditor({
                   <button
                     type="button"
                     onClick={() => handleRemoveRow(rowIndex)}
-                    aria-label={`Remove timeline event ${rowIndex + 1}`}
+                    aria-label={t('workOrderResidual.timelineRemove', { number: rowIndex + 1 })}
                     className="group/step flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-xs font-semibold text-foreground transition-colors hover:border-destructive/50 hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     <span
@@ -169,7 +183,7 @@ export function HistoricalTimelineEditor({
                     <button
                       type="button"
                       onClick={handleAddRow}
-                      aria-label="Add event"
+                      aria-label={t('workOrderResidual.timelineAdd')}
                       data-testid="timeline-add-event"
                       className="mt-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-success/40 bg-success/15 text-success shadow-sm transition-colors hover:border-success/60 hover:bg-success/25 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
@@ -181,7 +195,7 @@ export function HistoricalTimelineEditor({
 
               <div className="min-w-0 flex-1 space-y-2 rounded-md border border-border/80 bg-card/40 p-3">
                 <span id={eventHeadingId} className="sr-only">
-                  Timeline event {rowIndex + 1}
+                  {t('workOrderResidual.timelineEvent', { number: rowIndex + 1 })}
                 </span>
 
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:grid-rows-[auto_minmax(2.75rem,auto)] sm:gap-x-2 sm:gap-y-1.5">
@@ -190,10 +204,10 @@ export function HistoricalTimelineEditor({
                       htmlFor={statusFieldId}
                       className="min-w-0 flex-1 text-xs sm:col-start-1 sm:row-start-1 sm:flex-none"
                     >
-                      Status
+                      {t('workOrderResidual.status')}
                     </Label>
                     <Label className="hidden min-w-0 flex-1 text-xs sm:col-start-2 sm:row-start-1 sm:block sm:flex-none">
-                      Event date and time
+                      {t('workOrderResidual.eventDateTime')}
                     </Label>
                   </div>
 
@@ -204,12 +218,12 @@ export function HistoricalTimelineEditor({
                       disabled={isFirstRow}
                     >
                       <SelectTrigger id={statusFieldId} className="w-full">
-                        <SelectValue placeholder="Select status" />
+                        <SelectValue placeholder={t('workOrderResidual.selectStatus')} />
                       </SelectTrigger>
                       <SelectContent>
                         {selectableStatuses.map((status) => (
                           <SelectItem key={status} value={status}>
-                            {formatStatus(status)}
+                            {statusLabel(status)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -218,7 +232,7 @@ export function HistoricalTimelineEditor({
 
                   <div className="space-y-1.5 sm:contents">
                     <Label className="text-xs sm:col-start-2 sm:row-start-1 sm:hidden">
-                      Event date and time
+                      {t('workOrderResidual.eventDateTime')}
                     </Label>
                     <div className="min-w-0 w-full sm:col-start-2 sm:row-start-2">
                       <DateTimePicker
@@ -229,7 +243,7 @@ export function HistoricalTimelineEditor({
                           );
                           updateRows(nextRows);
                         }}
-                        placeholder="Pick event date and time"
+                        placeholder={t('workOrderResidual.pickDateTime')}
                         showShortcuts
                       />
                     </div>
@@ -239,11 +253,11 @@ export function HistoricalTimelineEditor({
                 {row.newStatus === 'assigned' ? (
                   <div className="space-y-1.5">
                     <Label htmlFor={assigneeFieldId} className="text-xs">
-                      Assignee
+                      {t('workOrderResidual.assignee')}
                     </Label>
                     {equipmentHasNoTeam ? (
                       <p className="text-xs text-muted-foreground">
-                        Equipment has no team. Showing organization admins.
+                        {t('workOrderResidual.noEquipmentTeam')}
                       </p>
                     ) : null}
                     <Select
@@ -256,8 +270,8 @@ export function HistoricalTimelineEditor({
                       }}
                       disabled={assignmentLoading}
                     >
-                      <SelectTrigger id={assigneeFieldId} aria-label="Select assignee for assigned event" className="h-9">
-                        <SelectValue placeholder={assignmentLoading ? 'Loading assignees...' : 'Select assignee'} />
+                      <SelectTrigger id={assigneeFieldId} aria-label={t('workOrderResidual.selectAssignedAssignee')} className="h-9">
+                        <SelectValue placeholder={assignmentLoading ? t('workOrderResidual.loadingAssignees') : t('workOrderResidual.selectAssignee')} />
                       </SelectTrigger>
                       <SelectContent>
                         <WorkOrderAssigneeSelectItems options={assignmentOptions} />
@@ -276,14 +290,11 @@ export function HistoricalTimelineEditor({
           <div className="w-7 shrink-0" aria-hidden="true" />
           <div
             role="status"
-            aria-label="Timeline ended at terminal status"
+            aria-label={t('workOrderResidual.terminalEndAria')}
             className="min-w-0 flex-1 rounded-md border border-dashed border-border/80 bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
           >
-            Timeline ends at{' '}
-            <span className="font-medium text-foreground">
-              {formatStatus(lastFilledStatus as WorkOrderStatus)}
-            </span>
-            . Remove or change the final event to add another historical status.
+            <span className="font-medium text-foreground">{t('workOrderResidual.timelineEndsAt', { status: statusLabel(lastFilledStatus as WorkOrderStatus) })}</span>{' '}
+            {t('workOrderResidual.terminalChangeHint')}
           </div>
         </div>
       ) : null}
@@ -291,14 +302,14 @@ export function HistoricalTimelineEditor({
       {validationErrors.length > 0 ? (
         <div className="space-y-1 text-sm text-destructive">
           {validationErrors.map((error) => (
-            <p key={`${error.field}-${error.message}`}>{error.message}</p>
+            <p key={`${error.field}-${error.message}`}>{validationLabel(error.field, error.message)}</p>
           ))}
         </div>
       ) : null}
 
       {rows.some((row) => row.newStatus !== '' && isTerminalStatus(row.newStatus as WorkOrderStatus)) ? (
         <p className="text-xs text-muted-foreground">
-          Terminal statuses end the timeline. Save when the final event matches the work order outcome you want to record.
+          {t('workOrderResidual.terminalHint')}
         </p>
       ) : null}
     </div>

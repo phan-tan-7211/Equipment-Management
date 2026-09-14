@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useI18n } from '@/i18n';
 
 export type LaborCostDialogProps = {
   open: boolean;
@@ -36,18 +37,19 @@ export function LaborCostDialog({
   onConfirm,
   isPending,
 }: LaborCostDialogProps) {
+  const { t } = useI18n();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add labor</DialogTitle>
+          <DialogTitle>{t('workOrderResidual.addLabor')}</DialogTitle>
           <DialogDescription>
-            Billable hours × hourly rate. Saved as a normal cost line (no inventory change).
+            {t('workOrderResidual.laborHelp')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="labor-hours">Hours</Label>
+            <Label htmlFor="labor-hours">{t('workOrderResidual.hours')}</Label>
             <Input
               id="labor-hours"
               type="number"
@@ -60,7 +62,7 @@ export function LaborCostDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="labor-rate">Hourly rate (USD)</Label>
+            <Label htmlFor="labor-rate">{t('workOrderResidual.hourlyRate')}</Label>
             <Input
               id="labor-rate"
               type="number"
@@ -73,22 +75,22 @@ export function LaborCostDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="labor-note">Note (optional)</Label>
+            <Label htmlFor="labor-note">{t('workOrderResidual.optionalNote')}</Label>
             <Input
               id="labor-note"
               value={laborNote}
               onChange={(e) => onLaborNoteChange(e.target.value)}
-              placeholder="e.g. Emergency call-out"
+              placeholder={t('workOrderResidual.laborNoteExample')}
               disabled={isPending}
             />
           </div>
         </div>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
-            Cancel
+            {t('workOrderResidual.cancel')}
           </Button>
           <Button type="button" onClick={() => void onConfirm()} disabled={isPending}>
-            {isPending ? 'Saving…' : 'Save labor'}
+            {isPending ? t('workOrderResidual.saving') : t('workOrderResidual.saveLabor')}
           </Button>
         </DialogFooter>
       </DialogContent>

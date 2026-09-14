@@ -12,6 +12,14 @@ const en = {
     en: 'English',
     ko: 'Korean',
   },
+  sharedUi: {
+    scanShort: 'Scan', ordersShort: 'Orders', menu: 'Menu', primaryNavigation: 'Primary navigation', openNavigationMenu: 'Open navigation menu',
+    personalizeList: 'Personalize list', openPersonalization: 'Open personalization', customSortActive: 'Open personalization, custom sort active',
+    csvDescription: 'Comma-separated values', jsonDescription: 'Structured data format',
+    mapDirections: 'Tap for directions in Google Maps', mapAddressDirections: 'Open directions to {{address}} in Google Maps', mapCoordinatesDirections: 'Open directions to {{coordinates}} in Google Maps', mapLoading: 'Loading map...', mapUnavailable: 'Map unavailable', mapRetry: 'Retry', useCurrentLocation: 'Use my current location', mapPreview: 'Map preview',
+    imageDropMultiple: 'Drop images here or click button below', imageFormats: 'Supports JPEG, PNG, GIF, WebP up to 10MB each', chooseFiles: 'Choose Files', selectedImages: 'Selected Images ({{count}})', uploadImages: 'Upload {{count}} images', removeSelectedImage: 'Remove selected image {{name}}', unsupportedImage: '{{name}} is not a supported image format', imageTooLarge: '{{name}} is too large. Maximum size is 10MB', maxFiles: 'Maximum {{count}} files allowed', selectImage: 'Please select at least one image', uploadUnavailable: 'Upload handler not configured', imagesUploaded: 'Images uploaded successfully!', imagesUploadFailed: 'Failed to upload images: {{error}}', unknownError: 'Unknown error',
+    upload: 'Upload', uploading: 'Uploading...', remove: 'Remove', removing: 'Removing...', replace: 'Replace', uploadPhoto: 'Upload photo', chooseFile: 'Choose File', cancel: 'Cancel', preview: 'Preview', avatar: 'Avatar', currentImage: 'Current image', preparingPreview: 'Preparing preview…', imageDropSingle: 'Drop an image here, or click to browse', formatSize: '{{formats}} up to {{size}} MB', singleUploadSuccess: 'Image uploaded successfully', singleUploadFailed: 'Upload failed: {{error}}', singleRemoveSuccess: 'Image removed', singleRemoveFailed: 'Failed to remove image: {{error}}', unsupportedSingleImage: 'Unsupported format: {{name}}. Use {{formats}}.', singleImageTooLarge: 'File too large: {{name}}. Maximum size is {{size}} MB.',
+  },
   navigation: {
     mainNavigation: 'Main navigation',
     groups: {

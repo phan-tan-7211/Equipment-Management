@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { enUS, vi, ko } from 'date-fns/locale';
 import {
   Card,
   CardContent,
@@ -23,18 +24,19 @@ import {
 import { useMyTickets, type Ticket } from '../hooks/useMyTickets';
 import { useTicketRealtime } from '../hooks/useTicketRealtime';
 import TicketDetail from './TicketDetail';
+import { useI18n } from '@/i18n';
 
 /**
  * Status badge configuration for ticket statuses.
  */
-function getStatusBadge(status: string) {
+function getStatusBadge(status: string, t: (key: string) => string) {
   switch (status) {
     case 'open':
-      return { label: 'Open', className: 'bg-warning/15 text-warning dark:text-warning border-warning/30' };
+      return { label: t('tickets.statuses.open'), className: 'bg-warning/15 text-warning dark:text-warning border-warning/30' };
     case 'in_progress':
-      return { label: 'In Progress', className: 'bg-info/15 text-info dark:text-info border-info/30' };
+      return { label: t('tickets.statuses.in_progress'), className: 'bg-info/15 text-info dark:text-info border-info/30' };
     case 'closed':
-      return { label: 'Closed', className: 'bg-success/15 text-success dark:text-success border-success/30' };
+      return { label: t('tickets.statuses.closed'), className: 'bg-success/15 text-success dark:text-success border-success/30' };
     default:
       return { label: status, className: '' };
   }
@@ -44,8 +46,9 @@ function getStatusBadge(status: string) {
  * A single ticket row in the list, expandable to show details.
  */
 const TicketRow: React.FC<{ ticket: Ticket }> = ({ ticket }) => {
-  const statusBadge = getStatusBadge(ticket.status);
-  const timeAgo = formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true });
+  const { t, language } = useI18n();
+  const statusBadge = getStatusBadge(ticket.status, t);
+  const timeAgo = formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: language === 'vi' ? vi : language === 'ko' ? ko : enUS });
   const commentCount = ticket.ticket_comments?.length || 0;
   const teamCommentCount = ticket.ticket_comments?.filter(c => c.is_from_team).length || 0;
 
@@ -66,8 +69,8 @@ const TicketRow: React.FC<{ ticket: Ticket }> = ({ ticket }) => {
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <MessageSquare className="h-3 w-3" />
                   {teamCommentCount > 0
-                    ? `${teamCommentCount} team response${teamCommentCount !== 1 ? 's' : ''}`
-                    : `${commentCount} comment${commentCount !== 1 ? 's' : ''}`
+                    ? t(teamCommentCount === 1 ? 'tickets.teamResponseOne' : 'tickets.teamResponseMany', { count: teamCommentCount })
+                    : t(commentCount === 1 ? 'tickets.commentOne' : 'tickets.commentMany', { count: commentCount })
                   }
                 </span>
               )}
@@ -91,6 +94,7 @@ const TicketRow: React.FC<{ ticket: Ticket }> = ({ ticket }) => {
  * and realtime updates via Supabase broadcast.
  */
 const MyTickets: React.FC = () => {
+  const { t } = useI18n();
   const { data: ticketsList, isLoading, error } = useMyTickets();
 
   // Subscribe to realtime ticket updates
@@ -102,7 +106,7 @@ const MyTickets: React.FC = () => {
       <Card>
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">Loading your tickets...</span>
+          <span className="ml-2 text-sm text-muted-foreground">{t('tickets.loading')}</span>
         </CardContent>
       </Card>
     );
@@ -113,7 +117,7 @@ const MyTickets: React.FC = () => {
       <Card>
         <CardContent className="flex items-center justify-center py-8">
           <AlertCircle className="h-5 w-5 text-destructive" />
-          <span className="ml-2 text-sm text-muted-foreground">Failed to load tickets</span>
+          <span className="ml-2 text-sm text-muted-foreground">{t('tickets.loadFailed')}</span>
         </CardContent>
       </Card>
     );
@@ -129,10 +133,10 @@ const MyTickets: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TicketCheck className="h-5 w-5" />
-          My Reported Issues
+          {t('tickets.myIssues')}
         </CardTitle>
         <CardDescription>
-          Track the status of issues you've reported. Updates from our team appear in real time.
+          {t('tickets.myIssuesDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -147,4 +151,3 @@ const MyTickets: React.FC = () => {
 };
 
 export default MyTickets;
-

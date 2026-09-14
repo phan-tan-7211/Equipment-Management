@@ -32,6 +32,7 @@ describe('toFullCalendarEvent', () => {
     });
     expect(event.classNames).toContain('eq-cal-unscheduled');
     expect(event.classNames).toContain('opacity-60');
+    expect(toFullCalendarEvent(item, 'Chưa lên lịch').title).toBe('Inspect pump · Chưa lên lịch');
   });
 
   it('keeps a missing-hours timed item as a point, not a 15-minute bar', () => {

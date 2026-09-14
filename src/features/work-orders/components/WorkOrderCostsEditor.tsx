@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 // fallow-ignore-file code-duplication
 // Duplication rationale: Editable costs parallel read-only list layout
 
@@ -33,6 +34,7 @@ const WorkOrderCostsEditor: React.FC<WorkOrderCostsEditorProps> = ({
   hasError = false,
   suppressMobileChrome = false,
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const showMobileHeaderStrip = !(isMobile && suppressMobileChrome);
   
@@ -49,18 +51,18 @@ const WorkOrderCostsEditor: React.FC<WorkOrderCostsEditorProps> = ({
       {showMobileHeaderStrip ? (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-            Cost Items
+            {t('workOrderOperations.costItems')}
           </h3>
           <Button type="button" variant="outline" size="sm" onClick={onAddCost}>
             <Plus className="h-4 w-4 mr-1" />
-            Add Cost Item
+            {t('workOrderOperations.addCostItem')}
           </Button>
         </div>
       ) : null}
 
       {hasError ? (
         <p className="text-sm text-destructive" role="alert">
-          All cost items must have a description and valid quantities/prices
+          {t('workOrderOperations.costError')}
         </p>
       ) : null}
 
@@ -68,10 +70,10 @@ const WorkOrderCostsEditor: React.FC<WorkOrderCostsEditorProps> = ({
         {/* Desktop Headers */}
         {!isMobile && (
           <div className="grid grid-cols-4 gap-4 text-sm font-medium text-muted-foreground px-3">
-            <div>Description</div>
-            <div>Quantity</div>
-            <div>Unit Price</div>
-            <div className="text-right">Total</div>
+            <div>{t('workOrderOperations.description')}</div>
+            <div>{t('workOrderOperations.quantity')}</div>
+            <div>{t('workOrderOperations.unitPrice')}</div>
+            <div className="text-right">{t('workOrderOperations.costTotal')}</div>
           </div>
         )}
 
@@ -102,7 +104,7 @@ const WorkOrderCostsEditor: React.FC<WorkOrderCostsEditorProps> = ({
         {costs.length > 0 && (
           <div className="border-t pt-4">
             <div className="flex items-center justify-between text-lg font-semibold">
-              <span>Subtotal:</span>
+              <span>{t('workOrderOperations.subtotal')}</span>
               <span>{formatCurrency(calculateSubtotal())}</span>
             </div>
           </div>

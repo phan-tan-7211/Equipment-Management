@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 /**
  * useDeleteOrganization - Hooks for deleting an organization
  * 
@@ -90,6 +91,7 @@ export const useOrganizationDeletionStats = (
 export const useDeleteOrganization = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   return useMutation({
@@ -119,8 +121,8 @@ export const useDeleteOrganization = () => {
       queryClient.invalidateQueries({ queryKey: ['simple-organizations'] });
 
       toast({
-        title: 'Organization Deleted',
-        description: result.message || 'The organization has been permanently deleted.',
+        title: t('organizationNotices.deleted'),
+        description: result.message || t('organizationNotices.deletedDescription'),
         variant: 'success',
       });
 
@@ -129,8 +131,8 @@ export const useDeleteOrganization = () => {
     },
     onError: (error) => {
       toast({
-        title: 'Failed to Delete Organization',
-        description: error instanceof Error ? error.message : 'An error occurred',
+        title: t('organizationNotices.deleteFailed'),
+        description: error instanceof Error ? error.message : t('organizationNotices.genericError'),
         variant: 'error',
       });
     },

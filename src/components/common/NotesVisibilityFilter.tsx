@@ -1,3 +1,4 @@
+import { useNotePresentationText } from '@/components/common/notePresentationI18n';
 import React from 'react';
 import {
   Select,
@@ -19,20 +20,23 @@ const NotesVisibilityFilter: React.FC<NotesVisibilityFilterProps> = ({
   value,
   onChange,
   className,
-}) => (
-  <div className={className}>
-    <Select value={value} onValueChange={(v) => onChange(v as NotesVisibilityFilterValue)}>
-      <SelectTrigger className="h-9 w-[160px]" aria-label="Filter notes by visibility">
-        <Filter className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-        <SelectValue placeholder="All notes" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="all">All notes</SelectItem>
-        <SelectItem value="public">Public only</SelectItem>
-        <SelectItem value="private">My private</SelectItem>
-      </SelectContent>
-    </Select>
-  </div>
-);
+}) => {
+  const noteText = useNotePresentationText();
+  return (
+    <div className={className}>
+      <Select value={value} onValueChange={(v) => onChange(v as NotesVisibilityFilterValue)}>
+        <SelectTrigger className="h-9 w-[160px]" aria-label={noteText('filterVisibility', 'Filter notes by visibility')}>
+          <Filter className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <SelectValue placeholder={noteText('allNotes', 'All notes')} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">{noteText('allNotes', 'All notes')}</SelectItem>
+          <SelectItem value="public">{noteText('publicOnly', 'Public only')}</SelectItem>
+          <SelectItem value="private">{noteText('myPrivate', 'My private')}</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
 
 export default NotesVisibilityFilter;

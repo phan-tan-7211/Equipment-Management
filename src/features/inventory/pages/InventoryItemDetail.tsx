@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Package, History, Link2, Plus, QrCode } from 'lucide-react';
@@ -36,6 +37,7 @@ import InventoryItemCompatibilityTab from '@/features/inventory/pages/components
 import { HorizontalChipRow } from '@/components/layout/HorizontalChipRow';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getStockHealthPresentation } from '@/features/inventory/utils/stockHealth';
+import { resolveStockHealthTier } from '@/features/inventory/utils/stockHealthLevels';
 import type { InventoryStructuredLocationFields } from '@/features/inventory/utils/inventoryLocationUtils';
 import { parseInventoryNumericField } from '@/features/inventory/utils/parseInventoryNumericField';
 import { useInventoryItemAdjustQuantity } from '@/features/inventory/hooks/useInventoryItemAdjustQuantity';
@@ -44,6 +46,7 @@ import { useInventoryItemAlternateGroupDialogs } from '@/features/inventory/hook
 import { InventoryItemDetailDialogs } from '@/features/inventory/pages/components/InventoryItemDetailDialogs';
 
 const InventoryItemDetail = () => {
+  const { t } = useI18n();
   const { itemId } = useParams<{ itemId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -251,7 +254,7 @@ const InventoryItemDetail = () => {
   if (!currentOrganization) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <PageHeader title="Inventory Item" description="Please select an organization." />
+        <PageHeader title={t('inventoryDetail.itemTitle')} description={t('inventoryDetail.selectOrganization')} />
       </Page>
     );
   }
@@ -259,7 +262,7 @@ const InventoryItemDetail = () => {
   if (itemLoading) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <PageHeader title="Inventory Item" />
+        <PageHeader title={t('inventoryDetail.itemTitle')} />
         <div className="space-y-4">
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-64 w-full" />
@@ -271,13 +274,13 @@ const InventoryItemDetail = () => {
   if (!item) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <PageHeader title="Inventory Item" description="Item not found" />
+        <PageHeader title={t('inventoryDetail.itemTitle')} description={t('inventoryDetail.itemNotFound')} />
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Inventory item not found or you don't have access.</p>
+            <p className="text-muted-foreground">{t('inventoryDetail.itemUnavailable')}</p>
             <Button onClick={() => navigate('/dashboard/inventory')} className="mt-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Inventory
+              {t('inventoryDetail.backToInventory')}
             </Button>
           </CardContent>
         </Card>
@@ -293,19 +296,19 @@ const InventoryItemDetail = () => {
         <PageHeader
           density="compact"
           title={item.name}
-          backLink={isMobile ? { label: 'Inventory', href: '/dashboard/inventory' } : undefined}
+          backLink={isMobile ? { label: t('inventoryDetail.inventory'), href: '/dashboard/inventory' } : undefined}
           meta={
             <Badge
               variant="outline"
               className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium', stockHealth.className)}
             >
-              {stockHealth.label}
+              {t(`inventoryList.stockHealth.${resolveStockHealthTier(item)}`)}
             </Badge>
           }
           breadcrumbs={isMobile
             ? undefined
             : [
-                { label: 'Inventory', href: '/dashboard/inventory' },
+                { label: t('inventoryDetail.inventory'), href: '/dashboard/inventory' },
                 { label: item.name },
               ]}
           actions={
@@ -315,11 +318,11 @@ const InventoryItemDetail = () => {
                   variant="default"
                   onClick={() => adjustQuantity.setShowAdjustDialog(true)}
                   className="min-h-[44px] flex-1 md:flex-initial"
-                  aria-label="Adjust Quantity"
+                  aria-label={t('inventoryDetail.adjustQuantity')}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  <span className="inline md:hidden">Adjust Qty</span>
-                  <span className="hidden md:inline">Adjust Quantity</span>
+                  <span className="inline md:hidden">{t('inventoryDetail.adjustQty')}</span>
+                  <span className="hidden md:inline">{t('inventoryDetail.adjustQuantity')}</span>
                 </Button>
               )}
               <TooltipProvider delayDuration={150}>
@@ -329,8 +332,8 @@ const InventoryItemDetail = () => {
                       variant={isMobile ? 'ghost' : 'outline'}
                       size={isMobile ? 'icon' : 'default'}
                       onClick={() => setShowQRCode(true)}
-                      aria-label="Show QR code"
-                      title="Generate QR Code"
+                      aria-label={t('inventoryDetail.showQrCode')}
+                      title={t('inventoryDetail.generateQrCode')}
                       className={cn(
                         isMobile &&
                           'h-11 w-11 shrink-0 text-muted-foreground hover:text-foreground border border-transparent hover:border-border/60'
@@ -338,13 +341,13 @@ const InventoryItemDetail = () => {
                     >
                       <QrCode className="h-4 w-4" aria-hidden />
                       {isMobile ? (
-                        <span className="sr-only">QR Code</span>
+                        <span className="sr-only">{t('inventoryDetail.qrCode')}</span>
                       ) : (
-                        <span>QR Code</span>
+                        <span>{t('inventoryDetail.qrCode')}</span>
                       )}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Generate QR code label</TooltipContent>
+                  <TooltipContent>{t('inventoryDetail.generateQrLabel')}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
@@ -353,19 +356,19 @@ const InventoryItemDetail = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           {isMobile ? (
-            <HorizontalChipRow ariaLabel="Item detail sections" className="w-full" gap="gap-1">
+            <HorizontalChipRow ariaLabel={t('inventoryDetail.detailSections')} className="w-full" gap="gap-1">
               <TabsList className="flex h-auto w-max min-w-0 shrink-0 justify-start gap-1 rounded-md bg-muted p-1">
                 <TabsTrigger value="overview" className="shrink-0">
                   <Package className="h-4 w-4 mr-2" />
-                  Overview
+                  {t('inventoryDetail.overview')}
                 </TabsTrigger>
                 <TabsTrigger value="transactions" className="shrink-0">
                   <History className="h-4 w-4 mr-2" />
-                  Transaction History
+                  {t('inventoryDetail.transactionHistory')}
                 </TabsTrigger>
                 <TabsTrigger value="compatibility" className="shrink-0">
                   <Link2 className="h-4 w-4 mr-2" />
-                  Compatibility
+                  {t('inventoryDetail.compatibility')}
                 </TabsTrigger>
               </TabsList>
             </HorizontalChipRow>
@@ -373,15 +376,15 @@ const InventoryItemDetail = () => {
             <TabsList>
               <TabsTrigger value="overview">
                 <Package className="h-4 w-4 mr-2" />
-                Overview
+                {t('inventoryDetail.overview')}
               </TabsTrigger>
               <TabsTrigger value="transactions">
                 <History className="h-4 w-4 mr-2" />
-                Transaction History
+                {t('inventoryDetail.transactionHistory')}
               </TabsTrigger>
               <TabsTrigger value="compatibility">
                 <Link2 className="h-4 w-4 mr-2" />
-                Compatibility
+                {t('inventoryDetail.compatibility')}
               </TabsTrigger>
             </TabsList>
           )}
@@ -401,10 +404,10 @@ const InventoryItemDetail = () => {
               onDeleteImage={async (img) => {
                 try {
                   await deleteInventoryItemImage(img.id, img.file_url, currentOrganization.id);
-                  appToast.success({ description: 'Image removed' });
+                  appToast.success({ description: t('inventoryDetail.imageRemoved') });
                   refetchImages();
                 } catch (error) {
-                  appToast.error({ description: error instanceof Error ? error.message : 'Failed to remove image' });
+                  appToast.error({ description: error instanceof Error ? error.message : t('inventoryDetail.imageRemoveFailed') });
                 }
               }}
               onUploadImages={async (files) => {
@@ -485,7 +488,7 @@ const InventoryItemDetail = () => {
               to={`${ORGANIZATION_AUDIT_LOG_PATH}?entityType=inventory_item&entityId=${itemId}`}
             >
               <History className="mr-1 h-3.5 w-3.5" />
-              View change history in the Audit Log
+              {t('inventoryDetail.viewAuditLog')}
             </Link>
           </Button>
         )}
@@ -523,5 +526,4 @@ const InventoryItemDetail = () => {
 };
 
 export default InventoryItemDetail;
-
 

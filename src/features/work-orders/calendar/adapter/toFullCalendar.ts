@@ -30,14 +30,14 @@ function eventClassNames(item: CalendarItem): string[] {
   return classes;
 }
 
-function displayTitle(item: CalendarItem): string {
-  return item.placement.kind === 'unscheduled' ? `${item.title} · Unscheduled` : item.title;
+function displayTitle(item: CalendarItem, unscheduledLabel: string): string {
+  return item.placement.kind === 'unscheduled' ? `${item.title} · ${unscheduledLabel}` : item.title;
 }
 
-export function toFullCalendarEvent(item: CalendarItem): PrivateCalendarEvent {
+export function toFullCalendarEvent(item: CalendarItem, unscheduledLabel = 'Unscheduled'): PrivateCalendarEvent {
   const editable = item.editability.kind === 'editable';
   const classNames = eventClassNames(item);
-  const title = displayTitle(item);
+  const title = displayTitle(item, unscheduledLabel);
 
   switch (item.placement.kind) {
     case 'unscheduled':

@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, {
   useCallback,
   useEffect,
@@ -50,15 +51,6 @@ const TOTAL_COL_WIDTH = Object.values(COL).reduce((a, b) => a + b, 0);
 const ROW_HEIGHT = 44;
 const MAX_VISIBLE_ROWS = 14;
 
-const FIELD_LABELS: Partial<Record<BulkEditableField, string>> = {
-  name: 'Name',
-  sku: 'SKU',
-  external_id: 'External ID',
-  location: 'Location Name',
-  quantity_on_hand: 'Qty on Hand',
-  low_stock_threshold: 'Low Stock',
-  default_unit_cost: 'Unit Cost',
-};
 
 type InventoryBulkListRowProps = {
   sortedRows: InventoryItem[];
@@ -89,6 +81,7 @@ function InventoryBulkListRow({
   handleRowClick,
   onToggleSelected,
 }: RowComponentProps<InventoryBulkListRowProps>) {
+  const { t } = useI18n();
   const row = sortedRows[index];
   if (!row) return null;
   const isSelected = selectedRowIds.has(row.id);
@@ -118,7 +111,7 @@ function InventoryBulkListRow({
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onToggleSelected(row.id)}
-          aria-label={`Select ${row.name}`}
+          aria-label={t('inventoryBulk.selectItem', { name: row.name })}
           onClick={(e) => e.stopPropagation()}
         />
       </div>
@@ -212,6 +205,16 @@ export const InventoryBulkGrid: React.FC<InventoryBulkGridProps> = ({
   onSelectAll,
   onClearSelection,
 }) => {
+  const { t } = useI18n();
+  const fieldLabels = useMemo<Partial<Record<BulkEditableField, string>>>(() => ({
+    name: t('inventoryBulk.name'),
+    sku: t('inventoryBulk.sku'),
+    external_id: t('inventoryBulk.externalId'),
+    location: t('inventoryBulk.locationName'),
+    quantity_on_hand: t('inventoryBulk.quantity'),
+    low_stock_threshold: t('inventoryBulk.lowStock'),
+    default_unit_cost: t('inventoryBulk.unitCost'),
+  }), [t]);
   const {
     sorting,
     setSorting,
@@ -224,7 +227,7 @@ export const InventoryBulkGrid: React.FC<InventoryBulkGridProps> = ({
     clearPendingApply,
   } = useBulkGridEditorState<BulkEditableField, InventoryItem[BulkEditableField]>({
     selectedRowIds,
-    fieldLabels: FIELD_LABELS,
+    fieldLabels,
     onSetCellValue,
     onSetCellValueOnRows,
     onToggleSelected,
@@ -252,47 +255,47 @@ export const InventoryBulkGrid: React.FC<InventoryBulkGridProps> = ({
       {
         id: 'name',
         accessorKey: 'name',
-        header: ({ column }) => <BulkGridSortableHeader column={column} title="Name" fullWidth />,
+        header: ({ column }) => <BulkGridSortableHeader column={column} title={t('inventoryBulk.name')} fullWidth />,
         enableSorting: true,
       },
       {
         id: 'sku',
         accessorKey: 'sku',
-        header: ({ column }) => <BulkGridSortableHeader column={column} title="SKU" fullWidth />,
+        header: ({ column }) => <BulkGridSortableHeader column={column} title={t('inventoryBulk.sku')} fullWidth />,
         enableSorting: true,
       },
       {
         id: 'external_id',
         accessorKey: 'external_id',
-        header: ({ column }) => <BulkGridSortableHeader column={column} title="External ID" fullWidth />,
+        header: ({ column }) => <BulkGridSortableHeader column={column} title={t('inventoryBulk.externalId')} fullWidth />,
         enableSorting: true,
       },
       {
         id: 'location',
         accessorKey: 'location',
-        header: ({ column }) => <BulkGridSortableHeader column={column} title="Location Name" fullWidth />,
+        header: ({ column }) => <BulkGridSortableHeader column={column} title={t('inventoryBulk.locationName')} fullWidth />,
         enableSorting: true,
       },
       {
         id: 'quantity_on_hand',
         accessorKey: 'quantity_on_hand',
-        header: ({ column }) => <BulkGridSortableHeader column={column} title="Qty on Hand" align="right" fullWidth />,
+        header: ({ column }) => <BulkGridSortableHeader column={column} title={t('inventoryBulk.quantity')} align="right" fullWidth />,
         enableSorting: true,
       },
       {
         id: 'low_stock_threshold',
         accessorKey: 'low_stock_threshold',
-        header: ({ column }) => <BulkGridSortableHeader column={column} title="Low Stock" align="right" fullWidth />,
+        header: ({ column }) => <BulkGridSortableHeader column={column} title={t('inventoryBulk.lowStock')} align="right" fullWidth />,
         enableSorting: true,
       },
       {
         id: 'default_unit_cost',
         accessorKey: 'default_unit_cost',
-        header: ({ column }) => <BulkGridSortableHeader column={column} title="Unit Cost ($)" align="right" fullWidth />,
+        header: ({ column }) => <BulkGridSortableHeader column={column} title={t('inventoryBulk.unitCostCurrency')} align="right" fullWidth />,
         enableSorting: true,
       },
     ],
-    []
+    [t]
   );
 
   const table = useReactTable({
@@ -406,7 +409,7 @@ export const InventoryBulkGrid: React.FC<InventoryBulkGridProps> = ({
         ref={containerRef}
         className="rounded-md border bg-card overflow-x-auto"
         role="grid"
-        aria-label="Inventory bulk edit"
+        aria-label={t('inventoryBulk.gridLabel')}
         aria-rowcount={sortedRows.length}
       >
         {/* ── Sticky header ── */}
@@ -430,7 +433,7 @@ export const InventoryBulkGrid: React.FC<InventoryBulkGridProps> = ({
                 if (value === true) onSelectAll(sortedRows.map((r) => r.id));
                 else onClearSelection();
               }}
-              aria-label="Select all rows"
+              aria-label={t('inventoryBulk.selectAll')}
             />
           </div>
 
@@ -471,7 +474,7 @@ export const InventoryBulkGrid: React.FC<InventoryBulkGridProps> = ({
             className="flex items-center justify-center text-sm text-muted-foreground"
             role="row"
           >
-            No inventory items to edit.
+            {t('inventoryBulk.empty')}
           </div>
         ) : (
           <div role="rowgroup">

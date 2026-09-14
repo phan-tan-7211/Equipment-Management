@@ -26,6 +26,8 @@ import { useToast } from '@/hooks/use-toast';
 import { TeamWithMembers } from '@/features/teams/services/teamService';
 import { TeamRoleSelect } from '@/features/teams/components/TeamRoleSelect';
 
+import { useI18n } from '@/i18n';
+
 interface AddTeamMemberDialogProps {
   open: boolean;
   onClose: () => void;
@@ -37,6 +39,7 @@ const AddTeamMemberDialog: React.FC<AddTeamMemberDialogProps> = ({
   onClose, 
   team 
 }) => {
+  const { t } = useI18n();
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<'manager' | 'technician' | 'requestor' | 'viewer'>('technician');
   const { currentOrganization } = useOrganization();
@@ -49,8 +52,8 @@ const AddTeamMemberDialog: React.FC<AddTeamMemberDialogProps> = ({
     
     if (!selectedUser) {
       toast({
-        title: "Error",
-        description: "Please select a user to add",
+        title: t('teamsDetail.error'),
+        description: t('teamsDetail.selectUserError'),
         variant: "destructive"
       });
       return;
@@ -72,10 +75,10 @@ const AddTeamMemberDialog: React.FC<AddTeamMemberDialogProps> = ({
   };
 
   const roleOptions = [
-    { value: 'manager', label: 'Manager', description: 'Can manage team members and assign work orders' },
-    { value: 'technician', label: 'Technician', description: 'Can update work orders and record maintenance' },
-    { value: 'requestor', label: 'Requestor', description: 'Can create and submit work orders' },
-    { value: 'viewer', label: 'Viewer', description: 'Can view work orders and equipment but not modify' },
+    { value: 'manager', label: t('teamsDetail.roles.manager'), description: t('teamsDetail.roleDescriptions.manager') },
+    { value: 'technician', label: t('teamsDetail.roles.technician'), description: t('teamsDetail.roleDescriptions.technician') },
+    { value: 'requestor', label: t('teamsDetail.roles.requestor'), description: t('teamsDetail.roleDescriptions.requestorAdd') },
+    { value: 'viewer', label: t('teamsDetail.roles.viewer'), description: t('teamsDetail.roleDescriptions.viewerAdd') },
   ];
 
   const isLoading = availableUsers.isLoading;
@@ -85,9 +88,9 @@ const AddTeamMemberDialog: React.FC<AddTeamMemberDialogProps> = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Team Member</DialogTitle>
+          <DialogTitle>{t('teamsDetail.addMemberTitle')}</DialogTitle>
           <DialogDescription>
-            Add an existing organization member to {team.name}
+            {t('teamsDetail.addMemberDescription', { name: team.name })}
           </DialogDescription>
         </DialogHeader>
 
@@ -95,15 +98,15 @@ const AddTeamMemberDialog: React.FC<AddTeamMemberDialogProps> = ({
           <Card>
             <CardContent className="pt-4 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="user">Select User *</Label>
+                <Label htmlFor="user">{t('teamsDetail.selectUserLabel')}</Label>
                 {isLoading ? (
-                  <div className="text-sm text-muted-foreground">Loading available users...</div>
+                  <div className="text-sm text-muted-foreground">{t('teamsDetail.loadingUsers')}</div>
                 ) : users.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">No available users to add</div>
+                  <div className="text-sm text-muted-foreground">{t('teamsDetail.noUsers')}</div>
                 ) : (
                   <Select value={selectedUser} onValueChange={setSelectedUser} required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a user to add" />
+                      <SelectValue placeholder={t('teamsDetail.selectUser')} />
                     </SelectTrigger>
                     <SelectContent>
                       <ScrollArea className="h-48">
@@ -112,14 +115,14 @@ const AddTeamMemberDialog: React.FC<AddTeamMemberDialogProps> = ({
                             <div className="flex items-center gap-2">
                               <Avatar className="h-6 w-6">
                                 {(user.profiles as { avatar_url?: string | null })?.avatar_url && (
-                                  <AvatarImage src={(user.profiles as { avatar_url?: string | null }).avatar_url!} alt={user.profiles?.name || 'User'} />
+                                  <AvatarImage src={(user.profiles as { avatar_url?: string | null }).avatar_url!} alt={user.profiles?.name || t('teamsDetail.user')} />
                                 )}
                                 <AvatarFallback className="text-xs">
                                   {(user.profiles?.name || 'U').split(' ').map(n => n[0]).join('')}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <div className="font-medium">{user.profiles?.name || 'Unknown'}</div>
+                                <div className="font-medium">{user.profiles?.name || t('teamsDetail.unknown')}</div>
                                 <div className="text-sm text-muted-foreground">{user.profiles?.email}</div>
                               </div>
                             </div>
@@ -132,7 +135,7 @@ const AddTeamMemberDialog: React.FC<AddTeamMemberDialogProps> = ({
               </div>
 
               <TeamRoleSelect
-                label="Team Role *"
+                label={t('teamsDetail.teamRoleLabel')}
                 value={selectedRole}
                 onValueChange={(value) =>
                   setSelectedRole(value as 'manager' | 'technician' | 'requestor' | 'viewer')
@@ -145,13 +148,13 @@ const AddTeamMemberDialog: React.FC<AddTeamMemberDialogProps> = ({
 
           <div className="flex gap-2 justify-end">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t('teamsDetail.cancel')}
             </Button>
             <Button 
               type="submit" 
               disabled={!selectedUser || addMember.isPending}
             >
-              {addMember.isPending ? 'Adding...' : 'Add Member'}
+              {addMember.isPending ? t('teamsDetail.adding') : t('teamsDetail.addMember')}
             </Button>
           </div>
         </form>

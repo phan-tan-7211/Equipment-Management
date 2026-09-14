@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useCallback, useMemo } from 'react';
 import { StructuredLocationEditorControls } from '@/components/location/StructuredLocationEditorControls';
 import {
@@ -25,9 +26,10 @@ type InventoryStorageLocationFieldsProps = {
 export function InventoryStorageLocationFields({
   structuredLocation,
   onStructuredLocationChange,
-  locationLabel = 'Storage Address',
-  description = 'Search for the physical address where this part is stored.',
+  locationLabel,
+  description,
 }: InventoryStorageLocationFieldsProps) {
+  const { t } = useI18n();
   const { isLoaded: isPlacesLoaded } = useGoogleMapsLoader();
   const isDark = useIsDarkTheme();
   const { googleMapsKey, mapId } = useGoogleMapsKey();
@@ -89,7 +91,7 @@ export function InventoryStorageLocationFields({
   return (
     <StructuredLocationEditorControls
       className="space-y-3"
-      locationLabel={locationLabel}
+      locationLabel={locationLabel ?? t('itemForm.storageAddress')}
       locationAddress={editor.addressValue}
       onPlaceSelect={handlePlaceSelect}
       onClear={handleClear}
@@ -103,9 +105,9 @@ export function InventoryStorageLocationFields({
       isLiveCaptureOpen={editor.isLiveCaptureOpen}
       onLiveCaptureOpenChange={editor.setIsLiveCaptureOpen}
       onConfirmLiveLocation={handleSaveLiveLocation}
-      liveCaptureTitle="Set storage location from this device"
-      liveCaptureConfirmLabel="Use this location"
-      description={description}
+      liveCaptureTitle={t('itemForm.liveCaptureTitle')}
+      liveCaptureConfirmLabel={t('itemForm.useLocation')}
+      description={description ?? t('itemForm.storageDescription')}
       showMapPreviewLabel
     />
   );

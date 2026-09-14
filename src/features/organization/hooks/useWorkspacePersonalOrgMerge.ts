@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 /**
  * useWorkspacePersonalOrgMerge - Hooks for managing per-user personal org merges
  *
@@ -69,6 +70,7 @@ export const usePersonalOrgMergePreview = (workspaceOrgId: string | undefined) =
 export const useRequestWorkspaceMerge = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
   const { user } = useAuth();
   const queryKeyFactory = user?.id ? workspacePersonalOrgMerge(user.id) : null;
 
@@ -99,15 +101,15 @@ export const useRequestWorkspaceMerge = () => {
       }
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       toast({
-        title: 'Merge Request Sent',
-        description: result.message || 'The member will be notified to approve or decline.',
+        title: t('organizationNotices.mergeSent'),
+        description: result.message || t('organizationNotices.mergeSentDescription'),
         variant: 'success',
       });
     },
     onError: (error) => {
       toast({
-        title: 'Failed to Send Merge Request',
-        description: error instanceof Error ? error.message : 'An error occurred',
+        title: t('organizationNotices.mergeSendFailed'),
+        description: error instanceof Error ? error.message : t('organizationNotices.genericError'),
         variant: 'error',
       });
     },
@@ -117,6 +119,7 @@ export const useRequestWorkspaceMerge = () => {
 export const useRespondWorkspaceMerge = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryKeyFactory = user?.id ? workspacePersonalOrgMerge(user.id) : null;
@@ -152,8 +155,8 @@ export const useRespondWorkspaceMerge = () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
 
       toast({
-        title: variables.accept ? 'Merge Accepted' : 'Merge Declined',
-        description: result.message || 'Your response has been recorded.',
+        title: variables.accept ? t('organizationNotices.mergeAccepted') : t('organizationNotices.mergeDeclined'),
+        description: result.message || t('organizationNotices.mergeResponded'),
         variant: variables.accept ? 'success' : undefined,
       });
 
@@ -163,8 +166,8 @@ export const useRespondWorkspaceMerge = () => {
     },
     onError: (error) => {
       toast({
-        title: 'Failed to Respond',
-        description: error instanceof Error ? error.message : 'An error occurred',
+        title: t('organizationNotices.mergeRespondFailed'),
+        description: error instanceof Error ? error.message : t('organizationNotices.genericError'),
         variant: 'error',
       });
     },

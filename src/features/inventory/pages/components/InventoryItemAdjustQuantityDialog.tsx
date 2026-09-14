@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -55,6 +56,7 @@ export function InventoryItemAdjustQuantityDialog({
   onCancelInput,
   onSubmitMore,
 }: InventoryItemAdjustQuantityDialogProps) {
+  const { t } = useI18n();
   const addInputRef = useMountFocus<HTMLInputElement>(showAddInput);
   const subtractInputRef = useMountFocus<HTMLInputElement>(showSubtractInput);
 
@@ -68,13 +70,13 @@ export function InventoryItemAdjustQuantityDialog({
       )}
     >
       <div className="text-center">
-        <p className="text-sm text-muted-foreground mb-2">Current quantity</p>
+        <p className="text-sm text-muted-foreground mb-2">{t('inventoryDetail.currentQuantity')}</p>
         <p className="text-4xl font-bold">{currentQuantity}</p>
       </div>
 
       {!showSubtractInput && (
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Add to inventory</Label>
+          <Label className="text-sm font-medium">{t('inventoryDetail.addToInventory')}</Label>
           {showAddInput ? (
             <div className="space-y-3">
               <Input
@@ -83,14 +85,14 @@ export function InventoryItemAdjustQuantityDialog({
                 min="1"
                 value={adjustmentAmount}
                 onChange={(e) => onAdjustmentAmountChange(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                placeholder="Enter amount to add"
+                placeholder={t('inventoryDetail.amountToAdd')}
               />
               <div className="flex gap-2">
                 <Button variant="outline" onClick={onCancelInput} className="flex-1">
-                  Cancel
+                  {t('inventoryDetail.cancel')}
                 </Button>
                 <Button onClick={onSubmitMore} disabled={adjustmentAmount <= 0 || isPending} className="flex-1">
-                  {isPending ? 'Adding...' : 'Add'}
+                  {isPending ? t('inventoryDetail.adding') : t('inventoryDetail.add')}
                 </Button>
               </div>
             </div>
@@ -98,11 +100,11 @@ export function InventoryItemAdjustQuantityDialog({
             <div className="flex gap-2">
               <Button onClick={onQuickAdd} disabled={isPending} className="flex-1">
                 <Plus className="h-4 w-4 mr-2" />
-                Add 1
+                {t('inventoryDetail.addOne')}
               </Button>
               <Button variant="outline" onClick={onShowAddMore} className={cn('flex-1', outlineSecondaryClass)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add More
+                {t('inventoryDetail.addMore')}
               </Button>
             </div>
           )}
@@ -111,7 +113,7 @@ export function InventoryItemAdjustQuantityDialog({
 
       {!showAddInput && (
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Take from inventory</Label>
+          <Label className="text-sm font-medium">{t('inventoryDetail.takeFromInventory')}</Label>
           {showSubtractInput ? (
             <div className="space-y-3">
               <Input
@@ -120,14 +122,14 @@ export function InventoryItemAdjustQuantityDialog({
                 min="1"
                 value={adjustmentAmount}
                 onChange={(e) => onAdjustmentAmountChange(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                placeholder="Enter amount to take"
+                placeholder={t('inventoryDetail.amountToTake')}
               />
               <div className="flex gap-2">
                 <Button variant="outline" onClick={onCancelInput} className="flex-1">
-                  Cancel
+                  {t('inventoryDetail.cancel')}
                 </Button>
                 <Button onClick={onSubmitMore} disabled={adjustmentAmount <= 0 || isPending} className="flex-1">
-                  {isPending ? 'Taking...' : 'Take'}
+                  {isPending ? t('inventoryDetail.taking') : t('inventoryDetail.take')}
                 </Button>
               </div>
             </div>
@@ -135,11 +137,11 @@ export function InventoryItemAdjustQuantityDialog({
             <div className="flex gap-2">
               <Button onClick={onQuickTake} disabled={isPending} variant="destructive" className="flex-1">
                 <Minus className="h-4 w-4 mr-2" />
-                Take 1
+                {t('inventoryDetail.takeOne')}
               </Button>
               <Button variant="outline" onClick={onShowTakeMore} className={cn('flex-1', outlineSecondaryClass)}>
                 <Minus className="h-4 w-4 mr-2" />
-                Take More
+                {t('inventoryDetail.takeMore')}
               </Button>
             </div>
           )}
@@ -148,13 +150,13 @@ export function InventoryItemAdjustQuantityDialog({
 
       <div>
         <Label htmlFor="adjust-reason" className="text-sm font-medium">
-          Reason <span className="text-muted-foreground font-normal">(optional)</span>
+          {t('inventoryDetail.reason')} <span className="text-muted-foreground font-normal">{t('inventoryDetail.optional')}</span>
         </Label>
         <Textarea
           id="adjust-reason"
           value={adjustReason}
           onChange={(e) => onAdjustReasonChange(e.target.value)}
-          placeholder="Reason for adjustment..."
+          placeholder={t('inventoryDetail.adjustmentReason')}
           rows={3}
           className="mt-1"
         />
@@ -167,12 +169,12 @@ export function InventoryItemAdjustQuantityDialog({
             className="w-full min-h-11 border-border/80 bg-transparent"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t('inventoryDetail.cancel')}
           </Button>
         ) : (
           <div className="flex justify-end">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('inventoryDetail.cancel')}
             </Button>
           </div>
         ))}
@@ -184,9 +186,9 @@ export function InventoryItemAdjustQuantityDialog({
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[92dvh] pb-safe-bottom">
           <DrawerHeader className="text-left">
-            <DrawerTitle>Adjust Quantity</DrawerTitle>
+            <DrawerTitle>{t('inventoryDetail.adjustQuantity')}</DrawerTitle>
             <DrawerDescription className="sr-only">
-              Add or remove inventory quantity. You can optionally record a reason.
+              {t('inventoryDetail.adjustDescription')}
             </DrawerDescription>
           </DrawerHeader>
           {content}
@@ -199,9 +201,9 @@ export function InventoryItemAdjustQuantityDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Adjust Quantity</DialogTitle>
+          <DialogTitle>{t('inventoryDetail.adjustQuantity')}</DialogTitle>
           <DialogDescription className="sr-only">
-            Add or remove inventory quantity. You can optionally record a reason.
+            {t('inventoryDetail.adjustDescription')}
           </DialogDescription>
         </DialogHeader>
         {content}

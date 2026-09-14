@@ -12,6 +12,14 @@ const vi = {
     en: 'Tiếng Anh',
     ko: 'Tiếng Hàn',
   },
+  sharedUi: {
+    scanShort: 'Quét', ordersShort: 'Lệnh', menu: 'Menu', primaryNavigation: 'Điều hướng chính', openNavigationMenu: 'Mở menu điều hướng',
+    personalizeList: 'Tùy chỉnh danh sách', openPersonalization: 'Mở tùy chỉnh', customSortActive: 'Mở tùy chỉnh, đang dùng kiểu sắp xếp riêng',
+    csvDescription: 'Giá trị phân tách bằng dấu phẩy', jsonDescription: 'Định dạng dữ liệu có cấu trúc',
+    mapDirections: 'Chạm để mở chỉ đường trong Google Maps', mapAddressDirections: 'Mở chỉ đường đến {{address}} trong Google Maps', mapCoordinatesDirections: 'Mở chỉ đường đến {{coordinates}} trong Google Maps', mapLoading: 'Đang tải bản đồ...', mapUnavailable: 'Không thể hiển thị bản đồ', mapRetry: 'Thử lại', useCurrentLocation: 'Dùng vị trí hiện tại', mapPreview: 'Xem trước bản đồ',
+    imageDropMultiple: 'Thả ảnh vào đây hoặc nhấn nút bên dưới', imageFormats: 'Hỗ trợ JPEG, PNG, GIF, WebP; tối đa 10MB mỗi ảnh', chooseFiles: 'Chọn ảnh', selectedImages: 'Ảnh đã chọn ({{count}})', uploadImages: 'Tải lên {{count}} ảnh', removeSelectedImage: 'Bỏ ảnh đã chọn {{name}}', unsupportedImage: '{{name}} không phải định dạng ảnh được hỗ trợ', imageTooLarge: '{{name}} quá lớn. Dung lượng tối đa là 10MB', maxFiles: 'Chỉ được chọn tối đa {{count}} tệp', selectImage: 'Vui lòng chọn ít nhất một ảnh', uploadUnavailable: 'Chưa cấu hình chức năng tải ảnh lên', imagesUploaded: 'Đã tải ảnh lên thành công!', imagesUploadFailed: 'Không thể tải ảnh lên: {{error}}', unknownError: 'Lỗi không xác định',
+    upload: 'Tải lên', uploading: 'Đang tải lên...', remove: 'Xóa', removing: 'Đang xóa...', replace: 'Thay ảnh', uploadPhoto: 'Tải ảnh lên', chooseFile: 'Chọn tệp', cancel: 'Hủy', preview: 'Xem trước', avatar: 'Ảnh đại diện', currentImage: 'Ảnh hiện tại', preparingPreview: 'Đang chuẩn bị xem trước…', imageDropSingle: 'Thả ảnh vào đây hoặc nhấn để chọn', formatSize: '{{formats}}; tối đa {{size}} MB', singleUploadSuccess: 'Đã tải ảnh lên thành công', singleUploadFailed: 'Tải ảnh lên thất bại: {{error}}', singleRemoveSuccess: 'Đã xóa ảnh', singleRemoveFailed: 'Không thể xóa ảnh: {{error}}', unsupportedSingleImage: 'Định dạng không được hỗ trợ: {{name}}. Hãy dùng {{formats}}.', singleImageTooLarge: 'Tệp quá lớn: {{name}}. Dung lượng tối đa là {{size}} MB.',
+  },
   navigation: {
     mainNavigation: 'Điều hướng chính',
     groups: {

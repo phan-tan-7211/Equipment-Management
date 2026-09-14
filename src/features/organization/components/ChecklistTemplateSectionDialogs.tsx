@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,32 +48,33 @@ export function ChecklistTemplateSectionDialogs({
   deleteTargetItemCount,
   onConfirmDelete,
 }: ChecklistTemplateSectionDialogsProps) {
+  const { t } = useI18n();
   return (
     <>
       <Dialog open={renameDialogOpen} onOpenChange={onRenameDialogOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename Section</DialogTitle>
-            <DialogDescription>{`Rename section "${renameOriginal}".`}</DialogDescription>
+            <DialogTitle>{t('pmTemplates.editor.renameSectionTitle')}</DialogTitle>
+            <DialogDescription>{t('pmTemplates.editor.renameSectionDescription', { name: renameOriginal ?? '' })}</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="section-name">Section Name</Label>
+            <Label htmlFor="section-name">{t('pmTemplates.editor.sectionName')}</Label>
             <Input
               id="section-name"
               value={renameInput}
               onChange={(e) => onRenameInputChange(e.target.value)}
-              placeholder="Enter section name"
+              placeholder={t('pmTemplates.editor.sectionNamePlaceholder')}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => onRenameDialogOpenChange(false)}>
-              Cancel
+              {t('pmTemplates.editor.cancel')}
             </Button>
             <Button
               onClick={onConfirmRename}
               disabled={!renameInput.trim() || renameInput.trim() === renameOriginal}
             >
-              Rename
+              {t('pmTemplates.editor.rename')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -81,20 +83,20 @@ export function ChecklistTemplateSectionDialogs({
       <AlertDialog open={deleteDialogOpen} onOpenChange={onDeleteDialogOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Section</AlertDialogTitle>
+            <AlertDialogTitle>{t('pmTemplates.editor.deleteSectionTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
               {deleteTarget
-                ? `Delete section "${deleteTarget}" and all ${deleteTargetItemCount} items? This cannot be undone.`
+                ? t('pmTemplates.editor.deleteSectionDescription', { name: deleteTarget, count: deleteTargetItemCount })
                 : ''}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('pmTemplates.editor.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={onConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t('pmTemplates.editor.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

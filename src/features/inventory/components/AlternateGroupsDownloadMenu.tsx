@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Download } from 'lucide-react';
 import { ExportFormatMenuItems } from '@/components/common/ExportFormatMenuItems';
@@ -5,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -18,15 +18,7 @@ interface AlternateGroupsDownloadMenuProps {
   groups: PartAlternateGroup[];
 }
 
-const CSV_HEADERS = [
-  'Name',
-  'Status',
-  'Description',
-  'Notes',
-  'Member Count',
-  'Created At',
-  'Updated At',
-];
+
 
 function groupsToCsvRows(
   groups: PartAlternateGroup[],
@@ -45,10 +37,11 @@ function groupsToCsvRows(
 
 const AlternateGroupsDownloadMenu: React.FC<AlternateGroupsDownloadMenuProps> = ({ groups }) => {
   const { formatDate } = useFormatTimestamp();
+  const { t } = useI18n();
 
   const handleExportCsv = () => {
     const rows = groupsToCsvRows(groups, formatDate);
-    const csv = arrayToCsv(CSV_HEADERS, rows);
+    const csv = arrayToCsv([t('alternateGroups.csvName'), t('alternateGroups.status'), t('alternateGroups.csvDescription'), t('alternateGroups.csvNotes'), t('alternateGroups.csvMemberCount'), t('alternateGroups.csvCreated'), t('alternateGroups.csvUpdated')], rows);
     downloadCsv(csv, filenameWithDate('alternate-groups', 'csv'));
   };
 
@@ -76,14 +69,14 @@ const AlternateGroupsDownloadMenu: React.FC<AlternateGroupsDownloadMenuProps> = 
           variant="outline"
           size="icon"
           className="h-8 w-8"
-          aria-label="Download alternate groups"
+          aria-label={t('alternateGroups.download')}
         >
           <Download className="h-3.5 w-3.5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-          Export format
+          {t('alternateGroups.exportFormat')}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ExportFormatMenuItems

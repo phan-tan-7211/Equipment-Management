@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 import { Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +30,7 @@ export function OperatorTemplateEquipmentAssignmentMenu({
   isAssigning,
   onAssignEquipmentIds,
 }: OperatorTemplateEquipmentAssignmentMenuProps) {
+  const { t } = useI18n();
   const assignedEquipmentIds = useMemo(
     () =>
       new Set(
@@ -44,11 +46,11 @@ export function OperatorTemplateEquipmentAssignmentMenu({
       equipment.map((item) => ({
         id: item.id,
         label: item.name,
-        sublabel: `${item.serial_number ? `Unit ${item.serial_number}` : 'No serial number'} · ${item.team_name ?? 'Unassigned'}`,
+        sublabel: `${item.serial_number ? t('operatorEquipment.unit', { serial: item.serial_number }) : t('operatorEquipment.noSerial')} · ${item.team_name ?? t('operatorEquipment.unassigned')}`,
         searchText: item.location ?? '',
-        lockedNote: assignedEquipmentIds.has(item.id) ? 'Assigned' : undefined,
+        lockedNote: assignedEquipmentIds.has(item.id) ? t('operatorEquipment.assigned') : undefined,
       })),
-    [equipment, assignedEquipmentIds],
+    [equipment, assignedEquipmentIds, t],
   );
 
   return (
@@ -57,19 +59,19 @@ export function OperatorTemplateEquipmentAssignmentMenu({
       trigger={
         <Button type="button" variant="outline" size="sm" disabled={isAssigning}>
           <Truck className="mr-2 h-4 w-4" />
-          Assign to equipment
+          {t('operatorEquipment.assignEquipment')}
         </Button>
       }
-      title={`Assign ${templateName}`}
-      description="Choose one or more equipment records in the current team scope."
+      title={t('operatorEquipment.assignTemplate', { name: templateName })}
+      description={t('operatorEquipment.chooseEquipment')}
       options={options}
       isLoading={isEquipmentLoading || isAssignmentsLoading}
       isPending={isAssigning}
-      searchPlaceholder="Search equipment..."
-      loadingText="Loading equipment…"
-      emptyText="No equipment in the current team scope."
-      noMatchText="No equipment matches your search."
-      actionLabel={() => (isAssigning ? 'Assigning...' : 'Assign checklist')}
+      searchPlaceholder={t('operatorEquipment.searchEquipment')}
+      loadingText={t('operatorEquipment.loadingEquipment')}
+      emptyText={t('operatorEquipment.noEquipment')}
+      noMatchText={t('operatorEquipment.noEquipmentMatch')}
+      actionLabel={() => (isAssigning ? t('operatorEquipment.assigning') : t('operatorEquipment.assignChecklist'))}
       onAction={onAssignEquipmentIds}
     />
   );

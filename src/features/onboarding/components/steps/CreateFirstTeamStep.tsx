@@ -9,6 +9,7 @@ import { useCustomerMutations } from '@/features/teams/hooks/useCustomerAccount'
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { TeamCreateFields } from '@/features/teams/components/TeamCreateFields';
+import { useI18n } from '@/i18n';
 import {
   buildTeamCreatePayload,
   emptyTeamCreateFieldsValue,
@@ -20,6 +21,7 @@ interface CreateFirstTeamStepProps {
 }
 
 export const CreateFirstTeamStep: React.FC<CreateFirstTeamStepProps> = ({ onTeamCreated }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
   const { createTeamWithCreator } = useTeamMutations();
@@ -34,7 +36,7 @@ export const CreateFirstTeamStep: React.FC<CreateFirstTeamStepProps> = ({ onTeam
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fields.name.trim()) {
-      setNameError('Team name is required');
+      setNameError(t('productOnboarding.teamNameRequired'));
       return;
     }
     if (!currentOrganization?.id || !user?.id) {
@@ -58,16 +60,16 @@ export const CreateFirstTeamStep: React.FC<CreateFirstTeamStepProps> = ({ onTeam
       queryClient.invalidateQueries({ queryKey: ['teams', currentOrganization.id] });
 
       toast({
-        title: 'Team created',
-        description: `"${team.name}" is ready for equipment.`,
+        title: t('productOnboarding.teamCreated'),
+        description: t('productOnboarding.teamCreatedDescription', { name: team.name }),
       });
 
       onTeamCreated(team.id);
     } catch (error) {
       console.error('Create first team failed:', error);
       toast({
-        title: 'Could not create team',
-        description: 'Please try again.',
+        title: t('productOnboarding.teamCreateFailed'),
+        description: t('productOnboarding.tryAgain'),
         variant: 'destructive',
       });
     } finally {
@@ -83,11 +85,9 @@ export const CreateFirstTeamStep: React.FC<CreateFirstTeamStepProps> = ({ onTeam
     <form onSubmit={handleSubmit} className="space-y-6" data-testid="onboarding-step-create-team">
       <Alert>
         <Users className="h-4 w-4" />
-        <AlertTitle>What is a team?</AlertTitle>
+        <AlertTitle>{t('productOnboarding.whatIsTeam')}</AlertTitle>
         <AlertDescription>
-          A team can represent people in a department at your organization, or a customer whose
-          heavy equipment you service. Equipment and work orders are organized by team so invoices
-          reach the right account.
+          {t('productOnboarding.teamExplanation')}
         </AlertDescription>
       </Alert>
 
@@ -104,7 +104,7 @@ export const CreateFirstTeamStep: React.FC<CreateFirstTeamStepProps> = ({ onTeam
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating team...' : 'Continue'}
+          {isSubmitting ? t('productOnboarding.creatingTeam') : t('productOnboarding.continue')}
         </Button>
       </div>
     </form>

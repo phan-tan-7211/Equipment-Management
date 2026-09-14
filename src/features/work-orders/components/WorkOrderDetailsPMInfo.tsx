@@ -1,3 +1,5 @@
+import { useI18n } from '@/i18n';
+import { localizePmStatus } from '@/features/work-orders/utils/workOrderI18nLabels';
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
@@ -17,6 +19,7 @@ export const WorkOrderDetailsPMInfo: React.FC<WorkOrderDetailsPMInfoProps> = ({
   pmData,
   permissionLevels
 }) => {
+  const { t } = useI18n();
   const { formatDate } = useFormatTimestamp();
   const { data: allTemplates = [] } = usePMTemplates();
   
@@ -34,7 +37,7 @@ export const WorkOrderDetailsPMInfo: React.FC<WorkOrderDetailsPMInfoProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clipboard className="h-5 w-5" />
-          Preventative Maintenance
+          {t('workOrderOperations.preventativeMaintenance')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -44,28 +47,28 @@ export const WorkOrderDetailsPMInfo: React.FC<WorkOrderDetailsPMInfoProps> = ({
             <div className="flex items-center gap-2">
               <Wrench className="h-4 w-4 text-muted-foreground" />
               <div>
-                <span className="text-sm font-medium">Template: </span>
+                <span className="text-sm font-medium">{t('workOrderOperations.template')} </span>
                 <span className="text-sm text-muted-foreground">{templateName}</span>
               </div>
             </div>
           )}
           
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">PM Status:</span>
+            <span className="text-sm font-medium">{t('workOrderOperations.pmStatus')}</span>
             <Badge className={
               pmData.status === 'completed' ? 'bg-success/20 text-success' :
               pmData.status === 'in_progress' ? 'bg-info/20 text-info' :
               'bg-warning/20 text-warning'
             }>
-              {pmData.status.replace('_', ' ').toUpperCase()}
+              {localizePmStatus(pmData.status, t)}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            This work order includes preventative maintenance tasks that will be completed by the assigned technician.
+            {t('workOrderOperations.pmStatusDescription')}
           </p>
           {pmData.status === 'completed' && pmData.completed_at && (
             <p className="text-sm text-success">
-              PM completed on {formatDate(pmData.completed_at)}
+              {t('workOrderOperations.pmCompletedOn', { date: formatDate(pmData.completed_at) })}
             </p>
           )}
         </div>

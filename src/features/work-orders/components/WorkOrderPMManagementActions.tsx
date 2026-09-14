@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Wrench } from 'lucide-react';
@@ -17,6 +18,7 @@ export function WorkOrderPMManagementActions({
   onManage,
   className,
 }: WorkOrderPMManagementActionsProps) {
+  const { t } = useI18n();
   if (!canManage) {
     return null;
   }
@@ -25,7 +27,7 @@ export function WorkOrderPMManagementActions({
     <div className={cn('flex justify-start md:justify-end', MOBILE_WO_FAB_AVOIDANCE_INSET_CLASS, className)}>
       <Button type="button" variant="outline" size="sm" onClick={onManage}>
         <Wrench className="h-4 w-4 mr-2" aria-hidden="true" />
-        {hasPm ? 'Manage PM Template' : 'Add PM Checklist'}
+        {hasPm ? t('workOrderOperations.managePmTemplate') : t('workOrderOperations.addPmChecklist')}
       </Button>
     </div>
   );

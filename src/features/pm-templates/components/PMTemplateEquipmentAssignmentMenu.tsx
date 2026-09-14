@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useI18n } from '@/i18n';
 import { Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +31,7 @@ export function PMTemplateEquipmentAssignmentMenu({
   templateName,
   fullWidthTrigger = false,
 }: PMTemplateEquipmentAssignmentMenuProps) {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { selectedTeamId } = useSelectedTeam();
   const { data: equipmentSummaries = [], isLoading } = useEquipmentSummaries(
@@ -49,17 +51,17 @@ export function PMTemplateEquipmentAssignmentMenu({
   );
 
   const triggerLabel =
-    assignedCount === 0 ? 'Apply to Equipment' : `Assigned Equipment (${assignedCount})`;
+    assignedCount === 0 ? t('pmTemplates.list.applyToEquipment') : t('pmTemplates.list.assignedEquipment', { count: assignedCount });
 
   const options = useMemo<MultiSelectActionOption[]>(() => {
     return scopedEquipment.map((item) => ({
       id: item.id,
       label: item.name,
-      sublabel: `${item.serial_number ? `Unit ${item.serial_number}` : 'No serial number'} · ${item.team_name ?? 'Unassigned'}`,
+      sublabel: `${item.serial_number ? t('pmTemplates.list.unitNumber', { number: item.serial_number }) : t('pmTemplates.list.noSerialNumber')} · ${item.team_name ?? t('pmTemplates.list.unassigned')}`,
       searchText: [item.manufacturer ?? '', item.model ?? '', item.location ?? ''].join(' '),
-      lockedNote: item.default_pm_template_id === templateId ? 'Current default' : undefined,
+      lockedNote: item.default_pm_template_id === templateId ? t('pmTemplates.list.currentDefault') : undefined,
     }));
-  }, [scopedEquipment, templateId]);
+  }, [scopedEquipment, templateId, t]);
 
   return (
     <MultiSelectActionMenu
@@ -71,22 +73,22 @@ export function PMTemplateEquipmentAssignmentMenu({
           size="sm"
           className={fullWidthTrigger ? 'w-full' : undefined}
           disabled={bulkAssignTemplate.isPending}
-          title="Set this template as the default PM on one or more equipment records"
+          title={t('pmTemplates.list.assignmentTooltip')}
         >
           <Wrench className="mr-2 h-4 w-4" />
           {triggerLabel}
         </Button>
       }
-      title={`Apply ${templateName}`}
-      description="Sets this template as the default PM on the selected equipment in the current team scope."
+      title={t('pmTemplates.list.applyTemplateTitle', { name: templateName })}
+      description={t('pmTemplates.list.assignmentDescription')}
       options={options}
       isLoading={isLoading}
       isPending={bulkAssignTemplate.isPending}
-      searchPlaceholder="Search equipment..."
-      loadingText="Loading equipment…"
-      emptyText="No equipment in the current team scope."
-      noMatchText="No equipment matches your search."
-      actionLabel={() => (bulkAssignTemplate.isPending ? 'Applying...' : 'Apply template')}
+      searchPlaceholder={t('pmTemplates.list.searchEquipment')}
+      loadingText={t('pmTemplates.list.loadingEquipment')}
+      emptyText={t('pmTemplates.list.noEquipmentInTeam')}
+      noMatchText={t('pmTemplates.list.noEquipmentMatch')}
+      actionLabel={() => t(bulkAssignTemplate.isPending ? 'pmTemplates.list.applying' : 'pmTemplates.list.applyTemplate')}
       onAction={async (equipmentIds) => {
         await bulkAssignTemplate.mutateAsync({ equipmentIds, templateId });
       }}

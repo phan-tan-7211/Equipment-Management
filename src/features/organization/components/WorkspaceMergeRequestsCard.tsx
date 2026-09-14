@@ -1,11 +1,11 @@
 import React from 'react';
-import { format } from 'date-fns';
 import { AlertTriangle, Database } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePersonalOrgMergePreview, useRespondWorkspaceMerge } from '@/features/organization/hooks/useWorkspacePersonalOrgMerge';
 import type { WorkspaceMergeRequest } from '@/features/organization/types/workspacePersonalOrgMerge';
+import { useI18n } from '@/i18n';
 
 interface WorkspaceMergeRequestsCardProps {
   workspaceOrgId: string;
@@ -16,6 +16,7 @@ export const WorkspaceMergeRequestsCard: React.FC<WorkspaceMergeRequestsCardProp
   workspaceOrgId,
   requests,
 }) => {
+  const { t, language } = useI18n();
   const { data: preview, isLoading: previewLoading } = usePersonalOrgMergePreview(workspaceOrgId);
   const respondMerge = useRespondWorkspaceMerge();
 
@@ -24,11 +25,11 @@ export const WorkspaceMergeRequestsCard: React.FC<WorkspaceMergeRequestsCardProp
   }
 
   const previewItems = [
-    { label: 'Equipment', value: preview?.equipment_count ?? 0 },
-    { label: 'Work Orders', value: preview?.work_orders_count ?? 0 },
-    { label: 'PM Templates', value: preview?.pm_templates_count ?? 0 },
-    { label: 'PM Records', value: preview?.pm_records_count ?? 0 },
-    { label: 'Inventory Items', value: preview?.inventory_items_count ?? 0 },
+    { label: t('organizationAdmin.mergeEquipment'), value: preview?.equipment_count ?? 0 },
+    { label: t('organizationAdmin.mergeWorkOrders'), value: preview?.work_orders_count ?? 0 },
+    { label: t('organizationAdmin.mergeTemplates'), value: preview?.pm_templates_count ?? 0 },
+    { label: t('organizationAdmin.mergeRecords'), value: preview?.pm_records_count ?? 0 },
+    { label: t('organizationAdmin.mergeInventory'), value: preview?.inventory_items_count ?? 0 },
   ];
 
   const hasPersonalOrg = preview?.has_personal_org !== false;
@@ -38,10 +39,10 @@ export const WorkspaceMergeRequestsCard: React.FC<WorkspaceMergeRequestsCardProp
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" />
-          Personal Org Merge Request
+          {t('organizationAdmin.mergeTitle')}
         </CardTitle>
         <CardDescription>
-          Review the request to merge your personal organization data into this workspace.
+          {t('organizationAdmin.mergeDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -50,34 +51,34 @@ export const WorkspaceMergeRequestsCard: React.FC<WorkspaceMergeRequestsCardProp
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <div className="text-sm font-medium">
-                  Requested by {request.requested_by_name}
+                  {t('organizationAdmin.requestedBy', { name: request.requested_by_name })}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Expires {format(new Date(request.expires_at), 'MMM d, yyyy')}
+                  {t('organizationAdmin.expires', { time: new Intl.DateTimeFormat(language === 'ko' ? 'ko-KR' : language === 'vi' ? 'vi-VN' : 'en-US', { dateStyle: 'medium' }).format(new Date(request.expires_at)) })}
                 </div>
                 {request.request_reason && (
                   <div className="mt-2 text-sm text-muted-foreground">
-                    Reason: {request.request_reason}
+                    {t('organizationAdmin.reason', { reason: request.request_reason })}
                   </div>
                 )}
               </div>
-              <Badge variant="secondary">Action Required</Badge>
+              <Badge variant="secondary">{t('organizationAdmin.actionRequired')}</Badge>
             </div>
 
             {!previewLoading && !hasPersonalOrg && (
               <div className="flex items-start gap-2 rounded-md bg-warning/10 p-3 text-sm text-muted-foreground">
                 <AlertTriangle className="mt-0.5 h-4 w-4 text-warning" />
-                <span>No personal organization was found to merge.</span>
+                <span>{t('organizationAdmin.noPersonalOrg')}</span>
               </div>
             )}
 
             <div>
               <div className="text-xs font-medium uppercase text-muted-foreground">
-                Data to merge
+                {t('organizationAdmin.dataToMerge')}
               </div>
               {previewLoading && (
                 <div className="mt-2 text-xs text-muted-foreground">
-                  Loading preview...
+                  {t('organizationAdmin.loadingPreview')}
                 </div>
               )}
               <div className="mt-2 flex flex-wrap gap-2">
@@ -94,14 +95,14 @@ export const WorkspaceMergeRequestsCard: React.FC<WorkspaceMergeRequestsCardProp
                 onClick={() => respondMerge.mutate({ requestId: request.id, accept: true })}
                 disabled={respondMerge.isPending || !hasPersonalOrg}
               >
-                Accept Merge
+                {t('organizationAdmin.acceptMerge')}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => respondMerge.mutate({ requestId: request.id, accept: false })}
                 disabled={respondMerge.isPending}
               >
-                Decline
+                {t('organizationAdmin.decline')}
               </Button>
             </div>
           </div>

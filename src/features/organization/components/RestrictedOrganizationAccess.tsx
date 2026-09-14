@@ -4,6 +4,7 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n';
 
 interface RestrictedOrganizationAccessProps {
   currentOrganizationName: string;
@@ -12,6 +13,7 @@ interface RestrictedOrganizationAccessProps {
 const RestrictedOrganizationAccess: React.FC<RestrictedOrganizationAccessProps> = ({
   currentOrganizationName
 }) => {
+  const { t } = useI18n();
   const { organizations, switchOrganization } = useOrganization();
   const navigate = useNavigate();
 
@@ -30,9 +32,9 @@ const RestrictedOrganizationAccess: React.FC<RestrictedOrganizationAccessProps> 
   return (
     <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Organization Management</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('organizationHub.restrictedTitle')}</h1>
         <p className="text-sm sm:text-base text-muted-foreground mt-1">
-          Access restricted for {currentOrganizationName}
+          {t('organizationHub.restrictedFor', { name: currentOrganizationName })}
         </p>
       </div>
 
@@ -43,20 +45,19 @@ const RestrictedOrganizationAccess: React.FC<RestrictedOrganizationAccessProps> 
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold text-foreground">
-                  Administrator Access Required
+                  {t('organizationHub.adminRequired')}
                 </h3>
                 <p className="text-muted-foreground mt-2">
-                  You need to be an organization administrator to manage this page. 
-                  Contact an existing organization admin if you require access to this page
+                  {t('organizationHub.adminExplanation')}
                   {ownedOrganizations.length > 0 && (
                     <>
-                      , or{' '}
+                      {t('organizationHub.or')}
                       <Button
                         variant="link"
                         className="p-0 h-auto font-normal text-primary underline"
                         onClick={handleSwitchToOwnedOrganization}
                       >
-                        see the settings for your organization instead
+                        {t('organizationHub.switchToOwn')}
                       </Button>
                       .
                     </>
@@ -67,7 +68,7 @@ const RestrictedOrganizationAccess: React.FC<RestrictedOrganizationAccessProps> 
               
               {ownedOrganizations.length === 0 && (
                 <div className="text-sm text-muted-foreground">
-                  You are currently a member of {currentOrganizationName} but do not own any organizations.
+                  {t('organizationHub.memberWithoutOwn', { name: currentOrganizationName })}
                 </div>
               )}
             </div>

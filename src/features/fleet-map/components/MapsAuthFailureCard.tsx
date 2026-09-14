@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
@@ -16,7 +17,9 @@ import {
  * reliable retry — the bad key has already been baked into the cached Maps JS
  * bundle. See issue #617 follow-up.
  */
-export const MapsAuthFailureCard: React.FC<{ failure: MapsAuthFailure }> = ({ failure }) => (
+export const MapsAuthFailureCard: React.FC<{ failure: MapsAuthFailure }> = ({ failure }) => {
+  const { t } = useI18n();
+  return (
   <div
     className="flex items-center justify-center min-h-[400px] p-4"
     role="alert"
@@ -28,15 +31,15 @@ export const MapsAuthFailureCard: React.FC<{ failure: MapsAuthFailure }> = ({ fa
         <div className="flex justify-center mb-4">
           <AlertTriangle className="h-12 w-12 text-destructive" />
         </div>
-        <CardTitle className="text-xl">Map could not load</CardTitle>
+        <CardTitle className="text-xl">{t('fleetMap.authTitle')}</CardTitle>
         <CardDescription>
-          The Google Maps API key returned by the server is not authorized for this URL.
+          {t('fleetMap.authDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md space-y-2">
           <div>
-            <p className="text-sm text-destructive font-medium">Referrer allowlist entry to add:</p>
+            <p className="text-sm text-destructive font-medium">{t('fleetMap.referrerEntry')}</p>
             <p
               className="text-sm font-mono break-all text-muted-foreground mt-1"
               data-testid="maps-auth-failure-allowlist-entry"
@@ -45,7 +48,7 @@ export const MapsAuthFailureCard: React.FC<{ failure: MapsAuthFailure }> = ({ fa
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground font-medium">Current page URL (for correlation):</p>
+            <p className="text-xs text-muted-foreground font-medium">{t('fleetMap.currentUrl')}</p>
             <p
               className="text-xs font-mono break-all text-muted-foreground mt-1"
               data-testid="maps-auth-failure-current-url"
@@ -56,20 +59,19 @@ export const MapsAuthFailureCard: React.FC<{ failure: MapsAuthFailure }> = ({ fa
         </div>
 
         <div className="text-sm text-muted-foreground">
-          <p className="font-medium mb-2">How to fix:</p>
+          <p className="font-medium mb-2">{t('fleetMap.howToFix')}</p>
           <ol className="space-y-1 list-decimal list-inside">
-            <li>Open Google Cloud Console -&gt; APIs &amp; Services -&gt; Credentials.</li>
+            <li>{t('fleetMap.authStep1')}</li>
             <li>
-              Edit the API key currently set as <code className="font-mono text-xs">GOOGLE_MAPS_BROWSER_KEY</code>
-              {' '}on the relevant Supabase project.
+              {t('fleetMap.authStep2Prefix')} <code className="font-mono text-xs">GOOGLE_MAPS_BROWSER_KEY</code>
+              {' '}{t('fleetMap.authStep2Suffix')}
             </li>
             <li>
-              Under Application restrictions -&gt; HTTP referrers, add the
-              {' '}<strong>allowlist entry</strong> above (the
-              {' '}<code className="font-mono text-xs">/*</code> wildcard pattern, not the route-specific URL)
-              and Save.
+              {t('fleetMap.authStep3Prefix')} <strong>{t('fleetMap.authAllowlist')}</strong> {' '}
+              {t('fleetMap.authStep3Middle')} <code className="font-mono text-xs">/*</code> {' '}
+              {t('fleetMap.authStep3Suffix')}
             </li>
-            <li>Wait ~1 minute for Google to propagate, then click Try Again.</li>
+            <li>{t('fleetMap.authStep4')}</li>
           </ol>
         </div>
 
@@ -80,7 +82,7 @@ export const MapsAuthFailureCard: React.FC<{ failure: MapsAuthFailure }> = ({ fa
             variant="outline"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
-            Try Again
+            {t('fleetMap.tryAgain')}
           </Button>
           <Button
             onClick={() => window.open(MAPS_REFERRER_RUNBOOK_URL, '_blank', 'noopener,noreferrer')}
@@ -88,10 +90,11 @@ export const MapsAuthFailureCard: React.FC<{ failure: MapsAuthFailure }> = ({ fa
             variant="ghost"
           >
             <ExternalLink className="mr-2 h-4 w-4" />
-            View Runbook
+            {t('fleetMap.viewRunbook')}
           </Button>
         </div>
       </CardContent>
     </Card>
   </div>
-);
+  );
+};

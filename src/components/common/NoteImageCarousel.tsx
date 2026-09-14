@@ -1,3 +1,4 @@
+import { useNotePresentationText } from '@/components/common/notePresentationI18n';
 import React, { useCallback } from 'react';
 import {
   Carousel,
@@ -30,6 +31,7 @@ const NoteImageCarousel: React.FC<NoteImageCarouselProps> = ({
   onImageClick,
   enableLightbox = true,
 }) => {
+  const noteText = useNotePresentationText();
   const { openImage, lightbox } = useImageLightbox();
 
   const handleImageClick = useCallback(
@@ -88,12 +90,12 @@ const NoteImageCarousel: React.FC<NoteImageCarouselProps> = ({
           <CarouselPrevious
             type="button"
             className="left-0 top-1/2 z-10 h-8 w-8 -translate-y-1/2 border bg-background/90 shadow-sm"
-            aria-label="Previous image"
+            aria-label={noteText('previousImage', 'Previous image')}
           />
           <CarouselNext
             type="button"
             className="right-0 top-1/2 z-10 h-8 w-8 -translate-y-1/2 border bg-background/90 shadow-sm"
-            aria-label="Next image"
+            aria-label={noteText('nextImage', 'Next image')}
           />
         </Carousel>
       </div>

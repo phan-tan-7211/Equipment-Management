@@ -9,6 +9,7 @@ import {
   type ImageUploadSession,
 } from '@/components/common/singleImageUploadSession';
 import { useSingleImageUpload } from '@/components/common/useSingleImageUpload';
+import { useI18n } from '@/i18n';
 
 interface SingleImageUploadProps {
   /** Current image URL (if any) */
@@ -78,6 +79,7 @@ function ImageDropZone({
   | 'formatLabel'
   | 'maxSizeMB'
 > & { compact: boolean }) {
+  const { t } = useI18n();
   const busy = disabled || isProcessing;
   const activeClass = dragActive
     ? 'border-primary bg-primary/5'
@@ -97,7 +99,7 @@ function ImageDropZone({
         onDrop={onDrop}
       >
         <Upload className="mb-1 h-5 w-5 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">Upload</span>
+        <span className="text-xs text-muted-foreground">{t('sharedUi.upload')}</span>
       </label>
     );
   }
@@ -116,13 +118,13 @@ function ImageDropZone({
     >
       <ImageIcon className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
       <div className="space-y-2">
-        <p className="text-sm font-medium">Drop an image here, or click to browse</p>
+        <p className="text-sm font-medium">{t('sharedUi.imageDropSingle')}</p>
         <p className="text-xs text-muted-foreground">
-          {formatLabel} up to {maxSizeMB} MB
+          {t('sharedUi.formatSize', { formats: formatLabel, size: maxSizeMB })}
         </p>
         <span className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-primary">
           <Upload className="h-4 w-4" />
-          Choose File
+          {t('sharedUi.chooseFile')}
         </span>
       </div>
     </label>
@@ -135,17 +137,18 @@ function AvatarFace({
   avatarFallback,
   onImageError,
 }: Pick<UploadLayoutProps, 'session' | 'label' | 'avatarFallback' | 'onImageError'>) {
+  const { t } = useI18n();
   const preview = session.kind === 'pending' ? session.src : null;
   const current = session.kind === 'current' ? session.src : null;
 
   return (
     <Avatar className="h-16 w-16 shrink-0">
       {preview ? (
-        <AvatarImage src={preview} alt="Preview" />
+        <AvatarImage src={preview} alt={t('sharedUi.preview')} />
       ) : current ? (
         <AvatarImage
           src={current}
-          alt={label || 'Avatar'}
+          alt={label || t('sharedUi.avatar')}
           onLoadingStatusChange={(status) => {
             if (status === 'error') onImageError();
           }}
@@ -171,6 +174,7 @@ function AvatarIdleActions({
   onPickFile: () => void;
   onDelete?: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <>
       <Button
@@ -181,7 +185,7 @@ function AvatarIdleActions({
         onClick={onPickFile}
       >
         <Upload className="mr-1.5 h-3.5 w-3.5" />
-        {hasCurrentImage ? 'Replace' : 'Upload photo'}
+        {hasCurrentImage ? t('sharedUi.replace') : t('sharedUi.uploadPhoto')}
       </Button>
       {hasCurrentImage && onDelete && (
         <Button
@@ -197,7 +201,7 @@ function AvatarIdleActions({
           ) : (
             <X className="mr-1.5 h-3.5 w-3.5" />
           )}
-          Remove
+          {t('sharedUi.remove')}
         </Button>
       )}
     </>
@@ -220,6 +224,7 @@ function AvatarUploadLayout({
   onDelete,
   onImageError,
 }: UploadLayoutProps) {
+  const { t } = useI18n();
   return (
     <div className="flex items-center gap-4">
       <AvatarFace
@@ -250,7 +255,7 @@ function AvatarUploadLayout({
           )}
         </div>
         <p className="text-xs text-muted-foreground">
-          {formatLabel} up to {maxSizeMB} MB
+          {t('sharedUi.formatSize', { formats: formatLabel, size: maxSizeMB })}
         </p>
       </div>
     </div>
@@ -258,6 +263,7 @@ function AvatarUploadLayout({
 }
 
 function CompactUploadLayout(props: UploadLayoutProps) {
+  const { t } = useI18n();
   const {
     session,
     disabled,
@@ -280,7 +286,7 @@ function CompactUploadLayout(props: UploadLayoutProps) {
           <div className="group relative h-24 w-24 overflow-hidden rounded-lg border bg-muted/50">
             <img
               src={thumbnailSrc}
-              alt={session.kind === 'pending' ? 'Preview' : label || 'Current image'}
+              alt={session.kind === 'pending' ? t('sharedUi.preview') : label || t('sharedUi.currentImage')}
               className="h-full w-full object-contain"
               onError={session.kind === 'current' ? onImageError : undefined}
             />
@@ -291,7 +297,7 @@ function CompactUploadLayout(props: UploadLayoutProps) {
                 disabled={disabled || isProcessing}
                 onClick={onPickFile}
               >
-                <span className="text-xs font-medium text-white">Replace</span>
+                <span className="text-xs font-medium text-white">{t('sharedUi.replace')}</span>
               </button>
             )}
           </div>
@@ -312,7 +318,7 @@ function CompactUploadLayout(props: UploadLayoutProps) {
               disabled={disabled || isProcessing}
               onClick={onDelete}
             >
-              {isDeleting ? 'Removing...' : 'Remove'}
+              {isDeleting ? t('sharedUi.removing') : t('sharedUi.remove')}
             </button>
           ) : null}
         </div>
@@ -337,6 +343,7 @@ function CompactUploadLayout(props: UploadLayoutProps) {
 }
 
 function DefaultUploadLayout(props: UploadLayoutProps) {
+  const { t } = useI18n();
   const {
     session,
     disabled,
@@ -359,7 +366,7 @@ function DefaultUploadLayout(props: UploadLayoutProps) {
           <div className="border rounded-lg p-4 bg-muted/50 flex items-center justify-center min-h-20">
             <img
               src={session.src}
-              alt={label || 'Current image'}
+              alt={label || t('sharedUi.currentImage')}
               className={previewClassName}
               onError={onImageError}
             />
@@ -373,7 +380,7 @@ function DefaultUploadLayout(props: UploadLayoutProps) {
               onClick={onPickFile}
             >
               <Upload className="mr-2 h-4 w-4" />
-              Replace
+              {t('sharedUi.replace')}
             </Button>
             {onDelete && (
               <Button
@@ -388,7 +395,7 @@ function DefaultUploadLayout(props: UploadLayoutProps) {
                 ) : (
                   <X className="mr-2 h-4 w-4" />
                 )}
-                Remove
+                {t('sharedUi.remove')}
               </Button>
             )}
           </div>
@@ -399,11 +406,11 @@ function DefaultUploadLayout(props: UploadLayoutProps) {
         <div className="space-y-2">
           {session.src ? (
             <div className="border rounded-lg p-4 bg-muted/50 flex items-center justify-center min-h-20">
-              <img src={session.src} alt="Preview" className={previewClassName} />
+              <img src={session.src} alt={t('sharedUi.preview')} className={previewClassName} />
             </div>
           ) : (
             <div className="border rounded-lg p-4 bg-muted/50 flex items-center justify-center min-h-20 text-sm text-muted-foreground">
-              Preparing preview…
+              {t('sharedUi.preparingPreview')}
             </div>
           )}
           <p className="truncate text-xs text-muted-foreground">{session.file.name}</p>
@@ -419,7 +426,7 @@ function DefaultUploadLayout(props: UploadLayoutProps) {
               ) : (
                 <Upload className="mr-2 h-4 w-4" />
               )}
-              {isUploading ? 'Uploading...' : 'Upload'}
+              {isUploading ? t('sharedUi.uploading') : t('sharedUi.upload')}
             </Button>
             <Button
               type="button"
@@ -428,7 +435,7 @@ function DefaultUploadLayout(props: UploadLayoutProps) {
               disabled={isProcessing}
               onClick={onCancelPreview}
             >
-              Cancel
+              {t('sharedUi.cancel')}
             </Button>
           </div>
         </div>

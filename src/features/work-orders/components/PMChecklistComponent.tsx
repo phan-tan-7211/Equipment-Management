@@ -31,6 +31,7 @@ import {
 import { isNegativePMCondition, PM_CONDITION_NOT_APPLICABLE } from '@/utils/pmChecklistHelpers';
 import { preventiveMaintenance } from '@/lib/queryKeys';
 import { useAuth } from '@/hooks/useAuth';
+import { useI18n } from '@/i18n';
 
 const TERMINAL_WORK_ORDER_STATUSES = new Set(['completed', 'cancelled']);
 
@@ -41,14 +42,15 @@ const TERMINAL_WORK_ORDER_STATUSES = new Set(['completed', 'cancelled']);
 function getChecklistTitle(
   templateName: string | null | undefined,
   templateId: string | null | undefined,
+  t: (key: string, params?: Record<string, string | number>) => string,
 ): string {
   if (templateName) {
-    return `${templateName} - Preventative Maintenance Checklist`;
+    return t('workOrderResidual.namedChecklistTitle', { name: templateName });
   }
   if (templateId) {
-    return 'Preventative Maintenance Checklist';
+    return t('workOrderResidual.checklistTitle');
   }
-  return 'Forklift Preventative Maintenance Checklist';
+  return t('workOrderResidual.forkliftChecklistTitle');
 }
 
 type PMChecklistStatusHeaderProps = {
@@ -107,6 +109,7 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
   equipment,
   organization,
 }) => {
+  const { t } = useI18n();
   const { formatDateTime } = useFormatTimestamp();
 
   const isMobile = useIsMobile();
@@ -272,21 +275,21 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
         setChecklist([...defaultForkliftChecklist]);
         setHasUnsavedChanges(false);
       } else if (updatedPM) {
-        toast.success('Checklist initialized successfully');
+        toast.success(t('workOrderResidual.initialized'));
         setChecklist([...defaultForkliftChecklist]);
         setHasUnsavedChanges(false);
         clearStorage();
         // Don't call onUpdate() - the mutation hook already handles cache updates
       } else {
-        toast.error('Failed to initialize checklist');
+        toast.error(t('workOrderResidual.initializeFailed'));
       }
     } catch (error) {
       logger.error('Error initializing checklist', error);
-      toast.error('Failed to initialize checklist');
+      toast.error(t('workOrderResidual.initializeFailed'));
     } finally {
       setIsUpdating(false);
     }
-  }, [pm.id, notes, pm.status, pm.updated_at, clearStorage, updatePMMutation]);
+  }, [pm.id, notes, pm.status, pm.updated_at, clearStorage, updatePMMutation, t]);
 
   const handleChecklistItemChange = useCallback((itemId: string, condition: PMChecklistCondition) => {
     setChecklist(prev => prev.map(item => 
@@ -359,7 +362,7 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
         setLastSaved(new Date());
         setHasUnsavedChanges(false);
       } else if (updatedPM) {
-        toast.success('PM checklist updated successfully');
+        toast.success(t('workOrderResidual.updated'));
         setSaveStatus('saved');
         setLastSaved(new Date());
         setHasUnsavedChanges(false);
@@ -368,16 +371,16 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
         onUpdate();
       } else {
         setSaveStatus('error');
-        toast.error('Failed to update PM checklist');
+        toast.error(t('workOrderResidual.updateFailed'));
       }
     } catch (error) {
       logger.error('Error updating PM', error);
       setSaveStatus('error');
-      toast.error('Failed to update PM checklist');
+      toast.error(t('workOrderResidual.updateFailed'));
     } finally {
       setIsUpdating(false);
     }
-  }, [pm.id, pm.status, pm.updated_at, cancelAutoSave, clearStorage, updatePMMutation, onUpdate]);
+  }, [pm.id, pm.status, pm.updated_at, cancelAutoSave, clearStorage, updatePMMutation, onUpdate, t]);
 
   const completePM = async () => {
     const requiredItems = checklist.filter(item => item.required);
@@ -385,12 +388,12 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
     const unsafeItems = checklist.filter(item => item.condition === 5);
 
     if (unratedRequiredItems.length > 0) {
-      toast.error(`Please rate all required items before completing: ${unratedRequiredItems.map(item => item.title).join(', ')}`);
+      toast.error(t('workOrderResidual.rateRequired', { items: unratedRequiredItems.map(item => item.title).join(', ') }));
       return;
     }
 
     if (unsafeItems.length > 0) {
-      toast.error(`Address unsafe conditions before completing: ${unsafeItems.map(item => item.title).join(', ')}`);
+      toast.error(t('workOrderResidual.addressUnsafe', { items: unsafeItems.map(item => item.title).join(', ') }));
       return;
     }
 
@@ -433,14 +436,14 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
         setIsManuallyUpdated(false);
         onUpdate();
       } else if (updatedPM) {
-        toast.success('PM completed successfully');
+        toast.success(t('workOrderResidual.pmCompleted'));
         // Don't call onUpdate() - the mutation hook already handles cache updates
       } else {
-        toast.error('Failed to complete PM');
+        toast.error(t('workOrderResidual.completeFailed'));
       }
     } catch (error) {
       logger.error('Error completing PM', error);
-      toast.error('Failed to complete PM');
+      toast.error(t('workOrderResidual.completeFailed'));
     } finally {
       setIsUpdating(false);
     }
@@ -470,20 +473,20 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
       if (result.success) {
         if (result.work_order_reopened) {
           toast.success(
-            `PM reverted to ${result.new_status} and work order reopened to ${result.work_order_new_status ?? 'accepted'}`,
+            t('workOrderResidual.revertedReopened', { status: t(`workOrderOperations.pm${result.new_status === 'in_progress' ? 'InProgress' : result.new_status === 'completed' ? 'Completed' : 'Pending'}`), workOrderStatus: t(`workOrders.list.${result.work_order_new_status ?? 'accepted'}`) }),
           );
         } else {
-          toast.success(`PM status reverted from ${result.old_status} to ${result.new_status}`);
+          toast.success(t('workOrderResidual.revertedStatus', { oldStatus: result.old_status, newStatus: result.new_status }));
         }
         onUpdate();
       } else {
         // PM may already be pending when WO reopen fails — still refresh caches above.
-        toast.error(result.error || 'Failed to revert PM completion');
+        toast.error(result.error || t('workOrderResidual.revertFailed'));
         onUpdate();
       }
     } catch (error) {
       logger.error('Error reverting PM completion', error);
-      toast.error('Failed to revert PM completion');
+      toast.error(t('workOrderResidual.revertFailed'));
     } finally {
       setIsReverting(false);
     }
@@ -511,7 +514,7 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
       // Update query cache immediately with optimistic data
       // Require organization ID to be present; throw error if missing
       if (!organization?.id) {
-        toast.error('Organization ID is required for updating PM checklist, but is missing.');
+        toast.error(t('workOrderResidual.organizationMissing'));
         setChecklist(checklist); // Rollback optimistic update
         setIsManuallyUpdated(false);
         setIsSettingAllOK(false);
@@ -548,7 +551,7 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
         // Clear backup since we've saved successfully
         localStorage.removeItem(storageKey);
 
-        toast.success('All items set to OK and PM saved successfully');
+        toast.success(t('workOrderResidual.setAllSaved'));
         setShowSetAllOKDialog(false);
 
         // Don't call onUpdate() - the mutation hook already handles cache updates
@@ -563,14 +566,14 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
       }
   } catch (error) {
     logger.error('Error setting all items to OK and saving', error);
-      toast.error('Failed to set all items to OK and save PM');
+      toast.error(t('workOrderResidual.setAllFailed'));
       // Rollback optimistic update
       setChecklist(checklist);
       setIsManuallyUpdated(false);
     } finally {
       setIsSettingAllOK(false);
     }
-  }, [checklist, notes, pm, updatePMMutation, storageKey, queryClient, workOrder, equipment, organization?.id]);
+  }, [checklist, notes, pm, updatePMMutation, storageKey, queryClient, workOrder, equipment, organization?.id, t]);
 
   const getStatusIcon = () => {
     switch (pm.status) {
@@ -598,8 +601,8 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
     }
   };
 
-  const checklistTitle = getChecklistTitle(templateName, pm.template_id);
-  const statusLabel = pm.status.replace('_', ' ').toUpperCase();
+  const checklistTitle = getChecklistTitle(templateName, pm.template_id, t);
+  const statusLabel = t(`workOrderOperations.pm${pm.status === 'in_progress' ? 'InProgress' : pm.status === 'completed' ? 'Completed' : pm.status === 'cancelled' ? 'Cancelled' : 'Pending'}`);
 
   // getConditionColor, getConditionText, and isItemComplete are hoisted to module scope
 
@@ -764,7 +767,7 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              PM checklist is empty. Initialize it with the default forklift maintenance checklist.
+              {t('workOrderResidual.emptyChecklist')}
             </AlertDescription>
           </Alert>
           {!readOnly && (
@@ -774,7 +777,7 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
               className="w-full"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
-              {isUpdating ? 'Initializing...' : 'Initialize Default Checklist'}
+              {isUpdating ? t('workOrderResidual.initializing') : t('workOrderResidual.initializeChecklist')}
             </Button>
           )}
         </CardContent>
@@ -799,7 +802,7 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
               <div className="flex items-center gap-2">
                 <Badge className={getStatusColor()}>{statusLabel}</Badge>
                 {hasUnsavedChanges && (
-                  <Badge variant="outline" className="text-xs">Unsaved changes</Badge>
+                  <Badge variant="outline" className="text-xs">{t('workOrderResidual.unsavedChanges')}</Badge>
                 )}
                 {!readOnly && (
                   <SaveStatus 
@@ -809,7 +812,7 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
                 )}
               </div>
               <span className="text-sm text-muted-foreground">
-                Progress: {completedItems.length}/{totalItems} items completed
+                {t('workOrderResidual.progress', { completed: completedItems.length, total: totalItems })}
               </span>
             </div>
           </div>
@@ -824,10 +827,10 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
               badgeRowExtras={
                 <>
                   {hasUnsavedChanges && (
-                    <Badge variant="outline" className="text-xs">Unsaved changes</Badge>
+                    <Badge variant="outline" className="text-xs">{t('workOrderResidual.unsavedChanges')}</Badge>
                   )}
                   <span className="text-sm text-muted-foreground">
-                    Progress: {completedItems.length}/{totalItems} items completed
+                    {t('workOrderResidual.progress', { completed: completedItems.length, total: totalItems })}
                   </span>
                   {!readOnly && (
                     <SaveStatus
@@ -895,4 +898,3 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
 };
 
 export default PMChecklistComponent;
-

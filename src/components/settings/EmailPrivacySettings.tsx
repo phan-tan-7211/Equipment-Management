@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -15,6 +16,7 @@ export const EmailPrivacySettings: React.FC<EmailPrivacySettingsProps> = ({
   currentEmailPrivate = false,
   onUpdate
 }) => {
+  const { t } = useI18n();
   const { user } = useAuth();
   const [emailPrivate, setEmailPrivate] = useState(currentEmailPrivate);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,12 +38,12 @@ export const EmailPrivacySettings: React.FC<EmailPrivacySettingsProps> = ({
 
       toast.success(
         newEmailPrivate
-          ? 'Email address is now private from organization members'
-          : 'Email address is now visible to organization members'
+          ? t('settingsForms.emailPrivateSuccess')
+          : t('settingsForms.emailVisibleSuccess')
       );
     } catch (error) {
       console.error('Failed to update email privacy:', error);
-      toast.error('Failed to update email privacy settings');
+      toast.error(t('settingsForms.emailPrivacyFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -51,8 +53,8 @@ export const EmailPrivacySettings: React.FC<EmailPrivacySettingsProps> = ({
     <div className="space-y-3">
       <SettingsToggleRow
         id="email-private"
-        label="Hide email from organization members"
-        description="Organization owners and admins can still see your email"
+        label={t('settingsForms.hideEmail')}
+        description={t('settingsForms.hideEmailHint')}
         checked={emailPrivate}
         onCheckedChange={handleUpdatePrivacy}
         loading={isLoading}
@@ -62,16 +64,16 @@ export const EmailPrivacySettings: React.FC<EmailPrivacySettingsProps> = ({
       <Collapsible>
         <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
           <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
-          Visibility settings
+          {t('settingsForms.visibilitySettings')}
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="mt-2 pl-6 border-l-2 border-muted text-xs text-muted-foreground space-y-1">
-            <p>You can always see your own email</p>
-            <p>Organization owners/admins can always see your email</p>
+            <p>{t('settingsForms.ownEmailVisible')}</p>
+            <p>{t('settingsForms.adminsSeeEmail')}</p>
             <p>
               {emailPrivate
-                ? 'Regular organization members cannot see your email'
-                : 'Organization members can see your email'}
+                ? t('settingsForms.membersCannotSeeEmail')
+                : t('settingsForms.membersSeeEmail')}
             </p>
           </div>
         </CollapsibleContent>

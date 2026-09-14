@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CardDescription } from '@/components/ui/card';
@@ -14,12 +15,13 @@ export function AlternateGroupListCardContent({
   notes,
   memberSummaries,
 }: AlternateGroupListCardContentProps) {
+  const { t } = useI18n();
   const hasMembers = (memberSummaries?.length ?? 0) > 0;
 
   if (hasMembers && memberSummaries) {
     return (
       <ScrollArea className="h-18">
-        <ul className="space-y-1 pr-2" aria-label="Parts in group">
+        <ul className="space-y-1 pr-2" aria-label={t('alternateGroups.partsInGroup')}>
           {memberSummaries.map((member) => (
             <li
               key={member.id}
@@ -47,7 +49,7 @@ export function AlternateGroupListCardContent({
         <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{notes}</p>
       ) : null}
       {!description && !notes ? (
-        <p className="text-sm text-muted-foreground italic">No description</p>
+        <p className="text-sm text-muted-foreground italic">{t('alternateGroups.noDescription')}</p>
       ) : null}
     </>
   );

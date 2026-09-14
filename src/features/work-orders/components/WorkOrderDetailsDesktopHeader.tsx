@@ -1,10 +1,12 @@
+import { useI18n } from '@/i18n';
+import { localizeWorkOrderStatus, localizeWorkOrderPriority } from '@/features/work-orders/utils/workOrderI18nLabels';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { WorkOrderDeleteConfirmDialog } from '@/features/work-orders/components/WorkOrderDeleteConfirmDialog';
 import { Info, Download, MoreHorizontal, Trash2 } from 'lucide-react';
-import { getStatusColor, formatStatus } from '@/features/work-orders/utils/workOrderHelpers';
+import { getStatusColor } from '@/features/work-orders/utils/workOrderHelpers';
 import { WorkOrderData, PermissionLevels, EquipmentData, PMData } from '@/features/work-orders/types/workOrderDetails';
 import {
   Tooltip,
@@ -51,10 +53,6 @@ interface WorkOrderDetailsDesktopHeaderProps {
   organizationId?: string;
 }
 
-const formatPriority = (priority: string) => {
-  return priority.charAt(0).toUpperCase() + priority.slice(1);
-};
-
 export const WorkOrderDetailsDesktopHeader: React.FC<WorkOrderDetailsDesktopHeaderProps> = ({
   workOrder,
   formMode,
@@ -65,6 +63,7 @@ export const WorkOrderDetailsDesktopHeader: React.FC<WorkOrderDetailsDesktopHead
   organizationName,
   organizationId
 }) => {
+  const { t } = useI18n();
   const [showPDFDialog, setShowPDFDialog] = useState(false);
   const [pdfDialogFocusDrive, setPdfDialogFocusDrive] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -152,7 +151,7 @@ export const WorkOrderDetailsDesktopHeader: React.FC<WorkOrderDetailsDesktopHead
   const { exportAudience = 'none' } = permissionLevels;
   const canExport = exportAudience !== 'none';
   const showActionsMenu = canExport || showQuickBooks || canDelete;
-  const actionsMenuLabel = canExport ? 'Export' : 'Actions';
+  const actionsMenuLabel = canExport ? t('workOrderDetail.export') : t('workOrderDetail.actions');
   const showGoogleDrive = isGoogleWorkspaceConnected && Boolean(googleDocsDestination);
   const showDeleteSeparator = canDelete && (canExport || showQuickBooks);
   const isExportBusy =
@@ -171,16 +170,16 @@ export const WorkOrderDetailsDesktopHeader: React.FC<WorkOrderDetailsDesktopHead
           density="compact"
           title={workOrder.title}
           breadcrumbs={[
-            { label: 'Work Orders', href: '/dashboard/work-orders' },
+            { label: t('workOrderDetail.workOrders'), href: '/dashboard/work-orders' },
             { label: `WO-${truncatedId}` },
           ]}
           meta={
             <>
               <Badge className={getStatusColor(workOrder.status)}>
-                {formatStatus(workOrder.status)}
+                {localizeWorkOrderStatus(workOrder.status, t)}
               </Badge>
               <span className="text-sm text-muted-foreground capitalize">
-                {formatPriority(workOrder.priority)} Priority
+                {t('workOrderDetail.priorityLabel', { priority: localizeWorkOrderPriority(workOrder.priority, t) })}
               </span>
               <QuickBooksInvoiceStatusBadge
                 status={workOrder.invoice_status}
@@ -194,7 +193,7 @@ export const WorkOrderDetailsDesktopHeader: React.FC<WorkOrderDetailsDesktopHead
                     <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>You have limited access to this work order</p>
+                    <p>{t('workOrderDetail.limitedAccess')}</p>
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -209,12 +208,12 @@ export const WorkOrderDetailsDesktopHeader: React.FC<WorkOrderDetailsDesktopHead
                       {canExport ? (
                         <>
                           <Download className="h-4 w-4 mr-2" />
-                          Export
+                          {t('workOrderDetail.export')}
                         </>
                       ) : (
                         <>
                           <MoreHorizontal className="h-4 w-4 mr-2" />
-                          Actions
+                          {t('workOrderDetail.actions')}
                         </>
                       )}
                     </Button>
@@ -254,7 +253,7 @@ export const WorkOrderDetailsDesktopHeader: React.FC<WorkOrderDetailsDesktopHead
                           onClick={() => setShowDeleteDialog(true)}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          Delete work order
+                          {t('workOrderDetail.deleteWorkOrder')}
                         </DropdownMenuItem>
                       </>
                     ) : null}

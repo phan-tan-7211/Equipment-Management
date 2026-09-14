@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,12 +8,13 @@ import { ORGANIZATION_AUDIT_LOG_PATH } from '@/features/organization/constants/r
 import CustomerContactActions from '@/features/teams/components/CustomerContactActions';
 
 export function WorkOrderPMChecklistLoadingCard() {
+  const { t } = useI18n();
   return (
-    <Card className="shadow-elevation-2" role="status" aria-label="Loading PM checklist">
+    <Card className="shadow-elevation-2" role="status" aria-label={t('workOrderDetail.loadingPmChecklist')}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clipboard className="h-5 w-5" />
-          Loading PM Checklist...
+          {t('workOrderDetail.loadingPmChecklist')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -35,6 +37,7 @@ export function WorkOrderCustomerContactsCard({
   customerId,
   canView,
 }: WorkOrderCustomerContactsCardProps) {
+  const { t } = useI18n();
   if (!canView || !customerId) {
     return null;
   }
@@ -44,13 +47,13 @@ export function WorkOrderCustomerContactsCard({
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
           <Users className="h-4 w-4" />
-          Customer Contacts
+          {t('workOrderDetail.customerContacts')}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <CustomerContactActions
           customerId={customerId}
-          emptyLabel="No QuickBooks contacts synced yet."
+          emptyLabel={t('workOrderDetail.noQuickBooksContacts')}
         />
       </CardContent>
     </Card>
@@ -62,11 +65,12 @@ export function WorkOrderCustomerContactsCard({
  * link into the dedicated audit log explorer, pre-filtered to this work order.
  */
 export function WorkOrderAuditLogLink({ workOrderId }: WorkOrderAuditLogLinkProps) {
+  const { t } = useI18n();
   return (
     <Button variant="link" size="sm" asChild className="h-auto px-0 text-xs text-muted-foreground">
       <Link to={`${ORGANIZATION_AUDIT_LOG_PATH}?entityType=work_order&entityId=${workOrderId}`}>
         <History className="mr-1 h-3.5 w-3.5" />
-        View field change history in the Audit Log
+        {t('workOrderDetail.viewAuditHistory')}
       </Link>
     </Button>
   );

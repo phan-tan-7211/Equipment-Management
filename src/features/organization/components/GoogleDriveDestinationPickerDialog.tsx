@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ChevronRight, FolderOpen, HardDrive, Plus, Trash2 } from 'lucide-react';
 import { useAppToast } from '@/hooks/useAppToast';
+import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import {
   createGoogleDriveDestinationFolder,
@@ -53,9 +54,10 @@ function GoogleDriveDestinationPickerRow({
   onSelect,
   onOpen,
 }: GoogleDriveDestinationPickerRowProps) {
+  const { t } = useI18n();
   const canDelete = item.kind === 'folder' && !isProtected;
   const kindLabel =
-    item.kind === 'shared_drive' ? 'Shared Drive' : isProtected ? 'Org folder' : 'Folder';
+    item.kind === 'shared_drive' ? t('organizationIntegrations.sharedDrive') : isProtected ? t('organizationIntegrations.orgFolder') : t('organizationIntegrations.folder');
 
   return (
     <div className="flex flex-col gap-2.5 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
@@ -70,10 +72,10 @@ function GoogleDriveDestinationPickerRow({
           {isProtected ? (
             <Badge
               variant="outline"
-              title="Current organization folder"
+              title={t('organizationIntegrations.currentOrgFolder')}
               className="mt-1.5 h-5 px-1.5 text-[10px] font-normal bg-primary/5"
             >
-              Org folder
+              {t('organizationIntegrations.orgFolder')}
             </Badge>
           ) : (
             <p className="mt-0.5 text-xs text-muted-foreground">{kindLabel}</p>
@@ -98,7 +100,7 @@ function GoogleDriveDestinationPickerRow({
             className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
             disabled={isBusy}
             onClick={() => onDelete(item)}
-            aria-label={`Delete ${item.name}`}
+            aria-label={t('organizationIntegrations.deleteNamedFolder', { name: item.name })}
           >
             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
           </Button>
@@ -112,7 +114,7 @@ function GoogleDriveDestinationPickerRow({
             disabled={isBusy}
             onClick={() => onSelect(item)}
           >
-            Select
+            {t('organizationIntegrations.select')}
           </Button>
         )}
         <Button
@@ -125,9 +127,9 @@ function GoogleDriveDestinationPickerRow({
           )}
           disabled={isBusy}
           onClick={() => onOpen(item)}
-          aria-label={`Open ${item.name}`}
+          aria-label={t('organizationIntegrations.openNamed', { name: item.name })}
         >
-          Open
+          {t('organizationIntegrations.open')}
           <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
@@ -162,6 +164,7 @@ export function GoogleDriveDestinationPickerDialog({
   onSelect,
   isSaving = false,
 }: GoogleDriveDestinationPickerDialogProps) {
+  const { t } = useI18n();
   const { toast } = useAppToast();
   const queryClient = useQueryClient();
   const [stack, setStack] = useState<BrowseFrame[]>([
@@ -217,15 +220,15 @@ export function GoogleDriveDestinationPickerDialog({
       setNewFolderName('');
       await invalidateBrowse();
       toast({
-        title: 'Folder created',
-        description: `"${folder.name}" is ready to use.`,
+        title: t('organizationIntegrations.created'),
+        description: t('organizationIntegrations.createdDescription', { name: folder.name }),
       });
     },
     onError: (error: Error & { code?: string }) => {
       toast(
         getGoogleWorkspaceDestinationSaveErrorToast(
           error,
-          'Could not create the folder in Google Drive.',
+          t('organizationIntegrations.createFailed'),
         ),
       );
     },
@@ -244,10 +247,10 @@ export function GoogleDriveDestinationPickerDialog({
       setPendingDeleteChildCount(0);
       await invalidateBrowse();
       toast({
-        title: 'Folder deleted',
+        title: t('organizationIntegrations.deleted'),
         description: variables.confirmDataLoss
-          ? 'The folder and its contents were permanently deleted from Google Drive.'
-          : 'The empty folder was deleted from Google Drive.',
+          ? t('organizationIntegrations.deletedContents')
+          : t('organizationIntegrations.deletedEmpty'),
       });
     },
     onError: (error: unknown) => {
@@ -260,7 +263,7 @@ export function GoogleDriveDestinationPickerDialog({
       toast(
         getGoogleWorkspaceDestinationSaveErrorToast(
           error as Error & { code?: string },
-          'Could not delete the folder from Google Drive.',
+          t('organizationIntegrations.deleteFailed'),
         ),
       );
     },
@@ -285,8 +288,8 @@ export function GoogleDriveDestinationPickerDialog({
   );
 
   const breadcrumb = useMemo(
-    () => stack.map((frame) => frame.label).join(' / '),
-    [stack],
+    () => stack.map((frame, index) => index === 0 ? t('organizationIntegrations.allLocations') : frame.label).join(' / '),
+    [stack, t],
   );
 
   const handleNavigateInto = useCallback((item: GoogleDriveDestinationBrowseItem) => {
@@ -315,12 +318,12 @@ export function GoogleDriveDestinationPickerDialog({
         toast(
           getGoogleWorkspaceDestinationSaveErrorToast(
             error as Error & { code?: string },
-            'Could not save the selected organization folder.',
+            t('organizationIntegrations.selectedFolderFailed'),
           ),
         );
       }
     },
-    [handleOpenChange, onSelect, toast],
+    [handleOpenChange, onSelect, toast, t],
   );
 
   const handleBack = useCallback(() => {
@@ -343,9 +346,9 @@ export function GoogleDriveDestinationPickerDialog({
 
       if (protectedFolderId && item.id === protectedFolderId) {
         toast({
-          title: 'Cannot delete organization folder',
+          title: t('organizationIntegrations.cannotDeleteOrg'),
           description:
-            'This folder is currently saved as your organization export destination. Choose a different folder first.',
+            t('organizationIntegrations.cannotDeleteOrgDescription'),
           variant: 'error',
         });
         return;
@@ -354,7 +357,7 @@ export function GoogleDriveDestinationPickerDialog({
       setPendingDelete(item);
       deleteFolderMutation.mutate({ folderId: item.id, confirmDataLoss: false });
     },
-    [deleteFolderMutation, protectedFolderId, toast],
+    [deleteFolderMutation, protectedFolderId, toast, t],
   );
 
   const handleConfirmDelete = useCallback(() => {
@@ -368,6 +371,11 @@ export function GoogleDriveDestinationPickerDialog({
     });
   }, [deleteFolderMutation, pendingDelete]);
 
+  const displayCreateLocation = currentFrame.parentId === null
+    ? t('organizationIntegrations.myDriveRoot')
+    : currentFrame.parentId === 'root' && currentFrame.driveId
+      ? t('organizationIntegrations.driveRoot', { name: currentFrame.label })
+      : createTarget.locationLabel;
   const items = browseQuery.data?.items ?? [];
   const isBusy =
     isSaving ||
@@ -380,19 +388,14 @@ export function GoogleDriveDestinationPickerDialog({
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent size="md" className="max-h-[85vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Choose organization folder</DialogTitle>
+            <DialogTitle>{t('organizationIntegrations.chooseFolder')}</DialogTitle>
             <DialogDescription>
-              Browse folders in the connected Google Workspace for{' '}
-              <span className="font-medium">{organizationName}</span>
-              {workspaceDomain ? (
-                <>
-                  {' '}
-                  ({workspaceDomain}
-                  {connectedEmail ? `, authorized by ${connectedEmail}` : ''})
-                </>
-              ) : null}
-              . Create folders here or select an existing one — no need to switch to the Google Drive
-              app.
+              {t('organizationIntegrations.pickerDescription', {
+                name: organizationName,
+                domain: workspaceDomain ? t('organizationIntegrations.pickerDomain', {
+                  domain: workspaceDomain, authorized: connectedEmail ? t('organizationIntegrations.authorizedEmail', { email: connectedEmail }) : '',
+                }) : '',
+              })}
             </DialogDescription>
           </DialogHeader>
 
@@ -406,7 +409,7 @@ export function GoogleDriveDestinationPickerDialog({
                 onClick={handleBack}
                 disabled={stack.length <= 1 || isBusy}
               >
-                Back
+                {t('organizationIntegrations.back')}
               </Button>
             </div>
 
@@ -415,9 +418,9 @@ export function GoogleDriveDestinationPickerDialog({
                 <Input
                   value={newFolderName}
                   onChange={(event) => setNewFolderName(event.target.value)}
-                  placeholder="New folder name"
+                  placeholder={t('organizationIntegrations.newFolder')}
                   disabled={isBusy}
-                  aria-label="New folder name"
+                  aria-label={t('organizationIntegrations.newFolder')}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter') {
                       event.preventDefault();
@@ -437,19 +440,18 @@ export function GoogleDriveDestinationPickerDialog({
                   ) : (
                     <Plus className="h-4 w-4 mr-2" />
                   )}
-                  Create folder
+                  {t('organizationIntegrations.createFolder')}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Creates a folder in {createTarget.locationLabel}. Open a Shared Drive first to
-                create at that drive&apos;s root instead of My Drive.
+                {t('organizationIntegrations.createLocation', { location: displayCreateLocation })}
               </p>
             </div>
 
             {browseQuery.isLoading && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Loading folders...
+                {t('organizationIntegrations.loadingFolders')}
               </div>
             )}
 
@@ -458,7 +460,7 @@ export function GoogleDriveDestinationPickerDialog({
                 <AlertDescription>
                   {browseQuery.error instanceof Error
                     ? browseQuery.error.message
-                    : 'Failed to load Google Drive folders.'}
+                    : t('organizationIntegrations.loadingFoldersFailed')}
                 </AlertDescription>
               </Alert>
             )}
@@ -467,7 +469,7 @@ export function GoogleDriveDestinationPickerDialog({
               <div className="overflow-y-auto rounded-md border divide-y min-h-0">
                 {items.length === 0 ? (
                   <p className="p-4 text-sm text-muted-foreground">
-                    No folders here yet. Use Create folder above to add one in {createTarget.locationLabel}.
+                    {t('organizationIntegrations.noFolders', { location: displayCreateLocation })}
                   </p>
                 ) : (
                   items.map((item) => (
@@ -496,7 +498,7 @@ export function GoogleDriveDestinationPickerDialog({
               onClick={() => handleOpenChange(false)}
               disabled={isSaving || deleteFolderMutation.isPending}
             >
-              Cancel
+              {t('organizationIntegrations.cancel')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -511,7 +513,7 @@ export function GoogleDriveDestinationPickerDialog({
             setPendingDeleteChildCount(0);
           }
         }}
-        folderName={pendingDelete?.name ?? 'Folder'}
+        folderName={pendingDelete?.name ?? t('organizationIntegrations.folder')}
         childCount={pendingDeleteChildCount}
         isDeleting={deleteFolderMutation.isPending}
         onConfirm={handleConfirmDelete}

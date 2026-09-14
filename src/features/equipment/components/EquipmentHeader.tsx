@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, Upload } from 'lucide-react';
+import { useI18n } from '@/i18n';
 
 interface EquipmentHeaderProps {
   organizationName: string;
@@ -17,12 +18,14 @@ const EquipmentHeader: React.FC<EquipmentHeaderProps> = ({
   onAddEquipment,
   onImportCsv
 }) => {
+  const { t } = useI18n();
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" data-testid="equipment-header">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Equipment</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('equipment.title')}</h1>
         <p className="text-muted-foreground">
-          Manage equipment for {organizationName}
+          {t('equipment.manageFor', { name: organizationName })}
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-2" data-testid="button-container">
@@ -33,7 +36,7 @@ const EquipmentHeader: React.FC<EquipmentHeaderProps> = ({
             className="flex items-center gap-2 w-full sm:w-auto"
           >
             <Upload className="h-4 w-4" />
-            Import CSV
+            {t('equipmentImport.title')}
           </Button>
         )}
         {canCreate && (
@@ -42,7 +45,7 @@ const EquipmentHeader: React.FC<EquipmentHeaderProps> = ({
             className="flex items-center gap-2 w-full sm:w-auto"
           >
             <Plus className="h-4 w-4" />
-            Add Equipment
+            {t('equipment.addEquipment')}
           </Button>
         )}
       </div>

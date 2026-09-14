@@ -17,16 +17,10 @@ import {
 } from '@/features/work-orders/components/WorkOrderFilterSelectFields';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { WorkOrderFilters } from '@/features/work-orders/types/workOrder';
 import type { QuickFilterPreset } from '@/features/work-orders/hooks/useWorkOrderFilters';
-
-const quickFilters: { label: string; value: QuickFilterPreset; tooltip: string }[] = [
-  { label: 'My Work', value: 'my-work', tooltip: 'Filter to work orders assigned to you' },
-  { label: 'Urgent', value: 'urgent', tooltip: 'Filter to high-priority work orders' },
-  { label: 'Overdue', value: 'overdue', tooltip: 'Filter to work orders past their due date' },
-  { label: 'Unassigned', value: 'unassigned', tooltip: 'Filter to unassigned work orders' },
-];
 
 interface WorkOrderFilterPopoverProps {
   filters: WorkOrderFilters;
@@ -47,93 +41,117 @@ const WorkOrderFilterPopover: React.FC<WorkOrderFilterPopoverProps> = ({
   onQuickFilter,
   hideDueDateFilter = false,
 }) => {
+  const { t } = useI18n();
+  const quickFilters: { label: string; value: QuickFilterPreset; tooltip: string }[] = [
+    {
+      label: t('workOrders.list.myWork'),
+      value: 'my-work',
+      tooltip: t('workOrders.list.myWorkTooltip'),
+    },
+    {
+      label: t('workOrders.list.urgent'),
+      value: 'urgent',
+      tooltip: t('workOrders.list.urgentTooltip'),
+    },
+    {
+      label: t('workOrders.list.overdue'),
+      value: 'overdue',
+      tooltip: t('workOrders.list.overdueTooltip'),
+    },
+    {
+      label: t('workOrders.list.unassigned'),
+      value: 'unassigned',
+      tooltip: t('workOrders.list.unassignedTooltip'),
+    },
+  ];
+
   return (
-    <FilterPopoverShell ariaSubject="work orders" activeFilterCount={activeFilterCount}>
+    <FilterPopoverShell
+      ariaSubject={t('workOrders.list.filterAriaSubject')}
+      activeFilterCount={activeFilterCount}
+    >
       {({ close }) => (
         <>
-          {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted-foreground">Status</span>
+            <span className="text-xs text-muted-foreground">{t('workOrders.list.status')}</span>
             <WorkOrderStatusFilterSelect
               value={filters.statusFilter}
-              onValueChange={(v) => onFilterChange('statusFilter', v)}
+              onValueChange={(value) => onFilterChange('statusFilter', value)}
             />
           </div>
 
-          {/* Assignee */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted-foreground">Assignee</span>
+            <span className="text-xs text-muted-foreground">{t('workOrders.list.assignee')}</span>
             <Select
               value={filters.assigneeFilter}
-              onValueChange={(v) => onFilterChange('assigneeFilter', v)}
+              onValueChange={(value) => onFilterChange('assigneeFilter', value)}
             >
               <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder="All assignees" />
+                <SelectValue placeholder={t('workOrders.list.allAssignees')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Assignees</SelectItem>
-                <SelectItem value="mine">My Work Orders</SelectItem>
-                <SelectItem value="unassigned">Unassigned</SelectItem>
+                <SelectItem value="all">{t('workOrders.list.allAssignees')}</SelectItem>
+                <SelectItem value="mine">{t('workOrders.list.myWorkOrders')}</SelectItem>
+                <SelectItem value="unassigned">{t('workOrders.list.unassigned')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Priority */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted-foreground">Priority</span>
+            <span className="text-xs text-muted-foreground">{t('workOrders.list.priority')}</span>
             <WorkOrderPriorityFilterSelect
               value={filters.priorityFilter}
-              onValueChange={(v) => onFilterChange('priorityFilter', v)}
+              onValueChange={(value) => onFilterChange('priorityFilter', value)}
             />
           </div>
 
           {!hideDueDateFilter && (
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs text-muted-foreground">Due Date</span>
+              <span className="text-xs text-muted-foreground">{t('workOrders.list.dueDate')}</span>
               <WorkOrderDueDateFilterSelect
                 value={filters.dueDateFilter}
-                onValueChange={(v) => onFilterChange('dueDateFilter', v)}
+                onValueChange={(value) => onFilterChange('dueDateFilter', value)}
               />
             </div>
           )}
 
-          {/* Invoice */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted-foreground">Invoice</span>
+            <span className="text-xs text-muted-foreground">{t('workOrders.list.invoice')}</span>
             <WorkOrderInvoiceFilterSelect
               value={filters.invoiceFilter}
-              onValueChange={(v) => onFilterChange('invoiceFilter', v)}
+              onValueChange={(value) => onFilterChange('invoiceFilter', value)}
             />
           </div>
 
           <Separator />
 
-          {/* Quick filters */}
           <div className="flex flex-col gap-1.5">
-            <p className="text-xs text-muted-foreground">Quick filters</p>
+            <p className="text-xs text-muted-foreground">{t('workOrders.list.quickFilters')}</p>
             <div className="flex flex-wrap gap-1.5">
-              {quickFilters.filter((preset) => !hideDueDateFilter || preset.value !== 'overdue').map((preset) => {
-                const isActive = activePresets.has(preset.value);
-                return (
-                  <Tooltip key={preset.value}>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => onQuickFilter(preset.value)}
-                        className={cn(
-                          'inline-flex h-6 items-center gap-1 rounded-full border px-2.5 text-[11px] font-medium transition-colors',
-                          isActive
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
-                        )}
-                      >
-                        {isActive && <Check className="h-3 w-3" />}
-                        {preset.label}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>{preset.tooltip}</TooltipContent>
-                  </Tooltip>
-                );
-              })}
+              {quickFilters
+                .filter((preset) => !hideDueDateFilter || preset.value !== 'overdue')
+                .map((preset) => {
+                  const isActive = activePresets.has(preset.value);
+                  return (
+                    <Tooltip key={preset.value}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => onQuickFilter(preset.value)}
+                          className={cn(
+                            'inline-flex h-6 items-center gap-1 rounded-full border px-2.5 text-[11px] font-medium transition-colors',
+                            isActive
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
+                          )}
+                        >
+                          {isActive && <Check className="h-3 w-3" />}
+                          {preset.label}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>{preset.tooltip}</TooltipContent>
+                    </Tooltip>
+                  );
+                })}
             </div>
           </div>
 

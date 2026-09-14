@@ -57,6 +57,29 @@ describe('evaluateSchemaReference (PR diff mode)', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('passes when the only migration diff is an exact-content rename', () => {
+    const oldPath = 'supabase/migrations/20260911030000_example.sql';
+    const newPath = 'supabase/migrations/20260911022811_example.sql';
+    const result = evaluateSchemaReference({
+      referenceExists: true,
+      changedFiles: [oldPath, newPath],
+      pureMigrationRenamePaths: [oldPath, newPath],
+      readMigration: () => 'CREATE TABLE public.example (id uuid PRIMARY KEY);',
+    });
+    expect(result.ok).toBe(true);
+    expect(result.reason).toContain('exact-content migration rename');
+  });
+
+  it('does not let a real migration edit bypass the dump gate', () => {
+    const result = evaluateSchemaReference({
+      referenceExists: true,
+      changedFiles: ['supabase/migrations/20260911022811_example.sql'],
+      pureMigrationRenamePaths: [],
+      readMigration: () => 'ALTER TABLE public.example ADD COLUMN code text;',
+    });
+    expect(result.ok).toBe(false);
+  });
+
   it('fails when a schema-affecting migration changes without a regenerated dump', () => {
     const result = evaluateSchemaReference({
       referenceExists: true,

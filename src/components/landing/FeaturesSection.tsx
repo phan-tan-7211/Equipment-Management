@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n/I18nProvider';
 import { Link } from 'react-router-dom';
 import {
   QrCode,
@@ -19,16 +20,16 @@ import LandingReveal from './LandingReveal';
 
 interface PillarFeature {
   icon: LucideIcon;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   link: string;
 }
 
 interface Pillar {
   id: string;
-  title: string;
-  subtitle: string;
-  description: string;
+  titleKey: string;
+  subtitleKey: string;
+  descriptionKey: string;
   accentClass: string;
   dotClass: string;
   features: PillarFeature[];
@@ -37,105 +38,102 @@ interface Pillar {
 const pillars: Pillar[] = [
   {
     id: 'field',
-    title: 'Field Operations',
-    subtitle: 'Technicians scan, inspect, document, and close work faster',
-    description:
-      'Give your crew everything they need at the machine — scan to pull history, create work orders, complete PM checklists, and capture photos from their phone.',
+    titleKey: 'fieldTitle',
+    subtitleKey: 'fieldSubtitle',
+    descriptionKey: 'fieldDescription',
     accentClass: 'text-primary',
     dotClass: 'bg-primary',
     features: [
       {
         icon: QrCode,
-        title: 'QR Code Integration',
-        description: 'Scan any machine to instantly pull its full service history and start a work order.',
+        titleKey: 'field1Title',
+        descriptionKey: 'field1Description',
         link: '/features/qr-code-integration',
       },
       {
         icon: Smartphone,
-        title: 'Mobile-First Design',
-        description: 'Touch-optimized for phones and tablets. Works offline in the field.',
+        titleKey: 'field2Title',
+        descriptionKey: 'field2Description',
         link: '/features/mobile-first-design',
       },
       {
         icon: ClipboardList,
-        title: 'Work Order Management',
-        description: 'Create, assign, track, and close work orders with clear statuses and due dates.',
+        titleKey: 'field3Title',
+        descriptionKey: 'field3Description',
         link: '/features/work-order-management',
       },
       {
         icon: FileCheck,
-        title: 'PM Templates',
-        description: 'Built-in checklists for forklifts, excavators, scissor lifts, trailers, and more.',
+        titleKey: 'field4Title',
+        descriptionKey: 'field4Description',
         link: '/features/pm-templates',
       },
     ],
   },
   {
     id: 'backoffice',
-    title: 'Back Office',
-    subtitle: 'Owners reduce double entry, billing delays, and parts chaos',
-    description:
-      'Connect your accounting, organize your customers, track your parts, and eliminate manual re-entry between your field work and your books.',
+    titleKey: 'backofficeTitle',
+    subtitleKey: 'backofficeSubtitle',
+    descriptionKey: 'backofficeDescription',
     accentClass: 'text-success',
     dotClass: 'bg-success',
     features: [
       {
         icon: Receipt,
-        title: 'QuickBooks',
-        description: 'Export completed work orders as QuickBooks draft invoices in one click.',
+        titleKey: 'backoffice1Title',
+        descriptionKey: 'backoffice1Description',
         link: '/features/quickbooks',
       },
       {
         icon: UserCircle,
-        title: 'Customer CRM',
-        description: 'Link equipment to customers. Permanent service history per client asset.',
+        titleKey: 'backoffice2Title',
+        descriptionKey: 'backoffice2Description',
         link: '/features/customer-crm',
       },
       {
         icon: Warehouse,
-        title: 'Inventory Management',
-        description: 'Track parts and supplies with stock levels, low-stock alerts, and audit history.',
+        titleKey: 'backoffice3Title',
+        descriptionKey: 'backoffice3Description',
         link: '/features/inventory',
       },
       {
         icon: Search,
-        title: 'Part Lookup & Alternates',
-        description: 'Find parts fast. Discover approved substitutes when preferred stock runs out.',
+        titleKey: 'backoffice4Title',
+        descriptionKey: 'backoffice4Description',
         link: '/features/part-lookup-alternates',
       },
     ],
   },
   {
     id: 'control',
-    title: 'Control & Trust',
-    subtitle: 'Managers govern access, see work, and prove who did what',
-    description:
-      "Role-based access, audit-ready scan logs, Google Workspace single sign-on, and a fleet map to see every machine's last confirmed location.",
+    titleKey: 'controlTitle',
+    subtitleKey: 'controlSubtitle',
+    descriptionKey: 'controlDescription',
     accentClass: 'text-info',
     dotClass: 'bg-info',
     features: [
       {
         icon: Users,
-        title: 'Team Collaboration',
-        description: 'Org and team roles control who sees what. Every action is attributed.',
+        titleKey: 'control1Title',
+        descriptionKey: 'control1Description',
         link: '/features/team-collaboration',
       },
       {
         icon: Building2,
-        title: 'Google Workspace',
-        description: 'Import users from your directory. Sign in with existing Google accounts.',
+        titleKey: 'control2Title',
+        descriptionKey: 'control2Description',
         link: '/features/google-workspace',
       },
       {
         icon: Map,
-        title: 'Fleet Visualization',
-        description: "See every machine's last confirmed location on an interactive map.",
+        titleKey: 'control3Title',
+        descriptionKey: 'control3Description',
         link: '/features/fleet-visualization',
       },
       {
         icon: Shield,
-        title: 'Enterprise Security',
-        description: 'Row-level security enforces tenant isolation. Every scan logged with name and time.',
+        titleKey: 'control4Title',
+        descriptionKey: 'control4Description',
         link: '/security',
       },
     ],
@@ -143,16 +141,16 @@ const pillars: Pillar[] = [
 ];
 
 const FeaturesSection = ({ id }: { id?: string }) => {
+  const { t } = useI18n();
   return (
     <section id={id} className="scroll-mt-20 py-20 bg-background">
       <div className="container px-4 mx-auto">
         <div className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Everything Your Shop Needs, Organized Around How Work Actually Flows
+            {t('landingDetails.features.heading')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            From the QR code on the machine to the invoice in QuickBooks &mdash; one platform your whole team
-            actually uses.
+            {t('landingDetails.features.intro')}
           </p>
         </div>
 
@@ -162,15 +160,15 @@ const FeaturesSection = ({ id }: { id?: string }) => {
               <div className="flex flex-col h-full rounded-2xl border border-border bg-card/60 shadow-sm overflow-hidden">
                 {/* Pillar header */}
                 <div className="px-6 pt-8 pb-6 border-b border-border/60">
-                  <h3 className={`text-xl font-bold mb-1 ${pillar.accentClass}`}>{pillar.title}</h3>
-                  <p className="text-sm font-medium text-foreground mb-3">{pillar.subtitle}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{pillar.description}</p>
+                  <h3 className={`text-xl font-bold mb-1 ${pillar.accentClass}`}>{t(`landingDetails.features.${pillar.titleKey}`)}</h3>
+                  <p className="text-sm font-medium text-foreground mb-3">{t(`landingDetails.features.${pillar.subtitleKey}`)}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{t(`landingDetails.features.${pillar.descriptionKey}`)}</p>
                 </div>
 
                 {/* Feature list */}
                 <ul className="flex flex-col grow px-6 py-5 space-y-4">
                   {pillar.features.map((feature) => (
-                    <li key={feature.title} className="list-none">
+                    <li key={feature.link} className="list-none">
                       <Link
                         to={feature.link}
                         className="group flex items-start gap-3 rounded-xl p-3 -mx-3 hover:bg-muted/60 transition-colors"
@@ -181,12 +179,12 @@ const FeaturesSection = ({ id }: { id?: string }) => {
                         <span className="min-w-0">
                           <span className="flex items-center gap-1.5">
                             <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                              {feature.title}
+                              {t(`landingDetails.features.${feature.titleKey}`)}
                             </span>
                             <ArrowRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden />
                           </span>
                           <span className="mt-0.5 block text-xs text-muted-foreground leading-relaxed">
-                            {feature.description}
+                            {t(`landingDetails.features.${feature.descriptionKey}`)}
                           </span>
                         </span>
                       </Link>

@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Page from '@/components/layout/Page';
@@ -14,6 +15,7 @@ import {
 } from '@/features/organization/components/ChecklistTemplateEditor';
 
 const PMTemplateEditor: React.FC = () => {
+  const { t } = useI18n();
   const { templateId } = useParams<{ templateId: string }>();
   const navigate = useNavigate();
   const isNew = !templateId;
@@ -50,7 +52,7 @@ const PMTemplateEditor: React.FC = () => {
   if (!currentOrganization) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <p className="text-muted-foreground">Please select an organization to manage PM templates.</p>
+        <p className="text-muted-foreground">{t('pmTemplates.list.selectOrganization')}</p>
       </Page>
     );
   }
@@ -59,7 +61,7 @@ const PMTemplateEditor: React.FC = () => {
     return (
       <Page maxWidth="7xl" padding="responsive">
         <p className="text-muted-foreground">
-          You need administrator permissions and user licenses to edit PM templates.
+          {t('pmTemplates.editor.adminLicenseRequired')}
         </p>
       </Page>
     );
@@ -70,7 +72,7 @@ const PMTemplateEditor: React.FC = () => {
       <Page maxWidth="7xl" padding="responsive">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Loading template...
+          {t('pmTemplates.editor.loading')}
         </div>
       </Page>
     );
@@ -79,15 +81,15 @@ const PMTemplateEditor: React.FC = () => {
   if (!isNew && !template) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <p className="text-muted-foreground">Template not found.</p>
+        <p className="text-muted-foreground">{t('pmTemplates.view.notFound')}</p>
         <Button variant="outline" className="mt-4" onClick={() => navigate('/dashboard/pm-templates')}>
-          Back to Templates
+          {t('pmTemplates.view.back')}
         </Button>
       </Page>
     );
   }
 
-  const pageTitle = isNew ? 'Create PM Template' : `Edit ${template?.name ?? 'Template'}`;
+  const pageTitle = isNew ? t('pmTemplates.editor.createTitle') : t('pmTemplates.editor.editTitle', { name: template?.name ?? t('pmTemplates.editor.templateFallback') });
 
   return (
     <Page maxWidth="7xl" padding="responsive">
@@ -97,23 +99,23 @@ const PMTemplateEditor: React.FC = () => {
           title={pageTitle}
           description={
             isNew
-              ? 'Build a new preventative maintenance checklist template.'
-              : 'Update checklist sections and items.'
+              ? t('pmTemplates.editor.createDescription')
+              : t('pmTemplates.editor.editDescription')
           }
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
-            { label: 'PM Templates', href: '/dashboard/pm-templates' },
-            { label: isNew ? 'New' : template?.name ?? 'Edit' },
+            { label: t('dashboard.title'), href: '/dashboard' },
+            { label: t('pmTemplates.list.title'), href: '/dashboard/pm-templates' },
+            { label: isNew ? t('pmTemplates.editor.new') : template?.name ?? t('pmTemplates.view.edit') },
           ]}
           actions={
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleCancel}>
                 <X className="mr-2 h-4 w-4" />
-                Cancel
+                {t('pmTemplates.editor.cancel')}
               </Button>
               <Button onClick={handleSave}>
                 <Save className="mr-2 h-4 w-4" />
-                {isNew ? 'Create Template' : 'Save Template'}
+                {isNew ? t('pmTemplates.editor.create') : t('pmTemplates.editor.save')}
               </Button>
             </div>
           }

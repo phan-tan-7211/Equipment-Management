@@ -19,6 +19,7 @@ import { DeleteOrganizationDialog } from './DeleteOrganizationDialog';
 import { PendingTransferCard } from './PendingTransferCard';
 import { usePendingTransferForUser } from '@/features/organization/hooks/useOwnershipTransfer';
 import type { SimpleOrganization } from '@/contexts/SimpleOrganizationContext';
+import { useI18n } from '@/i18n';
 
 interface DangerZoneSectionProps {
   organization: SimpleOrganization;
@@ -31,6 +32,7 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
   currentUserRole,
   admins,
 }) => {
+  const { t } = useI18n();
   const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -52,9 +54,7 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
         <Alert className="border-warning/50 bg-warning/10">
           <AlertTriangle className="h-4 w-4 text-warning" />
           <AlertDescription className="text-warning dark:text-warning">
-            You have a pending ownership transfer request to{' '}
-            <strong>{pendingTransfer.to_user_name}</strong>.
-            Waiting for their response.
+            {t('organizationAdmin.pendingTransfer', { name: pendingTransfer.to_user_name })}
           </AlertDescription>
         </Alert>
       )}
@@ -65,7 +65,7 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
         <div className="bg-destructive/5 border-b border-destructive/30 px-4 py-3">
           <h3 className="text-sm font-semibold text-destructive flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
-            Danger Zone
+            {t('organizationAdmin.danger')}
           </h3>
         </div>
 
@@ -74,16 +74,16 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
           {isOwner && (
             <div className="px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium">Transfer Ownership</p>
+                <p className="text-sm font-medium">{t('organizationAdmin.transfer')}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Transfer to another admin. A new personal organization will be created for you.
+                  {t('organizationAdmin.transferDescription')}
                 </p>
               </div>
               <div className="shrink-0">
                 {transferableAdmins.length === 0 ? (
                   <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <Info className="h-3.5 w-3.5" />
-                    Promote an admin first
+                    {t('organizationAdmin.promoteAdmin')}
                   </p>
                 ) : (
                   <Button
@@ -94,7 +94,7 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
                     disabled={!!pendingTransfer}
                   >
                     <ArrowRightLeft className="h-3.5 w-3.5 mr-1.5" />
-                    Transfer
+                    {t('organizationAdmin.transferButton')}
                   </Button>
                 )}
               </div>
@@ -105,9 +105,9 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
           {!isOwner && (
             <div className="px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium">Leave Organization</p>
+                <p className="text-sm font-medium">{t('organizationAdmin.leave')}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Leave this organization and lose access to all data.
+                  {t('organizationAdmin.leaveDescription')}
                 </p>
               </div>
               <div className="shrink-0">
@@ -118,7 +118,7 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
                   onClick={() => setShowLeaveDialog(true)}
                 >
                   <UserMinus className="h-3.5 w-3.5 mr-1.5" />
-                  Leave
+                  {t('organizationAdmin.leaveButton')}
                 </Button>
               </div>
             </div>
@@ -128,9 +128,9 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
           {isOwner && (
             <div className="px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium">Delete Organization</p>
+                <p className="text-sm font-medium">{t('organizationAdmin.delete')}</p>
                 <p className="text-sm text-destructive/80 mt-0.5">
-                  Permanently deletes all data. This action is irreversible.
+                  {t('organizationAdmin.deleteDescription')}
                 </p>
               </div>
               <div className="shrink-0">
@@ -140,7 +140,7 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
                   onClick={() => setShowDeleteDialog(true)}
                 >
                   <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                  Delete
+                  {t('organizationAdmin.deleteButton')}
                 </Button>
               </div>
             </div>
@@ -170,4 +170,3 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
     </div>
   );
 };
-

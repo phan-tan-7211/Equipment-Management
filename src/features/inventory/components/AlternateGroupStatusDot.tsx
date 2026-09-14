@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import {
   Tooltip,
@@ -9,23 +10,15 @@ import type { VerificationStatus } from '@/features/inventory/types/inventory';
 
 const STATUS_CONFIG: Record<
   VerificationStatus,
-  { label: string; description: string; dotClassName: string }
+  { dotClassName: string }
 > = {
   verified: {
-    label: 'Verified',
-    description:
-      'Interchangeability confirmed with evidence. Shown with higher priority in search results.',
     dotClassName: 'bg-success',
   },
   unverified: {
-    label: 'Unverified',
-    description:
-      'Not yet confirmed. Add evidence and part numbers, then mark as verified.',
     dotClassName: 'bg-muted-foreground',
   },
   deprecated: {
-    label: 'Deprecated',
-    description: 'No longer recommended for use as an alternate.',
     dotClassName: 'bg-warning',
   },
 };
@@ -39,14 +32,17 @@ export function AlternateGroupStatusDot({
   status,
   className,
 }: AlternateGroupStatusDotProps) {
+  const { t } = useI18n();
   const config = STATUS_CONFIG[status];
+  const label = t(`alternateGroups.${status}`);
+  const description = t(`alternateGroups.${status}Description`);
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span
           role="img"
-          aria-label={config.label}
+          aria-label={label}
           className={cn(
             'mt-2 inline-block size-2.5 shrink-0 rounded-full',
             config.dotClassName,
@@ -56,8 +52,8 @@ export function AlternateGroupStatusDot({
         />
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-xs">
-        <p className="font-medium">{config.label}</p>
-        <p className="text-xs text-muted-foreground">{config.description}</p>
+        <p className="font-medium">{label}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </TooltipContent>
     </Tooltip>
   );

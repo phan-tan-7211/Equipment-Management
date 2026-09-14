@@ -11,6 +11,9 @@
  * PR gate (when SCHEMA_REFERENCE_BASE_SHA is set):
  * - Only enforced when the PR actually touches `supabase/migrations/*.sql`,
  *   so unrelated PRs can never false-positive.
+ * - Exact-content migration renames are metadata-only and do not require a
+ *   regenerated schema dump (for example, aligning a local timestamp with the
+ *   version already recorded in production).
  * - Migrations containing the `-- schema-reference: skip` marker (pure data
  *   migrations) do not require a regenerated dump.
  * - Fails when schema-affecting migrations changed but
@@ -68,6 +71,7 @@ export function isDataOnlyMigration(sql) {
  *   referenceExists: boolean;
  *   changedFiles: string[] | null;
  *   readMigration: (filePath: string) => string | null;
+ *   pureMigrationRenamePaths?: string[];
  *   migrationsLastCommitEpoch?: number | null;
  *   referenceLastCommitEpoch?: number | null;
  * }} input
@@ -85,10 +89,20 @@ export function evaluateSchemaReference(input) {
 
   if (input.changedFiles != null) {
     const changed = input.changedFiles.map((file) => file.replace(/\\/g, '/'));
-    const changedMigrations = changed.filter(isMigrationSqlPath);
+    const pureRenamePaths = new Set(
+      (input.pureMigrationRenamePaths ?? []).map((file) => file.replace(/\\/g, '/')),
+    );
+    const changedMigrations = changed
+      .filter(isMigrationSqlPath)
+      .filter((file) => !pureRenamePaths.has(file));
 
     if (changedMigrations.length === 0) {
-      return { ok: true, reason: 'No migration changes in this diff — schema reference not required.' };
+      return {
+        ok: true,
+        reason: pureRenamePaths.size > 0
+          ? 'Only exact-content migration rename(s) changed — schema reference not required.'
+          : 'No migration changes in this diff — schema reference not required.',
+      };
     }
 
     const schemaAffecting = changedMigrations.filter(
@@ -148,6 +162,28 @@ function listChangedFiles(baseSha) {
     .filter(Boolean);
 }
 
+/**
+ * Returns both sides of exact-content migration renames. `-M100%` deliberately
+ * requires byte-identical SQL, so real SQL edits can never bypass the dump gate.
+ * @param {string} baseSha
+ */
+function listPureMigrationRenamePaths(baseSha) {
+  const output = execFileSync(
+    'git',
+    ['diff', '--name-status', '-M100%', `${baseSha}..HEAD`, '--', `${MIGRATIONS_DIR}/*.sql`],
+    { cwd: repoRoot, encoding: 'utf8' },
+  );
+
+  const paths = [];
+  for (const line of output.split(/\r?\n/)) {
+    const [status, oldPath, newPath] = line.trim().split(/\t/);
+    if (status === 'R100' && isMigrationSqlPath(oldPath ?? '') && isMigrationSqlPath(newPath ?? '')) {
+      paths.push(oldPath, newPath);
+    }
+  }
+  return paths;
+}
+
 /** @param {string} trackedPath */
 function lastCommitEpoch(trackedPath) {
   const output = execFileSync(
@@ -172,6 +208,7 @@ function checkSchemaReference(options = {}) {
         return null;
       }
     },
+    pureMigrationRenamePaths: baseSha ? listPureMigrationRenamePaths(baseSha) : [],
     migrationsLastCommitEpoch: baseSha ? null : lastCommitEpoch(MIGRATIONS_DIR),
     referenceLastCommitEpoch: baseSha ? null : lastCommitEpoch(SCHEMA_REFERENCE_PATH),
   });

@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen, within } from '@vitest-harness/utils/test-utils';
 import { RightToRepair } from './RightToRepair';
+import { I18nProvider } from '@/i18n/I18nProvider';
 
 vi.mock('react-router-dom', async () => {
   const { createReactRouterDomTestMock } = await import(
@@ -21,6 +22,21 @@ vi.mock('@/components/layout/LegalFooter', () => ({
 describe('RightToRepair', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it.each([
+    ['vi', 'Quyền sửa chữa', 'Bạn có thể mang theo hồ sơ của mình'],
+    ['ko', '수리할 권리', '기록을 가져갈 수 있습니다'],
+  ])('renders the product message in %s while preserving the reviewed legal text', (language, heading, commitment) => {
+    window.localStorage.setItem('znteqr-language', language);
+    try {
+      render(<I18nProvider><RightToRepair /></I18nProvider>);
+      expect(screen.getByRole('heading', { name: heading, level: 1 })).toBeInTheDocument();
+      expect(screen.getByText(commitment)).toBeInTheDocument();
+      expect(screen.getByText(/this page is a statement of principles/i)).toBeInTheDocument();
+    } finally {
+      window.localStorage.removeItem('znteqr-language');
+    }
   });
 
   it('states the public stance and that the page is not a contract', () => {

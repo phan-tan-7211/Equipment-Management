@@ -1,4 +1,5 @@
 import type { MouseEvent } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -15,28 +16,29 @@ import {
 } from '@/components/ui/sheet';
 
 interface NavigationItem {
-  name: string;
+  labelKey: string;
   href: string;
 }
 
 const navigation: NavigationItem[] = [
-  { name: 'Features', href: '#features' },
-  { name: 'About', href: '#about' },
-  { name: 'Customers', href: '#customers' },
-  { name: 'Pricing', href: '#pricing' },
+  { labelKey: 'features', href: '#features' },
+  { labelKey: 'about', href: '#about' },
+  { labelKey: 'customers', href: '#customers' },
+  { labelKey: 'pricing', href: '#pricing' },
 ];
 
 /** Crawler-visible deep links to primary marketing feature routes */
-const featureDeepLinks: Array<{ label: string; to: string }> = [
-  { label: 'Work orders', to: '/features/work-order-management' },
-  { label: 'QR codes', to: '/features/qr-code-integration' },
-  { label: 'QuickBooks', to: '/features/quickbooks' },
+const featureDeepLinks: Array<{ labelKey: string; to: string }> = [
+  { labelKey: 'workOrders', to: '/features/work-order-management' },
+  { labelKey: 'qrCodes', to: '/features/qr-code-integration' },
+  { labelKey: 'quickBooks', to: '/features/quickbooks' },
 ];
 
 // Stable constant for section IDs to avoid unnecessary re-renders (order matches page flow)
 const SECTION_IDS: string[] = ['features', 'about', 'customers', 'pricing'];
 
 const LandingHeader = () => {
+  const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
   const isOnMarketingHome = location.pathname === '/';
@@ -80,7 +82,7 @@ const LandingHeader = () => {
               
               return (
                 <a
-                  key={item.name}
+                  key={item.href}
                   href={item.href}
                   className={[
                     'transition-colors',
@@ -89,13 +91,13 @@ const LandingHeader = () => {
                   ].join(' ')}
                   onClick={(e) => handleNavClick(e, item.href)}
                 >
-                  {item.name}
+                  {t(`publicChrome.header.${item.labelKey}`)}
                 </a>
               );
             })}
             <div
               className="hidden xl:flex items-center gap-4 ml-2 pl-4 border-l border-border"
-              aria-label="Popular features"
+              aria-label={t('publicChrome.header.popularFeatures')}
             >
               {featureDeepLinks.map((link) => (
                 <Link
@@ -103,7 +105,7 @@ const LandingHeader = () => {
                   to={link.to}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
                 >
-                  {link.label}
+                  {t(`publicChrome.header.${link.labelKey}`)}
                 </Link>
               ))}
             </div>
@@ -112,7 +114,7 @@ const LandingHeader = () => {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center">
             <Button asChild>
-              <Link to="/auth">Get Started</Link>
+              <Link to="/auth">{t('publicChrome.header.getStarted')}</Link>
             </Button>
           </div>
 
@@ -120,23 +122,23 @@ const LandingHeader = () => {
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Open navigation menu">
+                <Button variant="ghost" size="icon" aria-label={t('publicChrome.header.openMenu')}>
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-75 sm:w-100">
                 <SheetHeader className="sr-only">
-                  <SheetTitle>Site navigation</SheetTitle>
+                  <SheetTitle>{t('publicChrome.header.siteNavigation')}</SheetTitle>
                   <SheetDescription>
-                    Jump to a section or get started.
+                    {t('publicChrome.header.menuDescription')}
                   </SheetDescription>
                 </SheetHeader>
                 <div className="flex flex-col gap-8 mt-6">
                   <div className="space-y-3">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
-                      On this page
+                      {t('publicChrome.header.onThisPage')}
                     </p>
-                    <nav className="flex flex-col gap-1" aria-label="Marketing page sections">
+                    <nav className="flex flex-col gap-1" aria-label={t('publicChrome.header.pageSections')}>
                       {navigation.map((item) => {
                         const isHash = item.href.startsWith('#');
                         let isActive = false;
@@ -148,7 +150,7 @@ const LandingHeader = () => {
                           isHash && !isOnMarketingHome ? `/${item.href}` : item.href;
 
                         return (
-                          <SheetClose asChild key={item.name}>
+                          <SheetClose asChild key={item.href}>
                             <a
                               href={href}
                               className={[
@@ -161,7 +163,7 @@ const LandingHeader = () => {
                               aria-current={isActive ? 'location' : undefined}
                               onClick={(e) => handleNavClick(e, item.href)}
                             >
-                              {item.name}
+                              {t(`publicChrome.header.${item.labelKey}`)}
                             </a>
                           </SheetClose>
                         );
@@ -170,16 +172,16 @@ const LandingHeader = () => {
                   </div>
                   <div className="space-y-3 border-t border-border pt-6">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
-                      Feature guides
+                      {t('publicChrome.header.featureGuides')}
                     </p>
-                    <nav className="flex flex-col gap-1" aria-label="Marketing feature pages">
+                    <nav className="flex flex-col gap-1" aria-label={t('publicChrome.header.featurePages')}>
                       {featureDeepLinks.map((link) => (
                         <SheetClose asChild key={link.to}>
                           <Link
                             to={link.to}
                             className="rounded-lg px-3 py-2.5 text-base font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                           >
-                            {link.label}
+                            {t(`publicChrome.header.${link.labelKey}`)}
                           </Link>
                         </SheetClose>
                       ))}
@@ -187,12 +189,12 @@ const LandingHeader = () => {
                   </div>
                   <div className="space-y-3 border-t border-border pt-6">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
-                      Account
+                      {t('publicChrome.header.account')}
                     </p>
                     <div className="flex flex-col gap-2">
                       <SheetClose asChild>
                         <Button asChild className="w-full h-11">
-                          <Link to="/auth">Get Started</Link>
+                          <Link to="/auth">{t('publicChrome.header.getStarted')}</Link>
                         </Button>
                       </SheetClose>
                     </div>

@@ -30,11 +30,12 @@ export function isPublicInputValuePresent(
 export function validateRequiredInputFields(
   requiredFields: RequiredInputField[],
   values: Record<string, unknown>,
+  requiredMessage?: (fieldLabel: string) => string,
 ): PublicFormValidationResult {
   const errors: string[] = [];
   for (const field of requiredFields) {
     if (!isPublicInputValuePresent(values[field.id], field.inputType)) {
-      errors.push(`"${field.label}" is required.`);
+      errors.push(requiredMessage?.(field.label) ?? `"${field.label}" is required.`);
     }
   }
   return { isComplete: errors.length === 0, errors };

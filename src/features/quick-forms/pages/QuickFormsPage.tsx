@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useI18n } from '@/i18n';
 import { FileSignature, Pencil, Plus, QrCode, ShieldAlert, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Page from '@/components/layout/Page';
@@ -38,6 +39,7 @@ import type { QuickForm } from '@/features/quick-forms/services/quickFormsServic
 import { logger } from '@/utils/logger';
 
 export default function QuickFormsPage() {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { hasRole } = usePermissions();
   const isAdmin = hasRole(['owner', 'admin']);
@@ -66,7 +68,7 @@ export default function QuickFormsPage() {
   if (!currentOrganization) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <PageHeader title="Quick Forms" description="Please select an organization." />
+        <PageHeader title={t('quickForms.page.title')} description={t('quickForms.page.selectOrganization')} />
       </Page>
     );
   }
@@ -76,10 +78,9 @@ export default function QuickFormsPage() {
       <Page maxWidth="7xl" padding="responsive">
         <Alert variant="destructive">
           <ShieldAlert className="h-4 w-4" />
-          <AlertTitle>Access Denied</AlertTitle>
+          <AlertTitle>{t('quickForms.page.accessDenied')}</AlertTitle>
           <AlertDescription>
-            Quick forms can collect sensitive data and are only available to
-            organization owners and administrators.
+            {t('quickForms.page.accessDescription')}
           </AlertDescription>
         </Alert>
       </Page>
@@ -94,26 +95,26 @@ export default function QuickFormsPage() {
     try {
       if (editingForm) {
         await updateMutation.mutateAsync({ formId: editingForm.id, ...input });
-        toast.success('Quick form updated');
+        toast.success(t('quickForms.page.updated'));
       } else {
         await createMutation.mutateAsync(input);
-        toast.success('Quick form created. Open its QR link to share it.');
+        toast.success(t('quickForms.page.created'));
       }
       setDialogOpen(false);
       setEditingFormId(null);
     } catch (error) {
       logger.error('Failed to save quick form', error);
-      toast.error('Unable to save the quick form.');
+      toast.error(t('quickForms.page.saveError'));
     }
   };
 
   const handleToggleActive = async (form: QuickForm, isActive: boolean) => {
     try {
       await updateMutation.mutateAsync({ formId: form.id, isActive });
-      toast.success(isActive ? 'Form activated' : 'Form deactivated — the QR link stops accepting submissions');
+      toast.success(isActive ? t('quickForms.page.activated') : t('quickForms.page.deactivated'));
     } catch (error) {
       logger.error('Failed to toggle quick form', error);
-      toast.error('Unable to update the form.');
+      toast.error(t('quickForms.page.updateError'));
     }
   };
 
@@ -121,10 +122,10 @@ export default function QuickFormsPage() {
     if (!pendingDelete) return;
     try {
       await deleteMutation.mutateAsync(pendingDelete.id);
-      toast.success('Quick form deleted');
+      toast.success(t('quickForms.page.deleted'));
     } catch (error) {
       logger.error('Failed to delete quick form', error);
-      toast.error('Unable to delete the form.');
+      toast.error(t('quickForms.page.deleteError'));
     } finally {
       setPendingDelete(null);
     }
@@ -134,8 +135,8 @@ export default function QuickFormsPage() {
     <Page maxWidth="7xl" padding="responsive">
       <div className="space-y-5">
         <PageHeader
-          title="Quick Forms"
-          description="Standalone QR-code forms for job sites: time sheets, secure-area checks, assembly-line checklists, and other quick data capture. Submissions are visible to owners and admins only."
+          title={t('quickForms.page.title')}
+          description={t('quickForms.page.subtitle')}
           actions={
             <Button
               onClick={() => {
@@ -144,15 +145,15 @@ export default function QuickFormsPage() {
               }}
             >
               <Plus className="h-4 w-4 mr-2" />
-              New Quick Form
+              {t('quickForms.page.new')}
             </Button>
           }
         />
 
         <Tabs defaultValue="forms" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="forms">Forms</TabsTrigger>
-            <TabsTrigger value="ledger">Ledger</TabsTrigger>
+            <TabsTrigger value="forms">{t('quickForms.page.forms')}</TabsTrigger>
+            <TabsTrigger value="ledger">{t('quickForms.page.ledger')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="forms" className="space-y-4">
@@ -165,8 +166,8 @@ export default function QuickFormsPage() {
             ) : forms.length === 0 ? (
               <EmptyState
                 icon={FileSignature}
-                title="No quick forms yet"
-                description="Create your first quick form and share its QR code with anyone on site — no sign-in needed."
+                title={t('quickForms.page.emptyTitle')}
+                description={t('quickForms.page.emptyDescription')}
               />
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
@@ -180,7 +181,7 @@ export default function QuickFormsPage() {
                             {form.name}
                           </CardTitle>
                           <Badge variant={form.is_active ? 'default' : 'secondary'}>
-                            {form.is_active ? 'Active' : 'Inactive'}
+                            {form.is_active ? t('quickForms.page.active') : t('quickForms.page.inactive')}
                           </Badge>
                         </div>
                         {form.description && (
@@ -189,8 +190,8 @@ export default function QuickFormsPage() {
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="text-xs text-muted-foreground">
-                          {parsed.fields.length} field{parsed.fields.length === 1 ? '' : 's'}
-                          {parsed.collectLocation ? ' · asks for GPS location' : ''}
+                          {t(parsed.fields.length === 1 ? 'quickForms.page.fieldCount' : 'quickForms.page.fieldsCount', { count: parsed.fields.length })}
+                          {parsed.collectLocation ? t('quickForms.page.asksGPS') : ''}
                         </p>
                         <div className="flex flex-wrap items-center gap-2">
                           <Button
@@ -199,7 +200,7 @@ export default function QuickFormsPage() {
                             onClick={() => setQrFormId(form.id)}
                           >
                             <QrCode className="h-4 w-4 mr-2" />
-                            QR link
+                            {t('quickForms.page.qrLink')}
                           </Button>
                           <Button
                             variant="outline"
@@ -210,14 +211,14 @@ export default function QuickFormsPage() {
                             }}
                           >
                             <Pencil className="h-4 w-4 mr-2" />
-                            Edit
+                            {t('quickForms.page.edit')}
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             className="text-muted-foreground hover:text-destructive"
                             onClick={() => setPendingDelete(form)}
-                            aria-label={`Delete ${form.name}`}
+                            aria-label={t('quickForms.page.deleteNamed', { name: form.name })}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -226,7 +227,7 @@ export default function QuickFormsPage() {
                               id={`quick-form-active-${form.id}`}
                               checked={form.is_active}
                               onCheckedChange={(checked) => void handleToggleActive(form, checked)}
-                              aria-label={`Toggle ${form.name} active`}
+                              aria-label={t('quickForms.page.toggleActive', { name: form.name })}
                             />
                           </div>
                         </div>
@@ -266,19 +267,18 @@ export default function QuickFormsPage() {
       <AlertDialog open={pendingDelete !== null} onOpenChange={(open) => !open && setPendingDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete "{pendingDelete?.name}"?</AlertDialogTitle>
+            <AlertDialogTitle>{t('quickForms.page.deleteTitle', { name: pendingDelete?.name ?? '' })}</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes the form, its QR link, and every
-              submission in its ledger. This cannot be undone.
+              {t('quickForms.page.deleteDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('quickForms.page.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => void handleDelete()}
             >
-              Delete form
+              {t('quickForms.page.deleteForm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

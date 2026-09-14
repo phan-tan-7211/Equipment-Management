@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, UserMinus, Loader2 } from 'lucide-react';
 import { useLeaveOrganization } from '@/features/organization/hooks/useLeaveOrganization';
 import type { SimpleOrganization } from '@/contexts/SimpleOrganizationContext';
+import { useI18n } from '@/i18n';
 
 interface LeaveOrganizationDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ export const LeaveOrganizationDialog: React.FC<LeaveOrganizationDialogProps> = (
   onOpenChange,
   organization,
 }) => {
+  const { t } = useI18n();
   const [confirmationName, setConfirmationName] = useState('');
 
   const leaveOrganization = useLeaveOrganization();
@@ -68,10 +70,10 @@ export const LeaveOrganizationDialog: React.FC<LeaveOrganizationDialogProps> = (
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <UserMinus className="h-5 w-5" />
-            Leave Organization
+            {t('organizationAdmin.leave')}
           </DialogTitle>
           <DialogDescription>
-            You are about to leave <strong>{organization.name}</strong>.
+            {t('organizationAdmin.leavingName', { name: organization.name })}
           </DialogDescription>
         </DialogHeader>
 
@@ -80,26 +82,25 @@ export const LeaveOrganizationDialog: React.FC<LeaveOrganizationDialogProps> = (
           <Alert className="border-destructive bg-destructive/10">
             <AlertTriangle className="h-4 w-4 text-destructive" />
             <AlertDescription className="text-destructive">
-              <strong>Warning:</strong> This action cannot be undone.
-              You will lose access to all organization data immediately.
+              <strong>{t('organizationAdmin.warning')}</strong> {t('organizationAdmin.leaveWarning')}
             </AlertDescription>
           </Alert>
 
           {/* What will happen */}
           <div className="rounded-lg border p-4 space-y-2 bg-muted/50">
-            <h4 className="font-medium text-sm">What happens when you leave:</h4>
+            <h4 className="font-medium text-sm">{t('organizationAdmin.leaveConsequences')}</h4>
             <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-              <li>You will be removed from all teams</li>
-              <li>You will lose access to equipment and work orders</li>
-              <li>Your notes and actions will be preserved for audit</li>
-              <li>You will need a new invitation to rejoin</li>
+              <li>{t('organizationAdmin.leaveTeams')}</li>
+              <li>{t('organizationAdmin.leaveEquipment')}</li>
+              <li>{t('organizationAdmin.leaveAudit')}</li>
+              <li>{t('organizationAdmin.leaveInvitation')}</li>
             </ul>
           </div>
 
           {/* Confirmation Input */}
           <div className="space-y-2">
             <Label htmlFor="confirm-name">
-              Type <strong>{organization.name}</strong> to confirm
+              {t('organizationAdmin.typeToConfirm', { name: organization.name })}
             </Label>
             <Input
               id="confirm-name"
@@ -113,7 +114,7 @@ export const LeaveOrganizationDialog: React.FC<LeaveOrganizationDialogProps> = (
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            Cancel
+            {t('organizationAdmin.cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -123,12 +124,12 @@ export const LeaveOrganizationDialog: React.FC<LeaveOrganizationDialogProps> = (
             {leaveOrganization.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Leaving...
+                {t('organizationAdmin.leaving')}
               </>
             ) : (
               <>
                 <UserMinus className="h-4 w-4 mr-2" />
-                Leave Organization
+                {t('organizationAdmin.leave')}
               </>
             )}
           </Button>

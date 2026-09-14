@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useI18n } from '@/i18n';
 import { useUser } from '@/contexts/useUser';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import { trimmedAvatarPath, userDisplayInitials } from '@/utils/userDisplayIniti
 import { resolveEffectiveAvatarUrl } from '@/utils/resolveEffectiveAvatarUrl';
 
 const ProfileSettings = () => {
+  const { t } = useI18n();
   const { currentUser, setCurrentUser } = useUser();
   const { user: authUser } = useAuth();
   const { data: avatarDisplayUrl } = useResolvedAvatarUrl(currentUser?.avatar_url);
@@ -39,10 +41,10 @@ const ProfileSettings = () => {
         name
       });
 
-      appToast.success({ description: 'Profile updated successfully' });
+      appToast.success({ description: t('settingsForms.profileSaved') });
     } catch (error) {
       console.error('Error updating profile:', error);
-      appToast.error({ description: 'Failed to update profile' });
+      appToast.error({ description: t('settingsForms.profileSaveFailed') });
     } finally {
       setIsLoading(false);
     }
@@ -92,18 +94,18 @@ const ProfileSettings = () => {
       />
 
       <div className="space-y-2">
-        <Label htmlFor="name" className="text-sm font-medium">Display Name</Label>
+        <Label htmlFor="name" className="text-sm font-medium">{t('settingsForms.displayName')}</Label>
         <Input
           id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Enter your display name"
+          placeholder={t('settingsForms.displayNamePlaceholder')}
           className="max-w-md"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+        <Label htmlFor="email" className="text-sm font-medium">{t('settingsForms.email')}</Label>
         <Input
           id="email"
           value={currentUser.email}
@@ -111,7 +113,7 @@ const ProfileSettings = () => {
           className="bg-muted max-w-md"
         />
         <p className="text-xs text-muted-foreground">
-          Your email address cannot be changed here. Contact support if you need to update it.
+          {t('settingsForms.emailCannotChange')}
         </p>
       </div>
 
@@ -127,7 +129,7 @@ const ProfileSettings = () => {
           ) : (
             <Save className="mr-2 h-4 w-4" />
           )}
-          {isLoading ? 'Saving...' : 'Save Changes'}
+          {isLoading ? t('settingsForms.saving') : t('settingsForms.saveChanges')}
         </Button>
       </div>
     </>

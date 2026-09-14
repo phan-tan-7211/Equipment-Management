@@ -140,7 +140,7 @@ describe('GoogleWorkspaceMemberImportSheet', () => {
 
     expect(await screen.findByText('Import from Google Workspace')).toBeInTheDocument();
     expect(screen.getByText(/Select users from/)).toBeInTheDocument();
-    expect(screen.getByText('example.com')).toBeInTheDocument();
+    expect(screen.getByText(/Select users from example\.com/)).toBeInTheDocument();
   });
 
   it('shows sync directory button', async () => {

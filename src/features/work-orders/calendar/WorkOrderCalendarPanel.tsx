@@ -22,10 +22,10 @@ import {
 } from '@/features/work-orders/calendar/dueDate';
 import type { CalendarEditability } from '@/features/work-orders/calendar/editability';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
+import { useI18n } from '@/i18n';
 import type { MergedWorkOrder } from '@/features/work-orders/types/offlineMergedWorkOrder';
+import { localizeWorkOrderPriority, localizeWorkOrderStatus } from '@/features/work-orders/utils/workOrderI18nLabels';
 import {
-  formatPriority,
-  formatStatus,
   getPriorityColor,
   getStatusColor,
 } from '@/features/work-orders/utils/workOrderHelpers';
@@ -44,12 +44,13 @@ export function WorkOrderCalendarPanel({
   onDueWrite,
 }: WorkOrderCalendarPanelProps) {
   const { formatDate, formatDateTime } = useFormatTimestamp();
+  const { t } = useI18n();
   const due = parseDue(workOrder);
   const editable = editability.kind === 'editable';
   const [showTime, setShowTime] = useState(due.kind === 'timed');
   const teamName = workOrder.teamName ?? workOrder.team?.name ?? '—';
   const equipmentName = workOrder.equipmentName ?? workOrder.equipment?.name ?? '—';
-  const assigneeName = workOrder.assigneeName ?? workOrder.assignee_name ?? 'Unassigned';
+  const assigneeName = workOrder.assigneeName ?? workOrder.assignee_name ?? t('workOrderCalendar.unassigned');
 
   return (
     <Sheet key={workOrder.id} open onOpenChange={(open) => { if (!open) onClose(); }}>
@@ -60,16 +61,16 @@ export function WorkOrderCalendarPanel({
         >
         <SheetHeader>
           <SheetTitle>{workOrder.title}</SheetTitle>
-          <SheetDescription>Work order overview</SheetDescription>
+          <SheetDescription>{t('workOrderCalendar.overview')}</SheetDescription>
         </SheetHeader>
 
         <div className="flex flex-wrap gap-2">
-          <Badge className={getStatusColor(workOrder.status)}>{formatStatus(workOrder.status)}</Badge>
-          <Badge className={getPriorityColor(workOrder.priority)}>{formatPriority(workOrder.priority)}</Badge>
+          <Badge className={getStatusColor(workOrder.status)}>{localizeWorkOrderStatus(workOrder.status, t)}</Badge>
+          <Badge className={getPriorityColor(workOrder.priority)}>{localizeWorkOrderPriority(workOrder.priority, t)}</Badge>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="calendar-panel-due-date">Due date</Label>
+          <Label htmlFor="calendar-panel-due-date">{t('workOrderCalendar.dueDate')}</Label>
           {editable ? (
             <>
               <Input
@@ -87,14 +88,14 @@ export function WorkOrderCalendarPanel({
                 />
               ) : (
                 <Button type="button" variant="outline" size="sm" onClick={() => setShowTime(true)}>
-                  Add time
+                  {t('workOrderCalendar.addTime')}
                 </Button>
               )}
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
               {due.kind === 'none'
-                ? 'Unscheduled'
+                ? t('workOrderCalendar.unscheduled')
                 : formatDueDisplay(due, { formatDay: formatDate, formatTimed: formatDateTime })}
             </p>
           )}
@@ -102,21 +103,21 @@ export function WorkOrderCalendarPanel({
 
         <dl className="space-y-3 text-sm">
           <div>
-            <dt className="text-muted-foreground">Equipment</dt>
+            <dt className="text-muted-foreground">{t('workOrderCalendar.equipment')}</dt>
             <dd>{equipmentName}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Team</dt>
+            <dt className="text-muted-foreground">{t('workOrderCalendar.team')}</dt>
             <dd>{teamName}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Assignee</dt>
+            <dt className="text-muted-foreground">{t('workOrderCalendar.assignee')}</dt>
             <dd>{assigneeName}</dd>
           </div>
         </dl>
 
         <Button asChild>
-          <Link to={`/dashboard/work-orders/${workOrder.id}`}>Open details</Link>
+          <Link to={`/dashboard/work-orders/${workOrder.id}`}>{t('workOrderCalendar.openDetails')}</Link>
         </Button>
       </SheetContent>
     </Sheet>

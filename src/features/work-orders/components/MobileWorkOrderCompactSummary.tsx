@@ -4,9 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, AlertTriangle, ChevronRight, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
+import { localizeWorkOrderPriority, localizeWorkOrderStatus } from '@/features/work-orders/utils/workOrderI18nLabels';
 import {
-  formatPriority,
-  formatStatus,
   getPriorityTextColor,
   getWorkOrderStatusTextColor,
 } from '@/features/work-orders/utils/workOrderHelpers';
@@ -33,12 +33,6 @@ import { useWorkOrderInlineFieldSave } from '@/features/work-orders/hooks/useWor
 import QuickBooksInvoiceStatusBadge from '@/features/work-orders/components/QuickBooksInvoiceStatusBadge';
 import type { QuickBooksInvoiceStatus, WorkOrderStatus } from '@/features/work-orders/types/workOrder';
 
-const PRIORITY_OPTIONS = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-];
-
 interface MobileDueDateStatusContentProps {
   formattedDueDate: string;
   overdue: boolean;
@@ -50,6 +44,7 @@ function MobileDueDateStatusContent({
   overdue,
   dueSoon,
 }: MobileDueDateStatusContentProps) {
+  const { t } = useI18n();
   return (
     <>
       {overdue ? (
@@ -59,10 +54,10 @@ function MobileDueDateStatusContent({
       ) : (
         <Clock className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
       )}
-      <span className="font-medium text-foreground">Due date</span>
+      <span className="font-medium text-foreground">{t('workOrderMobileSummary.dueDate')}</span>
       <span className="truncate font-semibold">{formattedDueDate}</span>
-      {overdue ? <span className="text-sm font-semibold">(Overdue)</span> : null}
-      {dueSoon && !overdue ? <span className="text-sm font-semibold">(Due soon)</span> : null}
+      {overdue ? <span className="text-sm font-semibold">{t('workOrderMobileSummary.overdue')}</span> : null}
+      {dueSoon && !overdue ? <span className="text-sm font-semibold">{t('workOrderMobileSummary.dueSoon')}</span> : null}
     </>
   );
 }
@@ -101,6 +96,7 @@ export const MobileWorkOrderCompactSummary: React.FC<MobileWorkOrderCompactSumma
   canChangeStatus = false,
   onStatusPress,
 }) => {
+  const { t } = useI18n();
   const { formatDate, formatDateTime } = useFormatTimestamp();
   const { saveField, savePatch } = useWorkOrderInlineFieldSave(workOrder.id, workOrder.updated_at);
   const due = parseDue({
@@ -117,6 +113,12 @@ export const MobileWorkOrderCompactSummary: React.FC<MobileWorkOrderCompactSumma
       return hoursUntilDue > 0 && hoursUntilDue < 24;
     })();
   const statusPressEnabled = Boolean(canChangeStatus && onStatusPress);
+  const statusLabel = localizeWorkOrderStatus(workOrder.status, t);
+  const priorityLabel = localizeWorkOrderPriority(workOrder.priority, t);
+  const priorityOptions = (['low', 'medium', 'high'] as const).map((value) => ({
+    value,
+    label: localizeWorkOrderPriority(value, t),
+  }));
   const formattedDueDate = formatDueDisplay(due, {
     formatDay: formatDate,
     formatTimed: formatDateTime,
@@ -147,9 +149,9 @@ export const MobileWorkOrderCompactSummary: React.FC<MobileWorkOrderCompactSumma
 
   const priorityDisplayNode = (
     <span className="inline-flex min-w-0 flex-wrap items-center gap-2 text-base">
-      <span className="font-medium text-foreground">Priority</span>
+      <span className="font-medium text-foreground">{t('workOrderMobileSummary.priority')}</span>
       <span className={cn('font-semibold capitalize', getPriorityTextColor(workOrder.priority))}>
-        {formatPriority(workOrder.priority)}
+        {priorityLabel}
       </span>
     </span>
   );
@@ -172,8 +174,8 @@ export const MobileWorkOrderCompactSummary: React.FC<MobileWorkOrderCompactSumma
   ) : (
     <span className="inline-flex min-w-0 items-center gap-2 text-base text-muted-foreground">
       <Clock className="h-5 w-5 shrink-0" aria-hidden />
-      <span className="font-medium text-foreground">Due date</span>
-      <span>Set due date</span>
+      <span className="font-medium text-foreground">{t('workOrderMobileSummary.dueDate')}</span>
+      <span>{t('workOrderMobileSummary.setDueDate')}</span>
     </span>
   );
 
@@ -198,13 +200,13 @@ export const MobileWorkOrderCompactSummary: React.FC<MobileWorkOrderCompactSumma
 
   const statusValue = (
     <span className={cn('font-semibold', getWorkOrderStatusTextColor(workOrder.status))}>
-      {formatStatus(workOrder.status)}
+      {statusLabel}
     </span>
   );
 
   const statusRowContent = (
     <div className={cn('flex min-w-0 items-center gap-2 text-base', mobileInlineEditValueClassName)}>
-      <span className="font-medium text-foreground">Status</span>
+      <span className="font-medium text-foreground">{t('workOrderMobileSummary.status')}</span>
       {statusValue}
       {statusPressEnabled ? (
         <ChevronRight className="ml-auto h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
@@ -224,12 +226,12 @@ export const MobileWorkOrderCompactSummary: React.FC<MobileWorkOrderCompactSumma
               'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             )}
             onClick={onStatusPress}
-            aria-label={`Status: ${formatStatus(workOrder.status)}. Change status`}
+            aria-label={t('workOrderMobileSummary.changeStatusLabel', { status: statusLabel })}
           >
             {statusRowContent}
           </button>
         ) : (
-          <div className={mobileInlineEditRowClassName} aria-label={`Status: ${formatStatus(workOrder.status)}`}>
+          <div className={mobileInlineEditRowClassName} aria-label={t('workOrderMobileSummary.statusLabel', { status: statusLabel })}>
             {statusRowContent}
           </div>
         )}
@@ -242,7 +244,7 @@ export const MobileWorkOrderCompactSummary: React.FC<MobileWorkOrderCompactSumma
                 mobileInlineEditValueClassName,
               )}
             >
-              <span className="shrink-0 font-medium text-foreground">Invoice</span>
+              <span className="shrink-0 font-medium text-foreground">{t('workOrderMobileSummary.invoice')}</span>
               <QuickBooksInvoiceStatusBadge
                 status={workOrder.invoice_status}
                 invoiceNumber={workOrder.quickbooks_invoice_number}
@@ -262,9 +264,9 @@ export const MobileWorkOrderCompactSummary: React.FC<MobileWorkOrderCompactSumma
             }}
             canEdit={canEditFields}
             type="select"
-            selectOptions={PRIORITY_OPTIONS}
+            selectOptions={priorityOptions}
             className="w-full"
-            editAriaLabel="Edit priority"
+            editAriaLabel={t('workOrderMobileSummary.editPriority')}
             displayNode={priorityDisplayNode}
           />
         ) : (
@@ -286,11 +288,11 @@ export const MobileWorkOrderCompactSummary: React.FC<MobileWorkOrderCompactSumma
                 canEdit={canEditFields}
                 type="date"
                 className="w-full"
-                editAriaLabel="Edit due date"
+                editAriaLabel={t('workOrderMobileSummary.editDueDate')}
                 displayNode={dueDateDisplayNode}
               />
               <div className="space-y-1.5">
-                <Label htmlFor="mobile-work-order-due-time">Due time</Label>
+                <Label htmlFor="mobile-work-order-due-time">{t('workOrderMobileSummary.dueTime')}</Label>
                 <Input
                   id="mobile-work-order-due-time"
                   type="time"
@@ -323,8 +325,8 @@ export const MobileWorkOrderCompactSummary: React.FC<MobileWorkOrderCompactSumma
               />
             ) : assignee ? (
               <div className="text-muted-foreground">
-                <span className="sr-only">Assignee:</span>
-                <span className="font-medium text-foreground">Assigned to</span>{' '}
+                <span className="sr-only">{t('workOrderMobileSummary.assignee')}</span>
+                <span className="font-medium text-foreground">{t('workOrderMobileSummary.assignedTo')}</span>{' '}
                 <span className="text-base">{assignee.name}</span>
               </div>
             ) : null}

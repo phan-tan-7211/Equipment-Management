@@ -1,3 +1,5 @@
+import { useI18n } from '@/i18n/I18nProvider';
+import { vi as viLocale, ko as koLocale, enUS } from 'date-fns/locale';
 import { useMemo, useState } from 'react';
 import { format as formatDate } from 'date-fns';
 import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -42,9 +44,9 @@ function parseDateInput(value: string): Date | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
-function formatSingleDateLabel(value: string): string {
+function formatSingleDateLabel(value: string, language: string, t: (key: string) => string): string {
   const date = parseDateInput(value);
-  return date ? formatDate(date, 'MMM d, yyyy') : 'Select date';
+  return date ? formatDate(date, 'PP', { locale: language === 'vi' ? viLocale : language === 'ko' ? koLocale : enUS }) : t('operatorCheckinDetail.selectDate');
 }
 
 const LEDGER_DATE_PICKER_CALENDAR_CLASS_NAMES = {
@@ -113,6 +115,7 @@ function DatePickerPanel({
   onComplete,
   density = 'comfortable',
 }: DatePickerPanelProps) {
+  const { t, language } = useI18n();
   const selectedDate = parseDateInput(value);
 
   const activeShortcutId = useMemo(() => {
@@ -143,7 +146,7 @@ function DatePickerPanel({
             isCompact ? 'mb-1 text-[11px]' : 'mb-2 text-xs',
           )}
         >
-          Quick dates
+          {t('operatorCheckinDetail.quickDates')}
         </p>
         <div className={cn(isCompact ? 'flex flex-wrap gap-1' : 'grid grid-cols-2 gap-2')}>
           {LEDGER_SINGLE_DATE_SHORTCUTS.map((shortcut) => {
@@ -163,10 +166,10 @@ function DatePickerPanel({
                     : 'border-border/60 bg-muted/30 hover:bg-muted/60',
                   !isCompact && shortcut.id === '365d' && 'col-span-2',
                 )}
-                aria-label={shortcut.label}
+                aria-label={t(`operatorCheckinDetail.${({ today: 'today', '7d': 'weekAgoLong', '30d': 'monthAgoLong', '90d': 'quarterAgoLong', '365d': 'yearAgoLong' } as Record<string, string>)[shortcut.id]}`)}
                 onClick={() => applyShortcut(shortcut.daysAgo)}
               >
-                {shortcut.shortLabel}
+                {t(`operatorCheckinDetail.${({ today: 'today', '7d': 'weekAgo', '30d': 'monthAgo', '90d': 'quarterAgo', '365d': 'yearAgo' } as Record<string, string>)[shortcut.id]}`)}
               </Button>
             );
           })}
@@ -179,6 +182,7 @@ function DatePickerPanel({
           selected={selectedDate}
           onSelect={handleSelect}
           defaultMonth={selectedDate}
+          locale={language === 'vi' ? viLocale : language === 'ko' ? koLocale : enUS}
           numberOfMonths={1}
           className="p-0"
           classNames={
@@ -194,7 +198,7 @@ function DatePickerPanel({
                 <ChevronRight className={cn(isCompact ? 'h-4 w-4' : 'h-5 w-5')} {...rest} />
               ),
           }}
-          aria-label={`${label} calendar`}
+          aria-label={t('operatorCheckinDetail.calendarLabel', { label })}
         />
       </div>
     </div>
@@ -214,6 +218,7 @@ function SingleDateCalendarField({
   value,
   onChange,
 }: SingleDateCalendarFieldProps) {
+  const { t, language } = useI18n();
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
@@ -231,7 +236,7 @@ function SingleDateCalendarField({
     >
       <span className="flex min-w-0 items-center gap-2">
         <CalendarIcon className="shrink-0 text-muted-foreground" aria-hidden />
-        <span className="truncate">{formatSingleDateLabel(value)}</span>
+        <span className="truncate">{formatSingleDateLabel(value, language, t)}</span>
       </span>
       <ChevronDown className="shrink-0 text-muted-foreground" aria-hidden />
     </Button>
@@ -294,18 +299,19 @@ export function OperatorCheckinLedgerDateRangePicker({
   onEndDateChange,
   className,
 }: OperatorCheckinLedgerDateRangePickerProps) {
+  const { t } = useI18n();
   return (
     <div className={cn('flex flex-col gap-2', className)} data-testid="ledger-date-range-picker">
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <SingleDateCalendarField
           id={LEDGER_DATE_START_ID}
-          label="Start date"
+          label={t('operatorCheckinDetail.startDate')}
           value={startDate}
           onChange={onStartDateChange}
         />
         <SingleDateCalendarField
           id={LEDGER_DATE_END_ID}
-          label="End date"
+          label={t('operatorCheckinDetail.endDate')}
           value={endDate}
           onChange={onEndDateChange}
         />

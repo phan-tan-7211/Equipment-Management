@@ -8,6 +8,7 @@ import { Forklift, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getEquipmentStatusBorderClass } from '@/lib/status-colors';
 import type { RecentEquipmentItem } from '@/features/teams/services/teamStatsService';
+import { useI18n } from '@/i18n';
 
 interface TeamRecentEquipmentProps {
   teamId: string;
@@ -29,6 +30,7 @@ const TeamRecentEquipment: React.FC<TeamRecentEquipmentProps> = ({
   equipment,
   isLoading,
 }) => {
+  const { t } = useI18n();
   // Don't render if no equipment and not loading
   if (!isLoading && equipment.length === 0) {
     return null;
@@ -39,10 +41,10 @@ const TeamRecentEquipment: React.FC<TeamRecentEquipmentProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Forklift className="h-5 w-5" />
-          Recent Equipment
+          {t('teamsCards.recentEquipment')}
         </CardTitle>
         <CardDescription>
-          Latest equipment added to this team
+          {t('teamsCards.recentEquipmentDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -73,7 +75,10 @@ const TeamRecentEquipment: React.FC<TeamRecentEquipmentProps> = ({
                     variant={getEquipmentStatusBadgeVariant(item.status)}
                     className="ml-2 shrink-0"
                   >
-                    {item.status}
+                    {(() => {
+                      const label = t(`teamsCards.equipmentStatuses.${item.status}`);
+                      return label.startsWith('teamsCards.') ? item.status : label;
+                    })()}
                   </Badge>
                 </Link>
               );
@@ -88,7 +93,7 @@ const TeamRecentEquipment: React.FC<TeamRecentEquipmentProps> = ({
               to={`/dashboard/equipment?team=${teamId}`}
               className="inline-flex items-center justify-center gap-2"
             >
-              View all equipment
+              {t('teamsCards.viewAllEquipment')}
               <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>

@@ -23,6 +23,7 @@ import type {
   ExternalContactInsert,
 } from '@/features/teams/types/team';
 import type { QBCustomerPayload } from '@/features/teams/services/customerAccountService';
+import { useI18n } from '@/i18n';
 
 // ============================================
 // Customer Account Queries
@@ -50,14 +51,15 @@ export function useCustomer(customerId: string | undefined) {
 // Customer Account Mutations
 // ============================================
 
-function requireOrganizationId(organizationId: string | undefined): string {
+function requireOrganizationId(organizationId: string | undefined, errorMessage: string): string {
   if (!organizationId) {
-    throw new Error('Select an organization before syncing QuickBooks customers.');
+    throw new Error(errorMessage);
   }
   return organizationId;
 }
 
 export function useCustomerMutations(organizationId: string | undefined) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -70,7 +72,7 @@ export function useCustomerMutations(organizationId: string | undefined) {
     mutationFn: (data: CustomerInsert) => createCustomer(data),
     onSuccess: () => invalidate(),
     onError: (err: Error) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('teamsFeedback.error'), description: err.message, variant: 'destructive' });
     },
   });
 
@@ -82,7 +84,7 @@ export function useCustomerMutations(organizationId: string | undefined) {
       invalidate();
     },
     onError: (err: Error) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('teamsFeedback.error'), description: err.message, variant: 'destructive' });
     },
   });
 
@@ -91,48 +93,48 @@ export function useCustomerMutations(organizationId: string | undefined) {
       linkTeamToCustomer(teamId, customerId, organizationId),
     onSuccess: () => invalidate(),
     onError: (err: Error) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('teamsFeedback.error'), description: err.message, variant: 'destructive' });
     },
   });
 
   const importFromQB = useMutation({
     mutationFn: ({ qb }: { qb: QBCustomerPayload }) =>
-      importCustomerFromQB(requireOrganizationId(organizationId), qb),
+      importCustomerFromQB(requireOrganizationId(organizationId, t('teamsFeedback.selectOrg')), qb),
     onSuccess: (data) => {
-      toast({ title: 'Imported', description: 'Customer imported from QuickBooks' });
+      toast({ title: t('teamsFeedback.imported'), description: t('teamsFeedback.importedDescription') });
       queryClient.invalidateQueries({ queryKey: ['external-contacts', data.id] });
       invalidate();
     },
     onError: (err: Error) => {
-      toast({ title: 'Import failed', description: err.message, variant: 'destructive' });
+      toast({ title: t('teamsFeedback.importFailed'), description: err.message, variant: 'destructive' });
     },
   });
 
   const refreshFromQB = useMutation({
     mutationFn: ({ customerId, qb }: { customerId: string; qb: QBCustomerPayload }) =>
-      refreshCustomerFromQB(requireOrganizationId(organizationId), customerId, qb),
+      refreshCustomerFromQB(requireOrganizationId(organizationId, t('teamsFeedback.selectOrg')), customerId, qb),
     onSuccess: (_data, vars) => {
-      toast({ title: 'Refreshed', description: 'Customer data refreshed from QuickBooks' });
+      toast({ title: t('teamsFeedback.refreshed'), description: t('teamsFeedback.refreshedDescription') });
       queryClient.invalidateQueries({ queryKey: ['customer', vars.customerId] });
       queryClient.invalidateQueries({ queryKey: ['external-contacts', vars.customerId] });
       invalidate();
     },
     onError: (err: Error) => {
-      toast({ title: 'Refresh failed', description: err.message, variant: 'destructive' });
+      toast({ title: t('teamsFeedback.refreshFailed'), description: err.message, variant: 'destructive' });
     },
   });
 
   const remapFromQB = useMutation({
     mutationFn: ({ customerId, qb }: { customerId: string; qb: QBCustomerPayload }) =>
-      remapCustomerFromQB(requireOrganizationId(organizationId), customerId, qb),
+      remapCustomerFromQB(requireOrganizationId(organizationId, t('teamsFeedback.selectOrg')), customerId, qb),
     onSuccess: (_data, vars) => {
-      toast({ title: 'QuickBooks link updated', description: 'Customer account now points at the selected QuickBooks customer' });
+      toast({ title: t('teamsFeedback.qbUpdated'), description: t('teamsFeedback.qbUpdatedDescription') });
       queryClient.invalidateQueries({ queryKey: ['customer', vars.customerId] });
       queryClient.invalidateQueries({ queryKey: ['external-contacts', vars.customerId] });
       invalidate();
     },
     onError: (err: Error) => {
-      toast({ title: 'Update failed', description: err.message, variant: 'destructive' });
+      toast({ title: t('teamsFeedback.updateFailed'), description: err.message, variant: 'destructive' });
     },
   });
 
@@ -156,6 +158,7 @@ export function useExternalContactMutations(
   organizationId: string | undefined,
   customerId: string | undefined
 ) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -165,37 +168,37 @@ export function useExternalContactMutations(
 
   const create = useMutation({
     mutationFn: (data: ExternalContactInsert) =>
-      createExternalContact(requireOrganizationId(organizationId), data),
+      createExternalContact(requireOrganizationId(organizationId, t('teamsFeedback.selectOrg')), data),
     onSuccess: () => {
-      toast({ title: 'Contact added' });
+      toast({ title: t('teamsFeedback.contactAdded') });
       invalidate();
     },
     onError: (err: Error) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('teamsFeedback.error'), description: err.message, variant: 'destructive' });
     },
   });
 
   const update = useMutation({
     mutationFn: ({ id, fields }: { id: string; fields: ExternalContactFieldsInput }) =>
-      updateExternalContact(requireOrganizationId(organizationId), id, fields),
+      updateExternalContact(requireOrganizationId(organizationId, t('teamsFeedback.selectOrg')), id, fields),
     onSuccess: () => {
-      toast({ title: 'Contact updated' });
+      toast({ title: t('teamsFeedback.contactUpdated') });
       invalidate();
     },
     onError: (err: Error) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('teamsFeedback.error'), description: err.message, variant: 'destructive' });
     },
   });
 
   const remove = useMutation({
     mutationFn: (contactId: string) =>
-      deleteExternalContact(requireOrganizationId(organizationId), contactId),
+      deleteExternalContact(requireOrganizationId(organizationId, t('teamsFeedback.selectOrg')), contactId),
     onSuccess: () => {
-      toast({ title: 'Contact removed' });
+      toast({ title: t('teamsFeedback.contactRemoved') });
       invalidate();
     },
     onError: (err: Error) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('teamsFeedback.error'), description: err.message, variant: 'destructive' });
     },
   });
 

@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,11 +16,10 @@ import { useWorkOrderTimeline } from '@/features/work-orders/hooks/useHistorical
 import { cn } from '@/lib/utils';
 import { MOBILE_WO_FAB_AVOIDANCE_INSET_CLASS } from '@/features/work-orders/utils/workOrderDetailsViewModel';
 import {
-  buildCreationDescription,
-  getCreationTitle,
-  getStatusChangeDescription,
-  getStatusChangeTitle,
-} from '@/features/work-orders/utils/workOrderTimelineLabels';
+  localizeCreationDescription,
+  localizeTimelineDescription,
+  localizeTimelineTitle,
+} from '@/features/work-orders/utils/localizeWorkOrderTimelineEvent';
 import { UserIdentityCard } from '@/components/common/UserIdentityCard';
 
 interface WorkOrderTimelineProps {
@@ -62,6 +62,7 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
   showDetailedHistory = true,
   headerAction,
 }) => {
+  const { t } = useI18n();
   const { formatDateTime } = useFormatTimestamp();
   const { data: historyRows = [], isLoading } = useWorkOrderTimeline(workOrder.id);
   const isHistorical = Boolean(workOrder.is_historical);
@@ -71,18 +72,18 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
       const metadata = history.metadata as { assignee_id?: string } | null;
       const assigneeSuffix =
         history.new_status === 'assigned' && metadata?.assignee_id
-          ? ' (assignee recorded)'
+          ? ` (${t('workOrderTimelineNote.assigneeRecorded')})`
           : '';
 
       return {
         id: history.id,
-        title: getStatusChangeTitle(history.old_status, history.new_status),
-        description: `${getStatusChangeDescription(history.old_status, history.new_status, history.reason ?? undefined)}${assigneeSuffix}`,
+        title: localizeTimelineTitle(history.old_status, history.new_status, t),
+        description: `${localizeTimelineDescription(history.old_status, history.new_status, history.reason ?? undefined, t)}${assigneeSuffix}`,
         timestamp: history.changed_at,
         type: history.new_status,
         icon: getStatusIcon(history.new_status),
         actor: {
-          name: history.profiles?.name || 'System',
+          name: history.profiles?.name || t('workOrderTimelineNote.systemActor'),
           avatarUrl: history.profiles?.avatar_url ?? null,
         },
         isPublic: true,
@@ -101,17 +102,13 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
     if (!historyHasCreation) {
       events.push({
         id: 'created',
-        title: getCreationTitle(workOrder.status, Boolean(workOrder.assigneeName)),
-        description: buildCreationDescription({
-          status: workOrder.status,
-          createdByName: workOrder.createdByName,
-          assigneeName: workOrder.assigneeName,
-        }),
+        title: workOrder.status === 'assigned' && workOrder.assigneeName ? t('workOrderTimelineNote.createdAssigned') : localizeTimelineTitle(null, workOrder.status, t),
+        description: localizeCreationDescription(workOrder.status, workOrder.createdByName, workOrder.assigneeName, t),
         timestamp: workOrder.created_date,
         type: workOrder.status,
         icon: getStatusIcon(workOrder.status),
         actor: {
-          name: workOrder.createdByName || 'System',
+          name: workOrder.createdByName || t('workOrderTimelineNote.systemActor'),
           avatarUrl: workOrder.createdByAvatarUrl ?? null,
         },
         isPublic: true,
@@ -130,13 +127,13 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
       const previousStatus = mostRecentHistoryStatus ?? null;
       events.push({
         id: 'current',
-        title: getStatusChangeTitle(previousStatus, workOrder.status),
-        description: getStatusChangeDescription(previousStatus, workOrder.status),
+        title: localizeTimelineTitle(previousStatus, workOrder.status, t),
+        description: localizeTimelineDescription(previousStatus, workOrder.status, undefined, t),
         timestamp: workOrder.updated_at || workOrder.created_date,
         type: workOrder.status,
         icon: getStatusIcon(workOrder.status),
         actor: {
-          name: workOrder.assigneeName || historyEvents[0]?.actor.name || 'System',
+          name: workOrder.assigneeName || historyEvents[0]?.actor.name || t('workOrderTimelineNote.systemActor'),
           avatarUrl:
             workOrder.assignedTo?.avatarUrl ??
             historyEvents[0]?.actor.avatarUrl ??
@@ -155,6 +152,7 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
     );
   }, [
     historyRows,
+    t,
     isHistorical,
     showDetailedHistory,
     workOrder.assigneeName,
@@ -196,7 +194,7 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
         <div className={cn('flex flex-wrap items-center justify-between gap-3', MOBILE_WO_FAB_AVOIDANCE_INSET_CLASS)}>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <Clock className="h-5 w-5" />
-            Timeline
+            {t('workOrderActivity.timeline')}
             {timelineHasBeenEdited ? (
               <TooltipProvider>
                 <Tooltip>
@@ -204,18 +202,16 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
                     <button
                       type="button"
                       className="inline-flex items-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:ring-offset-2"
-                      aria-label="Edited timeline"
+                      aria-label={t('workOrderActivity.editedTimeline')}
                       data-testid="timeline-edited-indicator"
                     >
                       <Pencil className="h-4 w-4" aria-hidden />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
-                    <p className="font-medium">Edited timeline</p>
+                    <p className="font-medium">{t('workOrderActivity.editedTimeline')}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      An admin backdated or corrected status events and dates to reflect paper
-                      records or actual field history. These timestamps may differ from when changes
-                      were recorded in EquipQR.
+                      {t('workOrderActivity.editedTimelineHint')}
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -223,7 +219,7 @@ const WorkOrderTimeline: React.FC<WorkOrderTimelineProps> = ({
             ) : null}
             {!showDetailedHistory && (
               <Badge variant="outline" className="text-xs">
-                Limited View
+                {t('workOrderActivity.limitedView')}
               </Badge>
             )}
           </CardTitle>

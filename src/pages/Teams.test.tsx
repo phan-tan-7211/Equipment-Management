@@ -6,6 +6,7 @@ import Teams from '@/features/teams/pages/Teams';
 import { personas, type UserPersona } from '@vitest-harness/fixtures/personas';
 import { teams as teamFixtures, organizations } from '@vitest-harness/fixtures/entities';
 import type { TeamWithMembers } from '@/features/teams/types/team';
+import { I18nProvider } from '@/i18n';
 
 vi.mock('@/features/teams/components/CreateTeamDialog', () => ({
   default: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
@@ -172,6 +173,19 @@ describe('Teams Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockNavigate.mockClear();
+    window.localStorage.removeItem('znteqr-language');
+  });
+
+  it.each([
+    ['vi', 'Tìm nhóm theo tên hoặc mô tả', 'Thành viên nhóm'],
+    ['ko', '이름 또는 설명으로 팀 검색', '팀 구성원'],
+  ])('localizes the list controls and member labels in %s', (language, searchLabel, membersLabel) => {
+    window.localStorage.setItem('znteqr-language', language);
+    setupAsPersona(personas.owner, { teams: [maintenanceTeam] });
+    render(<I18nProvider><Teams /></I18nProvider>);
+    expect(screen.getByRole('textbox', { name: searchLabel })).toBeInTheDocument();
+    expect(screen.getByText(membersLabel)).toBeInTheDocument();
+    expect(screen.getByText(teamFixtures.maintenance.name)).toBeInTheDocument();
   });
 
   // --------------------------------------------------------

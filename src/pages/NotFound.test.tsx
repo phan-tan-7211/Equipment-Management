@@ -21,7 +21,7 @@ describe('NotFound Page', () => {
     render(<NotFound />);
 
     expect(screen.getByText(/we couldn't find the public equipqr page at/i)).toBeInTheDocument();
-    expect(screen.getByText('/')).toBeInTheDocument();
+    expect(screen.getByText(/at \/\. Check the address/i)).toBeInTheDocument();
   });
 
   it('renders return home and releases links', () => {
@@ -45,4 +45,3 @@ describe('NotFound Page', () => {
     );
   });
 });
-

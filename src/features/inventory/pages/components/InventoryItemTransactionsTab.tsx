@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,15 +13,16 @@ const InventoryItemTransactionsTab: React.FC<InventoryItemTransactionsTabProps> 
   transactions,
 }) => {
   const { formatDateTime } = useFormatTimestamp();
+  const { t } = useI18n();
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Transaction History</CardTitle>
+        <CardTitle>{t('inventoryDetail.transactionHistory')}</CardTitle>
       </CardHeader>
       <CardContent>
         {transactions.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No transactions yet</p>
+          <p className="text-muted-foreground text-center py-8">{t('inventoryDetail.noTransactions')}</p>
         ) : (
           <div className="space-y-4">
             {transactions.map((transaction) => (
@@ -30,7 +32,11 @@ const InventoryItemTransactionsTab: React.FC<InventoryItemTransactionsTabProps> 
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="outline">{transaction.transaction_type}</Badge>
+                    <Badge variant="outline">
+                      {['usage', 'restock', 'adjustment', 'initial', 'work_order'].includes(transaction.transaction_type)
+                        ? t(`inventoryDetail.transactionType.${transaction.transaction_type}`)
+                        : transaction.transaction_type}
+                    </Badge>
                     <span className="font-medium">
                       {transaction.change_amount > 0 ? '+' : ''}
                       {transaction.change_amount}
@@ -43,7 +49,7 @@ const InventoryItemTransactionsTab: React.FC<InventoryItemTransactionsTabProps> 
                     <p className="text-sm mt-1">{transaction.notes}</p>
                   )}
                   <p className="text-xs text-muted-foreground mt-1">
-                    {transaction.userName || 'Unknown'} •{' '}
+                    {transaction.userName || t('inventoryDetail.unknown')} •{' '}
                     {formatDateTime(transaction.created_at)}
                   </p>
                 </div>

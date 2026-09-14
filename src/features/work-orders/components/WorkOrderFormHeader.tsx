@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import {
   DialogHeader,
@@ -18,15 +19,16 @@ export const WorkOrderFormHeader: React.FC<WorkOrderFormHeaderProps> = ({
   isEditMode,
   preSelectedEquipment
 }) => {
+  const { t } = useI18n();
   return (
     <DialogHeader>
-      <DialogTitle>{isEditMode ? 'Edit Work Order' : 'Create Work Order'}</DialogTitle>
+      <DialogTitle>{isEditMode ? t('workOrderForm.editTitle') : t('workOrderForm.createTitle')}</DialogTitle>
       <DialogDescription>
         {isEditMode ?
-          `Update the work order details` :
+          t('workOrderForm.editDescription') :
           (preSelectedEquipment ?
-            `Create a new work order for ${preSelectedEquipment.name}` :
-            'Create a new work order for your equipment'
+            t('workOrderForm.createForEquipment', { name: preSelectedEquipment.name || '' }) :
+            t('workOrderForm.createDescription')
           )
         }
       </DialogDescription>

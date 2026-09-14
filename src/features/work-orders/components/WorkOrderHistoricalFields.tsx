@@ -1,5 +1,6 @@
 // fallow-ignore-file code-duplication
 // Duplication rationale: Historical filters mirror live filter selects
+import { useI18n } from '@/i18n';
 import React, { useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +15,6 @@ import {
   synthesizeDefaultTimeline,
   type HistoricalTimelineEvent,
 } from '@/features/work-orders/utils/historicalTimeline';
-import { formatStatus } from '@/features/work-orders/utils/workOrderHelpers';
 
 interface WorkOrderHistoricalFieldsProps {
   values: Partial<WorkOrderFormData>;
@@ -27,6 +27,7 @@ export const WorkOrderHistoricalFields: React.FC<WorkOrderHistoricalFieldsProps>
   errors,
   setValue
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const [timelineDialogOpen, setTimelineDialogOpen] = useState(false);
   const timelineEvents = values.historicalTimelineEvents;
@@ -66,23 +67,23 @@ export const WorkOrderHistoricalFields: React.FC<WorkOrderHistoricalFieldsProps>
     <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
       <h3 className="font-medium flex items-center gap-2">
         <CalendarIcon className="h-4 w-4" />
-        Historical Information
+        {t('workOrderForm.historicalInformation')}
       </h3>
       
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Start Date *</Label>
+          <Label>{t('workOrderForm.startDate')}</Label>
           <DateTimePicker
             date={values.historicalStartDate}
             onDateChange={(date) => setValue('historicalStartDate', date)}
-            placeholder="Pick start date and time"
+            placeholder={t('workOrderForm.pickStartDate')}
           />
           {errors.historicalStartDate && (
             <p className="text-sm text-destructive">{errors.historicalStartDate}</p>
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="status">Final Status</Label>
+          <Label htmlFor="status">{t('workOrderForm.finalStatus')}</Label>
           <Select
             value={values.status || 'accepted'}
             onValueChange={(value) => {
@@ -97,13 +98,13 @@ export const WorkOrderHistoricalFields: React.FC<WorkOrderHistoricalFieldsProps>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="submitted">Submitted</SelectItem>
-              <SelectItem value="accepted">Accepted</SelectItem>
-              <SelectItem value="assigned">Assigned</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="on_hold">On Hold</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="submitted">{t('workOrderForm.statusSubmitted')}</SelectItem>
+              <SelectItem value="accepted">{t('workOrderForm.statusAccepted')}</SelectItem>
+              <SelectItem value="assigned">{t('workOrderForm.statusAssigned')}</SelectItem>
+              <SelectItem value="in_progress">{t('workOrderForm.statusInProgress')}</SelectItem>
+              <SelectItem value="on_hold">{t('workOrderForm.statusOnHold')}</SelectItem>
+              <SelectItem value="completed">{t('workOrderForm.statusCompleted')}</SelectItem>
+              <SelectItem value="cancelled">{t('workOrderForm.statusCancelled')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -111,25 +112,25 @@ export const WorkOrderHistoricalFields: React.FC<WorkOrderHistoricalFieldsProps>
 
       {(values.status === 'completed' || values.status === 'cancelled') && (
         <div className="space-y-2">
-          <Label>Completion Date</Label>
+          <Label>{t('workOrderForm.completionDate')}</Label>
           <DateTimePicker
             date={values.completedDate ?? undefined}
             onDateChange={(date) => {
               setValue('completedDate', date);
               setValue('historicalTimelineEvents', undefined);
             }}
-            placeholder="Pick completion date and time"
+            placeholder={t('workOrderForm.pickCompletionDate')}
           />
         </div>
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="historicalNotes">Historical Notes</Label>
+        <Label htmlFor="historicalNotes">{t('workOrderForm.historicalNotes')}</Label>
         <Textarea
           id="historicalNotes"
           value={values.historicalNotes || ''}
           onChange={(e) => setValue('historicalNotes', e.target.value)}
-          placeholder="Notes about this historical record..."
+          placeholder={t('workOrderForm.historicalNotesHint')}
           rows={2}
         />
       </div>
@@ -142,15 +143,15 @@ export const WorkOrderHistoricalFields: React.FC<WorkOrderHistoricalFieldsProps>
           disabled={!values.historicalStartDate || !values.status || !currentOrganization?.id || !values.equipmentId}
         >
           <CalendarClock className="mr-2 h-4 w-4" />
-          Build timeline
+          {t('workOrderForm.buildTimeline')}
         </Button>
         {timelineEvents && timelineEvents.length > 0 ? (
           <p className="text-sm text-muted-foreground">
-            Custom timeline with {timelineEvents.length} events ending in {formatStatus(timelineEvents[timelineEvents.length - 1]?.newStatus ?? values.status ?? 'accepted')}.
+            {t('workOrderForm.customTimeline', { count: timelineEvents.length, status: t(`workOrderForm.status${({ submitted: 'Submitted', accepted: 'Accepted', assigned: 'Assigned', in_progress: 'InProgress', on_hold: 'OnHold', completed: 'Completed', cancelled: 'Cancelled' } as Record<string, string>)[timelineEvents[timelineEvents.length - 1]?.newStatus ?? values.status ?? 'accepted']}`) })}
           </p>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Optional. Leave blank to auto-generate a valid timeline from start, final status, and completion date.
+            {t('workOrderForm.autoTimelineHint')}
           </p>
         )}
       </div>
@@ -162,7 +163,7 @@ export const WorkOrderHistoricalFields: React.FC<WorkOrderHistoricalFieldsProps>
           workOrderId="create-mode"
           organizationId={currentOrganization.id}
           equipmentId={values.equipmentId}
-          title="Build historical timeline"
+          title={t('workOrderForm.buildHistoricalTimeline')}
           mode="create"
           initialEvents={timelineEvents}
           onCreateSave={handleTimelineSave}

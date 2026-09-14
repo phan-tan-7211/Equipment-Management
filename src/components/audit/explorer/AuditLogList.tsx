@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
+import { useI18n } from '@/i18n/I18nProvider';
 import { ChangesSummary } from '@/components/audit/ChangesDiff';
 import {
   ACTION_SEVERITY_COLOR,
@@ -114,6 +115,7 @@ function AuditListRow({
   createdAtLabel,
   rootRole = 'option',
 }: RowProps) {
+  const { t } = useI18n();
   const handleClick = (e: React.MouseEvent) => {
     onRowClick(entry, modifiersFromEvent(e));
   };
@@ -145,7 +147,7 @@ function AuditListRow({
         onCheckedChange={() => onCheckboxToggle(entry)}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
-        aria-label={`Select audit entry for ${entry.entity_name ?? 'unknown entity'}`}
+        aria-label={t('auditExplorer.selectEntry', { name: entry.entity_name ?? t('auditExplorer.unknownEntity') })}
         className="h-3.5 w-3.5 shrink-0"
         data-testid="audit-log-row-checkbox"
       />
@@ -162,16 +164,16 @@ function AuditListRow({
         variant="outline"
         className="text-[10px] py-0 px-1.5 h-4 font-normal shrink-0"
       >
-        {entry.entityTypeLabel}
+        {t(`auditLogControls.${entry.entity_type}`)}
       </Badge>
       <Badge
         variant={getActionBadgeVariant(entry.action)}
         className="text-[10px] py-0 px-1.5 h-4 font-normal shrink-0"
       >
-        {entry.actionLabel}
+        {t(`auditLogControls.${entry.action}`)}
       </Badge>
       <span className="font-medium truncate min-w-0 basis-45">
-        {entry.entity_name ?? 'Unknown'}
+        {entry.entity_name ?? t('auditExplorer.unknown')}
       </span>
       <span className="text-muted-foreground truncate min-w-0 basis-30">
         {entry.actor_name}
@@ -180,7 +182,7 @@ function AuditListRow({
         {Object.keys(entry.changes).length > 0 ? (
           <ChangesSummary changes={entry.changes} />
         ) : (
-          <span className="italic">No changes</span>
+          <span className="italic">{t('auditExplorer.noChanges')}</span>
         )}
       </span>
     </div>
@@ -197,6 +199,7 @@ export function AuditLogList({
   isLoading = false,
   emptyState,
 }: AuditLogListProps) {
+  const { t } = useI18n();
   const { formatDateTime } = useFormatTimestamp();
 
   const firstSelectedId = useMemo(() => {
@@ -297,7 +300,7 @@ export function AuditLogList({
       <div
         ref={containerRef}
         role="listbox"
-        aria-label="Audit log entries"
+        aria-label={t('auditExplorer.listAria')}
         aria-multiselectable="true"
         tabIndex={0}
         onKeyDown={handleKeyDown}
@@ -323,7 +326,7 @@ export function AuditLogList({
     <div
       ref={containerRef}
       role="listbox"
-      aria-label="Audit log entries"
+      aria-label={t('auditExplorer.listAria')}
       aria-multiselectable="true"
       tabIndex={0}
       onKeyDown={handleKeyDown}

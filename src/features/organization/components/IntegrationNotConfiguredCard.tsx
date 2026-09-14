@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { useI18n } from '@/i18n';
 import {
   IntegrationCardHeader,
   IntegrationCardLayout,
@@ -16,6 +17,7 @@ export function IntegrationNotConfiguredCard({
   description,
   icon,
 }: IntegrationNotConfiguredCardProps) {
+  const { t } = useI18n();
   return (
     <IntegrationCardLayout>
       <IntegrationCardHeader
@@ -24,7 +26,7 @@ export function IntegrationNotConfiguredCard({
         icon={icon}
         badge={
           <Badge variant="secondary" className="text-xs">
-            Not configured
+            {t('organizationIntegrations.notConfigured')}
           </Badge>
         }
       />

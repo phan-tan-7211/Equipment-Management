@@ -17,6 +17,7 @@ import { useGoogleMapsKey } from '@/hooks/useGoogleMapsKey';
 import { useIsDarkTheme } from '@/hooks/useThemeVersion';
 import type { SessionOrganization } from '@/types/session';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 
 type OrganizationInventoryDefaultLocationSectionProps = {
   organization: SessionOrganization;
@@ -27,6 +28,7 @@ export function OrganizationInventoryDefaultLocationSection({
   organization,
   onSaved,
 }: OrganizationInventoryDefaultLocationSectionProps) {
+  const { t } = useI18n();
   const { isLoaded: isPlacesLoaded } = useGoogleMapsLoader();
   const isDark = useIsDarkTheme();
   const { googleMapsKey, mapId } = useGoogleMapsKey();
@@ -89,41 +91,41 @@ export function OrganizationInventoryDefaultLocationSection({
       }
 
       await onSaved();
-      toast.success('Inventory default location saved');
+      toast.success(t('organizationHub.inventoryLocationSaved'));
     } catch (error) {
       console.error('Error saving inventory default location:', error);
-      toast.error('Failed to save inventory default location');
+      toast.error(t('organizationHub.inventoryLocationFailed'));
     } finally {
       setIsSaving(false);
     }
-  }, [editor.isCleared, editor.pendingPlace, locationName, onSaved, organization.id]);
+  }, [editor.isCleared, editor.pendingPlace, locationName, onSaved, organization.id, t]);
 
   return (
     <div className="py-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
         <div className="pt-0.5">
-          <h2 className="text-sm font-semibold">Inventory Default Location</h2>
+          <h2 className="text-sm font-semibold">{t('organizationHub.inventoryLocation')}</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Parts inherit this address until they set their own storage location.
+            {t('organizationHub.inventoryLocationDescription')}
           </p>
         </div>
         <div className="md:col-span-2 space-y-4 rounded-lg border p-4">
           <div className="space-y-2">
-            <Label htmlFor="inventory-default-location-name">Default Location Name</Label>
+            <Label htmlFor="inventory-default-location-name">{t('organizationHub.locationName')}</Label>
             <Input
               id="inventory-default-location-name"
               value={locationName}
               onChange={(event) => setLocationName(event.target.value)}
-              placeholder="e.g., Main Shop, Yard Cage"
+              placeholder={t('organizationHub.locationNamePlaceholder')}
               disabled={isSaving}
             />
             <p className="text-xs text-muted-foreground">
-              Optional nickname shown when parts inherit this organization default.
+              {t('organizationHub.locationNameHelp')}
             </p>
           </div>
 
           <StructuredLocationEditorControls
-            locationLabel="Default storage address"
+            locationLabel={t('organizationHub.storageAddress')}
             locationAddress={editor.addressValue}
             onPlaceSelect={editor.handlePlaceSelect}
             onClear={editor.handleClear}
@@ -137,8 +139,8 @@ export function OrganizationInventoryDefaultLocationSection({
             isLiveCaptureOpen={editor.isLiveCaptureOpen}
             onLiveCaptureOpenChange={editor.setIsLiveCaptureOpen}
             onConfirmLiveLocation={editor.handleSaveLiveLocation}
-            liveCaptureTitle="Set inventory default from this device"
-            liveCaptureConfirmLabel="Use this location"
+            liveCaptureTitle={t('organizationHub.deviceLocation')}
+            liveCaptureConfirmLabel={t('organizationHub.useLocation')}
             isSaving={isSaving}
           />
 
@@ -155,7 +157,7 @@ export function OrganizationInventoryDefaultLocationSection({
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {isSaving ? 'Saving...' : 'Save default location'}
+              {isSaving ? t('organizationHub.saving') : t('organizationHub.saveLocation')}
             </Button>
           </div>
         </div>

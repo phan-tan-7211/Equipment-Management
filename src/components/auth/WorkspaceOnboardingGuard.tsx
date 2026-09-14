@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWorkspaceOnboardingState } from '@/hooks/useWorkspaceOnboarding';
 import { isConsumerGoogleDomain, isGoogleUser } from '@/utils/google-workspace';
 import WorkspaceAccessGate from '@/components/auth/WorkspaceAccessGate';
+import { useAuthFlowCopy } from './useAuthFlowCopy';
 
 interface WorkspaceOnboardingGuardProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
   children,
   loadingFallback,
 }) => {
+  const t = useAuthFlowCopy();
   const { user } = useAuth();
   const { data: onboardingState, isLoading, isError, refetch } = useWorkspaceOnboardingState();
 
@@ -32,7 +34,7 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
     }
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-label="Checking workspace access" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-label={t('authFlow.checkingWorkspace')} />
       </div>
     );
   }

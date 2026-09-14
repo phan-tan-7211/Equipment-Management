@@ -1,5 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@vitest-harness/utils/test-utils';
+import { I18nProvider } from '@/i18n';
 import userEvent from '@testing-library/user-event';
 import QuickFormPublicPage from '@/features/quick-forms/pages/QuickFormPublicPage';
 
@@ -42,6 +43,8 @@ vi.mock('sonner', () => ({
 }));
 
 describe('QuickFormPublicPage captcha wiring', () => {
+  afterEach(() => window.localStorage.removeItem('znteqr-language'));
+
   beforeEach(() => {
     mockLoadQuickForm.mockReset();
     mockSubmitQuickForm.mockReset();
@@ -104,5 +107,17 @@ describe('QuickFormPublicPage captcha wiring', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/submission received/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/submit again with the same qr code/i)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['vi', 'Gửi', 'Hoàn thành CAPTCHA bên dưới để gửi.'],
+    ['ko', '제출', '제출하려면 아래 CAPTCHA를 완료하세요.'],
+  ])('renders the public form controls in %s', async (language, submitLabel, captchaPrompt) => {
+    window.localStorage.setItem('znteqr-language', language);
+    render(<I18nProvider><QuickFormPublicPage /></I18nProvider>);
+
+    await screen.findByRole('heading', { name: /rt-03 throttle guard/i });
+    expect(screen.getByRole('button', { name: submitLabel })).toBeDisabled();
+    expect(screen.getByText(captchaPrompt)).toBeInTheDocument();
   });
 });

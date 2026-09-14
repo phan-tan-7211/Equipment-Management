@@ -1,5 +1,6 @@
 import type { InventoryListMetadata } from '@/features/inventory/types/inventory';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 type InventoryHealthSummaryProps = {
   metadata: InventoryListMetadata;
@@ -18,13 +19,18 @@ export function InventoryHealthSummary({
   metadata,
   className,
 }: InventoryHealthSummaryProps) {
+  const { t } = useI18n();
   const stats = [
-    { label: 'Total', value: metadata.totalCount, tone: 'text-foreground' },
-    { label: 'Low stock', value: metadata.lowStockCount, tone: 'text-warning' },
-    { label: 'Out of stock', value: metadata.outOfStockCount, tone: 'text-destructive' },
-    { label: 'Negative', value: metadata.negativeStockCount, tone: 'text-destructive' },
+    { label: t('inventoryList.total'), value: metadata.totalCount, tone: 'text-foreground' },
     {
-      label: 'Missing data',
+      label: t('inventoryList.quickFilterLabels.low-stock'),
+      value: metadata.lowStockCount,
+      tone: 'text-warning',
+    },
+    { label: t('inventoryList.outOfStock'), value: metadata.outOfStockCount, tone: 'text-destructive' },
+    { label: t('inventoryList.negative'), value: metadata.negativeStockCount, tone: 'text-destructive' },
+    {
+      label: t('inventoryList.missingData'),
       value:
         metadata.missingLocationCount +
         metadata.missingUnitCostCount +
@@ -32,7 +38,7 @@ export function InventoryHealthSummary({
       tone: 'text-muted-foreground',
     },
     {
-      label: 'Est. value',
+      label: t('inventoryList.estimatedValue'),
       value: formatCurrency(metadata.estimatedInventoryValue),
       tone: 'text-foreground',
       isText: true,
@@ -45,7 +51,7 @@ export function InventoryHealthSummary({
         'grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6',
         className,
       )}
-      aria-label="Inventory health summary"
+      aria-label={t('inventoryList.healthSummary')}
     >
       {stats.map((stat) => (
         <div
@@ -54,7 +60,7 @@ export function InventoryHealthSummary({
         >
           <p className="text-xs text-muted-foreground">{stat.label}</p>
           <p className={cn('text-sm font-semibold tabular-nums', stat.tone)}>
-            {stat.isText ? stat.value : stat.value}
+            {stat.value}
           </p>
         </div>
       ))}

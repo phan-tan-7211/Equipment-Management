@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { lazy, Suspense } from 'react';
 import { handleKeyboardActivation } from '@/components/a11y/keyboard';
 import { Search, CheckCircle2 } from 'lucide-react';
@@ -120,6 +121,7 @@ export function InventoryItemDetailDialogs({
   alternateGroups,
   onDelete,
 }: InventoryItemDetailDialogsProps) {
+  const { t } = useI18n();
   const outlineSecondaryClass = isMobile ? 'border-2 border-input bg-muted/25 hover:bg-muted/40' : '';
   const filteredEquipment = allEquipment.filter(
     (equipment) =>
@@ -141,14 +143,14 @@ export function InventoryItemDetailDialogs({
       <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Inventory Item</DialogTitle>
+            <DialogTitle>{t('inventoryDetail.deleteInventoryItem')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{item.name}"? This will permanently delete the item and all its transaction history. This action cannot be undone.
+              {t('inventoryDetail.deleteConfirm', { name: item.name })}
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setShowDeleteConfirmation(false)}>
-              Cancel
+              {t('inventoryDetail.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -157,7 +159,7 @@ export function InventoryItemDetailDialogs({
                 setShowDeleteDialog(true);
               }}
             >
-              Continue
+              {t('inventoryDetail.continue')}
             </Button>
           </div>
         </DialogContent>
@@ -166,9 +168,9 @@ export function InventoryItemDetailDialogs({
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Final Confirmation</DialogTitle>
+            <DialogTitle>{t('inventoryDetail.finalConfirmation')}</DialogTitle>
             <DialogDescription>
-              This will permanently delete "{item.name}" and all {transactionCount} transaction record{transactionCount !== 1 ? 's' : ''}. This action cannot be undone.
+              {t('inventoryDetail.deleteFinal', { name: item.name, count: transactionCount })}
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2">
@@ -179,10 +181,10 @@ export function InventoryItemDetailDialogs({
                 setShowDeleteConfirmation(false);
               }}
             >
-              Cancel
+              {t('inventoryDetail.cancel')}
             </Button>
             <Button variant="destructive" onClick={() => void onDelete()}>
-              Delete Permanently
+              {t('inventoryDetail.deletePermanently')}
             </Button>
           </div>
         </DialogContent>
@@ -219,16 +221,16 @@ export function InventoryItemDetailDialogs({
       <Dialog open={equipmentDialog.showAddEquipmentDialog} onOpenChange={equipmentDialog.setShowAddEquipmentDialog}>
         <DialogContent className="max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Manage Compatible Equipment</DialogTitle>
+            <DialogTitle>{t('inventoryDetail.manageCompatibleEquipment')}</DialogTitle>
             <DialogDescription>
-              Select equipment that is compatible with this inventory item
+              {t('inventoryDetail.selectEquipment')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search equipment..."
+                placeholder={t('inventoryDetail.searchEquipment')}
                 value={equipmentDialog.equipmentSearch}
                 onChange={(e) => equipmentDialog.setEquipmentSearch(e.target.value)}
                 className="pl-9"
@@ -238,8 +240,8 @@ export function InventoryItemDetailDialogs({
               {filteredEquipment.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">
                   {allEquipment.length === 0
-                    ? 'No equipment available'
-                    : 'No equipment found matching your search'}
+                    ? t('inventoryDetail.noEquipmentAvailable')
+                    : t('inventoryDetail.noEquipmentFound')}
                 </p>
               ) : (
                 filteredEquipment.map((equipment) => (
@@ -248,7 +250,7 @@ export function InventoryItemDetailDialogs({
                     equipment={equipment}
                     isSelected={equipmentDialog.selectedEquipmentIds.includes(equipment.id)}
                     onToggle={equipmentDialog.handleEquipmentToggle}
-                    selectedBadgeLabel="Selected"
+                    selectedBadgeLabel={t('inventoryDetail.selected')}
                   />
                 ))
               )}
@@ -261,13 +263,13 @@ export function InventoryItemDetailDialogs({
             />
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => equipmentDialog.setShowAddEquipmentDialog(false)}>
-                Cancel
+                {t('inventoryDetail.cancel')}
               </Button>
               <Button
                 onClick={() => void equipmentDialog.handleSaveEquipmentCompatibility()}
                 disabled={equipmentDialog.bulkLinkPending}
               >
-                {equipmentDialog.bulkLinkPending ? 'Saving...' : 'Save Changes'}
+                {equipmentDialog.bulkLinkPending ? t('inventoryDetail.saving') : t('inventoryDetail.saveChanges')}
               </Button>
             </div>
           </div>
@@ -277,9 +279,9 @@ export function InventoryItemDetailDialogs({
       <Dialog open={showEditRules} onOpenChange={setShowEditRules}>
         <DialogContent className="max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Compatibility Rules</DialogTitle>
+            <DialogTitle>{t('inventoryDetail.editCompatibilityRules')}</DialogTitle>
             <DialogDescription>
-              Define manufacturer and model patterns to automatically match this part with compatible equipment.
+              {t('inventoryDetail.defineRules')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -294,10 +296,10 @@ export function InventoryItemDetailDialogs({
             )}
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowEditRules(false)} disabled={bulkSetRulesPending}>
-                Cancel
+                {t('inventoryDetail.cancel')}
               </Button>
               <Button onClick={() => void onSaveCompatibilityRules()} disabled={bulkSetRulesPending}>
-                {bulkSetRulesPending ? 'Saving...' : 'Save Rules'}
+                {bulkSetRulesPending ? t('inventoryDetail.saving') : t('inventoryDetail.saveRules')}
               </Button>
             </div>
           </div>
@@ -307,25 +309,24 @@ export function InventoryItemDetailDialogs({
       <Dialog open={alternateGroups.showCreateGroupDialog} onOpenChange={alternateGroups.setShowCreateGroupDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Create Alternate Group</DialogTitle>
+            <DialogTitle>{t('inventoryDetail.createAlternateGroup')}</DialogTitle>
             <DialogDescription>
-              Create a new alternate group with this item as the first member.
-              Other interchangeable parts can be added later.
+              {t('inventoryDetail.createAlternateHint')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="group-name">
-                Group Name <span className="text-destructive">*</span>
+                {t('inventoryDetail.groupName')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="group-name"
-                placeholder="e.g., Oil Filter - CAT D6T Compatible"
+                placeholder={t('inventoryDetail.groupExample')}
                 value={alternateGroups.newGroupName}
                 onChange={(e) => alternateGroups.setNewGroupName(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                A descriptive name for this group of interchangeable parts.
+                {t('inventoryDetail.groupNameHint')}
               </p>
             </div>
             <div className="flex justify-end gap-2">
@@ -337,7 +338,7 @@ export function InventoryItemDetailDialogs({
                 }}
                 disabled={alternateGroups.createGroupPending || alternateGroups.addToGroupPending}
               >
-                Cancel
+                {t('inventoryDetail.cancel')}
               </Button>
               <Button
                 onClick={() => void alternateGroups.handleCreateGroupWithItem()}
@@ -348,8 +349,8 @@ export function InventoryItemDetailDialogs({
                 }
               >
                 {alternateGroups.createGroupPending || alternateGroups.addToGroupPending
-                  ? 'Creating...'
-                  : 'Create Group'}
+                  ? t('inventoryDetail.creating')
+                  : t('inventoryDetail.createGroup')}
               </Button>
             </div>
           </div>
@@ -359,16 +360,16 @@ export function InventoryItemDetailDialogs({
       <Dialog open={alternateGroups.showAddToGroupDialog} onOpenChange={alternateGroups.setShowAddToGroupDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Add to Alternate Group</DialogTitle>
+            <DialogTitle>{t('inventoryDetail.addToAlternateGroup')}</DialogTitle>
             <DialogDescription>
-              Select an existing alternate group to add this item to.
+              {t('inventoryDetail.selectExistingGroup')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search groups..."
+                placeholder={t('inventoryDetail.searchGroups')}
                 value={alternateGroups.groupSearch}
                 onChange={(e) => alternateGroups.setGroupSearch(e.target.value)}
                 className="pl-9"
@@ -378,8 +379,8 @@ export function InventoryItemDetailDialogs({
               {alternateGroups.filteredGroups.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   {alternateGroups.availableGroupsCount === 0
-                    ? 'No available groups. Create a new one instead.'
-                    : 'No groups found matching your search'}
+                    ? t('inventoryDetail.noAvailableGroups')
+                    : t('inventoryDetail.noGroupsFound')}
                 </p>
               ) : (
                 alternateGroups.filteredGroups.map((group) => (
@@ -402,7 +403,7 @@ export function InventoryItemDetailDialogs({
                       {group.status === 'verified' && (
                         <Badge className="bg-success text-xs">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Verified
+                          {t('inventoryDetail.verified')}
                         </Badge>
                       )}
                     </div>
@@ -425,13 +426,13 @@ export function InventoryItemDetailDialogs({
                 }}
                 disabled={alternateGroups.addToGroupPending}
               >
-                Cancel
+                {t('inventoryDetail.cancel')}
               </Button>
               <Button
                 onClick={() => void alternateGroups.handleAddToGroup()}
                 disabled={!alternateGroups.selectedGroupId || alternateGroups.addToGroupPending}
               >
-                {alternateGroups.addToGroupPending ? 'Adding...' : 'Add to Group'}
+                {alternateGroups.addToGroupPending ? t('inventoryDetail.adding') : t('inventoryDetail.addToGroup')}
               </Button>
             </div>
           </div>

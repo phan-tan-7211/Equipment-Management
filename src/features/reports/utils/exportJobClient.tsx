@@ -3,6 +3,18 @@ import { ToastAction } from '@/components/ui/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { downloadBlob } from '@/utils/exportUtils';
 import { logger } from '@/utils/logger';
+import { reportsResources } from '@/i18n/reportsResources';
+
+export type ReportTranslator = (key: string, params?: Record<string, string | number>) => string;
+
+const fallbackReportTranslation: ReportTranslator = (key, params) => {
+  const value = key.split('.').reduce<unknown>((current, segment) =>
+    current && typeof current === 'object' ? (current as Record<string, unknown>)[segment] : undefined,
+  { reports: reportsResources.en.reports });
+  return typeof value === 'string'
+    ? value.replace(/{{\s*([^}\s]+)\s*}}/g, (_match, token: string) => String(params?.[token] ?? `{{${token}}}`))
+    : key;
+};
 
 export type ExportJobStatus = {
   success: boolean;
@@ -22,10 +34,10 @@ const TERMINAL = new Set(['completed', 'failed', 'rate_limited']);
  * Show a persistent loading toast while an export (sync or async) is in flight.
  * Returns update/dismiss helpers so callers can flip to success/error.
  */
-export function showExportLoadingToast(label: string) {
+export function showExportLoadingToast(label: string, t: ReportTranslator = fallbackReportTranslation) {
   const handle = toast({
-    title: 'Export in progress',
-    description: `${label} — this can take a few seconds. Please keep this tab open.`,
+    title: t('reports.exportInProgress'),
+    description: t('reports.loadingExportDescription', { label }),
     duration: Infinity,
   });
 
@@ -34,16 +46,16 @@ export function showExportLoadingToast(label: string) {
     updateSuccess: (description: string, downloadUrl?: string) => {
       handle.update({
         id: handle.id,
-        title: 'Export Complete',
+        title: t('reports.exportComplete'),
         description,
         duration: 8000,
         action: downloadUrl
           ? (
               <ToastAction
-                altText="Download export"
+                altText={t('reports.downloadExport')}
                 onClick={() => window.open(downloadUrl, '_blank', 'noopener,noreferrer')}
               >
-                Download
+                {t('reports.download')}
               </ToastAction>
             )
           : undefined,
@@ -52,7 +64,7 @@ export function showExportLoadingToast(label: string) {
     updateError: (description: string) => {
       handle.update({
         id: handle.id,
-        title: 'Export Failed',
+        title: t('reports.exportFailed'),
         description,
         variant: 'destructive',
         duration: 8000,
@@ -81,10 +93,12 @@ export async function waitForExportJob(
     intervalMs?: number;
     timeoutMs?: number;
     onStatus?: (status: ExportJobStatus) => void;
+    t?: ReportTranslator;
   },
 ): Promise<ExportJobStatus> {
   const intervalMs = options?.intervalMs ?? 1500;
   const timeoutMs = options?.timeoutMs ?? 5 * 60 * 1000;
+  const t = options?.t ?? fallbackReportTranslation;
   const started = Date.now();
 
   while (Date.now() - started < timeoutMs) {
@@ -93,17 +107,17 @@ export async function waitForExportJob(
 
     if (status.success === false) {
       if (status.code === 'not_found') {
-        throw new Error('Export job not found');
+        throw new Error(t('reports.jobNotFound'));
       }
       if (status.code === 'rate_limited' || status.status === 'rate_limited') {
         throw new Error(
           status.errorMessage ||
-            'Rate limit exceeded. Please wait before requesting another export.',
+            t('reports.rateExceeded'),
         );
       }
       throw new Error(
         status.errorMessage ||
-          (status.code ? `Export job error: ${status.code}` : 'Export job failed'),
+          (status.code ? t('reports.jobError', { code: status.code }) : t('reports.jobFailed')),
       );
     }
 
@@ -113,15 +127,16 @@ export async function waitForExportJob(
     await new Promise((r) => setTimeout(r, intervalMs));
   }
 
-  throw new Error('Export timed out. Check notifications later or try again.');
+  throw new Error(t('reports.timedOut'));
 }
 
 export async function downloadExportJobResult(
   status: ExportJobStatus,
   filename: string,
+  t: ReportTranslator = fallbackReportTranslation,
 ): Promise<void> {
   if (!status.resultUrl && !status.resultStoragePath) {
-    throw new Error('Export completed but no download URL was returned');
+    throw new Error(t('reports.noDownloadUrl'));
   }
 
   if (status.resultStoragePath) {
@@ -133,7 +148,7 @@ export async function downloadExportJobResult(
         error: error?.message,
         path: status.resultStoragePath,
       });
-      throw new Error(error?.message ?? 'Failed to download export');
+      throw new Error(error?.message ?? t('reports.downloadFailed'));
     }
     downloadBlob(data, filename);
     return;
@@ -141,7 +156,7 @@ export async function downloadExportJobResult(
 
   const response = await fetch(status.resultUrl!);
   if (!response.ok) {
-    throw new Error(`Failed to download export (${response.status})`);
+    throw new Error(t('reports.downloadFailedStatus', { status: response.status }));
   }
   downloadBlob(await response.blob(), filename);
 }

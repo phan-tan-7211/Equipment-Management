@@ -4,6 +4,34 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MobileWorkOrderCompactSummary } from './MobileWorkOrderCompactSummary';
 
+const locale = vi.hoisted(() => ({ value: 'en' as 'en' | 'vi' | 'ko' }));
+vi.mock('@/i18n', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/i18n')>();
+  const { workOrderMobileSummaryResources } = await import('@/i18n/workOrderMobileSummaryResources');
+  const { workOrderDetailResources } = await import('@/i18n/workOrderDetailResources');
+  return {
+    ...actual,
+    useI18n: () => {
+      const base = actual.useI18n();
+      return {
+        ...base,
+        t: (key: string, params?: Record<string, string | number>) => {
+          const [namespace, name] = key.split('.');
+          const bundle = namespace === 'workOrderMobileSummary'
+            ? workOrderMobileSummaryResources[locale.value].workOrderMobileSummary
+            : namespace === 'workOrderDetail'
+              ? workOrderDetailResources[locale.value].workOrderDetail
+              : null;
+          const value = bundle?.[name as keyof typeof bundle];
+          return value
+            ? value.replace(/{{(.*?)}}/g, (_token, field: string) => String(params?.[field] ?? `{{${field}}}`))
+            : base.t(key, params);
+        },
+      };
+    },
+  };
+});
+
 const { saveField, savePatch } = vi.hoisted(() => ({
   saveField: vi.fn(),
   savePatch: vi.fn(),
@@ -22,6 +50,7 @@ vi.mock('@/features/work-orders/components/InlineEditWorkOrderAssignee', () => (
 
 describe('MobileWorkOrderCompactSummary', () => {
   beforeEach(() => {
+    locale.value = 'en';
     saveField.mockClear();
     savePatch.mockClear();
   });
@@ -140,5 +169,23 @@ describe('MobileWorkOrderCompactSummary', () => {
     expect(next.getDate()).toBe(25);
     expect(next.getHours()).toBe(12);
     expect(next.getMinutes()).toBe(0);
+  });
+
+  it('localizes a mobile status action, due date and priority in Vietnamese', async () => {
+    locale.value = 'vi';
+    const onStatusPress = vi.fn();
+    render(
+      <MobileWorkOrderCompactSummary
+        workOrder={baseWorkOrder}
+        organizationId="org-1"
+        canChangeStatus
+        onStatusPress={onStatusPress}
+      />,
+    );
+    expect(screen.getByText('Ưu tiên')).toBeInTheDocument();
+    expect(screen.getByText('Thấp')).toBeInTheDocument();
+    expect(screen.getByText('Ngày đến hạn')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Trạng thái: Đã chấp nhận. Thay đổi trạng thái' }));
+    expect(onStatusPress).toHaveBeenCalledOnce();
   });
 });

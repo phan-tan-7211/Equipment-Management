@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useMemo, useState } from 'react';
 import { Forklift, Clock, Edit, Plus, List, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -57,8 +58,8 @@ interface WorkOrderEquipmentSelectorProps {
  * Utility function to get the display text for equipment location.
  * Returns the last known location name, fallback location, or 'Unknown location'.
  */
-const getEquipmentLocationDisplay = (equipment: EquipmentSelectorItem): string => {
-  return equipment.last_known_location?.name || equipment.location || 'Unknown location';
+const getEquipmentLocationDisplay = (equipment: EquipmentSelectorItem, unknownLocation: string): string => {
+  return equipment.last_known_location?.name || equipment.location || unknownLocation;
 };
 
 const formatEquipmentTriggerLabel = (equipment: EquipmentSelectorItem): string => {
@@ -66,7 +67,8 @@ const formatEquipmentTriggerLabel = (equipment: EquipmentSelectorItem): string =
 };
 
 const EquipmentOptionDetails: React.FC<{ equipment: EquipmentSelectorItem }> = ({ equipment }) => {
-  const locationDisplay = getEquipmentLocationDisplay(equipment);
+  const { t } = useI18n();
+  const locationDisplay = getEquipmentLocationDisplay(equipment, t('workOrderForm.unknownLocation'));
 
   return (
     <div className="flex min-w-0 flex-col gap-0.5 py-1 text-left">
@@ -74,10 +76,10 @@ const EquipmentOptionDetails: React.FC<{ equipment: EquipmentSelectorItem }> = (
       <span className="text-xs text-muted-foreground">
         {[equipment.manufacturer, equipment.model].filter(Boolean).join(' ')}
         {equipment.serial_number ? ` • S/N: ${equipment.serial_number}` : ''}
-        {equipment.working_hours != null ? ` • ${equipment.working_hours.toLocaleString()} hrs` : ''}
+        {equipment.working_hours != null ? t('workOrderForm.unitHours', { count: equipment.working_hours.toLocaleString() }) : ''}
       </span>
       <span className="text-xs text-muted-foreground">
-        {equipment.team?.name || 'No team'} • {locationDisplay}
+        {equipment.team?.name || t('workOrderForm.noTeam')} • {locationDisplay}
       </span>
     </div>
   );
@@ -87,6 +89,7 @@ const WorkingHoursSection: React.FC<{
   equipmentId: string;
   setValue: <K extends keyof WorkOrderFormData>(field: K, value: WorkOrderFormData[K]) => void;
 }> = ({ equipmentId, setValue }) => {
+  const { t } = useI18n();
   const [isUpdating, setIsUpdating] = useState(false);
   const [newHours, setNewHours] = useState('');
 
@@ -121,7 +124,7 @@ const WorkingHoursSection: React.FC<{
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Equipment Hours</span>
+          <span className="text-sm font-medium">{t('workOrderForm.equipmentHours')}</span>
         </div>
         {!isUpdating && (
           <Button
@@ -131,7 +134,7 @@ const WorkingHoursSection: React.FC<{
             className="h-7 px-2"
           >
             <Edit className="mr-1 h-3 w-3" />
-            Update
+            {t('workOrderForm.update')}
           </Button>
         )}
       </div>
@@ -144,21 +147,21 @@ const WorkingHoursSection: React.FC<{
             step="0.1"
             value={newHours}
             onChange={(e) => setNewHours(e.target.value)}
-            placeholder="Enter equipment hours"
+            placeholder={t('workOrderForm.enterEquipmentHours')}
             className="h-8"
           />
           <div className="flex gap-2">
             <Button size="sm" onClick={handleSave} disabled={updateWorkingHours.isPending}>
-              Save
+              {t('workOrderForm.save')}
             </Button>
             <Button size="sm" variant="outline" onClick={handleCancel}>
-              Cancel
+              {t('workOrderForm.cancel')}
             </Button>
           </div>
         </div>
       ) : (
         <div className="mt-1 text-sm text-muted-foreground">
-          Current: {currentHours ? `${currentHours} hours` : '—'}
+          {currentHours ? t('workOrderForm.currentHours', { count: currentHours }) : `${t('workOrderForm.current')} —`}
         </div>
       )}
     </div>
@@ -177,6 +180,7 @@ export const WorkOrderEquipmentSelector: React.FC<WorkOrderEquipmentSelectorProp
   onEquipmentCreated,
   canCreateEquipment = false,
 }) => {
+  const { t } = useI18n();
   const [mode, setMode] = useState<EquipmentMode>('select');
   const [equipmentSearchOpen, setEquipmentSearchOpen] = useState(false);
   const [equipmentSearchQuery, setEquipmentSearchQuery] = useState('');
@@ -209,11 +213,11 @@ export const WorkOrderEquipmentSelector: React.FC<WorkOrderEquipmentSelectorProp
     const equipment = preSelectedEquipment;
     if (!equipment) return null;
 
-    const locationDisplay = getEquipmentLocationDisplay(equipment);
+    const locationDisplay = getEquipmentLocationDisplay(equipment, t('workOrderForm.unknownLocation'));
 
     return (
       <div className="space-y-2">
-        <Label>Equipment</Label>
+        <Label>{t('workOrderForm.equipment')}</Label>
         <div className="flex items-center gap-2 rounded-md border bg-muted/50 p-3">
           <Forklift className="h-4 w-4 shrink-0 text-muted-foreground" />
           <div className="min-w-0 flex-1">
@@ -221,14 +225,14 @@ export const WorkOrderEquipmentSelector: React.FC<WorkOrderEquipmentSelectorProp
             <div className="text-sm text-muted-foreground">
               {[equipment.manufacturer, equipment.model].filter(Boolean).join(' ')}
               {equipment.serial_number ? ` • S/N: ${equipment.serial_number}` : ''}
-              {equipment.working_hours != null ? ` • ${equipment.working_hours.toLocaleString()} hrs` : ''}
+              {equipment.working_hours != null ? t('workOrderForm.unitHours', { count: equipment.working_hours.toLocaleString() }) : ''}
             </div>
             <div className="text-sm text-muted-foreground">
-              {equipment.team?.name || 'No team'} • {locationDisplay}
+              {equipment.team?.name || t('workOrderForm.noTeam')} • {locationDisplay}
             </div>
           </div>
           <Badge variant="secondary" className="shrink-0 text-xs">
-            {isEditMode ? 'Current' : 'Selected'}
+            {isEditMode ? t('workOrderForm.current') : t('workOrderForm.selected')}
           </Badge>
         </div>
         <WorkingHoursSection equipmentId={equipment.id} setValue={setValue} />
@@ -240,18 +244,18 @@ export const WorkOrderEquipmentSelector: React.FC<WorkOrderEquipmentSelectorProp
 
   return (
     <div className="space-y-3">
-      <Label htmlFor="work-order-equipment-select">Equipment *</Label>
+      <Label htmlFor="work-order-equipment-select">{t('workOrderForm.equipmentRequired')}</Label>
 
       {showCreateOption && (
         <Tabs value={mode} onValueChange={(v) => setMode(v as EquipmentMode)} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="select" className="flex items-center gap-2">
               <List className="h-4 w-4" />
-              <span>Select Existing</span>
+              <span>{t('workOrderForm.selectExisting')}</span>
             </TabsTrigger>
             <TabsTrigger value="create" className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              <span>Create New</span>
+              <span>{t('workOrderForm.createNew')}</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -266,17 +270,17 @@ export const WorkOrderEquipmentSelector: React.FC<WorkOrderEquipmentSelectorProp
             >
               <SelectTrigger
                 id="work-order-equipment-select"
-                aria-label="Select equipment"
+                aria-label={t('workOrderForm.selectEquipment')}
                 className={cn('h-auto min-h-11 w-full sm:flex-1', !selectedEquipment && 'text-muted-foreground')}
               >
-                <SelectValue placeholder="Select equipment">
-                  {selectedEquipment ? formatEquipmentTriggerLabel(selectedEquipment) : 'Select equipment'}
+                <SelectValue placeholder={t('workOrderForm.selectEquipment')}>
+                  {selectedEquipment ? formatEquipmentTriggerLabel(selectedEquipment) : t('workOrderForm.selectEquipment')}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-60">
                 {allEquipment.length === 0 ? (
                   <div className="px-2 py-6 text-center text-sm text-muted-foreground">
-                    No equipment available
+                    {t('workOrderForm.noEquipmentAvailable')}
                   </div>
                 ) : (
                   allEquipment.map((equipment) => (
@@ -299,27 +303,27 @@ export const WorkOrderEquipmentSelector: React.FC<WorkOrderEquipmentSelectorProp
               onClick={() => setEquipmentSearchOpen(true)}
             >
               <Search className="mr-2 h-4 w-4" aria-hidden />
-              Search equipment
+              {t('workOrderForm.searchEquipment')}
             </Button>
           </div>
 
           <Dialog open={equipmentSearchOpen} onOpenChange={handleSearchDialogOpenChange} modal>
             <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle>Search equipment</DialogTitle>
+                <DialogTitle>{t('workOrderForm.searchEquipment')}</DialogTitle>
                 <DialogDescription>
-                  Filter and select equipment for this work order.
+                  {t('workOrderForm.filterEquipmentHint')}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
                 <Input
-                  placeholder="Search equipment..."
+                  placeholder={t('workOrderForm.searchEquipmentPlaceholder')}
                   value={equipmentSearchQuery}
                   onChange={(event) => setEquipmentSearchQuery(event.target.value)}
                   className="pl-9"
-                  aria-label="Search equipment"
+                  aria-label={t('workOrderForm.searchEquipment')}
                 />
               </div>
 
@@ -327,15 +331,15 @@ export const WorkOrderEquipmentSelector: React.FC<WorkOrderEquipmentSelectorProp
                 {filteredSearchEquipment.length === 0 ? (
                   <p className="py-8 text-center text-sm text-muted-foreground">
                     {allEquipment.length === 0
-                      ? 'No equipment available'
-                      : 'No equipment found matching your search'}
+                      ? t('workOrderForm.noEquipmentAvailable')
+                      : t('workOrderForm.noEquipmentMatches')}
                   </p>
                 ) : (
                   filteredSearchEquipment.map((equipment) => (
                     <button
                       key={equipment.id}
                       type="button"
-                      aria-label={`Select ${equipment.name}`}
+                      aria-label={t('workOrderForm.selectNamedEquipment', { name: equipment.name })}
                       onClick={() => handleSearchSelect(equipment.id)}
                       className={cn(
                         'w-full rounded-md px-2 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
@@ -350,7 +354,7 @@ export const WorkOrderEquipmentSelector: React.FC<WorkOrderEquipmentSelectorProp
 
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => handleSearchDialogOpenChange(false)}>
-                  Cancel
+                  {t('workOrderForm.cancel')}
                 </Button>
               </DialogFooter>
             </DialogContent>

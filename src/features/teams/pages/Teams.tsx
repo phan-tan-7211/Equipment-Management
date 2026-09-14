@@ -19,8 +19,10 @@ import { useTeamsListStats } from '@/features/teams/hooks/useTeamsListStats';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useNavigate } from 'react-router-dom';
 import CreateTeamDialog from '@/features/teams/components/CreateTeamDialog';
+import { useI18n } from '@/i18n';
 
 const Teams = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { currentOrganization } = useOrganization();
   const { teams = [], isLoading } = useTeams();
@@ -91,14 +93,19 @@ const Teams = () => {
     }
   };
 
+  const getRoleLabel = (role: string) =>
+    ['manager', 'technician', 'requestor', 'viewer'].includes(role)
+      ? t(`teamsList.roles.${role}`)
+      : role;
+
   if (isLoading) {
     return (
       <div data-testid="teams-loading" className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Teams</h1>
+            <h1 className="text-3xl font-bold">{t('teamsList.title')}</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your organization's teams and members
+              {t('teamsList.description')}
             </p>
           </div>
         </div>
@@ -126,9 +133,9 @@ const Teams = () => {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Teams</h1>
+        <h1 className="text-3xl font-bold">{t('teamsList.title')}</h1>
         <p className="text-muted-foreground mt-1">
-          Manage your organization's teams and members
+          {t('teamsList.description')}
         </p>
       </div>
 
@@ -137,11 +144,11 @@ const Teams = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search teams..."
+            placeholder={t('teamsList.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
-            aria-label="Search teams by name or description"
+            aria-label={t('teamsList.searchAria')}
           />
         </div>
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
@@ -150,16 +157,16 @@ const Teams = () => {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="name-asc">Name A–Z</SelectItem>
-            <SelectItem value="name-desc">Name Z–A</SelectItem>
-            <SelectItem value="members">Most Members</SelectItem>
-            <SelectItem value="newest">Newest First</SelectItem>
+            <SelectItem value="name-asc">{t('teamsList.sortNameAsc')}</SelectItem>
+            <SelectItem value="name-desc">{t('teamsList.sortNameDesc')}</SelectItem>
+            <SelectItem value="members">{t('teamsList.sortMembers')}</SelectItem>
+            <SelectItem value="newest">{t('teamsList.sortNewest')}</SelectItem>
           </SelectContent>
         </Select>
         {canCreateTeams && (
           <Button onClick={() => setShowCreateDialog(true)} className="gap-2 shrink-0">
             <Plus className="h-4 w-4" />
-            Create Team
+            {t('teamsList.create')}
           </Button>
         )}
       </div>
@@ -171,24 +178,24 @@ const Teams = () => {
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             {searchTerm ? (
               <>
-                <h3 className="text-lg font-semibold mb-2">No teams found</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('teamsList.noMatchTitle')}</h3>
                 <p className="text-muted-foreground">
-                  No teams match your search criteria. Try a different search term.
+                  {t('teamsList.noMatchDescription')}
                 </p>
               </>
             ) : (
               <>
-                <h3 className="text-lg font-semibold mb-2">No teams yet</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('teamsList.emptyTitle')}</h3>
                 <p className="text-muted-foreground mb-4">
                   {canCreateTeams
-                    ? "Get started by creating your first team to organize your maintenance work."
-                    : "No teams have been created yet. Contact your administrator to create teams."
+                    ? t('teamsList.emptyCanCreate')
+                    : t('teamsList.emptyCannotCreate')
                   }
                 </p>
                 {canCreateTeams && (
                   <Button onClick={() => setShowCreateDialog(true)} className="gap-2">
                     <Plus className="h-4 w-4" />
-                    Create First Team
+                    {t('teamsList.createFirst')}
                   </Button>
                 )}
               </>
@@ -205,7 +212,7 @@ const Teams = () => {
               onKeyDown={(event) => handleTeamCardKeyDown(event, team.id)}
               role="button"
               tabIndex={0}
-              aria-label={`Open team details for ${team.name}`}
+              aria-label={t('teamsList.openDetailsFor', { name: team.name })}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
@@ -221,13 +228,13 @@ const Teams = () => {
                               <button
                                 type="button"
                                 className="inline-flex shrink-0 mt-0.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                aria-label={`QuickBooks synced ${new Date(team.quickbooks_synced_at).toLocaleDateString()}`}
+                                aria-label={t('teamsList.quickBooksSynced', { date: new Date(team.quickbooks_synced_at).toLocaleDateString() })}
                               >
                                 <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              QB synced {new Date(team.quickbooks_synced_at).toLocaleDateString()}
+                              {t('teamsList.qbSynced', { date: new Date(team.quickbooks_synced_at).toLocaleDateString() })}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -240,7 +247,7 @@ const Teams = () => {
                       </p>
                     )}
                     <CardDescription className="mt-1 line-clamp-2">
-                      {team.description || 'No description provided'}
+                      {team.description || t('teamsList.noDescription')}
                     </CardDescription>
                   </div>
                   <DropdownMenu>
@@ -252,7 +259,7 @@ const Teams = () => {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <MoreVertical className="h-4 w-4" />
-                        <span className="sr-only">Actions for {team.name}</span>
+                        <span className="sr-only">{t('teamsList.actionsFor', { name: team.name })}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
@@ -263,7 +270,7 @@ const Teams = () => {
                         }}
                       >
                         <Settings className="h-4 w-4 mr-2" />
-                        View Team Details
+                        {t('teamsList.viewDetails')}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -273,7 +280,7 @@ const Teams = () => {
                         }}
                       >
                         <Forklift className="h-4 w-4 mr-2" />
-                        View Equipment
+                        {t('teamsList.viewEquipment')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
@@ -282,7 +289,7 @@ const Teams = () => {
                         }}
                       >
                         <ClipboardList className="h-4 w-4 mr-2" />
-                        View Work Orders
+                        {t('teamsList.viewWorkOrders')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -310,7 +317,7 @@ const Teams = () => {
                       {(stats?.overdueWOs ?? 0) > 0 && (
                         <span className="flex items-center gap-1 text-warning font-medium">
                           <AlertTriangle className="h-3.5 w-3.5" />
-                          {stats!.overdueWOs} overdue
+                          {t('teamsList.overdue', { count: stats!.overdueWOs })}
                         </span>
                       )}
                     </div>
@@ -319,11 +326,11 @@ const Teams = () => {
 
                 {/* Member Preview */}
                 <div className="space-y-3">
-                  <h4 className="text-sm font-medium">Team Members</h4>
+                  <h4 className="text-sm font-medium">{t('teamsList.members')}</h4>
                   <div className="space-y-3">
                     {team.members.slice(0, 3).map((member) => {
-                      const memberName = member.profiles?.name || 'Unknown User';
-                      const memberEmail = member.profiles?.email || 'No email';
+                      const memberName = member.profiles?.name || t('teamsList.unknownUser');
+                      const memberEmail = member.profiles?.email || t('teamsList.noEmail');
                       
                       return (
                         <div key={member.id} className="flex gap-2.5">
@@ -340,7 +347,7 @@ const Teams = () => {
                               className={`text-xs font-medium flex items-center gap-1 capitalize ${getRoleTextColor(member.role)}`}
                             >
                               {getRoleIcon(member.role)}
-                              {member.role}
+                              {getRoleLabel(member.role)}
                             </p>
                             <p className="text-xs text-muted-foreground wrap-break-word">
                               {memberEmail}
@@ -351,12 +358,12 @@ const Teams = () => {
                     })}
                     {team.members.length > 3 && (
                       <p className="text-xs text-muted-foreground text-center">
-                        +{team.members.length - 3} more members
+                        {t('teamsList.moreMembers', { count: team.members.length - 3 })}
                       </p>
                     )}
                     {team.members.length === 0 && (
                       <p className="text-sm text-muted-foreground text-center py-2">
-                        No members yet
+                        {t('teamsList.noMembers')}
                       </p>
                     )}
                   </div>
@@ -378,4 +385,3 @@ const Teams = () => {
 };
 
 export default Teams;
-

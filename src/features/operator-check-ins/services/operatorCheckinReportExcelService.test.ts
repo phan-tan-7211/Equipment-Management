@@ -8,6 +8,7 @@ import {
   buildSummarySheetRows,
   generateReportFilename,
 } from '@/features/operator-check-ins/services/operatorCheckinReportExportHelpers';
+import { getOperatorCheckinExcelLabels } from './operatorCheckinExcelLabels';
 
 function makeSubmission(): OperatorCheckinSubmission {
   return {
@@ -79,6 +80,16 @@ describe('operatorCheckinReportExcelService helpers', () => {
     expect(rows[0][0]).toBe('Daily Operator Check-In Report');
     expect(rows.some((row) => row[0] === 'Report template' && row[1] === 'Odometer Log')).toBe(true);
     expect(rows.some((row) => row[0] === 'Equipment' && row[1] === 'Truck 101')).toBe(true);
+  });
+
+  it.each(['vi', 'ko'] as const)('localizes workbook labels for %s without changing persisted values', (language) => {
+    const labels = getOperatorCheckinExcelLabels(language);
+    const rows = buildSummarySheetRows('2026-07-04', 'Odometer Log', 'Truck 101', [makeSubmission()], labels);
+    expect(rows[0][0]).toBe(labels.title);
+    expect(rows).toContainEqual([labels.template, 'Odometer Log']);
+    expect(rows).toContainEqual([labels.equipment, 'Truck 101']);
+    expect(labels.pass).not.toBe('Pass');
+    expect(labels.fail).not.toBe('Fail');
   });
 
   it('builds captured field rows for detail sheet', () => {

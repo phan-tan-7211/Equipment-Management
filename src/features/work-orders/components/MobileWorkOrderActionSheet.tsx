@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 /**
  * Mobile Work Order Action Sheet
  *
@@ -80,6 +81,7 @@ export const MobileWorkOrderActionSheet: React.FC<MobileWorkOrderActionSheetProp
   isGeneratingWorksheet,
   fileExportHandlers,
 }) => {
+  const { t } = useI18n();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const navigate = useNavigate();
@@ -153,7 +155,7 @@ export const MobileWorkOrderActionSheet: React.FC<MobileWorkOrderActionSheetProp
           className="flex max-h-[85dvh] flex-col gap-0 rounded-t-xl p-0 pb-safe-bottom"
         >
           <SheetHeader className="shrink-0 space-y-1 border-b px-6 pb-4 pt-6 text-left">
-            <SheetTitle>Work order actions</SheetTitle>
+            <SheetTitle>{t('workOrderDetail.workOrderActions')}</SheetTitle>
             <SheetDescription>
               Manage this work order, export records, and run admin actions without leaving the page.
             </SheetDescription>
@@ -259,7 +261,7 @@ export const MobileWorkOrderActionSheet: React.FC<MobileWorkOrderActionSheetProp
                   disabled={deleteWorkOrderMutation.isPending}
                 >
                   <Trash2 className="h-5 w-5" aria-hidden />
-                  <span className="text-sm font-medium">Delete work order</span>
+                  <span className="text-sm font-medium">{t('workOrderDetail.deleteWorkOrder')}</span>
                 </Button>
               </>
             ) : null}

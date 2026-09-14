@@ -18,6 +18,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import MyTickets from "@/features/tickets/components/MyTickets";
 import { useBugReport } from "@/features/tickets/context/BugReportContext";
 import { SUPPORT_DOCS_URL } from "@/lib/documentationUrl";
+import { useI18n } from '@/i18n';
 
 interface ContactSectionProps {
   /**
@@ -37,15 +38,17 @@ interface ContactSectionProps {
 const ContactSection: React.FC<ContactSectionProps> = ({
   withBugReport = false,
   onReportIssue,
-}) => (
+}) => {
+  const { t } = useI18n();
+  return (
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
         <Mail className="h-5 w-5" />
-        Get Help
+        {t('support.getHelp')}
       </CardTitle>
       <CardDescription>
-        Email us. We answer within 24 hours.
+        {t('support.emailHelp')}
       </CardDescription>
     </CardHeader>
     <CardContent>
@@ -53,15 +56,15 @@ const ContactSection: React.FC<ContactSectionProps> = ({
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-muted-foreground" />
-            <span>Check our </span>
+            <span>{t('support.checkOur')} </span>
             <ExternalLink href="https://status.equipqr.app" className="text-primary">
-              system status page
+              {t('support.statusPage')}
             </ExternalLink>
-            <span> to see if the app is up</span>
+            <span> {t('support.statusPageHelp')}</span>
           </div>
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            <span>Email support: </span>
+            <span>{t('support.emailSupport')}: </span>
             <a
               href="mailto:phantan7211@gmail.com"
               className="text-primary hover:underline"
@@ -71,36 +74,37 @@ const ContactSection: React.FC<ContactSectionProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
-            <span>Response time: Within 24 hours</span>
+            <span>{t('support.responseTime')}</span>
           </div>
         </div>
         {withBugReport && onReportIssue ? (
           <div className="pt-2 border-t">
             <p className="text-sm text-muted-foreground mb-3">
-              Something broken? Report it. Session diagnostics attach
-              automatically. No personal data in the dump.
+              {t('support.reportHelp')}
             </p>
             <Button variant="outline" onClick={onReportIssue}>
               <Bug className="mr-2 h-4 w-4" />
-              Report an Issue
+              {t('support.reportIssue')}
             </Button>
           </div>
         ) : null}
       </div>
     </CardContent>
   </Card>
-);
+  );
+};
 
-const HelpCenterCard: React.FC = () => (
+const HelpCenterCard: React.FC = () => {
+  const { t } = useI18n();
+  return (
   <Card className="border-primary/20 bg-linear-to-r from-primary/5 to-accent/5">
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
         <BookOpen className="h-5 w-5" />
-        EquipQR Help Center
+        {t('support.helpCenter')}
       </CardTitle>
       <CardDescription>
-        Guides for techs, managers, admins, and equipment owners, grouped by
-        the job you are doing.
+        {t('support.guidesDescription')}
       </CardDescription>
     </CardHeader>
     <CardContent>
@@ -110,27 +114,29 @@ const HelpCenterCard: React.FC = () => (
           className="inline-flex items-center gap-2"
           showIcon={false}
         >
-          Browse guides
+          {t('support.browseGuides')}
           <ArrowRight className="h-4 w-4" />
         </ExternalLink>
       </Button>
     </CardContent>
   </Card>
-);
+  );
+};
 
 /**
  * Dashboard variant. Ticket hub for signed-in users (report issue, my tickets).
  * Documentation lives on equipqr.info.
  */
 export const DashboardSupport: React.FC = () => {
+  const { t } = useI18n();
   const { openBugReport } = useBugReport();
 
   return (
     <Page maxWidth="7xl" padding="responsive">
       <div className="space-y-6">
         <PageHeader
-          title="Support"
-          description="Report issues, track your tickets, and reach the EquipQR team. Product guides live on the Help Center."
+          title={t('support.title')}
+          description={t('support.dashboardDescription')}
         />
 
         <HelpCenterCard />
@@ -148,16 +154,16 @@ export const DashboardSupport: React.FC = () => {
  * no ticket controls (those require a signed-in account).
  */
 const Support: React.FC = () => {
+  const { t } = useI18n();
   return (
     <div className="min-h-screen bg-background">
       <LandingHeader />
       <div className="container mx-auto p-6 max-w-4xl mt-16">
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold">Support</h1>
+            <h1 className="text-3xl font-bold">{t('support.title')}</h1>
             <p className="text-muted-foreground">
-              Contact the EquipQR team or browse the Help Center for guides
-              covering field work, work orders, equipment, inventory, and roles.
+              {t('support.publicDescription')}
             </p>
           </div>
 
@@ -167,13 +173,13 @@ const Support: React.FC = () => {
 
           <Card className="bg-linear-to-r from-primary/5 to-accent/5 border-primary/20">
             <CardContent className="p-6 text-center">
-              <h3 className="text-xl font-semibold mb-2">Create a free account</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('support.createAccount')}</h3>
               <p className="text-muted-foreground mb-4">
-                Print a QR, stick it, scan the first machine.
+                {t('support.createAccountHelp')}
               </p>
               <Button asChild>
                 <a href="/auth?tab=signup" className="inline-flex items-center gap-2">
-                  Create a free account
+                  {t('support.createAccount')}
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </Button>

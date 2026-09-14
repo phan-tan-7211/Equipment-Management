@@ -3,6 +3,7 @@ import { Package, Clock } from 'lucide-react';
 import { WorkOrderCost } from '@/features/work-orders/services/workOrderCostsService';
 import { isLaborCostRow } from '@/features/work-orders/utils/isLaborCostRow';
 import { formatWorkOrderCostCurrency } from '@/features/work-orders/utils/workOrderCostFormatters';
+import { useI18n } from '@/i18n';
 
 export type WorkOrderCostReadOnlyRowProps = {
   cost: WorkOrderCost;
@@ -10,6 +11,7 @@ export type WorkOrderCostReadOnlyRowProps = {
 };
 
 export function WorkOrderCostMobileReadOnlyRow({ cost, formatDate }: WorkOrderCostReadOnlyRowProps) {
+  const { t } = useI18n();
   return (
     <div className="bg-muted/50 rounded-lg p-4 space-y-2">
       <div className="flex items-start justify-between">
@@ -24,8 +26,8 @@ export function WorkOrderCostMobileReadOnlyRow({ cost, formatDate }: WorkOrderCo
             {cost.description}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            Added by {cost.created_by_name} • {formatDate(cost.created_at)}
-            {cost.inventory_item_id && <span className="ml-1 text-info">(Inventory)</span>}
+            {t('workOrderResidual.addedBy', { name: cost.created_by_name })} • {formatDate(cost.created_at)}
+            {cost.inventory_item_id && <span className="ml-1 text-info">{t('workOrderResidual.inventoryTag')}</span>}
           </div>
         </div>
         <div className="text-right ml-2">
@@ -36,14 +38,15 @@ export function WorkOrderCostMobileReadOnlyRow({ cost, formatDate }: WorkOrderCo
       </div>
 
       <div className="flex items-center justify-between text-sm text-muted-foreground pt-2 border-t">
-        <div>Qty: {cost.quantity}</div>
-        <div>Unit: {formatWorkOrderCostCurrency(cost.unit_price_cents)}</div>
+        <div>{t('workOrderResidual.qty')} {cost.quantity}</div>
+        <div>{t('workOrderResidual.unit')} {formatWorkOrderCostCurrency(cost.unit_price_cents)}</div>
       </div>
     </div>
   );
 }
 
 export function WorkOrderCostDesktopReadOnlyRow({ cost, formatDate }: WorkOrderCostReadOnlyRowProps) {
+  const { t } = useI18n();
   return (
     <div className="p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors">
       <div className="grid grid-cols-4 gap-4 items-center">
@@ -58,9 +61,8 @@ export function WorkOrderCostDesktopReadOnlyRow({ cost, formatDate }: WorkOrderC
             {cost.description}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            Added by {cost.created_by_name} on{' '}
-            {formatDate(cost.created_at)}
-            {cost.inventory_item_id && <span className="ml-1 text-info">(Inventory)</span>}
+            {t('workOrderResidual.addedByOn', { name: cost.created_by_name, date: formatDate(cost.created_at) })}
+            {cost.inventory_item_id && <span className="ml-1 text-info">{t('workOrderResidual.inventoryTag')}</span>}
           </div>
         </div>
         <div className="text-sm">{cost.quantity}</div>

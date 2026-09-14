@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +36,7 @@ export const PMTemplateRulesDialog: React.FC<PMTemplateRulesDialogProps> = ({
   open,
   onClose,
 }) => {
+  const { t } = useI18n();
   // Fetch existing rules
   const { data: savedRules = [], isLoading: isLoadingRules } = usePMTemplateCompatibilityRules(
     templateId,
@@ -86,10 +88,9 @@ export const PMTemplateRulesDialog: React.FC<PMTemplateRulesDialogProps> = ({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent className="max-w-2xl max-h-[calc(100dvh-2rem)] overflow-auto">
         <DialogHeader>
-          <DialogTitle>Configure Compatibility Rules</DialogTitle>
+          <DialogTitle>{t('pmTemplates.rules.title')}</DialogTitle>
           <DialogDescription>
-            Set which equipment types the "{templateName}" template applies to.
-            These rules are specific to your organization.
+            {t('pmTemplates.rules.description', { name: templateName })}
           </DialogDescription>
         </DialogHeader>
 
@@ -107,7 +108,7 @@ export const PMTemplateRulesDialog: React.FC<PMTemplateRulesDialogProps> = ({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose} disabled={bulkSetRules.isPending}>
-            Cancel
+            {t('pmTemplates.editor.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={bulkSetRules.isPending || !hasChanges}>
             {bulkSetRules.isPending ? (
@@ -115,7 +116,7 @@ export const PMTemplateRulesDialog: React.FC<PMTemplateRulesDialogProps> = ({
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
-            Save Rules
+            {t('pmTemplates.rules.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

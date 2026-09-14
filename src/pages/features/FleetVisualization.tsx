@@ -5,6 +5,7 @@ const FleetVisualizationFeature = () => (
   <StandardFeaturePage
     seoPath="/features/fleet-visualization"
     content={content}
+    translationKey="fleetVisualization"
     benefits={benefits}
     steps={steps}
     showcases={showcases}

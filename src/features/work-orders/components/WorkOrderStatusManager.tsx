@@ -1,3 +1,5 @@
+import { useI18n } from '@/i18n';
+import { localizeWorkOrderStatus, localizePmStatus, localizeWorkOrderActionLabel, localizeWorkOrderActionDescription } from '@/features/work-orders/utils/workOrderI18nLabels';
 // fallow-ignore-file code-duplication
 // Duplication rationale: Status manager shares transition UI with details page
 import React, { useState } from 'react';
@@ -26,7 +28,6 @@ import { WorkOrderAssigneeSelectItems } from '@/features/work-orders/components/
 import { useWorkOrderStatusChangeHandlers } from '@/features/work-orders/hooks/useWorkOrderStatusChangeHandlers';
 import { useWorkOrderContextualAssignment, type AssignmentWorkOrderContext } from '@/features/work-orders/hooks/useWorkOrderContextualAssignment';
 import {
-  formatStatus,
   getStatusColor,
 } from '@/features/work-orders/utils/workOrderHelpers';
 import { formatDueDisplay, isDueOverdue, parseDue } from '@/features/work-orders/calendar';
@@ -84,6 +85,7 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
   hideStatusActions = false,
   contextData,
 }) => {
+  const { t } = useI18n();
   const { formatDate, formatDateTime } = useFormatTimestamp();
   const [showAcceptanceModal, setShowAcceptanceModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -188,13 +190,13 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
       {/* Status Management */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Status Management</CardTitle>
+          <CardTitle className="text-lg">{t('workOrderActivity.statusManagement')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Current Status:</span>
+            <span className="text-sm font-medium">{t('workOrderActivity.currentStatus')}</span>
             <Badge className={getStatusColor(workOrder.status)}>
-              {formatStatus(workOrder.status)}
+              {localizeWorkOrderStatus(workOrder.status, t)}
             </Badge>
           </div>
 
@@ -205,7 +207,7 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
               <AlertDescription className="text-warning">
                 <div className="flex items-center gap-2">
                   <Clipboard className="h-4 w-4" />
-                  <span>Complete the PM checklist before marking this work order as completed.</span>
+                  <span>{t('workOrderActivity.pmCompletionWarning')}</span>
                 </div>
               </AlertDescription>
             </Alert>
@@ -215,14 +217,14 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
           {workOrder.assigneeName && (
             <div className="flex items-center gap-2 text-sm">
               <User className="h-4 w-4 text-muted-foreground" />
-              <span>Assigned to: {workOrder.assigneeName}</span>
+              <span>{t('workOrderActivity.assignedTo', { name: workOrder.assigneeName })}</span>
             </div>
           )}
 
           {workOrder.teamName && (
             <div className="flex items-center gap-2 text-sm">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <span>Team: {workOrder.teamName}</span>
+              <span>{t('workOrderActivity.forTeam', { name: workOrder.teamName })}</span>
             </div>
           )}
 
@@ -230,7 +232,7 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
           {!canPerformStatusActions() && (
             <Alert>
               <AlertDescription>
-                You don't have permission to change the status of this work order.
+                {t('workOrderActivity.noStatusPermission')}
               </AlertDescription>
             </Alert>
           )}
@@ -240,10 +242,10 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
             <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
               {needsStartAssigneeSelection && (
                 <div className="space-y-2">
-                  <Label htmlFor={startAssigneeFieldId} className="text-sm font-medium">Assign to start work</Label>
+                  <Label htmlFor={startAssigneeFieldId} className="text-sm font-medium">{t('workOrderActivity.assignToStart')}</Label>
                   {equipmentHasNoTeam && (
                     <p className="text-xs text-muted-foreground">
-                      Equipment has no team. Showing organization admins.
+                      {t('workOrderActivity.noEquipmentTeam')}
                     </p>
                   )}
                   <Select
@@ -251,8 +253,8 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
                     onValueChange={setSelectedAssigneeForStart}
                     disabled={assignmentLoading || updateStatusMutation.isPending}
                   >
-                    <SelectTrigger id={startAssigneeFieldId} className="w-full" aria-label="Select assignee to start work">
-                      <SelectValue placeholder={assignmentLoading ? "Loading..." : "Select assignee..."} />
+                    <SelectTrigger id={startAssigneeFieldId} className="w-full" aria-label={t('workOrderActivity.selectAssigneeStart')}>
+                      <SelectValue placeholder={assignmentLoading ? t('workOrderActivity.loading') : t('workOrderActivity.selectAssignee')} />
                     </SelectTrigger>
                     <SelectContent>
                       <WorkOrderAssigneeSelectItems options={assignmentOptions} />
@@ -268,13 +270,13 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
                 disabled={!effectiveStartAssigneeId || updateStatusMutation.isPending}
               >
                 <Play className="h-4 w-4 mr-2" />
-                {updateStatusMutation.isPending ? 'Starting...' : 'Start Work'}
+                {updateStatusMutation.isPending ? t('workOrderActivity.starting') : t('workOrderActivity.actionStartWork')}
               </Button>
               {needsStartAssigneeSelection && (
                 <p className="text-xs text-muted-foreground">
                   {selectedAssigneeForStart 
-                    ? 'Click "Start Work" to assign and begin working on this order'
-                    : 'Select an assignee to enable starting work'}
+                    ? t('workOrderActivity.clickStartHint')
+                    : t('workOrderActivity.actionAssigneeRequired')}
                 </p>
               )}
             </div>
@@ -283,7 +285,7 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
           {/* Status Actions */}
           {!hideStatusActions && statusActions.length > 0 && (
             <div className="space-y-2">
-              <span className="text-sm font-medium">Available Actions:</span>
+              <span className="text-sm font-medium">{t('workOrderActivity.availableActions')}</span>
               <div className="space-y-2">
                 {statusActions.map((action, index) => {
                   const IconComponent = action.icon;
@@ -298,10 +300,10 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
                         disabled={updateStatusMutation.isPending || acceptanceMutation.isPending || action.disabled}
                       >
                         <IconComponent className="h-4 w-4 mr-2" />
-                        {action.label}
+                        {localizeWorkOrderActionLabel(action.label, t)}
                       </Button>
                       <p className="text-xs text-muted-foreground ml-6 mt-1">
-                        {action.description}
+                        {localizeWorkOrderActionDescription(action.description, t)}
                       </p>
                     </div>
                   );
@@ -313,10 +315,10 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
           {workOrder.status === 'completed' && (
             <div className="text-sm text-success">
               <CheckCircle className="h-4 w-4 inline mr-2" />
-              Work order completed successfully
+              {t('workOrderActivity.completedSuccess')}
               {workOrder.completed_date && (
                 <div className="text-xs text-muted-foreground mt-1">
-                  Completed on {new Date(workOrder.completed_date).toLocaleDateString()}
+                  {t('workOrderActivity.completedOn', { date: formatDate(workOrder.completed_date) })}
                 </div>
               )}
             </div>
@@ -349,19 +351,19 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
                       }
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-medium">
-                          {contextData.formMode === 'requestor' && workOrder.status === 'submitted' ? 'Preferred Due:' : 'Due:'}
+                          {contextData.formMode === 'requestor' && workOrder.status === 'submitted' ? t('workOrderActivity.preferredDue') : t('workOrderActivity.due')}
                         </span>
                         <span className={isOverdue || isDueSoon ? '' : 'text-muted-foreground'}>
                           {dueLabel}
                         </span>
                         {isOverdue && (
                           <Badge variant="outline" className="text-xs bg-destructive/10 text-destructive border-destructive/30">
-                            OVERDUE
+                            {t('workOrderActivity.overdue')}
                           </Badge>
                         )}
                         {isDueSoon && (
                           <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/30">
-                            DUE SOON
+                            {t('workOrderActivity.dueSoon')}
                           </Badge>
                         )}
                       </div>
@@ -373,7 +375,7 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <span className="font-medium">Estimated:</span>
+                      <span className="font-medium">{t('workOrderActivity.estimated')}</span>
                       <span className="ml-1.5 text-muted-foreground">{contextData.estimatedHours}h</span>
                     </div>
                   </div>
@@ -383,9 +385,9 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
                   <div className="flex items-center gap-2 text-sm">
                     <Clipboard className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <span className="font-medium">PM Status:</span>
+                      <span className="font-medium">{t('workOrderActivity.pmStatus')}</span>
                       <span className="ml-1.5 text-muted-foreground">
-                        {contextData.pmStatus.replace('_', ' ').toUpperCase()}
+                        {localizePmStatus(contextData.pmStatus, t)}
                       </span>
                     </div>
                   </div>
@@ -395,7 +397,7 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
                   <div className="flex items-center gap-2 text-sm">
                     <Wrench className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <span className="font-medium">Equipment:</span>
+                      <span className="font-medium">{t('workOrderActivity.equipment')}</span>
                       <Link 
                         to={`/dashboard/equipment/${contextData.equipmentId}`}
                         className="ml-1.5 text-primary hover:underline"
@@ -412,7 +414,7 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
                     <div className="flex items-center gap-2 text-sm">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <span className="font-medium">Team:</span>
+                        <span className="font-medium">{t('workOrderForm.team')}:</span>
                         <Link
                           to={`/dashboard/teams/${contextData.team.id}`}
                           className="ml-1.5 text-primary hover:underline"
@@ -471,23 +473,22 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-destructive" />
-              Cancel Work Order
+              {t('workOrderActivity.cancelTitle')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to cancel this work order? This action cannot be undone.
-              Any logged hours, notes, and cost records will be preserved but the work order will be marked as cancelled.
+              {t('workOrderActivity.cancelDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={updateStatusMutation.isPending}>
-              Go Back
+              {t('workOrderActivity.goBack')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmCancel}
               disabled={updateStatusMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {updateStatusMutation.isPending ? 'Cancelling...' : 'Yes, Cancel Work Order'}
+              {updateStatusMutation.isPending ? t('workOrderActivity.cancelling') : t('workOrderActivity.confirmCancel')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -499,29 +500,29 @@ const WorkOrderStatusManager: React.FC<WorkOrderStatusManagerProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-success" />
-              Complete Work Order
+              {t('workOrderActivity.completeTitle')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
-                <p>Are you sure you want to mark this work order as completed?</p>
-                <p className="text-sm font-medium text-foreground">Before completing, please confirm:</p>
+                <p>{t('workOrderActivity.completeQuestion')}</p>
+                <p className="text-sm font-medium text-foreground">{t('workOrderActivity.beforeCompleting')}</p>
                 <ul className="text-sm space-y-1 list-disc pl-4">
-                  <li>All hours have been logged</li>
-                  <li>All cost items have been recorded</li>
-                  <li>Notes and photos are up to date</li>
+                  <li>{t('workOrderActivity.allHoursLogged')}</li>
+                  <li>{t('workOrderActivity.allCostsRecorded')}</li>
+                  <li>{t('workOrderActivity.notesPhotosCurrent')}</li>
                 </ul>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={updateStatusMutation.isPending}>
-              Go Back
+              {t('workOrderActivity.goBack')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmComplete}
               disabled={updateStatusMutation.isPending}
             >
-              {updateStatusMutation.isPending ? 'Completing...' : 'Mark as Complete'}
+              {updateStatusMutation.isPending ? t('workOrderActivity.completing') : t('workOrderActivity.markComplete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

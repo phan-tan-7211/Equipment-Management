@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useI18n } from '@/i18n';
 import { ClipboardCheck, FileText, Plus, RotateCcw } from 'lucide-react';
 import Page from '@/components/layout/Page';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -80,6 +81,7 @@ function OperatorChecklistTemplateSummaryHeader({
 }
 
 export default function OperatorCheckInsPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success: showSuccessToast, error: showErrorToast } = useAppToast();
   const { currentOrganization } = useOrganization();
@@ -147,10 +149,10 @@ export default function OperatorCheckInsPage() {
         templateData: materialized.templateData,
       });
       showSuccessToast({
-        description: `"${starter.name}" cloned into your templates. You can edit it before assigning to equipment.`,
+        description: t('operatorCheckinAdmin.cloneSuccess', { name: starter.name }),
       });
     } catch {
-      showErrorToast({ description: 'Unable to clone starter template.' });
+      showErrorToast({ description: t('operatorCheckinAdmin.cloneError') });
     } finally {
       setCloningStarterId(null);
     }
@@ -201,17 +203,17 @@ export default function OperatorCheckInsPage() {
 
       if (assignedCount > 0) {
         showSuccessToast({
-          description: `Checklist assigned to ${assignedCount} equipment record${assignedCount === 1 ? '' : 's'}. QR link${qrLinksReady === 1 ? '' : 's'} ready — open each equipment QR Code dialog to print.`,
+          description: t('operatorCheckinAdmin.assigned', { count: assignedCount, links: qrLinksReady }),
         });
       } else if (qrLinksReady > 0) {
         showSuccessToast({
-          description: `QR link${qrLinksReady === 1 ? '' : 's'} ready for ${qrLinksReady} equipment record${qrLinksReady === 1 ? '' : 's'}. Open QR Code on each equipment record to print.`,
+          description: t('operatorCheckinAdmin.linksReady', { links: qrLinksReady, count: qrLinksReady }),
         });
       } else {
-        showSuccessToast({ description: 'Selected equipment already has this checklist assigned.' });
+        showSuccessToast({ description: t('operatorCheckinAdmin.alreadyAssigned') });
       }
     } catch {
-      showErrorToast({ description: 'Unable to assign checklist to equipment.' });
+      showErrorToast({ description: t('operatorCheckinAdmin.assignError') });
     } finally {
       setAssigningTemplateId(null);
     }
@@ -223,20 +225,20 @@ export default function OperatorCheckInsPage() {
       const result = await deleteTemplateMutation.mutateAsync(templatePendingDelete.id);
       if (result.purged) {
         showSuccessToast({
-          description: `"${templatePendingDelete.name}" deleted. It had no collected check-ins and was removed completely.`,
+          description: t('operatorCheckinAdmin.deleted', { name: templatePendingDelete.name }),
         });
       } else {
         const assignmentNote =
           result.disabledAssignmentCount > 0
-            ? ` ${result.disabledAssignmentCount} equipment QR link${result.disabledAssignmentCount === 1 ? '' : 's'} disabled.`
+            ? t('operatorCheckinAdmin.disabledLinks', { count: result.disabledAssignmentCount })
             : '';
         showSuccessToast({
-          description: `"${templatePendingDelete.name}" archived.${assignmentNote} Collected check-ins remain in the Daily Ledger.`,
+          description: t('operatorCheckinAdmin.archived', { name: templatePendingDelete.name, note: assignmentNote }),
         });
       }
       setTemplatePendingDelete(null);
     } catch {
-      showErrorToast({ description: 'Unable to delete template.' });
+      showErrorToast({ description: t('operatorCheckinAdmin.deleteError') });
     }
   }
 
@@ -246,13 +248,13 @@ export default function OperatorCheckInsPage() {
       const result = await restoreTemplateMutation.mutateAsync(template.id);
       const assignmentNote =
         result.reenabledAssignmentCount > 0
-          ? ` ${result.reenabledAssignmentCount} equipment QR link${result.reenabledAssignmentCount === 1 ? '' : 's'} re-enabled.`
+          ? t('operatorCheckinAdmin.enabledLinks', { count: result.reenabledAssignmentCount })
           : '';
       showSuccessToast({
-        description: `"${template.name}" restored.${assignmentNote}`,
+        description: t('operatorCheckinAdmin.restored', { name: template.name, note: assignmentNote }),
       });
     } catch {
-      showErrorToast({ description: 'Unable to restore template.' });
+      showErrorToast({ description: t('operatorCheckinAdmin.restoreError') });
     } finally {
       setRestoringTemplateId(null);
     }
@@ -262,7 +264,7 @@ export default function OperatorCheckInsPage() {
     return (
       <Page maxWidth="7xl" padding="responsive">
         <Alert>
-          <AlertDescription>Only organization owners and administrators can manage operator daily check-ins.</AlertDescription>
+          <AlertDescription>{t('operatorCheckinAdmin.adminOnly')}</AlertDescription>
         </Alert>
       </Page>
     );
@@ -272,20 +274,20 @@ export default function OperatorCheckInsPage() {
     <Page maxWidth="7xl" padding="responsive">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Daily Check-Ins</h1>
+          <h1 className="text-3xl font-bold">{t('operatorCheckinAdmin.title')}</h1>
           <p className="text-muted-foreground mt-1">
-            Define operator safety checklists, assign them on each equipment record, and review daily audit ledgers.
+            {t('operatorCheckinAdmin.intro')}
           </p>
           <p className="mt-2 text-sm">
             <ExternalLink href={OPERATOR_DAILY_CHECK_INS_DOCS_URL}>
-              Learn how Daily Operator Check-Ins work
+              {t('operatorCheckinAdmin.help')}
             </ExternalLink>
           </p>
         </div>
 
       <Alert>
         <AlertDescription>
-          Records support safety and audit documentation. They do not certify legal or regulatory compliance.
+          {t('operatorCheckinAdmin.notice')}
         </AlertDescription>
       </Alert>
 
@@ -294,30 +296,30 @@ export default function OperatorCheckInsPage() {
           <TabsList>
             <TabsTrigger value="templates" className="gap-2">
               <ClipboardCheck className="h-4 w-4" />
-              Templates
+              {t('operatorCheckinAdmin.templates')}
             </TabsTrigger>
             <TabsTrigger value="ledger" className="gap-2">
               <FileText className="h-4 w-4" />
-              Daily Ledger
+              {t('operatorCheckinAdmin.ledger')}
             </TabsTrigger>
           </TabsList>
 
           <div className="flex items-center gap-2 rounded-md border border-dashed px-3 py-2">
             <Label htmlFor="show-deleted-checkins-page" className="text-sm font-normal">
-              Show deleted check-ins
+              {t('operatorCheckinAdmin.showDeleted')}
             </Label>
             <Switch
               id="show-deleted-checkins-page"
               checked={showDeletedCheckins}
               onCheckedChange={setShowDeletedCheckins}
-              aria-label="Show deleted check-ins"
+              aria-label={t('operatorCheckinAdmin.showDeleted')}
             />
           </div>
         </div>
 
         <TabsContent value="templates" className="space-y-6">
           {isLoading ? (
-            <p className="text-muted-foreground text-sm">Loading templates…</p>
+            <p className="text-muted-foreground text-sm">{t('operatorCheckinAdmin.loading')}</p>
           ) : (
             <>
               {orgId && (
@@ -332,7 +334,7 @@ export default function OperatorCheckInsPage() {
 
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-sm font-medium">Your Templates</h2>
+                  <h2 className="text-sm font-medium">{t('operatorCheckinAdmin.yourTemplates')}</h2>
                   <Button
                     onClick={() => {
                       setEditingTemplateId(null);
@@ -340,14 +342,14 @@ export default function OperatorCheckInsPage() {
                     }}
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    New Template
+                    {t('operatorCheckinAdmin.newTemplate')}
                   </Button>
                 </div>
 
                 {activeTemplates.length === 0 ? (
                   <Card>
                     <CardContent className="py-8 text-center text-muted-foreground">
-                      Clone a starter template from the catalog above, or create a custom checklist from scratch.
+                      {t('operatorCheckinAdmin.empty')}
                     </CardContent>
                   </Card>
                 ) : (
@@ -359,16 +361,16 @@ export default function OperatorCheckInsPage() {
                           description={template.description}
                           trailing={
                             <div className="flex gap-2">
-                              {!template.is_active && <Badge variant="outline">Inactive</Badge>}
+                              {!template.is_active && <Badge variant="outline">{t('operatorCheckinAdmin.inactive')}</Badge>}
                               <Badge variant="secondary">
-                                {template.template_data.dataFields.length} data field{template.template_data.dataFields.length === 1 ? '' : 's'}
+                                {t('operatorCheckinAdmin.dataFields', { count: template.template_data.dataFields.length })}
                               </Badge>
                             </div>
                           }
                         />
                         <CardContent className="flex flex-wrap items-center justify-between gap-2">
                           <span className="text-sm text-muted-foreground">
-                            {template.template_data.checklistItems.length} checklist item{template.template_data.checklistItems.length === 1 ? '' : 's'}
+                            {t('operatorCheckinAdmin.checklistItems', { count: template.template_data.checklistItems.length })}
                           </span>
                           <div className="flex flex-wrap gap-2">
                             <OperatorTemplateEquipmentAssignmentMenu
@@ -391,14 +393,14 @@ export default function OperatorCheckInsPage() {
                                 setTemplateDialogOpen(true);
                               }}
                             >
-                              Edit
+                              {t('operatorCheckinAdmin.edit')}
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => setTemplatePendingDelete(template)}
                             >
-                              Delete
+                              {t('operatorCheckinAdmin.delete')}
                             </Button>
                           </div>
                         </CardContent>
@@ -411,8 +413,8 @@ export default function OperatorCheckInsPage() {
               {showDeletedCheckins && deletedTemplates.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="text-sm font-medium">Deleted Check-Ins</h2>
-                    <Badge variant="outline">{deletedTemplates.length} archived</Badge>
+                    <h2 className="text-sm font-medium">{t('operatorCheckinAdmin.deletedTitle')}</h2>
+                    <Badge variant="outline">{t('operatorCheckinAdmin.archivedCount', { count: deletedTemplates.length })}</Badge>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     {visibleDeletedTemplates.map((template) => {
@@ -423,23 +425,23 @@ export default function OperatorCheckInsPage() {
                         <OperatorChecklistTemplateSummaryHeader
                           name={template.name}
                           description={template.description}
-                          trailing={<Badge variant="outline">Deleted</Badge>}
+                          trailing={<Badge variant="outline">{t('operatorCheckinAdmin.deletedBadge')}</Badge>}
                         />
                         <CardContent className="flex flex-wrap items-center justify-between gap-2">
                           <span className="text-sm text-muted-foreground">
                             {canRestore
-                              ? 'Historical ledger data is preserved. Restore to resume QR use.'
-                              : 'No collected check-ins. Delete to remove this archived template completely.'}
+                              ? t('operatorCheckinAdmin.historical')
+                              : t('operatorCheckinAdmin.noHistory')}
                           </span>
                           {isRestorableLookupError ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-sm text-destructive">Unable to verify ledger data.</span>
+                              <span className="text-sm text-destructive">{t('operatorCheckinAdmin.ledgerError')}</span>
                               <Button variant="outline" size="sm" onClick={() => void refetchRestorableLookup()}>
-                                Retry
+                                {t('operatorCheckinAdmin.retry')}
                               </Button>
                             </div>
                           ) : isRestorableLookupLoading ? (
-                            <span className="text-sm text-muted-foreground">Checking ledger data…</span>
+                            <span className="text-sm text-muted-foreground">{t('operatorCheckinAdmin.checkingLedger')}</span>
                           ) : canRestore ? (
                             <Button
                               variant="outline"
@@ -448,7 +450,7 @@ export default function OperatorCheckInsPage() {
                               onClick={() => void handleRestoreTemplate(template)}
                             >
                               <RotateCcw className="h-4 w-4 mr-2" />
-                              Restore
+                              {t('operatorCheckinAdmin.restore')}
                             </Button>
                           ) : (
                             <Button
@@ -456,7 +458,7 @@ export default function OperatorCheckInsPage() {
                               size="sm"
                               onClick={() => setTemplatePendingDelete(template)}
                             >
-                              Delete
+                              {t('operatorCheckinAdmin.delete')}
                             </Button>
                           )}
                         </CardContent>
@@ -499,29 +501,27 @@ export default function OperatorCheckInsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete template?</AlertDialogTitle>
+            <AlertDialogTitle>{t('operatorCheckinAdmin.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <p>
-                  Delete <strong className="text-foreground">{templatePendingDelete?.name}</strong> from
-                  active template management?
+                  {t('operatorCheckinAdmin.deleteQuestion', { name: templatePendingDelete?.name ?? '' })}
                 </p>
                 <p>
-                  Templates with collected check-ins are archived so the Daily Ledger and exports
-                  keep historical data. Unused templates are removed completely.
+                  {t('operatorCheckinAdmin.deleteExplanation')}
                 </p>
-                <p>Existing QR links for this template will stop working.</p>
+                <p>{t('operatorCheckinAdmin.qrWarning')}</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('operatorCheckinAdmin.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteTemplateMutation.isPending}
               onClick={() => void handleDeleteTemplate()}
             >
-              Delete template
+              {t('operatorCheckinAdmin.deleteTemplate')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

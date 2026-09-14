@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -64,6 +65,7 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
 }) => {
   const { currentOrganization } = useOrganization();
   const { toast } = useAppToast();
+  const { t } = useI18n();
   const lastInitKeyRef = useRef<string | null>(null);
 
   const createMutation = useCreateInventoryItem();
@@ -189,8 +191,8 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
         } catch (groupError) {
           logger.error('Error adding item to alternate group:', { error: groupError });
           toast({
-            title: 'Item created',
-            description: 'The item was created but could not be added to the alternate group.',
+            title: t('itemForm.itemCreated'),
+            description: t('itemForm.groupAddFailed'),
             variant: 'warning',
           });
         }
@@ -226,12 +228,12 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
       <DialogContent className="max-w-4xl max-h-[calc(100dvh-2rem)] overflow-y-auto pb-safe-bottom">
         <DialogHeader>
           <DialogTitle>
-            {editingItem ? 'Edit Inventory Item' : 'Create Inventory Item'}
+            {editingItem ? t('itemForm.editTitle') : t('itemForm.createTitle')}
           </DialogTitle>
           <DialogDescription>
             {editingItem
-              ? 'Update inventory item information'
-              : 'Enter the details for the new inventory item'}
+              ? t('itemForm.editDescription')
+              : t('itemForm.createDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -272,18 +274,18 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
 
             <div className="sticky bottom-0 z-10 -mx-6 flex justify-end space-x-2 border-t bg-background/95 px-6 py-3 pb-safe-bottom backdrop-blur supports-[backdrop-filter]:bg-background/90">
               <Button type="button" variant="outline" onClick={onClose} disabled={isFormDisabled}>
-                Cancel
+                {t('itemForm.cancel')}
               </Button>
               <Button type="submit" disabled={isFormDisabled}>
                 {isMutating
-                  ? 'Saving...'
+                  ? t('itemForm.saving')
                   : editingDataLoadError
-                    ? 'Load Failed'
+                    ? t('itemForm.loadFailed')
                     : isEditingDataPending
-                      ? 'Loading...'
+                      ? t('itemForm.loading')
                       : editingItem
-                        ? 'Update Item'
-                        : 'Create Item'}
+                        ? t('itemForm.updateItem')
+                        : t('itemForm.createItem')}
               </Button>
             </div>
           </form>

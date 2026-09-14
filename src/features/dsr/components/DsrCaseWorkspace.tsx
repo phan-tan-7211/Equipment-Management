@@ -1,3 +1,5 @@
+import { translateDsrCode } from '@/i18n/dsrResources';
+import { useI18n } from '@/i18n';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 import type { DsrRequest, DsrRequestEvent } from '@/features/dsr/api/dsrApi';
@@ -27,6 +29,7 @@ interface DsrCaseWorkspaceProps {
 }
 
 export function DsrCaseWorkspace({ request, events, canManageDsr, pending, onMutate }: DsrCaseWorkspaceProps) {
+  const { t } = useI18n();
   const timeline = useMemo(
     () => [...events].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
     [events],
@@ -47,15 +50,15 @@ export function DsrCaseWorkspace({ request, events, canManageDsr, pending, onMut
     payload?: Record<string, unknown>,
   ) => {
     if (!canManageDsr) {
-      toast.error('You do not have permission to manage this privacy request.');
+      toast.error(t('dsr.manageDenied'));
       return;
     }
 
     try {
       await onMutate(action, payload);
-      toast.success(`Action applied: ${action}`);
+      toast.success(t('dsr.actionApplied', { action: translateDsrCode(t, 'actions', action) }));
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Action failed';
+      const message = error instanceof Error ? error.message : t('dsr.actionFailed');
       toast.error(message);
     }
   };
@@ -63,10 +66,10 @@ export function DsrCaseWorkspace({ request, events, canManageDsr, pending, onMut
   return (
     <div className="space-y-4">
       <div className="rounded-md border p-3">
-        <h2 className="text-lg font-semibold">Case Details</h2>
-        <p className="text-sm text-muted-foreground mt-1">Requester: {request.requester_email}</p>
-        <p className="text-sm text-muted-foreground">Type: {request.request_type}</p>
-        <p className="text-sm text-muted-foreground">Status: {request.status}</p>
+        <h2 className="text-lg font-semibold">{t('dsr.caseDetails')}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{t('dsr.requester', { email: request.requester_email })}</p>
+        <p className="text-sm text-muted-foreground">{t('dsr.type')}: {translateDsrCode(t, 'requestTypes', request.request_type)}</p>
+        <p className="text-sm text-muted-foreground">{t('dsr.status')}: {translateDsrCode(t, 'statuses', request.status)}</p>
       </div>
 
       <DsrLifecycleActions
@@ -90,14 +93,14 @@ export function DsrCaseWorkspace({ request, events, canManageDsr, pending, onMut
       />
 
       <div className="rounded-md border p-3">
-        <h3 className="text-sm font-medium mb-2">Timeline</h3>
+        <h3 className="text-sm font-medium mb-2">{t('dsr.timeline')}</h3>
         <div className="space-y-2">
-          {timeline.length === 0 ? <p className="text-sm text-muted-foreground">No events yet.</p> : null}
+          {timeline.length === 0 ? <p className="text-sm text-muted-foreground">{t('dsr.noEvents')}</p> : null}
           {timeline.map((event) => (
             <div key={event.id} className="rounded-sm border p-2">
               <p className="text-sm font-medium">{event.summary}</p>
               <p className="text-xs text-muted-foreground">
-                {event.event_type} • {new Date(event.created_at).toLocaleString()}
+                {translateDsrCode(t, 'eventTypes', event.event_type)} • {new Date(event.created_at).toLocaleString()}
               </p>
             </div>
           ))}

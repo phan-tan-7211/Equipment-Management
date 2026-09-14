@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useAppToast } from '@/hooks/useAppToast';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import { useI18n } from '@/i18n';
 import type {
   PMTemplateCompatibilityRule,
   PMTemplateCompatibilityRuleFormData,
@@ -192,6 +193,7 @@ export const useEquipmentMatchCountForPMRules = (
 export const useBulkSetPMTemplateRules = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
 
   return useMutation({
@@ -202,21 +204,21 @@ export const useBulkSetPMTemplateRules = () => {
       templateId: string;
       rules: PMTemplateCompatibilityRuleFormData[];
     }) => {
-      if (!currentOrganization?.id) throw new Error('No organization selected');
+      if (!currentOrganization?.id) throw new Error(t('pmTemplates.list.selectOrganization'));
       return bulkSetRules(currentOrganization.id, templateId, rules);
     },
     onSuccess: (result, variables) => {
       invalidateCompatibilityCaches(queryClient, variables.templateId);
 
       toast({
-        title: 'Compatibility rules updated',
-        description: `${result.rulesSet} rule${result.rulesSet !== 1 ? 's' : ''} set`,
+        title: t('pmTemplates.rules.updated'),
+        description: t('pmTemplates.rules.rulesSet', { count: result.rulesSet }),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error updating rules',
-        description: error instanceof Error ? error.message : 'Failed to update rules',
+        title: t('pmTemplates.rules.updateError'),
+        description: error instanceof Error ? error.message : t('pmTemplates.rules.updateFailed'),
         variant: 'error',
       });
     },

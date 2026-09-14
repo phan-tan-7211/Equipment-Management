@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +24,7 @@ const WorkOrderCostsSection: React.FC<WorkOrderCostsSectionProps> = ({
   primaryEquipmentId,
   variant = 'default',
 }) => {
+  const { t } = useI18n();
   const { data: costs = [], isLoading } = useWorkOrderCosts(workOrderId);
   const { data: linkedEquipment = [] } = useWorkOrderEquipment(workOrderId);
   
@@ -43,7 +45,7 @@ const WorkOrderCostsSection: React.FC<WorkOrderCostsSectionProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
-            Loading Costs...
+            {t('workOrderOperations.loadingCosts')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -60,11 +62,11 @@ const WorkOrderCostsSection: React.FC<WorkOrderCostsSectionProps> = ({
       <CardHeader className={isMobileField ? 'pb-2' : undefined}>
         <CardTitle className={isMobileField ? 'flex items-center gap-2 text-base' : 'flex items-center gap-2'}>
           <DollarSign className={isMobileField ? 'h-4 w-4' : 'h-5 w-5'} />
-          Itemized Costs
+          {t('workOrderOperations.itemizedCosts')}
         </CardTitle>
         {isMobileField ? (
           <p className="text-xs text-muted-foreground pt-1">
-            Parts and labor — tap to add without leaving the job screen.
+            {t('workOrderOperations.mobileCostsHint')}
           </p>
         ) : null}
       </CardHeader>

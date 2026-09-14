@@ -13,6 +13,7 @@ import { useWorkOrderExcelExport, useWorkOrderExcelCount } from '@/features/work
 import { useGoogleWorkspaceConnectionStatus } from '@/features/organization/hooks/useGoogleWorkspaceConnectionStatus';
 import { canAccessScopedReportsExport } from '@/features/work-orders/utils/workOrderExportAccess';
 import { saveColumnPreferences } from '@/features/reports/utils/column-preferences';
+import { useI18n } from '@/i18n';
 
 import {
   REPORT_CARDS,
@@ -26,6 +27,7 @@ import type { WorkOrderExcelFilters, WorksheetKey } from '@/features/work-orders
  * Reports Page - Fleet Export Console (admin) or scoped work-order export (requestor/viewer)
  */
 const Reports: React.FC = () => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { hasRole } = usePermissions();
   const { teamMemberships, isLoading: teamsLoading } = useTeamMembership();
@@ -151,7 +153,7 @@ const Reports: React.FC = () => {
   if (teamsLoading || scopedTeamsLoading) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <div className="py-12 text-center text-sm text-muted-foreground">Loading export console…</div>
+        <div className="py-12 text-center text-sm text-muted-foreground">{t('reports.loadingConsole')}</div>
       </Page>
     );
   }
@@ -193,11 +195,11 @@ const Reports: React.FC = () => {
     <Page maxWidth="7xl" padding="responsive">
       <div className="space-y-6">
         <PageHeader
-          title={isScopedConsole ? 'Work Order Exports' : 'Fleet Export Console'}
+          title={isScopedConsole ? t('reports.workOrderExports') : t('reports.consoleTitle')}
           description={
             isScopedConsole
-              ? 'Download CSV summaries for work orders on equipment you can view. Private notes and costs are never included.'
-              : 'Export fleet, maintenance, inventory, and scan data. Expand each module to choose fields, then export.'
+              ? t('reports.scopedDescription')
+              : t('reports.consoleDescription')
           }
         />
 
@@ -213,7 +215,7 @@ const Reports: React.FC = () => {
               id="featured-export-heading"
               className="mb-3 font-tabular text-xs font-medium uppercase tracking-wider text-muted-foreground"
             >
-              Primary Export
+              {t('reports.primaryExport')}
             </h2>
             <div className="grid gap-4">
               {renderExportModule(FEATURED_REPORT_CARD, true)}
@@ -227,7 +229,7 @@ const Reports: React.FC = () => {
               id={`export-section-${group.category}`}
               className="mb-3 font-tabular text-xs font-medium uppercase tracking-wider text-muted-foreground"
             >
-              {group.label}
+              {t(`reports.categories.${group.category}`)}
             </h2>
             <div className={getSectionGridClass(group.cards.length)}>
               {group.cards.map((card) => (

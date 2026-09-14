@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ export const WorkOrderQuickActions: React.FC<WorkOrderQuickActionsProps> = ({
   canDelete = false,
   onDeleteClick,
 }) => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   
   // Check if user has QuickBooks access (billing admin permission)
@@ -66,7 +68,7 @@ export const WorkOrderQuickActions: React.FC<WorkOrderQuickActionsProps> = ({
           variant="ghost" 
           size="icon"
           className="h-8 w-8"
-          aria-label="Quick actions"
+          aria-label={t('workOrderDetail.quickActions')}
           onClick={stopCardNavigation}
           onPointerDown={stopCardNavigation}
         >
@@ -76,15 +78,15 @@ export const WorkOrderQuickActions: React.FC<WorkOrderQuickActionsProps> = ({
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem onClick={handleAddNote}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Note
+          {t('workOrderDetail.addNote')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleDownloadPDF}>
           <Download className="h-4 w-4 mr-2" />
-          Service Report PDF
+          {t('workOrderDetail.serviceReportPdf')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handlePrintFieldWorksheet}>
           <ClipboardList className="h-4 w-4 mr-2" />
-          Print Field Worksheet
+          {t('workOrderDetail.printFieldWorksheet')}
         </DropdownMenuItem>
         {showQuickBooks && (
           <>
@@ -108,7 +110,7 @@ export const WorkOrderQuickActions: React.FC<WorkOrderQuickActionsProps> = ({
               }}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete work order
+              {t('workOrderDetail.deleteWorkOrder')}
             </DropdownMenuItem>
           </>
         ) : null}

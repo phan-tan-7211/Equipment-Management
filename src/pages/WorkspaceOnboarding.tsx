@@ -15,6 +15,7 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { useSession } from '@/hooks/useSession';
 import { useWorkspaceOnboardingState } from '@/hooks/useWorkspaceOnboarding';
 import { useAppToast } from '@/hooks/useAppToast';
+import { useI18n } from '@/i18n';
 import {
   getGoogleWorkspaceConnectionStatus,
   listWorkspaceDirectoryUsers,
@@ -33,6 +34,7 @@ import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
 const WorkspaceOnboarding = () => {
+  const { t } = useI18n();
   const { user } = useAuth();
   const { refreshSession } = useSession();
   const { switchOrganization } = useOrganization();
@@ -58,7 +60,7 @@ const WorkspaceOnboarding = () => {
   const gwSupportRef = searchParams.get('gw_ref');
   const gwConnected = searchParams.get('gw_connected');
   const gwErrorMessage = gwError
-    ? getGoogleWorkspaceOAuthErrorMessage(gwError, gwSupportRef)
+    ? getGoogleWorkspaceOAuthErrorMessage(gwError, gwSupportRef, t)
     : null;
 
   // Clear query params after displaying them
@@ -67,8 +69,8 @@ const WorkspaceOnboarding = () => {
       // Show toast for success
       if (gwConnected === 'true' && !gwError) {
         toast({
-          title: 'Google Workspace connected',
-          description: 'Your organization is now connected to Google Workspace.',
+          title: t('workspaceOnboarding.connected'),
+          description: t('workspaceOnboarding.connectedDescription'),
         });
         // Refresh data after successful connection
         refetch();
@@ -82,7 +84,7 @@ const WorkspaceOnboarding = () => {
       newParams.delete('gw_connected');
       setSearchParams(newParams, { replace: true });
     }
-  }, [gwError, gwConnected, searchParams, setSearchParams, toast, refetch, refreshSession]);
+  }, [gwError, gwConnected, searchParams, setSearchParams, toast, refetch, refreshSession, t]);
 
   const isGoogleUser = useMemo(() => {
     const provider = (user?.app_metadata as { provider?: string })?.provider;
@@ -133,8 +135,8 @@ const WorkspaceOnboarding = () => {
       window.location.href = authUrl;
     } catch (error) {
       toast({
-        title: 'Failed to start Google Workspace connection',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        title: t('workspaceOnboarding.connectFailed'),
+        description: error instanceof Error ? error.message : t('workspaceOnboarding.tryAgain'),
         variant: 'error',
       });
       setIsConnecting(false);
@@ -148,17 +150,17 @@ const WorkspaceOnboarding = () => {
       const result = await syncGoogleWorkspaceUsers(workspaceOrgId);
       const revocationSummary =
         result.membersDeactivated > 0 || result.claimsRevoked > 0
-          ? ` ${result.membersDeactivated} access revoked, ${result.claimsRevoked} claims revoked.`
+          ? t('workspaceOnboarding.revoked', { members: result.membersDeactivated, claims: result.claimsRevoked })
           : '';
       toast({
-        title: 'Directory synced',
-        description: `${result.usersSynced} users loaded.${revocationSummary}`,
+        title: t('workspaceOnboarding.directorySynced'),
+        description: t('workspaceOnboarding.loaded', { count: result.usersSynced, revoked: revocationSummary }),
       });
       await queryClient.invalidateQueries({ queryKey: googleWorkspace.directoryUsers(workspaceOrgId) });
     } catch (error) {
       toast({
-        title: 'Failed to sync users',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        title: t('workspaceOnboarding.syncFailed'),
+        description: error instanceof Error ? error.message : t('workspaceOnboarding.tryAgain'),
         variant: 'error',
       });
     } finally {
@@ -186,15 +188,15 @@ const WorkspaceOnboarding = () => {
         Array.from(adminEmails)
       );
       toast({
-        title: 'Members added',
-        description: `${result.members_added} members added. ${result.admin_applied} admins applied; ${result.admin_pending} pending.`,
+        title: t('workspaceOnboarding.membersAdded'),
+        description: t('workspaceOnboarding.added', { count: result.members_added, admins: result.admin_applied, pending: result.admin_pending }),
       });
       clearSelection();
       await refetch();
     } catch (error) {
       toast({
-        title: 'Failed to add members',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        title: t('workspaceOnboarding.addFailed'),
+        description: error instanceof Error ? error.message : t('workspaceOnboarding.tryAgain'),
         variant: 'error',
       });
     }
@@ -203,7 +205,7 @@ const WorkspaceOnboarding = () => {
   if (isLoading) {
     return (
       <Page maxWidth="7xl" padding="responsive">
-        <PageHeader title="Workspace Onboarding" description="Preparing your Google Workspace setup..." />
+        <PageHeader title={t('workspaceOnboarding.title')} description={t('workspaceOnboarding.preparing')} />
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -215,12 +217,12 @@ const WorkspaceOnboarding = () => {
     return (
       <Page maxWidth="7xl" padding="responsive">
         <PageHeader
-          title="Workspace Onboarding"
-          description="Google Workspace onboarding is available for business Google accounts."
+          title={t('workspaceOnboarding.title')}
+          description={t('workspaceOnboarding.businessOnly')}
         />
         <Alert>
           <AlertDescription>
-            Sign in with your Google Workspace account to start setup.
+            {t('workspaceOnboarding.signIn')}
           </AlertDescription>
         </Alert>
       </Page>
@@ -233,8 +235,8 @@ const WorkspaceOnboarding = () => {
   return (
     <Page maxWidth="7xl" padding="responsive">
       <PageHeader
-        title="Workspace Onboarding"
-        description={`Set up EquipQR for ${onboardingState.domain}`}
+        title={t('workspaceOnboarding.title')}
+        description={t('workspaceOnboarding.setupFor', { domain: onboardingState.domain })}
       />
 
       <div className="space-y-6">
@@ -242,7 +244,7 @@ const WorkspaceOnboarding = () => {
         {gwErrorMessage && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Connection Failed</AlertTitle>
+            <AlertTitle>{t('workspaceOnboarding.connectionFailed')}</AlertTitle>
             <AlertDescription>{gwErrorMessage}</AlertDescription>
           </Alert>
         )}
@@ -251,17 +253,16 @@ const WorkspaceOnboarding = () => {
         {showConnectButton && (
           <Card>
             <CardHeader>
-              <CardTitle>Connect Google Workspace</CardTitle>
+              <CardTitle>{t('workspaceOnboarding.connectTitle')}</CardTitle>
               <CardDescription>
-                Connect your Google Workspace to set up your organization and import users.
-                Only Google Workspace administrators can complete this step.
+                {t('workspaceOnboarding.connectDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {!isGoogleWorkspaceConfigured() && (
                 <Alert variant="destructive">
                   <AlertDescription>
-                    Google Workspace integration is not configured. Contact your administrator.
+                    {t('workspaceOnboarding.notConfigured')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -273,15 +274,15 @@ const WorkspaceOnboarding = () => {
                 {isConnecting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Connecting...
+                    {t('workspaceOnboarding.connecting')}
                   </>
                 ) : (
-                  'Connect Google Workspace'
+                  t('workspaceOnboarding.connectTitle')
                 )}
               </Button>
 
               <p className="text-sm text-muted-foreground">
-                You will be redirected to Google to authorize EquipQR to access your Workspace directory.
+                {t('workspaceOnboarding.redirectHelp')}
               </p>
             </CardContent>
           </Card>
@@ -294,22 +295,22 @@ const WorkspaceOnboarding = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-success" />
-                  Google Workspace Connected
+                  {t('workspaceOnboarding.connectedTitle')}
                 </CardTitle>
                 <CardDescription>
-                  Your organization is connected to Google Workspace.
+                  {t('workspaceOnboarding.organizationConnected')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2 text-sm text-muted-foreground">
-                  <div>Connected domain: {connectionStatus.domain}</div>
-                  <div>Connected on: {connectionStatus.connected_at ? formatDate(connectionStatus.connected_at) : 'Unknown'}</div>
+                  <div>{t('workspaceOnboarding.connectedDomain', { domain: connectionStatus.domain })}</div>
+                  <div>{t('workspaceOnboarding.connectedOn', { date: connectionStatus.connected_at ? formatDate(connectionStatus.connected_at) : t('workspaceOnboarding.unknown') })}</div>
                 </div>
                 
                 <div className="pt-4 border-t">
                   {canManageWorkspaceDisconnect ? (
                     <>
-                      <p className="text-sm font-medium mb-2">Disconnect Google Workspace</p>
+                      <p className="text-sm font-medium mb-2">{t('workspaceOnboarding.disconnectTitle')}</p>
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -319,21 +320,19 @@ const WorkspaceOnboarding = () => {
                         {disconnectMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Disconnecting...
+                            {t('workspaceOnboarding.disconnecting')}
                           </>
                         ) : (
-                          'Disconnect Google Workspace'
+                          t('workspaceOnboarding.disconnectTitle')
                         )}
                       </Button>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Disconnect removes OAuth credentials, clears the cached directory snapshot, and
-                        releases your domain claim so you can start Google Workspace onboarding from the
-                        beginning.
+                        {t('workspaceOnboarding.disconnectDescription')}
                       </p>
                     </>
                   ) : (
                     <p className="text-xs text-muted-foreground">
-                      Only organization owners and admins can disconnect Google Workspace.
+                      {t('workspaceOnboarding.disconnectAdminOnly')}
                     </p>
                   )}
                 </div>
@@ -342,9 +341,9 @@ const WorkspaceOnboarding = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Sync Directory Users</CardTitle>
+                <CardTitle>{t('workspaceOnboarding.syncTitle')}</CardTitle>
                 <CardDescription>
-                  Sync your Google Workspace directory and select the members you want to add.
+                  {t('workspaceOnboarding.syncDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -352,10 +351,10 @@ const WorkspaceOnboarding = () => {
                   {isSyncing ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Syncing...
+                      {t('workspaceOnboarding.syncing')}
                     </>
                   ) : (
-                    'Sync Directory'
+                    t('workspaceOnboarding.syncDirectory')
                   )}
                 </Button>
 
@@ -364,10 +363,10 @@ const WorkspaceOnboarding = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Include</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Make Admin</TableHead>
+                          <TableHead>{t('workspaceOnboarding.include')}</TableHead>
+                          <TableHead>{t('workspaceOnboarding.email')}</TableHead>
+                          <TableHead>{t('workspaceOnboarding.name')}</TableHead>
+                          <TableHead>{t('workspaceOnboarding.makeAdmin')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -381,7 +380,7 @@ const WorkspaceOnboarding = () => {
                                 <Checkbox
                                   checked={isSelected}
                                   onCheckedChange={(checked) => toggleEmail(email, Boolean(checked))}
-                                  aria-label={`Select ${email}`}
+                                  aria-label={t('workspaceOnboarding.selectEmail', { email })}
                                 />
                               </TableCell>
                               <TableCell>{email}</TableCell>
@@ -391,7 +390,7 @@ const WorkspaceOnboarding = () => {
                                   checked={isAdmin}
                                   disabled={!isSelected}
                                   onCheckedChange={(checked) => toggleAdmin(email, Boolean(checked))}
-                                  aria-label={`Make admin ${email}`}
+                                  aria-label={t('workspaceOnboarding.makeAdminEmail', { email })}
                                 />
                               </TableCell>
                             </TableRow>
@@ -404,7 +403,7 @@ const WorkspaceOnboarding = () => {
                       onClick={handleAddMembers}
                       disabled={selectedEmails.size === 0}
                     >
-                      Add Selected Members
+                      {t('workspaceOnboarding.addSelected')}
                     </Button>
                   </>
                 )}
@@ -425,4 +424,3 @@ const WorkspaceOnboarding = () => {
 };
 
 export default WorkspaceOnboarding;
-

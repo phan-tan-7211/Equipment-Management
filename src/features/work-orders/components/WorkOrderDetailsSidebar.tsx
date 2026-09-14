@@ -8,6 +8,7 @@ import { WorkOrderDetailsStatusLockWarning } from './WorkOrderDetailsStatusLockW
 import { WorkOrderCustomerContactsCard } from '@/features/work-orders/components/WorkOrderDetailsSharedCards';
 import { WorkOrderData, EquipmentData, PMData, PermissionLevels, OrganizationData } from '@/features/work-orders/types/workOrderDetails';
 import type { WorkOrderLike } from '@/features/work-orders/utils/workOrderTypeConversion';
+import { useI18n } from '@/i18n';
 
 interface WorkOrderDetailsSidebarProps {
   workOrder: WorkOrderData;
@@ -49,6 +50,7 @@ export const WorkOrderDetailsSidebar: React.FC<WorkOrderDetailsSidebarProps> = (
   canViewWorkOrderCosts = false,
 }) => {
   const isMobile = useIsMobile();
+  const { t } = useI18n();
 
   return (
     <div className={`
@@ -60,7 +62,7 @@ export const WorkOrderDetailsSidebar: React.FC<WorkOrderDetailsSidebarProps> = (
     `}>
       {isMobile && showMobileSidebar && (
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Work Order Info</h2>
+          <h2 className="text-lg font-semibold">{t('workOrderAudit.info')}</h2>
           <Button 
             variant="ghost" 
             size="sm"
@@ -119,4 +121,3 @@ export const WorkOrderDetailsSidebar: React.FC<WorkOrderDetailsSidebarProps> = (
     </div>
   );
 };
-

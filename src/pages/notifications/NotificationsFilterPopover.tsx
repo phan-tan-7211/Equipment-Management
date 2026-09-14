@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,52 +29,53 @@ const NotificationsFilterPopover: React.FC<NotificationsFilterPopoverProps> = ({
   onFilterReadChange,
   onClearFilters,
 }) => {
+  const { t } = useI18n();
   return (
-    <FilterPopoverShell ariaSubject="notifications" activeFilterCount={activeFilterCount}>
+    <FilterPopoverShell ariaSubject={t('notificationPage.title')} activeFilterCount={activeFilterCount} triggerLabel={t('notificationPage.filter')} triggerAriaLabel={t('notificationPage.filterAria', { count: activeFilterCount })} headerLabel={t('notificationPage.filters')}>
       {({ close }) => (
         <>
           {/* Type */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted-foreground">Type</span>
+            <span className="text-xs text-muted-foreground">{t('notificationPage.type')}</span>
             <Select value={filterType} onValueChange={onFilterTypeChange}>
-              <SelectTrigger className="h-8 text-sm" aria-label="Filter by notification type">
-                <SelectValue placeholder="All types" />
+              <SelectTrigger className="h-8 text-sm" aria-label={t('notificationPage.filterType')}>
+                <SelectValue placeholder={t('notificationPage.allTypesPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="work_order_submitted">Submitted</SelectItem>
-                <SelectItem value="work_order_accepted">Accepted</SelectItem>
-                <SelectItem value="work_order_assigned">Assigned</SelectItem>
-                <SelectItem value="work_order_in_progress">In Progress</SelectItem>
-                <SelectItem value="work_order_on_hold">On Hold</SelectItem>
-                <SelectItem value="work_order_completed">Completed</SelectItem>
-                <SelectItem value="work_order_cancelled">Cancelled</SelectItem>
-                <SelectItem value="ownership_transfer_request">Transfer Request</SelectItem>
-                <SelectItem value="ownership_transfer_accepted">Transfer Accepted</SelectItem>
-                <SelectItem value="ownership_transfer_rejected">Transfer Declined</SelectItem>
-                <SelectItem value="workspace_merge_request">Merge Request</SelectItem>
-                <SelectItem value="workspace_merge_accepted">Merge Accepted</SelectItem>
-                <SelectItem value="workspace_merge_rejected">Merge Declined</SelectItem>
-                <SelectItem value="member_added">Member Added</SelectItem>
-                <SelectItem value="member_role_changed">Org Role Changed</SelectItem>
-                <SelectItem value="team_member_added">Team Member Added</SelectItem>
-                <SelectItem value="team_member_role_changed">Team Role Changed</SelectItem>
-                <SelectItem value="audit_export">Audit Export</SelectItem>
+                <SelectItem value="all">{t('notificationPage.allTypes')}</SelectItem>
+                <SelectItem value="work_order_submitted">{t('notificationPage.work_order_submitted')}</SelectItem>
+                <SelectItem value="work_order_accepted">{t('notificationPage.work_order_accepted')}</SelectItem>
+                <SelectItem value="work_order_assigned">{t('notificationPage.work_order_assigned')}</SelectItem>
+                <SelectItem value="work_order_in_progress">{t('notificationPage.work_order_in_progress')}</SelectItem>
+                <SelectItem value="work_order_on_hold">{t('notificationPage.work_order_on_hold')}</SelectItem>
+                <SelectItem value="work_order_completed">{t('notificationPage.work_order_completed')}</SelectItem>
+                <SelectItem value="work_order_cancelled">{t('notificationPage.work_order_cancelled')}</SelectItem>
+                <SelectItem value="ownership_transfer_request">{t('notificationPage.ownership_transfer_request')}</SelectItem>
+                <SelectItem value="ownership_transfer_accepted">{t('notificationPage.ownership_transfer_accepted')}</SelectItem>
+                <SelectItem value="ownership_transfer_rejected">{t('notificationPage.ownership_transfer_rejected')}</SelectItem>
+                <SelectItem value="workspace_merge_request">{t('notificationPage.workspace_merge_request')}</SelectItem>
+                <SelectItem value="workspace_merge_accepted">{t('notificationPage.workspace_merge_accepted')}</SelectItem>
+                <SelectItem value="workspace_merge_rejected">{t('notificationPage.workspace_merge_rejected')}</SelectItem>
+                <SelectItem value="member_added">{t('notificationPage.member_added')}</SelectItem>
+                <SelectItem value="member_role_changed">{t('notificationPage.member_role_changed')}</SelectItem>
+                <SelectItem value="team_member_added">{t('notificationPage.team_member_added')}</SelectItem>
+                <SelectItem value="team_member_role_changed">{t('notificationPage.team_member_role_changed')}</SelectItem>
+                <SelectItem value="audit_export">{t('notificationPage.audit_export')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Read status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted-foreground">Read status</span>
+            <span className="text-xs text-muted-foreground">{t('notificationPage.readStatus')}</span>
             <Select value={filterRead} onValueChange={onFilterReadChange}>
-              <SelectTrigger className="h-8 text-sm" aria-label="Filter by read status">
-                <SelectValue placeholder="All" />
+              <SelectTrigger className="h-8 text-sm" aria-label={t('notificationPage.filterRead')}>
+                <SelectValue placeholder={t('notificationPage.all')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="unread">Unread</SelectItem>
-                <SelectItem value="read">Read</SelectItem>
+                <SelectItem value="all">{t('notificationPage.all')}</SelectItem>
+                <SelectItem value="unread">{t('notificationPage.unread')}</SelectItem>
+                <SelectItem value="read">{t('notificationPage.read')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -91,7 +93,7 @@ const NotificationsFilterPopover: React.FC<NotificationsFilterPopoverProps> = ({
                 }}
               >
                 <X className="h-3 w-3 mr-1.5" />
-                Clear all filters
+                {t('notificationPage.clearAllFilters')}
               </Button>
             </>
           )}

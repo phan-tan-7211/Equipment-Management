@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { memo, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,6 +68,7 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
   onItemDrop,
   onItemDragEnd,
 }: ChecklistItemRowProps) {
+  const { t } = useI18n();
   const titleRef = useRef<HTMLInputElement>(null);
   const [titleInput, setTitleInput] = useState(item.title);
   const [descInput, setDescInput] = useState(item.description || '');
@@ -123,7 +125,7 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
   const showExpanded = !compactOnly && expanded;
   const hasDescription = Boolean(descInput.trim());
   const showDescriptionPreview = !compactOnly && !showExpanded && hasDescription;
-  const checkLabel = titleInput.trim() || item.title.trim() || 'check';
+  const checkLabel = titleInput.trim() || item.title.trim() || t('pmTemplates.editor.check');
 
   const requiredControl = (
     <TooltipProvider delayDuration={300}>
@@ -135,7 +137,7 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
           aria-describedby={`required-help-${item.id}`}
         />
         <Label htmlFor={`required-${item.id}`} className="text-xs font-medium cursor-pointer">
-          Required
+          {t('pmTemplates.editor.required')}
         </Label>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -144,14 +146,14 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
               variant="ghost"
               size="icon"
               className="h-6 w-6 shrink-0"
-              aria-label={`Required check help for ${checkLabel}`}
+              aria-label={t('pmTemplates.editor.requiredHelp', { name: checkLabel })}
             >
               <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="max-w-xs">
             <p id={`required-help-${item.id}`}>
-              When enabled, technicians must complete this check on the work order. It cannot be skipped.
+              {t('pmTemplates.editor.requiredDescription')}
             </p>
           </TooltipContent>
         </Tooltip>
@@ -162,32 +164,32 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
   const actionsMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Actions for ${checkLabel}`}>
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={t('pmTemplates.editor.actionsFor', { name: checkLabel })}>
           <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {!compactOnly && (
           <DropdownMenuItem onClick={() => setExpanded((v) => !v)}>
-            {expanded ? 'Collapse details' : 'Expand details'}
+            {expanded ? t('pmTemplates.editor.collapseDetails') : t('pmTemplates.editor.expandDetails')}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem onClick={() => onDuplicate(item.id)}>
           <Copy className="mr-2 h-3 w-3" />
-          Duplicate
+          {t('pmTemplates.editor.duplicate')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onMoveToTop(item.id)} disabled={index === 0}>
           <ArrowUp className="mr-2 h-3 w-3" />
-          Move to top
+          {t('pmTemplates.editor.moveTop')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onMoveToBottom(item.id)} disabled={index === totalInSection - 1}>
           <ArrowDown className="mr-2 h-3 w-3" />
-          Move to bottom
+          {t('pmTemplates.editor.moveBottom')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-destructive focus:text-destructive">
           <Trash2 className="mr-2 h-3 w-3" />
-          Delete
+          {t('pmTemplates.editor.delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -216,7 +218,7 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
               className="h-8 w-8 cursor-grab text-muted-foreground active:cursor-grabbing"
               draggable
               onDragStart={onDragHandleStart(item.id)}
-              aria-label={`Drag to reorder ${checkLabel}`}
+              aria-label={t('pmTemplates.editor.dragToReorder', { name: checkLabel })}
             >
               <GripVertical className="h-4 w-4" aria-hidden />
             </Button>
@@ -230,7 +232,7 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
               onClick={() => setExpanded((v) => !v)}
               aria-expanded={showExpanded}
               aria-label={
-                showExpanded ? `Collapse description for ${checkLabel}` : `Expand description for ${checkLabel}`
+                showExpanded ? t('pmTemplates.editor.collapseDescription', { name: checkLabel }) : t('pmTemplates.editor.expandDescription', { name: checkLabel })
               }
             >
               {showExpanded ? (
@@ -250,9 +252,9 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
               onChange={(e) => setTitleInput(e.target.value)}
               onBlur={commitTitle}
               onKeyDown={handleTitleKeyDown}
-              placeholder="Check name"
+              placeholder={t('pmTemplates.editor.checkName')}
               className={cn('min-w-0 flex-1', compactOnly ? 'h-8' : 'h-9')}
-              aria-label="Check name"
+              aria-label={t('pmTemplates.editor.checkName')}
             />
             {actionsMenu}
           </div>
@@ -272,21 +274,21 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
           {showExpanded && (
             <div className="space-y-3 border-t border-border/60 pt-3">
               <div>
-                <Label className="text-xs">Description (Optional)</Label>
+                <Label className="text-xs">{t('pmTemplates.editor.description')}</Label>
                 <Textarea
                   value={descInput}
                   onChange={(e) => setDescInput(e.target.value)}
                   onBlur={handleDescBlur}
-                  placeholder="Instructions for technicians"
+                  placeholder={t('pmTemplates.editor.instructions')}
                   className="mt-1 resize-none"
                   rows={3}
                 />
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Label className="text-xs">Move to section</Label>
+                <Label className="text-xs">{t('pmTemplates.editor.moveToSection')}</Label>
                 <Select onValueChange={(v) => onMoveToSection(item.id, v)} value={item.section}>
                   <SelectTrigger className="h-8 w-full max-w-md">
-                    <SelectValue placeholder="Section" />
+                    <SelectValue placeholder={t('pmTemplates.editor.section')} />
                   </SelectTrigger>
                   <SelectContent>
                     {sections.map((s) => (

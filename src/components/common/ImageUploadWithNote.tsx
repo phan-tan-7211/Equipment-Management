@@ -8,6 +8,7 @@ import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { finishDragDrop, handleDragActiveState } from '@/components/common/drag-active-handlers';
 import { useLocalFilePreviewUrls } from '@/hooks/useLocalFilePreviewUrls';
+import { useI18n } from '@/i18n';
 
 const sanitizeForDisplay = (text: string): string =>
   text.replace(/[^\w\s.\-()[\]]/g, '_') || 'unnamed';
@@ -25,6 +26,7 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
   acceptedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   disabled = false
 }) => {
+  const { t } = useI18n();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -38,11 +40,11 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
   const addFiles = (files: File[]) => {
     const validFiles = files.filter(file => {
       if (!acceptedTypes.includes(file.type)) {
-        toast.error(`${sanitizeForDisplay(file.name)} is not a supported image format`);
+        toast.error(t('sharedUi.unsupportedImage', { name: sanitizeForDisplay(file.name) }));
         return false;
       }
       if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${sanitizeForDisplay(file.name)} is too large. Maximum size is 10MB`);
+        toast.error(t('sharedUi.imageTooLarge', { name: sanitizeForDisplay(file.name) }));
         return false;
       }
       return true;
@@ -52,7 +54,7 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
       const combined = [...prev, ...validFiles];
       
       if (combined.length > maxFiles) {
-        toast.error(`Maximum ${maxFiles} files allowed`);
+        toast.error(t('sharedUi.maxFiles', { count: maxFiles }));
         return prev;
       }
       
@@ -81,12 +83,12 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
 
   const handleUpload = async () => {
     if (selectedFiles.length === 0) {
-      toast.error('Please select at least one image');
+      toast.error(t('sharedUi.selectImage'));
       return;
     }
 
     if (!onUpload) {
-      toast.error('Upload handler not configured');
+      toast.error(t('sharedUi.uploadUnavailable'));
       return;
     }
 
@@ -96,10 +98,10 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
       await onUpload(selectedFiles);
       clearPreviewUrls();
       setSelectedFiles([]);
-      toast.success('Images uploaded successfully!');
+      toast.success(t('sharedUi.imagesUploaded'));
     } catch (error) {
       console.error('Upload failed:', error);
-      toast.error(`Failed to upload images: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(t('sharedUi.imagesUploadFailed', { error: error instanceof Error ? error.message : t('sharedUi.unknownError') }));
     } finally {
       setIsUploading(false);
     }
@@ -121,9 +123,9 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
         >
           <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <div className="space-y-2">
-            <p className="text-sm font-medium">Drop images here or click button below</p>
+            <p className="text-sm font-medium">{t('sharedUi.imageDropMultiple')}</p>
             <p className="text-xs text-muted-foreground">
-              Supports JPEG, PNG, GIF, WebP up to 10MB each
+              {t('sharedUi.imageFormats')}
             </p>
             <Button
               type="button"
@@ -134,7 +136,7 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
               className="mt-2"
             >
               <Upload className="h-4 w-4 mr-2" />
-              Choose Files
+              {t('sharedUi.chooseFiles')}
             </Button>
           </div>
           <Input
@@ -150,7 +152,7 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
 
         {selectedFiles.length > 0 && (
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Selected Images ({selectedFiles.length})</Label>
+            <Label className="text-sm font-medium">{t('sharedUi.selectedImages', { count: selectedFiles.length })}</Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {selectedFiles.map((file, index) => {
                 const safePreviewUrl = getPreviewUrl(file);
@@ -177,7 +179,7 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
                     size="sm"
                     className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => removeFile(index)}
-                    aria-label={`Remove selected image ${displayName}`}
+                    aria-label={t('sharedUi.removeSelectedImage', { name: displayName })}
                   >
                     <X className="h-3 w-3" />
                   </Button>
@@ -196,7 +198,7 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
             className="w-full"
           >
             <Upload className="h-4 w-4 mr-2" />
-            {isUploading ? 'Uploading...' : `Upload ${selectedFiles.length} Image${selectedFiles.length !== 1 ? 's' : ''}`}
+            {isUploading ? t('sharedUi.uploading') : t('sharedUi.uploadImages', { count: selectedFiles.length })}
           </Button>
         )}
       </CardContent>

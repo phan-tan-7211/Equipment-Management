@@ -29,6 +29,7 @@ import {
 import { AlertTriangle, ArrowRightLeft, Loader2, Building2 } from 'lucide-react';
 import { useInitiateTransfer } from '@/features/organization/hooks/useOwnershipTransfer';
 import type { SimpleOrganization } from '@/contexts/SimpleOrganizationContext';
+import { useI18n } from '@/i18n';
 
 interface TransferOwnershipDialogProps {
   open: boolean;
@@ -43,6 +44,7 @@ export const TransferOwnershipDialog: React.FC<TransferOwnershipDialogProps> = (
   organization,
   admins,
 }) => {
+  const { t } = useI18n();
   const [selectedAdminId, setSelectedAdminId] = useState<string>('');
   const [reason, setReason] = useState('');
   const [confirmed, setConfirmed] = useState(false);
@@ -87,10 +89,10 @@ export const TransferOwnershipDialog: React.FC<TransferOwnershipDialogProps> = (
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ArrowRightLeft className="h-5 w-5" />
-            Transfer Ownership
+            {t('organizationAdmin.transfer')}
           </DialogTitle>
           <DialogDescription>
-            Transfer ownership of <strong>{organization.name}</strong> to another admin.
+            {t('organizationAdmin.transferOf', { name: organization.name })}
           </DialogDescription>
         </DialogHeader>
 
@@ -99,17 +101,16 @@ export const TransferOwnershipDialog: React.FC<TransferOwnershipDialogProps> = (
           <Alert className="border-destructive/50 bg-destructive/10">
             <AlertTriangle className="h-4 w-4 text-destructive" />
             <AlertDescription className="text-destructive">
-              <strong>Important:</strong> After transfer, you will no longer be the owner.
-              A new personal organization will be created for you automatically.
+              <strong>{t('organizationAdmin.important')}</strong> {t('organizationAdmin.transferWarning')}
             </AlertDescription>
           </Alert>
 
           {/* Admin Selection */}
           <div className="space-y-2">
-            <Label htmlFor="admin-select">Transfer to</Label>
+            <Label htmlFor="admin-select">{t('organizationAdmin.transferTo')}</Label>
             <Select value={selectedAdminId} onValueChange={setSelectedAdminId}>
               <SelectTrigger id="admin-select">
-                <SelectValue placeholder="Select an admin..." />
+                <SelectValue placeholder={t('organizationAdmin.selectAdmin')} />
               </SelectTrigger>
               <SelectContent>
                 {admins.map((admin) => (
@@ -123,16 +124,16 @@ export const TransferOwnershipDialog: React.FC<TransferOwnershipDialogProps> = (
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Only admins can receive ownership. Promote a member to admin first if needed.
+              {t('organizationAdmin.adminOnly')}
             </p>
           </div>
 
           {/* Transfer Reason */}
           <div className="space-y-2">
-            <Label htmlFor="reason">Reason for transfer (optional)</Label>
+            <Label htmlFor="reason">{t('organizationAdmin.transferReason')}</Label>
             <Textarea
               id="reason"
-              placeholder="e.g., Leaving company, role change..."
+              placeholder={t('organizationAdmin.transferReasonExample')}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={2}
@@ -142,25 +143,25 @@ export const TransferOwnershipDialog: React.FC<TransferOwnershipDialogProps> = (
           {/* What happens after */}
           {selectedAdmin && (
             <div className="rounded-lg border p-4 space-y-2 bg-muted/50">
-              <h4 className="font-medium text-sm">What happens next:</h4>
+              <h4 className="font-medium text-sm">{t('organizationAdmin.next')}</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li className="flex items-start gap-2">
                   <span className="text-primary">1.</span>
                   <span>
-                    <strong>{selectedAdmin.name}</strong> will receive a notification to accept or decline.
+                    {t('organizationAdmin.notifyAdmin', { name: selectedAdmin.name })}
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">2.</span>
-                  <span>The request expires in 7 days if not responded to.</span>
+                  <span>{t('organizationAdmin.expiresSevenDays')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">3.</span>
-                  <span>If accepted, they become the owner and choose your new role.</span>
+                  <span>{t('organizationAdmin.acceptedOwner')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Building2 className="h-4 w-4 text-primary mt-0.5" />
-                  <span>A new personal organization will be created for you.</span>
+                  <span>{t('organizationAdmin.personalOrgCreated')}</span>
                 </li>
               </ul>
             </div>
@@ -174,15 +175,14 @@ export const TransferOwnershipDialog: React.FC<TransferOwnershipDialogProps> = (
               onCheckedChange={(checked) => setConfirmed(checked === true)}
             />
             <Label htmlFor="confirm" className="text-sm leading-tight cursor-pointer">
-              I understand that I will no longer be the owner of this organization
-              and this action requires the new owner to accept.
+              {t('organizationAdmin.transferConsent')}
             </Label>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            Cancel
+            {t('organizationAdmin.cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -192,12 +192,12 @@ export const TransferOwnershipDialog: React.FC<TransferOwnershipDialogProps> = (
             {initiateTransfer.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Sending Request...
+                {t('organizationAdmin.sendingRequest')}
               </>
             ) : (
               <>
                 <ArrowRightLeft className="h-4 w-4 mr-2" />
-                Send Transfer Request
+                {t('organizationAdmin.sendRequest')}
               </>
             )}
           </Button>

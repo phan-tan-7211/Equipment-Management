@@ -23,6 +23,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { RefreshCw, Search, Users, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAppToast } from '@/hooks/useAppToast';
+import { useI18n } from '@/i18n';
 import {
   listWorkspaceDirectoryUsersLight,
   selectGoogleWorkspaceMembers,
@@ -46,6 +47,7 @@ export const GoogleWorkspaceMemberImportSheet = ({
   organizationId,
   domain,
 }: GoogleWorkspaceMemberImportSheetProps) => {
+  const { t } = useI18n();
   const { toast } = useAppToast();
   const queryClient = useQueryClient();
 
@@ -122,19 +124,19 @@ export const GoogleWorkspaceMemberImportSheet = ({
       const result = await syncGoogleWorkspaceUsers(organizationId);
       const revocationSummary =
         result.membersDeactivated > 0 || result.claimsRevoked > 0
-          ? ` Revoked access for ${result.membersDeactivated} member(s).`
+          ? t('organizationImport.syncRevoked', { count: result.membersDeactivated })
           : '';
       toast({
-        title: 'Directory synced',
-        description: `${result.usersSynced} users loaded from Google Workspace.${revocationSummary}`,
+        title: t('organizationImport.directorySynced'),
+        description: t('organizationImport.syncedCount', { count: result.usersSynced, revoked: revocationSummary }),
         variant: 'success',
       });
       await queryClient.invalidateQueries({ queryKey: googleWorkspace.directoryUsersLight(organizationId) });
       await refetchDirectory();
     } catch (error) {
       toast({
-        title: 'Failed to sync directory',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        title: t('organizationImport.syncFailed'),
+        description: error instanceof Error ? error.message : t('organizationImport.tryAgain'),
         variant: 'error',
       });
     } finally {
@@ -168,8 +170,8 @@ export const GoogleWorkspaceMemberImportSheet = ({
       );
 
       toast({
-        title: 'Members added',
-        description: `${result.members_added} members added. ${result.admin_applied} admins applied; ${result.admin_pending} pending.`,
+        title: t('organizationImport.membersAdded'),
+        description: t('organizationImport.addedDescription', { count: result.members_added, adminCount: result.admin_applied, pendingCount: result.admin_pending }),
         variant: 'success',
       });
 
@@ -181,8 +183,8 @@ export const GoogleWorkspaceMemberImportSheet = ({
       handleOpenChange(false);
     } catch (error) {
       toast({
-        title: 'Failed to add members',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        title: t('organizationImport.addFailed'),
+        description: error instanceof Error ? error.message : t('organizationImport.tryAgain'),
         variant: 'error',
       });
     } finally {
@@ -208,13 +210,13 @@ export const GoogleWorkspaceMemberImportSheet = ({
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Import from Google Workspace
+            {t('organizationImport.title')}
           </SheetTitle>
           <SheetDescription>
             {domain ? (
-              <>Select users from <span className="font-medium">{domain}</span> to add to your organization.</>
+              t('organizationImport.domainDescription', { domain })
             ) : (
-              'Select users from your Google Workspace directory to add to your organization.'
+              t('organizationImport.description')
             )}
           </SheetDescription>
         </SheetHeader>
@@ -227,7 +229,7 @@ export const GoogleWorkspaceMemberImportSheet = ({
               <AlertDescription>
                 {directoryError instanceof Error
                   ? directoryError.message
-                  : 'An unexpected error occurred while fetching directory users.'}
+                  : t('organizationImport.unexpectedError')}
               </AlertDescription>
             </Alert>
             <Button
@@ -238,7 +240,7 @@ export const GoogleWorkspaceMemberImportSheet = ({
               disabled={isLoadingDirectory}
             >
               <RefreshCw className={`mr-2 h-4 w-4 ${isLoadingDirectory ? 'animate-spin' : ''}`} />
-              Retry
+              {t('organizationImport.retry')}
             </Button>
           </div>
         )}
@@ -253,10 +255,10 @@ export const GoogleWorkspaceMemberImportSheet = ({
               ) : (
                 <RefreshCw className="h-4 w-4 mr-2" />
               )}
-              Sync Directory
+              {t('organizationImport.syncDirectory')}
             </Button>
             <span className="text-sm text-muted-foreground">
-              {directoryUsers.length} users in directory
+              {t('organizationImport.directoryCount', { count: directoryUsers.length })}
             </span>
           </div>
 
@@ -265,7 +267,7 @@ export const GoogleWorkspaceMemberImportSheet = ({
             <Alert>
               <CheckCircle2 className="h-4 w-4" />
               <AlertDescription>
-                {hiddenCount} user{hiddenCount !== 1 ? 's' : ''} already in organization or pending claim (hidden).
+                {t('organizationImport.hiddenCount', { count: hiddenCount })}
               </AlertDescription>
             </Alert>
           )}
@@ -274,7 +276,7 @@ export const GoogleWorkspaceMemberImportSheet = ({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name or email..."
+              placeholder={t('organizationImport.search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -291,12 +293,12 @@ export const GoogleWorkspaceMemberImportSheet = ({
               {directoryUsers.length === 0 ? (
                 <>
                   <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-                  <p>No directory users found. Click "Sync Directory" to load users.</p>
+                  <p>{t('organizationImport.noDirectoryUsers')}</p>
                 </>
               ) : searchQuery ? (
-                <p>No users match your search.</p>
+                <p>{t('organizationImport.noSearchMatch')}</p>
               ) : (
-                <p>All directory users are already in your organization.</p>
+                <p>{t('organizationImport.allAlreadyMembers')}</p>
               )}
             </div>
           ) : (
@@ -314,11 +316,11 @@ export const GoogleWorkspaceMemberImportSheet = ({
                               availableUsers.map((u) => u.primary_email),
                             )
                           }
-                          aria-label="Select all"
+                          aria-label={t('organizationImport.selectAll')}
                         />
                       </TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead className="w-24">Admin</TableHead>
+                      <TableHead>{t('organizationImport.user')}</TableHead>
+                      <TableHead className="w-24">{t('organizationImport.admin')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -332,7 +334,7 @@ export const GoogleWorkspaceMemberImportSheet = ({
                             <Checkbox
                               checked={isSelected}
                               onCheckedChange={(checked) => toggleEmail(email, Boolean(checked))}
-                              aria-label={`Select ${email}`}
+                              aria-label={t('organizationImport.selectEmail', { email })}
                             />
                           </TableCell>
                           <TableCell>
@@ -348,7 +350,7 @@ export const GoogleWorkspaceMemberImportSheet = ({
                               checked={isAdmin}
                               disabled={!isSelected}
                               onCheckedChange={(checked) => toggleAdmin(email, Boolean(checked))}
-                              aria-label={`Make ${email} admin`}
+                              aria-label={t('organizationImport.makeAdmin', { email })}
                             />
                           </TableCell>
                         </TableRow>
@@ -361,7 +363,7 @@ export const GoogleWorkspaceMemberImportSheet = ({
               {/* Add Button */}
               <div className="flex items-center justify-between pt-4 border-t">
                 <span className="text-sm text-muted-foreground">
-                  {selectedEmails.size} selected{adminEmails.size > 0 && ` (${adminEmails.size} as admin)`}
+                  {t('organizationImport.selected', { count: selectedEmails.size })}{adminEmails.size > 0 && t('organizationImport.selectedAdmins', { count: adminEmails.size })}
                 </span>
                 <Button
                   onClick={handleAddMembers}
@@ -370,12 +372,12 @@ export const GoogleWorkspaceMemberImportSheet = ({
                   {isAdding ? (
                     <RefreshCw className="h-4 w-4 animate-spin mr-2" />
                   ) : null}
-                  Add {selectedEmails.size > 0 ? selectedEmails.size : ''} Member{selectedEmails.size !== 1 ? 's' : ''}
+                  {t('organizationImport.addMembers', { count: selectedEmails.size || 0 })}
                 </Button>
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Selected users will be able to join automatically when they sign in with their Google account.
+                {t('organizationImport.signInHelp')}
               </p>
             </>
           )}
@@ -385,4 +387,3 @@ export const GoogleWorkspaceMemberImportSheet = ({
     </Sheet>
   );
 };
-

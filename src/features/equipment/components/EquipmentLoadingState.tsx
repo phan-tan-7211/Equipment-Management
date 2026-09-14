@@ -1,6 +1,7 @@
 import React from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
 import PageHeader from '@/components/layout/PageHeader';
+import { useI18n } from '@/i18n';
 
 /** Single shimmer row matching the mobile equipment card layout */
 const MobileSkeletonRow = () => (
@@ -40,9 +41,10 @@ const DesktopSkeletonCard = () => (
 );
 
 const EquipmentLoadingState = () => {
+  const { t } = useI18n();
   return (
     <div className="space-y-4 md:space-y-6">
-      <PageHeader title="Equipment" />
+      <PageHeader title={t('equipment.title')} />
       {/* Mobile skeletons — list-style rows */}
       <div className="flex flex-col gap-2 md:hidden">
         {[...Array(5)].map((_, i) => (

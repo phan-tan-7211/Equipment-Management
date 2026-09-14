@@ -8,6 +8,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 import { getAuthClaims } from '@/lib/authClaims';
 import { useMemo } from 'react';
 import type { Database } from '@/integrations/supabase/types';
@@ -136,6 +137,7 @@ interface MutateContext {
  * Hook for updating member roles
  */
 export const useUpdateMemberRole = (organizationId: string) => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   return useMutation<OrganizationMemberRow, Error, UpdateMemberRoleVariables, MutateContext>({
@@ -172,10 +174,10 @@ export const useUpdateMemberRole = (organizationId: string) => {
         queryClient.setQueryData(['organization-members', organizationId], context.previousMembers);
       }
       logger.error('Error updating member role', error);
-      toast.error('Failed to update member role');
+      toast.error(t('organizationMembers.roleFailed'));
     },
     onSuccess: () => {
-      toast.success('Member role updated successfully');
+      toast.success(t('organizationMembers.roleUpdated'));
     }
   });
 };
@@ -193,6 +195,7 @@ interface RemovalResult {
  * Hook for removing organization members
  */
 export const useRemoveMember = (organizationId: string) => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   return useMutation<RemovalResult, Error, string, MutateContext>({
@@ -238,14 +241,14 @@ export const useRemoveMember = (organizationId: string) => {
         queryClient.setQueryData(['organization-members', organizationId], context.previousMembers);
       }
       logger.error('Error removing member', error);
-      const message = error instanceof Error ? error.message : 'Failed to remove member';
+      const message = error instanceof Error ? error.message : t('organizationMembers.removeFailed');
       toast.error(message);
     },
     onSuccess: (data) => {
       // Show detailed success message based on what happened
-      let message = `${data.removed_user_name} was removed successfully`;
+      let message = t('organizationMembers.removedSuccess', { name: data.removed_user_name || '' });
       if (data.teams_transferred && data.teams_transferred > 0) {
-        message += `. Team management for ${data.teams_transferred} team(s) was transferred to the organization owner.`;
+        message += t('organizationMembers.transferredTeams', { count: data.teams_transferred });
       }
       
       toast.success(message);

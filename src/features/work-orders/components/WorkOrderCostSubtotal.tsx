@@ -3,6 +3,7 @@ import React from 'react';
 import { DollarSign } from 'lucide-react';
 import { useWorkOrderCostsSubtotal } from '@/features/work-orders/hooks/useWorkOrderCostsSubtotal';
 import { formatCurrency } from '@/utils/currencyUtils';
+import { useI18n } from '@/i18n';
 
 interface WorkOrderCostSubtotalProps {
   workOrderId: string;
@@ -15,13 +16,14 @@ const WorkOrderCostSubtotal: React.FC<WorkOrderCostSubtotalProps> = ({
   className = "",
   hideWhenEmpty = false,
 }) => {
+  const { t } = useI18n();
   const { data: subtotalCents = 0, isLoading } = useWorkOrderCostsSubtotal(workOrderId);
 
   if (isLoading) {
     return (
       <div className={`flex items-center gap-1 ${className}`}>
         <DollarSign className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Loading...</span>
+        <span className="text-sm text-muted-foreground">{t('workOrderResidual.loading')}</span>
       </div>
     );
   }
@@ -31,7 +33,7 @@ const WorkOrderCostSubtotal: React.FC<WorkOrderCostSubtotalProps> = ({
     return (
       <div className={`flex items-center gap-1 ${className}`}>
         <DollarSign className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">No costs</span>
+        <span className="text-sm text-muted-foreground">{t('workOrderResidual.noCosts')}</span>
       </div>
     );
   }

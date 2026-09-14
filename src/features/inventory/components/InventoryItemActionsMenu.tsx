@@ -1,6 +1,7 @@
 import { Eye, Layers, Minus, Pencil, Plus, QrCode } from 'lucide-react';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import type { InventoryItem } from '@/features/inventory/types/inventory';
+import { useI18n } from '@/i18n';
 
 export type InventoryItemActionHandlers = {
   canCreate: boolean;
@@ -26,11 +27,13 @@ export function InventoryItemActionsMenu({
   onEdit,
   onManageAlternateGroups,
 }: InventoryItemActionsMenuProps) {
+  const { t } = useI18n();
+
   return (
     <>
       <DropdownMenuItem onClick={() => onViewDetails(item.id)}>
         <Eye className="mr-2 h-4 w-4" />
-        View Details
+        {t('inventoryList.viewDetails')}
       </DropdownMenuItem>
       {canCreate && (
         <DropdownMenuItem
@@ -40,7 +43,7 @@ export function InventoryItemActionsMenu({
           disabled={adjustPending}
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add 1
+          {t('inventoryList.addOne')}
         </DropdownMenuItem>
       )}
       {canCreate && (
@@ -51,23 +54,23 @@ export function InventoryItemActionsMenu({
           disabled={adjustPending}
         >
           <Minus className="mr-2 h-4 w-4" />
-          Take 1
+          {t('inventoryList.takeOne')}
         </DropdownMenuItem>
       )}
       <DropdownMenuItem onClick={() => onShowQR(item)}>
         <QrCode className="mr-2 h-4 w-4" />
-        QR Code
+        {t('inventoryList.qrCode')}
       </DropdownMenuItem>
       {canCreate && (
         <DropdownMenuItem onClick={() => onEdit(item)}>
           <Pencil className="mr-2 h-4 w-4" />
-          Edit
+          {t('inventoryList.edit')}
         </DropdownMenuItem>
       )}
       {canCreate && onManageAlternateGroups && (
         <DropdownMenuItem onClick={() => onManageAlternateGroups(item.id)}>
           <Layers className="mr-2 h-4 w-4" />
-          Manage Alternate Groups
+          {t('inventoryList.manageAlternateGroups')}
         </DropdownMenuItem>
       )}
     </>

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { ExportCollapsibleCheckboxPicker } from '@/components/common/ExportCollapsibleCheckboxPicker';
 import { getColumnsForReportType } from '@/features/reports/constants/reportColumns';
 import type { ReportType } from '@/features/reports/types/reports';
+import { useI18n } from '@/i18n';
 
 interface ReportColumnSelectorProps {
   reportType: ReportType;
@@ -20,22 +21,23 @@ export const ReportColumnSelector: React.FC<ReportColumnSelectorProps> = ({
   onChange,
   className,
 }) => {
+  const { t } = useI18n();
   const items = useMemo(
     () =>
       getColumnsForReportType(reportType).map((column) => ({
         key: column.key,
-        label: column.label,
+        label: t(`reports.columns.${reportType === 'operator-check-ins' && column.key === 'serial_number' ? 'unitNumber' : column.key}`),
       })),
-    [reportType],
+    [reportType, t],
   );
 
   return (
     <ExportCollapsibleCheckboxPicker
-      title="Fields to export"
+      title={t('reports.fieldsToExport')}
       items={items}
       selectedKeys={selectedColumns}
       onChange={onChange}
-      noneSelectedMessage="Select at least one field to export."
+      noneSelectedMessage={t('reports.selectField')}
       idPrefix={`column-${reportType}`}
       className={className}
     />

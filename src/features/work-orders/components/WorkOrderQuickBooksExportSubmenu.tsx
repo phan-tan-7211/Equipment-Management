@@ -1,3 +1,5 @@
+import { useI18n } from '@/i18n';
+import { localizeQuickBooksTooltip } from '@/features/work-orders/utils/localizeExportAvailability';
 import React from 'react';
 import {
   DropdownMenuItem,
@@ -37,6 +39,7 @@ export const WorkOrderQuickBooksExportSubmenu: React.FC<WorkOrderQuickBooksExpor
   teamId,
   workOrderStatus,
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const featureEnabled = isQuickBooksEnabled();
   const { data: canExport = false, isLoading: accessLoading } = useQuickBooksAccess();
@@ -144,7 +147,9 @@ export const WorkOrderQuickBooksExportSubmenu: React.FC<WorkOrderQuickBooksExpor
     window.open(invoiceUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const updateLabel = invoiceDisplay ? `Update Invoice #${invoiceDisplay}` : 'Update Invoice';
+  const updateLabel = invoiceDisplay
+    ? t('workOrderExportUi.updateInvoiceNumber', { number: invoiceDisplay })
+    : t('workOrderExportUi.updateInvoice');
 
   return (
     <DropdownMenuSub>
@@ -162,14 +167,14 @@ export const WorkOrderQuickBooksExportSubmenu: React.FC<WorkOrderQuickBooksExpor
                 ) : (
                   <FileSpreadsheet className="h-4 w-4 mr-2" />
                 )}
-                Create New Invoice
+                {t('workOrderExportUi.createInvoice')}
               </DropdownMenuItem>
             </TooltipTrigger>
             <TooltipContent side="left">
               <p className="max-w-xs">
                 {hasLinkedInvoice
-                  ? `Invoice ${invoiceDisplay} is already linked to this work order.`
-                  : tooltipMessage}
+                  ? t('workOrderExportUi.alreadyLinkedInvoice', { number: invoiceDisplay ?? '' })
+                  : localizeQuickBooksTooltip(tooltipMessage, invoiceDisplay, t)}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -191,8 +196,8 @@ export const WorkOrderQuickBooksExportSubmenu: React.FC<WorkOrderQuickBooksExpor
             <TooltipContent side="left">
               <p className="max-w-xs">
                 {!hasLinkedInvoice
-                  ? 'Create an invoice first before updating.'
-                  : tooltipMessage}
+                  ? t('workOrderExportUi.invoiceCreateBeforeUpdate')
+                  : localizeQuickBooksTooltip(tooltipMessage, invoiceDisplay, t)}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -204,14 +209,14 @@ export const WorkOrderQuickBooksExportSubmenu: React.FC<WorkOrderQuickBooksExpor
                 disabled={!hasLinkedInvoice || !invoiceUrl}
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Open Invoice
+                {t('workOrderExportUi.openInvoice')}
               </DropdownMenuItem>
             </TooltipTrigger>
             <TooltipContent side="left">
               <p className="max-w-xs">
                 {!hasLinkedInvoice
-                  ? 'Create an invoice first to open it in QuickBooks.'
-                  : `Open Invoice ${invoiceDisplay} in QuickBooks`}
+                  ? t('workOrderExportUi.invoiceCreateBeforeOpen')
+                  : t('workOrderExportUi.invoiceOpenLinked', { number: invoiceDisplay ?? '' })}
               </p>
             </TooltipContent>
           </Tooltip>

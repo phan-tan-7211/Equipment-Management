@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
+import { useI18n } from '@/i18n';
 import { Plus, X, CheckCircle2, Info } from 'lucide-react';
 import { CompatibilityRulesCardShell } from '@/components/common/CompatibilityRulesCardShell';
 import { CompatibilityManufacturerSelect } from '@/components/common/CompatibilityManufacturerSelect';
@@ -30,18 +31,18 @@ interface CompatibilityRulesEditorProps {
 }
 
 // Match type options with descriptions (Any Model first as the broadest/simplest option)
-const MATCH_TYPE_OPTIONS: { value: ModelMatchType; label: string; description: string }[] = [
-  { value: 'any', label: 'Any Model', description: 'Matches all models from this manufacturer' },
-  { value: 'exact', label: 'Specific Model', description: 'Matches a specific model exactly' },
-  { value: 'prefix', label: 'Starts With', description: 'Matches models starting with a pattern (e.g., "JL-" matches JL-100, JL-200)' },
-  { value: 'wildcard', label: 'Pattern', description: 'Matches models using * wildcard (e.g., "D*T" matches D6T, D8T)' },
+const MATCH_TYPE_OPTIONS: { value: ModelMatchType; labelKey: string; descriptionKey: string }[] = [
+  { value: 'any', labelKey: 'anyModel', descriptionKey: 'anyModelHelp' },
+  { value: 'exact', labelKey: 'specificModel', descriptionKey: 'specificModelHelp' },
+  { value: 'prefix', labelKey: 'startsWith', descriptionKey: 'startsWithHelp' },
+  { value: 'wildcard', labelKey: 'pattern', descriptionKey: 'patternHelp' },
 ];
 
 // Status options (ordered by lifecycle: new → deprecated → verified as final confirmation)
-const STATUS_OPTIONS: { value: VerificationStatus; label: string; className: string }[] = [
-  { value: 'unverified', label: 'Unverified', className: 'bg-warning/20 text-warning' },
-  { value: 'deprecated', label: 'Deprecated', className: 'bg-muted text-foreground' },
-  { value: 'verified', label: 'Verified', className: 'bg-success/20 text-success' },
+const STATUS_OPTIONS: { value: VerificationStatus; labelKey: string; className: string }[] = [
+  { value: 'unverified', labelKey: 'unverified', className: 'bg-warning/20 text-warning' },
+  { value: 'deprecated', labelKey: 'deprecated', className: 'bg-muted text-foreground' },
+  { value: 'verified', labelKey: 'verifiedStatus', className: 'bg-success/20 text-success' },
 ];
 
 /**
@@ -61,7 +62,7 @@ const createBlankRule = (): PartCompatibilityRuleFormData => ({
 /**
  * Validates a pattern and returns normalized preview or error message.
  */
-const validatePattern = (matchType: ModelMatchType, pattern: string): { valid: boolean; preview: string; error?: string } => {
+const validatePattern = (matchType: ModelMatchType, pattern: string, t: (key: string) => string): { valid: boolean; preview: string; error?: string } => {
   const trimmed = pattern.trim();
   
   if (matchType === 'any') {
@@ -69,29 +70,29 @@ const validatePattern = (matchType: ModelMatchType, pattern: string): { valid: b
   }
   
   if (matchType === 'exact') {
-    return { valid: trimmed.length > 0, preview: trimmed.toLowerCase(), error: trimmed.length === 0 ? 'Model is required' : undefined };
+    return { valid: trimmed.length > 0, preview: trimmed.toLowerCase(), error: trimmed.length === 0 ? t('itemForm.modelRequired') : undefined };
   }
   
   if (matchType === 'prefix') {
     if (trimmed.length === 0) {
-      return { valid: false, preview: '', error: 'Prefix pattern is required' };
+      return { valid: false, preview: '', error: t('itemForm.prefixRequired') };
     }
     if (trimmed.includes('*') || trimmed.includes('?')) {
-      return { valid: false, preview: '', error: 'Prefix cannot contain wildcards (* or ?)' };
+      return { valid: false, preview: '', error: t('itemForm.prefixNoWildcard') };
     }
     return { valid: true, preview: `${trimmed.toLowerCase()}*` };
   }
   
   if (matchType === 'wildcard') {
     if (trimmed.length === 0) {
-      return { valid: false, preview: '', error: 'Pattern is required' };
+      return { valid: false, preview: '', error: t('itemForm.patternRequired') };
     }
     const asteriskCount = (trimmed.match(/\*/g) || []).length;
     if (asteriskCount > 2) {
-      return { valid: false, preview: '', error: 'Pattern can have at most 2 wildcards (*)' };
+      return { valid: false, preview: '', error: t('itemForm.patternMaxWildcards') };
     }
     if (trimmed === '*' || trimmed === '**' || trimmed === '*-*') {
-      return { valid: false, preview: '', error: 'Pattern must include at least 2 non-wildcard characters' };
+      return { valid: false, preview: '', error: t('itemForm.patternMinCharacters') };
     }
     // Convert to SQL LIKE preview
     const sqlPattern = trimmed.toLowerCase().replace(/\*/g, '%').replace(/\?/g, '_');
@@ -106,6 +107,7 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
   onChange,
   disabled = false
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { data: manufacturersData = [], isLoading: isLoadingMfrs } = useEquipmentManufacturersAndModels(
     currentOrganization?.id
@@ -182,8 +184,11 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
 
   return (
     <CompatibilityRulesCardShell
-      title="Compatibility Rules"
-      description="Match parts to equipment by manufacturer and model pattern. Use different match types for flexible targeting."
+      title={t('itemForm.ruleTitle')}
+      description={t('itemForm.ruleDescription')}
+      matchesLabel={t('itemForm.matchesEquipment', { count: matchCount })}
+      noEquipmentLabel={t('itemForm.noEquipmentInOrg')}
+      addEquipmentLabel={t('itemForm.addEquipmentFirst')}
       validRulesCount={validRulesCount}
       matchCount={matchCount}
       isLoadingMfrs={isLoadingMfrs}
@@ -199,14 +204,14 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
             className="w-full"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add Rule
+            {t('itemForm.addRule')}
           </Button>
           {rules.length > 0 && (
             <div className="text-xs text-muted-foreground space-y-1">
-              <p>Rules use case-insensitive matching. Duplicate rules are highlighted and will be deduplicated on save.</p>
+              <p>{t('itemForm.rulesCaseInsensitive')}</p>
               <p className="flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3 text-success" />
-                <span>Verified rules are shown first in part lookup results.</span>
+                <span>{t('itemForm.verifiedRulesFirst')}</span>
               </p>
             </div>
           )}
@@ -218,7 +223,7 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
                 const matchType: ModelMatchType = rule.match_type || 'exact';
                 const availableModels = getModelsForManufacturer(rule.manufacturer);
                 const isDuplicate = rule.manufacturer.trim().length > 0 && isDuplicateRule(rule, index);
-                const validation = validatePattern(matchType, rule.model || '');
+                const validation = validatePattern(matchType, rule.model || '', t);
                 const useDropdown = matchType === 'exact';
 
                 return (
@@ -237,6 +242,7 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
                           onValueChange={(value) => handleRuleChange(index, { manufacturer: value })}
                           manufacturers={manufacturers}
                           disabled={disabled}
+                          placeholder={t('itemForm.selectManufacturer')}
                         />
                       </div>
 
@@ -256,10 +262,10 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <span>{opt.label}</span>
+                                      <span>{t(`itemForm.${opt.labelKey}`)}</span>
                                     </TooltipTrigger>
                                     <TooltipContent side="right">
-                                      <p className="max-w-xs">{opt.description}</p>
+                                      <p className="max-w-xs">{t(`itemForm.${opt.descriptionKey}`)}</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -289,7 +295,7 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
                         // Any Model: show confirmation text
                         <div className="flex-1 flex items-center gap-2 text-sm text-muted-foreground px-3 py-2 bg-muted/50 rounded-md">
                           <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-                          <span>Matches all models from this manufacturer</span>
+                          <span>{t('itemForm.anyModelHelp')}</span>
                         </div>
                       ) : useDropdown ? (
                         // Specific Model: dropdown
@@ -300,7 +306,7 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
                             disabled={disabled || !rule.manufacturer}
                           >
                             <SelectTrigger className={`w-full ${!rule.model && rule.manufacturer ? 'border-warning/50' : ''}`}>
-                              <SelectValue placeholder="Select model..." />
+                              <SelectValue placeholder={t('itemForm.selectModel')} />
                             </SelectTrigger>
                             <SelectContent>
                               {availableModels.map((model) => (
@@ -313,7 +319,7 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
                           {/* Validation hint for Specific Model with no selection */}
                           {!rule.model && rule.manufacturer && (
                             <p className="text-xs text-warning">
-                              Select a model, or change match type to "Any Model" to match all models
+                              {t('itemForm.selectModelHint')}
                             </p>
                           )}
                         </div>
@@ -326,8 +332,8 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
                               onChange={(e) => handleRuleChange(index, { model: e.target.value })}
                               placeholder={
                                 matchType === 'prefix' 
-                                  ? 'Enter prefix (e.g., JL-)...'
-                                  : 'Enter pattern (e.g., D*T, *-100)...'
+                                  ? t('itemForm.prefixPlaceholder')
+                                  : t('itemForm.patternPlaceholder')
                               }
                               disabled={disabled || !rule.manufacturer}
                               className={!validation.valid && rule.model ? 'border-destructive' : ''}
@@ -339,9 +345,9 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
                                 </TooltipTrigger>
                                 <TooltipContent side="right" className="max-w-xs">
                                   {matchType === 'prefix' ? (
-                                    <p>Enter the beginning of the model name. For example, "JL-" will match JL-100, JL-200, etc.</p>
+                                    <p>{t('itemForm.prefixTooltip')}</p>
                                   ) : (
-                                    <p>Use * for wildcards. For example, "D*T" matches D6T, D8T. Use ? for single character.</p>
+                                    <p>{t('itemForm.patternTooltip')}</p>
                                   )}
                                 </TooltipContent>
                               </Tooltip>
@@ -352,7 +358,7 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
                             <div className="text-xs">
                               {validation.valid ? (
                                 <span className="text-muted-foreground">
-                                  Pattern: <code className="bg-muted px-1 rounded">{validation.preview}</code>
+                                  {t('itemForm.patternPreview')} <code className="bg-muted px-1 rounded">{validation.preview}</code>
                                 </span>
                               ) : (
                                 <span className="text-destructive">{validation.error}</span>
@@ -377,7 +383,7 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
                               <SelectItem key={opt.value} value={opt.value}>
                                 <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs ${opt.className}`}>
                                   {opt.value === 'verified' && <CheckCircle2 className="h-3 w-3" />}
-                                  {opt.label}
+                                  {t(`itemForm.${opt.labelKey}`)}
                                 </span>
                               </SelectItem>
                             ))}
@@ -392,7 +398,7 @@ export const CompatibilityRulesEditor: React.FC<CompatibilityRulesEditorProps> =
                         <Input
                           value={rule.notes || ''}
                           onChange={(e) => handleRuleChange(index, { notes: e.target.value || null })}
-                          placeholder="Verification notes (optional)..."
+                          placeholder={t('itemForm.verificationNotes')}
                           disabled={disabled}
                           className="text-sm"
                         />

@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
@@ -12,6 +13,7 @@ import { DsrAdminAccessGate } from '@/features/dsr/components/DsrAdminAccessGate
 
 function DSRCasePage() {
   const { requestId } = useParams();
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { canManageOrganization } = usePermissions();
   const canManageDsr = canManageOrganization();
@@ -24,7 +26,7 @@ function DSRCasePage() {
   if (caseQuery.isLoading) {
     gateContent = (
       <Page maxWidth="7xl" padding="responsive">
-        <p className="text-sm text-muted-foreground">Loading case...</p>
+        <p className="text-sm text-muted-foreground">{t('dsr.loadingCase')}</p>
       </Page>
     );
   } else if (caseQuery.isError || !caseQuery.data?.request) {
@@ -32,9 +34,9 @@ function DSRCasePage() {
       <Page maxWidth="7xl" padding="responsive">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Case not available</AlertTitle>
+          <AlertTitle>{t('dsr.caseUnavailable')}</AlertTitle>
           <AlertDescription>
-            {caseQuery.error instanceof Error ? caseQuery.error.message : 'Failed to load case'}
+            {caseQuery.error instanceof Error ? caseQuery.error.message : t('dsr.caseLoadError')}
           </AlertDescription>
         </Alert>
       </Page>
@@ -68,8 +70,8 @@ function DSRCasePage() {
     <DsrAdminAccessGate
       hasOrganization={Boolean(currentOrganization)}
       canManageDsr={canManageDsr}
-      noOrganizationDescription="Select an organization to open the case workspace."
-      restrictedDescription="Only organization owners/admins can access this case workspace."
+      noOrganizationDescription={t('dsr.caseSelectOrg')}
+      restrictedDescription={t('dsr.caseRestricted')}
     >
       {gateContent}
     </DsrAdminAccessGate>

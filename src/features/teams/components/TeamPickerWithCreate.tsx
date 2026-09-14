@@ -19,6 +19,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Receipt } from 'lucide-react';
 import type { TeamWithMembers } from '@/features/teams/types/team';
+import { useI18n } from '@/i18n';
 
 const UNASSIGNED_VALUE = 'unassigned';
 const CREATE_NEW_VALUE = '__create_new__';
@@ -46,6 +47,7 @@ const TeamPickerWithCreate: React.FC<TeamPickerWithCreateProps> = ({
   id = 'team-picker',
   teamFilter,
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
   const { teams: allTeams, isLoading } = useTeams();
@@ -109,14 +111,14 @@ const TeamPickerWithCreate: React.FC<TeamPickerWithCreateProps> = ({
       setNewTeamName('');
       setNewTeamDescription('');
       toast({
-        title: 'Team created',
-        description: `"${team.name}" is ready for equipment assignment.`,
+        title: t('teamsCustomer.teamCreated'),
+        description: t('teamsCustomer.teamCreatedDescription', { name: team.name }),
       });
     } catch (error) {
       console.error('Inline team create failed:', error);
       toast({
-        title: 'Could not create team',
-        description: 'Please try again.',
+        title: t('teamsCustomer.createError'),
+        description: t('teamsDetail.tryAgain'),
         variant: 'destructive',
       });
     } finally {
@@ -128,7 +130,7 @@ const TeamPickerWithCreate: React.FC<TeamPickerWithCreateProps> = ({
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Loading teams...
+        {t('teamsCustomer.loadingTeams')}
       </div>
     );
   }
@@ -138,27 +140,26 @@ const TeamPickerWithCreate: React.FC<TeamPickerWithCreateProps> = ({
       {showBillingCallout && (
         <Alert>
           <Receipt className="h-4 w-4" />
-          <AlertTitle>Team ownership drives invoicing</AlertTitle>
+          <AlertTitle>{t('teamsCustomer.billingTitle')}</AlertTitle>
           <AlertDescription>
-            The team that owns this equipment determines which customer receives invoices when work
-            orders are completed and exported to QuickBooks.
+            {t('teamsCustomer.billingDescription')}
           </AlertDescription>
         </Alert>
       )}
 
       <div className="space-y-2">
         <Label htmlFor={id}>
-          Assign to Team{requireTeam ? ' *' : ''}
+          {t('teamsCustomer.assignTeam')}{requireTeam ? ' *' : ''}
         </Label>
         <Select value={selectValue} onValueChange={handleSelectChange} disabled={disabled}>
           <SelectTrigger id={id}>
             <SelectValue
-              placeholder={requireTeam ? 'Select a team' : 'Select a team (recommended)'}
+              placeholder={requireTeam ? t('teamsCustomer.selectTeam') : t('teamsCustomer.selectTeamRecommended')}
             />
           </SelectTrigger>
           <SelectContent>
             {allowUnassigned && (
-              <SelectItem value={UNASSIGNED_VALUE}>No team assigned</SelectItem>
+              <SelectItem value={UNASSIGNED_VALUE}>{t('teamsCustomer.noTeam')}</SelectItem>
             )}
             {teams.map((team) => (
               <SelectItem key={team.id} value={team.id}>
@@ -171,7 +172,7 @@ const TeamPickerWithCreate: React.FC<TeamPickerWithCreateProps> = ({
             <SelectItem value={CREATE_NEW_VALUE}>
               <span className="flex items-center gap-1">
                 <Plus className="h-3 w-3" />
-                Create new team
+                {t('teamsCustomer.createNewTeam')}
               </span>
             </SelectItem>
           </SelectContent>
@@ -180,23 +181,23 @@ const TeamPickerWithCreate: React.FC<TeamPickerWithCreateProps> = ({
 
       {showInlineCreate && (
         <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
-          <p className="text-sm font-medium">Create a new team</p>
+          <p className="text-sm font-medium">{t('teamsCustomer.createNewTeam')}</p>
           <div className="space-y-2">
-            <Label htmlFor={`${id}-new-name`}>Team name *</Label>
+            <Label htmlFor={`${id}-new-name`}>{t('teamsDetail.nameRequiredLabel')}</Label>
             <Input
               id={`${id}-new-name`}
               value={newTeamName}
               onChange={(e) => setNewTeamName(e.target.value)}
-              placeholder="Department or customer name"
+              placeholder={t('teamsCustomer.departmentOrCustomer')}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`${id}-new-description`}>Description</Label>
+            <Label htmlFor={`${id}-new-description`}>{t('teamsDetail.description')}</Label>
             <Input
               id={`${id}-new-description`}
               value={newTeamDescription}
               onChange={(e) => setNewTeamDescription(e.target.value)}
-              placeholder="Optional"
+              placeholder={t('teamsCustomer.optional')}
             />
           </div>
           <div className="flex gap-2">
@@ -206,7 +207,7 @@ const TeamPickerWithCreate: React.FC<TeamPickerWithCreateProps> = ({
               onClick={handleInlineCreate}
               disabled={!newTeamName.trim() || isCreating}
             >
-              {isCreating ? 'Creating...' : 'Create & select'}
+              {isCreating ? t('teamsDetail.creating') : t('teamsCustomer.createSelect')}
             </Button>
             <Button
               type="button"
@@ -218,7 +219,7 @@ const TeamPickerWithCreate: React.FC<TeamPickerWithCreateProps> = ({
                 setNewTeamDescription('');
               }}
             >
-              Cancel
+              {t('teamsDetail.cancel')}
             </Button>
           </div>
         </div>

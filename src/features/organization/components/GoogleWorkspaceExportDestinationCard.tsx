@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FolderOpen, Loader2, Copy, Check } from 'lucide-react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useAppToast } from '@/hooks/useAppToast';
+import { useI18n } from '@/i18n';
 import { useGoogleWorkspaceConnectionStatus } from '@/features/organization/hooks/useGoogleWorkspaceConnectionStatus';
 import { useGoogleWorkspaceExportDestination } from '@/features/organization/hooks/useGoogleWorkspaceExportDestination';
 import {
@@ -31,6 +32,7 @@ interface GoogleWorkspaceExportDestinationCardProps {
 export function GoogleWorkspaceExportDestinationCard({
   currentUserRole,
 }: GoogleWorkspaceExportDestinationCardProps) {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { toast } = useAppToast();
   const canManage = currentUserRole === 'owner' || currentUserRole === 'admin';
@@ -86,11 +88,11 @@ export function GoogleWorkspaceExportDestinationCard({
         parentId: selection.parentId,
       });
       toast({
-        title: 'Organization folder saved',
-        description: `EquipQR files for ${currentOrganization?.name ?? 'this organization'} will save to ${selection.displayName}.`,
+        title: t('organizationIntegrations.folderSaved'),
+        description: t('organizationIntegrations.folderSavedDescription', { name: currentOrganization?.name ?? t('organizationIntegrations.thisOrganization'), folder: selection.displayName }),
       });
     },
-    [currentOrganization?.name, setDestination, toast],
+    [currentOrganization?.name, setDestination, toast, t],
   );
 
   const [isSavingFlags, setIsSavingFlags] = useState(false);
@@ -100,8 +102,9 @@ export function GoogleWorkspaceExportDestinationCard({
       if (!destination) return;
       setIsSavingFlags(true);
 
-      const label = flag === 'folderByTeam' ? 'team' : 'equipment';
-      const action = checked ? 'enabled' : 'disabled';
+      const settingKey = flag === 'folderByTeam'
+        ? (checked ? 'organizationIntegrations.organizeByTeamEnabled' : 'organizationIntegrations.organizeByTeamDisabled')
+        : (checked ? 'organizationIntegrations.organizeByEquipmentEnabled' : 'organizationIntegrations.organizeByEquipmentDisabled');
 
       try {
         await sonnerToast.promise(
@@ -111,12 +114,12 @@ export function GoogleWorkspaceExportDestinationCard({
             [flag]: checked,
           }),
           {
-            loading: 'Saving folder settings...',
-            success: `Organize by ${label} ${action}`,
+            loading: t('organizationIntegrations.folderSettingsSaving'),
+            success: t(settingKey),
             error: (err: Error & { code?: string }) => {
               const errToast = getGoogleWorkspaceDestinationSaveErrorToast(
                 err,
-                'Could not save organization folder.',
+                t('organizationIntegrations.folderSaveFailed'),
               );
               return errToast.description;
             },
@@ -126,37 +129,37 @@ export function GoogleWorkspaceExportDestinationCard({
         setIsSavingFlags(false);
       }
     },
-    [destination, setDestination],
+    [destination, setDestination, t],
   );
 
   if (!canManage) {
     return null;
   }
 
-  const kindLabel = destination?.selection_kind === 'shared_drive' ? 'Shared Drive folder' : 'My Drive folder';
-  const organizationName = currentOrganization?.name ?? 'Organization';
+  const kindLabel = destination?.selection_kind === 'shared_drive' ? t('organizationIntegrations.sharedFolder') : t('organizationIntegrations.myFolder');
+  const organizationName = currentOrganization?.name ?? t('organizationIntegrations.organization');
 
   return (
     <>
       <IntegrationCardLayout>
         <IntegrationCardHeader
-          title="Google Drive File Storage"
+          title={t('organizationIntegrations.fileStorage')}
           icon={<GoogleWorkspaceMarkIcon />}
           description={
             <>
               <p>
-                Organization folder for {organizationName}
-                {workspaceDomain ? ` on ${workspaceDomain}` : ''}
+                {t('organizationIntegrations.organizationFolder', { name: organizationName })}
+                {workspaceDomain ? t('organizationIntegrations.onDomain', { domain: workspaceDomain }) : ''}
               </p>
               {connectionStatus?.connected_email ? (
-                <p>Authorized by {connectionStatus.connected_email}</p>
+                <p>{t('organizationIntegrations.authorizedBy', { email: connectionStatus.connected_email })}</p>
               ) : null}
             </>
           }
           badge={
             destination ? (
               <Badge variant="outline" className="bg-success/10 text-success border-success/30 text-xs">
-                Configured
+                {t('organizationIntegrations.configured')}
               </Badge>
             ) : undefined
           }
@@ -173,7 +176,7 @@ export function GoogleWorkspaceExportDestinationCard({
               ) : (
                 <FolderOpen className="h-3.5 w-3.5 mr-1.5" />
               )}
-              {destination ? 'Change organization folder' : 'Choose organization folder'}
+              {t(destination ? 'organizationIntegrations.changeFolder' : 'organizationIntegrations.chooseFolder')}
             </Button>
           }
         />
@@ -181,7 +184,7 @@ export function GoogleWorkspaceExportDestinationCard({
         {isLoadingDestination && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            Loading organization folder...
+            {t('organizationIntegrations.loadingFolder')}
           </div>
         )}
 
@@ -204,7 +207,7 @@ export function GoogleWorkspaceExportDestinationCard({
                 className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
                 onClick={() => setShowAdvancedId((prev) => !prev)}
               >
-                {showAdvancedId ? 'Hide advanced details' : 'Advanced: show folder ID'}
+                {t(showAdvancedId ? 'organizationIntegrations.hideAdvanced' : 'organizationIntegrations.showFolderId')}
               </button>
               {showAdvancedId && (
                 <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -215,7 +218,7 @@ export function GoogleWorkspaceExportDestinationCard({
                     type="button"
                     onClick={handleCopyParentId}
                     className="self-start text-muted-foreground hover:text-foreground transition-colors sm:self-auto"
-                    aria-label="Copy folder ID"
+                    aria-label={t('organizationIntegrations.copyFolderId')}
                   >
                     {copiedId ? (
                       <Check className="h-3.5 w-3.5 text-success" />
@@ -240,7 +243,7 @@ export function GoogleWorkspaceExportDestinationCard({
 
         {!destination && !isLoadingDestination && (
           <p className="text-xs text-muted-foreground">
-            Choose a Shared Drive folder or My Drive folder where EquipQR should store organization files.
+            {t('organizationIntegrations.chooseFolderDescription')}
           </p>
         )}
 
@@ -248,7 +251,7 @@ export function GoogleWorkspaceExportDestinationCard({
           <Alert>
             <AlertDescription className="text-sm space-y-3">
               <p>
-                Grant Google Drive permissions before choosing an organization folder for exports.
+                {t('organizationIntegrations.grantDriveDescription')}
               </p>
               <Button
                 size="sm"
@@ -260,7 +263,7 @@ export function GoogleWorkspaceExportDestinationCard({
                 {isGrantingPermissions ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
                 ) : null}
-                Grant Drive permissions
+                {t('organizationIntegrations.grantDrive')}
               </Button>
             </AlertDescription>
           </Alert>
@@ -268,7 +271,7 @@ export function GoogleWorkspaceExportDestinationCard({
 
         {!isGoogleWorkspaceConnected && !isLoadingDestination && (
           <p className="text-xs text-muted-foreground">
-            Connect Google Workspace first to choose an organization folder.
+            {t('organizationIntegrations.connectFirst')}
           </p>
         )}
       </IntegrationCardLayout>
@@ -289,4 +292,3 @@ export function GoogleWorkspaceExportDestinationCard({
     </>
   );
 }
-

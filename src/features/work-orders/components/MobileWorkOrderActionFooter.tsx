@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkOrderPermissionLevels } from '@/features/work-orders/hooks/useWorkOrderPermissionLevels';
 import type { MobileFooterSyncState } from '@/features/work-orders/utils/workOrderDetailsViewModel';
+import { useI18n } from '@/i18n';
 
 export type FooterWorkOrder = {
   id: string;
@@ -33,14 +34,14 @@ export interface MobileWorkOrderActionFooterProps {
   onRetrySync?: () => void;
 }
 
-function footerQueueMessage(sync: MobileFooterSyncState): { className: string; content: React.ReactNode } | null {
+function footerQueueMessage(sync: MobileFooterSyncState, t: (key: string) => string): { className: string; content: React.ReactNode } | null {
   if (sync.failedCount > 0) {
     return {
       className: 'bg-destructive/15 text-destructive',
       content: (
         <>
           <RefreshCw className="h-3.5 w-3.5" aria-hidden />
-          <span>Sync failed</span>
+          <span>{t('workOrderAudit.syncFailed')}</span>
         </>
       ),
     };
@@ -51,7 +52,7 @@ function footerQueueMessage(sync: MobileFooterSyncState): { className: string; c
       content: (
         <>
           <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-          <span>Syncing...</span>
+          <span>{t('workOrderAudit.syncing')}</span>
         </>
       ),
     };
@@ -62,7 +63,7 @@ function footerQueueMessage(sync: MobileFooterSyncState): { className: string; c
       content: (
         <>
           <RefreshCw className="h-3.5 w-3.5" aria-hidden />
-          <span>Sync pending</span>
+          <span>{t('workOrderAudit.syncPending')}</span>
         </>
       ),
     };
@@ -73,7 +74,7 @@ function footerQueueMessage(sync: MobileFooterSyncState): { className: string; c
       content: (
         <>
           <WifiOff className="h-3.5 w-3.5" aria-hidden />
-          <span>Offline - text and status changes save locally</span>
+          <span>{t('workOrderAudit.offline')}</span>
         </>
       ),
     };
@@ -87,6 +88,7 @@ export const MobileWorkOrderActionFooter: React.FC<MobileWorkOrderActionFooterPr
   syncState,
   onRetrySync,
 }) => {
+  const { t } = useI18n();
   const { user } = useAuth();
   const { isManager, isTechnician } = useWorkOrderPermissionLevels();
 
@@ -100,7 +102,7 @@ export const MobileWorkOrderActionFooter: React.FC<MobileWorkOrderActionFooterPr
     return null;
   }
 
-  const queueRow = footerQueueMessage(syncState);
+  const queueRow = footerQueueMessage(syncState, t);
   if (!queueRow) {
     return null;
   }

@@ -6,6 +6,7 @@ import type { PlaceLocationData } from '@/components/ui/GooglePlacesAutocomplete
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { TeamLocationFormFields } from '@/features/teams/components/TeamLocationFormFields';
+import { useI18n } from '@/i18n';
 
 type StructuredLocationEditorControlsProps = {
   locationLabel: string;
@@ -54,6 +55,7 @@ export function StructuredLocationEditorControls({
   showMapPreviewLabel = false,
   className,
 }: StructuredLocationEditorControlsProps) {
+  const { t } = useI18n();
   return (
     <>
       <div className={className ?? 'space-y-4'}>
@@ -77,13 +79,13 @@ export function StructuredLocationEditorControls({
           disabled={disabled || isSaving}
         >
           <Navigation className="h-3.5 w-3.5" />
-          Use my current location
+          {t('sharedUi.useCurrentLocation')}
         </Button>
 
         {previewCenter && googleMapsKey ? (
           <div className={showMapPreviewLabel ? 'space-y-2' : undefined}>
             {showMapPreviewLabel ? (
-              <Label className="text-sm font-medium">Map preview</Label>
+              <Label className="text-sm font-medium">{t('sharedUi.mapPreview')}</Label>
             ) : null}
             <CenterPinMapPicker
               center={previewCenter}

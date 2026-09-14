@@ -11,6 +11,7 @@
     ".nvmrc",
     ".pr_agent.toml",
     "AGENTS.md",
+    "AGENTS.override.md",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
     "README.md",

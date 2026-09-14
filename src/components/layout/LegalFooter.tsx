@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 import { Link } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { ExternalLink } from '@/components/ui/external-link';
@@ -15,12 +16,12 @@ const linkClassName =
   'whitespace-nowrap text-muted-foreground hover:text-foreground transition-colors no-underline hover:underline';
 
 const legalLinks = [
-  { to: '/releases', label: 'Releases' },
-  { to: '/terms-of-service', label: 'Terms of Service' },
-  { to: '/security', label: 'Security' },
-  { to: '/right-to-repair', label: 'Right to Repair' },
-  { to: '/privacy-policy', label: 'Privacy Policy' },
-  { to: '/do-not-sell-or-share', label: 'Do Not Sell or Share' },
+  { to: '/releases', labelKey: 'releases' },
+  { to: '/terms-of-service', labelKey: 'terms' },
+  { to: '/security', labelKey: 'security' },
+  { to: '/right-to-repair', labelKey: 'repair' },
+  { to: '/privacy-policy', labelKey: 'privacy' },
+  { to: '/do-not-sell-or-share', labelKey: 'doNotSell' },
 ] as const;
 
 type LegalFooterProps = {
@@ -32,6 +33,7 @@ type LegalFooterViewProps = {
 };
 
 function LegalFooterView({ canManageDsr }: LegalFooterViewProps): JSX.Element {
+  const { t } = useI18n();
   return (
     <footer className="hidden md:block border-t border-border bg-background/50 backdrop-blur-sm mt-auto">
       <div className="container mx-auto px-4 py-2">
@@ -39,19 +41,19 @@ function LegalFooterView({ canManageDsr }: LegalFooterViewProps): JSX.Element {
           <p className="inline-flex min-w-0 flex-wrap items-center gap-x-1">
             <span className="whitespace-nowrap font-medium">ZNTEQR</span>
             <span aria-hidden="true" className="text-muted-foreground/40">·</span>
-            <span className="whitespace-nowrap">Equipment Management by Phan Tan</span>
+            <span className="whitespace-nowrap">{t('publicChrome.legalFooter.byline')}</span>
             <span aria-hidden="true" className="text-muted-foreground/40">·</span>
             <Link
               to="/releases"
               className={`${linkClassName} font-medium`}
-              aria-label={`View release notes for ZNTEQR version ${APP_VERSION}`}
+              aria-label={t('publicChrome.legalFooter.releaseVersion', { version: APP_VERSION })}
             >
               v{APP_VERSION}
             </Link>
           </p>
 
           <nav
-            aria-label="Legal and support links"
+            aria-label={t('publicChrome.legalFooter.navigation')}
             className="flex flex-wrap items-center gap-x-2 gap-y-0.5"
           >
             <ExternalLink
@@ -59,30 +61,30 @@ function LegalFooterView({ canManageDsr }: LegalFooterViewProps): JSX.Element {
               className={linkClassName}
               showIcon={false}
             >
-              Help Center
+              {t('publicChrome.legalFooter.help')}
             </ExternalLink>
             <span aria-hidden="true" className="text-muted-foreground/40">·</span>
 
             <DropdownMenu>
               <DropdownMenuTrigger
                 className="inline-flex items-center gap-0.5 whitespace-nowrap rounded-sm text-xs text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                aria-label="Legal links"
+                aria-label={t('publicChrome.legalFooter.legalLinks')}
               >
-                Legal
+                {t('publicChrome.legalFooter.legal')}
                 <ChevronDown className="h-3 w-3 opacity-70" aria-hidden="true" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-44">
-                {legalLinks.map(({ to, label }) => (
+                {legalLinks.map(({ to, labelKey }) => (
                   <DropdownMenuItem key={to} asChild>
                     <Link to={to} className="cursor-pointer">
-                      {label}
+                      {t(`publicChrome.legalFooter.${labelKey}`)}
                     </Link>
                   </DropdownMenuItem>
                 ))}
                 {canManageDsr ? (
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard/dsr" className="cursor-pointer">
-                      DSR Cockpit
+                      {t('publicChrome.legalFooter.dsr')}
                     </Link>
                   </DropdownMenuItem>
                 ) : null}
@@ -95,7 +97,7 @@ function LegalFooterView({ canManageDsr }: LegalFooterViewProps): JSX.Element {
               className={linkClassName}
               showIcon={false}
             >
-              System Status
+              {t('publicChrome.legalFooter.status')}
             </ExternalLink>
           </nav>
         </div>

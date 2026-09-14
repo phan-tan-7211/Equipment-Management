@@ -1,4 +1,5 @@
 import { FeatureSection } from './FeatureSection';
+import { useI18n } from '@/i18n';
 
 const ORG_ROLES = [
   {
@@ -85,22 +86,29 @@ const RoleList = ({
   </div>
 );
 
-export const TeamRolesPermissionsSection = () => (
-  <FeatureSection
-    title="Roles & Permissions"
-    description="EquipQR uses a two-tier role system: organization-level roles that govern your whole account, and team-level roles that control access within each team."
-  >
+export const TeamRolesPermissionsSection = () => {
+  const { t } = useI18n();
+  const key = (part: string) => t(`publicFeatures.teamCollaboration.extra.${part}`);
+  const localizeRoles = (roles: typeof ORG_ROLES | typeof TEAM_ROLES, part: string) =>
+    roles.map((role, index) => ({
+      ...role,
+      badge: key(`${part}.${index}.0`).slice(0, 1).toUpperCase(),
+      title: key(`${part}.${index}.0`),
+      description: key(`${part}.${index}.1`),
+    }));
+
+  return <FeatureSection title={key('title')} description={key('description')}>
     <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
       <RoleList
-        title="Organization Roles"
-        subtitle="Set once per member when they join your organization."
-        roles={ORG_ROLES}
+        title={key('orgTitle')}
+        subtitle={key('orgSubtitle')}
+        roles={localizeRoles(ORG_ROLES, 'orgRoles')}
       />
       <RoleList
-        title="Team Roles"
-        subtitle="Assigned independently per team, giving fine-grained control within each crew."
-        roles={TEAM_ROLES}
+        title={key('teamTitle')}
+        subtitle={key('teamSubtitle')}
+        roles={localizeRoles(TEAM_ROLES, 'teamRoles')}
       />
     </div>
-  </FeatureSection>
-);
+  </FeatureSection>;
+};

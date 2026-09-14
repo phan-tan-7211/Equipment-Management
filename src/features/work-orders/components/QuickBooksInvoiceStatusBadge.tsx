@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -25,22 +26,22 @@ const statusClasses: Record<QuickBooksInvoiceStatus, string> = {
   voided: 'bg-muted text-muted-foreground border-border',
 };
 
-function formatStatusLabel(status: QuickBooksInvoiceStatus): string {
+function formatStatusLabel(status: QuickBooksInvoiceStatus, t: (key: string) => string): string {
   switch (status) {
     case 'draft':
-      return 'Invoice Draft';
+      return t('workOrderExportUi.invoiceDraft');
     case 'sent':
-      return 'Awaiting Payment';
+      return t('workOrderExportUi.awaitingPayment');
     case 'viewed':
-      return 'Viewed';
+      return t('workOrderExportUi.viewed');
     case 'paid':
-      return 'Paid';
+      return t('workOrderExportUi.paid');
     case 'partially_paid':
-      return 'Partially Paid';
+      return t('workOrderExportUi.partiallyPaid');
     case 'overdue':
-      return 'Invoice Overdue';
+      return t('workOrderExportUi.invoiceOverdue');
     case 'voided':
-      return 'Invoice Voided';
+      return t('workOrderExportUi.invoiceVoided');
     default:
       return status;
   }
@@ -53,11 +54,12 @@ const QuickBooksInvoiceStatusBadge: React.FC<QuickBooksInvoiceStatusBadgeProps> 
   paidAt,
   className,
 }) => {
+  const { t } = useI18n();
   const { formatDate } = useFormatTimestamp();
 
   if (!isQuickBooksInvoiceStatus(status)) return null;
 
-  const parts = [formatStatusLabel(status)];
+  const parts = [formatStatusLabel(status, t)];
   if (status === 'paid' && paidAt) {
     parts.push(formatDate(paidAt));
   } else if (status !== 'paid' && typeof balanceCents === 'number' && balanceCents > 0) {

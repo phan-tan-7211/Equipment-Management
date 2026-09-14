@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
@@ -255,6 +256,7 @@ export const useCreateInventoryItem = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -264,7 +266,7 @@ export const useCreateInventoryItem = () => {
       organizationId: string;
       formData: InventoryItemFormData;
     }) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error(t('inventoryMutation.notAuthenticated'));
       return await createInventoryItem(organizationId, formData, user.id);
     },
     onSuccess: (data, variables) => {
@@ -276,14 +278,14 @@ export const useCreateInventoryItem = () => {
         queryKey: inventoryKeys.metadata(variables.organizationId),
       });
       toast({
-        title: 'Inventory item created',
-        description: `${data.name} has been added to inventory.`
+        title: t('inventoryMutation.createdTitle'),
+        description: t('inventoryMutation.createdDescription', { name: data.name })
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error creating inventory item',
-        description: error instanceof Error ? error.message : 'Failed to create inventory item',
+        title: t('inventoryMutation.createError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.createFailed'),
         variant: 'error'
       });
     }
@@ -293,6 +295,7 @@ export const useCreateInventoryItem = () => {
 export const useUpdateInventoryItem = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -318,14 +321,14 @@ export const useUpdateInventoryItem = () => {
         queryKey: ['inventory-item', variables.organizationId, variables.itemId]
       });
       toast({
-        title: 'Inventory item updated',
-        description: `${data.name} has been updated.`
+        title: t('inventoryMutation.updatedTitle'),
+        description: t('inventoryMutation.updatedDescription', { name: data.name })
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error updating inventory item',
-        description: error instanceof Error ? error.message : 'Failed to update inventory item',
+        title: t('inventoryMutation.updateError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.updateFailed'),
         variant: 'error'
       });
     }
@@ -335,6 +338,7 @@ export const useUpdateInventoryItem = () => {
 export const useDeleteInventoryItem = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -355,14 +359,14 @@ export const useDeleteInventoryItem = () => {
         queryKey: inventoryKeys.metadata(variables.organizationId),
       });
       toast({
-        title: 'Inventory item deleted',
-        description: 'The inventory item has been removed.'
+        title: t('inventoryMutation.deletedTitle'),
+        description: t('inventoryMutation.deletedDescription')
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error deleting inventory item',
-        description: error instanceof Error ? error.message : 'Failed to delete inventory item',
+        title: t('inventoryMutation.deleteError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.deleteFailed'),
         variant: 'error'
       });
     }
@@ -373,6 +377,7 @@ export const useAdjustInventoryQuantity = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -382,7 +387,7 @@ export const useAdjustInventoryQuantity = () => {
       organizationId: string;
       adjustment: InventoryQuantityAdjustment;
     }) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error(t('inventoryMutation.notAuthenticated'));
       return await adjustInventoryQuantity(organizationId, adjustment);
     },
     onSuccess: (newQuantity, variables) => {
@@ -405,21 +410,21 @@ export const useAdjustInventoryQuantity = () => {
       // Show warning if quantity is negative
       if (newQuantity < 0) {
         toast({
-          title: 'Inventory adjusted',
-          description: `Quantity is now negative: ${newQuantity}`,
+          title: t('inventoryMutation.adjustedTitle'),
+          description: t('inventoryMutation.negativeQuantity', { quantity: newQuantity }),
           variant: 'warning'
         });
       } else {
         toast({
-          title: 'Inventory adjusted',
-          description: `New quantity: ${newQuantity}`
+          title: t('inventoryMutation.adjustedTitle'),
+          description: t('inventoryMutation.newQuantity', { quantity: newQuantity })
         });
       }
     },
     onError: (error) => {
       toast({
-        title: 'Error adjusting inventory',
-        description: error instanceof Error ? error.message : 'Failed to adjust inventory quantity',
+        title: t('inventoryMutation.adjustError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.adjustFailed'),
         variant: 'error'
       });
     }
@@ -429,6 +434,7 @@ export const useAdjustInventoryQuantity = () => {
 export const useBulkLinkEquipmentToItem = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -449,18 +455,18 @@ export const useBulkLinkEquipmentToItem = () => {
       // Show summary toast with counts
       const { added, removed } = result;
       const messages = [];
-      if (added > 0) messages.push(`${added} added`);
-      if (removed > 0) messages.push(`${removed} removed`);
+      if (added > 0) messages.push(t('inventoryMutation.equipmentAdded', { count: added }));
+      if (removed > 0) messages.push(t('inventoryMutation.equipmentRemoved', { count: removed }));
       
       toast({
-        title: 'Equipment compatibility updated',
-        description: messages.length > 0 ? messages.join(', ') : 'No changes made'
+        title: t('inventoryMutation.linkUpdated'),
+        description: messages.length > 0 ? messages.join(', ') : t('inventoryMutation.noChanges')
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error updating equipment compatibility',
-        description: error instanceof Error ? error.message : 'Failed to update equipment compatibility',
+        title: t('inventoryMutation.linkUpdateError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.linkUpdateFailed'),
         variant: 'error'
       });
     }
@@ -514,6 +520,7 @@ export const useEquipmentMatchingItemRules = (
 export const useBulkSetCompatibilityRules = () => {
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: async ({
@@ -538,14 +545,14 @@ export const useBulkSetCompatibilityRules = () => {
       });
       
       toast({
-        title: 'Compatibility rules updated',
-        description: `${result.rulesSet} rule${result.rulesSet !== 1 ? 's' : ''} set`
+        title: t('inventoryMutation.rulesUpdated'),
+        description: t('inventoryMutation.rulesSet', { count: result.rulesSet })
       });
     },
     onError: (error) => {
       toast({
-        title: 'Error updating compatibility rules',
-        description: error instanceof Error ? error.message : 'Failed to update rules',
+        title: t('inventoryMutation.rulesUpdateError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.rulesUpdateFailed'),
         variant: 'error'
       });
     }

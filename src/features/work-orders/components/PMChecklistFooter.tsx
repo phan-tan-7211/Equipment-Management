@@ -7,7 +7,7 @@ import type { PMChecklistItem } from '@/features/pm-templates/services/preventat
 import { useVoiceTextAppender } from '@/hooks/useVoiceTextAppender';
 import VoiceInputButton from '@/components/common/VoiceInputButton';
 import VoiceInterimTranscript from '@/components/common/VoiceInterimTranscript';
-import { COMPLETED_PM_GENERAL_NOTES_LOCK_MESSAGE } from '@/features/work-orders/utils/workOrderLockCopy';
+import { useI18n } from '@/i18n';
 
 type PMChecklistFooterProps = {
   pmStatus: string;
@@ -48,6 +48,7 @@ export function PMChecklistFooter({
   onShowSetAllOKDialog,
   onShowRevertPMDialog,
 }: PMChecklistFooterProps) {
+  const { t } = useI18n();
   const notesDisabled = readOnly || pmStatus === 'completed';
 
   const {
@@ -68,7 +69,7 @@ export function PMChecklistFooter({
         <Alert className="border-destructive/30 bg-destructive/10">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="text-destructive">
-            {unratedRequiredItems.length} required item(s) need to be rated before completion.
+            {t('workOrderResidual.requiredItems', { count: unratedRequiredItems.length })}
             {!readOnly && (
               <>
                 {' '}
@@ -77,7 +78,7 @@ export function PMChecklistFooter({
                   className="text-destructive underline hover:no-underline focus:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
                   disabled={isSettingAllOK}
                 >
-                  Set All to OK
+                  {t('workOrderResidual.setAllOk')}
                 </button>
               </>
             )}
@@ -89,28 +90,27 @@ export function PMChecklistFooter({
         <Alert className="border-destructive/30 bg-destructive/10">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="text-destructive">
-            {unsafeItems.length} item(s) marked as unsafe condition present require immediate
-            attention.
+            {t('workOrderResidual.unsafeItems', { count: unsafeItems.length })}
           </AlertDescription>
         </Alert>
       )}
 
       <div className="space-y-2">
         {pmStatus === 'completed' ? (
-          <p className="text-base font-semibold">General Notes</p>
+          <p className="text-base font-semibold">{t('workOrderResidual.generalNotes')}</p>
         ) : (
           <label htmlFor="pm-general-notes" className="text-base font-semibold">
-            General Notes
+            {t('workOrderResidual.generalNotes')}
           </label>
         )}
         {pmStatus === 'completed' ? (
           <>
-            <p className="text-xs text-muted-foreground">{COMPLETED_PM_GENERAL_NOTES_LOCK_MESSAGE}</p>
+            <p className="text-xs text-muted-foreground">{t('workOrderResidual.completedNotesLocked')}</p>
             <div className="rounded-md border bg-muted/30 px-3 py-3 text-[15px] text-foreground">
               {notes.trim() ? (
                 <p className="whitespace-pre-wrap">{notes}</p>
               ) : (
-                <p className="text-muted-foreground">No general notes were added before completion.</p>
+                <p className="text-muted-foreground">{t('workOrderResidual.noGeneralNotes')}</p>
               )}
             </div>
           </>
@@ -119,7 +119,7 @@ export function PMChecklistFooter({
             <div className="relative">
               <Textarea
                 id="pm-general-notes"
-                placeholder="Add general notes about this PM..."
+                placeholder={t('workOrderResidual.generalNotesPlaceholder')}
                 value={notes}
                 onChange={(e) => onNotesChange(e.target.value)}
                 disabled={notesDisabled}
@@ -148,7 +148,7 @@ export function PMChecklistFooter({
       {!readOnly && pmStatus !== 'completed' && (
         <div className="flex gap-2 pt-4">
           <Button onClick={onSaveChanges} disabled={isUpdating} variant="outline">
-            {isUpdating ? 'Saving...' : 'Save Changes'}
+            {isUpdating ? t('workOrderResidual.saving') : t('workOrderResidual.saveChanges')}
           </Button>
           <Button
             onClick={onCompletePM}
@@ -156,7 +156,7 @@ export function PMChecklistFooter({
               isUpdating || unratedRequiredItems.length > 0 || unsafeItems.length > 0
             }
           >
-            {isUpdating ? 'Completing...' : 'Complete PM'}
+            {isUpdating ? t('workOrderResidual.completing') : t('workOrderResidual.completePm')}
           </Button>
         </div>
       )}
@@ -165,8 +165,8 @@ export function PMChecklistFooter({
         <div className="space-y-3 pt-4 border-t">
           <p className="text-sm text-muted-foreground">
             {willReopenWorkOrder
-              ? 'Need to edit the completed checklist? Revert PM to set the checklist back to pending and reopen the work order to accepted.'
-              : 'Need to edit the completed checklist? Revert PM to set the checklist back to pending.'}
+              ? t('workOrderResidual.revertReopensHint')
+              : t('workOrderResidual.revertHint')}
           </p>
           <Button
             onClick={onShowRevertPMDialog}
@@ -175,14 +175,14 @@ export function PMChecklistFooter({
             className="w-full sm:w-auto border-destructive/50 text-destructive hover:bg-destructive/10"
           >
             <RotateCcw className="h-4 w-4 mr-2" />
-            Revert PM
+            {t('workOrderResidual.revertPm')}
           </Button>
         </div>
       )}
 
       {completedAt && formattedCompletedAt && (
         <div className="pt-4 border-t text-sm text-muted-foreground">
-          Completed on {formattedCompletedAt}
+          {t('workOrderOperations.pmCompletedOn', { date: formattedCompletedAt })}
         </div>
       )}
     </>

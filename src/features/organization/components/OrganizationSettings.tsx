@@ -20,6 +20,7 @@ import { DangerZoneSection } from './DangerZoneSection';
 import { OrganizationInventoryDefaultLocationSection } from './OrganizationInventoryDefaultLocationSection';
 import { useOrganizationMembersQuery } from '@/features/organization/hooks/useOrganizationMembers';
 import SingleImageUpload from '@/components/common/SingleImageUpload';
+import { useI18n } from '@/i18n';
 
 interface OrganizationSettingsProps {
   organization: SessionOrganization;
@@ -30,6 +31,7 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
   organization,
   currentUserRole,
 }) => {
+  const { t } = useI18n();
   const [isUpdating, setIsUpdating] = useState(false);
   const [currentLogo, setCurrentLogo] = useState<string | null>(organization.logo || null);
   const [privacyEnabled, setPrivacyEnabled] = useState(
@@ -64,7 +66,7 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
 
   const onSubmit = async (data: OrganizationFormData) => {
     if (currentUserRole !== 'owner' && currentUserRole !== 'admin') {
-      toast.error('You do not have permission to update organization settings');
+      toast.error(t('organizationHub.noPermission'));
       return;
     }
 
@@ -86,11 +88,11 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
       await queryClient.invalidateQueries({ queryKey: ['organization', organization.id] });
       await refetch();
 
-      toast.success('Organization settings updated');
+      toast.success(t('organizationHub.updateSuccess'));
       form.reset(data);
     } catch (error) {
       console.error('Error updating organization:', error);
-      toast.error('Failed to update organization settings');
+      toast.error(t('organizationHub.updateFailure'));
     } finally {
       setIsUpdating(false);
     }
@@ -114,14 +116,14 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
       });
       if (!success) throw new Error('Update failed');
       await invalidateOrgCache();
-      toast.success(checked ? 'Location collection enabled' : 'Location collection disabled');
+      toast.success(t(checked ? 'organizationHub.locationEnabled' : 'organizationHub.locationDisabled'));
     } catch {
       setPrivacyEnabled(previous);
-      toast.error('Failed to update privacy setting');
+      toast.error(t('organizationHub.privacyFailure'));
     } finally {
       setIsTogglingPrivacy(false);
     }
-  }, [privacyEnabled, organization.id, invalidateOrgCache]);
+  }, [privacyEnabled, organization.id, invalidateOrgCache, t]);
 
   const canEdit = currentUserRole === 'owner' || currentUserRole === 'admin';
 
@@ -130,10 +132,10 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
       <div className="rounded-lg border p-6">
         <div className="flex items-center gap-2 mb-2">
           <Settings className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-sm font-semibold">Organization Settings</h2>
+          <h2 className="text-sm font-semibold">{t('organizationHub.settings')}</h2>
         </div>
         <p className="text-sm text-muted-foreground">
-          Contact an admin to update organization settings.
+          {t('organizationHub.contactAdmin')}
         </p>
       </div>
     );
@@ -169,9 +171,9 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
           <div className="pb-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
               <div className="pt-0.5">
-                <h2 className="text-sm font-semibold">Basic Information</h2>
+                <h2 className="text-sm font-semibold">{t('organizationHub.basicInfo')}</h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Organization name and branding
+                  {t('organizationHub.branding')}
                 </p>
               </div>
               <div className="md:col-span-2 space-y-5">
@@ -180,12 +182,12 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">Organization Name</FormLabel>
+                      <FormLabel className="text-sm font-medium">{t('organizationHub.name')}</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           disabled={isUpdating}
-                          placeholder="Enter organization name"
+                          placeholder={t('organizationHub.namePlaceholder')}
                           className="w-full max-w-md"
                         />
                       </FormControl>
@@ -200,8 +202,8 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
                   onDelete={handleLogoDelete}
                   maxSizeMB={5}
                   disabled={isUpdating}
-                  label="Organization Logo"
-                  helpText="Appears in emails and the sidebar."
+                  label={t('organizationHub.logo')}
+                  helpText={t('organizationHub.logoHelp')}
                   variant="compact"
                 />
 
@@ -210,7 +212,7 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
                   name="backgroundColor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">Background Color</FormLabel>
+                      <FormLabel className="text-sm font-medium">{t('organizationHub.backgroundColor')}</FormLabel>
                       <FormControl>
                         <div className="flex flex-wrap items-center gap-2 max-w-md">
                           {showColorSwatch && (
@@ -232,13 +234,13 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
                             onChange={(e) => field.onChange(e.target.value)}
                             disabled={isUpdating}
                             className="w-9 h-9 rounded border border-input cursor-pointer disabled:cursor-not-allowed shrink-0 p-0.5"
-                            title="Pick a color"
+                            title={t('organizationHub.pickColor')}
                           />
                         </div>
                       </FormControl>
                       <FormMessage />
                       <p className="text-xs text-muted-foreground">
-                        Hex format (e.g., #FF5733) or use the picker
+                        {t('organizationHub.hexHelp')}
                       </p>
                     </FormItem>
                   )}
@@ -251,7 +253,7 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
                     ) : (
                       <Save className="mr-2 h-4 w-4" />
                     )}
-                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                    {isUpdating ? t('organizationHub.saving') : t('organizationHub.save')}
                   </Button>
                 </div>
               </div>
@@ -264,19 +266,19 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
       <div className="py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
           <div className="pt-0.5">
-            <h2 className="text-sm font-semibold">Privacy &amp; Location</h2>
+            <h2 className="text-sm font-semibold">{t('organizationHub.privacy')}</h2>
             <p className="text-xs text-muted-foreground mt-1">
-              Control location data collection
+              {t('organizationHub.privacyDescription')}
             </p>
           </div>
           <div className="md:col-span-2">
             <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-0.5">
                 <Label className="text-sm font-medium leading-none">
-                  QR Scan Location Collection
+                  {t('organizationHub.scanLocation')}
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  When enabled, QR code scans capture GPS coordinates for the Fleet Map.
+                  {t('organizationHub.scanLocationDescription')}
                 </p>
               </div>
               <div className="flex items-center gap-2 self-start sm:self-center">
@@ -287,7 +289,7 @@ export const OrganizationSettings: React.FC<OrganizationSettingsProps> = ({
                   checked={privacyEnabled}
                   onCheckedChange={handlePrivacyToggle}
                   disabled={isTogglingPrivacy}
-                  aria-label="Toggle QR scan location collection"
+                  aria-label={t('organizationHub.toggleLocation')}
                 />
               </div>
             </div>

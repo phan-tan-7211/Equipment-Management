@@ -24,6 +24,7 @@ import {
   type WorksheetKey,
 } from '@/features/work-orders/types/workOrderExcel';
 import { WorksheetSelector } from '@/features/work-orders/components/WorksheetSelector';
+import { useI18n } from '@/i18n';
 
 const EXPORT_ROW_LIMIT = 50_000;
 
@@ -55,7 +56,9 @@ interface ModuleHeaderProps {
   featured: boolean;
 }
 
-const ModuleHeader: React.FC<ModuleHeaderProps> = ({ config, icon, featured }) => (
+const ModuleHeader: React.FC<ModuleHeaderProps> = ({ config, icon, featured }) => {
+  const { t } = useI18n();
+  return (
   <div className="flex min-w-0 items-start gap-3">
     <div
       className={cn(
@@ -66,10 +69,11 @@ const ModuleHeader: React.FC<ModuleHeaderProps> = ({ config, icon, featured }) =
       {icon}
     </div>
     <div className="min-w-0 flex-1">
-      <CardTitle className={cn('text-lg', featured && 'text-xl')}>{config.title}</CardTitle>
+      <CardTitle className={cn('text-lg', featured && 'text-xl')}>{t(`reports.cards.${config.type}.title`)}</CardTitle>
     </div>
   </div>
-);
+  );
+};
 
 interface ModuleStatsProps {
   recordCount: number;
@@ -77,22 +81,25 @@ interface ModuleStatsProps {
   compact?: boolean;
 }
 
-const ModuleStats: React.FC<ModuleStatsProps> = ({ recordCount, isLoadingCount, compact }) => (
+const ModuleStats: React.FC<ModuleStatsProps> = ({ recordCount, isLoadingCount, compact }) => {
+  const { t } = useI18n();
+  return (
   <div className={cn('space-y-1', compact && 'text-xs')}>
     {isLoadingCount ? (
       <Skeleton className="h-4 w-24" />
     ) : recordCount === 0 ? (
-      <span className="font-tabular text-sm text-muted-foreground">NO RECORDS</span>
+      <span className="font-tabular text-sm text-muted-foreground">{t('reports.noRecords')}</span>
     ) : (
       <span className="font-tabular text-sm text-foreground">
-        {recordCount.toLocaleString()} RECORDS
+        {t('reports.recordCount', { count: recordCount.toLocaleString() })}
       </span>
     )}
     {recordCount > EXPORT_ROW_LIMIT && !isLoadingCount && (
-      <p className="text-[10px] text-warning">Export capped at 50,000 rows</p>
+      <p className="text-[10px] text-warning">{t('reports.rowCap')}</p>
     )}
   </div>
-);
+  );
+};
 
 interface ExportActionsProps {
   isExcel: boolean;
@@ -119,6 +126,7 @@ const ExportActions: React.FC<ExportActionsProps> = ({
   selectedColumns,
   selectedWorksheets,
 }) => {
+  const { t } = useI18n();
   if (isExcel && onExcelExport && selectedWorksheets) {
     return (
       <Button
@@ -130,12 +138,12 @@ const ExportActions: React.FC<ExportActionsProps> = ({
         {isExporting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-            Exporting…
+            {t('reports.exporting')}
           </>
         ) : (
           <>
             <Download className="mr-2 h-4 w-4" aria-hidden />
-            {compact ? 'Export' : 'Export Packet'}
+            {compact ? t('reports.export') : t('reports.exportPacket')}
           </>
         )}
       </Button>
@@ -153,12 +161,12 @@ const ExportActions: React.FC<ExportActionsProps> = ({
         {isExporting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-            Exporting…
+            {t('reports.exporting')}
           </>
         ) : (
           <>
             <Download className="mr-2 h-4 w-4" aria-hidden />
-            Export
+            {t('reports.export')}
           </>
         )}
       </Button>
@@ -181,6 +189,7 @@ export const ReportExportModule: React.FC<ReportExportModuleProps> = ({
   canExport,
   featured = false,
 }) => {
+  const { t } = useI18n();
   const [selectedWorksheets, setSelectedWorksheets] = useState<WorksheetKey[]>(DEFAULT_WORKSHEETS);
   const [selectedColumns, setSelectedColumns] = useState<string[]>(() =>
     resolveInitialExportColumns(config.type),
@@ -244,7 +253,7 @@ export const ReportExportModule: React.FC<ReportExportModuleProps> = ({
           <div className="grid flex-1 gap-6 lg:grid-cols-[1fr_minmax(12rem,16rem)] lg:items-stretch">
             <div className="flex min-w-0 flex-col">
               <ModuleHeader config={config} icon={scaledIcon} featured />
-              <CardDescription className="mt-2 text-sm">{config.description}</CardDescription>
+              <CardDescription className="mt-2 text-sm">{t(`reports.cards.${config.type}.description`)}</CardDescription>
               {worksheetSelector}
             </div>
             <div className="flex flex-col justify-between border-border/40 lg:border-l lg:pl-6">
@@ -255,7 +264,7 @@ export const ReportExportModule: React.FC<ReportExportModuleProps> = ({
         ) : (
           <>
             <ModuleHeader config={config} icon={scaledIcon} featured={false} />
-            <CardDescription className="mt-2 text-sm">{config.description}</CardDescription>
+            <CardDescription className="mt-2 text-sm">{t(`reports.cards.${config.type}.description`)}</CardDescription>
             {fieldSelector}
           </>
         )}
@@ -277,8 +286,8 @@ export const ReportExportModule: React.FC<ReportExportModuleProps> = ({
             <Icon className="h-6 w-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate font-semibold text-sm">{config.title}</h3>
-            <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{config.description}</p>
+            <h3 className="truncate font-semibold text-sm">{t(`reports.cards.${config.type}.title`)}</h3>
+            <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{t(`reports.cards.${config.type}.description`)}</p>
             {fieldSelector}
             {worksheetSelector}
             <div className="mt-2">

@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import {
   Navigate,
@@ -17,6 +18,7 @@ import { useBulkEditInventory } from '@/features/inventory/hooks/useBulkEditInve
 import { InventoryBulkGrid } from '@/features/inventory/components/InventoryBulkGrid';
 
 const BulkInventory: React.FC = () => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { data: isPartsManager = false } = useIsPartsManager(currentOrganization?.id);
   const { canManageInventory } = usePermissions();
@@ -55,8 +57,8 @@ const BulkInventory: React.FC = () => {
     return (
       <Page maxWidth="full" padding="responsive">
         <PageHeader
-          title="Bulk Edit Inventory"
-          description="Please select an organization to edit inventory."
+          title={t('inventoryBulk.title')}
+          description={t('inventoryBulk.selectOrganization')}
           actions={<BulkEditBackButton to="/dashboard/inventory" />}
         />
       </Page>
@@ -67,8 +69,8 @@ const BulkInventory: React.FC = () => {
     return (
       <Page maxWidth="full" padding="responsive">
         <PageHeader
-          title="Bulk Edit Inventory"
-          description="Bulk inventory editing is restricted to administrators and parts managers. Contact an organization administrator if you need access."
+          title={t('inventoryBulk.title')}
+          description={t('inventoryBulk.restricted')}
           actions={<BulkEditBackButton to="/dashboard/inventory" />}
         />
       </Page>
@@ -78,11 +80,11 @@ const BulkInventory: React.FC = () => {
   if (!isOnline) {
     return (
       <Page maxWidth="full" padding="responsive">
-        <PageHeader title="Bulk Edit Inventory" actions={<BulkEditBackButton to="/dashboard/inventory" />} />
+        <PageHeader title={t('inventoryBulk.title')} actions={<BulkEditBackButton to="/dashboard/inventory" />} />
         <BulkEditOfflinePanel
-          message="Bulk editing requires an internet connection. Use the single-item form to update individual records offline."
+          message={t('inventoryBulk.offline')}
           backHref="/dashboard/inventory"
-          backLabel="Back to Inventory"
+          backLabel={t('inventoryBulk.back')}
         />
       </Page>
     );
@@ -91,7 +93,7 @@ const BulkInventory: React.FC = () => {
   if (isLoading) {
     return (
       <Page maxWidth="full" padding="responsive">
-        <PageHeader title="Bulk Edit Inventory" actions={<BulkEditBackButton to="/dashboard/inventory" />} />
+        <PageHeader title={t('inventoryBulk.title')} actions={<BulkEditBackButton to="/dashboard/inventory" />} />
         <div className="space-y-2 animate-pulse">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-11 rounded-md bg-muted" />
@@ -105,8 +107,8 @@ const BulkInventory: React.FC = () => {
     <Page maxWidth="full" padding="responsive">
       <div className="space-y-4 pb-4">
         <PageHeader
-          title="Bulk Edit Inventory"
-          description={`Edit inventory for ${currentOrganization.name}. Single-click to select, double-click to edit.`}
+          title={t('inventoryBulk.title')}
+          description={t('inventoryBulk.description', { organization: currentOrganization.name })}
           hideDescriptionOnMobile
           actions={<BulkEditBackButton to="/dashboard/inventory" />}
         />

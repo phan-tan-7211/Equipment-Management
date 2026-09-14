@@ -7,6 +7,7 @@ import { Link2, RefreshCw, Users, Loader2, Unlink, ShieldAlert } from 'lucide-re
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppToast } from '@/hooks/useAppToast';
+import { useI18n } from '@/i18n';
 import {
   getGoogleWorkspaceConnectionStatus,
   syncGoogleWorkspaceUsers,
@@ -38,6 +39,7 @@ interface GoogleWorkspaceIntegrationProps {
 }
 
 export const GoogleWorkspaceIntegration = ({ currentUserRole }: GoogleWorkspaceIntegrationProps) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const queryClient = useQueryClient();
   const { toast } = useAppToast();
@@ -81,20 +83,20 @@ export const GoogleWorkspaceIntegration = ({ currentUserRole }: GoogleWorkspaceI
       const result = await syncGoogleWorkspaceUsers(organizationId);
       const revocationSummary =
         result.membersDeactivated > 0 || result.claimsRevoked > 0
-          ? ` Revoked access for ${result.membersDeactivated} member(s).`
+          ? t('organizationIntegrations.syncRevoked', { count: result.membersDeactivated })
           : '';
       toast({
-        title: 'Directory synced',
-        description: `${result.usersSynced} users loaded.${revocationSummary}`,
+        title: t('organizationIntegrations.directorySynced'),
+        description: t('organizationIntegrations.syncLoaded', { count: result.usersSynced, revoked: revocationSummary }),
       });
       await queryClient.invalidateQueries({ queryKey: googleWorkspace.root });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Please try again.';
+      const message = error instanceof Error ? error.message : t('organizationIntegrations.tryAgain');
       const isTokenError = /revoked|expired|token|not connected|401|403/i.test(message);
       toast({
-        title: 'Failed to sync users',
+        title: t('organizationIntegrations.syncFailed'),
         description: isTokenError
-          ? 'Google Workspace authorization is no longer valid. Disconnect and connect again from this page.'
+          ? t('organizationIntegrations.authorizationInvalid')
           : message,
         variant: 'error',
       });
@@ -119,28 +121,28 @@ export const GoogleWorkspaceIntegration = ({ currentUserRole }: GoogleWorkspaceI
     return (
       <IntegrationNotConfiguredCard
         title="Google Workspace"
-        description="Import and manage organization members"
+        description={t('organizationIntegrations.googleDescription')}
         icon={googleWorkspaceMark}
       />
     );
   }
 
   if (isLoading) {
-    return <IntegrationLoadingCard label="Loading Google Workspace..." />;
+    return <IntegrationLoadingCard label={t('organizationIntegrations.googleLoading')} />;
   }
 
   const statusBadge =
     connectionHealth === 'healthy' ? (
       <Badge variant="outline" className="bg-success/10 text-success border-success/30 text-xs">
-        Connected
+        {t('organizationIntegrations.connected')}
       </Badge>
     ) : connectionHealth === 'missing_permissions' ? (
       <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 text-xs">
-        Permissions needed
+        {t('organizationIntegrations.permissionsNeeded')}
       </Badge>
     ) : (
       <Badge variant="secondary" className="text-xs">
-        Not connected
+        {t('organizationIntegrations.notConnected')}
       </Badge>
     );
 
@@ -152,8 +154,8 @@ export const GoogleWorkspaceIntegration = ({ currentUserRole }: GoogleWorkspaceI
           icon={googleWorkspaceMark}
           description={
             connectionHealth === 'disconnected'
-              ? 'Import and manage organization members'
-              : `Domain: ${connectionStatus?.domain || 'Unknown'}`
+              ? t('organizationIntegrations.googleDescription')
+              : t('organizationIntegrations.domain', { domain: connectionStatus?.domain || t('organizationIntegrations.unknown') })
           }
           badge={statusBadge}
           actions={
@@ -170,7 +172,7 @@ export const GoogleWorkspaceIntegration = ({ currentUserRole }: GoogleWorkspaceI
                   ) : (
                     <Link2 className="h-3.5 w-3.5 mr-1.5" />
                   )}
-                  Connect
+                  {t('organizationIntegrations.connect')}
                 </Button>
               )}
 
@@ -188,7 +190,7 @@ export const GoogleWorkspaceIntegration = ({ currentUserRole }: GoogleWorkspaceI
                       ) : (
                         <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                       )}
-                      Sync Directory
+                      {t('organizationIntegrations.syncDirectory')}
                     </Button>
                   )}
                   <Button
@@ -203,12 +205,12 @@ export const GoogleWorkspaceIntegration = ({ currentUserRole }: GoogleWorkspaceI
                     ) : (
                       <Unlink className="h-3.5 w-3.5 mr-1.5" />
                     )}
-                    Disconnect
+                    {t('organizationIntegrations.disconnect')}
                   </Button>
                   <Button variant="ghost" size="sm" className={integrationActionButtonClassName} asChild>
                     <Link to={ORGANIZATION_MEMBERS_PATH}>
                       <Users className="h-3.5 w-3.5 mr-1.5" />
-                      Members
+                      {t('organizationIntegrations.members')}
                     </Link>
                   </Button>
                 </>
@@ -228,7 +230,7 @@ export const GoogleWorkspaceIntegration = ({ currentUserRole }: GoogleWorkspaceI
                       ) : (
                         <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                       )}
-                      Sync Directory
+                      {t('organizationIntegrations.syncDirectory')}
                     </Button>
                   )}
                   <Button
@@ -242,7 +244,7 @@ export const GoogleWorkspaceIntegration = ({ currentUserRole }: GoogleWorkspaceI
                     ) : (
                       <ShieldAlert className="h-3.5 w-3.5 mr-1.5" />
                     )}
-                    Finish authorization
+                    {t('organizationIntegrations.finishAuthorization')}
                   </Button>
                   <Button
                     variant="outline"
@@ -256,7 +258,7 @@ export const GoogleWorkspaceIntegration = ({ currentUserRole }: GoogleWorkspaceI
                     ) : (
                       <Unlink className="h-3.5 w-3.5 mr-1.5" />
                     )}
-                    Disconnect
+                    {t('organizationIntegrations.disconnect')}
                   </Button>
                 </>
               )}
@@ -267,17 +269,14 @@ export const GoogleWorkspaceIntegration = ({ currentUserRole }: GoogleWorkspaceI
         {connectionHealth === 'missing_permissions' && (
           <Alert>
             <AlertDescription className="text-sm">
-              Directory access is connected. EquipQR still needs Google approval for export
-              features (Drive, Docs, and Sheets). Click Finish authorization to grant those
-              scopes incrementally without losing directory sync access.
+              {t('organizationIntegrations.incrementalConsent')}
             </AlertDescription>
           </Alert>
         )}
 
         {connectionHealth === 'disconnected' && (
           <p className="text-xs text-muted-foreground">
-            Claimed Workspace domains require explicit import or invitation before members can
-            access the organization.
+            {t('organizationIntegrations.claimedDomain')}
           </p>
         )}
       </IntegrationCardLayout>

@@ -170,9 +170,9 @@ async function main() {
   step(`project_ref: ${PROJECT_REF}`);
   step(`migrations_dir: ${MIGRATIONS_DIR}`);
 
-  if (!token || token.startsWith('op://')) {
+  if (!token) {
     const msg =
-      'SUPABASE_ACCESS_TOKEN missing or unresolved — cannot verify schema drift. Plant OP_SERVICE_ACCOUNT_TOKEN as a repo secret and ensure load-1p-secrets resolves supabase-write.';
+      'SUPABASE_ACCESS_TOKEN is missing — cannot verify schema drift. Add it as a repo-level GitHub Actions secret.';
     if (strict) {
       ghError('schema-drift-check', msg);
       process.exit(1);
@@ -223,7 +223,6 @@ async function main() {
     return;
   }
 
-  // Build step summary sections.
   const summaryParts = ['## Schema-drift check', ''];
   if (pending.length > 0) {
     summaryParts.push('### Pending local migrations', '', pendingSummary(pending), '');
@@ -246,13 +245,10 @@ async function main() {
   }
   await appendStepSummary(summaryParts.join('\n'));
 
-  // Determine whether to fail or warn for each category.
   const shouldFailOnDrift = strict || isReleasePR;
 
   if (pending.length > 0) {
     const md = pendingSummary(pending);
-    // pending migrations are applied post-merge by the release workflow;
-    // they are expected on release PRs and must not block the merge.
     if (strict) {
       ghError(
         'schema-drift-check',

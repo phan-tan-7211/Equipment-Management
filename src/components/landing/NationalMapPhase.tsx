@@ -1,9 +1,22 @@
+import { useI18n } from '@/i18n/I18nProvider';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
 import { STATES_RELATIVE, ALL_STATE_CODES } from './stateVectors';
 import { seededRng, strToSeed } from './dotPositions';
 import { FEATURE_CARD_SETS } from './featureCardsData';
+
+const CARD_KEYS: Record<string, string> = {
+  'Mobile-first': 'mobile',
+  'Scan to record': 'scan',
+  'Offline-capable': 'offline',
+  'QuickBooks sync': 'quickBooks',
+  'PM templates': 'pm',
+  'Multi-org & teams': 'teams',
+  'Asset history': 'history',
+  'Fleet map': 'map',
+  'Built for shops': 'shops',
+};
 
 interface NationalMapPhaseProps {
   /** Mixed into the dot-position RNG so dots vary per loop iteration. */
@@ -40,6 +53,7 @@ export default function NationalMapPhase({
   nationalSeed,
   onComplete,
 }: NationalMapPhaseProps) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapWrapperRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -233,10 +247,10 @@ export default function NationalMapPhase({
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-primary mb-0.5">
-                      {card.title}
+                      {CARD_KEYS[card.title] ? t(`landingAnimation.${CARD_KEYS[card.title]}Title`) : card.title}
                     </p>
                     <p className="text-[10px] leading-snug text-foreground/85">
-                      {card.description}
+                      {CARD_KEYS[card.title] ? t(`landingAnimation.${CARD_KEYS[card.title]}Description`) : card.description}
                     </p>
                   </div>
                 </div>

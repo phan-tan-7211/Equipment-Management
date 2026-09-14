@@ -16,10 +16,19 @@ const GOOGLE_WORKSPACE_OAUTH_ERROR_MESSAGES: Record<string, string> = {
 export function getGoogleWorkspaceOAuthErrorMessage(
   errorCode: string | null,
   supportRef?: string | null,
+  translate?: (key: string, params?: Record<string, string>) => string,
 ): string {
+  const knownCode = errorCode && Object.prototype.hasOwnProperty.call(GOOGLE_WORKSPACE_OAUTH_ERROR_MESSAGES, errorCode)
+    ? errorCode
+    : 'oauth_failed';
+  const translationKey = `organizationNotices.oauth.${knownCode}`;
+  const localized = translate?.(translationKey);
   const base =
-    (errorCode && GOOGLE_WORKSPACE_OAUTH_ERROR_MESSAGES[errorCode]) ||
-    GOOGLE_WORKSPACE_OAUTH_ERROR_MESSAGES.oauth_failed;
+    (localized && localized !== translationKey ? localized : undefined) ||
+    GOOGLE_WORKSPACE_OAUTH_ERROR_MESSAGES[knownCode];
 
-  return supportRef ? `${base} Reference: ${supportRef}` : base;
+  if (!supportRef) return base;
+  const referenceKey = 'organizationNotices.oauth.reference';
+  const reference = translate?.(referenceKey, { message: base, ref: supportRef });
+  return reference && reference !== referenceKey ? reference : `${base} Reference: ${supportRef}`;
 }

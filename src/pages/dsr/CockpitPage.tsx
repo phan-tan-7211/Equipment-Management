@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { Link } from 'react-router-dom';
 import { AlertCircle, ShieldCheck } from 'lucide-react';
 import Page from '@/components/layout/Page';
@@ -10,6 +11,7 @@ import { DsrQueueRail } from '@/features/dsr/components/DsrQueueRail';
 import { DsrAdminAccessGate } from '@/features/dsr/components/DsrAdminAccessGate';
 
 function DSRCockpitPage() {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { canManageOrganization } = usePermissions();
   const canManageDsr = canManageOrganization();
@@ -20,17 +22,17 @@ function DSRCockpitPage() {
     <DsrAdminAccessGate
       hasOrganization={Boolean(currentOrganization)}
       canManageDsr={canManageDsr}
-      noOrganizationDescription="Select an organization to view the DSR cockpit."
-      restrictedDescription="Only organization owners/admins can access this cockpit."
+      noOrganizationDescription={t('dsr.cockpitSelectOrg')}
+      restrictedDescription={t('dsr.cockpitRestricted')}
     >
     <Page maxWidth="7xl" padding="responsive">
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <ShieldCheck className="h-7 w-7 text-primary" />
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">DSR Cockpit</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('dsr.cockpit')}</h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Privacy request operations workspace for admins.
+              {t('dsr.cockpitDescription')}
             </p>
           </div>
         </div>
@@ -38,9 +40,9 @@ function DSRCockpitPage() {
         {queueQuery.isError ? (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Queue Error</AlertTitle>
+            <AlertTitle>{t('dsr.queueError')}</AlertTitle>
             <AlertDescription>
-              {queueQuery.error instanceof Error ? queueQuery.error.message : 'Failed to load queue'}
+              {queueQuery.error instanceof Error ? queueQuery.error.message : t('dsr.queueLoadError')}
             </AlertDescription>
           </Alert>
         ) : null}
@@ -49,8 +51,8 @@ function DSRCockpitPage() {
           <DsrQueueRail requests={queueQuery.data ?? []} />
           <Card>
             <CardHeader>
-              <CardTitle>Select a request</CardTitle>
-              <CardDescription>Choose a case from the queue rail to open the full workspace.</CardDescription>
+              <CardTitle>{t('dsr.selectRequest')}</CardTitle>
+              <CardDescription>{t('dsr.selectRequestHelp')}</CardDescription>
             </CardHeader>
             <CardContent>
               {(queueQuery.data?.length ?? 0) > 0 ? (
@@ -58,10 +60,10 @@ function DSRCockpitPage() {
                   to={`/dashboard/dsr/${queueQuery.data?.[0]?.id}`}
                   className="text-sm text-primary hover:underline"
                 >
-                  Open first queue item
+                  {t('dsr.openFirst')}
                 </Link>
               ) : (
-                <p className="text-sm text-muted-foreground">No requests available.</p>
+                <p className="text-sm text-muted-foreground">{t('dsr.noRequests')}</p>
               )}
             </CardContent>
           </Card>

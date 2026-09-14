@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n/I18nProvider';
 import { useRef, useState, useEffect, useMemo } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
@@ -49,6 +50,7 @@ export default function PMChecklistPhase({
   exportSeed,
   onComplete,
 }: PMChecklistPhaseProps) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const lineRef = useRef<SVGLineElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -176,13 +178,15 @@ export default function PMChecklistPhase({
           style={{ height: 0, opacity: 0 }}
         >
           <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-primary mb-1.5 px-0.5">
-            Work Order
+            {t('landingAnimation.workOrder')}
           </p>
 
           {PM_CHECKLIST_SECTIONS.map((section) => (
             <div key={section.title} className="mb-1.5">
               <p className="text-[7px] font-medium text-muted-foreground uppercase tracking-wide px-0.5 mb-0.5">
-                {section.title}
+                {section.title === 'Visual Inspection' ? t('landingAnimation.visualInspection')
+                  : section.title === 'Engine Compartment' ? t('landingAnimation.engineCompartment')
+                  : section.title}
               </p>
               {section.items.map((item) => {
                 const isChecked = checkedItems.has(item.id);
@@ -205,7 +209,8 @@ export default function PMChecklistPhase({
                       )}
                     </div>
                     <span className="text-[7.5px] leading-tight text-foreground/80">
-                      {item.title}
+                      {['oil-leaks', 'tire-wheel', 'seat-belt', 'air-filter', 'engine-oil'].includes(item.id)
+                        ? t(`landingAnimation.${item.id}`) : item.title}
                     </span>
                   </div>
                 );
@@ -227,7 +232,9 @@ export default function PMChecklistPhase({
             data-testid="export-button"
           >
             <exportTarget.icon className="w-2.5 h-2.5" aria-hidden />
-            {exportTarget.label}
+            {exportTarget.label === 'Export to QuickBooks' ? t('landingAnimation.exportQuickBooks')
+              : exportTarget.label === 'Export to Google Drive' ? t('landingAnimation.exportDrive')
+              : exportTarget.label === 'Export to Excel' ? t('landingAnimation.exportExcel') : exportTarget.label}
           </button>
         </div>
       </div>

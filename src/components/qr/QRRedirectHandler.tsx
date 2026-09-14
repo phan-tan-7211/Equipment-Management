@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useQRRedirectWithOrgSwitch } from '@/hooks/useQRRedirectWithOrgSwitch';
 import { useScanFeedback } from '@/hooks/useScanFeedback';
 import { logger } from '@/utils/logger';
+import { useI18n } from '@/i18n';
 
 interface QRRedirectHandlerProps {
   equipmentId?: string | undefined;
@@ -15,6 +16,7 @@ interface QRRedirectHandlerProps {
 }
 
 export const QRRedirectHandler: React.FC<QRRedirectHandlerProps> = ({ equipmentId, inventoryItemId, workOrderId }) => {
+  const { t } = useI18n();
   const [shouldNavigate, setShouldNavigate] = React.useState(false);
   const [navigationTarget, setNavigationTarget] = React.useState<string | null>(null);
   const { triggerFeedback } = useScanFeedback();
@@ -44,7 +46,7 @@ export const QRRedirectHandler: React.FC<QRRedirectHandlerProps> = ({ equipmentI
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
-                  Verifying access...
+                  {t('authRoutes.verifyingAccess')}
                 </p>
               </div>
             </div>
@@ -70,30 +72,30 @@ export const QRRedirectHandler: React.FC<QRRedirectHandlerProps> = ({ equipmentI
   // Organization switch required
   const orgInfo = state.equipmentInfo || state.inventoryInfo || state.workOrderInfo;
   if (state.needsOrgSwitch && orgInfo) {
-    const itemLabel = state.equipmentInfo ? 'equipment' : state.workOrderInfo ? 'work order' : 'item';
-    const itemTypeLabel = state.equipmentInfo ? 'Equipment' : state.workOrderInfo ? 'Work order' : 'Inventory item';
+    const itemLabel = t(state.equipmentInfo ? 'authRoutes.equipment' : state.workOrderInfo ? 'authRoutes.workOrder' : 'authRoutes.inventoryItem');
+    const itemTypeLabel = t(state.equipmentInfo ? 'authRoutes.equipmentTitle' : state.workOrderInfo ? 'authRoutes.workOrderTitle' : 'authRoutes.inventoryItemTitle');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center space-x-2">
               <ArrowRight className="h-5 w-5 text-primary" />
-              <span>Organization Switch Required</span>
+              <span>{t('authRoutes.orgSwitchRequired')}</span>
             </CardTitle>
             <CardDescription>
-              This {itemLabel} belongs to a different organization
+              {t('authRoutes.itemOtherOrg', { item: itemLabel })}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
               <div className="text-center space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  {itemTypeLabel} found in:
+                  {t('authRoutes.foundIn', { item: itemTypeLabel })}
                 </p>
                 <p className="font-medium text-foreground">
                   {orgInfo.organizationName}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Your role: {orgInfo.userRole}
+                  {t('authRoutes.yourRole', { role: orgInfo.userRole ?? '—' })}
                 </p>
               </div>
 
@@ -106,12 +108,12 @@ export const QRRedirectHandler: React.FC<QRRedirectHandlerProps> = ({ equipmentI
                 {isSwitchingOrg ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Switching...
+                    {t('authRoutes.switching')}
                   </>
                 ) : (
                   <>
                     <ArrowRight className="mr-2 h-4 w-4" />
-                    Switch & Continue
+                    {t('authRoutes.switchContinue')}
                   </>
                 )}
               </Button>
@@ -121,7 +123,7 @@ export const QRRedirectHandler: React.FC<QRRedirectHandlerProps> = ({ equipmentI
                 onClick={() => window.location.href = '/dashboard'}
                 className="w-full"
               >
-                Cancel
+                {t('authRoutes.cancel')}
               </Button>
             </div>
           </CardContent>
@@ -138,7 +140,7 @@ export const QRRedirectHandler: React.FC<QRRedirectHandlerProps> = ({ equipmentI
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center space-x-2 text-destructive">
               <AlertCircle className="h-5 w-5" />
-              <span>Access Error</span>
+              <span>{t('authRoutes.accessError')}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -156,14 +158,14 @@ export const QRRedirectHandler: React.FC<QRRedirectHandlerProps> = ({ equipmentI
                 className="w-full"
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Try Again
+                {t('authRoutes.tryAgain')}
               </Button>
               
               <Button 
                 onClick={() => window.location.href = '/dashboard'}
                 className="w-full"
               >
-                Go to Dashboard
+                {t('authRoutes.dashboard')}
               </Button>
             </div>
           </CardContent>
@@ -181,7 +183,7 @@ export const QRRedirectHandler: React.FC<QRRedirectHandlerProps> = ({ equipmentI
           <CardContent className="pt-6">
             <div className="flex flex-col items-center space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Redirecting...</p>
+              <p className="text-sm text-muted-foreground">{t('authRoutes.redirecting')}</p>
             </div>
           </CardContent>
         </Card>

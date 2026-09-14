@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -79,6 +80,7 @@ export function ChecklistTemplateSections({
   triggerAutoSave,
   toolbar,
 }: ChecklistTemplateSectionsProps) {
+  const { t } = useI18n();
   return (
     <>
       {!isPageLayout && toolbar}
@@ -93,7 +95,7 @@ export function ChecklistTemplateSections({
               if (e.key === 'Enter') onConfirmInlineAddSection();
               if (e.key === 'Escape') onCancelInlineAddSection();
             }}
-            placeholder="New section name"
+            placeholder={t('pmTemplates.editor.newSectionName')}
             className="flex-1"
           />
           <Button
@@ -101,7 +103,7 @@ export function ChecklistTemplateSections({
             onClick={onConfirmInlineAddSection}
             disabled={!inlineSectionName.trim() || sections.includes(inlineSectionName.trim())}
           >
-            Add
+            {t('pmTemplates.editor.add')}
           </Button>
           <Button size="sm" variant="ghost" onClick={onCancelInlineAddSection}>
             <X className="h-4 w-4" />
@@ -119,7 +121,7 @@ export function ChecklistTemplateSections({
             }}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Jump to section..." />
+              <SelectValue placeholder={t('pmTemplates.editor.jumpSection')} />
             </SelectTrigger>
             <SelectContent>
               {sections.map((s) => (
@@ -147,7 +149,7 @@ export function ChecklistTemplateSections({
         <div className="lg:col-span-9 space-y-4">
           {sections.length === 0 ? (
             <Card className="p-6 text-center">
-              <div className="text-muted-foreground">No sections yet. Add a section to get started.</div>
+              <div className="text-muted-foreground">{t('pmTemplates.editor.noSections')}</div>
             </Card>
           ) : (
             <Accordion type="multiple" value={expanded} onValueChange={(v) => onAccordionChange(v as string[])}>
@@ -164,7 +166,7 @@ export function ChecklistTemplateSections({
                         <div className="flex items-center justify-between w-full min-w-0 gap-2 pr-2">
                           <div className="font-medium truncate min-w-0">{section}</div>
                           <div className="text-sm text-muted-foreground shrink-0 whitespace-nowrap">
-                            {sectionItems.length} items
+                            {t('pmTemplates.editor.itemsCount', { count: sectionItems.length })}
                           </div>
                         </div>
                       </AccordionTrigger>
@@ -177,7 +179,7 @@ export function ChecklistTemplateSections({
                             e.stopPropagation();
                             onAddItem(section);
                           }}
-                          aria-label={`Add item to ${section}`}
+                          aria-label={t('pmTemplates.editor.addItemTo', { name: section })}
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -185,22 +187,22 @@ export function ChecklistTemplateSections({
                     </div>
                     <AccordionContent>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="text-sm text-muted-foreground">Section actions</div>
+                        <div className="text-sm text-muted-foreground">{t('pmTemplates.editor.sectionActions')}</div>
                         <div className="flex gap-1">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => onOpenRenameSection(section)}
-                            aria-label={`Rename section ${section}`}
+                            aria-label={t('pmTemplates.editor.renameSection', { name: section })}
                           >
-                            Rename
+                            {t('pmTemplates.editor.rename')}
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             className="min-h-11 min-w-11 md:min-h-0 md:min-w-0"
                             onClick={() => onOpenDeleteSection(section)}
-                            aria-label={`Delete section ${section}`}
+                            aria-label={t('pmTemplates.editor.deleteSection', { name: section })}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -226,7 +228,7 @@ export function ChecklistTemplateSections({
                       {!previewMode && sectionItems.length <= SECTION_VIRTUALIZATION_THRESHOLD && (
                         <Button variant="outline" onClick={() => onAddItem(section)} className="w-full mt-2">
                           <Plus className="mr-2 h-4 w-4" />
-                          Add Item to {section}
+                          {t('pmTemplates.editor.addItemToButton', { name: section })}
                         </Button>
                       )}
                     </AccordionContent>

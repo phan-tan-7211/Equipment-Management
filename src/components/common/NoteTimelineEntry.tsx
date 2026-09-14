@@ -1,3 +1,4 @@
+import { useNotePresentationText } from '@/components/common/notePresentationI18n';
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -45,6 +46,7 @@ const NoteTimelineEntry: React.FC<NoteTimelineEntryProps> = ({
   contentTextClassName = 'whitespace-pre-wrap',
   showLaborHours = false,
 }) => {
+  const noteText = useNotePresentationText();
   return (
     <Card key={note.id}>
       <CardContent standalone>
@@ -71,7 +73,7 @@ const NoteTimelineEntry: React.FC<NoteTimelineEntryProps> = ({
               {note.is_private ? (
                 <Badge variant="outline" className="text-xs shrink-0">
                   <EyeOff className="mr-1 h-3 w-3" aria-hidden />
-                  Private
+                  {noteText('private', 'Private')}
                 </Badge>
               ) : null}
             </div>

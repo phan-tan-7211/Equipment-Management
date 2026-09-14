@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -16,6 +17,7 @@ export const WorkOrderHistoricalToggle: React.FC<WorkOrderHistoricalToggleProps>
   onToggle,
   disabled = false
 }) => {
+  const { t } = useI18n();
   const { canManageOrganization } = usePermissions();
 
   if (!canManageOrganization()) {
@@ -27,7 +29,7 @@ export const WorkOrderHistoricalToggle: React.FC<WorkOrderHistoricalToggleProps>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <History className="h-4 w-4" />
-          <Label htmlFor="historical-toggle">Historical Work Order</Label>
+          <Label htmlFor="historical-toggle">{t('workOrderForm.historicalWorkOrder')}</Label>
         </div>
         <Switch
           id="historical-toggle"
@@ -40,8 +42,7 @@ export const WorkOrderHistoricalToggle: React.FC<WorkOrderHistoricalToggleProps>
         <Alert>
           <Clock className="h-4 w-4" />
           <AlertDescription>
-            Creating a historical work order to record past maintenance activities. 
-            These records help maintain equipment history and compliance.
+            {t('workOrderForm.historicalHint')}
           </AlertDescription>
         </Alert>
       )}

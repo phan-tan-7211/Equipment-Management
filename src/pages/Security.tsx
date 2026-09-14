@@ -2,8 +2,10 @@ import Page from '@/components/layout/Page';
 import { PageBackButton } from '@/components/layout/PageBackButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, Lock, Database, AlertTriangle } from 'lucide-react';
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function Security() {
+  const { t } = useI18n();
   return (
     <Page maxWidth="4xl" padding="responsive">
       <div className="space-y-6">
@@ -12,22 +14,22 @@ export default function Security() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Shield className="h-8 w-8 text-primary" />
-            Security
+            {t('marketingTrust.security.title')}
           </h1>
           <p className="text-muted-foreground mt-2">
-            EquipQR security controls and trust posture overview.
+            {t('marketingTrust.security.overview')}
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Authentication and Access Control</CardTitle>
-            <CardDescription>Identity, tenant isolation, and least-privilege access.</CardDescription>
+            <CardTitle>{t('marketingTrust.security.authTitle')}</CardTitle>
+            <CardDescription>{t('marketingTrust.security.authDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>Google Workspace OAuth is supported for sign-in and can inherit MFA enforcement at Google.</p>
-            <p>Organization and team access are role-based, with tenant isolation enforced through PostgreSQL RLS.</p>
-            <p>New users have no effective team access until explicitly assigned.</p>
+            <p>{t('marketingTrust.security.googleSignIn')}</p>
+            <p>{t('marketingTrust.security.roleAccess')}</p>
+            <p>{t('marketingTrust.security.noAccess')}</p>
           </CardContent>
         </Card>
 
@@ -35,13 +37,13 @@ export default function Security() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="h-5 w-5" />
-              Data Protection
+              {t('marketingTrust.security.dataTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>Data is protected in transit with TLS and stored in managed Supabase/PostgreSQL infrastructure.</p>
-            <p>Audit logs are append-only and designed for traceability of critical data changes.</p>
-            <p>Organization-level privacy settings control optional collection of QR scan location data.</p>
+            <p>{t('marketingTrust.security.dataTransit')}</p>
+            <p>{t('marketingTrust.security.auditLogs')}</p>
+            <p>{t('marketingTrust.security.locationPrivacy')}</p>
           </CardContent>
         </Card>
 
@@ -49,12 +51,12 @@ export default function Security() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="h-5 w-5" />
-              Monitoring and Response
+              {t('marketingTrust.security.monitoringTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>Security-relevant events (member changes, role updates, audit exports) are available in notifications and audit history.</p>
-            <p>Session controls include inactivity timeout and support for global sign-out.</p>
+            <p>{t('marketingTrust.security.securityEvents')}</p>
+            <p>{t('marketingTrust.security.sessionControls')}</p>
           </CardContent>
         </Card>
 
@@ -62,11 +64,11 @@ export default function Security() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
-              Responsible Disclosure
+              {t('marketingTrust.security.disclosureTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            To report security concerns, contact <a className="text-primary underline" href="mailto:security@equipqr.app">security@equipqr.app</a>.
+            {t('marketingTrust.security.disclosureText')}{' '}<a className="text-primary underline" href="mailto:security@equipqr.app">security@equipqr.app</a>.
           </CardContent>
         </Card>
       </div>

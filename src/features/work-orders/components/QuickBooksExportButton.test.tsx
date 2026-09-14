@@ -319,7 +319,7 @@ describe('QuickBooksExportButton Component', () => {
       
       await waitFor(() => {
         // Button text is now "Update Invoice {invoiceNumber}"
-        expect(screen.getByRole('button', { name: /Update Invoice 1001/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Update Invoice #1001/i })).toBeInTheDocument();
       });
     });
 
@@ -328,11 +328,11 @@ describe('QuickBooksExportButton Component', () => {
       
       // Wait for button to be visible and enabled (queries resolved)
       await waitFor(() => {
-        const button = screen.getByRole('button', { name: /Update Invoice 1001/i });
+        const button = screen.getByRole('button', { name: /Update Invoice #1001/i });
         expect(button).not.toBeDisabled();
       }, { timeout: 3000 });
 
-      const button = screen.getByRole('button', { name: /Update Invoice 1001/i });
+      const button = screen.getByRole('button', { name: /Update Invoice #1001/i });
       fireEvent.click(button);
       
       await waitFor(() => {
@@ -421,7 +421,7 @@ describe('QuickBooksExportButton Component', () => {
       });
 
       const statusButton = await waitFor(() => {
-        const button = screen.getByRole('button', { name: /QuickBooks export status/i });
+        const button = screen.getByRole('button', { name: /QB Status/i });
         expect(button).toBeInTheDocument();
         return button;
       });
@@ -466,7 +466,7 @@ describe('QuickBooksExportButton Component', () => {
       });
 
       const statusButton = await waitFor(() => {
-        const button = screen.getByRole('button', { name: /QuickBooks export status/i });
+        const button = screen.getByRole('button', { name: /QB Status/i });
         expect(button).toBeInTheDocument();
         return button;
       });

@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ export function DsrLifecycleActions({
   onDeny,
   onExtend,
 }: DsrLifecycleActionsProps) {
+  const { t } = useI18n();
   const [verificationMethod, setVerificationMethod] = useState('');
   const [denyReason, setDenyReason] = useState('');
   const [extendReason, setExtendReason] = useState('');
@@ -32,17 +34,17 @@ export function DsrLifecycleActions({
 
   return (
     <div className="space-y-3 rounded-md border p-3">
-      <h3 className="text-sm font-medium">Lifecycle Actions</h3>
+      <h3 className="text-sm font-medium">{t('dsr.lifecycleActions')}</h3>
       <div className="space-y-2">
         <Select value={verificationMethod} onValueChange={setVerificationMethod} disabled={!canVerify}>
-          <SelectTrigger aria-label="Verification method">
-            <SelectValue placeholder="Select verification method" />
+          <SelectTrigger aria-label={t('dsr.verificationMethod')}>
+            <SelectValue placeholder={t('dsr.selectVerification')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="authenticated_match">Authenticated Match</SelectItem>
-            <SelectItem value="email_challenge">Email Challenge</SelectItem>
-            <SelectItem value="manual_review">Manual Review</SelectItem>
-            <SelectItem value="authorized_agent">Authorized Agent</SelectItem>
+            <SelectItem value="authenticated_match">{t('dsr.verification.authenticated_match')}</SelectItem>
+            <SelectItem value="email_challenge">{t('dsr.verification.email_challenge')}</SelectItem>
+            <SelectItem value="manual_review">{t('dsr.verification.manual_review')}</SelectItem>
+            <SelectItem value="authorized_agent">{t('dsr.verification.authorized_agent')}</SelectItem>
           </SelectContent>
         </Select>
         <Button
@@ -51,12 +53,12 @@ export function DsrLifecycleActions({
           onClick={() => onVerify(verificationMethod)}
           disabled={!canVerify || !verificationMethod}
         >
-          Verify & Start Processing
+          {t('dsr.verifyStart')}
         </Button>
       </div>
       <div className="flex flex-wrap gap-2">
         <Button size="sm" onClick={onComplete} disabled={!isProcessing}>
-          Complete
+          {t('dsr.complete')}
         </Button>
       </div>
 
@@ -64,8 +66,8 @@ export function DsrLifecycleActions({
         <Input
           value={denyReason}
           onChange={(event) => setDenyReason(event.target.value)}
-          placeholder="Denial reason"
-          aria-label="Denial reason"
+          placeholder={t('dsr.denialReason')}
+          aria-label={t('dsr.denialReason')}
         />
         <Button
           size="sm"
@@ -73,7 +75,7 @@ export function DsrLifecycleActions({
           onClick={() => onDeny(denyReason)}
           disabled={!denyReason.trim()}
         >
-          Deny Request
+          {t('dsr.denyRequest')}
         </Button>
       </div>
 
@@ -81,8 +83,8 @@ export function DsrLifecycleActions({
         <Input
           value={extendReason}
           onChange={(event) => setExtendReason(event.target.value)}
-          placeholder="Extension reason"
-          aria-label="Extension reason"
+          placeholder={t('dsr.extensionReason')}
+          aria-label={t('dsr.extensionReason')}
         />
         <Button
           size="sm"
@@ -90,7 +92,7 @@ export function DsrLifecycleActions({
           onClick={() => onExtend(extendReason)}
           disabled={!extendReason.trim()}
         >
-          Extend Deadline
+          {t('dsr.extendDeadline')}
         </Button>
       </div>
     </div>

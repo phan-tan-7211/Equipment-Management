@@ -9,6 +9,8 @@ type GridTableViewModeToggleProps<T extends string> = {
   gridValue: T;
   tableValue: T;
   gridAriaLabel?: string;
+  tableAriaLabel?: string;
+  viewModeAriaLabel?: string;
 };
 
 export function GridTableViewModeToggle<T extends string>({
@@ -17,12 +19,14 @@ export function GridTableViewModeToggle<T extends string>({
   gridValue,
   tableValue,
   gridAriaLabel = 'Card view',
+  tableAriaLabel = 'Table view',
+  viewModeAriaLabel = 'View mode',
 }: GridTableViewModeToggleProps<T>) {
   return (
     <div
       className="hidden md:flex items-center rounded-md border"
       role="radiogroup"
-      aria-label="View mode"
+      aria-label={viewModeAriaLabel}
     >
       <Button
         variant="ghost"
@@ -40,7 +44,7 @@ export function GridTableViewModeToggle<T extends string>({
         size="icon"
         className={cn('h-8 w-8 rounded-l-none', viewMode === tableValue && 'bg-muted')}
         onClick={() => onViewModeChange(tableValue)}
-        aria-label="Table view"
+        aria-label={tableAriaLabel}
         aria-checked={viewMode === tableValue}
         role="radio"
       >

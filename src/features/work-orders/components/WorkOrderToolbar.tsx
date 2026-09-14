@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import WorkOrderFilterPopover from './WorkOrderFilterPopover';
 import WorkOrderSortPopover from './WorkOrderSortPopover';
 import type { WorkOrderFiltersToolbarProps } from '@/features/work-orders/types/workOrderFiltersToolbarTypes';
-import { formatInvoiceFilterLabel } from '@/features/work-orders/utils/invoiceFilterLabels';
+import { useI18n } from '@/i18n';
 
 type WorkOrderToolbarProps = Omit<
   WorkOrderFiltersToolbarProps,
@@ -29,28 +29,53 @@ const WorkOrderToolbar: React.FC<WorkOrderToolbarProps> = ({
   rangeToggle,
   viewToggle,
 }) => {
+  const { t } = useI18n();
   const hasActiveFilters = activeFilterCount > 0 || filters.searchQuery.length > 0;
+  const statusLabels: Record<string, string> = {
+    submitted: t('workOrders.list.submitted'),
+    accepted: t('workOrders.list.accepted'),
+    assigned: t('workOrders.list.assigned'),
+    in_progress: t('workOrders.list.inProgress'),
+    on_hold: t('workOrders.list.onHold'),
+    completed: t('workOrders.list.completed'),
+    cancelled: t('workOrders.list.cancelled'),
+  };
+  const priorityLabels: Record<string, string> = {
+    high: t('workOrders.list.high'),
+    medium: t('workOrders.list.medium'),
+    low: t('workOrders.list.low'),
+  };
+  const dueDateLabels: Record<string, string> = {
+    overdue: t('workOrders.list.overdue'),
+    today: t('workOrders.list.dueToday'),
+    this_week: t('workOrders.list.thisWeek'),
+  };
+  const invoiceLabels: Record<string, string> = {
+    paid: t('workOrders.list.paid'),
+    unpaid: t('workOrders.list.unpaid'),
+    overdue: t('workOrders.list.overdue'),
+    not_exported: t('workOrders.list.notExported'),
+  };
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Single toolbar row */}
       <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2">
         {showSearchAndSort ? (
           <>
             <div className="relative flex-1 max-w-65">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
-                placeholder="Search work orders..."
+                placeholder={t('workOrders.list.searchPlaceholder')}
                 value={filters.searchQuery}
-                onChange={(e) => onFilterChange('searchQuery', e.target.value)}
+                onChange={(event) => onFilterChange('searchQuery', event.target.value)}
                 className="h-8 pl-8 text-sm bg-transparent"
-                aria-label="Search work orders"
+                aria-label={t('workOrders.list.searchAria')}
               />
               {filters.searchQuery && (
                 <button
                   onClick={() => onFilterChange('searchQuery', '')}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label="Clear search"
+                  aria-label={t('workOrders.list.clearSearchAria')}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -91,18 +116,17 @@ const WorkOrderToolbar: React.FC<WorkOrderToolbarProps> = ({
         ) : null}
       </div>
 
-      {/* Active filter badges row */}
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-1.5 px-1">
-          <span className="text-xs text-muted-foreground">Active:</span>
+          <span className="text-xs text-muted-foreground">{t('workOrders.list.active')}</span>
 
           {filters.statusFilter !== 'all' && (
             <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">
-              Status: {filters.statusFilter.replace('_', ' ')}
+              {t('workOrders.list.status')}: {statusLabels[filters.statusFilter] ?? filters.statusFilter}
               <button
                 onClick={() => onFilterChange('statusFilter', 'all')}
                 className="ml-0.5 hover:text-foreground"
-                aria-label="Clear status filter"
+                aria-label={t('workOrders.list.clearStatusFilterAria')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -111,11 +135,16 @@ const WorkOrderToolbar: React.FC<WorkOrderToolbarProps> = ({
 
           {filters.assigneeFilter !== 'all' && (
             <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">
-              Assignee: {filters.assigneeFilter === 'mine' ? 'Mine' : filters.assigneeFilter}
+              {t('workOrders.list.assignee')}:{' '}
+              {filters.assigneeFilter === 'mine'
+                ? t('workOrders.list.mine')
+                : filters.assigneeFilter === 'unassigned'
+                  ? t('workOrders.list.unassigned')
+                  : filters.assigneeFilter}
               <button
                 onClick={() => onFilterChange('assigneeFilter', 'all')}
                 className="ml-0.5 hover:text-foreground"
-                aria-label="Clear assignee filter"
+                aria-label={t('workOrders.list.clearAssigneeFilterAria')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -124,11 +153,12 @@ const WorkOrderToolbar: React.FC<WorkOrderToolbarProps> = ({
 
           {filters.priorityFilter !== 'all' && (
             <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">
-              Priority: {filters.priorityFilter}
+              {t('workOrders.list.priority')}:{' '}
+              {priorityLabels[filters.priorityFilter] ?? filters.priorityFilter}
               <button
                 onClick={() => onFilterChange('priorityFilter', 'all')}
                 className="ml-0.5 hover:text-foreground"
-                aria-label="Clear priority filter"
+                aria-label={t('workOrders.list.clearPriorityFilterAria')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -137,11 +167,11 @@ const WorkOrderToolbar: React.FC<WorkOrderToolbarProps> = ({
 
           {!hideDueDateFilter && filters.dueDateFilter !== 'all' && (
             <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">
-              Due: {filters.dueDateFilter.replace('_', ' ')}
+              {t('workOrders.list.due')}: {dueDateLabels[filters.dueDateFilter] ?? filters.dueDateFilter}
               <button
                 onClick={() => onFilterChange('dueDateFilter', 'all')}
                 className="ml-0.5 hover:text-foreground"
-                aria-label="Clear due date filter"
+                aria-label={t('workOrders.list.clearDueDateFilterAria')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -150,11 +180,12 @@ const WorkOrderToolbar: React.FC<WorkOrderToolbarProps> = ({
 
           {filters.invoiceFilter !== 'all' && (
             <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">
-              Invoice: {formatInvoiceFilterLabel(filters.invoiceFilter)}
+              {t('workOrders.list.invoice')}:{' '}
+              {invoiceLabels[filters.invoiceFilter] ?? filters.invoiceFilter}
               <button
                 onClick={() => onFilterChange('invoiceFilter', 'all')}
                 className="ml-0.5 hover:text-foreground"
-                aria-label="Clear invoice filter"
+                aria-label={t('workOrders.list.clearInvoiceFilterAria')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -167,7 +198,7 @@ const WorkOrderToolbar: React.FC<WorkOrderToolbarProps> = ({
             className="h-5 px-2 text-xs text-muted-foreground hover:text-foreground"
             onClick={onClearFilters}
           >
-            Clear all
+            {t('workOrders.list.clearAll')}
           </Button>
         </div>
       )}

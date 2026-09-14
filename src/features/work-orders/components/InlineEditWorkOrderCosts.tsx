@@ -20,6 +20,7 @@ import {
 } from './WorkOrderCostReadOnlyRows';
 import { useInlineWorkOrderCostActions } from '@/features/work-orders/hooks/useInlineWorkOrderCostActions';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,7 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
   canEdit,
   compactMobile = false,
 }) => {
+  const { t } = useI18n();
   const { formatDate } = useFormatTimestamp();
   const isMobile = useIsMobile();
   // Consuming parts requires inventory view access (owner/admin, Parts
@@ -133,7 +135,7 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
     return (
       <div className="flex items-center gap-2 py-3 px-4 text-sm text-muted-foreground">
         <DollarSign className="h-4 w-4 opacity-50" />
-        <span>No costs recorded</span>
+        <span>{t('workOrderResidual.noCosts')}</span>
       </div>
     );
   }
@@ -166,8 +168,8 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
         <div className={cn('flex items-center justify-between', compactMobile ? 'mb-2' : 'mb-4')}>
           <p className={cn('text-muted-foreground', compactMobile ? 'text-xs' : 'text-sm')}>
             {costs.length > 0
-              ? `${costs.length} cost item${costs.length === 1 ? '' : 's'}`
-              : 'No cost items yet'}
+              ? t('workOrderResidual.costItemsCount', { count: costs.length })
+              : t('workOrderResidual.noCostsYet')}
           </p>
           {costs.length > 0 && (
             <Button
@@ -175,8 +177,8 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
               size="sm"
               className="h-8 w-8 p-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
               onClick={handleStartEdit}
-              aria-label="Edit costs"
-              title="Edit costs"
+              aria-label={t('workOrderResidual.editCosts')}
+              title={t('workOrderResidual.editCosts')}
             >
               <Edit2 className="h-3.5 w-3.5" />
             </Button>
@@ -201,7 +203,7 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
           <div className="flex flex-wrap gap-2 pt-1">
             <Button type="button" variant="default" size="sm" className="min-h-11 flex-1" onClick={handleStartEdit}>
               <Plus className="h-4 w-4 mr-1.5" aria-hidden />
-              Add cost
+              {t('workOrderResidual.addCost')}
             </Button>
             <Button
               type="button"
@@ -211,21 +213,21 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
               onClick={() => setLaborDialogOpen(true)}
             >
               <Clock className="h-4 w-4 mr-1.5" aria-hidden />
-              Add labor
+              {t('workOrderResidual.addLabor')}
             </Button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
             <DollarSign className="h-8 w-8 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">No costs recorded yet</p>
+            <p className="text-sm text-muted-foreground">{t('workOrderResidual.noCostsYet')}</p>
             <div className="flex flex-wrap justify-center gap-2">
               <Button variant="outline" size="sm" onClick={handleStartEdit}>
                 <Plus className="h-4 w-4 mr-1.5" />
-                Add Cost Item
+                {t('workOrderOperations.addCostItem')}
               </Button>
               <Button variant="outline" size="sm" onClick={() => setLaborDialogOpen(true)}>
                 <Clock className="h-4 w-4 mr-1.5" />
-                Add labor
+                {t('workOrderResidual.addLabor')}
               </Button>
             </div>
           </div>
@@ -255,7 +257,7 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
     <div className="overflow-x-hidden">
       {isMobile ? (
         <div className="space-y-4">
-          <h4 className="text-base font-semibold leading-snug text-foreground">Edit cost lines</h4>
+          <h4 className="text-base font-semibold leading-snug text-foreground">{t('workOrderResidual.editCostLines')}</h4>
 
           <div
             className={cn(
@@ -272,7 +274,7 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
               disabled={isSaving}
             >
               <Clock className="mr-1 inline h-4 w-4 shrink-0 align-text-bottom" aria-hidden />
-              Add labor
+              {t('workOrderResidual.addLabor')}
             </Button>
             {equipmentIds.length > 0 && canUseInventoryParts ? (
               <Button
@@ -284,7 +286,7 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
                 disabled={isSaving}
               >
                 <Package className="mr-1 inline h-4 w-4 shrink-0 align-text-bottom" aria-hidden />
-                Add from Inventory
+                {t('workOrderResidual.addFromInventory')}
               </Button>
             ) : null}
           </div>
@@ -298,7 +300,7 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
             disabled={isSaving}
           >
             <Plus className="mr-2 h-4 w-4 shrink-0" aria-hidden />
-            Add cost line
+            {t('workOrderResidual.addCostLine')}
           </Button>
 
           <WorkOrderCostsEditor
@@ -320,7 +322,7 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
               disabled={isSaving}
             >
               <Check className="mr-2 h-4 w-4 shrink-0" aria-hidden />
-              Save
+              {t('workOrderResidual.save')}
             </Button>
             <Button
               type="button"
@@ -331,14 +333,14 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
               disabled={isSaving}
             >
               <X className="mr-2 h-4 w-4 shrink-0" aria-hidden />
-              Cancel
+              {t('workOrderResidual.cancel')}
             </Button>
           </div>
         </div>
       ) : (
         <>
           <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-            <h4 className="text-sm font-medium">Edit Cost Items</h4>
+            <h4 className="text-sm font-medium">{t('workOrderResidual.editCostItems')}</h4>
             <div className="flex max-w-full flex-wrap justify-end gap-2">
               <Button
                 type="button"
@@ -348,7 +350,7 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
                 disabled={isSaving}
               >
                 <Clock className="h-4 w-4 mr-1" aria-hidden />
-                Add labor
+                {t('workOrderResidual.addLabor')}
               </Button>
               {equipmentIds.length > 0 && canUseInventoryParts && (
                 <Button
@@ -359,16 +361,16 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
                   disabled={isSaving}
                 >
                   <Package className="h-4 w-4 mr-1" aria-hidden />
-                  Add from Inventory
+                  {t('workOrderResidual.addFromInventory')}
                 </Button>
               )}
               <Button type="button" variant="ghost" size="sm" onClick={() => void handleSave()} disabled={isSaving}>
                 <Check className="h-4 w-4 mr-1" aria-hidden />
-                Save
+                {t('workOrderResidual.save')}
               </Button>
               <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={isSaving}>
                 <X className="h-4 w-4 mr-1" aria-hidden />
-                Cancel
+                {t('workOrderResidual.cancel')}
               </Button>
             </div>
           </div>
@@ -411,20 +413,17 @@ const InlineEditWorkOrderCosts: React.FC<InlineEditWorkOrderCostsProps> = ({
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Restore Inventory?</AlertDialogTitle>
+            <AlertDialogTitle>{t('workOrderResidual.restoreInventoryTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This cost item was added from inventory. Deleting it will restore{' '}
-              <strong>{costToDelete?.quantity ?? 0} unit(s)</strong> back to the inventory.
-              <br /><br />
-              Are you sure you want to delete this cost and restore the inventory?
+              {t('workOrderResidual.restoreInventoryHelp', { count: costToDelete?.quantity ?? 0 })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setCostToDelete(null)}>
-              Cancel
+              {t('workOrderResidual.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete}>
-              Delete & Restore Inventory
+              {t('workOrderResidual.deleteAndRestore')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

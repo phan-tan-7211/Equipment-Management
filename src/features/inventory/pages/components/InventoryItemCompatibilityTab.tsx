@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { handleKeyboardActivation } from '@/components/a11y/keyboard';
 import {
@@ -84,15 +85,17 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
   onOpenAddToGroup,
   onOpenCreateGroup,
   onRefetchAlternates,
-}) => (
-  <div className="space-y-4">
+}) => {
+  const { t } = useI18n();
+  return (
+    <div className="space-y-4">
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle>Compatibility Rules</CardTitle>
+        <CardTitle>{t('inventoryDetail.compatibilityRules')}</CardTitle>
         {canEdit && (
           <Button onClick={onEditRules} size="sm">
             <Settings2 className="h-4 w-4 mr-2" />
-            Edit Rules
+            {t('inventoryDetail.editRules')}
           </Button>
         )}
       </CardHeader>
@@ -104,14 +107,14 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
           </div>
         ) : compatibilityRules.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground mb-2">No compatibility rules defined</p>
+            <p className="text-muted-foreground mb-2">{t('inventoryDetail.noCompatibilityRules')}</p>
             <p className="text-sm text-muted-foreground">
-              Rules automatically match parts to equipment by manufacturer and model.
+              {t('inventoryDetail.rulesHint')}
             </p>
             {canEdit && (
               <Button onClick={onAddRules} variant="outline" className="mt-4">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Rules
+                {t('inventoryDetail.addRules')}
               </Button>
             )}
           </div>
@@ -128,20 +131,20 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
                     <span className="font-medium">{rule.manufacturer}</span>
                     <span className="text-muted-foreground">→</span>
                     <Badge variant="outline" className="text-xs capitalize">
-                      {matchType === 'any' ? 'Any' : matchType}
+                      {t(`inventoryDetail.matchType.${matchType}`)}
                     </Badge>
-                    <span className="text-sm text-muted-foreground">{matchTypeLabel}</span>
+                    <span className="text-sm text-muted-foreground">{matchTypeLabel === 'Any model' ? t('inventoryDetail.anyModel') : matchTypeLabel}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {status === 'verified' && (
                       <Badge className="bg-success text-xs">
                         <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Verified
+                        {t('inventoryDetail.verified')}
                       </Badge>
                     )}
                     {status === 'deprecated' && (
                       <Badge variant="secondary" className="text-xs">
-                        Deprecated
+                        {t('inventoryDetail.deprecated')}
                       </Badge>
                     )}
                   </div>
@@ -159,10 +162,10 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
           <div>
             <CardTitle className="flex items-center gap-2">
               <Cpu className="h-5 w-5 text-muted-foreground" />
-              Equipment Matched by Rules
+              {t('inventoryDetail.equipmentMatched')}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Equipment auto-discovered via the compatibility rules above
+              {t('inventoryDetail.autoDiscovered')}
             </p>
           </div>
         </CardHeader>
@@ -175,9 +178,9 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
           ) : equipmentMatchedByRules.length === 0 ? (
             <div className="text-center py-8">
               <Cpu className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-              <p className="text-muted-foreground mb-2">No equipment matches the current rules</p>
+              <p className="text-muted-foreground mb-2">{t('inventoryDetail.noEquipmentMatched')}</p>
               <p className="text-sm text-muted-foreground">
-                Equipment with matching manufacturer and model will appear here automatically.
+                {t('inventoryDetail.equipmentAppears')}
               </p>
             </div>
           ) : (
@@ -202,20 +205,21 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
                   </div>
                   <div className="flex items-center gap-2 ml-4">
                     <Badge variant="secondary" className="text-xs capitalize">
-                      {equipment.matched_rule_match_type}
+                      {['any', 'exact', 'prefix', 'wildcard'].includes(equipment.matched_rule_match_type)
+                        ? t(`inventoryDetail.matchType.${equipment.matched_rule_match_type}`)
+                        : equipment.matched_rule_match_type}
                     </Badge>
                     {equipment.matched_rule_status === 'verified' && (
                       <Badge className="bg-success text-xs">
                         <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Verified
+                        {t('inventoryDetail.verified')}
                       </Badge>
                     )}
                   </div>
                 </div>
               ))}
               <p className="text-xs text-muted-foreground text-center pt-2">
-                {equipmentMatchedByRules.length} equipment{' '}
-                {equipmentMatchedByRules.length === 1 ? 'item' : 'items'} matched
+                {t('inventoryDetail.matchedItems', { count: equipmentMatchedByRules.length })}
               </p>
             </div>
           )}
@@ -228,16 +232,16 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
         <div>
           <CardTitle className="flex items-center gap-2">
             <LinkIcon className="h-5 w-5 text-muted-foreground" />
-            Direct Associations
+            {t('inventoryDetail.directAssociations')}
           </CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            Equipment manually linked to this part (independent of rules)
+            {t('inventoryDetail.directHint')}
           </p>
         </div>
         {canEdit && (
           <Button onClick={onOpenManageEquipment} size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Manage
+            {t('inventoryDetail.manage')}
           </Button>
         )}
       </CardHeader>
@@ -245,14 +249,14 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
         {compatibleEquipment.length === 0 ? (
           <div className="text-center py-8">
             <LinkIcon className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground mb-2">No equipment directly linked</p>
+            <p className="text-muted-foreground mb-2">{t('inventoryDetail.noDirectEquipment')}</p>
             <p className="text-sm text-muted-foreground mb-4">
-              Direct associations are useful for special cases not covered by rules.
+              {t('inventoryDetail.directUse')}
             </p>
             {canEdit && (
               <Button onClick={onOpenManageEquipment} variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Equipment
+                {t('inventoryDetail.addEquipment')}
               </Button>
             )}
           </div>
@@ -294,9 +298,9 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div>
-          <CardTitle>Part Alternates</CardTitle>
+          <CardTitle>{t('inventoryDetail.partAlternates')}</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            Interchangeable parts based on part number equivalence groups
+            {t('inventoryDetail.alternatesHint')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -309,11 +313,11 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
                 disabled={availableGroupsCount === 0}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add to Group
+                {t('inventoryDetail.addToGroup')}
               </Button>
               <Button size="sm" onClick={onOpenCreateGroup}>
                 <Layers className="h-4 w-4 mr-2" />
-                Create Group
+                {t('inventoryDetail.createGroup')}
               </Button>
             </>
           )}
@@ -331,21 +335,21 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
         ) : groupedAlternates.length === 0 ? (
           <div className="text-center py-8">
             <Layers className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground mb-2">No alternate part groups found</p>
+            <p className="text-muted-foreground mb-2">{t('inventoryDetail.noAlternateGroups')}</p>
             <p className="text-sm text-muted-foreground mb-4">
-              Add this part to an existing group or create a new one to define interchangeable parts.
+              {t('inventoryDetail.alternateHint')}
             </p>
             {canEdit && (
               <div className="flex justify-center gap-2">
                 {availableGroupsCount > 0 && (
                   <Button variant="outline" onClick={onOpenAddToGroup}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Add to Existing Group
+                    {t('inventoryDetail.addExistingGroup')}
                   </Button>
                 )}
                 <Button onClick={onOpenCreateGroup}>
                   <Layers className="h-4 w-4 mr-2" />
-                  Create New Group
+                  {t('inventoryDetail.createNewGroup')}
                 </Button>
               </div>
             )}
@@ -368,7 +372,7 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
                         {groupVerified && (
                           <Badge className="bg-success text-xs">
                             <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Verified
+                            {t('inventoryDetail.verified')}
                           </Badge>
                         )}
                       </div>
@@ -377,9 +381,9 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
                       )}
                     </div>
                     <div className="text-right text-sm text-muted-foreground">
-                      <div>{inventoryParts.length} in inventory</div>
+                      <div>{t('inventoryDetail.inInventory', { count: inventoryParts.length })}</div>
                       <div className={inStockParts.length > 0 ? 'text-success font-medium' : ''}>
-                        {inStockParts.length} in stock
+                        {t('inventoryDetail.inStock', { count: inStockParts.length })}
                       </div>
                     </div>
                   </div>
@@ -424,12 +428,12 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
                               )}
                               {isCurrentItem && (
                                 <Badge variant="outline" className="text-xs">
-                                  This item
+                                  {t('inventoryDetail.thisItem')}
                                 </Badge>
                               )}
                               {part.is_primary && (
                                 <Badge variant="secondary" className="text-xs">
-                                  Primary
+                                  {t('inventoryDetail.primary')}
                                 </Badge>
                               )}
                               {part.identifier_type && (
@@ -461,7 +465,7 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
                               {part.is_low_stock && (
                                 <div className="text-xs text-destructive flex items-center justify-end gap-1">
                                   <AlertCircle className="h-3 w-3" />
-                                  Low
+                                  {t('inventoryDetail.low')}
                                 </div>
                               )}
                             </div>
@@ -478,6 +482,7 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
       </CardContent>
     </Card>
   </div>
-);
+  );
+};
 
 export default InventoryItemCompatibilityTab;

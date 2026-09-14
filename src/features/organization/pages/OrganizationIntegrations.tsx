@@ -8,8 +8,10 @@ import RestrictedOrganizationAccess from '@/features/organization/components/Res
 import Page from '@/components/layout/Page';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plug } from 'lucide-react';
+import { useI18n } from '@/i18n';
 
 const OrganizationIntegrations = () => {
+  const { t } = useI18n();
   const { currentOrganization, isLoading } = useOrganization();
   useOrganizationIntegrationOAuthCallbacks();
 
@@ -21,8 +23,8 @@ const OrganizationIntegrations = () => {
       <Page maxWidth="7xl" padding="responsive">
         <div className="space-y-4 sm:space-y-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Integrations</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Loading...</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('organizationHub.integrations')}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">{t('organizationHub.loading')}</p>
           </div>
         </div>
       </Page>
@@ -48,9 +50,9 @@ const OrganizationIntegrations = () => {
               <Plug className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Integrations</h1>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{t('organizationHub.integrations')}</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Connect third-party services for {currentOrganization.name}
+                {t('organizationHub.integrationsDescription', { name: currentOrganization.name })}
               </p>
             </div>
           </div>

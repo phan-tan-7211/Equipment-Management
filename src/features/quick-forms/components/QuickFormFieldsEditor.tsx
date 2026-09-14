@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '@/i18n';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,11 +24,20 @@ export interface QuickFormFieldsEditorProps {
   onChange: (fields: QuickFormField[]) => void;
 }
 
+const INPUT_TYPE_LABEL_KEYS: Record<QuickFormInputType, string> = {
+  text: 'quickForms.fields.shortText',
+  textarea: 'quickForms.fields.longText',
+  number: 'quickForms.fields.number',
+  date: 'quickForms.fields.date',
+  checkbox: 'quickForms.fields.checkbox',
+};
+
 /**
  * Admin editor for the quick form field list (#1184): the who / what / when /
  * where / how / why questions the public form collects.
  */
 export function QuickFormFieldsEditor({ fields, onChange }: QuickFormFieldsEditorProps) {
+  const { t } = useI18n();
   const updateField = (fieldId: string, patch: Partial<QuickFormField>) => {
     onChange(fields.map((field) => (field.id === fieldId ? { ...field, ...patch } : field)));
   };
@@ -47,7 +57,7 @@ export function QuickFormFieldsEditor({ fields, onChange }: QuickFormFieldsEdito
     <div className="space-y-3">
       {fields.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          No fields yet. Add the questions this form should collect.
+          {t('quickForms.fields.empty')}
         </p>
       )}
 
@@ -59,16 +69,16 @@ export function QuickFormFieldsEditor({ fields, onChange }: QuickFormFieldsEdito
         >
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="flex-1 space-y-1.5">
-              <Label htmlFor={`qf-field-label-${field.id}`}>Field label</Label>
+              <Label htmlFor={`qf-field-label-${field.id}`}>{t('quickForms.fields.label')}</Label>
               <Input
                 id={`qf-field-label-${field.id}`}
                 value={field.label}
-                placeholder={`Question ${index + 1} (e.g. Employee name)`}
+                placeholder={t('quickForms.fields.questionPlaceholder', { number: index + 1 })}
                 onChange={(e) => updateField(field.id, { label: e.target.value })}
               />
             </div>
             <div className="w-full sm:w-44 space-y-1.5">
-              <Label htmlFor={`qf-field-type-${field.id}`}>Type</Label>
+              <Label htmlFor={`qf-field-type-${field.id}`}>{t('quickForms.fields.type')}</Label>
               <Select
                 value={field.inputType}
                 onValueChange={(value) =>
@@ -81,7 +91,7 @@ export function QuickFormFieldsEditor({ fields, onChange }: QuickFormFieldsEdito
                 <SelectContent>
                   {QUICK_FORM_INPUT_TYPES.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {t(INPUT_TYPE_LABEL_KEYS[option.value])}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -91,11 +101,11 @@ export function QuickFormFieldsEditor({ fields, onChange }: QuickFormFieldsEdito
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1 space-y-1.5">
-              <Label htmlFor={`qf-field-help-${field.id}`}>Help text (optional)</Label>
+              <Label htmlFor={`qf-field-help-${field.id}`}>{t('quickForms.fields.help')}</Label>
               <Input
                 id={`qf-field-help-${field.id}`}
                 value={field.helpText ?? ''}
-                placeholder="Shown under the field on the public form"
+                placeholder={t('quickForms.fields.helpPlaceholder')}
                 onChange={(e) =>
                   updateField(field.id, { helpText: e.target.value || undefined })
                 }
@@ -110,7 +120,7 @@ export function QuickFormFieldsEditor({ fields, onChange }: QuickFormFieldsEdito
                 }
               />
               <Label htmlFor={`qf-field-required-${field.id}`} className="text-sm">
-                Required
+                {t('quickForms.fields.required')}
               </Label>
               <Button
                 type="button"
@@ -118,7 +128,7 @@ export function QuickFormFieldsEditor({ fields, onChange }: QuickFormFieldsEdito
                 size="icon"
                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
                 onClick={() => removeField(field.id)}
-                aria-label={`Remove field ${field.label || index + 1}`}
+                aria-label={t('quickForms.fields.remove', { name: field.label || index + 1 })}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -129,7 +139,7 @@ export function QuickFormFieldsEditor({ fields, onChange }: QuickFormFieldsEdito
 
       <Button type="button" variant="outline" size="sm" onClick={addField}>
         <Plus className="h-4 w-4 mr-2" />
-        Add field
+        {t('quickForms.fields.add')}
       </Button>
     </div>
   );

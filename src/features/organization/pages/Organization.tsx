@@ -17,8 +17,10 @@ import { usePermissions } from '@/hooks/usePermissions';
 import Page from '@/components/layout/Page';
 import { Card, CardContent } from '@/components/ui/card';
 import { Settings } from 'lucide-react';
+import { useI18n } from '@/i18n';
 
 const Organization = () => {
+  const { t } = useI18n();
   const { currentOrganization, isLoading } = useOrganization();
   const navigate = useNavigate();
   const { canManageOrganization } = usePermissions();
@@ -57,8 +59,8 @@ const Organization = () => {
       <Page maxWidth="7xl" padding="responsive">
         <div className="space-y-4 sm:space-y-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Organization Settings</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Loading...</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('organizationHub.settings')}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">{t('organizationHub.loading')}</p>
           </div>
         </div>
       </Page>
@@ -71,9 +73,9 @@ const Organization = () => {
         <Page maxWidth="7xl" padding="responsive">
           <div className="space-y-4 sm:space-y-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Personal Organization Merge</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('organizationHub.mergeTitle')}</h1>
               <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Review a request to merge your personal data into {currentOrganization.name}.
+                {t('organizationHub.mergeDescription', { name: currentOrganization.name })}
               </p>
             </div>
             {currentOrganizationId && (
@@ -112,9 +114,9 @@ const Organization = () => {
               <Settings className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Organization Settings</h1>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{t('organizationHub.settings')}</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Update branding, privacy, and organization details for {currentOrganization.name}.
+                {t('organizationHub.settingsDescription', { name: currentOrganization.name })}
               </p>
             </div>
           </div>

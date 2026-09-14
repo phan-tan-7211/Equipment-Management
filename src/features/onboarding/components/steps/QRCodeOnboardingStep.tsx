@@ -5,13 +5,9 @@ import { QrCode } from 'lucide-react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import AssetQRCodePanel from '@/components/common/AssetQRCodePanel';
 import { equipmentQRPath, qrFullUrl } from '@/utils/qr';
+import { useI18n } from '@/i18n';
 
-const ONBOARDING_QR_INSTRUCTIONS = [
-  'Copy the URL and paste it into your preferred QR generator app if that is how you print labels',
-  'Or download the QR image (PNG/JPG) and print it from your computer or phone',
-  'Affix the printed code to the equipment where technicians can scan it in the field',
-  'Without a physical QR label on the machine, EquipQR is just digital paperwork you already had',
-];
+
 
 interface QRCodeOnboardingStepProps {
   equipmentId: string;
@@ -26,6 +22,7 @@ export const QRCodeOnboardingStep: React.FC<QRCodeOnboardingStepProps> = ({
   onFinish,
   isFinishing = false,
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const qrCodeUrl = qrFullUrl(equipmentQRPath(equipmentId, currentOrganization?.id));
 
@@ -33,11 +30,9 @@ export const QRCodeOnboardingStep: React.FC<QRCodeOnboardingStepProps> = ({
     <div className="space-y-6" data-testid="onboarding-step-qr-code">
       <Alert variant="default" className="border-primary/30 bg-primary/5">
         <QrCode className="h-4 w-4" />
-        <AlertTitle>Affix the QR code to your equipment</AlertTitle>
+        <AlertTitle>{t('productOnboarding.qrTitle')}</AlertTitle>
         <AlertDescription>
-          This is the most important step. Technicians scan this code to open the equipment record,
-          log work, and create work orders in the field. Choose whichever printing method works for
-          your shop — URL paste or image download.
+          {t('productOnboarding.qrDescription')}
         </AlertDescription>
       </Alert>
 
@@ -45,14 +40,14 @@ export const QRCodeOnboardingStep: React.FC<QRCodeOnboardingStepProps> = ({
         entityId={equipmentId}
         entityName={equipmentName}
         qrCodeUrl={qrCodeUrl}
-        qrImageAlt={`QR code for ${equipmentName}`}
+        qrImageAlt={t('productOnboarding.qrAlt', { name: equipmentName })}
         defaultFilenameStem={equipmentName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}
-        instructionBullets={ONBOARDING_QR_INSTRUCTIONS}
+        instructionBullets={[t('productOnboarding.qrInstructionUrl'), t('productOnboarding.qrInstructionImage'), t('productOnboarding.qrInstructionAffix'), t('productOnboarding.qrInstructionPhysical')]}
       />
 
       <div className="flex justify-end">
         <Button onClick={onFinish} disabled={isFinishing} data-testid="onboarding-finish-button">
-          {isFinishing ? 'Finishing...' : 'Finish setup'}
+          {isFinishing ? t('productOnboarding.finishing') : t('productOnboarding.finish')}
         </Button>
       </div>
     </div>

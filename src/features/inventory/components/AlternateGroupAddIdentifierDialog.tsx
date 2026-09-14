@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,10 +40,11 @@ function AddIdentifierDialogBody({
   onSubmit,
   isPending,
 }: Omit<AlternateGroupAddIdentifierDialogProps, 'isMobile' | 'open' | 'onOpenChange'>) {
+  const { t } = useI18n();
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="identifier-type">Type</Label>
+        <Label htmlFor="identifier-type">{t('alternateGroupDetail.identifierType')}</Label>
         <Select
           value={identifierType}
           onValueChange={(value) => onIdentifierTypeChange(value as PartIdentifierType)}
@@ -53,7 +55,7 @@ function AddIdentifierDialogBody({
           <SelectContent>
             {IDENTIFIER_TYPES.map((type) => (
               <SelectItem key={type.value} value={type.value}>
-                {type.label}
+                {t(`alternateGroupDetail.${type.value === 'sku' ? 'skuType' : type.value}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -62,35 +64,35 @@ function AddIdentifierDialogBody({
 
       <div className="space-y-2">
         <Label htmlFor="identifier-value">
-          Part Number <span className="text-destructive">*</span>
+          {t('alternateGroupDetail.partNumbers')} <span className="text-destructive">*</span>
         </Label>
         <Input
           id="identifier-value"
-          placeholder="e.g., CAT-1R-0750, WIX 51773"
+          placeholder={t('alternateGroupDetail.partNumberExample')}
           value={identifierValue}
           onChange={(e) => onIdentifierValueChange(e.target.value)}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="identifier-manufacturer">Manufacturer</Label>
+        <Label htmlFor="identifier-manufacturer">{t('alternateGroupDetail.manufacturer')}</Label>
         <Input
           id="identifier-manufacturer"
-          placeholder="e.g., Caterpillar, WIX, Baldwin"
+          placeholder={t('alternateGroupDetail.manufacturerExample')}
           value={identifierManufacturer}
           onChange={(e) => onIdentifierManufacturerChange(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">
-          Optional. The brand or manufacturer of this part number.
+          {t('alternateGroupDetail.manufacturerHelp')}
         </p>
       </div>
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
-          Cancel
+          {t('alternateGroups.cancel')}
         </Button>
         <Button onClick={onSubmit} disabled={!identifierValue.trim() || isPending}>
-          {isPending ? 'Adding...' : 'Add Part Number'}
+          {isPending ? t('alternateGroupDetail.adding') : t('alternateGroupDetail.addPartNumber')}
         </Button>
       </div>
     </div>
@@ -98,6 +100,7 @@ function AddIdentifierDialogBody({
 }
 
 export function AlternateGroupAddIdentifierDialog(props: AlternateGroupAddIdentifierDialogProps) {
+  const { t } = useI18n();
   const { isMobile, open, onOpenChange } = props;
 
   return (
@@ -105,8 +108,8 @@ export function AlternateGroupAddIdentifierDialog(props: AlternateGroupAddIdenti
       isMobile={isMobile}
       open={open}
       onOpenChange={onOpenChange}
-      title="Add Part Number"
-      description="Add an OEM, aftermarket, or cross-reference part number to this group."
+      title={t('alternateGroupDetail.addPartNumber')}
+      description={t('alternateGroupDetail.addIdentifierDescription')}
     >
       <AddIdentifierDialogBody {...props} />
     </AlternateGroupResponsiveDialog>

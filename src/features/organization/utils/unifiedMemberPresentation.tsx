@@ -1,6 +1,16 @@
 import { CheckCircle, Clock, CloudCog } from 'lucide-react';
 import type { UnifiedMember } from '@/features/organization/utils/buildUnifiedMembers';
 
+export function getUnifiedMemberDisplayName(
+  member: UnifiedMember,
+  labels: { pendingInvite: string; pendingGoogle: string; unknown: string },
+) {
+  if (member.type === 'invitation') return labels.pendingInvite;
+  if (member.type === 'gws_claim' && member.name === 'Pending (Google Workspace)') return labels.pendingGoogle;
+  if (member.type === 'member' && member.name === 'Unknown') return labels.unknown;
+  return member.name;
+}
+
 export function getStatusIcon(status: UnifiedMember['status']) {
   switch (status) {
     case 'active':

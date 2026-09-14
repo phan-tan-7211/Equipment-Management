@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import type { UseFormReturn } from 'react-hook-form';
 import {
   FormControl,
@@ -23,6 +24,7 @@ export function InventoryItemFormBasicFields({
   form,
   editingItem,
 }: InventoryItemFormBasicFieldsProps) {
+  const { t } = useI18n();
   const structuredLocation = form.watch([
     'location_address',
     'location_city',
@@ -49,9 +51,9 @@ export function InventoryItemFormBasicFields({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name *</FormLabel>
+              <FormLabel>{t('itemForm.name')}</FormLabel>
               <FormControl>
-                <Input placeholder="Item name" {...field} />
+                <Input placeholder={t('itemForm.itemName')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -65,9 +67,9 @@ export function InventoryItemFormBasicFields({
             <FormItem>
               <FormLabel>SKU</FormLabel>
               <FormControl>
-                <Input placeholder="Internal SKU" {...field} value={field.value || ''} />
+                <Input placeholder={t('itemForm.internalSku')} {...field} value={field.value || ''} />
               </FormControl>
-              <FormDescription>Internal identifier (unique per organization)</FormDescription>
+              <FormDescription>{t('itemForm.skuHelp')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -79,10 +81,10 @@ export function InventoryItemFormBasicFields({
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Description</FormLabel>
+            <FormLabel>{t('itemForm.description')}</FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Item description"
+                placeholder={t('itemForm.itemDescription')}
                 {...field}
                 value={field.value || ''}
                 rows={3}
@@ -99,11 +101,11 @@ export function InventoryItemFormBasicFields({
           name="external_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>External ID (UPC/EAN/Barcode)</FormLabel>
+              <FormLabel>{t('itemForm.externalId')}</FormLabel>
               <FormControl>
-                <Input placeholder="Manufacturer barcode" {...field} value={field.value || ''} />
+                <Input placeholder={t('itemForm.manufacturerBarcode')} {...field} value={field.value || ''} />
               </FormControl>
-              <FormDescription>For scanning manufacturer barcodes</FormDescription>
+              <FormDescription>{t('itemForm.barcodeHelp')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -114,16 +116,16 @@ export function InventoryItemFormBasicFields({
           name="location"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Location Name</FormLabel>
+              <FormLabel>{t('itemForm.locationName')}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="e.g., Yard Cage, Truck 3, Shelf A"
+                  placeholder={t('itemForm.locationExample')}
                   {...field}
                   value={field.value || ''}
                 />
               </FormControl>
               <FormDescription>
-                Use a storage nickname like Yard Cage, Truck 3, Shelf A, or Main Shop Bin 5.
+                {t('itemForm.locationHelp')}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -149,7 +151,7 @@ export function InventoryItemFormBasicFields({
           name="quantity_on_hand"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Quantity on Hand *</FormLabel>
+              <FormLabel>{t('itemForm.quantityOnHand')}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -176,7 +178,7 @@ export function InventoryItemFormBasicFields({
           name="low_stock_threshold"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Low Stock Threshold</FormLabel>
+              <FormLabel>{t('itemForm.lowStockThreshold')}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -194,7 +196,7 @@ export function InventoryItemFormBasicFields({
           name="default_unit_cost"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Default Unit Cost ($)</FormLabel>
+              <FormLabel>{t('itemForm.defaultUnitCost')}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -207,7 +209,7 @@ export function InventoryItemFormBasicFields({
                   }
                 />
               </FormControl>
-              <FormDescription>For form auto-fill only</FormDescription>
+              <FormDescription>{t('itemForm.costHelp')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -217,7 +219,7 @@ export function InventoryItemFormBasicFields({
       {!editingItem && (
         <div className="rounded-lg border border-dashed p-3 text-center">
           <p className="text-sm text-muted-foreground">
-            You can upload up to 5 images after creating this item.
+            {t('itemForm.imagesHelp')}
           </p>
         </div>
       )}

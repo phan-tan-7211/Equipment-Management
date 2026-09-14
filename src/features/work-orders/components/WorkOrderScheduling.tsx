@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ export const WorkOrderScheduling: React.FC<WorkOrderSchedulingProps> = ({
   errors,
   setValue
 }) => {
+  const { t } = useI18n();
   const due = parseDue({
     dueDate: values.dueDate,
     dueDateHasTime: values.dueDateHasTime ?? false,
@@ -67,11 +69,11 @@ export const WorkOrderScheduling: React.FC<WorkOrderSchedulingProps> = ({
     <Card>
       <CardContent className="pt-4 space-y-4">
         <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-          Scheduling
+          {t('workOrderForm.scheduling')}
         </h3>
         
         <div className="space-y-2">
-          <Label htmlFor="work-order-due-date">Due Date</Label>
+          <Label htmlFor="work-order-due-date">{t('workOrderForm.dueDate')}</Label>
           <Input
             id="work-order-due-date"
             type="date"
@@ -84,7 +86,7 @@ export const WorkOrderScheduling: React.FC<WorkOrderSchedulingProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="work-order-due-time">Due time</Label>
+          <Label htmlFor="work-order-due-time">{t('workOrderForm.dueTime')}</Label>
           <Input
             id="work-order-due-time"
             type="time"
@@ -92,12 +94,12 @@ export const WorkOrderScheduling: React.FC<WorkOrderSchedulingProps> = ({
             onChange={(e) => handleDueTimeChange(e.target.value)}
           />
           <p className="text-xs text-muted-foreground">
-            Optional. Leave empty for an all-day due date.
+            {t('workOrderForm.dueTimeHint')}
           </p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="work-order-estimated-hours">Estimated Hours</Label>
+          <Label htmlFor="work-order-estimated-hours">{t('workOrderForm.estimatedHours')}</Label>
           <Input
             id="work-order-estimated-hours"
             type="number"
@@ -112,7 +114,7 @@ export const WorkOrderScheduling: React.FC<WorkOrderSchedulingProps> = ({
             <p className="text-sm text-destructive">{errors.estimatedHours}</p>
           )}
           <p className="text-xs text-muted-foreground">
-            Optional: Estimated time to complete this work order
+            {t('workOrderForm.estimatedHoursHint')}
           </p>
         </div>
       </CardContent>

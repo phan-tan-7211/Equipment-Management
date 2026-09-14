@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useGoogleMapsKey } from '@/hooks/useGoogleMapsKey';
 import { useIsDarkTheme, useThemeVersion } from '@/hooks/useThemeVersion';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 type LocationDirectionsMiniMapProps = {
   lat: number;
@@ -39,6 +40,7 @@ function LocationDirectionsMiniMapCanvas({
   directionsUrl: string;
   ariaLabel: string;
 }) {
+  const { t } = useI18n();
   const openDirections = useCallback(() => {
     window.open(directionsUrl, '_blank', 'noopener,noreferrer');
   }, [directionsUrl]);
@@ -70,7 +72,7 @@ function LocationDirectionsMiniMapCanvas({
         </AdvancedMarker>
       </Map>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 to-transparent px-3 py-2">
-        <p className="text-xs font-medium text-white">Tap for directions in Google Maps</p>
+        <p className="text-xs font-medium text-white">{t('sharedUi.mapDirections')}</p>
       </div>
       <span className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/5 group-active:bg-black/10" />
     </button>
@@ -86,6 +88,7 @@ export function LocationDirectionsMiniMap({
   directionsUrl,
   ariaLabel,
 }: LocationDirectionsMiniMapProps) {
+  const { t } = useI18n();
   const themeVersion = useThemeVersion();
   const isDark = useIsDarkTheme(themeVersion);
   const {
@@ -100,8 +103,8 @@ export function LocationDirectionsMiniMap({
   const label =
     ariaLabel ??
     (address
-      ? `Open directions to ${address} in Google Maps`
-      : `Open directions to ${lat.toFixed(5)}, ${lng.toFixed(5)} in Google Maps`);
+      ? t('sharedUi.mapAddressDirections', { address })
+      : t('sharedUi.mapCoordinatesDirections', { coordinates: `${lat.toFixed(5)}, ${lng.toFixed(5)}` }));
 
   if (isKeyLoading) {
     return (
@@ -112,7 +115,7 @@ export function LocationDirectionsMiniMap({
         )}
         style={{ height: mapHeight }}
       >
-        <p className="text-xs text-muted-foreground">Loading map...</p>
+        <p className="text-xs text-muted-foreground">{t('sharedUi.mapLoading')}</p>
       </div>
     );
   }
@@ -127,10 +130,10 @@ export function LocationDirectionsMiniMap({
         style={{ height: mapHeight }}
       >
         <MapPin className="h-6 w-6 text-destructive/70" />
-        <p className="text-xs text-muted-foreground">Map unavailable</p>
+        <p className="text-xs text-muted-foreground">{t('sharedUi.mapUnavailable')}</p>
         <Button type="button" size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={retryMapsKey}>
           <RefreshCw className="h-3 w-3" />
-          Retry
+          {t('sharedUi.mapRetry')}
         </Button>
       </div>
     );

@@ -14,6 +14,7 @@ import {
   RIGHT_TO_REPAIR_SEO,
 } from '@/pages/legal/right-to-repair/rightToRepairContent';
 import type { EquipQrCommitmentId } from '@/pages/legal/right-to-repair/types';
+import { useI18n } from '@/i18n/I18nProvider';
 
 const COMMITMENT_ICONS: Record<EquipQrCommitmentId, LucideIcon> = {
   export: Download,
@@ -21,11 +22,18 @@ const COMMITMENT_ICONS: Record<EquipQrCommitmentId, LucideIcon> = {
   'no-pairing': Wrench,
 };
 
+const COMMITMENT_COPY_KEYS: Record<EquipQrCommitmentId, { title: string; body: string }> = {
+  export: { title: 'exportTitle', body: 'exportBody' },
+  'no-hostage': { title: 'noHostageTitle', body: 'noHostageBody' },
+  'no-pairing': { title: 'noPairingTitle', body: 'noPairingBody' },
+};
+
 export function RightToRepair(): JSX.Element {
+  const { t } = useI18n();
   return (
     <>
       <PageSEO
-        title={RIGHT_TO_REPAIR_SEO.title}
+        title={t('marketingTrust.repair.title')}
         description={RIGHT_TO_REPAIR_SEO.description}
         path={RIGHT_TO_REPAIR_SEO.path}
       />
@@ -42,18 +50,17 @@ export function RightToRepair(): JSX.Element {
                 <PageBackButton className="mb-6" />
                 <div className="text-center">
                   <p className="text-sm font-medium uppercase tracking-wide text-primary">
-                    Public stance
+                    {t('marketingTrust.repair.stance')}
                   </p>
                   <h1
                     data-route-heading="true"
                     tabIndex={-1}
                     className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl"
                   >
-                    Right to Repair
+                    {t('marketingTrust.repair.title')}
                   </h1>
                   <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
-                    If you bought the machine, you should be able to keep it running. If you logged
-                    the work in EquipQR, that history is yours. We will not hold your data hostage.
+                    {t('marketingTrust.repair.introduction')}
                   </p>
                   <p className="mt-4 text-sm text-muted-foreground">
                     Last reviewed {RIGHT_TO_REPAIR_REVIEWED_ON}. This page is a statement of
@@ -78,7 +85,7 @@ export function RightToRepair(): JSX.Element {
           >
             <div className="container mx-auto px-4">
               <h2 id="commitments-heading" className="mb-10 text-center text-3xl font-bold">
-                What we commit to
+                {t('marketingTrust.repair.commitments')}
               </h2>
               <ul className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
                 {EQUIPQR_REPAIR_COMMITMENTS.map((commitment) => {
@@ -88,10 +95,14 @@ export function RightToRepair(): JSX.Element {
                       <Card className="h-full">
                         <CardHeader>
                           <Icon className="mb-2 h-6 w-6 text-primary" aria-hidden="true" />
-                          <CardTitle className="text-xl">{commitment.title}</CardTitle>
+                          <CardTitle className="text-xl">
+                            {t(`marketingTrust.repair.${COMMITMENT_COPY_KEYS[commitment.id].title}`)}
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-sm text-muted-foreground">{commitment.body}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t(`marketingTrust.repair.${COMMITMENT_COPY_KEYS[commitment.id].body}`)}
+                          </p>
                         </CardContent>
                       </Card>
                     </li>

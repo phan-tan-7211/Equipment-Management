@@ -14,6 +14,7 @@ import { isOrgAdminRole } from '@/features/teams/utils/teamAccessScope';
 import { useEquipmentById } from '@/features/equipment/hooks/useEquipment';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 
 import { WorkOrderLike } from '@/features/work-orders/utils/workOrderTypeConversion';
 import { resolveWorkOrderAcceptanceAssigneeGate } from '@/features/work-orders/utils/workOrderAcceptanceAssigneeScope';
@@ -40,6 +41,7 @@ const WorkOrderAcceptanceModal: React.FC<WorkOrderAcceptanceModalProps> = ({
   organizationId,
   onAccept
 }) => {
+  const { t } = useI18n();
   const [selectedAssignee, setSelectedAssignee] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const assigneeSelectId = 'work-order-acceptance-assignee';
@@ -77,14 +79,14 @@ const WorkOrderAcceptanceModal: React.FC<WorkOrderAcceptanceModalProps> = ({
   // Build assignee options based on equipment team assignment
   const buildAssigneeOptions = (): AssigneeOption[] => {
     const options: AssigneeOption[] = [
-      { id: 'unassigned', name: 'Leave Unassigned', type: 'leave_unassigned' }
+      { id: 'unassigned', name: t('workOrderAssignment.leaveUnassigned'), type: 'leave_unassigned' }
     ];
 
     // Add current user
     if (currentUser) {
       options.push({
         id: currentUser.id,
-        name: 'Me',
+        name: t('workOrderAssignment.me'),
         type: 'user'
       });
     }
@@ -102,9 +104,9 @@ const WorkOrderAcceptanceModal: React.FC<WorkOrderAcceptanceModalProps> = ({
           .filter(m => m.role === 'manager' && m.user_id !== currentUser?.id)
           .map(m => ({
             id: m.user_id,
-            name: m.profiles?.name ?? 'Unknown',
+            name: m.profiles?.name ?? t('workOrderAssignment.unknown'),
             type: 'user' as const,
-            role: 'Team Manager'
+            role: t('workOrderAssignment.teamManager')
           }));
 
         // Add team technicians
@@ -112,9 +114,9 @@ const WorkOrderAcceptanceModal: React.FC<WorkOrderAcceptanceModalProps> = ({
           .filter(m => m.role === 'technician' && m.user_id !== currentUser?.id)
           .map(m => ({
             id: m.user_id,
-            name: m.profiles?.name ?? 'Unknown',
+            name: m.profiles?.name ?? t('workOrderAssignment.unknown'),
             type: 'user' as const,
-            role: 'Team Technician'
+            role: t('workOrderAssignment.teamTechnician')
           }));
 
         options.push(...teamManagers, ...teamTechnicians);
@@ -127,7 +129,7 @@ const WorkOrderAcceptanceModal: React.FC<WorkOrderAcceptanceModalProps> = ({
           id: admin.id,
           name: admin.name,
           type: 'user' as const,
-          role: admin.role === 'owner' ? 'Organization Owner' : 'Organization Admin'
+          role: t(admin.role === 'owner' ? 'workOrderAssignment.organizationOwner' : 'workOrderAssignment.organizationAdmin')
         }));
 
       options.push(...orgAdmins);
@@ -151,10 +153,10 @@ const WorkOrderAcceptanceModal: React.FC<WorkOrderAcceptanceModalProps> = ({
       await onAccept(assigneeId);
       onClose();
       
-      toast.success('Work order accepted successfully');
+      toast.success(t('workOrderAssignment.acceptedSuccess'));
     } catch (error) {
       console.error('Error accepting work order:', error);
-      toast.error('Failed to accept work order');
+      toast.error(t('workOrderAssignment.acceptFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -173,7 +175,7 @@ const WorkOrderAcceptanceModal: React.FC<WorkOrderAcceptanceModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserCheck className="h-5 w-5" />
-            Accept Work Order
+            {t('workOrderAssignment.acceptTitle')}
           </DialogTitle>
         </DialogHeader>
 
@@ -193,19 +195,19 @@ const WorkOrderAcceptanceModal: React.FC<WorkOrderAcceptanceModalProps> = ({
             <div className="flex items-center gap-2 rounded-lg bg-accent p-3 text-accent-foreground">
               <AlertCircle className="h-4 w-4 text-accent-foreground" />
               <p className="text-sm">
-                This work order will be automatically assigned to you and started.
+                {t('workOrderAssignment.autoAssigned')}
               </p>
             </div>
           ) : (
             <div className="space-y-2">
-              <label htmlFor={assigneeSelectId} className="text-sm font-medium">Assign To</label>
+              <label htmlFor={assigneeSelectId} className="text-sm font-medium">{t('workOrderAssignment.assignTo')}</label>
               <Select
                 value={selectedAssignee}
                 onValueChange={setSelectedAssignee}
                 disabled={!canSubmitAssignee}
               >
                 <SelectTrigger id={assigneeSelectId} className="min-h-11">
-                  <SelectValue placeholder={canSubmitAssignee ? 'Select assignee...' : 'Loading assignees...'} />
+                  <SelectValue placeholder={t(canSubmitAssignee ? 'workOrderAssignment.selectAssigneeShort' : 'workOrderAssignment.loadingAssignees')} />
                 </SelectTrigger>
                 <SelectContent>
                   {assigneeOptions.map((option) => (
@@ -239,14 +241,14 @@ const WorkOrderAcceptanceModal: React.FC<WorkOrderAcceptanceModalProps> = ({
               disabled={isSubmitting}
               className="flex-1 min-h-11"
             >
-              Cancel
+              {t('workOrderAssignment.cancel')}
             </Button>
             <Button
               onClick={handleAccept}
               disabled={isSubmitting || (!isSingleUserOrg && (!selectedAssignee || !canSubmitAssignee))}
               className="flex-1 min-h-11"
             >
-              {isSubmitting ? 'Accepting...' : 'Accept & Assign'}
+              {t(isSubmitting ? 'workOrderAssignment.accepting' : 'workOrderAssignment.acceptAndAssign')}
             </Button>
           </div>
         </div>

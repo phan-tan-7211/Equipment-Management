@@ -112,10 +112,10 @@ const EquipmentBasicInfoSection: React.FC<EquipmentBasicInfoSectionProps> = ({
           <FormItem>
             <FormLabel>
               {t('equipmentForm.serialNumberRequired').replace(/\s*\*$/, '')}
-              <span className="font-normal text-muted-foreground"> (optional)</span>
+              <span className="font-normal text-muted-foreground">{t('equipmentResidual.optional')}</span>
             </FormLabel>
             <FormControl><Input placeholder={t('equipmentForm.serialNumberPlaceholder')} {...field} /></FormControl>
-            <FormDescription>Leave blank when the asset has no manufacturer serial number or it is no longer readable.</FormDescription>
+            <FormDescription>{t('equipmentResidual.serialNumberHint')}</FormDescription>
             <FormMessage />
             {duplicateMatch && <DuplicateSerialWarning match={duplicateMatch} inline onNavigate={onDuplicateNavigate} />}
           </FormItem>

@@ -23,6 +23,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { OfflineQueueService, type OfflineQueueItem, type OfflineQueueEnqueueInput } from '@/services/offlineQueueService';
+import { useOfflineQueueCopy } from '@/features/offline-queue/hooks/useOfflineQueueCopy';
 import { OfflineQueueProcessor, type ProcessResult } from '@/services/offlineQueueProcessor';
 import { logger } from '@/utils/logger';
 import { toast } from 'sonner';
@@ -62,6 +63,7 @@ const OfflineQueueContext = createContext<OfflineQueueContextValue | null>(null)
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 export const OfflineQueueProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const t = useOfflineQueueCopy();
   const { user } = useAuth();
   const { currentOrganization } = useOrganization();
   const queryClient = useQueryClient();
@@ -76,8 +78,8 @@ export const OfflineQueueProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Stable service & processor instances (re-created when user/org changes)
   const queueService = useMemo(() => {
     if (!user?.id || !currentOrganization?.id) return null;
-    return new OfflineQueueService(user.id, currentOrganization.id);
-  }, [user?.id, currentOrganization?.id]);
+    return new OfflineQueueService(user.id, currentOrganization.id, t);
+  }, [user?.id, currentOrganization?.id, t]);
 
   const processor = useMemo(() => {
     if (!queueService) return null;
@@ -116,29 +118,36 @@ export const OfflineQueueProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (result.succeeded > 0) {
         const conflictNote = result.conflicts && result.conflicts.length > 0
-          ? ` (${result.conflicts.length} with conflicts resolved)`
+          ? t('offlineQueue.resolvedConflicts', { count: result.conflicts.length })
           : '';
-        toast.success(`Synced ${result.succeeded} offline item${result.succeeded > 1 ? 's' : ''}${conflictNote}`);
+        toast.success(`${t(result.succeeded === 1 ? 'offlineQueue.syncedItem' : 'offlineQueue.syncedItems', { count: result.succeeded })}${conflictNote}`);
       }
       if (result.conflicts && result.conflicts.length > 0) {
         for (const conflict of result.conflicts) {
-          toast.warning('Sync conflict resolved', { description: conflict.details });
+          const fields = /^Server-side changes won for: (.*)\. Your offline edits/.exec(conflict.details);
+          const status = /^Work order is already "([^"]+)" on the server\. Your offline "([^"]+)"/.exec(conflict.details);
+          const pm = /^PM was (\S+) on the server while offline\./.exec(conflict.details);
+          const description = fields ? t('offlineQueue.fieldConflict', { fields: fields[1] })
+            : status ? t('offlineQueue.statusConflict', { serverStatus: status[1], offlineStatus: status[2] })
+            : pm ? t('offlineQueue.pmConflict', { status: pm[1] })
+            : t('offlineQueue.genericConflict');
+          toast.warning(t('offlineQueue.conflictResolved'), { description });
         }
       }
       if (result.failed > 0) {
-        toast.error(`${result.failed} item${result.failed > 1 ? 's' : ''} failed to sync`);
+        toast.error(t(result.failed === 1 ? 'offlineQueue.failedOne' : 'offlineQueue.failedToSync', { count: result.failed }));
       }
 
       return result;
     } catch (error) {
       logger.error('Offline queue sync error', error);
-      toast.error('Sync failed', { description: 'Please try again.' });
+      toast.error(t('offlineQueue.syncFailed'), { description: t('offlineQueue.tryAgain') });
       return null;
     } finally {
       setIsSyncing(false);
       syncLockRef.current = false;
     }
-  }, [processor, refresh]);
+  }, [processor, refresh, t]);
 
   // Trigger auto-sync when we come back online and have pending items
   useEffect(() => {

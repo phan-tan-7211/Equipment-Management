@@ -19,6 +19,7 @@ import {
 } from '@/features/inventory/utils/inventoryExportUtils';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { arrayToCsv, downloadCsv, downloadJson, filenameWithDate } from '@/utils/exportUtils';
+import { useI18n } from '@/i18n';
 
 interface InventoryDownloadMenuProps {
   canExport: boolean;
@@ -31,6 +32,7 @@ const InventoryDownloadMenu: React.FC<InventoryDownloadMenuProps> = ({
   items,
   selectedItems = [],
 }) => {
+  const { t } = useI18n();
   const { formatDate } = useFormatTimestamp();
   const hasSelection = selectedItems.length > 0;
 
@@ -44,20 +46,20 @@ const InventoryDownloadMenu: React.FC<InventoryDownloadMenuProps> = ({
             className="h-8 gap-1.5 text-sm font-normal opacity-50 cursor-not-allowed"
             disabled
           >
-            Download
+            {t('inventoryList.download')}
             <ChevronDown className="h-3 w-3 text-muted-foreground" />
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          Export is available to parts managers, owners, and admins
+          {t('inventoryList.exportDenied')}
         </TooltipContent>
       </Tooltip>
     );
   }
 
   const handleExportAllCsv = () => {
-    const rows = itemsToAllExportRows(items, formatDate);
-    const csv = arrayToCsv(getAllExportHeaders(), rows);
+    const rows = itemsToAllExportRows(items, formatDate, t);
+    const csv = arrayToCsv(getAllExportHeaders(t), rows);
     downloadCsv(csv, filenameWithDate('inventory', 'csv'));
   };
 
@@ -66,8 +68,8 @@ const InventoryDownloadMenu: React.FC<InventoryDownloadMenuProps> = ({
   };
 
   const handleExportSelectedCsv = () => {
-    const rows = itemsToAllExportRows(selectedItems, formatDate);
-    const csv = arrayToCsv(getAllExportHeaders(), rows);
+    const rows = itemsToAllExportRows(selectedItems, formatDate, t);
+    const csv = arrayToCsv(getAllExportHeaders(t), rows);
     downloadCsv(csv, filenameWithDate('inventory-selected', 'csv'));
   };
 
@@ -82,15 +84,15 @@ const InventoryDownloadMenu: React.FC<InventoryDownloadMenuProps> = ({
           variant="outline"
           size="sm"
           className="h-8 gap-1.5 text-sm font-normal"
-          aria-label="Download inventory"
+          aria-label={t('inventoryList.downloadAria')}
         >
-          Download
+          {t('inventoryList.download')}
           <ChevronDown className="h-3 w-3 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-          Export all fields
+          {t('inventoryList.exportAllFields')}
         </DropdownMenuLabel>
         <ExportFormatMenuItems
           onExportCsv={handleExportAllCsv}
@@ -101,10 +103,14 @@ const InventoryDownloadMenu: React.FC<InventoryDownloadMenuProps> = ({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-              Export selected ({selectedItems.length})
+              {t('inventoryList.exportSelected', { count: selectedItems.length })}
             </DropdownMenuLabel>
-            <DropdownMenuItem onSelect={handleExportSelectedCsv}>CSV (selected)</DropdownMenuItem>
-            <DropdownMenuItem onSelect={handleExportSelectedJson}>JSON (selected)</DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleExportSelectedCsv}>
+              {t('inventoryList.csvSelected')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleExportSelectedJson}>
+              {t('inventoryList.jsonSelected')}
+            </DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>

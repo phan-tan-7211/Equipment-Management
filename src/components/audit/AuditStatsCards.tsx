@@ -8,8 +8,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuditStats } from '@/hooks/useAuditLog';
+import { useI18n } from '@/i18n/I18nProvider';
 
 export function AuditStatsCards({ organizationId }: { organizationId: string }) {
+  const { t, language } = useI18n();
+  const locale = language === 'vi' ? 'vi-VN' : language === 'ko' ? 'ko-KR' : 'en-US';
   const { data: stats, isLoading } = useAuditStats(organizationId);
 
   if (isLoading) {
@@ -40,44 +43,44 @@ export function AuditStatsCards({ organizationId }: { organizationId: string }) 
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Total Entries
+            {t('auditExplorer.totalEntries')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.totalEntries.toLocaleString()}</div>
+          <div className="text-2xl font-bold">{stats.totalEntries.toLocaleString(locale)}</div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Records Created
+            {t('auditExplorer.createdRecords')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-success">{createdCount.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-success">{createdCount.toLocaleString(locale)}</div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Records Updated
+            {t('auditExplorer.updatedRecords')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-info">{updatedCount.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-info">{updatedCount.toLocaleString(locale)}</div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Records Deleted
+            {t('auditExplorer.deletedRecords')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-destructive">{deletedCount.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-destructive">{deletedCount.toLocaleString(locale)}</div>
         </CardContent>
       </Card>
     </div>

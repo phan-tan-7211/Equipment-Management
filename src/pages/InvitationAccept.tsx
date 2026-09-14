@@ -10,6 +10,7 @@ import { Building2, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { persistDashboardOrganizationSelection } from '@/utils/organizationSelection';
+import { useI18n } from '@/i18n';
 
 interface InvitationData {
   id: string;
@@ -36,6 +37,7 @@ const InvitationAccept = () => {
   const navigate = useNavigate();
   const { isLoading: sessionLoading, refreshSession, switchOrganization } = useSession();
   const { user } = useAuth();
+  const { t, language } = useI18n();
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -44,7 +46,7 @@ const InvitationAccept = () => {
   useEffect(() => {
     const fetchInvitation = async () => {
       if (!token) {
-        setError('Invalid invitation link');
+        setError(t('invitationAccept.invalidLink'));
         setLoading(false);
         return;
       }
@@ -59,7 +61,7 @@ const InvitationAccept = () => {
         if (invitationError) throw invitationError;
 
         if (!invitationData || invitationData.length === 0) {
-          setError('Invitation not found or you do not have permission to access it');
+          setError(t('invitationAccept.notFound'));
           setLoading(false);
           return;
         }
@@ -72,22 +74,22 @@ const InvitationAccept = () => {
           role: invitation.role as 'admin' | 'member',
           status: invitation.status,
           organization_id: invitation.organization_id,
-          organization_name: invitation.organization_name || 'Unknown Organization',
-          inviter_name: invitation.invited_by_name || 'Unknown User',
+          organization_name: invitation.organization_name || t('invitationAccept.unknownOrganization'),
+          inviter_name: invitation.invited_by_name || t('invitationAccept.unknownUser'),
           message: invitation.message,
           expires_at: invitation.expires_at
         });
 
       } catch (err: unknown) {
         logger.error('Error fetching invitation', err);
-        setError(err instanceof Error ? err.message : 'Failed to load invitation');
+        setError(err instanceof Error ? err.message : t('invitationAccept.loadFailed'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchInvitation();
-  }, [token]);
+  }, [token, t]);
 
   const handleAcceptInvitation = async () => {
     if (!invitation || !user || !token) return;
@@ -105,11 +107,11 @@ const InvitationAccept = () => {
       const result = data as unknown as AcceptInvitationResponse;
       
       if (!result?.success) {
-        toast.error(result?.error || 'Failed to accept invitation');
+        toast.error(result?.error || t('invitationAccept.acceptFailed'));
         return;
       }
 
-      toast.success(`Welcome to ${result.organization_name}!`);
+      toast.success(t('invitationAccept.welcome', { organization: result.organization_name ?? invitation.organization_name }));
 
       const invitedOrganizationId = result.organization_id ?? invitation.organization_id;
 
@@ -131,7 +133,7 @@ const InvitationAccept = () => {
 
     } catch (err: unknown) {
       logger.error('Error accepting invitation', err);
-      toast.error(err instanceof Error ? err.message : 'Failed to accept invitation');
+      toast.error(err instanceof Error ? err.message : t('invitationAccept.acceptFailed'));
     } finally {
       setAccepting(false);
     }
@@ -151,12 +153,12 @@ const InvitationAccept = () => {
 
       if (error) throw error;
 
-      toast.success('Invitation declined');
+      toast.success(t('invitationAccept.declined'));
       navigate('/');
 
     } catch (err: unknown) {
       console.error('Error declining invitation:', err);
-      toast.error('Failed to decline invitation');
+      toast.error(t('invitationAccept.declineFailed'));
     }
   };
 
@@ -168,7 +170,7 @@ const InvitationAccept = () => {
             <div className="flex items-center justify-center">
               <Clock className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-            <p className="text-center text-muted-foreground mt-4">Loading invitation...</p>
+            <p className="text-center text-muted-foreground mt-4">{t('invitationAccept.loading')}</p>
           </CardContent>
         </Card>
       </div>
@@ -181,14 +183,14 @@ const InvitationAccept = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <XCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <CardTitle>Invalid Invitation</CardTitle>
+            <CardTitle>{t('invitationAccept.invalid')}</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-muted-foreground mb-4">
-              {error || 'This invitation link is invalid or has expired.'}
+              {error || t('invitationAccept.invalidOrExpired')}
             </p>
             <Button onClick={() => navigate('/')}>
-              Go to Dashboard
+              {t('invitationAccept.dashboard')}
             </Button>
           </CardContent>
         </Card>
@@ -207,18 +209,18 @@ const InvitationAccept = () => {
           <CardHeader className="text-center">
             <XCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <CardTitle>
-              {isExpired ? 'Invitation Expired' : 'Invitation Already Processed'}
+              {isExpired ? t('invitationAccept.expired') : t('invitationAccept.processed')}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-muted-foreground mb-4">
               {isExpired 
-                ? 'This invitation has expired. Please request a new invitation from your organization administrator.'
-                : `This invitation has already been ${invitation.status}.`
+                ? t('invitationAccept.expiredDescription')
+                : t('invitationAccept.processedDescription', { status: invitation.status === 'accepted' ? t('invitationAccept.accepted') : invitation.status === 'declined' ? t('invitationAccept.declinedStatus') : invitation.status })
               }
             </p>
             <Button onClick={() => navigate('/')}>
-              Go to Dashboard
+              {t('invitationAccept.dashboard')}
             </Button>
           </CardContent>
         </Card>
@@ -247,30 +249,30 @@ const InvitationAccept = () => {
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
           <Building2 className="h-12 w-12 text-primary mx-auto mb-4" />
-          <CardTitle className="text-2xl">Organization Invitation</CardTitle>
+          <CardTitle className="text-2xl">{t('invitationAccept.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-2">
-              You're invited to join
+              {t('invitationAccept.invitedToJoin')}
             </h3>
             <p className="text-2xl font-bold text-primary mb-2">
               {invitation.organization_name}
             </p>
             <div className="flex items-center justify-center gap-2">
-              <span className="text-muted-foreground">as a</span>
+              <span className="text-muted-foreground">{t('invitationAccept.asA')}</span>
               <Badge variant="outline" className="capitalize">
-                {invitation.role}
+                {t(`invitationAccept.${invitation.role}`)}
               </Badge>
             </div>
           </div>
 
           <div className="bg-muted/50 rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">Invited by</p>
+            <p className="text-sm text-muted-foreground mb-1">{t('invitationAccept.invitedBy')}</p>
             <p className="font-medium">{invitation.inviter_name}</p>
             {invitation.message && (
               <>
-                <p className="text-sm text-muted-foreground mt-3 mb-1">Personal message</p>
+                <p className="text-sm text-muted-foreground mt-3 mb-1">{t('invitationAccept.personalMessage')}</p>
                 <p className="text-sm italic bg-background p-3 rounded border-l-4 border-primary">
                   "{invitation.message}"
                 </p>
@@ -279,12 +281,12 @@ const InvitationAccept = () => {
           </div>
 
           <div className="bg-info/10 rounded-lg p-4">
-            <h4 className="font-semibold text-info mb-2">What you'll get access to:</h4>
+            <h4 className="font-semibold text-info mb-2">{t('invitationAccept.accessTitle')}</h4>
             <ul className="text-sm text-info space-y-1">
-              <li>• Equipment tracking and management</li>
-              <li>• Work order creation and tracking</li>
-              <li>• Team collaboration tools</li>
-              <li>• QR code scanning for equipment</li>
+              <li>• {t('invitationAccept.equipment')}</li>
+              <li>• {t('invitationAccept.workOrders')}</li>
+              <li>• {t('invitationAccept.teams')}</li>
+              <li>• {t('invitationAccept.qr')}</li>
             </ul>
           </div>
 
@@ -297,12 +299,12 @@ const InvitationAccept = () => {
               {accepting ? (
                 <>
                   <Clock className="h-4 w-4 mr-2 animate-spin" />
-                  Accepting...
+                  {t('invitationAccept.accepting')}
                 </>
               ) : (
                 <>
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  Accept Invitation
+                  {t('invitationAccept.accept')}
                 </>
               )}
             </Button>
@@ -311,12 +313,12 @@ const InvitationAccept = () => {
               onClick={handleDeclineInvitation}
               disabled={accepting}
             >
-              Decline
+              {t('invitationAccept.decline')}
             </Button>
           </div>
 
           <div className="text-center text-xs text-muted-foreground">
-            This invitation will expire on {new Date(invitation.expires_at).toLocaleDateString()}
+            {t('invitationAccept.expiresOn', { date: new Date(invitation.expires_at).toLocaleDateString(language === 'vi' ? 'vi-VN' : language === 'ko' ? 'ko-KR' : 'en-US') })}
           </div>
         </CardContent>
       </Card>

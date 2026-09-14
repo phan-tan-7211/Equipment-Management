@@ -7,6 +7,8 @@
 import React, { useEffect, useState } from 'react';
 import { Calendar } from 'lucide-react';
 import { format as formatDate } from 'date-fns';
+import { enUS, ko as koLocale, vi as viLocale } from 'date-fns/locale';
+import { useI18n } from '@/i18n/I18nProvider';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Popover,
@@ -23,15 +25,15 @@ import {
 
 const PRESET_BUTTONS: Array<{
   value: Exclude<AuditLogTimePreset, 'custom'>;
-  label: string;
-  ariaLabel: string;
+  labelKey: string;
+  ariaKey: string;
 }> = [
-  { value: 'last_15m', label: '15m', ariaLabel: 'Last 15 minutes' },
-  { value: 'last_1h', label: '1h', ariaLabel: 'Last 1 hour' },
-  { value: 'last_24h', label: '24h', ariaLabel: 'Last 24 hours' },
-  { value: 'last_7d', label: '7d', ariaLabel: 'Last 7 days' },
-  { value: 'last_30d', label: '30d', ariaLabel: 'Last 30 days' },
-  { value: 'all', label: 'All', ariaLabel: 'All time' },
+  { value: 'last_15m', labelKey: 'short15m', ariaKey: 'minutes15' },
+  { value: 'last_1h', labelKey: 'short1h', ariaKey: 'hour1' },
+  { value: 'last_24h', labelKey: 'short24h', ariaKey: 'hours24' },
+  { value: 'last_7d', labelKey: 'short7d', ariaKey: 'days7' },
+  { value: 'last_30d', labelKey: 'short30d', ariaKey: 'days30' },
+  { value: 'all', labelKey: 'all', ariaKey: 'allTime' },
 ];
 
 export interface AuditLogTimeRangePickerProps {
@@ -67,6 +69,8 @@ export function AuditLogTimeRangePicker({
   isoTo,
   onChange,
 }: AuditLogTimeRangePickerProps) {
+  const { t, language } = useI18n();
+  const locale = language === 'vi' ? viLocale : language === 'ko' ? koLocale : enUS;
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [draftFrom, setDraftFrom] = useState(() => isoToDateInput(isoFrom));
   const [draftTo, setDraftTo] = useState(() => exclusiveUpperIsoToDateInput(isoTo));
@@ -78,11 +82,11 @@ export function AuditLogTimeRangePicker({
 
   const customLabel =
     preset === 'custom' && isoFrom && isoTo
-      ? `${formatDate(new Date(isoFrom), 'MMM d')} – ${formatDate(
+      ? `${formatDate(new Date(isoFrom), 'MMM d', { locale })} – ${formatDate(
           new Date(new Date(isoTo).getTime() - 1),
-          'MMM d'
+          'MMM d', { locale }
         )}`
-      : 'Custom';
+      : t('auditLogControls.custom');
 
   return (
     <div className="flex items-center gap-1.5">
@@ -94,16 +98,16 @@ export function AuditLogTimeRangePicker({
           if (!v) return;
           onChange(v as AuditLogTimePreset);
         }}
-        aria-label="Time range preset"
+        aria-label={t('auditLogControls.preset')}
       >
         {PRESET_BUTTONS.map((btn) => (
           <ToggleGroupItem
             key={btn.value}
             value={btn.value}
             className="h-7 px-2 text-xs"
-            aria-label={btn.ariaLabel}
+            aria-label={t(`auditLogControls.${btn.ariaKey}`)}
           >
-            {btn.label}
+            {t(`auditLogControls.${btn.labelKey}`)}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
@@ -114,7 +118,7 @@ export function AuditLogTimeRangePicker({
             variant={preset === 'custom' ? 'default' : 'outline'}
             size="sm"
             className="h-7 gap-1.5 px-2 text-xs"
-            aria-label="Custom date range"
+            aria-label={t('auditLogControls.customDateRange')}
           >
             <Calendar className="h-3 w-3" />
             {customLabel}
@@ -123,27 +127,27 @@ export function AuditLogTimeRangePicker({
         <PopoverContent align="start" className="w-72 p-3">
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Custom range
+              {t('auditLogControls.customRange')}
             </p>
             <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-muted-foreground">From</span>
+                <span className="text-[10px] text-muted-foreground">{t('auditLogControls.from')}</span>
                 <Input
                   type="date"
                   value={draftFrom}
                   onChange={(e) => setDraftFrom(e.target.value)}
                   className="h-8 text-xs"
-                  aria-label="Custom range start date"
+                  aria-label={t('auditLogControls.customStart')}
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-muted-foreground">To</span>
+                <span className="text-[10px] text-muted-foreground">{t('auditLogControls.to')}</span>
                 <Input
                   type="date"
                   value={draftTo}
                   onChange={(e) => setDraftTo(e.target.value)}
                   className="h-8 text-xs"
-                  aria-label="Custom range end date"
+                  aria-label={t('auditLogControls.customEnd')}
                 />
               </div>
             </div>
@@ -154,7 +158,7 @@ export function AuditLogTimeRangePicker({
                 className="h-7 text-xs"
                 onClick={() => setPopoverOpen(false)}
               >
-                Cancel
+                {t('auditLogControls.cancel')}
               </Button>
               <Button
                 size="sm"
@@ -168,7 +172,7 @@ export function AuditLogTimeRangePicker({
                   setPopoverOpen(false);
                 }}
               >
-                Apply
+                {t('auditLogControls.apply')}
               </Button>
             </div>
           </div>
@@ -177,4 +181,3 @@ export function AuditLogTimeRangePicker({
     </div>
   );
 }
-

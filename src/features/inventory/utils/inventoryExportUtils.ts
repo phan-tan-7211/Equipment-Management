@@ -22,6 +22,7 @@ function getExportCellValue(
   item: InventoryItem,
   key: InventoryTableColumnKey | 'id',
   formatDate: FormatDateFn,
+  t?: (key: string) => string,
 ): string {
   switch (key) {
     case 'id':
@@ -41,7 +42,7 @@ function getExportCellValue(
     case 'default_unit_cost':
       return item.default_unit_cost != null ? String(item.default_unit_cost) : '';
     case 'status':
-      return item.isLowStock ? 'Low Stock' : 'OK';
+      return item.isLowStock ? (t?.('inventoryMutation.csvLowStock') ?? 'Low Stock') : (t?.('inventoryMutation.csvOk') ?? 'OK');
     case 'description':
       return item.description ?? '';
     case 'created_at':
@@ -53,16 +54,23 @@ function getExportCellValue(
   }
 }
 
-export function getAllExportHeaders(): string[] {
-  return ALL_EXPORT_COLUMNS.map((c) => c.title);
+const EXPORT_LABEL_KEYS: Partial<Record<InventoryTableColumnKey | 'id', string>> = {
+  name: 'csvName', external_id: 'csvExternalId', quantity_on_hand: 'csvQuantity',
+  low_stock_threshold: 'csvThreshold', location: 'csvLocation', default_unit_cost: 'csvUnitCost',
+  status: 'csvStatus', description: 'csvDescription', created_at: 'csvCreated', updated_at: 'csvUpdated',
+};
+
+export function getAllExportHeaders(t?: (key: string) => string): string[] {
+  return ALL_EXPORT_COLUMNS.map((c) => t && EXPORT_LABEL_KEYS[c.key] ? t(`inventoryMutation.${EXPORT_LABEL_KEYS[c.key]}`) : c.title);
 }
 
 export function itemsToAllExportRows(
   items: InventoryItem[],
   formatDate: FormatDateFn,
+  t?: (key: string) => string,
 ): string[][] {
   return items.map((item) =>
-    ALL_EXPORT_COLUMNS.map((col) => getExportCellValue(item, col.key, formatDate)),
+    ALL_EXPORT_COLUMNS.map((col) => getExportCellValue(item, col.key, formatDate, t)),
   );
 }
 

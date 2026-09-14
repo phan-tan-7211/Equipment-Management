@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useI18n } from '@/i18n';
 import { Download, Eye, FileDown, FileSpreadsheet, FileText, Inbox } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -40,10 +41,10 @@ import { logger } from '@/utils/logger';
 
 type LedgerRangeKey = 'last_7d' | 'last_30d' | 'all';
 
-const RANGE_OPTIONS: { value: LedgerRangeKey; label: string }[] = [
-  { value: 'last_7d', label: 'Last 7 days' },
-  { value: 'last_30d', label: 'Last 30 days' },
-  { value: 'all', label: 'All time' },
+const RANGE_OPTIONS: { value: LedgerRangeKey; labelKey: string }[] = [
+  { value: 'last_7d', labelKey: 'last7' },
+  { value: 'last_30d', labelKey: 'last30' },
+  { value: 'all', labelKey: 'allTime' },
 ];
 
 function rangeToDateFrom(range: LedgerRangeKey): string | undefined {
@@ -59,7 +60,9 @@ export interface QuickFormLedgerPanelProps {
 
 /** Admin-only submissions ledger with per-form filter, date range, and exports (#1184). */
 export function QuickFormLedgerPanel({ organizationId, forms }: QuickFormLedgerPanelProps) {
+  const { t } = useI18n();
   const { formatDateTime } = useFormatTimestamp();
+  const booleanLabels = { yes: t('quickForms.ledger.yes'), no: t('quickForms.ledger.no') };
   const [formFilter, setFormFilter] = useState<string>('all');
   const [range, setRange] = useState<LedgerRangeKey>('last_30d');
   const [viewing, setViewing] = useState<QuickFormSubmission | null>(null);
@@ -86,10 +89,10 @@ export function QuickFormLedgerPanel({ organizationId, forms }: QuickFormLedgerP
       } else {
         await downloadQuickFormSubmissionsPdf(submissions);
       }
-      toast.success(`Exported ${submissions.length} submissions`);
+      toast.success(t('quickForms.ledger.exported', { count: submissions.length }));
     } catch (error) {
       logger.error('Quick form ledger export failed', error);
-      toast.error('Export failed. Please try again.');
+      toast.error(t('quickForms.ledger.exportFailed'));
     } finally {
       setExporting(false);
     }
@@ -99,14 +102,14 @@ export function QuickFormLedgerPanel({ organizationId, forms }: QuickFormLedgerP
     <Card>
       <CardHeader className="pb-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-base">Submission ledger</CardTitle>
+          <CardTitle className="text-base">{t('quickForms.ledger.title')}</CardTitle>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={formFilter} onValueChange={setFormFilter}>
-              <SelectTrigger className="w-52" aria-label="Filter by form">
+              <SelectTrigger className="w-52" aria-label={t('quickForms.ledger.filterForm')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All forms</SelectItem>
+                <SelectItem value="all">{t('quickForms.ledger.allForms')}</SelectItem>
                 {forms.map((form) => (
                   <SelectItem key={form.id} value={form.id}>
                     {form.name}
@@ -115,13 +118,13 @@ export function QuickFormLedgerPanel({ organizationId, forms }: QuickFormLedgerP
               </SelectContent>
             </Select>
             <Select value={range} onValueChange={(value) => setRange(value as LedgerRangeKey)}>
-              <SelectTrigger className="w-40" aria-label="Date range">
+              <SelectTrigger className="w-40" aria-label={t('quickForms.ledger.dateRange')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {RANGE_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(`quickForms.ledger.${option.labelKey}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -130,7 +133,7 @@ export function QuickFormLedgerPanel({ organizationId, forms }: QuickFormLedgerP
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" disabled={submissions.length === 0 || exporting}>
                   <Download className="h-4 w-4 mr-2" />
-                  {exporting ? 'Exporting…' : 'Export'}
+                  {exporting ? t('quickForms.ledger.exporting') : t('quickForms.ledger.export')}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -161,8 +164,8 @@ export function QuickFormLedgerPanel({ organizationId, forms }: QuickFormLedgerP
         ) : submissions.length === 0 ? (
           <EmptyState
             icon={Inbox}
-            title="No submissions yet"
-            description="Share a quick form QR link to start collecting responses."
+            title={t('quickForms.ledger.emptyTitle')}
+            description={t('quickForms.ledger.emptyDescription')}
             className="border-0 bg-transparent"
           />
         ) : (
@@ -177,12 +180,12 @@ export function QuickFormLedgerPanel({ organizationId, forms }: QuickFormLedgerP
                   {formatDateTime(submission.submitted_at)}
                 </span>
                 <Badge variant="outline" className="shrink-0">
-                  {submission.form_snapshot?.name ?? 'Quick form'}
+                  {submission.form_snapshot?.name ?? t('quickForms.ledger.formFallback')}
                 </Badge>
                 <span className="truncate flex-1 text-muted-foreground">
                   {(submission.field_values ?? [])
                     .slice(0, 3)
-                    .map((field) => `${field.label}: ${formatQuickFormValue(field.value)}`)
+                    .map((field) => `${field.label}: ${formatQuickFormValue(field.value, booleanLabels)}`)
                     .join(' · ')}
                 </span>
                 <Button
@@ -190,7 +193,7 @@ export function QuickFormLedgerPanel({ organizationId, forms }: QuickFormLedgerP
                   size="sm"
                   className="h-7 px-2 shrink-0"
                   onClick={() => setViewing(submission)}
-                  aria-label="View submission details"
+                  aria-label={t('quickForms.ledger.viewDetails')}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -203,9 +206,9 @@ export function QuickFormLedgerPanel({ organizationId, forms }: QuickFormLedgerP
       <Dialog open={viewing !== null} onOpenChange={(open) => !open && setViewing(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{viewing?.form_snapshot?.name ?? 'Submission'}</DialogTitle>
+            <DialogTitle>{viewing?.form_snapshot?.name ?? t('quickForms.ledger.submission')}</DialogTitle>
             <DialogDescription>
-              Submitted {viewing ? formatDateTime(viewing.submitted_at) : ''}
+              {viewing ? t('quickForms.ledger.submitted', { date: formatDateTime(viewing.submitted_at) }) : ''}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 text-sm">
@@ -213,13 +216,13 @@ export function QuickFormLedgerPanel({ organizationId, forms }: QuickFormLedgerP
               <div key={field.field_id} className="grid grid-cols-[1fr_1fr] gap-2 border-b py-1.5 last:border-b-0">
                 <span className="font-medium">{field.label}</span>
                 <span className="text-muted-foreground wrap-break-word">
-                  {formatQuickFormValue(field.value)}
+                  {formatQuickFormValue(field.value, booleanLabels)}
                 </span>
               </div>
             ))}
             {viewing?.client_context?.browser_timezone && (
               <div className="grid grid-cols-[1fr_1fr] gap-2 border-b py-1.5">
-                <span className="font-medium">Timezone</span>
+                <span className="font-medium">{t('quickForms.ledger.timezone')}</span>
                 <span className="text-muted-foreground">
                   {viewing.client_context.browser_timezone}
                 </span>

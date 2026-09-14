@@ -25,29 +25,31 @@ import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSidebar } from '@/components/ui/sidebar-context';
 import { useInventoryAccess } from '@/features/inventory/hooks/useInventoryAccess';
+import { useI18n } from '@/i18n';
 
 interface NavItem {
-  label: string;
-  shortLabel?: string; // Optional shorter label for small screens
+  labelKey: string;
+  shortLabelKey?: string; // Optional shorter label for small screens
   href: string;
   icon: LucideIcon;
   inventoryAccessRequired?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: Home },
+  { labelKey: 'navigation.items.dashboard', href: '/dashboard', icon: Home },
   {
-    label: 'Scan QR',
-    shortLabel: 'Scan',
+    labelKey: 'breadcrumb.scanQr',
+    shortLabelKey: 'sharedUi.scanShort',
     href: '/dashboard/scan',
     icon: ScanLine,
   },
-  { label: 'Equipment', href: '/dashboard/equipment', icon: Forklift },
-  { label: 'Inventory', href: '/dashboard/inventory', icon: Warehouse, inventoryAccessRequired: true },
-  { label: 'Work Orders', shortLabel: 'Orders', href: '/dashboard/work-orders', icon: ClipboardList },
+  { labelKey: 'navigation.items.equipment', href: '/dashboard/equipment', icon: Forklift },
+  { labelKey: 'navigation.items.inventory', href: '/dashboard/inventory', icon: Warehouse, inventoryAccessRequired: true },
+  { labelKey: 'navigation.items.workOrders', shortLabelKey: 'sharedUi.ordersShort', href: '/dashboard/work-orders', icon: ClipboardList },
 ];
 
 const BottomNav: React.FC = () => {
+  const { t } = useI18n();
   const location = useLocation();
   const { setOpenMobile } = useSidebar();
   const { canView: canViewInventory } = useInventoryAccess();
@@ -84,7 +86,7 @@ const BottomNav: React.FC = () => {
         "animate-slide-up"
       )}
       role="navigation"
-      aria-label="Primary navigation"
+      aria-label={t('sharedUi.primaryNavigation')}
     >
       <div className="flex items-stretch justify-around px-2">
         {visibleNavItems.map((item) => {
@@ -129,8 +131,8 @@ const BottomNav: React.FC = () => {
                 )}
               </div>
               <span className="mt-0.5 whitespace-nowrap">
-                <span className="hidden sm:inline">{item.label}</span>
-                <span className="sm:hidden">{item.shortLabel || item.label}</span>
+                <span className="hidden sm:inline">{t(item.labelKey)}</span>
+                <span className="sm:hidden">{t(item.shortLabelKey || item.labelKey)}</span>
               </span>
             </Link>
           );
@@ -153,12 +155,12 @@ const BottomNav: React.FC = () => {
             // Focus styles
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
           )}
-          aria-label="Open navigation menu"
+          aria-label={t('sharedUi.openNavigationMenu')}
         >
           <div className="p-1.5 rounded-lg">
             <Menu className="h-5 w-5" />
           </div>
-          <span className="mt-0.5">Menu</span>
+          <span className="mt-0.5">{t('sharedUi.menu')}</span>
         </button>
       </div>
     </nav>

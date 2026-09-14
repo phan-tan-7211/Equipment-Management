@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useMemo, useState } from 'react';
 import { Eye, Plus, ShieldCheck, Trash2, Users, Wrench } from 'lucide-react';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
@@ -72,6 +73,7 @@ function PartsRoleSection({
   onRequestRemove,
   emptyText,
 }: PartsRoleSectionProps) {
+  const { t } = useI18n();
   const { formatDate } = useFormatTimestamp();
 
   return (
@@ -89,18 +91,18 @@ function PartsRoleSection({
           trigger={
             <Button type="button" variant="outline" size="sm" disabled={isAddPending}>
               <Plus className="mr-1 h-4 w-4" />
-              Add
+              {t('inventoryListAux.add')}
             </Button>
           }
-          title={`Add ${roleLabel}`}
+          title={t('inventoryListAux.addRole', { role: roleLabel })}
           description={roleDescription}
           options={addOptions}
           isPending={isAddPending}
-          searchPlaceholder="Search members..."
-          emptyText="All eligible members already have this access."
-          noMatchText="No members found matching your search."
+          searchPlaceholder={t('inventoryListAux.searchMembers')}
+          emptyText={t('inventoryListAux.allAssigned')}
+          noMatchText={t('inventoryListAux.noMemberMatch')}
           actionLabel={(count) =>
-            isAddPending ? 'Adding...' : `Add ${count > 0 ? count : ''} member${count === 1 ? '' : 's'}`
+            isAddPending ? t('inventoryListAux.adding') : t('inventoryListAux.addCount', { count })
           }
           onAction={onAdd}
         />
@@ -127,14 +129,14 @@ function PartsRoleSection({
                 <p className="truncate text-sm font-medium">{assignee.userName}</p>
                 <p className="truncate text-xs text-muted-foreground">{assignee.userEmail}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Added {formatDate(assignee.assigned_at)}
+                  {t('inventoryListAux.addedOn', { date: formatDate(assignee.assigned_at) })}
                 </p>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 className="ml-2 shrink-0"
-                aria-label={`Remove ${assignee.userName} from ${roleLabel}`}
+                aria-label={t('inventoryListAux.removeFromRole', { name: assignee.userName, role: roleLabel })}
                 onClick={() => onRequestRemove(assignee)}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -153,6 +155,7 @@ function PartsRoleSection({
  * managers-only sheet and the separate Members-page-only consumer toggles.
  */
 export const PartsAccessSheet: React.FC<PartsAccessSheetProps> = ({ open, onOpenChange }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { canManagePartsManagers, canManagePartsConsumers } = usePermissions();
   const canManage = canManagePartsManagers() && canManagePartsConsumers();
@@ -187,7 +190,7 @@ export const PartsAccessSheet: React.FC<PartsAccessSheetProps> = ({ open, onOpen
       .filter((member) => !grantedIds.has(member.id))
       .map((member) => ({
         id: member.id,
-        label: member.name || 'Unknown',
+        label: member.name || t('inventoryListAux.unknown'),
         sublabel: member.email ?? undefined,
       }));
   };
@@ -222,14 +225,14 @@ export const PartsAccessSheet: React.FC<PartsAccessSheetProps> = ({ open, onOpen
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent className="sm:max-w-md">
           <SheetHeader>
-            <SheetTitle>Parts Access</SheetTitle>
-            <SheetDescription>Manage who can view and edit inventory</SheetDescription>
+            <SheetTitle>{t('inventoryListAux.partsAccess')}</SheetTitle>
+            <SheetDescription>{t('inventoryListAux.accessSubtitle')}</SheetDescription>
           </SheetHeader>
           <div className="py-12 text-center">
             <ShieldCheck className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 text-lg font-semibold">Access Denied</h3>
+            <h3 className="mb-2 text-lg font-semibold">{t('inventoryListAux.accessDenied')}</h3>
             <p className="text-muted-foreground">
-              Only organization owners and admins can manage parts access.
+              {t('inventoryListAux.accessDeniedHelp')}
             </p>
           </div>
         </SheetContent>
@@ -244,18 +247,17 @@ export const PartsAccessSheet: React.FC<PartsAccessSheetProps> = ({ open, onOpen
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Parts Access
+              {t('inventoryListAux.partsAccess')}
             </SheetTitle>
             <SheetDescription>
-              Grant members access to inventory. Organization owners and admins always have full
-              access.
+              {t('inventoryListAux.accessDescription')}
             </SheetDescription>
           </SheetHeader>
 
           <div className="mt-6 space-y-8">
             <PartsRoleSection
-              roleLabel="Parts Managers"
-              roleDescription="Parts managers can create, edit, and delete inventory items."
+              roleLabel={t('inventoryListAux.managers')}
+              roleDescription={t('inventoryListAux.managersDescription')}
               icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
               idPrefix="parts-manager"
               assignees={partsManagers}
@@ -264,12 +266,12 @@ export const PartsAccessSheet: React.FC<PartsAccessSheetProps> = ({ open, onOpen
               isAddPending={addManagerMutation.isPending}
               onAdd={(userIds) => handleAdd(addManagerMutation, userIds)}
               onRequestRemove={(assignee) => setRemoval({ role: 'manager', assignee })}
-              emptyText="No parts managers assigned yet."
+              emptyText={t('inventoryListAux.noManagers')}
             />
 
             <PartsRoleSection
-              roleLabel="Parts Consumers"
-              roleDescription="Parts consumers can view inventory and use part lookup, but cannot edit items."
+              roleLabel={t('inventoryListAux.consumers')}
+              roleDescription={t('inventoryListAux.consumersDescription')}
               icon={<Eye className="h-4 w-4 text-muted-foreground" />}
               idPrefix="parts-consumer"
               assignees={partsConsumers}
@@ -278,16 +280,16 @@ export const PartsAccessSheet: React.FC<PartsAccessSheetProps> = ({ open, onOpen
               isAddPending={addConsumerMutation.isPending}
               onAdd={(userIds) => handleAdd(addConsumerMutation, userIds)}
               onRequestRemove={(assignee) => setRemoval({ role: 'consumer', assignee })}
-              emptyText="No parts consumers assigned yet."
+              emptyText={t('inventoryListAux.noConsumers')}
             />
 
             <div className="rounded-lg border bg-muted/30 p-4">
-              <h4 className="mb-2 text-sm font-medium">About Permissions</h4>
+              <h4 className="mb-2 text-sm font-medium">{t('inventoryListAux.aboutPermissions')}</h4>
               <ul className="space-y-1 text-xs text-muted-foreground">
-                <li>• <strong>Owners &amp; Admins</strong> can always view and manage inventory.</li>
-                <li>• <strong>Parts Managers</strong> can create, edit, and delete items.</li>
-                <li>• <strong>Parts Consumers</strong> can view inventory and use part lookup.</li>
-                <li>• <strong>Members without a grant</strong> cannot access inventory at all.</li>
+                <li>• <strong>{t('inventoryListAux.ownersAdmins')}</strong> {t('inventoryListAux.ownersHelp')}</li>
+                <li>• <strong>{t('inventoryListAux.managers')}</strong> {t('inventoryListAux.managersHelp')}</li>
+                <li>• <strong>{t('inventoryListAux.consumers')}</strong> {t('inventoryListAux.consumersHelp')}</li>
+                <li>• <strong>{t('inventoryListAux.noGrant')}</strong> {t('inventoryListAux.noGrantHelp')}</li>
               </ul>
             </div>
           </div>
@@ -298,21 +300,21 @@ export const PartsAccessSheet: React.FC<PartsAccessSheetProps> = ({ open, onOpen
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Remove {removal?.role === 'manager' ? 'Parts Manager' : 'Parts Consumer'}?
+              {removal?.role === 'manager' ? t('inventoryListAux.removeManagerTitle') : t('inventoryListAux.removeConsumerTitle')}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {removal?.role === 'manager'
-                ? `Are you sure you want to remove ${removal?.assignee.userName} as a parts manager? They will no longer be able to edit inventory items.`
-                : `Are you sure you want to remove ${removal?.assignee.userName} as a parts consumer? They will no longer be able to view inventory or use part lookup.`}
+                ? t('inventoryListAux.removeManagerDescription', { name: removal?.assignee.userName ?? '' })
+                : t('inventoryListAux.removeConsumerDescription', { name: removal?.assignee.userName ?? '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('inventoryListAux.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void handleConfirmRemove()}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Remove
+              {t('inventoryListAux.remove')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

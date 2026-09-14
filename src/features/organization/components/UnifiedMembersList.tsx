@@ -35,6 +35,7 @@ import { isQuickBooksEnabled } from '@/lib/flags';
 import { buildUnifiedMembers } from '@/features/organization/utils/buildUnifiedMembers';
 import { UnifiedMembersDesktopTable } from '@/features/organization/components/UnifiedMembersDesktopTable';
 import { UnifiedMembersMobileList } from '@/features/organization/components/UnifiedMembersMobileList';
+import { useI18n } from '@/i18n';
 
 // Re-export type for backward compatibility
 export type RealOrganizationMember = OrganizationMember;
@@ -55,6 +56,7 @@ const UnifiedMembersList: React.FC<UnifiedMembersListProps> = ({
   isLoading,
   canInviteMembers,
 }) => {
+  const { t } = useI18n();
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [importSheetOpen, setImportSheetOpen] = useState(false);
 
@@ -104,36 +106,36 @@ const UnifiedMembersList: React.FC<UnifiedMembersListProps> = ({
   const handleRoleChange = async (memberId: string, newRole: 'admin' | 'member') => {
     try {
       await updateMemberRole.mutateAsync({ memberId, newRole });
-      toast.success('Member role updated successfully');
+      toast.success(t('organizationMembers.roleUpdated'));
     } catch {
-      toast.error('Failed to update member role');
+      toast.error(t('organizationMembers.roleFailed'));
     }
   };
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
     try {
       await removeMember.mutateAsync(memberId);
-      toast.success(`${memberName} has been removed from the organization`);
+      toast.success(t('organizationMembers.removed', { name: memberName }));
     } catch {
-      toast.error('Failed to remove member');
+      toast.error(t('organizationMembers.removeFailed'));
     }
   };
 
   const handleResendInvitation = async (invitationId: string) => {
     try {
       await resendInvitation.mutateAsync(invitationId);
-      toast.success('Invitation resent successfully');
+      toast.success(t('organizationMembers.resent'));
     } catch {
-      toast.error('Failed to resend invitation');
+      toast.error(t('organizationMembers.resendFailed'));
     }
   };
 
   const handleCancelInvitation = async (invitationId: string) => {
     try {
       await cancelInvitation.mutateAsync(invitationId);
-      toast.success('Invitation cancelled successfully');
+      toast.success(t('organizationMembers.cancelled'));
     } catch {
-      toast.error('Failed to cancel invitation');
+      toast.error(t('organizationMembers.cancelFailed'));
     }
   };
 
@@ -147,7 +149,7 @@ const UnifiedMembersList: React.FC<UnifiedMembersListProps> = ({
 
   const handleQuickBooksToggle = async (userId: string, canManage: boolean) => {
     if (!isOwner || !quickBooksEnabled) {
-      toast.error('You do not have permission to manage QuickBooks access');
+      toast.error(t('organizationMembers.quickBooksDenied'));
       return;
     }
 
@@ -159,7 +161,7 @@ const UnifiedMembersList: React.FC<UnifiedMembersListProps> = ({
 
   const handlePartsManagerToggle = async (userId: string, isPartsManager: boolean) => {
     if (!canManagePartsManagers) {
-      toast.error('You do not have permission to manage Parts Managers');
+      toast.error(t('organizationMembers.managerDenied'));
       return;
     }
 
@@ -173,7 +175,7 @@ const UnifiedMembersList: React.FC<UnifiedMembersListProps> = ({
 
   const handlePartsConsumerToggle = async (userId: string, isPartsConsumer: boolean) => {
     if (!canManagePartsConsumers) {
-      toast.error('You do not have permission to manage Parts Consumers');
+      toast.error(t('organizationMembers.consumerDenied'));
       return;
     }
 
@@ -220,7 +222,7 @@ const UnifiedMembersList: React.FC<UnifiedMembersListProps> = ({
       <Card>
         <CardContent className="pt-4">
           <div className="text-center py-6 sm:py-8">
-            <div className="text-xs sm:text-sm text-muted-foreground">Loading members...</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">{t('organizationMembers.loading')}</div>
           </div>
         </CardContent>
       </Card>
@@ -249,7 +251,7 @@ const UnifiedMembersList: React.FC<UnifiedMembersListProps> = ({
       <CardHeader className="pb-3 space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <CardTitle className="text-base sm:text-lg">
-            Team roster ({unifiedMembers.length})
+            {t('organizationMembers.roster', { count: unifiedMembers.length })}
           </CardTitle>
           {canInviteMembers && (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
@@ -261,7 +263,7 @@ const UnifiedMembersList: React.FC<UnifiedMembersListProps> = ({
                   className="w-full sm:w-auto justify-center"
                 >
                   <Users className="h-4 w-4 sm:mr-2" />
-                  Import from Google
+                  {t('organizationMembers.importGoogle')}
                 </Button>
               )}
               <Button
@@ -270,7 +272,7 @@ const UnifiedMembersList: React.FC<UnifiedMembersListProps> = ({
                 className="w-full sm:w-auto justify-center"
               >
                 <UserPlus className="h-4 w-4 sm:mr-2" />
-                Invite Member
+                {t('organizationMembers.invite')}
               </Button>
             </div>
           )}
@@ -280,11 +282,11 @@ const UnifiedMembersList: React.FC<UnifiedMembersListProps> = ({
         {unifiedMembers.length === 0 ? (
           <div className="text-center py-8 px-2">
             <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-            <h3 className="text-sm font-semibold mb-1">No members yet</h3>
+            <h3 className="text-sm font-semibold mb-1">{t('organizationMembers.empty')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
               {canInviteMembers
-                ? 'Invite members to start building your team.'
-                : 'No members in this organization yet.'
+                ? t('organizationMembers.emptyInvite')
+                : t('organizationMembers.emptyNoInvite')
               }
             </p>
             {canInviteMembers && (
@@ -292,12 +294,12 @@ const UnifiedMembersList: React.FC<UnifiedMembersListProps> = ({
                 {isGwsConnected && (
                   <Button onClick={() => setImportSheetOpen(true)} variant="outline" className="w-full sm:w-auto">
                     <Users className="h-4 w-4 mr-2" />
-                    Import from Google
+                    {t('organizationMembers.importGoogle')}
                   </Button>
                 )}
                 <Button onClick={() => setInviteDialogOpen(true)} className="w-full sm:w-auto">
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Invite Member
+                  {t('organizationMembers.invite')}
                 </Button>
               </div>
             )}

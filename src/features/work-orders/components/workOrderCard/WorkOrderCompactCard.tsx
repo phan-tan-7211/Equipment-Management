@@ -8,10 +8,10 @@ import ClickableAddress from '@/components/ui/ClickableAddress';
 import { cn } from '@/lib/utils';
 import {
   getStatusColor,
-  formatStatus,
   isOverdue,
   isTerminalStatus,
 } from '@/features/work-orders/utils/workOrderHelpers';
+import { localizeWorkOrderPriority, localizeWorkOrderStatus } from '@/features/work-orders/utils/workOrderI18nLabels';
 import { formatDueDisplay, parseDue } from '@/features/work-orders/calendar';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { getWorkOrderStatusBorderWithOverdue } from '@/lib/status-colors';
@@ -21,12 +21,14 @@ import {
   WORK_ORDER_CARD_NAVIGABLE_CLASS,
 } from './workOrderCardNavigation';
 import type { WorkOrderCardProps } from '../WorkOrderCard';
+import { useI18n } from '@/i18n';
 
 export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
   workOrder,
   onNavigate,
 }) => {
   const { formatDate, formatDateTime } = useFormatTimestamp();
+  const { t } = useI18n();
 
   const computedData = useMemo(() => {
     const fmtDate = (v?: string | null) => (v ? formatDate(v) : '—');
@@ -62,11 +64,13 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
               {workOrder.title}
             </CardTitle>
             <span className="text-xs text-muted-foreground capitalize">
-              {workOrder.priority} priority
+              {t('workOrderDetail.priorityLabel', {
+                priority: localizeWorkOrderPriority(workOrder.priority, t),
+              })}
             </span>
           </div>
           <Badge className={getStatusColor(workOrder.status)}>
-            {formatStatus(workOrder.status)}
+            {localizeWorkOrderStatus(workOrder.status, t)}
           </Badge>
         </div>
       </CardHeader>
@@ -88,7 +92,7 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
         <div className="space-y-2 text-sm">
           {workOrder.equipmentName && (
             <div className="flex items-center gap-2">
-              <span className="font-medium">Equipment:</span>
+              <span className="font-medium">{t('workOrderAudit.equipmentLabel')}</span>
               <span className="text-muted-foreground truncate">
                 {workOrder.equipmentName}
               </span>
@@ -106,7 +110,7 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
 
           {(workOrder.teamName || workOrder.equipmentTeamName) && (
             <div className="flex items-center gap-2">
-              <span className="font-medium">Team:</span>
+              <span className="font-medium">{t('workOrderAudit.teamLabel')}</span>
               <span className="text-muted-foreground truncate">
                 {workOrder.teamName || workOrder.equipmentTeamName}
               </span>
@@ -131,7 +135,7 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            Created: {computedData.formattedCreatedDate}
+            {t('workOrderAudit.created')}: {computedData.formattedCreatedDate}
           </div>
 
           {computedData.formattedDueDate !== '—' && (
@@ -143,10 +147,10 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
                   <TooltipTrigger asChild>
                     <AlertTriangle className="h-3.5 w-3.5" />
                   </TooltipTrigger>
-                  <TooltipContent>Overdue &mdash; due date has passed</TooltipContent>
+                  <TooltipContent>{t('workOrderAudit.overdue')}</TooltipContent>
                 </Tooltip>
               )}
-              Due: {computedData.formattedDueDate}
+              {t('workOrderAudit.due')}: {computedData.formattedDueDate}
             </div>
           )}
         </div>
@@ -158,7 +162,7 @@ export const WorkOrderCompactCard: React.FC<WorkOrderCardProps> = memo(({
             className="flex-1"
             onClick={() => onNavigate?.(workOrder.id)}
           >
-            View Details
+            {t('workOrderAudit.viewDetails')}
           </Button>
         </div>
       </CardContent>

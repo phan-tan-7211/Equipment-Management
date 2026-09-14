@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 type InventoryPartsAccessFooterButtonProps = {
   className?: string;
@@ -11,6 +12,8 @@ export function InventoryPartsAccessFooterButton({
   className,
   onOpenPartsAccess,
 }: InventoryPartsAccessFooterButtonProps) {
+  const { t } = useI18n();
+
   return (
     <div
       className={cn('flex justify-center border-t pt-4', className)}
@@ -22,7 +25,7 @@ export function InventoryPartsAccessFooterButton({
         onClick={onOpenPartsAccess}
         className="h-auto px-0 text-xs font-normal text-muted-foreground"
       >
-        Update parts access
+        {t('inventoryList.updatePartsAccess')}
       </Button>
     </div>
   );

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 import { Link } from 'react-router-dom';
 import { ExternalLink } from '@/components/ui/external-link';
 import {
@@ -15,63 +16,64 @@ const COLUMBIA_CLOUDWORKS_URL = 'https://columbiacloudworks.com';
 
 interface FooterLinkItem {
   href: string;
-  label: string;
+  labelKey?: string;
+  label?: string;
   type: 'hash' | 'route' | 'external';
   showIcon?: boolean;
 }
 
 interface FooterSection {
-  title: string;
+  titleKey: string;
   links: FooterLinkItem[];
 }
 
 const footerSections: FooterSection[] = [
   {
-    title: 'Product',
+    titleKey: 'product',
     links: [
-      { href: '/#features', label: 'All features', type: 'route' },
+      { href: '/#features', labelKey: 'allFeatures', type: 'route' },
       {
         href: '/features/qr-code-integration',
-        label: 'QR equipment tracking',
+        labelKey: 'qrTracking',
         type: 'route',
       },
       {
         href: '/features/work-order-management',
-        label: 'Work order management',
+        labelKey: 'workOrderManagement',
         type: 'route',
       },
-      { href: '/features/quickbooks', label: 'QuickBooks export', type: 'route' },
-      { href: '/features/inventory', label: 'Parts inventory', type: 'route' },
-      { href: '/#pricing', label: 'Pricing', type: 'route' },
+      { href: '/features/quickbooks', labelKey: 'quickBooksExport', type: 'route' },
+      { href: '/features/inventory', labelKey: 'partsInventory', type: 'route' },
+      { href: '/#pricing', labelKey: 'pricing', type: 'route' },
     ],
   },
   {
-    title: 'Company',
+    titleKey: 'company',
     links: [
-      { href: '#about', label: 'About', type: 'hash' },
+      { href: '#about', labelKey: 'about', type: 'hash' },
       {
         href: COLUMBIA_CLOUDWORKS_URL,
         label: 'ZNT',
         type: 'external',
       },
-      { href: CONTACT_EMAIL, label: 'Contact', type: 'hash' },
+      { href: CONTACT_EMAIL, labelKey: 'contact', type: 'hash' },
     ],
   },
   {
-    title: 'Legal',
+    titleKey: 'legal',
     links: [
-      { href: '/terms-of-service', label: 'Terms', type: 'route' },
-      { href: '/privacy-policy', label: 'Privacy', type: 'route' },
-      { href: '/do-not-sell-or-share', label: 'Do Not Sell or Share', type: 'route' },
-      { href: '/right-to-repair', label: 'Right to Repair', type: 'route' },
+      { href: '/terms-of-service', labelKey: 'terms', type: 'route' },
+      { href: '/privacy-policy', labelKey: 'privacy', type: 'route' },
+      { href: '/do-not-sell-or-share', labelKey: 'doNotSell', type: 'route' },
+      { href: '/right-to-repair', labelKey: 'rightToRepair', type: 'route' },
     ],
   },
   {
-    title: 'Connect',
+    titleKey: 'connect',
     links: [
       {
         href: 'https://calendly.com/nicholas-king-columbiacloudworks/30min',
-        label: 'Schedule a Demo',
+        labelKey: 'demo',
         type: 'external',
       },
       { href: EQUIPQR_APP_URL, label: 'EquipQR™.app', type: 'external' },
@@ -88,11 +90,12 @@ const footerSections: FooterSection[] = [
 const footerLinkDecorationClassName =
   'text-muted-foreground no-underline transition-colors hover:text-foreground hover:underline motion-reduce:transition-none';
 
-function renderFooterLink(item: FooterLinkItem, className: string) {
+function renderFooterLink(item: FooterLinkItem, className: string, t: ReturnType<typeof useI18n>['t']) {
+  const label = item.labelKey ? t(`publicChrome.footer.${item.labelKey}`) : item.label;
   if (item.type === 'route') {
     return (
       <Link to={item.href} className={className}>
-        {item.label}
+        {label}
       </Link>
     );
   }
@@ -104,19 +107,20 @@ function renderFooterLink(item: FooterLinkItem, className: string) {
         className={className}
         showIcon={item.showIcon ?? false}
       >
-        {item.label}
+        {label}
       </ExternalLink>
     );
   }
 
   return (
     <a href={item.href} className={className}>
-      {item.label}
+      {label}
     </a>
   );
 }
 
 const LandingFooter = () => {
+  const { t } = useI18n();
   const currentYear = new Date().getFullYear();
   const footerLinkClassName =
     `flex items-center min-h-[44px] py-3 text-sm ${footerLinkDecorationClassName}`;
@@ -125,10 +129,10 @@ const LandingFooter = () => {
     <footer className="border-t border-border bg-background/50 backdrop-blur-sm mt-auto">
       <nav
         className="container mx-auto px-4 py-8 sm:py-10"
-        aria-label="Footer navigation"
+        aria-label={t('publicChrome.footer.navigation')}
       >
         <p className="text-sm text-muted-foreground max-w-xl mb-8">
-          EquipQR helps teams track equipment, manage work orders, and run operations from one platform. Built for repair shops, rental ops, and field crews.
+          {t('publicChrome.footer.description')}
         </p>
         <div className="sm:hidden">
           <Accordion
@@ -136,15 +140,15 @@ const LandingFooter = () => {
             className="rounded-2xl border border-border/60 bg-background/30 px-4"
           >
             {footerSections.map((section) => (
-              <AccordionItem key={section.title} value={section.title}>
+              <AccordionItem key={section.titleKey} value={section.titleKey}>
                 <AccordionTrigger className="min-h-13 py-4 text-sm font-semibold text-foreground hover:no-underline">
-                  {section.title}
+                  {t(`publicChrome.footer.${section.titleKey}`)}
                 </AccordionTrigger>
                 <AccordionContent>
                   <ul className="pb-2">
                     {section.links.map((item) => (
-                      <li key={`${section.title}-${item.label}`}>
-                        {renderFooterLink(item, footerLinkClassName)}
+                      <li key={`${section.titleKey}-${item.href}`}>
+                        {renderFooterLink(item, footerLinkClassName, t)}
                       </li>
                     ))}
                   </ul>
@@ -156,12 +160,12 @@ const LandingFooter = () => {
 
         <div className="hidden grid-cols-2 gap-8 sm:grid sm:grid-cols-4">
           {footerSections.map((section) => (
-            <div key={section.title}>
-              <h3 className="mb-3 text-sm font-semibold text-foreground">{section.title}</h3>
+            <div key={section.titleKey}>
+              <h3 className="mb-3 text-sm font-semibold text-foreground">{t(`publicChrome.footer.${section.titleKey}`)}</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 {section.links.map((item) => (
-                  <li key={`${section.title}-${item.label}`}>
-                    {renderFooterLink(item, footerLinkDecorationClassName)}
+                  <li key={`${section.titleKey}-${item.href}`}>
+                    {renderFooterLink(item, footerLinkDecorationClassName, t)}
                   </li>
                 ))}
               </ul>

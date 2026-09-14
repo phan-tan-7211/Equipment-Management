@@ -6,6 +6,9 @@
  */
 
 import React from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, ko as koLocale, vi as viLocale } from 'date-fns/locale';
 import { Copy, Check, Inbox, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,6 +51,7 @@ function CopyContentButton({
   getContent: () => string;
   testId?: string;
 }) {
+  const { t } = useI18n();
   const [copied, setCopied] = React.useState(false);
   const copiedTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -88,12 +92,13 @@ function CopyContentButton({
       ) : (
         <Copy className="h-3 w-3 mr-1" />
       )}
-      {copied ? 'Copied' : label}
+      {copied ? t('auditExplorer.copied') : label}
     </Button>
   );
 }
 
 function CopyableValue({ value }: { value: string }) {
+  const { t } = useI18n();
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = () => {
@@ -119,7 +124,7 @@ function CopyableValue({ value }: { value: string }) {
         size="icon"
         className="h-5 w-5 shrink-0 text-muted-foreground hover:text-foreground"
         onClick={handleCopy}
-        aria-label="Copy to clipboard"
+        aria-label={t('auditExplorer.copyClipboard')}
       >
         {copied ? (
           <Check className="h-3 w-3 text-success" />
@@ -149,6 +154,8 @@ function PropertyRow({ label, children, className }: PropertyRowProps) {
 }
 
 export function AuditLogDetailPanel({ entry, onClearSelection }: AuditLogDetailPanelProps) {
+  const { t, language } = useI18n();
+  const locale = language === 'vi' ? viLocale : language === 'ko' ? koLocale : enUS;
   if (!entry) {
     return (
       <div
@@ -157,8 +164,8 @@ export function AuditLogDetailPanel({ entry, onClearSelection }: AuditLogDetailP
       >
         <EmptyState
           icon={Inbox}
-          title="No entry selected"
-          description="Select an entry on the left to inspect."
+          title={t('auditExplorer.noSelection')}
+          description={t('auditExplorer.selectHint')}
           className="border-0 bg-transparent"
         />
       </div>
@@ -172,7 +179,7 @@ export function AuditLogDetailPanel({ entry, onClearSelection }: AuditLogDetailP
       <div className="px-5 pt-4 pb-3 border-b shrink-0">
         <div className="flex items-start gap-2">
           <h2 className="text-sm font-semibold leading-tight truncate flex-1 min-w-0">
-            {entry.entity_name ?? 'Audit Entry'}
+            {entry.entity_name ?? t('auditExplorer.entry')}
           </h2>
           {onClearSelection && (
             <Button
@@ -180,7 +187,7 @@ export function AuditLogDetailPanel({ entry, onClearSelection }: AuditLogDetailP
               size="icon"
               className="h-6 w-6 shrink-0 -mt-0.5 text-muted-foreground hover:text-foreground"
               onClick={onClearSelection}
-              aria-label="Clear selection"
+              aria-label={t('auditExplorer.clearSelection')}
             >
               <X className="h-3.5 w-3.5" />
             </Button>
@@ -188,23 +195,23 @@ export function AuditLogDetailPanel({ entry, onClearSelection }: AuditLogDetailP
         </div>
         <div className="flex items-center gap-2 mt-1.5">
           <Badge variant="outline" className="text-xs">
-            {entry.entityTypeLabel}
+            {t(`auditLogControls.${entry.entity_type}`)}
           </Badge>
           <Badge variant={getActionBadgeVariant(entry.action)} className="text-xs">
-            {entry.actionLabel}
+            {t(`auditLogControls.${entry.action}`)}
           </Badge>
           <span className="text-xs text-muted-foreground ml-auto tabular-nums">
-            {entry.relativeTime}
+            {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale })}
           </span>
         </div>
         <div className="flex items-center gap-1.5 mt-2">
           <CopyContentButton
-            label="Copy Markdown"
+            label={t('auditExplorer.copyMarkdown')}
             getContent={() => formatAuditEntryMarkdown(entry)}
             testId="audit-detail-copy-markdown"
           />
           <CopyContentButton
-            label="Copy JSON"
+            label={t('auditExplorer.copyJson')}
             getContent={() => JSON.stringify(entry, null, 2)}
             testId="audit-detail-copy-json"
           />
@@ -214,10 +221,10 @@ export function AuditLogDetailPanel({ entry, onClearSelection }: AuditLogDetailP
       <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
         <TabsList className="mx-5 mt-3 self-start h-8">
           <TabsTrigger value="overview" className="text-xs px-3 py-1 h-6">
-            Overview
+            {t('auditExplorer.overview')}
           </TabsTrigger>
           <TabsTrigger value="changes" className="text-xs px-3 py-1 h-6">
-            Changes
+            {t('auditExplorer.changes')}
           </TabsTrigger>
           <TabsTrigger value="json" className="text-xs px-3 py-1 h-6">
             JSON
@@ -229,36 +236,36 @@ export function AuditLogDetailPanel({ entry, onClearSelection }: AuditLogDetailP
             <div className="px-5 py-3 space-y-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  Entry Details
+                  {t('auditExplorer.entryDetails')}
                 </p>
                 <div className="divide-y divide-border/50">
-                  <PropertyRow label="Date">
+                  <PropertyRow label={t('auditExplorer.date')}>
                     <div className="flex flex-col gap-0.5">
                       <code className="text-sm font-mono tabular-nums">
                         {formatIsoZulu(entry.created_at)}
                       </code>
                       <span className="text-xs text-muted-foreground">
-                        {entry.relativeTime}
+                        {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale })}
                       </span>
                     </div>
                   </PropertyRow>
-                  <PropertyRow label="Entity Name">
+                  <PropertyRow label={t('auditExplorer.entityName')}>
                     <span className="text-sm">{entry.entity_name ?? '\u2014'}</span>
                   </PropertyRow>
-                  <PropertyRow label="Entity Type">
+                  <PropertyRow label={t('auditExplorer.entityType')}>
                     <Badge variant="outline" className="text-xs">
-                      {entry.entityTypeLabel}
+                      {t(`auditLogControls.${entry.entity_type}`)}
                     </Badge>
                   </PropertyRow>
-                  <PropertyRow label="Action">
+                  <PropertyRow label={t('auditExplorer.action')}>
                     <Badge
                       variant={getActionBadgeVariant(entry.action)}
                       className="text-xs"
                     >
-                      {entry.actionLabel}
+                      {t(`auditLogControls.${entry.action}`)}
                     </Badge>
                   </PropertyRow>
-                  <PropertyRow label="Changed By">
+                  <PropertyRow label={t('auditExplorer.changedBy')}>
                     <div className="flex flex-col">
                       <span className="text-sm">{entry.actor_name}</span>
                       {entry.actor_email && (
@@ -268,9 +275,9 @@ export function AuditLogDetailPanel({ entry, onClearSelection }: AuditLogDetailP
                       )}
                     </div>
                   </PropertyRow>
-                  <PropertyRow label="Changes">
+                  <PropertyRow label={t('auditExplorer.changes')}>
                     <span className="text-sm">
-                      {entry.changeCount} field{entry.changeCount !== 1 ? 's' : ''}
+                      {t('auditExplorer.fieldsCount', { count: entry.changeCount })}
                     </span>
                   </PropertyRow>
                 </div>
@@ -280,21 +287,21 @@ export function AuditLogDetailPanel({ entry, onClearSelection }: AuditLogDetailP
 
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  Identifiers
+                  {t('auditExplorer.identifiers')}
                 </p>
                 <div className="divide-y divide-border/50">
-                  <PropertyRow label="Entry ID">
+                  <PropertyRow label={t('auditExplorer.entryId')}>
                     <CopyableValue value={entry.id} />
                   </PropertyRow>
-                  <PropertyRow label="Entity ID">
+                  <PropertyRow label={t('auditExplorer.entityId')}>
                     <CopyableValue value={entry.entity_id} />
                   </PropertyRow>
                   {entry.actor_id && (
-                    <PropertyRow label="Actor ID">
+                    <PropertyRow label={t('auditExplorer.actorId')}>
                       <CopyableValue value={entry.actor_id} />
                     </PropertyRow>
                   )}
-                  <PropertyRow label="Org ID">
+                  <PropertyRow label={t('auditExplorer.organizationId')}>
                     <CopyableValue value={entry.organization_id} />
                   </PropertyRow>
                 </div>
@@ -305,7 +312,7 @@ export function AuditLogDetailPanel({ entry, onClearSelection }: AuditLogDetailP
                   <Separator />
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                      Metadata
+                      {t('auditExplorer.metadata')}
                     </p>
                     <div className="divide-y divide-border/50">
                       {Object.entries(entry.metadata).map(([key, value]) => (
@@ -332,7 +339,7 @@ export function AuditLogDetailPanel({ entry, onClearSelection }: AuditLogDetailP
                 <ChangesDiff changes={entry.changes} expanded />
               ) : (
                 <p className="text-xs text-muted-foreground italic">
-                  No field changes recorded.
+                  {t('auditExplorer.noFieldChanges')}
                 </p>
               )}
             </div>

@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import MFAEnrollment from './MFAEnrollment';
 import MFAVerification from './MFAVerification';
 import { logger } from '@/utils/logger';
+import { useAuthFlowCopy } from './useAuthFlowCopy';
 
 /** Organization roles that require MFA */
 const MFA_REQUIRED_ROLES = ['owner', 'admin'] as const;
@@ -31,6 +32,7 @@ const MFAEnforcementGuard: React.FC<MFAEnforcementGuardProps> = ({
   children,
   loadingFallback,
 }) => {
+  const t = useAuthFlowCopy();
   const { isEnrolled, isVerified, isLoading: mfaLoading, refreshMFAStatus } = useMFA();
   const orgContext = useSimpleOrganizationSafe();
 
@@ -57,9 +59,9 @@ const MFAEnforcementGuard: React.FC<MFAEnforcementGuardProps> = ({
     }
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div role="status" aria-label="Checking security requirements" className="text-center">
+        <div role="status" aria-label={t('authFlow.checkingSecurity')} className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Verifying security requirements...</p>
+          <p className="text-sm text-muted-foreground">{t('authFlow.verifyingSecurity')}</p>
         </div>
       </div>
     );

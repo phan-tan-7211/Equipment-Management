@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '@/i18n';
 import { Plus, X } from 'lucide-react';
 import { CompatibilityRulesCardShell } from '@/components/common/CompatibilityRulesCardShell';
 import { CompatibilityManufacturerSelect } from '@/components/common/CompatibilityManufacturerSelect';
@@ -29,6 +30,7 @@ export const PMTemplateCompatibilityRulesEditor: React.FC<PMTemplateCompatibilit
   onChange,
   disabled = false
 }) => {
+  const { t } = useI18n();
   const { currentOrganization } = useOrganization();
   const { data: manufacturersData = [], isLoading: isLoadingMfrs } = useEquipmentManufacturersAndModels(
     currentOrganization?.id
@@ -91,12 +93,17 @@ export const PMTemplateCompatibilityRulesEditor: React.FC<PMTemplateCompatibilit
 
   return (
     <CompatibilityRulesCardShell
-      title="Equipment Compatibility"
-      description="Define which equipment this PM template applies to by manufacturer and model. Leave model empty to match all models from a manufacturer."
+      title={t('pmTemplates.rules.equipmentCompatibility')}
+      description={t('pmTemplates.rules.equipmentDescription')}
       validRulesCount={validRulesCount}
       matchCount={matchCount}
       isLoadingMfrs={isLoadingMfrs}
       hasManufacturers={manufacturers.length > 0}
+      labels={{
+        matches: t('pmTemplates.rules.matchesEquipment', { count: matchCount }),
+        noEquipment: t('pmTemplates.rules.noEquipment'),
+        addEquipmentFirst: t('pmTemplates.rules.addEquipmentFirst'),
+      }}
       footer={
         <>
           <Button
@@ -108,12 +115,11 @@ export const PMTemplateCompatibilityRulesEditor: React.FC<PMTemplateCompatibilit
             className="w-full"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add Rule
+            {t('pmTemplates.rules.addRule')}
           </Button>
           {rules.length > 0 && (
             <p className="text-xs text-muted-foreground">
-              Rules use case-insensitive matching. When creating PM work orders,
-              templates matching the selected equipment will be suggested first.
+              {t('pmTemplates.rules.matchingExplanation')}
             </p>
           )}
         </>
@@ -141,6 +147,7 @@ export const PMTemplateCompatibilityRulesEditor: React.FC<PMTemplateCompatibilit
                         onValueChange={(value) => handleManufacturerChange(index, value)}
                         manufacturers={manufacturers}
                         disabled={disabled}
+                        placeholder={t('pmTemplates.rules.selectManufacturer')}
                       />
                     </div>
 
@@ -152,11 +159,11 @@ export const PMTemplateCompatibilityRulesEditor: React.FC<PMTemplateCompatibilit
                         disabled={disabled || !rule.manufacturer}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select model..." />
+                          <SelectValue placeholder={t('pmTemplates.rules.selectModel')} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value={ANY_MODEL_VALUE}>
-                            <span className="italic">Any Model</span>
+                            <span className="italic">{t('pmTemplates.rules.anyModel')}</span>
                           </SelectItem>
                           {availableModels.map((model) => (
                             <SelectItem key={model} value={model}>

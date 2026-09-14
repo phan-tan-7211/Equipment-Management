@@ -20,6 +20,7 @@ import { useChecklistSectionNavigation } from '@/features/organization/hooks/use
 import { useChecklistSectionManagement } from '@/features/organization/hooks/useChecklistSectionManagement';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { pmIntervalPolicyService, policyRowToFormState } from '@/features/pm-templates/services/pmIntervalPolicyService';
+import { useI18n } from '@/i18n';
 
 type UseChecklistTemplateEditorStateArgs = {
   template?: ChecklistTemplateEditorTemplate | null;
@@ -32,6 +33,7 @@ export function useChecklistTemplateEditorState({
   onSave,
   onCancel,
 }: UseChecklistTemplateEditorStateArgs) {
+  const { t } = useI18n();
   const [templateName, setTemplateName] = useState(template?.name || '');
   const [templateDescription, setTemplateDescription] = useState(template?.description || '');
   const [checklistItems, setChecklistItems] = useState<PMChecklistItem[]>(template?.template_data || []);
@@ -157,22 +159,22 @@ export function useChecklistTemplateEditorState({
 
   const handleSave = useCallback(async (): Promise<string | undefined> => {
     if (!templateName.trim()) {
-      alert('Template name is required');
+      alert(t('pmTemplates.editor.nameRequired'));
       return undefined;
     }
 
     if (checklistItems.length === 0) {
-      alert('Template must have at least one item');
+      alert(t('pmTemplates.editor.itemRequired'));
       return undefined;
     }
 
     if (sections.length === 0) {
-      alert('Template must have at least one section');
+      alert(t('pmTemplates.editor.sectionRequired'));
       return undefined;
     }
 
     if (intervalEnabled && (!intervalValue || intervalValue < 1)) {
-      setIntervalError('Enter a value of 1 or greater');
+      setIntervalError(t('pmTemplates.editor.intervalRequired'));
       return undefined;
     }
     setIntervalError(null);
@@ -223,6 +225,7 @@ export function useChecklistTemplateEditorState({
     createMutation,
     onSave,
     syncTemplateIntervalPolicy,
+    t,
   ]);
 
   const storageKey = `pm-template-editor-${template?.id || 'new'}`;
@@ -316,14 +319,14 @@ export function useChecklistTemplateEditorState({
 
   const handleCancel = useCallback(() => {
     if (hasUnsavedChanges) {
-      const confirmed = window.confirm('You have unsaved changes. Are you sure you want to leave?');
+      const confirmed = window.confirm(t('pmTemplates.editor.unsavedChanges'));
       if (!confirmed) return;
     }
     if (!template?.id) {
       clearStorage();
     }
     onCancel();
-  }, [hasUnsavedChanges, template?.id, clearStorage, onCancel]);
+  }, [hasUnsavedChanges, template?.id, clearStorage, onCancel, t]);
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 

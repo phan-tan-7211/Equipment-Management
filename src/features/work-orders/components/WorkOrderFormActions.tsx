@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React from 'react';
 import { Button } from "@/components/ui/button";
 
@@ -17,19 +18,20 @@ export const WorkOrderFormActions: React.FC<WorkOrderFormActionsProps> = ({
   isValid,
   isEditMode
 }) => {
+  const { t } = useI18n();
   return (
     <div className="flex gap-2 justify-end">
       <Button type="button" variant="outline" onClick={onCancel}>
-        Cancel
+        {t('workOrderForm.cancel')}
       </Button>
-      <Button 
+      <Button
         onClick={onSubmit}
         data-testid="submit-button"
         disabled={isSubmitting || !isValid}
       >
-        {isSubmitting ? 
-          (isEditMode ? 'Updating...' : 'Creating...') : 
-          (isEditMode ? 'Update Work Order' : 'Create Work Order')
+        {isSubmitting ?
+          (isEditMode ? t('workOrderForm.updating') : t('workOrderForm.creating')) :
+          (isEditMode ? t('workOrderForm.updateWorkOrder') : t('workOrderForm.createTitle'))
         }
       </Button>
     </div>

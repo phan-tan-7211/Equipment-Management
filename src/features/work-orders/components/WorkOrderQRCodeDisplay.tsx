@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import AssetQRCodePanel from '@/components/common/AssetQRCodePanel';
-import { FIELD_WORKSHEET_EXPORT_POLICY } from '@/features/work-orders/constants/workOrderExportPolicy';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useI18n } from '@/i18n';
 import { qrFullUrl, workOrderQRPath } from '@/utils/qr';
 import { ClipboardList, Loader2 } from 'lucide-react';
 
@@ -19,18 +19,6 @@ interface WorkOrderQRCodeDisplayProps {
   showFieldWorksheet?: boolean;
 }
 
-const WORK_ORDER_QR_INSTRUCTIONS_WITH_WORKSHEET = [
-  'Print the field worksheet or download this QR code for paperwork you take into the field',
-  'The worksheet footer includes a QR code that links directly back to this work order',
-  'Office staff can scan completed paperwork to reopen the work order and enter results',
-  'Technicians who cannot use the app in adverse conditions can complete the paper checklist instead',
-];
-
-const WORK_ORDER_QR_INSTRUCTIONS_QR_ONLY = [
-  'Download this QR code to link paperwork or signage back to this work order',
-  'Scanning the code opens the work order in EquipQR for status updates and notes',
-];
-
 const WorkOrderQRCodeDisplay: React.FC<WorkOrderQRCodeDisplayProps> = ({
   open,
   onClose,
@@ -40,10 +28,11 @@ const WorkOrderQRCodeDisplay: React.FC<WorkOrderQRCodeDisplayProps> = ({
   isPrintingWorksheet = false,
   showFieldWorksheet = false,
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const instructionBullets = showFieldWorksheet
-    ? WORK_ORDER_QR_INSTRUCTIONS_WITH_WORKSHEET
-    : WORK_ORDER_QR_INSTRUCTIONS_QR_ONLY;
+    ? [1, 2, 3, 4].map((n) => t(`workOrderQR.worksheetInstruction${n}`))
+    : [1, 2].map((n) => t(`workOrderQR.qrInstruction${n}`));
   const qrCodeUrl = qrFullUrl(workOrderQRPath(workOrderId));
   const filenameStem = workOrderTitle
     ? workOrderTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()
@@ -53,9 +42,9 @@ const WorkOrderQRCodeDisplay: React.FC<WorkOrderQRCodeDisplayProps> = ({
     <Dialog open={open} onOpenChange={(dialogOpen) => !dialogOpen && onClose()}>
       <DialogContent className={`max-w-md ${isMobile ? 'max-h-[calc(100dvh-2rem)] overflow-y-auto p-4' : ''}`}>
         <DialogHeader>
-          <DialogTitle>Work Order QR &amp; Print</DialogTitle>
+          <DialogTitle>{t('workOrderQR.title')}</DialogTitle>
           <DialogDescription className="sr-only">
-            Generate a QR code and printable field worksheet for work order {workOrderTitle || workOrderId}
+            {t('workOrderQR.description', { name: workOrderTitle || workOrderId })}
           </DialogDescription>
         </DialogHeader>
 
@@ -64,7 +53,7 @@ const WorkOrderQRCodeDisplay: React.FC<WorkOrderQRCodeDisplayProps> = ({
             entityId={workOrderId}
             entityName={workOrderTitle}
             qrCodeUrl={qrCodeUrl}
-            qrImageAlt="Work order QR code"
+            qrImageAlt={t('workOrderQR.imageAlt')}
             defaultFilenameStem={filenameStem}
             instructionBullets={instructionBullets}
             imageLoading="lazy"
@@ -79,10 +68,10 @@ const WorkOrderQRCodeDisplay: React.FC<WorkOrderQRCodeDisplayProps> = ({
                   <ClipboardList className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">
-                      {FIELD_WORKSHEET_EXPORT_POLICY.title}
+                      {t('workOrderQR.worksheetTitle')}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {FIELD_WORKSHEET_EXPORT_POLICY.description}
+                      {t('workOrderQR.worksheetDescription')}
                     </p>
                   </div>
                 </div>
@@ -97,14 +86,14 @@ const WorkOrderQRCodeDisplay: React.FC<WorkOrderQRCodeDisplayProps> = ({
                   ) : (
                     <ClipboardList className="h-4 w-4" aria-hidden />
                   )}
-                  Print field worksheet (PDF)
+                  {t('workOrderQR.printWorksheet')}
                 </Button>
               </div>
             </>
           ) : null}
 
           <Button type="button" variant="outline" className="w-full min-h-11" onClick={onClose}>
-            Close
+            {t('workOrderQR.close')}
           </Button>
         </div>
       </DialogContent>

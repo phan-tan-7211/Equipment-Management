@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useI18n } from '@/i18n';
 
 type InventoryLocationFilterSelectProps = {
   value: string;
@@ -23,16 +24,19 @@ export function InventoryLocationFilterSelect({
   uniqueLocations,
   triggerClassName,
   iconClassName = 'h-3.5 w-3.5 mr-1.5 text-muted-foreground shrink-0',
-  allLocationsLabel = 'All location names',
+  allLocationsLabel,
 }: InventoryLocationFilterSelectProps) {
+  const { t } = useI18n();
+  const resolvedAllLocationsLabel = allLocationsLabel ?? t('inventoryList.allLocationNames');
+
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className={triggerClassName}>
         <MapPin className={iconClassName} aria-hidden />
-        <SelectValue placeholder="All location names" />
+        <SelectValue placeholder={resolvedAllLocationsLabel} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="__all__">{allLocationsLabel}</SelectItem>
+        <SelectItem value="__all__">{resolvedAllLocationsLabel}</SelectItem>
         {uniqueLocations.map((loc) => (
           <SelectItem key={loc} value={loc}>
             {loc}

@@ -2,8 +2,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Building2, ShieldCheck, Cloud, Gauge } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const EXPORT_RATE_LIMIT_SUMMARY = '5 per minute, 50 per hour';
+import { useI18n } from '@/i18n';
 
 export interface ReportsStatusStripProps {
   organizationName: string;
@@ -21,51 +20,52 @@ export const ReportsStatusStrip: React.FC<ReportsStatusStripProps> = ({
   isGoogleWorkspaceConnected,
   className,
 }) => {
+  const { t } = useI18n();
   return (
     <div
       className={cn(
         'grid gap-3 sm:grid-cols-2 lg:grid-cols-4 border border-border/60 bg-card/80 p-3 sm:p-4 texture-grain',
         className,
       )}
-      aria-label="Export console status"
+      aria-label={t('reports.consoleStatus')}
     >
       <StatusItem
         icon={<Building2 className="h-3.5 w-3.5" aria-hidden />}
-        label="ORGANIZATION"
+        label={t('reports.organization')}
         value={organizationName}
       />
       <StatusItem
         icon={<ShieldCheck className="h-3.5 w-3.5" aria-hidden />}
-        label="EXPORT ACCESS"
+        label={t('reports.exportAccess')}
         value={
           canExport ? (
             <Badge variant="secondary" className="font-mono text-[10px] uppercase tracking-wide">
-              Owner / Admin
+              {t('reports.ownerAdmin')}
             </Badge>
           ) : (
-            <span className="text-muted-foreground">Restricted</span>
+            <span className="text-muted-foreground">{t('reports.restricted')}</span>
           )
         }
       />
       <StatusItem
         icon={<Cloud className="h-3.5 w-3.5" aria-hidden />}
-        label="GOOGLE WORKSPACE"
+        label={t('reports.googleWorkspace')}
         value={
           isGoogleWorkspaceConnected ? (
             <Badge variant="secondary" className="font-mono text-[10px] uppercase tracking-wide text-success">
-              Connected
+              {t('reports.connected')}
             </Badge>
           ) : (
-            <span className="text-muted-foreground">Not connected</span>
+            <span className="text-muted-foreground">{t('reports.notConnected')}</span>
           )
         }
       />
       <StatusItem
         icon={<Gauge className="h-3.5 w-3.5" aria-hidden />}
-        label="RATE LIMIT"
+        label={t('reports.rateLimit')}
         value={
           <span className="font-tabular text-xs text-muted-foreground">
-            {EXPORT_RATE_LIMIT_SUMMARY}
+            {t('reports.rateLimitSummary')}
           </span>
         }
       />

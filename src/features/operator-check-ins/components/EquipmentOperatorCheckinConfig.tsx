@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 import { Link } from 'react-router-dom';
 import {
   ClipboardSignature,
@@ -69,7 +70,8 @@ function AssignedChecklistRow({
   const hasStoredToken = Boolean(storedToken);
   const [rotateDialogOpen, setRotateDialogOpen] = useState(false);
 
-  const templateName = assignment.template?.name ?? 'Checklist';
+  const { t } = useI18n();
+  const templateName = assignment.template?.name ?? t('operatorEquipment.checklist');
 
   const handleRotateRequest = () => {
     if (hasStoredToken || isTokenPending) {
@@ -90,7 +92,7 @@ function AssignedChecklistRow({
         <p className="font-medium leading-tight">{templateName}</p>
         {assignment.enabled && !hasStoredToken && !isTokenPending && (
           <p className="mt-1 text-xs text-muted-foreground">
-            Generate a QR link from the actions menu before printing.
+            {t('operatorEquipment.generateQrHint')}
           </p>
         )}
       </div>
@@ -98,7 +100,7 @@ function AssignedChecklistRow({
       <div className="flex shrink-0 items-center gap-2">
         <Button type="button" variant="outline" size="sm" disabled={isBusy} onClick={onViewQrCode}>
           <QrCode className="mr-2 h-4 w-4" />
-          View QR code
+          {t('operatorEquipment.viewQr')}
         </Button>
 
         <DropdownMenu>
@@ -109,7 +111,7 @@ function AssignedChecklistRow({
               size="icon"
               className="h-9 w-9 shrink-0 touch-manipulation"
               disabled={isBusy}
-              aria-label={`${templateName} checklist actions`}
+              aria-label={t('operatorEquipment.checklistActions', { name: templateName })}
             >
               <MoreVertical className="h-4 w-4" aria-hidden />
             </Button>
@@ -117,7 +119,7 @@ function AssignedChecklistRow({
           <DropdownMenuContent align="end" side="top" className="w-52">
             <DropdownMenuItem onSelect={handleRotateRequest}>
               <RefreshCw className="mr-2 h-4 w-4" />
-              {hasStoredToken || isTokenPending ? 'Rotate QR link' : 'Generate QR link'}
+              {t(hasStoredToken || isTokenPending ? 'operatorEquipment.rotateQr' : 'operatorEquipment.generateQr')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -125,7 +127,7 @@ function AssignedChecklistRow({
               onSelect={onRemove}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Remove checklist
+              {t('operatorEquipment.removeChecklist')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -134,25 +136,24 @@ function AssignedChecklistRow({
       <AlertDialog open={rotateDialogOpen} onOpenChange={setRotateDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Rotate QR link for {templateName}?</AlertDialogTitle>
+            <AlertDialogTitle>{t('operatorEquipment.rotateConfirm', { name: templateName })}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <span className="block">
-                This replaces the public check-in link for this checklist. Any printed or shared QR codes
-                for {templateName} will stop working immediately.
+                {t('operatorEquipment.rotateWarning', { name: templateName })}
               </span>
               <span className="block">
-                Plan to physically replace old QR codes with the new one before operators scan again.
+                {t('operatorEquipment.replacePrinted')}
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isBusy}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isBusy}>{t('operatorEquipment.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               disabled={isBusy}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleConfirmRotate}
             >
-              Rotate QR link
+              {t('operatorEquipment.rotateQr')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -167,6 +168,7 @@ export function EquipmentOperatorCheckinConfig({
   equipmentName,
   onOpenQrCodeForAssignment,
 }: EquipmentOperatorCheckinConfigProps) {
+  const { t } = useI18n();
   const { data: templates = [], isLoading: templatesLoading } =
     useOperatorChecklistTemplates(organizationId);
   const { data: assignments = [], isLoading: assignmentsLoading } =
@@ -208,31 +210,31 @@ export function EquipmentOperatorCheckinConfig({
 
       if (assignedCount > 0) {
         toast.success(
-          `Assigned ${assignedCount} checklist${assignedCount === 1 ? '' : 's'}. Open View QR code on each row to print or share.`,
+          t(assignedCount === 1 ? 'operatorEquipment.assignedSuccess' : 'operatorEquipment.assignedSuccessPlural', { count: assignedCount }),
         );
       } else {
-        toast.success('Selected checklists are already assigned to this equipment.');
+        toast.success(t('operatorEquipment.alreadyAssigned'));
       }
     } catch {
-      toast.error('Unable to assign checklists.');
+      toast.error(t('operatorEquipment.assignFailed'));
     }
   }
 
   async function handleRotateToken(assignmentId: string) {
     try {
       await rotateMutation.mutateAsync(assignmentId);
-      toast.success('QR link updated. Open View QR code to print or share it.');
+      toast.success(t('operatorEquipment.qrUpdated'));
     } catch {
-      toast.error('Unable to rotate QR link.');
+      toast.error(t('operatorEquipment.rotateFailed'));
     }
   }
 
   async function handleRemove(assignmentId: string) {
     try {
       await deleteMutation.mutateAsync(assignmentId);
-      toast.success('Checklist removed from this equipment.');
+      toast.success(t('operatorEquipment.removed'));
     } catch {
-      toast.error('Unable to remove checklist.');
+      toast.error(t('operatorEquipment.removeFailed'));
     }
   }
 
@@ -240,7 +242,7 @@ export function EquipmentOperatorCheckinConfig({
     return (
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Daily Operator Check-In</CardTitle>
+          <CardTitle className="text-base">{t('operatorEquipment.dailyCheckin')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-16 animate-pulse rounded bg-muted" />
@@ -254,26 +256,25 @@ export function EquipmentOperatorCheckinConfig({
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <ClipboardSignature className="h-4 w-4" />
-          Daily Operator Check-In
+          {t('operatorEquipment.dailyCheckin')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Assign one or more checklists for unauthenticated operator daily check-ins on {equipmentName}.
-          Assigned checklists are public by default and can be removed when no longer needed. Each checklist gets its own QR link — use the <strong>QR Code</strong> action above to print.{' '}
+          {t('operatorEquipment.intro', { name: equipmentName })}{' '}
           <ExternalLink href={OPERATOR_DAILY_CHECK_INS_DOCS_URL} className="text-sm">
-            Setup, QR placement, and assignment guide
+            {t('operatorEquipment.guide')}
           </ExternalLink>
         </p>
 
         {templates.length === 0 ? (
           <Alert>
             <AlertDescription>
-              Create an operator checklist template first on the{' '}
+              {t('operatorEquipment.createFirst')}{' '}
               <Link to="/dashboard/operator-check-ins" className="text-primary underline">
-                Daily Check-Ins
+                {t('operatorEquipment.dailyCheckins')}
               </Link>{' '}
-              page.
+              {t('operatorEquipment.page')}
             </AlertDescription>
           </Alert>
         ) : (
@@ -281,7 +282,7 @@ export function EquipmentOperatorCheckinConfig({
             {assignments.length > 0 ? (
               <div className="space-y-2">
                 <p className="text-sm font-medium text-foreground">
-                  {assignments.length} checklist{assignments.length === 1 ? '' : 's'} assigned
+                  {t(assignments.length === 1 ? 'operatorEquipment.assignedCount' : 'operatorEquipment.assignedCountPlural', { count: assignments.length })}
                 </p>
                 <ul className="divide-y rounded-lg border">
                   {assignments.map((assignment) => (
@@ -297,7 +298,7 @@ export function EquipmentOperatorCheckinConfig({
                 </ul>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No daily check-in checklists assigned yet.</p>
+              <p className="text-sm text-muted-foreground">{t('operatorEquipment.noneAssigned')}</p>
             )}
 
             {activeTemplateCount > 0 ? (
@@ -314,7 +315,7 @@ export function EquipmentOperatorCheckinConfig({
               />
             ) : (
               <p className="text-xs text-muted-foreground">
-                All templates are inactive. Reactivate or create a template on the Daily Check-Ins page.
+                {t('operatorEquipment.allInactive')}
               </p>
             )}
           </>

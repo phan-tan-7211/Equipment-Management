@@ -1,9 +1,10 @@
 import React from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatWorkOrderMachineHours, formatWorkOrderPriorityLabel } from '@/features/work-orders/utils/workOrderEquipmentVisuals';
+import { formatWorkOrderMachineHours } from '@/features/work-orders/utils/workOrderEquipmentVisuals';
 import { cn } from '@/lib/utils';
-import { getStatusColor, formatStatus } from '@/features/work-orders/utils/workOrderHelpers';
+import { getStatusColor } from '@/features/work-orders/utils/workOrderHelpers';
+import { localizeWorkOrderPriority, localizeWorkOrderStatus } from '@/features/work-orders/utils/workOrderI18nLabels';
 import { getPriorityBadgeClass } from '@/lib/status-colors';
 import { WorkOrderQuickActions } from '../WorkOrderQuickActions';
 import QuickBooksInvoiceStatusBadge from '../QuickBooksInvoiceStatusBadge';
@@ -11,6 +12,7 @@ import { PendingSyncBadge } from '@/features/offline-queue/components/PendingSyn
 import type { MergedWorkOrder } from '@/features/work-orders/hooks/useOfflineMergedWorkOrders';
 import type { WorkOrder } from '@/features/work-orders/types/workOrder';
 import { WorkOrderEquipmentThumbnail } from './WorkOrderEquipmentThumbnail';
+import { useI18n } from '@/i18n';
 
 type WorkOrderDesktopIdentityStripProps = {
   workOrder: WorkOrder;
@@ -21,6 +23,7 @@ export const WorkOrderDesktopIdentityStrip: React.FC<WorkOrderDesktopIdentityStr
   workOrder,
   isAboveTheFold,
 }) => {
+  const { t } = useI18n();
   const machineHours = formatWorkOrderMachineHours(workOrder.equipmentWorkingHours);
   const showDescription = workOrder.description && workOrder.description !== workOrder.title;
   const equipmentLine = [workOrder.equipmentModel, machineHours].filter(Boolean).join(' \u2022 ');
@@ -58,13 +61,13 @@ export const WorkOrderDesktopIdentityStrip: React.FC<WorkOrderDesktopIdentityStr
           equipmentTeamId={workOrder.equipmentTeamId ?? workOrder.team_id}
         />
         <Badge className={getStatusColor(workOrder.status)}>
-          {formatStatus(workOrder.status)}
+          {localizeWorkOrderStatus(workOrder.status, t)}
         </Badge>
         <Badge
           variant="outline"
           className={cn('capitalize', getPriorityBadgeClass(workOrder.priority))}
         >
-          {formatWorkOrderPriorityLabel(workOrder.priority)}
+          {localizeWorkOrderPriority(workOrder.priority, t)}
         </Badge>
         <QuickBooksInvoiceStatusBadge
           status={workOrder.invoiceStatus ?? workOrder.invoice_status}

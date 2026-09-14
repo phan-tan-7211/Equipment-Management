@@ -11,6 +11,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
+import { useI18n } from '@/i18n';
+
 interface DeleteTeamDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,27 +28,26 @@ const DeleteTeamDialog: React.FC<DeleteTeamDialogProps> = ({
   isPending,
   onConfirm,
 }) => {
+  const { t } = useI18n();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            Delete this team?
+            {t('teamsDetail.deleteQuestion')}
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-3 text-sm text-muted-foreground">
               <p>
-                This will permanently delete <strong>{teamName}</strong> and
-                remove all member associations. Equipment assigned to this team
-                will become unassigned.
+                {t('teamsDetail.deleteDescription', { name: teamName })}
               </p>
-              <p>This action cannot be undone.</p>
+              <p>{t('teamsDetail.cannotUndo')}</p>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>{t('teamsDetail.cancel')}</AlertDialogCancel>
           <Button
             variant="destructive"
             onClick={onConfirm}
@@ -55,10 +56,10 @@ const DeleteTeamDialog: React.FC<DeleteTeamDialogProps> = ({
             {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Deleting...
+                {t('teamsDetail.deleting')}
               </>
             ) : (
-              'Delete Team'
+              t('teamsDetail.delete')
             )}
           </Button>
         </AlertDialogFooter>

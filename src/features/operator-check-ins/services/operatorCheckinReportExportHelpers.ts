@@ -14,6 +14,7 @@ import {
 } from '@/features/operator-check-ins/utils/operatorCheckinLedgerScope';
 import { defaultUserSettings } from '@/types/settings';
 import { formatDateTime as formatDateTimeWithSettings } from '@/utils/dateFormatter';
+import { getOperatorCheckinExcelLabels, type OperatorCheckinExcelLabels } from './operatorCheckinExcelLabels';
 
 export interface ChecklistExportRow {
   submissionId: string;
@@ -138,6 +139,7 @@ export function submissionHasChecklistItems(submission: OperatorCheckinSubmissio
 
 export function buildChecklistSummaryLine(
   submission: OperatorCheckinSubmission,
+  labels: OperatorCheckinExcelLabels = getOperatorCheckinExcelLabels('en'),
 ): string | null {
   if (!submissionHasChecklistItems(submission)) return null;
 
@@ -146,7 +148,7 @@ export function buildChecklistSummaryLine(
     : [];
   const passCount = answers.filter((a) => a.passed).length;
   const failCount = answers.filter((a) => !a.passed).length;
-  return `Checklist: ${submission.answered_required_count}/${submission.required_item_count} required answered, ${passCount} pass, ${failCount} fail`;
+  return `${labels.checklist}: ${submission.answered_required_count}/${submission.required_item_count} ${labels.pdfRequiredAnswered}, ${passCount} ${labels.pdfPass}, ${failCount} ${labels.pdfFail}`;
 }
 
 function filterCapturedFieldsByOptions(
@@ -221,10 +223,11 @@ export function buildSubmissionExportRow(
 export function buildCompactSubmissionPdfLines(
   submission: OperatorCheckinSubmission,
   options: OperatorCheckinReportExportOptions,
+  labels: OperatorCheckinExcelLabels = getOperatorCheckinExcelLabels('en'),
 ): string[] {
   const lines: string[] = [];
   const equipmentName = submission.equipment?.name ?? submission.equipment_id;
-  const status = submission.is_complete ? 'Complete' : 'Incomplete';
+  const status = submission.is_complete ? labels.complete : labels.incomplete;
   const submitted = formatDateTimeWithSettings(submission.submitted_at, defaultUserSettings);
 
   lines.push(`${equipmentName} — ${submitted} (${status})`);
@@ -236,13 +239,13 @@ export function buildCompactSubmissionPdfLines(
   }
 
   if (options.includeChecklist) {
-    const summaryLine = buildChecklistSummaryLine(submission);
+    const summaryLine = buildChecklistSummaryLine(submission, labels);
     if (summaryLine) {
       lines.push(summaryLine);
     }
     const checklistRows = buildChecklistExportRows(submission, options);
     for (const row of checklistRows) {
-      const passLabel = row.passed ? 'Pass' : 'Fail';
+      const passLabel = row.passed ? labels.pass : labels.fail;
       const noteSuffix = row.notes?.trim() ? ` — ${row.notes.trim()}` : '';
       lines.push(`  • ${row.section} / ${row.itemTitle}: ${passLabel}${noteSuffix}`);
     }
@@ -255,26 +258,27 @@ export function buildCompactSubmissionPdfLines(
 export function buildFullSubmissionPdfLines(
   submission: OperatorCheckinSubmission,
   options: OperatorCheckinReportExportOptions,
+  labels: OperatorCheckinExcelLabels = getOperatorCheckinExcelLabels('en'),
 ): string[] {
   const lines: string[] = [];
   const equipmentName = submission.equipment?.name ?? submission.equipment_id;
   lines.push(equipmentName);
 
-  lines.push(`Submitted: ${formatDateTimeWithSettings(submission.submitted_at, defaultUserSettings)}`);
-  lines.push(`Complete: ${submission.is_complete ? 'Yes' : 'No'}`);
+  lines.push(`${labels.pdfSubmitted}: ${formatDateTimeWithSettings(submission.submitted_at, defaultUserSettings)}`);
+  lines.push(`${labels.complete}: ${submission.is_complete ? labels.yes : labels.no}`);
 
   for (const row of buildCapturedFieldExportRows(submission, options)) {
     lines.push(`  ${row.label}: ${row.value}`);
   }
 
   if (options.includeChecklist) {
-    const summaryLine = buildChecklistSummaryLine(submission);
+    const summaryLine = buildChecklistSummaryLine(submission, labels);
     if (summaryLine) {
       lines.push(summaryLine);
     }
     for (const row of buildChecklistExportRows(submission, options)) {
-      const passLabel = row.passed ? 'Pass' : 'Fail';
-      const noteSuffix = row.notes?.trim() ? ` — Note: ${row.notes.trim()}` : '';
+      const passLabel = row.passed ? labels.pass : labels.fail;
+      const noteSuffix = row.notes?.trim() ? ` — ${labels.pdfNote}: ${row.notes.trim()}` : '';
       lines.push(`  • [${row.section}] ${row.itemTitle}: ${passLabel}${noteSuffix}`);
     }
   }
@@ -285,10 +289,11 @@ export function buildFullSubmissionPdfLines(
 export function buildSubmissionPdfLines(
   submission: OperatorCheckinSubmission,
   options: OperatorCheckinReportExportOptions,
+  labels: OperatorCheckinExcelLabels = getOperatorCheckinExcelLabels('en'),
 ): string[] {
   return options.detailLevel === 'full'
-    ? buildFullSubmissionPdfLines(submission, options)
-    : buildCompactSubmissionPdfLines(submission, options);
+    ? buildFullSubmissionPdfLines(submission, options, labels)
+    : buildCompactSubmissionPdfLines(submission, options, labels);
 }
 
 export function buildSummarySheetRows(
@@ -296,16 +301,17 @@ export function buildSummarySheetRows(
   templateName: string,
   equipmentLabel: string,
   submissions: OperatorCheckinSubmission[],
+  labels?: OperatorCheckinExcelLabels,
 ): string[][] {
   const completeCount = submissions.filter((s) => s.is_complete).length;
   return [
-    ['Daily Operator Check-In Report'],
-    ['Report period', reportDateRangeLabel],
-    ['Report template', templateName],
-    ['Equipment', equipmentLabel],
-    ['Submissions', String(submissions.length)],
-    ['Complete', String(completeCount)],
-    ['Incomplete', String(submissions.length - completeCount)],
+    [labels?.title ?? 'Daily Operator Check-In Report'],
+    [labels?.period ?? 'Report period', reportDateRangeLabel],
+    [labels?.template ?? 'Report template', templateName],
+    [labels?.equipment ?? 'Equipment', equipmentLabel],
+    [labels?.submissions ?? 'Submissions', String(submissions.length)],
+    [labels?.complete ?? 'Complete', String(completeCount)],
+    [labels?.incomplete ?? 'Incomplete', String(submissions.length - completeCount)],
   ];
 }
 

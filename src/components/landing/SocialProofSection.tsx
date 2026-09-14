@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n/I18nProvider';
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,42 +7,43 @@ import { Shield, Smartphone, Building2, Receipt } from 'lucide-react';
 import LandingReveal from './LandingReveal';
 
 const trustBadges = [
-  { icon: Shield, label: 'Your Data Stays Private' },
-  { icon: Smartphone, label: 'Offline-Ready Mobile' },
-  { icon: Building2, label: 'Google Workspace SSO' },
-  { icon: Receipt, label: 'QuickBooks Integration' },
+  { icon: Shield, labelKey: 'private' },
+  { icon: Smartphone, labelKey: 'offline' },
+  { icon: Building2, labelKey: 'google' },
+  { icon: Receipt, labelKey: 'quickbooks' },
 ];
 
 const customerResults = [
   {
     value: '100%',
-    label: 'Field adoption',
-    description: 'Every technician on the team uses EquipQR daily.',
+    labelKey: 'adoption',
+    descriptionKey: 'adoptionDescription',
   },
   {
     value: '50%',
-    label: 'Faster close times',
-    description: 'Work orders close faster after moving the process into EquipQR.',
+    labelKey: 'close',
+    descriptionKey: 'closeDescription',
   },
 ];
 
 const SocialProofSection = () => {
+  const { t } = useI18n();
   return (
     <section id="customers" className="scroll-mt-20 py-24 bg-background">
       <div className="container px-4 mx-auto">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Trusted by Equipment Teams
+            {t('landingDetails.social.heading')}
           </h2>
           <p className="mx-auto max-w-2xl text-left text-xl text-muted-foreground sm:text-center">
-            Currently deployed at heavy equipment repair shops who rely on EquipQR™ for their daily operations.
+            {t('landingDetails.social.intro')}
           </p>
         </div>
 
         {/* Trusted-by strip — quick scan before the main testimonial */}
         <LandingReveal>
           <div className="mb-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 rounded-xl border border-border/50 bg-muted/30 px-4 py-6">
-            <span className="text-sm font-medium text-muted-foreground">Trusted by teams at</span>
+            <span className="text-sm font-medium text-muted-foreground">{t('landingDetails.social.trustedAt')}</span>
             <div className="flex items-center gap-3">
               <img
                 src="/images/brand/logos/3A-Equipment-Logo-Medium.png"
@@ -51,7 +53,7 @@ const SocialProofSection = () => {
               />
               <span className="text-sm font-semibold text-foreground">3-A Equipment</span>
               <span className="text-muted-foreground">·</span>
-              <span className="text-sm text-muted-foreground">Heavy equipment repair</span>
+              <span className="text-sm text-muted-foreground">{t('landingDetails.social.repairType')}</span>
             </div>
           </div>
         </LandingReveal>
@@ -64,7 +66,7 @@ const SocialProofSection = () => {
                 <div className="shrink-0">
                   <img
                     src="/images/brand/logos/3A-Equipment-Logo-Medium.png"
-                    alt="3-A Equipment Logo"
+                    alt={t('landingDetails.social.repairShop') + ' 3-A Equipment'}
                     className="h-20 w-20 object-contain"
                   />
                 </div>
@@ -77,32 +79,32 @@ const SocialProofSection = () => {
                       3-A Equipment
                     </ExternalLink>
                   </h3>
-                  <Badge variant="secondary" className="mb-4">Heavy Equipment Repair Shop</Badge>
+                  <Badge variant="secondary" className="mb-4">{t('landingDetails.social.repairShop')}</Badge>
                   <p className="text-muted-foreground leading-relaxed">
-                    &ldquo;We used to track PMs on paper and hope nothing slipped through. Now every machine has a QR code &mdash; scanning it proves exactly where it was dropped off and pulls up the full inspection history. I can see at a glance that every item was checked for defects, and so can my customers.&rdquo;
+                    {t('landingDetails.social.quote')}
                   </p>
                   <p className="text-sm font-medium text-foreground mt-3">
-                    &mdash; Matt Hankins, Owner, 3-A Equipment
+                    {t('landingDetails.social.attribution')}
                   </p>
                 </div>
               </div>
 
               <ul
-                aria-label="Customer results"
+                aria-label={t('landingDetails.social.customerResults')}
                 className="grid grid-cols-1 gap-4 border-t border-border pt-6 sm:grid-cols-2"
               >
                 {customerResults.map((result, index) => (
-                  <li key={result.label} className="list-none">
+                  <li key={result.labelKey} className="list-none">
                     <LandingReveal delayMs={index * 80}>
                       <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-left shadow-sm shadow-primary/10">
                         <p className="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
                           {result.value}
                         </p>
                         <p className="mt-2 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/90">
-                          {result.label}
+                          {t(`landingDetails.social.${result.labelKey}`)}
                         </p>
                         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                          {result.description}
+                          {t(`landingDetails.social.${result.descriptionKey}`)}
                         </p>
                       </div>
                     </LandingReveal>
@@ -115,11 +117,11 @@ const SocialProofSection = () => {
 
         {/* Qualitative trust badges - verifiable feature claims */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
-          {trustBadges.map(({ icon: Icon, label }, index) => (
-            <LandingReveal key={label} delayMs={index * 60}>
+          {trustBadges.map(({ icon: Icon, labelKey }, index) => (
+            <LandingReveal key={labelKey} delayMs={index * 60}>
               <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 px-4 py-3">
                 <Icon className="h-6 w-6 text-primary shrink-0" aria-hidden />
-                <span className="text-sm font-medium text-foreground">{label}</span>
+                <span className="text-sm font-medium text-foreground">{t(`landingDetails.social.${labelKey}`)}</span>
               </div>
             </LandingReveal>
           ))}

@@ -20,6 +20,7 @@ import {
   WORK_ORDER_CARD_NAVIGABLE_CLASS,
 } from './workOrderCardNavigation';
 import type { WorkOrderCardProps } from '../WorkOrderCard';
+import { useI18n } from '@/i18n';
 
 export const WorkOrderDesktopCard: React.FC<WorkOrderCardProps> = memo(({
   workOrder,
@@ -28,6 +29,7 @@ export const WorkOrderDesktopCard: React.FC<WorkOrderCardProps> = memo(({
   canDelete = false,
   onDeleteClick,
 }) => {
+  const { t } = useI18n();
   const { formatDate, formatDateTime } = useFormatTimestamp();
   const fmtDate = (v?: string | null) => (v ? formatDate(v) : '—');
   const permissions = useUnifiedPermissions();
@@ -81,7 +83,7 @@ export const WorkOrderDesktopCard: React.FC<WorkOrderCardProps> = memo(({
           <div
             className="flex items-center justify-end gap-2 mt-3 pt-3 border-t"
             role="group"
-            aria-label="Work order actions"
+            aria-label={t('workOrderAudit.workOrderActions')}
           >
             {canDelete && onDeleteClick ? (
               <Button
@@ -89,7 +91,7 @@ export const WorkOrderDesktopCard: React.FC<WorkOrderCardProps> = memo(({
                 variant="ghost"
                 size="icon"
                 className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                aria-label="Delete work order"
+                aria-label={t('workOrderAudit.deleteWorkOrder')}
                 onClick={(event) => {
                   event.stopPropagation();
                   onDeleteClick(workOrder);

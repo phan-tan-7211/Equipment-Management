@@ -2,6 +2,7 @@ import { Database, Mail, MoreHorizontal, UserMinus, XCircle } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { UnifiedMember } from '@/features/organization/utils/buildUnifiedMembers';
+import { useI18n } from '@/i18n';
 
 type UnifiedMemberRowActionsProps = {
   member: UnifiedMember;
@@ -34,12 +35,13 @@ export function UnifiedMemberRowActions({
   onRequestDataMerge,
   onRemoveMember,
 }: UnifiedMemberRowActionsProps) {
+  const { t } = useI18n();
   if (!canManageMembers || member.organizationRole === 'owner') return null;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Member options">
+        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t('organizationMembers.memberOptions')}>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
@@ -51,7 +53,7 @@ export function UnifiedMemberRowActions({
               disabled={resendPending}
             >
               <Mail className="h-4 w-4 mr-2" />
-              Resend Invitation
+              {t('organizationMembers.resend')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onCancelInvitation(member.id)}
@@ -59,7 +61,7 @@ export function UnifiedMemberRowActions({
               className="text-destructive"
             >
               <XCircle className="h-4 w-4 mr-2" />
-              Cancel Invitation
+              {t('organizationMembers.cancelInvitation')}
             </DropdownMenuItem>
           </>
         )}
@@ -70,7 +72,7 @@ export function UnifiedMemberRowActions({
             className="text-destructive"
           >
             <XCircle className="h-4 w-4 mr-2" />
-            Remove Pending Member
+            {t('organizationMembers.removePending')}
           </DropdownMenuItem>
         )}
         {member.type === 'member' && (
@@ -80,7 +82,7 @@ export function UnifiedMemberRowActions({
               disabled={mergePending || member.userId === currentUserId}
             >
               <Database className="mr-2 h-4 w-4" />
-              Request Data Merge
+              {t('organizationMembers.requestMerge')}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
@@ -88,7 +90,7 @@ export function UnifiedMemberRowActions({
               disabled={removePending}
             >
               <UserMinus className="mr-2 h-4 w-4" />
-              Remove Member
+              {t('organizationMembers.removeMember')}
             </DropdownMenuItem>
           </>
         )}

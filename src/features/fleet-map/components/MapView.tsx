@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useI18n } from '@/i18n';
 import {
   APIProvider,
   Map,
@@ -22,9 +23,10 @@ import {
   type MapsAuthFailure,
 } from '@/features/fleet-map/utils/mapsAuthFailure';
 import { useNavigate } from 'react-router-dom';
-import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
+import { format, formatDistanceToNow, isValid, parseISO, type Locale } from 'date-fns';
+import { vi, ko, enUS } from 'date-fns/locale';
 import { DATE_DISPLAY_FORMAT } from '@/config/date-formats';
-import { buildGoogleMapsUrlFromCoords, FLEET_MAP_SOURCE_LABELS, type FleetMapSource } from '@/utils/effectiveLocation';
+import { buildGoogleMapsUrlFromCoords, type FleetMapSource } from '@/utils/effectiveLocation';
 import ClickableAddress from '@/components/ui/ClickableAddress';
 import { cn } from '@/lib/utils';
 import { logger } from '@/utils/logger';
@@ -40,25 +42,27 @@ function buildResolvedImageUrlById(locations: EquipmentLocation[]): Record<strin
   );
 }
 
-function formatDate(dateString: string): string {
+type Translate = ReturnType<typeof useI18n>['t'];
+
+function formatDate(dateString: string, t: Translate): string {
   try {
     const date = parseISO(dateString);
-    if (!isValid(date)) return 'Invalid date';
+    if (!isValid(date)) return t('fleetMap.invalidDate');
     return format(date, DATE_DISPLAY_FORMAT);
   } catch {
-    return 'Invalid date';
+    return t('fleetMap.invalidDate');
   }
 }
 
-function getRelativeTime(dateString: string): string {
+function getRelativeTime(dateString: string, t: Translate, locale: Locale): string {
   try {
     const date = parseISO(dateString);
-    if (!isValid(date)) return 'Invalid date';
+    if (!isValid(date)) return t('fleetMap.invalidDate');
     const diffInMinutes = Math.abs(Date.now() - date.getTime()) / (1000 * 60);
-    if (diffInMinutes < 1) return 'just now';
-    return formatDistanceToNow(date, { addSuffix: true });
+    if (diffInMinutes < 1) return t('fleetMap.justNow');
+    return formatDistanceToNow(date, { addSuffix: true, locale });
   } catch {
-    return 'Invalid date';
+    return t('fleetMap.invalidDate');
   }
 }
 
@@ -70,12 +74,20 @@ type MarkerColor = {
   label: string;
 };
 
-const SOURCE_TOKEN_CONFIG: Record<SourceType, { token: 'info' | 'primary' | 'success' | 'warning'; label: string }> = {
-  team: { token: 'info', label: FLEET_MAP_SOURCE_LABELS.team },
-  manual: { token: 'primary', label: FLEET_MAP_SOURCE_LABELS.manual },
-  scan: { token: 'success', label: FLEET_MAP_SOURCE_LABELS.scan },
-  legacy: { token: 'warning', label: FLEET_MAP_SOURCE_LABELS.legacy },
-  geocoded: { token: 'warning', label: FLEET_MAP_SOURCE_LABELS.geocoded },
+const SOURCE_TOKEN_CONFIG: Record<SourceType, { token: 'info' | 'primary' | 'success' | 'warning' }> = {
+  team: { token: 'info' },
+  manual: { token: 'primary' },
+  scan: { token: 'success' },
+  legacy: { token: 'warning' },
+  geocoded: { token: 'warning' },
+};
+
+const SOURCE_LABEL_KEYS: Record<SourceType, string> = {
+  team: 'fleetMap.teamSource',
+  manual: 'fleetMap.manualSource',
+  scan: 'fleetMap.scanSource',
+  legacy: 'fleetMap.legacySource',
+  geocoded: 'fleetMap.geocodedSource',
 };
 
 const SOURCE_TOKEN_CLASSES: Record<
@@ -119,7 +131,7 @@ const SOURCE_TOKEN_FALLBACKS: Record<SourceType, string> = {
   geocoded: '#F59E0B',
 };
 
-const TEAM_HQ_TOKEN = { token: 'warning' as const, label: 'Team HQ', fallback: '#D97706' };
+const TEAM_HQ_TOKEN = { token: 'warning' as const, fallback: '#D97706' };
 
 function hslToHex(h: number, s: number, l: number): string {
   const normalizedS = s / 100;
@@ -233,9 +245,10 @@ const EquipmentMarker: React.FC<EquipmentMarkerProps> = ({
   onMarkerClick,
 }) => {
   const navigate = useNavigate();
+  const { t, language } = useI18n();
+  const dateLocale = { vi, ko, en: enUS }[language];
   const [markerRef, marker] = useAdvancedMarkerRef();
   const sourceType: SourceType = location.source;
-  const sourceConfig = SOURCE_TOKEN_CONFIG[sourceType];
   const sourceClasses = SOURCE_TOKEN_CLASSES[sourceType];
   const popupImageSrc = displayableImageSrc(location.image_url);
 
@@ -288,7 +301,7 @@ const EquipmentMarker: React.FC<EquipmentMarkerProps> = ({
                       sourceClasses.badge
                     )}
                   >
-                    {sourceConfig.label}
+                    {t(SOURCE_LABEL_KEYS[sourceType])}
                   </span>
                   {location.team_name && (
                     <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
@@ -303,19 +316,19 @@ const EquipmentMarker: React.FC<EquipmentMarkerProps> = ({
             {/* Details */}
             <div className="space-y-1.5 text-xs mb-3">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Serial:</span>
+                <span className="text-muted-foreground">{t('fleetMap.serial')}</span>
                 <span className="font-mono truncate ml-2 text-foreground">{location.serial_number}</span>
               </div>
               {location.working_hours != null && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />Hours:</span>
+                  <span className="text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{t('fleetMap.hours')}</span>
                   <span className="text-foreground">{location.working_hours.toLocaleString()}</span>
                 </div>
               )}
               {location.last_maintenance && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1"><Wrench className="h-3 w-3" />Maintenance:</span>
-                  <span className="text-foreground">{formatDate(location.last_maintenance)}</span>
+                  <span className="text-muted-foreground flex items-center gap-1"><Wrench className="h-3 w-3" />{t('fleetMap.maintenance')}</span>
+                  <span className="text-foreground">{formatDate(location.last_maintenance, t)}</span>
                 </div>
               )}
               {location.formatted_address && (
@@ -330,7 +343,7 @@ const EquipmentMarker: React.FC<EquipmentMarkerProps> = ({
               )}
               {location.location_updated_at && (
                 <div className="text-[10px] text-muted-foreground">
-                  Updated {getRelativeTime(location.location_updated_at)}
+                  {t('fleetMap.updated', { time: getRelativeTime(location.location_updated_at, t, dateLocale) })}
                 </div>
               )}
             </div>
@@ -343,7 +356,7 @@ const EquipmentMarker: React.FC<EquipmentMarkerProps> = ({
                 onClick={() => navigate(`/dashboard/equipment/${location.id}`)}
               >
                 <ExternalLink className="h-3 w-3 mr-1" />
-                Details
+                {t('fleetMap.details')}
               </Button>
               <Button
                 size="sm"
@@ -354,7 +367,7 @@ const EquipmentMarker: React.FC<EquipmentMarkerProps> = ({
                 }}
               >
                 <Navigation className="h-3 w-3 mr-1" />
-                Directions
+                {t('fleetMap.directions')}
               </Button>
             </div>
           </div>
@@ -380,6 +393,7 @@ const TeamHQMarker: React.FC<TeamHQMarkerProps> = ({
   onClose,
 }) => {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [markerRef, marker] = useAdvancedMarkerRef();
 
   return (
@@ -442,7 +456,7 @@ const TeamHQMarker: React.FC<TeamHQMarkerProps> = ({
                 onClick={() => navigate(`/dashboard/teams/${hq.id}`)}
               >
                 <ExternalLink className="h-3 w-3 mr-1" />
-                View Team
+                {t('fleetMap.viewTeam')}
               </Button>
               <Button
                 size="sm"
@@ -453,7 +467,7 @@ const TeamHQMarker: React.FC<TeamHQMarkerProps> = ({
                 }}
               >
                 <Navigation className="h-3 w-3 mr-1" />
-                Directions
+                {t('fleetMap.directions')}
               </Button>
             </div>
           </div>
@@ -480,6 +494,7 @@ const MapContent: React.FC<{
   focusEquipmentId,
   onMarkerClick,
 }) => {
+  const { t } = useI18n();
   const map = useMap();
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [selectedHQId, setSelectedHQId] = useState<string | null>(null);
@@ -539,23 +554,23 @@ const MapContent: React.FC<{
       accumulator[sourceType] = {
         fill,
         stroke: darkenHex(fill, 0.22),
-        label: config.label,
+        label: t(SOURCE_LABEL_KEYS[sourceType]),
       };
       return accumulator;
     }, {} as Record<SourceType, MarkerColor>);
     // themeVersion is intentionally a dep so we re-resolve on theme switch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [themeVersion]);
+  }, [themeVersion, t]);
 
   const teamHQColor = useMemo<MarkerColor>(() => {
     const fill = resolveTokenHex(TEAM_HQ_TOKEN.token, TEAM_HQ_TOKEN.fallback);
     return {
       fill,
       stroke: darkenHex(fill, 0.3),
-      label: TEAM_HQ_TOKEN.label,
+      label: t('fleetMap.teamHQ'),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [themeVersion]);
+  }, [themeVersion, t]);
 
   // Compute the bounding box of all visible markers and fit the map to it.
   const fitAllMarkers = useCallback(() => {
@@ -680,8 +695,8 @@ const MapContent: React.FC<{
         variant="outline"
         size="sm"
         onClick={fitAllMarkers}
-        title="Fit all markers in view"
-        aria-label="Fit all markers in view"
+        title={t('fleetMap.fitAll')}
+        aria-label={t('fleetMap.fitAll')}
         className="absolute bottom-16 left-4 z-10 h-8 w-8 p-0 bg-background/95 backdrop-blur-sm border-border/80 shadow-xl hover:bg-background"
       >
         <Maximize2 className="h-3.5 w-3.5" />
@@ -689,19 +704,19 @@ const MapContent: React.FC<{
 
       {/* Map Legend — bottom-right to avoid conflict with Google's top-right controls */}
       <div className="absolute bottom-6 right-4 bg-background/95 backdrop-blur-sm border border-border/80 rounded-xl px-3.5 py-3 shadow-xl z-10 max-w-[220px]">
-        <p className="text-[11px] font-semibold text-muted-foreground/80 uppercase tracking-wider mb-2">Location Source</p>
+        <p className="text-[11px] font-semibold text-muted-foreground/80 uppercase tracking-wider mb-2">{t('fleetMap.locationSource')}</p>
         <Select
           value={sourceFilter}
           onValueChange={(value) => setSourceFilter(value as SourceType | 'all')}
         >
-          <SelectTrigger aria-label="Filter map markers by location source" className="h-8 mb-2 text-xs">
-            <SelectValue placeholder="All sources" />
+          <SelectTrigger aria-label={t('fleetMap.filterSource')} className="h-8 mb-2 text-xs">
+            <SelectValue placeholder={t('fleetMap.allSources')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All sources</SelectItem>
+            <SelectItem value="all">{t('fleetMap.allSources')}</SelectItem>
             {(Object.keys(SOURCE_TOKEN_CONFIG) as SourceType[]).map((sourceType) => (
               <SelectItem key={sourceType} value={sourceType}>
-                {SOURCE_TOKEN_CONFIG[sourceType].label}
+                {t(SOURCE_LABEL_KEYS[sourceType])}
               </SelectItem>
             ))}
           </SelectContent>

@@ -1,3 +1,4 @@
+import { useI18n } from '@/i18n';
 import React, { useCallback, useMemo, useState } from 'react';
 import { StructuredLocationEditorControls } from '@/components/location/StructuredLocationEditorControls';
 import { StructuredLocationEditorDialogFooter } from '@/components/location/StructuredLocationEditorDialogFooter';
@@ -32,6 +33,7 @@ export function InventoryItemLocationEditorDialog({
   structuredLocation,
   onSave,
 }: InventoryItemLocationEditorDialogProps) {
+  const { t } = useI18n();
   const { isLoaded: isPlacesLoaded } = useGoogleMapsLoader();
   const isDark = useIsDarkTheme();
   const { googleMapsKey, mapId } = useGoogleMapsKey();
@@ -66,15 +68,14 @@ export function InventoryItemLocationEditorDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg" className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Set part storage location</DialogTitle>
+          <DialogTitle>{t('inventoryListAux.locationTitle')}</DialogTitle>
           <DialogDescription>
-            Search for an address or capture your current location. This overrides the organization
-            inventory default for this part only.
+            {t('inventoryListAux.locationDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <StructuredLocationEditorControls
-          locationLabel="Storage address"
+          locationLabel={t('inventoryListAux.storageAddress')}
           locationAddress={editor.addressValue}
           onPlaceSelect={editor.handlePlaceSelect}
           onClear={editor.handleClear}
@@ -88,8 +89,8 @@ export function InventoryItemLocationEditorDialog({
           isLiveCaptureOpen={editor.isLiveCaptureOpen}
           onLiveCaptureOpenChange={editor.setIsLiveCaptureOpen}
           onConfirmLiveLocation={editor.handleSaveLiveLocation}
-          liveCaptureTitle="Set part storage location from this device"
-          liveCaptureConfirmLabel="Use this location"
+          liveCaptureTitle={t('inventoryListAux.liveCapture')}
+          liveCaptureConfirmLabel={t('inventoryListAux.useLocation')}
           isSaving={isSaving}
         />
 
@@ -98,7 +99,7 @@ export function InventoryItemLocationEditorDialog({
           onSave={handleSave}
           canSave={editor.canSave}
           isSaving={isSaving}
-          saveLabel="Save storage location"
+          saveLabel={t('inventoryListAux.saveLocation')}
         />
       </DialogContent>
     </Dialog>

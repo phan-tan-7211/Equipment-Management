@@ -16,10 +16,11 @@ import type { UnifiedMembersListViewProps } from '@/features/organization/compon
 import {
   getUnifiedMemberStatusBadgeVariant,
   getStatusIcon,
-  getStatusLabel,
+  getUnifiedMemberDisplayName,
 } from '@/features/organization/utils/unifiedMemberPresentation';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { getRoleBadgeVariant } from '@/utils/badgeVariants';
+import { useI18n } from '@/i18n';
 
 const thClass = 'text-xs font-semibold uppercase tracking-wide text-muted-foreground';
 
@@ -48,7 +49,17 @@ export function UnifiedMembersDesktopTable({
   onRequestDataMerge,
   onRemoveMember,
 }: UnifiedMembersListViewProps) {
+  const { t } = useI18n();
   const { formatDate } = useFormatTimestamp();
+  const roleLabel = (role: string) => role === 'owner' || role === 'admin' || role === 'member'
+    ? t(`organizationMembers.${role}`) : role;
+  const statusLabel = (status: string) => status === 'active' ? t('organizationMembers.active')
+    : status === 'pending_invite' ? t('organizationMembers.pendingInvite') : t('organizationMembers.pendingGoogle');
+  const displayNameLabels = {
+    pendingInvite: t('organizationMembers.pendingInvite'),
+    pendingGoogle: t('organizationMembers.pendingGoogleName'),
+    unknown: t('organizationMembers.unknownName'),
+  };
   const { isOwner, quickBooksEnabled, canManagePartsManagers, canManagePartsConsumers } =
     permissionContext;
   const showQuickBooksColumn = isOwner && quickBooksEnabled;
@@ -60,19 +71,19 @@ export function UnifiedMembersDesktopTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className={thClass}>Member</TableHead>
-            <TableHead className={thClass}>Email</TableHead>
-            <TableHead className={thClass}>Role</TableHead>
-            <TableHead className={thClass}>Status</TableHead>
+            <TableHead className={thClass}>{t('organizationMembers.member')}</TableHead>
+            <TableHead className={thClass}>{t('organizationMembers.email')}</TableHead>
+            <TableHead className={thClass}>{t('organizationMembers.role')}</TableHead>
+            <TableHead className={thClass}>{t('organizationMembers.status')}</TableHead>
             {showQuickBooksColumn && (
               <TableHead className={thClass}>
                 <Tooltip>
                   <TooltipTrigger className="cursor-help inline-flex items-center gap-1.5 uppercase">
                     <QuickBooksMarkIcon />
-                    QuickBooks
+                    {t('organizationMembers.quickBooks')}
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="max-w-xs">Allow admin to manage QuickBooks integration (connect, disconnect, export invoices)</p>
+                    <p className="max-w-xs">{t('organizationMembers.quickBooksHelp')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TableHead>
@@ -82,10 +93,10 @@ export function UnifiedMembersDesktopTable({
                 <Tooltip>
                   <TooltipTrigger className="cursor-help inline-flex items-center gap-1.5 uppercase">
                     <PartsManagerMarkIcon />
-                    Parts Manager
+                    {t('organizationMembers.partsManager')}
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="max-w-xs">Allow member to create, edit, and manage inventory items</p>
+                    <p className="max-w-xs">{t('organizationMembers.managerHelp')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TableHead>
@@ -95,15 +106,15 @@ export function UnifiedMembersDesktopTable({
                 <Tooltip>
                   <TooltipTrigger className="cursor-help inline-flex items-center gap-1.5 uppercase">
                     <PartsConsumerMarkIcon />
-                    Parts Consumer
+                    {t('organizationMembers.partsConsumer')}
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="max-w-xs">Allow member to view inventory, part lookup, and alternate groups</p>
+                    <p className="max-w-xs">{t('organizationMembers.consumerHelp')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TableHead>
             )}
-            {canManageMembers && <TableHead className={`${thClass} text-right`}>Actions</TableHead>}
+            {canManageMembers && <TableHead className={`${thClass} text-right`}>{t('organizationMembers.actions')}</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -113,15 +124,15 @@ export function UnifiedMembersDesktopTable({
                 <div className="flex items-center gap-3">
                   <UnifiedMemberAvatar member={member} />
                   <div>
-                    <div className="text-sm font-medium">{member.name}</div>
+                    <div className="text-sm font-medium">{getUnifiedMemberDisplayName(member, displayNameLabels)}</div>
                     {member.joinedDate && (
                       <div className="text-xs text-muted-foreground">
-                        Joined {formatDate(member.joinedDate)}
+                        {t('organizationMembers.joined', { date: formatDate(member.joinedDate) })}
                       </div>
                     )}
                     {member.invitedDate && (
                       <div className="text-xs text-muted-foreground">
-                        {member.type === 'gws_claim' ? 'Added' : 'Invited'} {formatDate(member.invitedDate)}
+                        {t(member.type === 'gws_claim' ? 'organizationMembers.added' : 'organizationMembers.invited', { date: formatDate(member.invitedDate) })}
                       </div>
                     )}
                   </div>
@@ -131,20 +142,20 @@ export function UnifiedMembersDesktopTable({
               <TableCell className="py-3">
                 {canManageMembers && member.organizationRole !== 'owner' && member.type === 'member' ? (
                   <Select
-                    value={member.organizationRole}
+                    value={roleLabel(member.organizationRole)}
                     onValueChange={(value) => onRoleChange(member.id, value as 'admin' | 'member')}
                   >
                     <SelectTrigger className="w-24 h-8">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="member">Member</SelectItem>
+                      <SelectItem value="admin">{t('organizationMembers.admin')}</SelectItem>
+                      <SelectItem value="member">{t('organizationMembers.member')}</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
                   <Badge variant={getRoleBadgeVariant(member.organizationRole)} className="capitalize">
-                    {member.organizationRole}
+                    {roleLabel(member.organizationRole)}
                   </Badge>
                 )}
               </TableCell>
@@ -155,19 +166,19 @@ export function UnifiedMembersDesktopTable({
                       <Badge variant={getUnifiedMemberStatusBadgeVariant(member.status)} className="capitalize cursor-help">
                         <div className="flex items-center gap-1">
                           {getStatusIcon(member.status)}
-                          {getStatusLabel(member.status)}
+                          {statusLabel(member.status)}
                         </div>
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="max-w-xs">Selected from Google Workspace. They will be automatically added when they sign up with their Google account.</p>
+                      <p className="max-w-xs">{t('organizationMembers.googlePendingHelp')}</p>
                     </TooltipContent>
                   </Tooltip>
                 ) : (
                   <Badge variant={getUnifiedMemberStatusBadgeVariant(member.status)} className="capitalize">
                     <div className="flex items-center gap-1">
                       {getStatusIcon(member.status)}
-                      {getStatusLabel(member.status)}
+                      {statusLabel(member.status)}
                     </div>
                   </Badge>
                 )}

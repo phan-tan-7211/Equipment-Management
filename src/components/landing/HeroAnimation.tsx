@@ -7,6 +7,7 @@ import { STATE_VECTORS, ALL_STATE_CODES } from './stateVectors';
 import type { StateCode } from './stateVectors';
 import { computeDotPositionsInState, chosenDotIndex, strToSeed } from './dotPositions';
 import { HERO_VERTICAL_LINE } from './heroGeometry';
+import { useI18n } from '@/i18n';
 
 // Animation phases are dynamically imported so the reduced-motion path
 // never pays the GSAP / MorphSVG bundle cost. AssetDotsPhase MUST stay lazy
@@ -89,6 +90,7 @@ function HeroPhaseLoadingFallback() {
 }
 
 export default function HeroAnimation() {
+  const { t } = useI18n();
   const prefersReducedMotion = usePrefersReducedMotion();
 
   // Counts COMPLETED cycles (incremented at the end of each cycle).
@@ -242,13 +244,11 @@ export default function HeroAnimation() {
 
   return (
     <section
-      aria-label="EquipQR asset tracking demo"
+      aria-label={t('landingSections.hero.aria')}
       className="relative flex flex-col items-center justify-center pt-24 pb-14 md:pt-28 md:pb-20 bg-linear-to-br from-background via-background to-primary/5"
     >
       <p className="sr-only">
-        EquipQR tracks QR-coded equipment across the United States. The demo shows a QR
-        code being scanned, which transforms into a U.S. map with asset location markers.
-        Work orders are created and exported to QuickBooks, Google Drive, or Excel.
+        {t('landingSections.hero.sr')}
       </p>
 
       <div className="relative z-10 text-center mb-8 px-4">
@@ -257,7 +257,7 @@ export default function HeroAnimation() {
           tabIndex={-1}
           className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
-          QR-tracked work orders for heavy equipment repair shops
+          {t('landingSections.hero.title')}
         </h1>
       </div>
 
@@ -265,12 +265,12 @@ export default function HeroAnimation() {
         <div className="flex flex-col items-center gap-3 mb-8 px-4">
           <Button asChild size="lg" className="text-base px-7 py-5">
             <Link to="/auth?tab=signup">
-              Get Started Free
+              {t('landingSections.hero.start')}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
           <p className="text-sm text-muted-foreground">
-            No credit card. First scan in 20 minutes.
+            {t('landingSections.hero.hint')}
           </p>
         </div>
 
