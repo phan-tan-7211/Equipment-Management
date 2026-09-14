@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { expectPublicQrRouteHealthy } from '../shared/auth-helpers';
 import { seedEquipment, seedInventory, seedWorkOrders } from '../shared/seed-data';
 
