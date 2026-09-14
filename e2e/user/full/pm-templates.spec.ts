@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 
 test.describe('PM templates @full', () => {
   test('PM templates page loads for owner', async ({ gotoDashboard, page, assertHealthyShell }) => {
