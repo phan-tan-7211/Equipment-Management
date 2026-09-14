@@ -1,6 +1,8 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useI18n } from '@/i18n';
+import { getFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditCopy';
 
 type ToolbarSearchInputProps = {
   value: string;
@@ -17,6 +19,9 @@ export function ToolbarSearchInput({
   ariaLabel,
   className = 'max-w-[260px]',
 }: ToolbarSearchInputProps) {
+  const { language } = useI18n();
+  const copy = getFinalHardcodedAuditCopy(language);
+
   return (
     <div className={`relative flex-1 ${className}`}>
       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -31,7 +36,7 @@ export function ToolbarSearchInput({
         <button
           onClick={() => onChange('')}
           className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          aria-label="Clear search"
+          aria-label={copy.clearSearch}
         >
           <X className="h-3.5 w-3.5" />
         </button>

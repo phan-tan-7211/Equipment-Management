@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
@@ -7,149 +6,116 @@ import {
   createWorkOrderCost,
   deleteWorkOrderCostWithInventoryInfo,
   updateWorkOrderCostWithQuantityTracking,
-  type UpdateWorkOrderCostData
+  type UpdateWorkOrderCostData,
 } from '@/features/work-orders/services/workOrderCostsService';
 import { adjustInventoryQuantity } from '@/features/inventory/services/inventoryService';
 import { inventory as inventoryQueryKeys } from '@/lib/queryKeys';
+import { useI18n } from '@/i18n';
+import {
+  formatFinalAuditCopy,
+  getFinalHardcodedAuditCopy,
+} from '@/i18n/finalHardcodedAuditCopy';
 
 export const useWorkOrderCosts = (workOrderId: string) => {
   return useQuery({
     queryKey: ['work-order-costs', workOrderId],
     queryFn: () => getWorkOrderCosts(workOrderId),
-    enabled: !!workOrderId
+    enabled: !!workOrderId,
   });
 };
 
 export const useCreateWorkOrderCost = () => {
   const queryClient = useQueryClient();
+  const { language } = useI18n();
+  const copy = getFinalHardcodedAuditCopy(language);
 
   return useMutation({
     mutationFn: createWorkOrderCost,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['work-order-costs', data.work_order_id] });
-      toast.success('Cost item added successfully');
+      toast.success(copy.costAdded);
     },
     onError: (error) => {
       logger.error('Error creating cost item', error);
-      toast.error('Failed to add cost item');
-    }
+      toast.error(copy.costAddFailed);
+    },
   });
 };
 
-/**
- * Delete a cost item with inventory restoration.
- * If the cost was created from inventory, restores the quantity back to the source inventory item.
- */
 export const useDeleteWorkOrderCostWithInventoryRestore = () => {
   const queryClient = useQueryClient();
+  const { language } = useI18n();
+  const copy = getFinalHardcodedAuditCopy(language);
 
   return useMutation({
-    mutationFn: async ({ 
-      costId, 
-      organizationId 
-    }: { 
-      costId: string; 
-      organizationId: string;
-    }) => {
-      // Delete the cost and get inventory info if applicable
+    mutationFn: async ({ costId, organizationId }: { costId: string; organizationId: string }) => {
       const inventoryInfo = await deleteWorkOrderCostWithInventoryInfo(costId);
-
-      // If this cost was from inventory, restore the quantity
       if (inventoryInfo) {
         await adjustInventoryQuantity(organizationId, {
           itemId: inventoryInfo.inventory_item_id,
-          delta: inventoryInfo.quantity, // Positive to add back to inventory
+          delta: inventoryInfo.quantity,
           reason: 'Restored from deleted work order cost',
-          workOrderId: inventoryInfo.work_order_id
+          workOrderId: inventoryInfo.work_order_id,
         });
       }
-
       return { inventoryRestored: !!inventoryInfo, quantity: inventoryInfo?.quantity ?? 0 };
     },
     onSuccess: (result, variables) => {
       queryClient.invalidateQueries({ queryKey: ['work-order-costs'] });
-      queryClient.invalidateQueries({
-        queryKey: inventoryQueryKeys.listPrefix(variables.organizationId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: inventoryQueryKeys.metadata(variables.organizationId),
-      });
-      
-      if (result.inventoryRestored) {
-        toast.success(`Cost deleted. ${result.quantity} unit(s) restored to inventory.`);
-      } else {
-        toast.success('Cost item deleted successfully');
-      }
+      queryClient.invalidateQueries({ queryKey: inventoryQueryKeys.listPrefix(variables.organizationId) });
+      queryClient.invalidateQueries({ queryKey: inventoryQueryKeys.metadata(variables.organizationId) });
+      toast.success(
+        result.inventoryRestored
+          ? formatFinalAuditCopy(copy.costDeletedRestored, { count: result.quantity })
+          : copy.costDeleted,
+      );
     },
     onError: (error) => {
       logger.error('Error deleting cost item with inventory restore', error);
-      toast.error('Failed to delete cost item');
-    }
+      toast.error(copy.costDeleteFailed);
+    },
   });
 };
 
-/**
- * Update a cost item with inventory adjustment when quantity changes.
- * Calculates delta and adjusts source inventory accordingly.
- */
 export const useUpdateWorkOrderCostWithInventory = () => {
   const queryClient = useQueryClient();
+  const { language } = useI18n();
+  const copy = getFinalHardcodedAuditCopy(language);
 
   return useMutation({
-    mutationFn: async ({ 
-      costId, 
-      updateData,
-      organizationId
-    }: { 
-      costId: string; 
-      updateData: UpdateWorkOrderCostData;
-      organizationId: string;
-    }) => {
-      // Update cost and get inventory adjustment info
+    mutationFn: async ({ costId, updateData, organizationId }: { costId: string; updateData: UpdateWorkOrderCostData; organizationId: string }) => {
       const result = await updateWorkOrderCostWithQuantityTracking(costId, updateData);
-
-      // If there's an inventory adjustment needed, apply it
       if (result.inventoryAdjustment) {
         const { inventory_item_id, delta } = result.inventoryAdjustment;
-        
-        // delta > 0 means returning to inventory (quantity decreased)
-        // delta < 0 means taking more from inventory (quantity increased)
         await adjustInventoryQuantity(organizationId, {
           itemId: inventory_item_id,
           delta,
-          reason: delta > 0 
+          reason: delta > 0
             ? 'Returned from work order cost quantity reduction'
             : 'Used in work order cost quantity increase',
-          workOrderId: result.cost.work_order_id
+          workOrderId: result.cost.work_order_id,
         });
       }
-
-      return { 
-        cost: result.cost, 
+      return {
+        cost: result.cost,
         inventoryAdjusted: !!result.inventoryAdjustment,
-        delta: result.inventoryAdjustment?.delta ?? 0
+        delta: result.inventoryAdjustment?.delta ?? 0,
       };
     },
     onSuccess: (result, variables) => {
       queryClient.invalidateQueries({ queryKey: ['work-order-costs', result.cost.work_order_id] });
-      queryClient.invalidateQueries({
-        queryKey: inventoryQueryKeys.listPrefix(variables.organizationId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: inventoryQueryKeys.metadata(variables.organizationId),
-      });
-      
+      queryClient.invalidateQueries({ queryKey: inventoryQueryKeys.listPrefix(variables.organizationId) });
+      queryClient.invalidateQueries({ queryKey: inventoryQueryKeys.metadata(variables.organizationId) });
       if (result.inventoryAdjusted) {
-        const action = result.delta > 0 ? 'restored to' : 'taken from';
-        toast.success(`Cost updated. ${Math.abs(result.delta)} unit(s) ${action} inventory.`);
+        const template = result.delta > 0 ? copy.costUpdatedRestored : copy.costUpdatedTaken;
+        toast.success(formatFinalAuditCopy(template, { count: Math.abs(result.delta) }));
       } else {
-        toast.success('Cost item updated successfully');
+        toast.success(copy.costUpdated);
       }
     },
     onError: (error) => {
       logger.error('Error updating cost item with inventory', error);
-      toast.error('Failed to update cost item');
-    }
+      toast.error(copy.costUpdateFailed);
+    },
   });
 };
-

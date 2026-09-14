@@ -10,12 +10,15 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
-import { showErrorToast } from '@/utils/errorHandling';
+import { getErrorMessage, showErrorToast } from '@/utils/errorHandling';
 import { useOfflineQueueOptional } from '@/contexts/OfflineQueueContext';
 import { OfflineAwareWorkOrderService } from '@/services/offlineAwareService';
 import { attachWorkOrderCreationImages } from '@/features/work-orders/services/workOrderNotesService';
 import { workOrders as workOrderQueryKeys, workOrderMetrics } from '@/lib/queryKeys';
 import type { WorkOrder } from '@/features/work-orders/types/workOrder';
+import { useI18n } from '@/i18n';
+import { getFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditCopy';
+import { getFinalHardcodedAuditRemainingCopy } from '@/i18n/finalHardcodedAuditRemainingCopy';
 
 export interface CreateWorkOrderData {
   title: string;
@@ -28,14 +31,11 @@ export interface CreateWorkOrderData {
   equipmentWorkingHours?: number;
   hasPM?: boolean;
   pmTemplateId?: string;
-  // Simplified assignment: just pass the assigneeId (null/undefined = unassigned)
   assigneeId?: string;
   images?: File[];
-  /** Stored on the auto-created evidence note when images are attached */
   creationPhotoNote?: string;
 }
 
-/** Result shape from mutationFn. */
 interface CreateWorkOrderResult {
   workOrder: WorkOrder | null;
   queuedOffline: boolean;
@@ -45,42 +45,32 @@ interface CreateWorkOrderResult {
 export const useCreateWorkOrder = (options?: { onSuccess?: (workOrder: WorkOrder) => void }) => {
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
+  const { language, t } = useI18n();
+  const copy = getFinalHardcodedAuditCopy(language);
+  const remainingCopy = getFinalHardcodedAuditRemainingCopy(language);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const offlineCtx = useOfflineQueueOptional();
 
   return useMutation({
     mutationFn: async (data: CreateWorkOrderData): Promise<CreateWorkOrderResult> => {
-      if (!currentOrganization) {
-        throw new Error('No organization selected');
-      }
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+      if (!currentOrganization) throw new Error('No organization selected');
+      if (!user) throw new Error('User not authenticated');
 
-      // Auto-assign logic for single-user organizations
       let assigneeId = data.assigneeId;
-      if (!assigneeId && currentOrganization.memberCount === 1) {
-        assigneeId = user.id;
-      }
+      if (!assigneeId && currentOrganization.memberCount === 1) assigneeId = user.id;
 
-      // ── Offline-aware create (pre-check + fallback) ──
       const svc = new OfflineAwareWorkOrderService(currentOrganization.id, user.id);
       const result = await svc.createWorkOrder(data, assigneeId);
 
       if (result.queuedOffline) {
-        // Signal the context to re-read localStorage so banner updates
         offlineCtx?.refresh();
         return { workOrder: null, queuedOffline: true };
       }
 
       const workOrder = result.data!;
-
       let creationPhotoFailure = false;
 
-      // ── Side-effects (only when online create succeeds) ──
-
-      // Update equipment working hours
       if (data.equipmentWorkingHours && data.equipmentWorkingHours > 0) {
         try {
           const { error } = await supabase.rpc('update_equipment_working_hours', {
@@ -88,19 +78,18 @@ export const useCreateWorkOrder = (options?: { onSuccess?: (workOrder: WorkOrder
             p_new_hours: data.equipmentWorkingHours,
             p_update_source: 'work_order',
             p_work_order_id: workOrder.id,
-            p_notes: `Updated from work order: ${data.title}`
+            p_notes: `Updated from work order: ${data.title}`,
           });
           if (error) {
             logger.error('Failed to update equipment working hours', error);
-            toast.error('Work order created but failed to update equipment hours');
+            toast.error(copy.workOrderCreatedHoursFailed);
           }
         } catch (error) {
           logger.error('Error updating equipment working hours', error);
-          toast.error('Work order created but failed to update equipment hours');
+          toast.error(copy.workOrderCreatedHoursFailed);
         }
       }
 
-      // Create PM if required
       if (data.hasPM && data.equipmentId) {
         try {
           let checklistData: PMChecklistItem[] = defaultForkliftChecklist;
@@ -126,7 +115,7 @@ export const useCreateWorkOrder = (options?: { onSuccess?: (workOrder: WorkOrder
           });
         } catch (error) {
           logger.error('Failed to create PM for equipment', error);
-          toast.error('Work order created but PM initialization failed');
+          toast.error(t('workOrderResidual.initializeFailed'));
         }
       }
 
@@ -140,12 +129,8 @@ export const useCreateWorkOrder = (options?: { onSuccess?: (workOrder: WorkOrder
           });
           if (primaryImageId) {
             queryClient.invalidateQueries({ queryKey: workOrderQueryKeys.images(workOrder.id) });
-            queryClient.invalidateQueries({
-              queryKey: workOrderQueryKeys.notesWithImages(workOrder.id),
-            });
-            queryClient.invalidateQueries({
-              queryKey: workOrderMetrics.imageCount(workOrder.id),
-            });
+            queryClient.invalidateQueries({ queryKey: workOrderQueryKeys.notesWithImages(workOrder.id) });
+            queryClient.invalidateQueries({ queryKey: workOrderMetrics.imageCount(workOrder.id) });
           } else {
             creationPhotoFailure = true;
           }
@@ -159,22 +144,16 @@ export const useCreateWorkOrder = (options?: { onSuccess?: (workOrder: WorkOrder
     },
     onSuccess: (result) => {
       if (result.queuedOffline) {
-        toast.info('Saved offline', {
-          description: 'This work order will sync when your connection returns.',
+        toast.info(remainingCopy.savedOfflineTitle, {
+          description: remainingCopy.workOrderSyncLater,
         });
-        if (!options?.onSuccess) {
-          navigate('/dashboard/work-orders');
-        }
+        if (!options?.onSuccess) navigate('/dashboard/work-orders');
         return;
       }
 
-      // Normal success
-      toast.success('Work order created successfully');
-      if (result.creationPhotoFailure) {
-        toast.warning(
-          'Work order created, but photos did not attach. Open the work order to retry.',
-        );
-      }
+      toast.success(copy.workOrderCreated);
+      if (result.creationPhotoFailure) toast.warning(t('equipmentQRScan.photosAttachFailed'));
+
       if (currentOrganization?.id) {
         queryClient.invalidateQueries({ queryKey: workOrderQueryKeys.pagedList(currentOrganization.id) });
       }
@@ -186,20 +165,22 @@ export const useCreateWorkOrder = (options?: { onSuccess?: (workOrder: WorkOrder
       queryClient.invalidateQueries({ queryKey: ['team-based-dashboard-stats', currentOrganization?.id] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-trends', currentOrganization?.id] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-cost-trend', currentOrganization?.id] });
-      // Keep legacy key invalidation until all dashboard consumers are migrated.
       queryClient.invalidateQueries({ queryKey: ['dashboardStats', currentOrganization?.id] });
 
       if (result.workOrder) {
-        if (options?.onSuccess) {
-          options.onSuccess(result.workOrder);
-        } else {
-          navigate(`/dashboard/work-orders/${result.workOrder.id}`);
-        }
+        if (options?.onSuccess) options.onSuccess(result.workOrder);
+        else navigate(`/dashboard/work-orders/${result.workOrder.id}`);
       }
     },
     onError: (error) => {
       logger.error('Error creating work order', error);
-      showErrorToast(error, 'Work Order Creation');
+      if (language === 'en') {
+        showErrorToast(error, 'Work Order Creation');
+      } else {
+        toast.error(remainingCopy.workOrderCreationFailedTitle, {
+          description: getErrorMessage(error),
+        });
+      }
     },
   });
 };

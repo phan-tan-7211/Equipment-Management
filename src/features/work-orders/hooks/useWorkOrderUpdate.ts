@@ -1,14 +1,16 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { showErrorToast, getErrorMessage } from '@/utils/errorHandling';
+import { getErrorMessage, showErrorToast } from '@/utils/errorHandling';
 import { useOfflineQueueOptional } from '@/contexts/OfflineQueueContext';
 import { OfflineAwareWorkOrderService } from '@/services/offlineAwareService';
 import type { WorkOrderServerSnapshot } from '@/services/offlineQueueService';
 import { preventiveMaintenance } from '@/lib/queryKeys';
 import { invalidateWorkOrderCaches } from '@/features/work-orders/utils/invalidateWorkOrderQueries';
+import { useI18n } from '@/i18n';
+import { getFinalHardcodedAuditExtraCopy } from '@/i18n/finalHardcodedAuditExtraCopy';
+import { getFinalHardcodedAuditRemainingCopy } from '@/i18n/finalHardcodedAuditRemainingCopy';
 
 export interface UpdateWorkOrderData {
   title?: string;
@@ -20,7 +22,6 @@ export interface UpdateWorkOrderData {
   hasPM?: boolean;
 }
 
-/** Result shape from mutationFn. */
 interface UpdateWorkOrderResult {
   result: Record<string, unknown> | null;
   queuedOffline: boolean;
@@ -29,6 +30,9 @@ interface UpdateWorkOrderResult {
 export const useUpdateWorkOrder = () => {
   const { currentOrganization } = useOrganization();
   const { user } = useAuth();
+  const { language } = useI18n();
+  const extra = getFinalHardcodedAuditExtraCopy(language);
+  const copy = getFinalHardcodedAuditRemainingCopy(language);
   const queryClient = useQueryClient();
   const offlineCtx = useOfflineQueueOptional();
 
@@ -42,16 +46,9 @@ export const useUpdateWorkOrder = () => {
       workOrderId: string;
       data: UpdateWorkOrderData;
       serverUpdatedAt?: string;
-      /**
-       * Field values from the server at the time the user opened the edit form.
-       * Pass this so offline sync can perform a true 3-way merge instead of
-       * blindly overwriting the server with stale offline values.
-       */
       serverSnapshot?: WorkOrderServerSnapshot;
     }): Promise<UpdateWorkOrderResult> => {
-      if (!currentOrganization?.id || !user?.id) {
-        throw new Error('Organization or user not available');
-      }
+      if (!currentOrganization?.id || !user?.id) throw new Error(copy.workOrderUpdateFailed);
 
       const svc = new OfflineAwareWorkOrderService(currentOrganization.id, user.id);
       const result = await svc.updateWorkOrder(workOrderId, data, serverUpdatedAt, serverSnapshot);
@@ -66,42 +63,42 @@ export const useUpdateWorkOrder = () => {
     onSuccess: ({ queuedOffline }, variables) => {
       if (queuedOffline) {
         toast({
-          title: 'Saved offline',
-          description: 'Your changes will sync when your connection returns.',
+          title: extra.savedOffline,
+          description: extra.changesSyncLater,
         });
         return;
       }
 
       const { workOrderId } = variables;
       const orgId = currentOrganization?.id ?? '';
-
       invalidateWorkOrderCaches(queryClient, orgId, workOrderId);
       queryClient.invalidateQueries({ queryKey: preventiveMaintenance.byWorkOrder(workOrderId) });
-      
+
       toast({
-        title: 'Work Order Updated',
-        description: 'Work order has been successfully updated.',
+        title: copy.workOrderUpdatedTitle,
+        description: copy.workOrderUpdatedDescription,
       });
     },
     onError: (error) => {
       console.error('Update work order error:', error);
       const errorMessage = getErrorMessage(error);
       const specificMessage = errorMessage.includes('permission')
-        ? "You don't have permission to update this work order. Contact your administrator."
+        ? copy.workOrderUpdatePermission
         : errorMessage.includes('not found')
-        ? "Work order not found. It may have been deleted."
-        : errorMessage.includes('validation') || errorMessage.includes('required')
-        ? "Please check all required fields and try again."
-        : "Failed to update work order. Please check your connection and try again.";
-      
+          ? copy.workOrderUpdateNotFound
+          : errorMessage.includes('validation') || errorMessage.includes('required')
+            ? copy.workOrderUpdateValidation
+            : copy.workOrderUpdateFailed;
+
       toast({
-        title: 'Update Failed',
+        title: copy.workOrderUpdateFailedTitle,
         description: specificMessage,
         variant: 'destructive',
       });
-      
-      showErrorToast(error, 'Work Order Update');
+
+      if (language === 'en') {
+        showErrorToast(error, 'Work Order Update');
+      }
     },
   });
 };
-

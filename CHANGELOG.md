@@ -11,6 +11,13 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.1] - 2026-09-15
+
+### Changed
+
+- **VI/EN/KO localization completion** — Remaining user-facing work-order, PM, note, image, loading, accessibility, cookie-consent, and equipment feedback now follows the selected Vietnamese, English, or Korean language without changing stored business data.
+
+
 ## [3.34.0] - 2026-09-14
 
 ### Changed

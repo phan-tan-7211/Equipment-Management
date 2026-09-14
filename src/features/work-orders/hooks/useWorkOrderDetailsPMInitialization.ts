@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { isOfflineId } from '@/features/work-orders/hooks/useOfflineMergedWorkOrders';
+import { useI18n } from '@/i18n';
+import { getFinalHardcodedAuditExtraCopy } from '@/i18n/finalHardcodedAuditExtraCopy';
 
 type PMData = { work_order_id: string } | null | undefined;
 
@@ -43,6 +45,8 @@ export function useWorkOrderDetailsPMInitialization({
   defaultPmTemplateId,
   initializePMChecklist,
 }: UseWorkOrderDetailsPMInitializationParams) {
+  const { language } = useI18n();
+  const copy = getFinalHardcodedAuditExtraCopy(language);
   const [pmInitializing, setPmInitializing] = useState(false);
   const pmInitializationAttempted = useRef<string | null>(null);
 
@@ -81,13 +85,13 @@ export function useWorkOrderDetailsPMInitialization({
         {
           onSuccess: (result) => {
             if (result !== null) {
-              toast.success('PM checklist initialized');
+              toast.success(copy.pmChecklistInitialized);
             }
             setPmInitializing(false);
           },
           onError: (error) => {
             console.error('Failed to initialize PM:', error);
-            toast.error('Failed to initialize PM checklist');
+            toast.error(copy.pmChecklistInitializeFailed);
             setPmInitializing(false);
             pmInitializationAttempted.current = null;
           },
@@ -115,6 +119,8 @@ export function useWorkOrderDetailsPMInitialization({
     defaultPmTemplateId,
     initializePMChecklist,
     pmError,
+    copy.pmChecklistInitialized,
+    copy.pmChecklistInitializeFailed,
   ]);
 
   return { pmInitializing };

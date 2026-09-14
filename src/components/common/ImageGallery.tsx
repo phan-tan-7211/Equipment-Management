@@ -6,6 +6,11 @@ import { Trash2, Eye, Star, StarOff } from 'lucide-react';
 import DynamicImageViewport from '@/components/common/DynamicImageViewport';
 import ImageLightboxDialog from '@/components/common/ImageLightboxDialog';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
+import {
+  formatFinalAuditCopy,
+  getFinalHardcodedAuditCopy,
+} from '@/i18n/finalHardcodedAuditCopy';
 
 interface ImageData {
   id: string;
@@ -38,23 +43,26 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   canDelete,
   canSetDisplayImage = false,
   currentDisplayImage,
-  title = 'Images',
-  emptyMessage = 'No images uploaded yet.'
+  title,
+  emptyMessage,
 }) => {
+  const { language } = useI18n();
+  const copy = getFinalHardcodedAuditCopy(language);
+  const resolvedTitle = title ?? copy.images;
+  const resolvedEmptyMessage = emptyMessage ?? copy.noImages;
   const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isSettingDisplay, setIsSettingDisplay] = useState<string | null>(null);
 
   const handleDelete = async (image: ImageData) => {
     if (!onDelete) return;
-    
     setIsDeleting(image.id);
     try {
       await onDelete(image.id);
-      toast.success('Image deleted successfully');
+      toast.success(copy.imageDeleted);
     } catch (error) {
       console.error('Failed to delete image:', error);
-      toast.error('Failed to delete image');
+      toast.error(copy.imageDeleteFailed);
     } finally {
       setIsDeleting(null);
     }
@@ -62,14 +70,13 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 
   const handleSetDisplayImage = async (image: ImageData) => {
     if (!onSetDisplayImage) return;
-    
     setIsSettingDisplay(image.id);
     try {
       await onSetDisplayImage(image.file_url);
-      toast.success('Display image updated');
+      toast.success(copy.displayImageUpdated);
     } catch (error) {
       console.error('Failed to set display image:', error);
-      toast.error('Failed to set display image');
+      toast.error(copy.displayImageUpdateFailed);
     } finally {
       setIsSettingDisplay(null);
     }
@@ -77,13 +84,12 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 
   const handleRemoveDisplayImage = async () => {
     if (!onSetDisplayImage) return;
-    
     try {
       await onSetDisplayImage('');
-      toast.success('Display image removed');
+      toast.success(copy.displayImageRemoved);
     } catch (error) {
       console.error('Failed to remove display image:', error);
-      toast.error('Failed to remove display image');
+      toast.error(copy.displayImageRemoveFailed);
     }
   };
 
@@ -103,12 +109,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   if (images.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-center py-8">{emptyMessage}</p>
-        </CardContent>
+        <CardHeader><CardTitle className="text-lg">{resolvedTitle}</CardTitle></CardHeader>
+        <CardContent><p className="text-muted-foreground text-center py-8">{resolvedEmptyMessage}</p></CardContent>
       </Card>
     );
   }
@@ -118,7 +120,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center justify-between">
-            {title}
+            {resolvedTitle}
             <Badge variant="secondary">{images.length}</Badge>
           </CardTitle>
         </CardHeader>
@@ -127,93 +129,40 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
             {images.map((image) => (
               <div key={image.id} className="relative group">
                 <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
-                <button
-                  type="button"
-                  className="block h-full w-full border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  onClick={() => setSelectedImage(image)}
-                  onKeyDown={(e) => handleImagePreviewKeyDown(e, image)}
-                  aria-label={`Open image ${image.file_name}`}
-                >
-                  <DynamicImageViewport
-                    src={image.file_url}
-                    alt={image.file_name}
-                    fileName={image.file_name}
-                    className="aspect-square h-full w-full rounded-lg"
-                    showControls={false}
-                  />
-                </button>
-                  
-                  {/* Display Image Indicator */}
+                  <button
+                    type="button"
+                    className="block h-full w-full border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    onClick={() => setSelectedImage(image)}
+                    onKeyDown={(e) => handleImagePreviewKeyDown(e, image)}
+                    aria-label={formatFinalAuditCopy(copy.openImage, { name: image.file_name })}
+                  >
+                    <DynamicImageViewport src={image.file_url} alt={image.file_name} fileName={image.file_name} className="aspect-square h-full w-full rounded-lg" showControls={false} />
+                  </button>
+
                   {currentDisplayImage === image.file_url && (
                     <div className="absolute top-2 left-2">
-                      <Badge className="bg-warning text-warning-foreground text-xs">
-                        <Star className="h-3 w-3 mr-1" />
-                        Display
-                      </Badge>
+                      <Badge className="bg-warning text-warning-foreground text-xs"><Star className="h-3 w-3 mr-1" />{copy.display}</Badge>
                     </div>
                   )}
-                  
-                  {/* Action Buttons */}
+
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity space-y-1">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-8 w-8 p-0"
-                      onClick={() => setSelectedImage(image)}
-                      aria-label={`View image ${image.file_name}`}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    
+                    <Button size="sm" variant="secondary" className="h-8 w-8 p-0" onClick={() => setSelectedImage(image)} aria-label={formatFinalAuditCopy(copy.viewImage, { name: image.file_name })}><Eye className="h-4 w-4" /></Button>
                     {canSetDisplayImage && currentDisplayImage !== image.file_url && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleSetDisplayImage(image)}
-                        disabled={isSettingDisplay === image.id}
-                        aria-label={`Set ${image.file_name} as display image`}
-                      >
-                        <Star className="h-4 w-4" />
-                      </Button>
+                      <Button size="sm" variant="secondary" className="h-8 w-8 p-0" onClick={() => handleSetDisplayImage(image)} disabled={isSettingDisplay === image.id} aria-label={formatFinalAuditCopy(copy.setDisplayImage, { name: image.file_name })}><Star className="h-4 w-4" /></Button>
                     )}
-                    
                     {canSetDisplayImage && currentDisplayImage === image.file_url && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="h-8 w-8 p-0"
-                        onClick={handleRemoveDisplayImage}
-                        disabled={isSettingDisplay === image.id}
-                        aria-label={`Remove ${image.file_name} as display image`}
-                      >
-                        <StarOff className="h-4 w-4" />
-                      </Button>
+                      <Button size="sm" variant="secondary" className="h-8 w-8 p-0" onClick={handleRemoveDisplayImage} disabled={isSettingDisplay === image.id} aria-label={formatFinalAuditCopy(copy.removeDisplayImage, { name: image.file_name })}><StarOff className="h-4 w-4" /></Button>
                     )}
-                    
                     {onDelete && canDelete?.(image) && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleDelete(image)}
-                        disabled={isDeleting === image.id}
-                        aria-label={`Delete image ${image.file_name}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <Button size="sm" variant="destructive" className="h-8 w-8 p-0" onClick={() => handleDelete(image)} disabled={isDeleting === image.id} aria-label={formatFinalAuditCopy(copy.deleteImage, { name: image.file_name })}><Trash2 className="h-4 w-4" /></Button>
                     )}
                   </div>
                 </div>
-                
+
                 <div className="mt-2 space-y-1">
                   <p className="text-xs font-medium truncate">{image.file_name}</p>
-                  {image.file_size && (
-                    <p className="text-xs text-muted-foreground">{formatFileSize(image.file_size)}</p>
-                  )}
-                  {image.note_content && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">{image.note_content}</p>
-                  )}
+                  {image.file_size && <p className="text-xs text-muted-foreground">{formatFileSize(image.file_size)}</p>}
+                  {image.note_content && <p className="text-xs text-muted-foreground line-clamp-2">{image.note_content}</p>}
                 </div>
               </div>
             ))}
@@ -223,24 +172,11 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 
       <ImageLightboxDialog
         open={selectedImage !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedImage(null);
-          }
-        }}
-        image={
-          selectedImage
-            ? {
-                src: selectedImage.file_url,
-                alt: selectedImage.file_name,
-                fileName: selectedImage.file_name,
-              }
-            : null
-        }
+        onOpenChange={(open) => { if (!open) setSelectedImage(null); }}
+        image={selectedImage ? { src: selectedImage.file_url, alt: selectedImage.file_name, fileName: selectedImage.file_name } : null}
       />
     </>
   );
 };
 
 export default ImageGallery;
-

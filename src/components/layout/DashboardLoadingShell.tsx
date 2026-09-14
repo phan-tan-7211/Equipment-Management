@@ -1,6 +1,8 @@
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import Logo from '@/components/ui/Logo';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useI18n } from '@/i18n';
+import { getDashboardLoadingShellCopy } from '@/i18n/dashboardLoadingShellResources';
 
 interface DashboardLoadingShellProps {
   statusLabel?: string;
@@ -8,15 +10,20 @@ interface DashboardLoadingShellProps {
 }
 
 export function DashboardLoadingShell({
-  statusLabel = 'Loading dashboard',
-  message = 'Loading dashboard content.',
+  statusLabel,
+  message,
 }: DashboardLoadingShellProps) {
+  const { language } = useI18n();
+  const copy = getDashboardLoadingShellCopy(language);
+  const resolvedStatusLabel = statusLabel ?? copy.loadingDashboard;
+  const resolvedMessage = message ?? copy.loadingContent;
   const sectionSkeletonWidths = ['w-full', 'w-11/12', 'w-10/12'] as const;
+  const sections = [copy.fleet, copy.operations, copy.infrastructure];
 
   return (
     <div data-testid="dashboard-loading-shell" className="flex min-h-screen w-full bg-background">
       <aside
-        aria-label="Dashboard navigation loading"
+        aria-label={copy.navigationLoading}
         data-testid="dashboard-loading-sidebar"
         className="hidden w-64 shrink-0 border-r bg-sidebar md:flex md:flex-col"
       >
@@ -28,7 +35,7 @@ export function DashboardLoadingShell({
         </div>
 
         <div className="flex-1 space-y-4 p-3">
-          {['Fleet', 'Operations', 'Infrastructure'].map((sectionLabel) => (
+          {sections.map((sectionLabel) => (
             <section key={sectionLabel} className="space-y-2">
               <span className="px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/50">
                 {sectionLabel}
@@ -51,7 +58,7 @@ export function DashboardLoadingShell({
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header
-          aria-label="Dashboard header loading"
+          aria-label={copy.headerLoading}
           data-testid="dashboard-loading-header"
           className="flex h-14 shrink-0 items-center gap-3 border-b px-4 sm:h-16"
         >
@@ -69,8 +76,8 @@ export function DashboardLoadingShell({
           tabIndex={-1}
           className="flex-1 overflow-auto pb-16 md:pb-0 outline-none"
         >
-          <div role="status" aria-label={statusLabel} className="sr-only">
-            {message}
+          <div role="status" aria-label={resolvedStatusLabel} className="sr-only">
+            {resolvedMessage}
           </div>
           <PageSkeleton />
         </main>
