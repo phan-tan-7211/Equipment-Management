@@ -1,4 +1,4 @@
-import { expect, test } from '../user/fixtures/equipqr-test';
+import { expect, test } from '../user/fixtures/znteqr-test';
 import type { Page } from '@playwright/test';
 import { evidenceScreenshot, evidencePause } from './shared/evidence-helpers';
 
