@@ -9,6 +9,7 @@ import { get, set, del, keys, delMany } from 'idb-keyval';
 import { logger } from '@/utils/logger';
 import { toast } from 'sonner';
 import { validateImageFile } from '@/services/imageUploadService';
+import { getRuntimeFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditRuntime';
 
 const STORE_PREFIX = 'equipqr-offline-blob';
 
@@ -64,9 +65,9 @@ export async function stageOfflineImages(
         await deleteOfflineImageRefs(userId, orgId, refs);
       }
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        toast.error('Photo storage full', {
-          description:
-            'Cannot save photos offline. Free device storage or sync when online. Your text note was not discarded.',
+        const copy = getRuntimeFinalHardcodedAuditCopy();
+        toast.error(copy.photoStorageFull, {
+          description: copy.photoStorageFullDescription,
         });
         throw new OfflineBlobStoreError('IndexedDB quota exceeded while staging offline photos');
       }
