@@ -1,5 +1,6 @@
 import type { Language } from '@/i18n/I18nProvider';
 
+// Residual user-facing copy finalized for the 3.34.1 VI/EN/KO audit.
 export const finalHardcodedAuditRemainingCopy = {
   en: {
     equipmentLocationUpdated: 'Equipment location updated successfully',
