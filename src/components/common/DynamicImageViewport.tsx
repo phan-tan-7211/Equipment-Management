@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { useHoverCapable } from '@/hooks/use-hover-capable';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useI18n } from '@/i18n';
-import { getFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditCopy';
+import { formatFinalAuditCopy, getFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditCopy';
 import {
   calculatePanPosition,
   copyImageToClipboard,
@@ -51,6 +51,8 @@ const DynamicImageViewport: React.FC<DynamicImageViewportProps> = ({
   const inlinePanEnabled = hoverCapable && !isMobile;
   const effectiveCanPan = canPan && inlinePanEnabled;
   const controlsAlwaysVisible = isMobile || !hoverCapable;
+  const downloadLabel = formatFinalAuditCopy(copy.downloadNamed, { name: alt });
+  const copyLabel = formatFinalAuditCopy(copy.copyNamed, { name: alt });
 
   const handleImageLoad = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
     const img = event.currentTarget;
@@ -163,10 +165,10 @@ const DynamicImageViewport: React.FC<DynamicImageViewportProps> = ({
           onPointerDown={stopControlPointer}
           onPointerUp={stopControlPointer}
         >
-          <Button type="button" size="icon" variant="secondary" className="pointer-events-auto h-8 w-8 bg-background/70 shadow-sm backdrop-blur-sm" onClick={handleDownload} onPointerDown={stopControlPointer} aria-label={copy.download}>
+          <Button type="button" size="icon" variant="secondary" className="pointer-events-auto h-8 w-8 bg-background/70 shadow-sm backdrop-blur-sm" onClick={handleDownload} onPointerDown={stopControlPointer} aria-label={downloadLabel}>
             <Download className="h-4 w-4" />
           </Button>
-          <Button type="button" size="icon" variant="secondary" className="pointer-events-auto h-8 w-8 bg-background/70 shadow-sm backdrop-blur-sm" onClick={handleCopy} onPointerDown={stopControlPointer} disabled={isCopying} aria-label={copy.copy}>
+          <Button type="button" size="icon" variant="secondary" className="pointer-events-auto h-8 w-8 bg-background/70 shadow-sm backdrop-blur-sm" onClick={handleCopy} onPointerDown={stopControlPointer} disabled={isCopying} aria-label={copyLabel}>
             <Copy className="h-4 w-4" />
           </Button>
         </div>
