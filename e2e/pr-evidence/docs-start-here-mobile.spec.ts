@@ -13,7 +13,7 @@
  *     -Collection start-here -Variant mobile
  */
 
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { evidenceScreenshot } from './shared/evidence-helpers';
 import { focusAndClick, focusAndFill, focusControl, settleForDemo } from './shared/docs-demo-helpers';
 
