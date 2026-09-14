@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
+import { getFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditCopy';
 
 type UseWorkOrderDetailsNotesComposerParams = {
   notesSectionRef: React.RefObject<HTMLDivElement | null>;
@@ -10,6 +12,8 @@ export function useWorkOrderDetailsNotesComposer({
   notesSectionRef,
   isOnline,
 }: UseWorkOrderDetailsNotesComposerParams) {
+  const { language } = useI18n();
+  const copy = getFinalHardcodedAuditCopy(language);
   const [openNoteFormTrigger, setOpenNoteFormTrigger] = useState(0);
   const [openCaptureTrigger, setOpenCaptureTrigger] = useState(0);
 
@@ -22,7 +26,7 @@ export function useWorkOrderDetailsNotesComposer({
 
   const openPhotoCapture = useCallback(() => {
     if (!isOnline) {
-      toast.error('Photos need a connection. Text notes can still be saved offline.');
+      toast.error(copy.photosNeedConnection);
       return;
     }
     setOpenNoteFormTrigger((prev) => prev + 1);
@@ -30,7 +34,7 @@ export function useWorkOrderDetailsNotesComposer({
     setTimeout(() => {
       notesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
-  }, [isOnline, notesSectionRef]);
+  }, [copy.photosNeedConnection, isOnline, notesSectionRef]);
 
   return {
     openNoteFormTrigger,
