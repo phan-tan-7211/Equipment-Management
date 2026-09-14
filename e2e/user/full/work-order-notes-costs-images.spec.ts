@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { seedWorkOrders } from '../shared/seed-data';
 
 test.describe('work order notes and costs @full', () => {
