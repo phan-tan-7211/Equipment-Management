@@ -4,7 +4,7 @@ alwaysApply: true
 ---
 # Dev Stack Lifecycle (authoritative)
 
-Agents working on EquipQR **must not fight a sick local stack**. Prefer a clean full cycle over incremental hacks that leave `node_modules`, Docker, or background processes in a bad state.
+Agents working on ZNTEQR **must not fight a sick local stack**. Prefer a clean full cycle over incremental hacks that leave `node_modules`, Docker, or background processes in a bad state.
 
 ## Hard rules
 
