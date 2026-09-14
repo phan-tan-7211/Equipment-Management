@@ -141,12 +141,12 @@ function Install-RootNodeModules {
     param([string]$Reason)
 
     Write-Host "        $Reason"
-    . (Join-Path $repoRoot 'dev\Release-EquipQrNodeModuleLocks.ps1')
-    Stop-EquipQrDevToolingProcesses -RepoRoot $repoRoot
+    . (Join-Path $repoRoot 'dev\Release-ZnteqrNodeModuleLocks.ps1')
+    Stop-ZnteqrDevToolingProcesses -RepoRoot $repoRoot
     Start-Sleep -Seconds 1
     Remove-RepoNodeModulesScrap -ParentDirectory $repoRoot
     try {
-        Invoke-EquipQrSafeNpmCi -WorkingDirectory $repoRoot -PreferOffline -NoAudit -SkipToolingStop
+        Invoke-ZnteqrSafeNpmCi -WorkingDirectory $repoRoot -PreferOffline -NoAudit -SkipToolingStop
     } catch {
         Write-Host "        FAIL: Could not install root dependencies: $_"
         Write-Host '        Try: .\dev\npm-ci-safe.bat  (or dev-stop-all.bat then npm-ci-safe.bat)'
@@ -164,11 +164,11 @@ function Install-DocsNodeModules {
     param([string]$Reason)
 
     Write-Host "        $Reason"
-    if (-not (Get-Command Invoke-EquipQrSafeNpmCi -ErrorAction SilentlyContinue)) {
-        . (Join-Path $repoRoot 'dev\Release-EquipQrNodeModuleLocks.ps1')
+    if (-not (Get-Command Invoke-ZnteqrSafeNpmCi -ErrorAction SilentlyContinue)) {
+        . (Join-Path $repoRoot 'dev\Release-ZnteqrNodeModuleLocks.ps1')
     }
     try {
-        Invoke-EquipQrSafeNpmCi -WorkingDirectory $repoRoot -NpmPrefix 'docs' -PreferOffline -NoAudit -SkipToolingStop
+        Invoke-ZnteqrSafeNpmCi -WorkingDirectory $repoRoot -NpmPrefix 'docs' -PreferOffline -NoAudit -SkipToolingStop
     } catch {
         Write-Host "        FAIL: Could not install docs dependencies: $_"
         exit 1
@@ -393,9 +393,9 @@ Write-Host "        All pre-flight checks passed."
 # ---------- 1b. 1Password sync ----------
 Write-Host ""
 Write-Host " [1b/11] Syncing 1Password item env files early..."
-$OP_APP_ITEM = $env:EQUIPQR_OP_APP_ITEM
+$OP_APP_ITEM = $env:ZNTEQR_OP_APP_ITEM
 if (-not $OP_APP_ITEM) { $OP_APP_ITEM = $DEFAULT_OP_APP_ITEM }
-$OP_EDGE_ITEM = $env:EQUIPQR_OP_EDGE_ITEM
+$OP_EDGE_ITEM = $env:ZNTEQR_OP_EDGE_ITEM
 if (-not $OP_EDGE_ITEM) { $OP_EDGE_ITEM = $DEFAULT_OP_EDGE_ITEM }
 
 $opCli = Get-Command op -ErrorAction SilentlyContinue
