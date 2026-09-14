@@ -33,7 +33,7 @@ jobs:
       - name: Probe public-google-maps-key
         shell: bash
         env:
-          SUPABASE_URL: https://ymxkzronkhwxzcdcbnwq.supabase.co
+          SUPABASE_URL: https://wgynakhoppqkrutnslmv.supabase.co
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           set -u
