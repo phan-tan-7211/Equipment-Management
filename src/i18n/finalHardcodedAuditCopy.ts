@@ -33,6 +33,10 @@ export const finalHardcodedAuditCopy = {
     costUpdatedTaken: 'Cost updated. {{count}} unit(s) taken from inventory.',
     costUpdated: 'Cost item updated successfully',
     costUpdateFailed: 'Failed to update cost item',
+    notificationSettingsUpdated: 'Notification settings updated',
+    notificationSettingsUpdateFailed: 'Failed to update notification settings',
+    notificationsMarkedRead: 'All notifications marked as read',
+    notificationsMarkReadFailed: 'Failed to mark notifications as read',
   },
   vi: {
     cookiePreferenceSaveFailed: 'Không thể lưu tùy chọn cookie của bạn. Vui lòng thử lại.',
@@ -66,6 +70,10 @@ export const finalHardcodedAuditCopy = {
     costUpdatedTaken: 'Đã cập nhật chi phí. {{count}} đơn vị đã được lấy từ kho.',
     costUpdated: 'Đã cập nhật khoản chi phí',
     costUpdateFailed: 'Không thể cập nhật khoản chi phí',
+    notificationSettingsUpdated: 'Đã cập nhật cài đặt thông báo',
+    notificationSettingsUpdateFailed: 'Không thể cập nhật cài đặt thông báo',
+    notificationsMarkedRead: 'Đã đánh dấu tất cả thông báo là đã đọc',
+    notificationsMarkReadFailed: 'Không thể đánh dấu tất cả thông báo là đã đọc',
   },
   ko: {
     cookiePreferenceSaveFailed: '쿠키 환경설정을 저장할 수 없습니다. 다시 시도해 주세요.',
@@ -99,6 +107,10 @@ export const finalHardcodedAuditCopy = {
     costUpdatedTaken: '비용이 업데이트되었습니다. {{count}}개가 재고에서 차감되었습니다.',
     costUpdated: '비용 항목이 업데이트되었습니다',
     costUpdateFailed: '비용 항목을 업데이트하지 못했습니다',
+    notificationSettingsUpdated: '알림 설정이 업데이트되었습니다',
+    notificationSettingsUpdateFailed: '알림 설정을 업데이트하지 못했습니다',
+    notificationsMarkedRead: '모든 알림을 읽음으로 표시했습니다',
+    notificationsMarkReadFailed: '모든 알림을 읽음으로 표시하지 못했습니다',
   },
 } as const;
 
