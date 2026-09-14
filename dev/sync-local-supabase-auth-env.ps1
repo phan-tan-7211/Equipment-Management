@@ -33,7 +33,7 @@ function Read-OpField {
 
 $workspaceRoot = Split-Path -Parent $PSScriptRoot
 $targetPath = Join-Path $workspaceRoot "supabase\.env"
-$appItem = if ($env:EQUIPQR_OP_APP_ITEM) { $env:EQUIPQR_OP_APP_ITEM } else { 'app-env-local-dev' }
+$appItem = if ($env:ZNTEQR_OP_APP_ITEM) { $env:ZNTEQR_OP_APP_ITEM } else { 'app-env-local-dev' }
 
 $clientId = Read-OpField -Item $appItem -Field 'SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID'
 $secret = Read-OpField -Item $appItem -Field 'SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET'
