@@ -11,6 +11,8 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.2] - 2026-09-15
+
 ### Changed
 
 - **ZNTEQR naming cleanup** — Accessibility labels, internal helpers, test fixtures, documentation tokens, and developer configuration now consistently use the ZNTEQR name while legacy production URLs and immutable migration history remain unchanged.
