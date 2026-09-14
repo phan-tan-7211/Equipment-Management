@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { evidencePause, evidenceScreenshot } from './shared/evidence-helpers';
 import { signInWithEmailPassword } from '../user/shared/auth-helpers';
 import { devPassword } from '../user/shared/seed-data';
