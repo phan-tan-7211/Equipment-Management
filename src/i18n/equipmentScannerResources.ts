@@ -24,7 +24,7 @@ export const equipmentScannerResources = {
       noQrInImage: 'No QR code found in this image. Try another photo or use the camera.',
       parseEmpty: 'No QR content.',
       parseMalformed: 'Could not read this QR link.',
-      parseExternal: 'This QR code is not an ZNTEQR link.',
+      parseExternal: 'This QR code is not a ZNTEQR link.',
       parseUnsupported: 'Unsupported ZNTEQR link.',
       cameraPolicyBlocked: "Camera access is blocked by this page's security policy. Use Upload QR image or contact support.",
       cameraDenied: 'Camera permission was denied. Allow camera access in your browser settings, then retry, or upload a QR image.',
