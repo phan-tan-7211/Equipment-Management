@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { pinContextToOrg } from '../user/shared/auth-helpers';
 import { apexOrgId, authStatePath, seedEquipment } from '../user/shared/seed-data';
 import {
