@@ -96,7 +96,7 @@ export function parseZNTEQRTarget(
   const originAllowed = url.origin === baseOrigin || EQUIPQR_QR_ORIGINS.has(url.origin);
 
   if (!originAllowed) {
-    return { ok: false, reason: 'external', message: 'This QR code is not an ZNTEQR link.' };
+    return { ok: false, reason: 'external', message: 'This QR code is not a ZNTEQR link.' };
   }
 
   const pathname = url.pathname.replace(/\/+$/, '') || '/';

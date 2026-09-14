@@ -86,7 +86,7 @@ describe('Landing mobile UX pass', () => {
   it('renders how-it-works as an ordered list of steps', () => {
     renderWithRouter(<HowItWorksSection />);
 
-    const steps = screen.getByRole('list', { name: /how equipqr works/i });
+    const steps = screen.getByRole('list', { name: /how znteqr works/i });
 
     expect(within(steps).getAllByRole('listitem')).toHaveLength(3);
   });

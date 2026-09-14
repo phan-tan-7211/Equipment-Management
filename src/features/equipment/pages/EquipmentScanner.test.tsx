@@ -172,7 +172,7 @@ describe('EquipmentScanner', () => {
       hoisted.scannerState.lastOnDecode?.({ data: 'https://evil.example/not-equipqr' });
     });
     const errorAlert = await screen.findByRole('alert');
-    expect(errorAlert).toHaveTextContent(/not an equipqr link/i);
+    expect(errorAlert).toHaveTextContent(/not a znteqr link/i);
     expect(hoisted.mockStop).toHaveBeenCalled();
   });
 
@@ -272,7 +272,7 @@ describe('EquipmentScanner', () => {
       hoisted.scannerState.lastOnDecode?.({ data: 'https://evil.example/x' });
     });
     const errorAlert = await screen.findByRole('alert');
-    expect(errorAlert).toHaveTextContent(/not an equipqr link/i);
+    expect(errorAlert).toHaveTextContent(/not a znteqr link/i);
     const destroysBefore = hoisted.mockDestroy.mock.calls.length;
     await user.click(screen.getByRole('button', { name: /retry scan/i }));
     await waitFor(() =>
