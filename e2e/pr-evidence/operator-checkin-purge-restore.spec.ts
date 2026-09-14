@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { pinContextToApex } from '../user/shared/auth-helpers';
 import { evidenceScreenshot, evidencePause } from './shared/evidence-helpers';
 import { resetApexOperatorCheckinEvidence } from './shared/operator-checkin-evidence-reset';
