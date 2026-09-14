@@ -4,7 +4,7 @@ import "./custom.css";
 
 /**
  * ZNTEQR Help Center theme — default VitePress + Mission Control tokens.
- * Token mirror lives in equipqr-tokens.css / custom.css (see deployment.md).
+ * Token mirror lives in znteqr-tokens.css / custom.css (see deployment.md).
  */
 const theme: Theme = {
   extends: DefaultTheme,
