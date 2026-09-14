@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 
 test.describe('notifications settings reports @full', () => {
   test('notifications page loads', async ({ gotoDashboard, page, assertHealthyShell }) => {
