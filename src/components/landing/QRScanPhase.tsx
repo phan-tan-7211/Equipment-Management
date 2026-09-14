@@ -12,7 +12,7 @@ const QR_SIZE = 200;
 const QR_OFFSET = (VIEWBOX - QR_SIZE) / 2; // 60
 
 /**
- * Phase 1: The EquipQR brand icon (which was designed to look like a QR code)
+ * Phase 1: The ZNTEQR brand icon (which was designed to look like a QR code)
  * is rendered at the centre of the stage. A glowing scanline sweeps top-to-bottom
  * across it, communicating "this is being scanned".
  *
@@ -20,7 +20,7 @@ const QR_OFFSET = (VIEWBOX - QR_SIZE) / 2; // 60
  * single vertical line that the next phase morphs into a U.S. state outline.
  *
  * The icon paths are rendered inside a nested <svg> using the same tight viewBox
- * as EquipQRIcon (850 365 222 222), so no coordinate translation is needed.
+ * as ZNTEQRIcon (850 365 222 222), so no coordinate translation is needed.
  */
 export default function QRScanPhase({ onPhaseComplete }: QRScanPhaseProps) {
   const containerRef = useRef<SVGSVGElement>(null);
@@ -91,7 +91,7 @@ export default function QRScanPhase({ onPhaseComplete }: QRScanPhaseProps) {
         </filter>
       </defs>
 
-      {/* EquipQR brand icon — designed to look like a QR code.
+      {/* ZNTEQR brand icon — designed to look like a QR code.
           Nested <svg> maps the icon's own coordinate space (viewBox 850 365 222 222)
           into the QR_OFFSET / QR_SIZE region of this stage. */}
       <g ref={qrGroupRef}>

@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - PM Template Compatibility Rules
+-- ZNTEQR Seed Data - PM Template Compatibility Rules
 -- =====================================================
 -- Links PM templates to equipment types by manufacturer/model
 -- These rules determine which PM templates are suggested for equipment

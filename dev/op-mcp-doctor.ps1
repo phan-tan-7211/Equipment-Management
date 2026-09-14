@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Verify every MCP server EquipQR agents rely on is reachable and authenticated.
+  Verify every MCP server ZNTEQR agents rely on is reachable and authenticated.
 
 .DESCRIPTION
   Runs a non-mutating health check against each MCP server:
@@ -47,7 +47,7 @@ function Test-CommandOnPath {
 
 function Test-PluginFolder {
     param([string]$Server, [string]$Folder)
-    $pluginRoot = 'C:\Users\viral\.cursor\projects\c-Users-viral-EquipQR\mcps'
+    $pluginRoot = 'C:\Users\viral\.cursor\projects\c-Users-viral-ZNTEQR\mcps'
     $path = Join-Path $pluginRoot $Folder
     if (Test-Path -LiteralPath $path) {
         Add-Result -Server $Server -Type 'plugin' -Status 'OK' -Detail $path
@@ -137,7 +137,7 @@ function Test-StdioMcp {
 }
 
 Write-Host ""
-Write-Host "EquipQR MCP Doctor - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Write-Host "ZNTEQR MCP Doctor - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 Write-Host "================================================="
 Write-Host ""
 

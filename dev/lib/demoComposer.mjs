@@ -78,7 +78,7 @@ export async function composeSceneClips(opts) {
   );
   const runToken = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 
-  const introText = opts.introText || 'EquipQR Demo';
+  const introText = opts.introText || 'ZNTEQR Demo';
   const outroText = opts.outroText || 'End of Demo';
   const introFilter = `drawtext=text='${escapeDrawtextValue(introText)}':x=(w-text_w)/2:y=(h-text_h)/2:fontsize=36:fontcolor=white`;
   const outroFilter = `drawtext=text='${escapeDrawtextValue(outroText)}':x=(w-text_w)/2:y=(h-text_h)/2:fontsize=36:fontcolor=white`;

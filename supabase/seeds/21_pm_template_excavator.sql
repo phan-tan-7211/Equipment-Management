@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Excavator PM Template (Global)
+-- ZNTEQR Seed Data - Excavator PM Template (Global)
 -- =====================================================
 -- This seed creates the global Excavator PM checklist template.
 -- Global templates have organization_id = NULL and is_protected = true.

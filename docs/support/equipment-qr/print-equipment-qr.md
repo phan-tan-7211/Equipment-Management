@@ -13,7 +13,7 @@ Pick the machine from Equipment, or scan its existing QR code.
 
 ## 2. Open the QR code view
 
-Tap the QR icon in the equipment header. EquipQR renders the QR code full-size so you can print or download it.
+Tap the QR icon in the equipment header. ZNTEQR renders the QR code full-size so you can print or download it.
 
 When the equipment has **Daily Operator Check-In** assignments, the QR dialog includes a **QR code type** dropdown:
 

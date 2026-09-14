@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { parseEquipQRTarget, type ParseEquipQRTargetResult } from '@/utils/qr';
+import { parseZNTEQRTarget, type ParseZNTEQRTargetResult } from '@/utils/qr';
 import {
   getCameraAccessErrorCode,
   type CameraAccessErrorCode,
@@ -33,7 +33,7 @@ type Phase =
   | 'no-camera';
 
 type DecodeSource = 'camera' | 'upload';
-type ParseErrorReason = Extract<ParseEquipQRTargetResult, { ok: false }>['reason'];
+type ParseErrorReason = Extract<ParseZNTEQRTargetResult, { ok: false }>['reason'];
 
 const CAMERA_ERROR_KEYS: Record<CameraAccessErrorCode, string> = {
   policy_blocked: 'equipmentScanner.cameraPolicyBlocked',
@@ -94,7 +94,7 @@ const EquipmentScanner: React.FC = () => {
   const handleDecodedPayload = useCallback(
     (raw: string, source: DecodeSource) => {
       if (handledDecodeRef.current) return;
-      const parsed = parseEquipQRTarget(raw);
+      const parsed = parseZNTEQRTarget(raw);
       if (!parsed.ok) {
         const message = t(PARSE_ERROR_KEYS[parsed.reason]);
         handledDecodeRef.current = true;

@@ -23,7 +23,7 @@ export const settingsPageResources = {
       "resetButton": "Reset",
       "resetSuccess": "Settings have been reset to default values",
       "deleteTitle": "Delete Account",
-      "deleteDescription": "Permanently delete your EquipQR login and personal data. Organization work history you contributed stays with those organizations.",
+      "deleteDescription": "Permanently delete your ZNTEQR login and personal data. Organization work history you contributed stays with those organizations.",
       "deleteButton": "Delete account",
       "navAria": "Settings sections"
     }
@@ -52,7 +52,7 @@ export const settingsPageResources = {
       "resetButton": "Đặt lại",
       "resetSuccess": "Đã đặt lại cài đặt về giá trị mặc định",
       "deleteTitle": "Xóa tài khoản",
-      "deleteDescription": "Xóa vĩnh viễn tài khoản đăng nhập EquipQR và dữ liệu cá nhân. Lịch sử công việc bạn đã đóng góp vẫn được lưu tại các tổ chức liên quan.",
+      "deleteDescription": "Xóa vĩnh viễn tài khoản đăng nhập ZNTEQR và dữ liệu cá nhân. Lịch sử công việc bạn đã đóng góp vẫn được lưu tại các tổ chức liên quan.",
       "deleteButton": "Xóa tài khoản",
       "navAria": "Các mục cài đặt"
     }
@@ -81,7 +81,7 @@ export const settingsPageResources = {
       "resetButton": "초기화",
       "resetSuccess": "설정이 기본값으로 초기화되었습니다",
       "deleteTitle": "계정 삭제",
-      "deleteDescription": "EquipQR 로그인 및 개인정보를 영구 삭제합니다. 기여한 조직의 업무 이력은 해당 조직에 남습니다.",
+      "deleteDescription": "ZNTEQR 로그인 및 개인정보를 영구 삭제합니다. 기여한 조직의 업무 이력은 해당 조직에 남습니다.",
       "deleteButton": "계정 삭제",
       "navAria": "설정 항목"
     }

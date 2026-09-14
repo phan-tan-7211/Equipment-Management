@@ -14,7 +14,7 @@ export function PrivacySecuritySection() {
                 {
                   label: 'Encryption in transit:',
                   content:
-                    'All data transmitted between your browser and EquipQR is encrypted using TLS (HTTPS). We enforce HTTP Strict Transport Security (HSTS) with a one-year max-age, including subdomains, with preload.',
+                    'All data transmitted between your browser and ZNTEQR is encrypted using TLS (HTTPS). We enforce HTTP Strict Transport Security (HSTS) with a one-year max-age, including subdomains, with preload.',
                 },
                 {
                   label: 'Encryption at rest:',
@@ -49,11 +49,11 @@ export function PrivacySecuritySection() {
                       <code>X-Content-Type-Options: nosniff</code>,{' '}
                       <code>Referrer-Policy: strict-origin-when-cross-origin</code>, and a{' '}
                       <code>Permissions-Policy</code> that allows camera and microphone access only
-                      within EquipQR&apos;s own application pages (same origin). The camera is used for
+                      within ZNTEQR&apos;s own application pages (same origin). The camera is used for
                       features such as in-app QR scanning; the microphone is used only for optional
                       voice dictation into text fields, is activated only when you tap the microphone
                       button and grant browser consent, and audio is processed by your browser&apos;s
-                      speech service &mdash; EquipQR never records or stores audio.
+                      speech service &mdash; ZNTEQR never records or stores audio.
                     </>
                   ),
                 },

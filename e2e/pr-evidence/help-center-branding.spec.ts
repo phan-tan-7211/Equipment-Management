@@ -6,7 +6,7 @@ import { startDocsDistCspServer, type DocsCspServer } from './shared/docs-csp-se
  * Issue #1147 — equipqr.info served a front page whose links, theme toggle,
  * and hero button did nothing because the production CSP (script-src 'self')
  * blocked the inline scripts VitePress needs to hydrate. The site also had no
- * EquipQR branding (no nav logo, no hero logo, favicon 404).
+ * ZNTEQR branding (no nav logo, no hero logo, favicon 404).
  *
  * Issue #1158 — the sha256-hash CSP from #1147 drifted as soon as any doc page
  * changed (VitePress regenerates its inline __VP_HASH_MAP__ bootstrap), because
@@ -16,7 +16,7 @@ import { startDocsDistCspServer, type DocsCspServer } from './shared/docs-csp-se
  * script-src 'self' that can never drift.
  *
  * Issue #1358 — VitePress theme mirrors Mission Control tokens from the app,
- * force-dark appearance (no light toggle), EquipQR (+ Docs) wordmark, and
+ * force-dark appearance (no light toggle), ZNTEQR (+ Docs) wordmark, and
  * Open App as a primary CTA so the help center reads as the same product family.
  *
  * This spec serves the built docs through the exact CSP shipped in
@@ -35,7 +35,7 @@ test.describe.serial('Help Center CSP hydration and branding @pr-evidence', () =
     await docsServer?.close();
   });
 
-  test('homepage hydrates under production CSP with EquipQR branding', async ({ page }) => {
+  test('homepage hydrates under production CSP with ZNTEQR branding', async ({ page }) => {
     page.on('console', (message) => {
       if (message.type() === 'error' && /content security policy/i.test(message.text())) {
         cspViolations.push(message.text());
@@ -57,9 +57,9 @@ test.describe.serial('Help Center CSP hydration and branding @pr-evidence', () =
     await expect(navLogo).toHaveAttribute('src', /eqr-logo\/icon\.svg/);
     await expect(page.locator('.VPHero .VPImage')).toBeVisible();
 
-    // #1358 — product wordmark (EquipQR), not "EquipQR Help" as primary title.
-    await expect(page.locator('.VPNavBarTitle .title')).toContainText('EquipQR');
-    await expect(page.locator('.VPHero .name')).toHaveText(/EquipQR/i);
+    // #1358 — product wordmark (ZNTEQR), not "ZNTEQR Help" as primary title.
+    await expect(page.locator('.VPNavBarTitle .title')).toContainText('ZNTEQR');
+    await expect(page.locator('.VPHero .name')).toHaveText(/ZNTEQR/i);
     await expect(page.locator('html')).toHaveClass(/dark/);
 
     // Assert the source Mission Control token (stable HSL components).

@@ -17,7 +17,7 @@ function buildPublicReleases(): PublicRelease[] {
           entries: [
             {
               title: 'Public releases page',
-              body: 'Customers can review published EquipQR changes without opening GitHub.',
+              body: 'Customers can review published ZNTEQR changes without opening GitHub.',
               issueRefs: ['#1460'],
             },
           ],

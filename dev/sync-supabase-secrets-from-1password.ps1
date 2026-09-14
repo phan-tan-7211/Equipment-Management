@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Sync Supabase Edge Function secrets from the EquipQR Agents 1Password vault.
+  Sync Supabase Edge Function secrets from the ZNTEQR Agents 1Password vault.
 
 .DESCRIPTION
   Reads server-side env vars from 1Password and pushes them to Supabase via
@@ -39,7 +39,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$OP_VAULT = 'tgo2m6qbct5otqeqirjocn3joa'  # EquipQR Agents
+$OP_VAULT = 'tgo2m6qbct5otqeqirjocn3joa'  # ZNTEQR Agents
 $SUPABASE_TOKEN_ITEM = 'supabase-write'
 $SUPABASE_TOKEN_FIELD = 'SUPABASE_ACCESS_TOKEN'
 
@@ -352,7 +352,7 @@ $allowedRef = $cfg.AllowedProjectRef
 
 $itemProbe = & op item get $OpItem --vault $OP_VAULT --format json 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Fail "1Password item '$OpItem' not found in EquipQR Agents vault."
+    Write-Fail "1Password item '$OpItem' not found in ZNTEQR Agents vault."
     exit 1
 }
 

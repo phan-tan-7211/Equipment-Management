@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/accordion';
 
 const CONTACT_EMAIL = 'mailto:phantan7211@gmail.com';
-const GITHUB_REPO_URL = 'https://github.com/Columbia-Cloudworks-LLC/EquipQR';
+const GITHUB_REPO_URL = 'https://github.com/Columbia-Cloudworks-LLC/ZNTEQR';
 const EQUIPQR_APP_URL = 'https://equipqr.app';
 const COLUMBIA_CLOUDWORKS_URL = 'https://columbiacloudworks.com';
 
@@ -76,7 +76,7 @@ const footerSections: FooterSection[] = [
         labelKey: 'demo',
         type: 'external',
       },
-      { href: EQUIPQR_APP_URL, label: 'EquipQR™.app', type: 'external' },
+      { href: EQUIPQR_APP_URL, label: 'ZNTEQR™.app', type: 'external' },
       {
         href: GITHUB_REPO_URL,
         label: 'GitHub',
@@ -174,7 +174,7 @@ const LandingFooter = () => {
         </div>
 
         <div className="mt-8 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-muted-foreground">
-          <span>© {currentYear} EquipQR™</span>
+          <span>© {currentYear} ZNTEQR™</span>
           <ExternalLink
             href={COLUMBIA_CLOUDWORKS_URL}
             className={`flex items-center gap-1.5 ${footerLinkDecorationClassName}`}

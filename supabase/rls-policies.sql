@@ -1,4 +1,4 @@
--- EquipQR RLS reference baseline (read-only documentation artifact)
+-- ZNTEQR RLS reference baseline (read-only documentation artifact)
 -- Source: production Supabase project ymxkzronkhwxzcdcbnwq
 -- Generated (UTC): 2026-06-02T13:25:49Z
 -- Regenerate: .\scripts\export-schema-baseline.ps1

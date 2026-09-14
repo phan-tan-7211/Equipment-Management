@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Fetch GitHub issue JSON plus EquipQR ITIL heuristic flags.
+  Fetch GitHub issue JSON plus ZNTEQR ITIL heuristic flags.
 
 .PARAMETER Issue
   Issue number, #nnn, or github.com/issues/n URL.

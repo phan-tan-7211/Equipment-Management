@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Geocoded Locations (Cache)
+-- ZNTEQR Seed Data - Geocoded Locations (Cache)
 -- =====================================================
 -- Production reality: this table has 0 rows in production. It is a pure
 -- runtime cache populated by the geocoding edge function.

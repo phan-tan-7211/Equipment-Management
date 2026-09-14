@@ -1,6 +1,6 @@
 ---
 title: "Connect QuickBooks"
-description: "Authorize EquipQR to create draft invoices in your QuickBooks Online company."
+description: "Authorize ZNTEQR to create draft invoices in your QuickBooks Online company."
 lastReviewed: 2026-07-07
 personas: ["admin","owner"]
 requirement: "Must be Organization Owner or Admin."
@@ -21,13 +21,13 @@ From the sidebar, open **Integrations** (or Organization → Integrations tab). 
 
 ## 2. Click Connect to QuickBooks Online
 
-EquipQR redirects you to QuickBooks to authorize the connection. Sign in to the QuickBooks company you want to connect.
+ZNTEQR redirects you to QuickBooks to authorize the connection. Sign in to the QuickBooks company you want to connect.
 
 ## 3. Approve access
 
-Grant the requested scopes. EquipQR only reads customers and writes invoices — it does not touch payroll, banking, or transactions.
+Grant the requested scopes. ZNTEQR only reads customers and writes invoices — it does not touch payroll, banking, or transactions.
 
-## 4. Return to EquipQR
+## 4. Return to ZNTEQR
 
 You land back on the Integrations tab with a **Connected** badge on the QuickBooks Online card. The card offers **Disconnect** and a shortcut to manage the connection inside QuickBooks.
 
@@ -40,7 +40,7 @@ The same card is available on mobile:
 Next, map your teams to QuickBooks customers so invoice export knows where to post.
 
 ::: tip Note
-QuickBooks access tokens expire every 100 days. EquipQR auto-refreshes the connection in the background, so you rarely need to reconnect manually. If the connection health indicator in the top bar turns red, reconnect from this page.
+QuickBooks access tokens expire every 100 days. ZNTEQR auto-refreshes the connection in the background, so you rarely need to reconnect manually. If the connection health indicator in the top bar turns red, reconnect from this page.
 :::
 
 ## Related articles

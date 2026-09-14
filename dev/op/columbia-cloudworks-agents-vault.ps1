@@ -7,7 +7,7 @@
   Human Google sign-in for admin.google.com and console.cloud.google.com lives here
   (item IDs required because titles contain parentheses).
 
-  EquipQR product E2E automation still uses EquipQR Agents item google-login.
+  ZNTEQR product E2E automation still uses ZNTEQR Agents item google-login.
 #>
 
 $script:ColumbiaCloudworksAgentsVaultId = 'mrviyowmjwrxv7syobdlhnmawa'

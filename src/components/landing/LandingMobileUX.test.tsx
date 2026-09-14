@@ -43,7 +43,7 @@ describe('Landing mobile UX pass', () => {
     renderWithRouter(<HeroAnimation />);
 
     expect(
-      screen.getByRole('region', { name: /EquipQR asset tracking demo/i }),
+      screen.getByRole('region', { name: /ZNTEQR asset tracking demo/i }),
     ).toBeInTheDocument();
   });
 

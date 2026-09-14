@@ -8,7 +8,7 @@ STATE_FILE="${CLOUD_AGENT_STATE_FILE:-${STATE_DIR}/ephemeral-stack.json}"
 ENV_BACKUP_FILE="${CLOUD_AGENT_ENV_BACKUP:-${STATE_DIR}/.env.pre-ephemeral}"
 DEFAULT_TTL_HOURS="${CLOUD_AGENT_BRANCH_TTL_HOURS:-4}"
 BRANCH_NAME_PREFIX="${CLOUD_AGENT_BRANCH_PREFIX:-agent}"
-# EquipQR Agents vault UUID (spaced names break some op CLI paths).
+# ZNTEQR Agents vault UUID (spaced names break some op CLI paths).
 OP_EQUIPQR_AGENTS_VAULT_ID="${CLOUD_AGENT_OP_VAULT_ID:-tgo2m6qbct5otqeqirjocn3joa}"
 
 ca_log() { echo "  [cloud-agent] $*"; }

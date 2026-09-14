@@ -1,6 +1,6 @@
 # Testing Guidelines
 
-EquipQR follows a **testing trophy** strategy: fast unit and component tests carry most coverage; Playwright journey tests guard critical user flows.
+ZNTEQR follows a **testing trophy** strategy: fast unit and component tests carry most coverage; Playwright journey tests guard critical user flows.
 
 ## Philosophy
 
@@ -13,7 +13,7 @@ As the product and test suite scale:
 3. **Reliable teardown**: Vitest runs natively with a forks pool (no log-watching wrapper); React Query caches and Supabase handles are cleared in global teardown.
 4. **Network isolation**: Vitest never hits real Supabase — the global client mock and scenario helpers intercept at the service boundary.
 
-### Testing Trophy (EquipQR Style)
+### Testing Trophy (ZNTEQR Style)
 
 ```
          /\

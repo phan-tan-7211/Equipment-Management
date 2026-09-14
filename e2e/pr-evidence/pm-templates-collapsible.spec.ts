@@ -10,7 +10,7 @@ test.describe('PM template collapsible sections @pr-evidence', () => {
     await pinContextToOrg(context, apexOrgId);
   });
 
-  test('EquipQR and organization template sections toggle, with org-aware defaults', async ({
+  test('ZNTEQR and organization template sections toggle, with org-aware defaults', async ({
     gotoDashboard,
     assertHealthyShell,
     page,

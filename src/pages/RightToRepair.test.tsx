@@ -56,7 +56,7 @@ describe('RightToRepair', () => {
     );
   });
 
-  it('renders the three EquipQR commitments', () => {
+  it('renders the three ZNTEQR commitments', () => {
     render(<RightToRepair />);
 
     expect(screen.getByText('Your records leave with you')).toBeInTheDocument();

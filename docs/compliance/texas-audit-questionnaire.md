@@ -1,19 +1,19 @@
-# Texas Audit Questionnaire and Pass-Fail Matrix (EquipQR)
+# Texas Audit Questionnaire and Pass-Fail Matrix (ZNTEQR)
 
 ## Scope
 
 - **Jurisdiction:** Texas
-- **System in scope:** EquipQR (multi-tenant SaaS for fleet and equipment operations)
+- **System in scope:** ZNTEQR (multi-tenant SaaS for fleet and equipment operations)
 - **Regulatory regimes covered (pack order):**
   1. TX-RAMP
   2. TDPSA
   3. Texas Data Breach Notification
   4. Texas Sales Tax (SaaS)
 - **Applicability assumptions:**
-  - TX-RAMP controls apply when EquipQR serves Texas state agencies; Level 2 adds additional obligations.
-  - TDPSA controls apply when EquipQR conducts business in Texas or targets Texas residents and processes personal data in scope.
-  - Texas breach-notification controls apply when EquipQR holds computerized sensitive personal information for Texas residents and a qualifying breach occurs.
-  - Texas sales-tax controls apply when EquipQR has Texas nexus or other taxable presence conditions.
+  - TX-RAMP controls apply when ZNTEQR serves Texas state agencies; Level 2 adds additional obligations.
+  - TDPSA controls apply when ZNTEQR conducts business in Texas or targets Texas residents and processes personal data in scope.
+  - Texas breach-notification controls apply when ZNTEQR holds computerized sensitive personal information for Texas residents and a qualifying breach occurs.
+  - Texas sales-tax controls apply when ZNTEQR has Texas nexus or other taxable presence conditions.
 
 ## Audit Questions
 

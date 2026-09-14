@@ -358,7 +358,7 @@ describe('PMTemplates Page', () => {
   });
 
   function expandEquipQrTemplates() {
-    const trigger = screen.getByRole('button', { name: /EquipQR Templates/i });
+    const trigger = screen.getByRole('button', { name: /ZNTEQR Templates/i });
     if (trigger.getAttribute('aria-expanded') === 'false') {
       fireEvent.click(trigger);
     }
@@ -384,20 +384,20 @@ describe('PMTemplates Page', () => {
         </TestProviders>
       );
 
-      expect(screen.getByText('EquipQR Templates')).toBeInTheDocument();
+      expect(screen.getByText('ZNTEQR Templates')).toBeInTheDocument();
       expandEquipQrTemplates();
       expect(screen.getByText(pmFixtures.forklift.name)).toBeInTheDocument();
       expect(screen.getByText(pmFixtures.forklift.description)).toBeInTheDocument();
     });
 
-    it('collapses EquipQR templates by default when the org already has a template', () => {
+    it('collapses ZNTEQR templates by default when the org already has a template', () => {
       render(
         <TestProviders>
           <PMTemplates />
         </TestProviders>
       );
 
-      expect(screen.getByRole('button', { name: /EquipQR Templates/i })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: /ZNTEQR Templates/i })).toHaveAttribute(
         'aria-expanded',
         'false',
       );
@@ -409,7 +409,7 @@ describe('PMTemplates Page', () => {
       expect(screen.getByText(pmFixtures.customOrgTemplate.name)).toBeInTheDocument();
     });
 
-    it('expands EquipQR templates by default when the org has no templates of its own', () => {
+    it('expands ZNTEQR templates by default when the org has no templates of its own', () => {
       vi.mocked(usePMTemplates).mockReturnValue({
         ...mockHooks.usePMTemplates,
         data: mockTemplates.filter((template) => template.organization_id == null),
@@ -421,7 +421,7 @@ describe('PMTemplates Page', () => {
         </TestProviders>
       );
 
-      expect(screen.getByRole('button', { name: /EquipQR Templates/i })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: /ZNTEQR Templates/i })).toHaveAttribute(
         'aria-expanded',
         'true',
       );
@@ -429,14 +429,14 @@ describe('PMTemplates Page', () => {
       expect(screen.queryByRole('button', { name: /Organization Templates/i })).not.toBeInTheDocument();
     });
 
-    it('toggles EquipQR and organization template sections from their headers', () => {
+    it('toggles ZNTEQR and organization template sections from their headers', () => {
       render(
         <TestProviders>
           <PMTemplates />
         </TestProviders>
       );
 
-      fireEvent.click(screen.getByRole('button', { name: /EquipQR Templates/i }));
+      fireEvent.click(screen.getByRole('button', { name: /ZNTEQR Templates/i }));
       expect(screen.getByText(pmFixtures.forklift.name)).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('button', { name: /Organization Templates/i }));
@@ -446,7 +446,7 @@ describe('PMTemplates Page', () => {
       expect(screen.getByText(pmFixtures.customOrgTemplate.name)).toBeInTheDocument();
     });
 
-    it('reveals matching EquipQR templates when searching a collapsed section', () => {
+    it('reveals matching ZNTEQR templates when searching a collapsed section', () => {
       render(
         <TestProviders>
           <PMTemplates />
@@ -518,11 +518,11 @@ describe('PMTemplates Page', () => {
           `${pmFixtures.forklift.sections.length} sections · ${pmFixtures.forklift.itemCount} items`,
         ),
       ).toBeInTheDocument();
-      expect(within(forkliftCard).getByText('EquipQR')).toBeInTheDocument();
+      expect(within(forkliftCard).getByText('ZNTEQR')).toBeInTheDocument();
       expect(within(forkliftCard).getByText('Protected')).toBeInTheDocument();
     });
 
-    it('keeps protected EquipQR starter titles readable when badges are present', () => {
+    it('keeps protected ZNTEQR starter titles readable when badges are present', () => {
       render(
         <TestProviders>
           <PMTemplates />
@@ -539,7 +539,7 @@ describe('PMTemplates Page', () => {
 
         const badgeRow = title.nextElementSibling;
         expect(badgeRow).not.toBeNull();
-        expect(badgeRow).toHaveTextContent('EquipQR');
+        expect(badgeRow).toHaveTextContent('ZNTEQR');
         expect(badgeRow).toHaveTextContent('Protected');
       }
     });

@@ -4,7 +4,7 @@
 **Total Items:** 80  
 **Sections:** 10
 
-80 items. Default EquipQR template for skid steers.
+80 items. Default ZNTEQR template for skid steers.
 
 ---
 

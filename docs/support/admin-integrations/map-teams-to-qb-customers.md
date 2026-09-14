@@ -13,7 +13,7 @@ requirement: "QuickBooks must be connected. Only Organization Owners and Admins 
 QuickBooks must be connected. Only Organization Owners and Admins can link customer accounts.
 :::
 
-In EquipQR, an external customer you service is represented as a **team of type Customer**. Linking that team's customer account to a QuickBooks customer tells invoice export where to post.
+In ZNTEQR, an external customer you service is represented as a **team of type Customer**. Linking that team's customer account to a QuickBooks customer tells invoice export where to post.
 
 ## 1. Open the team
 

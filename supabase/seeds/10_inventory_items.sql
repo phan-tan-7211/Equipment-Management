@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Inventory Items
+-- ZNTEQR Seed Data - Inventory Items
 -- =====================================================
 -- Parts and supplies with varied stock levels for testing
 -- Includes: normal stock, low stock, out of stock, no SKU items

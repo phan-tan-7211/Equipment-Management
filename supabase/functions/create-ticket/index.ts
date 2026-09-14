@@ -5,7 +5,7 @@
  * 1. Authenticates the user via JWT
  * 2. Validates and sanitizes the request payload (title, description, metadata)
  * 3. Enforces per-user rate limiting (max 3 tickets per hour)
- * 4. Creates a GitHub Issue in Columbia-Cloudworks-LLC/EquipQR
+ * 4. Creates a GitHub Issue in Columbia-Cloudworks-LLC/ZNTEQR
  * 5. Inserts a record into the tickets table with the GitHub issue number
  *
  * Security:
@@ -32,7 +32,7 @@ import { MissingSecretError, requireSecret } from "../_shared/require-secret.ts"
 const FUNCTION_NAME = "create-ticket";
 
 const GITHUB_REPO_OWNER = "Columbia-Cloudworks-LLC";
-const GITHUB_REPO_NAME = "EquipQR";
+const GITHUB_REPO_NAME = "ZNTEQR";
 const GITHUB_ASSIGNEE = "viralarchitect";
 const GITHUB_LABEL = "user-reported";
 
@@ -297,7 +297,7 @@ ${errorsSection}${queriesSection}
 </details>
 
 ---
-*This issue was automatically created via the EquipQR in-app bug reporting system.*`;
+*This issue was automatically created via the ZNTEQR in-app bug reporting system.*`;
 }
 
 async function checkRateLimit(
@@ -337,7 +337,7 @@ async function createGitHubIssue(
       Authorization: `Bearer ${githubPat}`,
       Accept: "application/vnd.github.v3+json",
       "Content-Type": "application/json",
-      "User-Agent": "EquipQR-BugReporter",
+      "User-Agent": "ZNTEQR-BugReporter",
     },
     body: JSON.stringify({
       title,
@@ -371,7 +371,7 @@ async function closeGitHubIssue(
         Authorization: `Bearer ${githubPat}`,
         Accept: "application/vnd.github.v3+json",
         "Content-Type": "application/json",
-        "User-Agent": "EquipQR-BugReporter",
+        "User-Agent": "ZNTEQR-BugReporter",
       },
       body: JSON.stringify({
         state: "closed",

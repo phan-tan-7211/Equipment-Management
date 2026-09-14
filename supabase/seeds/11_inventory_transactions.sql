@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Inventory Transactions (Audit Trail)
+-- ZNTEQR Seed Data - Inventory Transactions (Audit Trail)
 -- =====================================================
 -- Stock movement history for inventory items
 

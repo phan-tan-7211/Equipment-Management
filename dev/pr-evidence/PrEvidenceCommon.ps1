@@ -124,14 +124,14 @@ function Set-PrEvidenceUploadEnvironment {
     Assert-PrEvidenceCommandExists 'op'
 
     $urlRead = Invoke-PrEvidenceNative -FilePath 'op' -Arguments @(
-        'read', 'op://EquipQR Agents/app-env-preview-public/SUPABASE_URL'
+        'read', 'op://ZNTEQR Agents/app-env-preview-public/SUPABASE_URL'
     )
     if ($urlRead.ExitCode -ne 0) {
         throw "op read SUPABASE_URL failed: $($urlRead.Text)"
     }
 
     $keyRead = Invoke-PrEvidenceNative -FilePath 'op' -Arguments @(
-        'read', 'op://EquipQR Agents/supabase-write/prod_service_role_key'
+        'read', 'op://ZNTEQR Agents/supabase-write/prod_service_role_key'
     )
     if ($keyRead.ExitCode -ne 0) {
         throw "op read prod_service_role_key failed: $($keyRead.Text)"
@@ -595,7 +595,7 @@ function Publish-PrEvidenceSupabaseVideo {
 function Publish-PrEvidenceGitHubVideo {
     param(
         [Parameter(Mandatory)][string]$Mp4Path,
-        [string]$Repo = 'Columbia-Cloudworks-LLC/EquipQR'
+        [string]$Repo = 'Columbia-Cloudworks-LLC/ZNTEQR'
     )
 
     Assert-PrEvidenceCommandExists 'npx'
@@ -769,7 +769,7 @@ function Write-PrEvidenceVisualReviewChecklist {
         '- **No horizontal scroll** is required; wide tables/cards wrap or scroll vertically inside the page.',
         '- **Stacking** reads clearly (labels, values, actions); no overlapping or crushed side-by-side columns on mobile.',
         '- **Primary actions** are visible or clearly reachable with vertical scroll (not trapped behind fixed chrome).',
-        '- Layout looks **intentionally designed** for EquipQR — not merely functional enough for now.',
+        '- Layout looks **intentionally designed** for ZNTEQR — not merely functional enough for now.',
         '',
         '## Screenshots',
         '',

@@ -1,10 +1,10 @@
 import type { jsPDF } from 'jspdf';
 import type { Language } from '@/i18n/I18nProvider';
 import { getOperatorCheckinExcelLabels } from './operatorCheckinExcelLabels';
-import fontUrl from '../assets/EquipQR-Report-KR-VI.ttf?url';
+import fontUrl from '../assets/ZNTEQR-Report-KR-VI.ttf?url';
 
-const FONT_FILE = 'EquipQR-Report-KR-VI.ttf';
-const FONT_FAMILY = 'EquipQRReport';
+const FONT_FILE = 'ZNTEQR-Report-KR-VI.ttf';
+const FONT_FAMILY = 'ZNTEQRReport';
 
 /** Keep the 2.8 MB font out of the initial app bundle and fail before writing a broken PDF. */
 export async function registerOperatorCheckinPdfFont(doc: jsPDF, language: Language): Promise<string> {

@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Start the full EquipQR local stack: Supabase, Edge Functions serve, Vite, and docs.
+  Start the full ZNTEQR local stack: Supabase, Edge Functions serve, Vite, and docs.
 
 .PARAMETER Force
   After Supabase is up: regenerate volume seed data, reset local DB, regenerate TypeScript types, seed equipment images, then ensure Edge, docs, and Vite are running.
@@ -306,7 +306,7 @@ function Invoke-DockerRecovery {
 
 Write-Host ""
 Write-Host " ============================================"
-Write-Host "  EquipQR Dev Environment - Startup"
+Write-Host "  ZNTEQR Dev Environment - Startup"
 Write-Host "  Mode: full (Supabase + Edge Functions + Docs + Vite)"
 if ($Force) {
     Write-Host '  Flag: -Force (DB reset + type generation + full verification)'
@@ -938,7 +938,7 @@ if ($listen5174) {
     if (Test-DocsResponding) {
         Write-Host "        Docs already running - skipped."
     } else {
-        Write-Host "        FAIL: Port 5174 is not serving EquipQR docs. Free the port or stop the other process."
+        Write-Host "        FAIL: Port 5174 is not serving ZNTEQR docs. Free the port or stop the other process."
         exit 1
     }
 } else {
@@ -1017,7 +1017,7 @@ if ($listen8080) {
 # ---------- Final health report ----------
 Write-Host ""
 Write-Host " ============================================"
-Write-Host "  EquipQR Dev Environment - Status Report"
+Write-Host "  ZNTEQR Dev Environment - Status Report"
 Write-Host " ============================================"
 Write-Host ""
 

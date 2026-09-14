@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Shut down the EquipQR local development stack (Vite, docs, Edge Functions serve, Supabase Docker).
+  Shut down the ZNTEQR local development stack (Vite, docs, Edge Functions serve, Supabase Docker).
 
 .PARAMETER Force
   Also stop Docker Desktop after tearing down dev services.
@@ -54,7 +54,7 @@ $stopFail = $false
 
 Write-Host ""
 Write-Host " ============================================"
-Write-Host '  EquipQR Dev Environment - Shutdown'
+Write-Host '  ZNTEQR Dev Environment - Shutdown'
 if ($Force) {
     Write-Host '  Docker: stop Desktop (-Force)'
 } else {

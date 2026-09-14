@@ -211,7 +211,7 @@ const PMTemplateView: React.FC = () => {
           <div className="lg:col-span-9 space-y-4">
             <div className="flex flex-wrap gap-2">
               {!isOrgTemplate && (
-                <Badge><Globe className="h-3 w-3 mr-1" />EquipQR</Badge>
+                <Badge><Globe className="h-3 w-3 mr-1" />ZNTEQR</Badge>
               )}
               {isOrgTemplate && (
                 <Badge variant="secondary">{t('pmTemplates.view.organization')}</Badge>

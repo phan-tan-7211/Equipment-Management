@@ -283,7 +283,7 @@ sql_paths = ['./seeds/*.sql', './seeds/generated/*.sql']
 #     Deploy to production: ON (auto-deploys to main on push/merge)
 #
 # Branches auto-delete on PR close. Estimated recurring cost at typical
-# EquipQR cadence: ~$25-35/mo at $0.01344/branch/hour
+# ZNTEQR cadence: ~$25-35/mo at $0.01344/branch/hour
 # (https://supabase.com/pricing). Branching compute is NOT covered by the
 # organization Spend Cap â€” monitor weekly via Settings â†’ Billing â†’ Usage â†’
 # Branching.

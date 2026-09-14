@@ -1,14 +1,14 @@
 # Deployment Guide
 
-This guide covers all aspects of deploying EquipQR™, including build processes, hosting platforms, runner management, and versioning.
+This guide covers all aspects of deploying ZNTEQR™, including build processes, hosting platforms, runner management, and versioning.
 
 ## Deployment Overview
 
-EquipQR™ is designed as a modern single-page application (SPA) that can be deployed to various hosting platforms with minimal configuration.
+ZNTEQR™ is designed as a modern single-page application (SPA) that can be deployed to various hosting platforms with minimal configuration.
 
 ### Public documentation site (`equipqr.info`)
 
-Developer and operator documentation is published from this repository’s [`docs/`](https://github.com/Columbia-Cloudworks-LLC/EquipQR/tree/main/docs) directory as a **standalone VitePress** static site. It is deployed as a **separate Vercel project** with **Root Directory** set to `docs` (build: `npm run docs:build`, output: `.vitepress/dist`). Production hostname: **`https://equipqr.info`**. The product app remains on **`https://equipqr.app`**.
+Developer and operator documentation is published from this repository’s [`docs/`](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/tree/main/docs) directory as a **standalone VitePress** static site. It is deployed as a **separate Vercel project** with **Root Directory** set to `docs` (build: `npm run docs:build`, output: `.vitepress/dist`). Production hostname: **`https://equipqr.info`**. The product app remains on **`https://equipqr.app`**.
 
 **Operational wiring (ZNT Vercel team):**
 
@@ -73,7 +73,7 @@ VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 # Optional Development Settings
-VITE_APP_TITLE=EquipQR™ Development
+VITE_APP_TITLE=ZNTEQR™ Development
 VITE_ENABLE_DEVTOOLS=true
 VITE_LOG_LEVEL=debug
 ```
@@ -85,7 +85,7 @@ VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 # Optional Production Settings
-VITE_APP_TITLE=EquipQR
+VITE_APP_TITLE=ZNTEQR
 VITE_ENABLE_DEVTOOLS=false
 VITE_LOG_LEVEL=error
 VITE_SENTRY_DSN=your-sentry-dsn
@@ -99,7 +99,7 @@ VITE_GOOGLE_MAPS_API_KEY=your_maps_key
 // src/lib/config.ts
 export const config = {
   app: {
-    title: import.meta.env.VITE_APP_TITLE || 'EquipQR™',
+    title: import.meta.env.VITE_APP_TITLE || 'ZNTEQR™',
     version: import.meta.env.VITE_APP_VERSION || '1.0.0',
   },
   supabase: {
@@ -159,7 +159,7 @@ passwords, Supabase keys, or session tokens.
 
 ## Hosting Platforms
 
-EquipQR™ is hosted on Vercel. The `main` branch promotes to `equipqr.app` after
+ZNTEQR™ is hosted on Vercel. The `main` branch promotes to `equipqr.app` after
 **Production Release Readiness** runs **`vercel promote`**. **`preview.equipqr.app`**
 is the stable pre-production hostname bound to git branch **`preview`** (integration
 train) — Vercel Preview deploys on merges/pushes to that branch. SSL, CDN, and custom
@@ -229,9 +229,9 @@ When this workflow is green, production traffic should already match the merged 
 
 | Variable | 1Password reference |
 |----------|---------------------|
-| `SUPABASE_ACCESS_TOKEN` | `op://EquipQR Agents/supabase-write/SUPABASE_ACCESS_TOKEN` |
-| `SUPABASE_DB_PASSWORD` | `op://EquipQR Agents/supabase-write/prod_db_password` |
-| `VERCEL_TOKEN` | `op://EquipQR Agents/vercel-write/VERCEL_TOKEN` |
+| `SUPABASE_ACCESS_TOKEN` | `op://ZNTEQR Agents/supabase-write/SUPABASE_ACCESS_TOKEN` |
+| `SUPABASE_DB_PASSWORD` | `op://ZNTEQR Agents/supabase-write/prod_db_password` |
+| `VERCEL_TOKEN` | `op://ZNTEQR Agents/vercel-write/VERCEL_TOKEN` |
 
 Keep these database passwords on the `supabase-write` item in sync with **Supabase Dashboard → Project Settings → Database** (the Postgres password) for each project:
 
@@ -250,7 +250,7 @@ After merge, **Production Release Readiness** applies any remaining SQL via `sup
 
 ### Secrets Checklist
 
-EquipQR runs on **two independent platforms** — Vercel (frontend build) and Supabase (backend / Edge Functions). Each has its own secrets store. Redeploying one does **not** update the other.
+ZNTEQR runs on **two independent platforms** — Vercel (frontend build) and Supabase (backend / Edge Functions). Each has its own secrets store. Redeploying one does **not** update the other.
 
 When rotating keys or deploying a new environment, verify secrets in **both** dashboards:
 
@@ -306,7 +306,7 @@ Policy: use one shared Google OAuth Web client for both Workspace callback and P
 
 ### Google Workspace Scope Matrix
 
-EquipQR uses these scopes for Google Workspace features:
+ZNTEQR uses these scopes for Google Workspace features:
 
 | Scope | Used for | Source |
 |---|---|---|
@@ -324,7 +324,7 @@ Production receiver URL:
 
 `https://supabase.equipqr.app/functions/v1/google-risc-receiver`
 
-Register this endpoint in **Google Cloud Console → Google Auth Platform → Project Checkup → Cross-Account Protection** for the **EquipQR Google Workspace OAuth** client (`GOOGLE_WORKSPACE_CLIENT_ID` on edge). Google sends Security Event Tokens (`application/secevent+jwt`) without Supabase JWTs; the edge function validates signatures against Google JWKS and disconnects affected Workspace credentials on revocation events.
+Register this endpoint in **Google Cloud Console → Google Auth Platform → Project Checkup → Cross-Account Protection** for the **ZNTEQR Google Workspace OAuth** client (`GOOGLE_WORKSPACE_CLIENT_ID` on edge). Google sends Security Event Tokens (`application/secevent+jwt`) without Supabase JWTs; the edge function validates signatures against Google JWKS and disconnects affected Workspace credentials on revocation events.
 
 Expected verification signal after registration: Google posts a RISC **verification** event and Project Checkup marks Cross-Account Protection as configured (may take a re-scan after deploy).
 
@@ -745,7 +745,7 @@ git push origin vX.Y.Z
 
 ### Version Display
 
-The version is displayed in the footer of all pages in the format: `© 2024 EquipQR™ v1.2.3 by ZNT LLC`
+The version is displayed in the footer of all pages in the format: `© 2024 ZNTEQR™ v1.2.3 by ZNT LLC`
 
 ### Files Involved
 
@@ -825,7 +825,7 @@ Ensure all deployments use HTTPS:
 ## Database Integration
 
 ### Supabase Integration (Recommended)
-EquipQR™ is designed to work with Supabase for backend functionality:
+ZNTEQR™ is designed to work with Supabase for backend functionality:
 
 1. **Connect Supabase**: Configure project credentials via Vercel environment variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`)
 2. **Database Setup**: Create tables for equipment, work orders, teams
@@ -834,7 +834,7 @@ EquipQR™ is designed to work with Supabase for backend functionality:
 
 ### Supabase Branch Configuration
 
-EquipQR uses Supabase branching for **ephemeral PR validation** and, today, a
+ZNTEQR uses Supabase branching for **ephemeral PR validation** and, today, a
 single production project for cloud runtime:
 
 - **Production:** `ymxkzronkhwxzcdcbnwq` — API `https://supabase.equipqr.app`
@@ -856,7 +856,7 @@ See `docs/ops/preview-persistent-branch.md`,
 `docs/ops/supabase-branch-secrets.md`.
 
 ### Supabase Configuration
-EquipQR™ uses Supabase for all backend functionality. Ensure proper configuration:
+ZNTEQR™ uses Supabase for all backend functionality. Ensure proper configuration:
 
 ```typescript
 // src/integrations/supabase/client.ts
@@ -1032,4 +1032,4 @@ The Supabase performance advisor flags absolute allocation because resizing the
 instance without updating the number manually leaves Auth underprovisioned. With
 percentage-based allocation the pool scales proportionally.
 
-This deployment guide provides comprehensive instructions for deploying EquipQR™ to various platforms while maintaining optimal performance, security, and reliability.
+This deployment guide provides comprehensive instructions for deploying ZNTEQR™ to various platforms while maintaining optimal performance, security, and reliability.

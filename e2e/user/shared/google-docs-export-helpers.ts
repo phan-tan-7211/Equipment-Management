@@ -21,7 +21,7 @@ export async function exportWorkOrderToGoogleDoc(
   await expect(
     googleDocMenuItem,
     'Google Doc export is unavailable. Connect Google Workspace on Integrations (with Docs/Drive scopes) ' +
-      'then re-run npm run e2e:google-auth:capture if EquipQR session expired.',
+      'then re-run npm run e2e:google-auth:capture if ZNTEQR session expired.',
   ).toBeVisible({ timeout: 30_000 });
 
   const exportResponsePromise = page.waitForResponse(

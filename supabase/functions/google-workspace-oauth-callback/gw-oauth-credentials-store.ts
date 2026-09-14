@@ -9,7 +9,7 @@ import {
 import { logStep, normalizeDomain } from "./gw-oauth-validation.ts";
 
 export const DOMAIN_ALREADY_LINKED_ERROR =
-  "This Google Workspace domain is already linked to another EquipQR organization.";
+  "This Google Workspace domain is already linked to another ZNTEQR organization.";
 
 const DOMAIN_CLAIM_VERIFY_ERROR =
   "Failed to verify workspace domain claim. Please try again.";
@@ -169,7 +169,7 @@ export async function storeGoogleWorkspaceCredentials(
 
   if (!refreshToken) {
     throw new Error(
-      "Google Workspace refresh token missing. Revoke EquipQR at myaccount.google.com/permissions and reconnect.",
+      "Google Workspace refresh token missing. Revoke ZNTEQR at myaccount.google.com/permissions and reconnect.",
     );
   }
 

@@ -15,7 +15,7 @@ function requireBoundingBox(
 /**
  * Evidence for the six-issue UX pass:
  *   #1152 Parts Access sheet (managers + consumers from Inventory)
- *   #1144 PM template equipment assignment menu + EquipQR templates
+ *   #1144 PM template equipment assignment menu + ZNTEQR templates
  *   #1122 Audit log buried under org settings, owner/admin only
  *   #1132 Dedicated team views with team default
  *   #1151 Mobile quick access drawers (equipment + work order details)

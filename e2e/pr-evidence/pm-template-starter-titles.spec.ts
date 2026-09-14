@@ -8,7 +8,7 @@ const starterTemplateMatchers = [
 ];
 
 test.describe('PM template starter title readability @pr-evidence', () => {
-  test('protected EquipQR starter badges do not crowd starter titles (#1462)', async ({
+  test('protected ZNTEQR starter badges do not crowd starter titles (#1462)', async ({
     gotoDashboard,
     assertHealthyShell,
     page,
@@ -33,7 +33,7 @@ test.describe('PM template starter title readability @pr-evidence', () => {
       await expect(cardHeader).toBeVisible();
       await expect(title).toBeVisible();
       await expect(title).toContainText(matcher.titleName);
-      await expect(badgeRow).toContainText('EquipQR');
+      await expect(badgeRow).toContainText('ZNTEQR');
       await expect(badgeRow).toContainText('Protected');
 
       const titleBox = await title.boundingBox();

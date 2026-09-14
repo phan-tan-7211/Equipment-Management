@@ -174,7 +174,7 @@ const EQUIPMENT_QR_SELECT = `
  *
  * When `organizationId` is provided (preferred — QR URLs generated with
  * `equipmentQRPath(id, orgId)` include it as a query param) the lookup is
- * single-org scoped, matching EquipQR's tenant-isolation requirement.
+ * single-org scoped, matching ZNTEQR's tenant-isolation requirement.
  * When omitted (legacy QR links without `?org=`) a multi-org fallback queries
  * all organizations the authenticated user belongs to.
  */

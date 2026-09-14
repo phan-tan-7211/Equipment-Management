@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document summarizes the compliance audit and remediation work performed for EquipQR to align with SOC 2 Type 1 and PCI DSS SAQ-A requirements.
+This document summarizes the compliance audit and remediation work performed for ZNTEQR to align with SOC 2 Type 1 and PCI DSS SAQ-A requirements.
 
 ## Phase 1: Security & Access Control
 
@@ -131,10 +131,10 @@ This document summarizes the compliance audit and remediation work performed for
 **Status:** Compliant
 
 **Findings:**
-- EquipQR does not accept, store, or log raw credit card numbers
+- ZNTEQR does not accept, store, or log raw credit card numbers
 - Payment processing (if used) would go through Stripe, which handles tokenization
 - QuickBooks integration exports invoices only - does not handle payment card data
-- No payment card data flows through EquipQR systems
+- No payment card data flows through ZNTEQR systems
 
 **Compliance Status:** PCI DSS SAQ-A compliant (no cardholder data handled)
 
@@ -189,7 +189,7 @@ This document summarizes the compliance audit and remediation work performed for
 
 ## Related Documents
 
-- [Access Control Policy](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/access-control-policy.md)
-- [Change Management Policy](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/CONTRIBUTING.md#change-management-policy)
-- [Disaster Recovery Plan](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/disaster-recovery.md)
-- [RLS Migration](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/supabase/migrations/20260113210000_fix_rls_cross_tenant_vulnerabilities.sql)
+- [Access Control Policy](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/access-control-policy.md)
+- [Change Management Policy](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/CONTRIBUTING.md#change-management-policy)
+- [Disaster Recovery Plan](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/disaster-recovery.md)
+- [RLS Migration](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/supabase/migrations/20260113210000_fix_rls_cross_tenant_vulnerabilities.sql)

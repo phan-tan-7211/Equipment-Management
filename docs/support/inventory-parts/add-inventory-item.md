@@ -32,7 +32,7 @@ The form opens with required and optional fields. For importing dozens or hundre
 ## 4. Set stock levels
 
 - **Quantity on Hand** — current stock count.
-- **Low Stock Threshold** — EquipQR alerts Parts Managers when stock drops to or below this number.
+- **Low Stock Threshold** — ZNTEQR alerts Parts Managers when stock drops to or below this number.
 - **Default Unit Cost** — used to populate work order costs.
 - **Location** — optional **Location Name** nickname (for example "Shelf A-3"). This label does not place a map pin. Set the structured **storage address** on the item detail page or inherit the [organization inventory default](../admin-integrations/organization-settings).
 

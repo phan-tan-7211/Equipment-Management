@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Work Order Notes
+-- ZNTEQR Seed Data - Work Order Notes
 -- =====================================================
 -- Notes and progress updates on work orders
 

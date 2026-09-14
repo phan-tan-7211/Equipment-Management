@@ -91,8 +91,8 @@ export function normalizeTestFilePath(name) {
   if (!name) return '(unknown)';
   let n = name.replace(/\\/g, '/');
   const markers = [
-    '/home/runner/work/EquipQR/EquipQR/',
-    'EquipQR/EquipQR/',
+    '/home/runner/work/ZNTEQR/ZNTEQR/',
+    'ZNTEQR/ZNTEQR/',
   ];
   for (const marker of markers) {
     const idx = n.indexOf(marker);

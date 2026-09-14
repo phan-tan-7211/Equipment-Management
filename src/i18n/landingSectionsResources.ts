@@ -2,14 +2,14 @@ export const landingSectionsResources = {
   "en": {
     "landingSections": {
       "hero": {
-        "aria": "EquipQR asset tracking demo",
-        "sr": "EquipQR tracks QR-coded equipment across the United States. The demo shows a QR code being scanned, which transforms into a U.S. map with asset location markers. Work orders are created and exported to QuickBooks, Google Drive, or Excel.",
+        "aria": "ZNTEQR asset tracking demo",
+        "sr": "ZNTEQR tracks QR-coded equipment across the United States. The demo shows a QR code being scanned, which transforms into a U.S. map with asset location markers. Work orders are created and exported to QuickBooks, Google Drive, or Excel.",
         "title": "QR-tracked work orders for heavy equipment repair shops",
         "start": "Get Started Free",
         "hint": "No credit card. First scan in 20 minutes."
       },
       "why": {
-        "heading": "Why EquipQR is Different",
+        "heading": "Why ZNTEQR is Different",
         "historyTitle": "One scan, full history",
         "historyText": "Any tech can pull up a machine’s complete service record from their phone. No calling the office.",
         "requestTitle": "Customers request work without calling you",
@@ -23,9 +23,9 @@ export const landingSectionsResources = {
       },
       "how": {
         "heading": "How It Works",
-        "aria": "How EquipQR works",
+        "aria": "How ZNTEQR works",
         "printTitle": "Print & stick QR labels",
-        "printText": "Generate labels in EquipQR and stick them on your machines. Takes minutes, not hours.",
+        "printText": "Generate labels in ZNTEQR and stick them on your machines. Takes minutes, not hours.",
         "scanTitle": "Techs scan on the job",
         "scanText": "Your crew scans with their phone to pull up history, log work, or start a new work order.",
         "closeTitle": "Jobs close & invoices generate",
@@ -59,14 +59,14 @@ export const landingSectionsResources = {
   "vi": {
     "landingSections": {
       "hero": {
-        "aria": "Bản demo theo dõi thiết bị EquipQR",
-        "sr": "EquipQR theo dõi thiết bị gắn mã QR trên khắp Hoa Kỳ. Bản demo cho thấy thao tác quét mã QR, chuyển thành bản đồ Hoa Kỳ cùng các điểm đánh dấu vị trí thiết bị. Lệnh công việc được tạo và xuất sang QuickBooks, Google Drive hoặc Excel.",
+        "aria": "Bản demo theo dõi thiết bị ZNTEQR",
+        "sr": "ZNTEQR theo dõi thiết bị gắn mã QR trên khắp Hoa Kỳ. Bản demo cho thấy thao tác quét mã QR, chuyển thành bản đồ Hoa Kỳ cùng các điểm đánh dấu vị trí thiết bị. Lệnh công việc được tạo và xuất sang QuickBooks, Google Drive hoặc Excel.",
         "title": "Lệnh công việc theo dõi bằng QR cho xưởng sửa chữa máy móc hạng nặng",
         "start": "Bắt đầu miễn phí",
         "hint": "Không cần thẻ tín dụng. Quét lần đầu trong 20 phút."
       },
       "why": {
-        "heading": "Điều gì làm EquipQR khác biệt",
+        "heading": "Điều gì làm ZNTEQR khác biệt",
         "historyTitle": "Quét một lần, xem toàn bộ lịch sử",
         "historyText": "Kỹ thuật viên xem toàn bộ lịch sử bảo dưỡng thiết bị trên điện thoại, không cần gọi về văn phòng.",
         "requestTitle": "Khách hàng yêu cầu sửa chữa mà không cần gọi điện",
@@ -80,9 +80,9 @@ export const landingSectionsResources = {
       },
       "how": {
         "heading": "Cách hoạt động",
-        "aria": "Cách EquipQR hoạt động",
+        "aria": "Cách ZNTEQR hoạt động",
         "printTitle": "In và dán nhãn QR",
-        "printText": "Tạo nhãn trong EquipQR rồi dán lên thiết bị. Chỉ mất vài phút, không phải hàng giờ.",
+        "printText": "Tạo nhãn trong ZNTEQR rồi dán lên thiết bị. Chỉ mất vài phút, không phải hàng giờ.",
         "scanTitle": "Kỹ thuật viên quét tại hiện trường",
         "scanText": "Nhân viên dùng điện thoại quét để xem lịch sử, ghi nhận công việc hoặc tạo lệnh mới.",
         "closeTitle": "Hoàn tất công việc và tạo hóa đơn",
@@ -116,14 +116,14 @@ export const landingSectionsResources = {
   "ko": {
     "landingSections": {
       "hero": {
-        "aria": "EquipQR 장비 추적 데모",
-        "sr": "EquipQR은 미국 전역의 QR 코드 장비를 추적합니다. 데모에서는 QR 코드를 스캔하면 장비 위치가 표시된 미국 지도로 전환되고, 작업 지시를 작성해 QuickBooks, Google Drive 또는 Excel로 내보내는 과정을 보여줍니다.",
+        "aria": "ZNTEQR 장비 추적 데모",
+        "sr": "ZNTEQR은 미국 전역의 QR 코드 장비를 추적합니다. 데모에서는 QR 코드를 스캔하면 장비 위치가 표시된 미국 지도로 전환되고, 작업 지시를 작성해 QuickBooks, Google Drive 또는 Excel로 내보내는 과정을 보여줍니다.",
         "title": "중장비 수리점을 위한 QR 추적 작업 지시",
         "start": "무료로 시작하기",
         "hint": "신용카드 불필요. 20분 안에 첫 스캔."
       },
       "why": {
-        "heading": "EquipQR이 다른 이유",
+        "heading": "ZNTEQR이 다른 이유",
         "historyTitle": "한 번 스캔으로 전체 이력 확인",
         "historyText": "기술자는 사무실에 전화할 필요 없이 휴대폰에서 장비의 전체 정비 이력을 확인할 수 있습니다.",
         "requestTitle": "고객이 전화 없이 작업 요청",
@@ -137,9 +137,9 @@ export const landingSectionsResources = {
       },
       "how": {
         "heading": "이용 방법",
-        "aria": "EquipQR 이용 방법",
+        "aria": "ZNTEQR 이용 방법",
         "printTitle": "QR 라벨 인쇄 및 부착",
-        "printText": "EquipQR에서 라벨을 만들어 장비에 붙이세요. 몇 시간이 아닌 몇 분이면 됩니다.",
+        "printText": "ZNTEQR에서 라벨을 만들어 장비에 붙이세요. 몇 시간이 아닌 몇 분이면 됩니다.",
         "scanTitle": "현장에서 기술자가 스캔",
         "scanText": "팀원이 휴대폰으로 스캔해 이력을 확인하고 작업을 기록하거나 새 작업 지시를 시작합니다.",
         "closeTitle": "작업 완료 및 송장 생성",

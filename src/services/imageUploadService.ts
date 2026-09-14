@@ -64,7 +64,7 @@ function normalizeSignedStorageUrlForChecks(url: string): string {
 }
 
 /**
- * True when `url` is (or was) a Supabase signed URL for an EquipQR private bucket.
+ * True when `url` is (or was) a Supabase signed URL for an ZNTEQR private bucket.
  * Expired or orphaned signed URLs must not be used as `<img src>` fallbacks (#1171).
  */
 export function isEquipQrPrivateStorageUrl(url: string): boolean {
