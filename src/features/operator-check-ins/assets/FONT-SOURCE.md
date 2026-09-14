@@ -1,6 +1,6 @@
 # Operator Check-in PDF font
 
-`EquipQR-Report-KR-VI.ttf` is derived from the regular (weight 400) instance of
+`ZNTEQR-Report-KR-VI.ttf` is derived from the regular (weight 400) instance of
 Google Fonts' Noto Sans KR variable TTF. The source is
 `https://github.com/google/fonts/blob/main/ofl/notosanskr/NotoSansKR%5Bwght%5D.ttf`
 (SHA-256 `194018e6b2b293a7964f037b25c0249ce1418bc9ab3c971060a03aa57861e252`).

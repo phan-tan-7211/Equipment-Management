@@ -1,8 +1,8 @@
 # SECURITY DEFINER RPC grant policy
 
-EquipQR uses many `SECURITY DEFINER` PostgreSQL functions in `public`. PostgREST exposes any function granted `EXECUTE` to `anon` or `authenticated` at `/rest/v1/rpc/<name>`.
+ZNTEQR uses many `SECURITY DEFINER` PostgreSQL functions in `public`. PostgREST exposes any function granted `EXECUTE` to `anon` or `authenticated` at `/rest/v1/rpc/<name>`.
 
-Issue [#762](https://github.com/Columbia-Cloudworks-LLC/EquipQR/issues/762) locked down the default-allow posture from the baseline migration. Issue [#1310](https://github.com/Columbia-Cloudworks-LLC/EquipQR/issues/1310) re-locked after post-#762 drift (new `CREATE FUNCTION` inherited `ALTER DEFAULT PRIVILEGES … GRANT ALL ON FUNCTIONS TO anon/authenticated`) and removed public-bucket listing policies.
+Issue [#762](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/762) locked down the default-allow posture from the baseline migration. Issue [#1310](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/1310) re-locked after post-#762 drift (new `CREATE FUNCTION` inherited `ALTER DEFAULT PRIVILEGES … GRANT ALL ON FUNCTIONS TO anon/authenticated`) and removed public-bucket listing policies.
 
 ## Categories
 

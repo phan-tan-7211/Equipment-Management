@@ -17,7 +17,7 @@ The Requestor role is designed for the person who owns or is responsible for a m
 
 ## 1. Scan the equipment QR code
 
-Point your phone's camera at the QR sticker on the equipment and tap the banner to open EquipQR.
+Point your phone's camera at the QR sticker on the equipment and tap the banner to open ZNTEQR.
 
 ## 2. Tap Submit Request
 
@@ -39,4 +39,4 @@ As a Requestor, you cannot edit a work order after submitting it. Contact the te
 ## Related articles
 
 - [Triage submitted work requests](./triage-submitted-requests)
-- [Role overview for EquipQR](../start-here/role-overview)
+- [Role overview for ZNTEQR](../start-here/role-overview)

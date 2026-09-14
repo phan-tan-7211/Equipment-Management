@@ -16,7 +16,7 @@ describe('parsePublicReleases', () => {
 
 ### Added
 
-- **Public releases page (#1460)** — Customers can review published EquipQR changes without opening GitHub.
+- **Public releases page (#1460)** — Customers can review published ZNTEQR changes without opening GitHub.
 - **Cloud Agent ephemeral Supabase stack (#1249)** — Internal preview workflow for hosted branches.
 
 ### Fixed
@@ -35,7 +35,7 @@ describe('parsePublicReleases', () => {
     expect(releases[0].sections).toHaveLength(2);
     expect(releases[0].sections[0]?.entries[0]).toEqual({
       title: 'Public releases page',
-      body: 'Customers can review published EquipQR changes without opening GitHub.',
+      body: 'Customers can review published ZNTEQR changes without opening GitHub.',
       issueRefs: ['#1460'],
     });
     expect(releases[0].sections.flatMap((section) => section.entries)).not.toContainEqual(

@@ -36,7 +36,7 @@ Set-Location -LiteralPath $repoRoot
 
 Write-Host ''
 Write-Host ' ============================================'
-Write-Host '  EquipQR - Safe npm ci (Windows lock recovery)'
+Write-Host '  ZNTEQR - Safe npm ci (Windows lock recovery)'
 Write-Host ' ============================================'
 Write-Host ''
 

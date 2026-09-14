@@ -43,7 +43,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: authUser.id,
             email: authUser.email || '',
             name: profile?.name || authUser.user_metadata?.name || authUser.email || 'User',
-            // EquipQR upload wins; otherwise Google Auth metadata photo
+            // ZNTEQR upload wins; otherwise Google Auth metadata photo
             avatar_url: resolveEffectiveAvatarUrl(
               profile?.avatar_url,
               authUser.user_metadata,

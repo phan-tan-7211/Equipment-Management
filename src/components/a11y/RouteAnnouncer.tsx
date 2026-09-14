@@ -50,7 +50,7 @@ export const RouteAnnouncer: FC = () => {
     prevRef.current = { pathname, search, hash };
 
     const stripEquipQrSuffix = (t: string): string => {
-      const suffix = ' | EquipQR';
+      const suffix = ' | ZNTEQR';
       return t.endsWith(suffix) ? t.slice(0, -suffix.length).trim() : t.trim();
     };
 

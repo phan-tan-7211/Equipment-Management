@@ -28,7 +28,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-for /f "usebackq delims=" %%i in (`op read "op://EquipQR Agents/github-write/credential"`) do set "GH_TOKEN=%%i"
+for /f "usebackq delims=" %%i in (`op read "op://ZNTEQR Agents/github-write/credential"`) do set "GH_TOKEN=%%i"
 if not defined GH_TOKEN (
   echo [rotate-github-secrets] FAIL: could not read github-write token from 1Password.
   exit /b 1

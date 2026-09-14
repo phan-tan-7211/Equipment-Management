@@ -124,7 +124,7 @@ describe('GoogleDriveDestinationPickerDialog', () => {
     );
 
     await screen.findByRole('button', { name: 'Open Ops Shared Drive' });
-    await user.type(screen.getByLabelText('New folder name'), 'EquipQR Root');
+    await user.type(screen.getByLabelText('New folder name'), 'ZNTEQR Root');
     await user.click(screen.getByRole('button', { name: /create folder/i }));
 
     await waitFor(() => {
@@ -132,7 +132,7 @@ describe('GoogleDriveDestinationPickerDialog', () => {
         organizationId: 'org-1',
         parentId: 'root',
         driveId: null,
-        name: 'EquipQR Root',
+        name: 'ZNTEQR Root',
       });
     });
   });
@@ -174,7 +174,7 @@ describe('GoogleDriveDestinationPickerDialog', () => {
     );
 
     await user.click(await screen.findByRole('button', { name: 'Open Ops Shared Drive' }));
-    await user.type(screen.getByLabelText('New folder name'), 'EquipQR Exports');
+    await user.type(screen.getByLabelText('New folder name'), 'ZNTEQR Exports');
     await user.click(screen.getByRole('button', { name: /create folder/i }));
 
     await waitFor(() => {
@@ -182,7 +182,7 @@ describe('GoogleDriveDestinationPickerDialog', () => {
         organizationId: 'org-1',
         parentId: 'root',
         driveId: 'drive-1',
-        name: 'EquipQR Exports',
+        name: 'ZNTEQR Exports',
       });
     });
   });

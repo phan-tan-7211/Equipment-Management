@@ -1,4 +1,4 @@
-# Contributing to EquipQR
+# Contributing to ZNTEQR
 
 This file covers branching, reviews, and how to land a change.
 
@@ -16,7 +16,7 @@ This file covers branching, reviews, and how to land a change.
 
 ## Project overview
 
-EquipQR is a QR-first work order app for heavy equipment repair shops, built with React, TypeScript, and Supabase.
+ZNTEQR is a QR-first work order app for heavy equipment repair shops, built with React, TypeScript, and Supabase.
 
 **Key Technologies:**
 - Frontend: React 18, TypeScript, Vite
@@ -27,7 +27,7 @@ EquipQR is a QR-first work order app for heavy equipment repair shops, built wit
 
 ## Branching Model
 
-EquipQR uses a **feat → preview → main** train (#1282). Authoritative policy: [`.cursor/rules/branching.mdc`](.cursor/rules/branching.mdc).
+ZNTEQR uses a **feat → preview → main** train (#1282). Authoritative policy: [`.cursor/rules/branching.mdc`](.cursor/rules/branching.mdc).
 
 ### Branch Environments
 
@@ -65,7 +65,7 @@ EquipQR uses a **feat → preview → main** train (#1282). Authoritative policy
 
 ## Versioning & Release Process
 
-EquipQR uses **semantic versioning**. GitHub Actions creates tags when a bumped `package.json` lands on `main`. What belongs in the changelog is defined in [`.cursor/rules/changelog.mdc`](.cursor/rules/changelog.mdc).
+ZNTEQR uses **semantic versioning**. GitHub Actions creates tags when a bumped `package.json` lands on `main`. What belongs in the changelog is defined in [`.cursor/rules/changelog.mdc`](.cursor/rules/changelog.mdc).
 
 ### How It Works
 
@@ -123,8 +123,8 @@ For technical details on CI/CD workflows including version tagging, see [`docs/o
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Columbia-Cloudworks-LLC/EquipQR.git
-   cd EquipQR
+   git clone https://github.com/Columbia-Cloudworks-LLC/ZNTEQR.git
+   cd ZNTEQR
    ```
 
 2. **Install dependencies**:
@@ -204,7 +204,7 @@ Include the following information:
 - **Actual Behavior**: What actually happens
 - **Environment**:
   - Browser/OS version
-  - EquipQR version (check footer)
+  - ZNTEQR version (check footer)
   - Organization role (admin, technician, etc.)
 - **Screenshots/Logs**: If applicable
 - **Additional Context**: Any other relevant information
@@ -233,7 +233,7 @@ Use these labels to categorize your issue:
 
 ### For Customers
 
-If you're a EquipQR customer experiencing issues or need support:
+If you're a ZNTEQR customer experiencing issues or need support:
 
 **Email**: [phantan7211@gmail.com](mailto:phantan7211@gmail.com)
 
@@ -254,7 +254,7 @@ This helps maintain a public record and benefits the entire community.
 
 ## Coding Guidelines
 
-EquipQR follows strict coding standards to maintain quality and consistency.
+ZNTEQR follows strict coding standards to maintain quality and consistency.
 
 ### Language & Style
 
@@ -302,7 +302,7 @@ const { data } = await supabase
 
 ### Testing
 
-EquipQR follows a **journey-first** testing strategy. See [`docs/technical/testing-guidelines.md`](./docs/technical/testing-guidelines.md) for complete details.
+ZNTEQR follows a **journey-first** testing strategy. See [`docs/technical/testing-guidelines.md`](./docs/technical/testing-guidelines.md) for complete details.
 
 **Key principles**:
 - **Default to journey tests**: Render real pages, use `userEvent`, assert on visible outcomes
@@ -360,7 +360,7 @@ describe('Feature Journey', () => {
 
 ## Change Management Policy
 
-**CRITICAL**: All code changes to EquipQR must follow this Change Management Policy to ensure security, quality, and compliance.
+**CRITICAL**: All code changes to ZNTEQR must follow this Change Management Policy to ensure security, quality, and compliance.
 
 ### Requirements
 
@@ -476,4 +476,4 @@ If you have questions about contributing, feel free to:
 - Create an issue tagged `question`
 - Email [phantan7211@gmail.com](mailto:phantan7211@gmail.com)
 
-Thank you for contributing to EquipQR.
+Thank you for contributing to ZNTEQR.

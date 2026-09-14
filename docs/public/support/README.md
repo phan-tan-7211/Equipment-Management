@@ -1,6 +1,6 @@
 # Support library screenshot assets
 
-This directory is served under `/support/*` on the EquipQR Help Center (`equipqr.info`).
+This directory is served under `/support/*` on the ZNTEQR Help Center (`equipqr.info`).
 
 ## Preferred workflow (2026+)
 

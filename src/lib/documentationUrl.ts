@@ -16,7 +16,7 @@ export function resolveDocumentationUrl(env: DocumentationUrlEnv = import.meta.e
   return env.DEV ? LOCAL_DOCUMENTATION_URL : PRODUCTION_DOCUMENTATION_URL;
 }
 
-/** Canonical EquipQR Help Center root (VitePress `/support/`). */
+/** Canonical ZNTEQR Help Center root (VitePress `/support/`). */
 export function resolveSupportDocsUrl(env: DocumentationUrlEnv = import.meta.env): string {
   const base = resolveDocumentationUrl(env).replace(/\/$/, '');
   return `${base}/support`;

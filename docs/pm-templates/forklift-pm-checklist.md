@@ -4,7 +4,7 @@
 **Total Items**: 103  
 **Sections**: 12
 
-103 items. Default EquipQR template for forklifts.
+103 items. Default ZNTEQR template for forklifts.
 
 ---
 

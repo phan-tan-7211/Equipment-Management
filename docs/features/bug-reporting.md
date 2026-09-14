@@ -1,13 +1,13 @@
 # In-App Bug Reporting System
 
-This document describes the in-app bug reporting feature that allows authenticated users to submit issue reports directly from EquipQR. Reports are stored in the `tickets` database table, automatically synced to GitHub Issues for developer tracking, and users can track status and responses in real time.
+This document describes the in-app bug reporting feature that allows authenticated users to submit issue reports directly from ZNTEQR. Reports are stored in the `tickets` database table, automatically synced to GitHub Issues for developer tracking, and users can track status and responses in real time.
 
 ## Overview
 
 Users can access the bug reporting form from the **Support** page in the dashboard. Submitting a report:
 
 1. Captures anonymized session diagnostics (app version, browser, errors, performance)
-2. Creates a GitHub Issue in `Columbia-Cloudworks-LLC/EquipQR`, assigned to `viralarchitect` with the `user-reported` label
+2. Creates a GitHub Issue in `Columbia-Cloudworks-LLC/ZNTEQR`, assigned to `viralarchitect` with the `user-reported` label
 3. Inserts a record in the `tickets` Supabase table, linking the GitHub issue number
 4. Shows a success confirmation to the user
 
@@ -159,9 +159,9 @@ A GitHub Personal Access Token is required for the `create-ticket` edge function
 1. Go to [GitHub Settings > Developer settings > Personal access tokens > Fine-grained tokens](https://github.com/settings/tokens?type=beta)
 2. Click **Generate new token**
 3. Set the following:
-   - **Token name:** `EquipQR Bug Reporter` (or similar)
+   - **Token name:** `ZNTEQR Bug Reporter` (or similar)
    - **Expiration:** Choose an appropriate expiration (recommended: 90 days, then rotate)
-   - **Repository access:** Select **Only select repositories** > `Columbia-Cloudworks-LLC/EquipQR`
+   - **Repository access:** Select **Only select repositories** > `Columbia-Cloudworks-LLC/ZNTEQR`
    - **Permissions:** Under **Repository permissions**, set **Issues** to **Read and write**
 4. Click **Generate token** and copy the value
 
@@ -177,7 +177,7 @@ openssl rand -hex 32
 
 #### How to Configure the Webhook
 
-1. Go to [GitHub repo Settings > Webhooks](https://github.com/Columbia-Cloudworks-LLC/EquipQR/settings/hooks)
+1. Go to [GitHub repo Settings > Webhooks](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/settings/hooks)
 2. Click **Add webhook**
 3. Set:
    - **Payload URL:** `https://<supabase-url>/functions/v1/github-issue-webhook`
@@ -194,7 +194,7 @@ openssl rand -hex 32
 | **Preview branch** | Supabase Dashboard > Edge Functions > Secrets | Both secrets |
 | **Production** | Supabase Dashboard > Edge Functions > Secrets | Both secrets |
 
-For complete secrets documentation, see [Supabase Branch Secrets](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/supabase-branch-secrets.md).
+For complete secrets documentation, see [Supabase Branch Secrets](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/supabase-branch-secrets.md).
 
 ## Troubleshooting
 

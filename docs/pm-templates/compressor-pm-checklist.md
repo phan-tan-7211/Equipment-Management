@@ -4,7 +4,7 @@
 **Total Items:** 53  
 **Sections:** 8
 
-53 items. Default EquipQR template for portable compressors.
+53 items. Default ZNTEQR template for portable compressors.
 
 ---
 

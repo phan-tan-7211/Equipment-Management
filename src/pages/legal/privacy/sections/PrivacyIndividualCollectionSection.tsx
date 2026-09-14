@@ -10,7 +10,7 @@ export function PrivacyIndividualCollectionSection() {
       className="scroll-mt-24"
     >
       <p>
-        When you create an account or interact with EquipQR, we collect information tied to you
+        When you create an account or interact with ZNTEQR, we collect information tied to you
         personally. The table below lists every category of individual-level data and exactly what is
         collected.
       </p>

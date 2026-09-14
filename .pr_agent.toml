@@ -1,4 +1,4 @@
-# EquipQR — Qodo Merge per-repo configuration
+# ZNTEQR — Qodo Merge per-repo configuration
 #
 # Reference: https://docs.qodo.ai/code-review/get-started/configuration-overview/configuration-and-command-reference
 # Modeled on Codium-ai/se-qodo-merge-configs and trimmed to typeorm/typeorm's lean shape.

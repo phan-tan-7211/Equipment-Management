@@ -4,7 +4,7 @@
 **Total Items:** 74  
 **Sections:** 10
 
-74 items. Default EquipQR template for scissor lifts.
+74 items. Default ZNTEQR template for scissor lifts.
 
 ---
 

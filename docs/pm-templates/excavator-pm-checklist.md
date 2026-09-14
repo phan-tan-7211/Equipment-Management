@@ -4,7 +4,7 @@
 **Total Items:** 84  
 **Sections:** 11
 
-84 items. Default EquipQR template for excavators.
+84 items. Default ZNTEQR template for excavators.
 
 ---
 

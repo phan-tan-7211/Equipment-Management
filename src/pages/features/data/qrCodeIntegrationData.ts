@@ -80,7 +80,7 @@ export const showcases: Screenshot[] = [
   {
     kind: 'image',
     imageUrl: landingImage('equipment-qr-code-modal-2026-04.webp'),
-    imageAlt: 'EquipQR Equipment QR Code modal showing scannable QR code with equipment URL and download options',
+    imageAlt: 'ZNTEQR Equipment QR Code modal showing scannable QR code with equipment URL and download options',
     title: 'Equipment QR Codes',
     description:
       'Each piece of equipment gets its own unique QR code. Technicians scan the code with any smartphone camera to open equipment details, maintenance history, and active work orders. No app download required.',
@@ -88,7 +88,7 @@ export const showcases: Screenshot[] = [
   {
     kind: 'image',
     imageUrl: landingImage('equipment-list-2026-04.webp'),
-    imageAlt: 'EquipQR Equipment list showing QR code buttons on each equipment card with team assignments and last maintenance dates',
+    imageAlt: 'ZNTEQR Equipment list showing QR code buttons on each equipment card with team assignments and last maintenance dates',
     title: 'Quick Access from Equipment List',
     description:
       'Every equipment card includes a QR code button. View, download, or print QR codes from your equipment list without opening each detail page.',

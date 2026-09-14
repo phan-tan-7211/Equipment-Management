@@ -26,7 +26,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                     'Database query results, authentication tokens (JWTs), real-time event updates, and file download URLs.',
                 },
                 {
-                  label: 'Data stored in EquipQR via Supabase:',
+                  label: 'Data stored in ZNTEQR via Supabase:',
                   content:
                     'All application data is persisted in Supabase-managed PostgreSQL databases. Uploaded files are stored in Supabase Storage (S3-compatible).',
                 },
@@ -63,7 +63,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                     'Place predictions (autocomplete suggestions), formatted addresses, address components, and latitude/longitude coordinates.',
                 },
                 {
-                  label: 'Data stored in EquipQR:',
+                  label: 'Data stored in ZNTEQR:',
                   content:
                     'Geocoded results (address-to-coordinate mappings) are cached in our database to reduce redundant API calls and improve performance. Equipment and team location coordinates derived from geocoding are stored as part of those records.',
                 },
@@ -95,7 +95,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                   content: 'A pass/fail verification result.',
                 },
                 {
-                  label: 'Data stored in EquipQR:',
+                  label: 'Data stored in ZNTEQR:',
                   content:
                     'None. The verification is stateless and the token is discarded immediately after validation.',
                 },
@@ -122,7 +122,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                   content: 'A delivery confirmation and message ID.',
                 },
                 {
-                  label: 'Data stored in EquipQR:',
+                  label: 'Data stored in ZNTEQR:',
                   content: 'None. Resend is used solely for email delivery and we do not store Resend-specific data.',
                 },
               ],
@@ -132,19 +132,19 @@ export const subprocessorProviders: SubprocessorProvider[] = [
     items: [
                 {
                   label: 'Purpose:',
-                  content: 'Hosting and content delivery network (CDN) for the EquipQR frontend web application.',
+                  content: 'Hosting and content delivery network (CDN) for the ZNTEQR frontend web application.',
                 },
                 {
                   label: 'Data sent to Vercel:',
                   content:
-                    'Standard HTTP requests from your browser when you access EquipQR (URL, headers, IP address).',
+                    'Standard HTTP requests from your browser when you access ZNTEQR (URL, headers, IP address).',
                 },
                 {
                   label: 'Data received from Vercel:',
-                  content: 'The application assets (HTML, CSS, JavaScript) that power the EquipQR interface.',
+                  content: 'The application assets (HTML, CSS, JavaScript) that power the ZNTEQR interface.',
                 },
                 {
-                  label: 'Data stored in EquipQR:',
+                  label: 'Data stored in ZNTEQR:',
                   content: 'None. Vercel is a hosting platform only.',
                 },
                 {
@@ -175,9 +175,9 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                   content: 'Organization billing identity and subscription plan selections.',
                 },
                 {
-                  label: 'Data stored in EquipQR:',
+                  label: 'Data stored in ZNTEQR:',
                   content:
-                    'Historical Stripe customer IDs and subscription IDs remain in organization records for accounting continuity. No payment card numbers or bank account details were ever stored in EquipQR — those were handled entirely by Stripe.',
+                    'Historical Stripe customer IDs and subscription IDs remain in organization records for accounting continuity. No payment card numbers or bank account details were ever stored in ZNTEQR — those were handled entirely by Stripe.',
                 },
               ],
   },
@@ -187,7 +187,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                 {
                   label: 'Purpose:',
                   content:
-                    'Export work order invoices to QuickBooks and synchronize customer lists between EquipQR teams and QuickBooks customers.',
+                    'Export work order invoices to QuickBooks and synchronize customer lists between ZNTEQR teams and QuickBooks customers.',
                 },
                 {
                   label: 'Activation:',
@@ -205,7 +205,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                     'OAuth tokens (access and refresh), the QuickBooks company ID (realm ID), customer lists (names and IDs), and invoice confirmation numbers.',
                 },
                 {
-                  label: 'Data stored in EquipQR:',
+                  label: 'Data stored in ZNTEQR:',
                   content:
                     'OAuth tokens (encrypted at rest using AES with a server-side encryption key), team-to-QuickBooks-customer mappings, and an export audit log (invoice IDs, export status, timestamps).',
                 },
@@ -217,7 +217,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                 {
                   label: 'Purpose:',
                   content:
-                    'Synchronize your Google Workspace directory users with EquipQR memberships, export work order data to Google Sheets, and upload PDF reports to Google Drive.',
+                    'Synchronize your Google Workspace directory users with ZNTEQR memberships, export work order data to Google Sheets, and upload PDF reports to Google Drive.',
                 },
                 {
                   label: 'Activation:',
@@ -235,7 +235,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                     'OAuth tokens (access and refresh), directory user details (name, email, suspended status), spreadsheet and file IDs, and web view links.',
                 },
                 {
-                  label: 'Data stored in EquipQR:',
+                  label: 'Data stored in ZNTEQR:',
                   content:
                     'OAuth tokens (encrypted at rest using AES with a server-side encryption key), directory user records (name, email, suspended status), domain verification records, and OAuth session metadata.',
                 },
@@ -245,7 +245,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                     <>
                       <code>admin.directory.user.readonly</code> (directory sync), <code>spreadsheets</code>{' '}
                       (Sheets export), <code>drive.file</code> (Drive uploads — limited to files created by
-                      EquipQR).
+                      ZNTEQR).
                     </>
                   ),
                 },
@@ -269,7 +269,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                   content: 'The issue number, status updates (open/closed), and developer comments.',
                 },
                 {
-                  label: 'Data stored in EquipQR:',
+                  label: 'Data stored in ZNTEQR:',
                   content:
                     'The GitHub issue number, current issue status, and synced developer comments (displayed to the reporting user within the app).',
                 },
@@ -281,7 +281,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                 {
                   label: 'Purpose:',
                   content:
-                    'Delivering push notifications to your device when you are not actively using EquipQR (e.g., work order assignments, status changes).',
+                    'Delivering push notifications to your device when you are not actively using ZNTEQR (e.g., work order assignments, status changes).',
                 },
                 {
                   label: 'Data sent to browser push services:',
@@ -289,7 +289,7 @@ export const subprocessorProviders: SubprocessorProvider[] = [
                     'Notification title, body text, and an action URL. The push payload is encrypted end-to-end using the VAPID (Voluntary Application Server Identification) protocol. The specific push service depends on your browser (e.g., Firebase Cloud Messaging for Chrome, Apple Push Notification Service for Safari).',
                 },
                 {
-                  label: 'Data stored in EquipQR:',
+                  label: 'Data stored in ZNTEQR:',
                   content:
                     'Your push subscription endpoint URL, encryption keys (required by the Web Push protocol), and browser user agent string.',
                 },

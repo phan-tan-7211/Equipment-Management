@@ -27,7 +27,7 @@ export function googleAvatarUrlFromMetadata(
 
 /**
  * Precedence for the current user's display avatar:
- * 1. EquipQR `profiles.avatar_url` (storage path or legacy absolute URL)
+ * 1. ZNTEQR `profiles.avatar_url` (storage path or legacy absolute URL)
  * 2. Google / Auth metadata photo
  * 3. null → initials / generic fallback in UI
  */

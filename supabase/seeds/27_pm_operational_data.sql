@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - PM Operational Data
+-- ZNTEQR Seed Data - PM Operational Data
 -- =====================================================
 -- Populates the PM system with realistic operational data so that
 -- PM interval tracking, the dashboard Needs Attention count, and

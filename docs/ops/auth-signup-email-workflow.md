@@ -1,4 +1,4 @@
-# EquipQR Production Signup Email Workflow
+# ZNTEQR Production Signup Email Workflow
 
 Last verified: 2026-05-25 UTC
 
@@ -11,7 +11,7 @@ This runbook documents the production email signup path after the Resend SMTP cu
 | App URL | `https://equipqr.app` |
 | Supabase project | `ymxkzronkhwxzcdcbnwq` |
 | Supabase Auth URL | `https://supabase.equipqr.app/auth/v1` |
-| Supabase Auth email sender | `EquipQR <noreply@equipqr.app>` |
+| Supabase Auth email sender | `ZNTEQR <noreply@equipqr.app>` |
 | SMTP provider | Resend |
 | SMTP host | `smtp.resend.com` |
 | SMTP port | `587` |
@@ -72,7 +72,7 @@ Use this checklist after any Auth, SMTP, DNS, or signup-flow change.
    - `smtp_host = smtp.resend.com`
    - `smtp_port = 587`
    - `smtp_admin_email = noreply@equipqr.app`
-   - `smtp_sender_name = EquipQR`
+   - `smtp_sender_name = ZNTEQR`
    - `rate_limit_email_sent = 30`
    - `mailer_autoconfirm = false`
 2. Confirm Resend domain health:

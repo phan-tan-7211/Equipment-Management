@@ -154,7 +154,7 @@ export const PageSEO: FC<PageSEOProps> = ({
         ['og:image', ogImage],
         ['og:image:width', '1200'],
         ['og:image:height', '630'],
-        ['og:image:alt', `${title} - EquipQR`],
+        ['og:image:alt', `${title} - ZNTEQR`],
       ];
 
       for (const [prop, content] of ogPairs) {

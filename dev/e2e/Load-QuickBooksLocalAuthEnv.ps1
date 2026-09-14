@@ -4,7 +4,7 @@
   Configure env vars for local QuickBooks integration Playwright replay.
 
 .DESCRIPTION
-  After npm run e2e:quickbooks-auth:capture, replays the saved EquipQR session and
+  After npm run e2e:quickbooks-auth:capture, replays the saved ZNTEQR session and
   documents where OAuth tokens live (quickbooks_credentials in local Supabase).
 
 .EXAMPLE

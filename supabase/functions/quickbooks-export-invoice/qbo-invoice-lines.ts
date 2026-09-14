@@ -93,7 +93,7 @@ export function buildPrivateNote(
 ): string {
   const lines: string[] = [];
 
-  lines.push(`EquipQR Work Order ID: ${workOrder.id}`);
+  lines.push(`ZNTEQR Work Order ID: ${workOrder.id}`);
   lines.push(`Created: ${new Date(workOrder.created_date).toLocaleDateString("en-US")}`);
   if (workOrder.due_date) {
     lines.push(`Due: ${new Date(workOrder.due_date).toLocaleDateString("en-US")}`);

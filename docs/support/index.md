@@ -1,19 +1,19 @@
 ---
-title: "EquipQR Help Center"
-description: "Step-by-step guides for technicians, managers, admins, and equipment owners using EquipQR."
+title: "ZNTEQR Help Center"
+description: "Step-by-step guides for technicians, managers, admins, and equipment owners using ZNTEQR."
 ---
 
-# EquipQR Help Center
+# ZNTEQR Help Center
 
 Browse guides by workflow and role. For bug reports and ticket tracking, use the signed-in support page in the app.
 
 - [Open support & tickets](https://equipqr.app/dashboard/support)
 - [System status](https://status.equipqr.app)
-- [Open EquipQR](https://equipqr.app)
+- [Open ZNTEQR](https://equipqr.app)
 
 ## Categories
 
-- [Start Here](./start-here/) — New to EquipQR? Get oriented and set up your organization.
+- [Start Here](./start-here/) — New to ZNTEQR? Get oriented and set up your organization.
 - [Technician Field Work](./technician-field-work/) — Fast mobile-first workflows for technicians scanning equipment, running work orders, and documenting what they did.
 - [Work Orders](./work-orders/) — Create, assign, schedule, and close work orders across your teams.
 - [Equipment & QR Codes](./equipment-qr/) — Add equipment, print QR codes, and keep records current so field scans always resolve.

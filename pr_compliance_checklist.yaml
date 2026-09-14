@@ -1,4 +1,4 @@
-# EquipQR — Qodo Merge custom compliance checklist
+# ZNTEQR — Qodo Merge custom compliance checklist
 #
 # Reference: https://docs.qodo.ai/code-review/qodo-merge/features/custom-compliance
 # Schema: title (required) | compliance_label (required) | objective (required)
@@ -9,7 +9,7 @@
 #                                 codebase_standards/groups/typescript
 #   2. Front-end baseline       — seeded from qodo-ai/pr-compliance-templates,
 #                                 codebase_standards/groups/front-end
-#   3. EquipQR domain           — multi-tenancy, RBAC, RLS, service-layer,
+#   3. ZNTEQR domain           — multi-tenancy, RBAC, RLS, service-layer,
 #                                 Edge Function auth-at-entrypoint, no service_role
 #                                 outside approved Edge Functions
 #
@@ -63,7 +63,7 @@ pr_compliances:
     failure_criteria: "Missing CSP headers, XSS vulnerabilities through innerHTML usage, sensitive data exposed in client storage, unsanitized user input, or insecure cookie configurations"
 
   # ---------------------------------------------------------------------------
-  # 3. EquipQR domain compliances (multi-tenant fleet management on Supabase)
+  # 3. ZNTEQR domain compliances (multi-tenant fleet management on Supabase)
   # ---------------------------------------------------------------------------
 
   - title: "Multi-tenant organization scoping"

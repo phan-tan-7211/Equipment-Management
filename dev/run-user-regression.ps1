@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Run EquipQR Playwright user regression suites against the local dev stack.
+  Run ZNTEQR Playwright user regression suites against the local dev stack.
 
 .PARAMETER Suite
   critical (default) or full.
@@ -131,7 +131,7 @@ $appReady = Test-AppReady
 $supabaseReady = Test-SupabaseReady
 
 if (-not $SkipStackStart -and (-not $appReady -or -not $supabaseReady)) {
-    Write-Host "[EquipQR E2E] Local stack not ready (app=$appReady supabase=$supabaseReady). Starting dev-start.bat..."
+    Write-Host "[ZNTEQR E2E] Local stack not ready (app=$appReady supabase=$supabaseReady). Starting dev-start.bat..."
     $devStart = Join-Path $repoRoot 'dev\dev-start.bat'
     if (-not (Test-Path -LiteralPath $devStart)) {
         Write-Host "FAIL: dev-start.bat not found at $devStart"
@@ -155,15 +155,15 @@ if (-not $SkipStackStart -and (-not $appReady -or -not $supabaseReady)) {
 }
 
 if (($Suite -eq 'full' -or $Suite -eq 'all') -and -not $ResetDb) {
-    Write-Host '[EquipQR E2E] WARNING: full/all suites mutate data; auto-enabling -ResetDb for repeatable runs.'
+    Write-Host '[ZNTEQR E2E] WARNING: full/all suites mutate data; auto-enabling -ResetDb for repeatable runs.'
     $ResetDb = $true
 }
 
 if ($ResetDb) {
-    Write-Host '[EquipQR E2E] Generating volume seed data (dev/seed-data/generate-seeds.ts)...'
+    Write-Host '[ZNTEQR E2E] Generating volume seed data (dev/seed-data/generate-seeds.ts)...'
     npx tsx dev/seed-data/generate-seeds.ts
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host '[EquipQR E2E] Resetting local database (supabase db reset)...'
+    Write-Host '[ZNTEQR E2E] Resetting local database (supabase db reset)...'
     npx supabase db reset
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
@@ -225,7 +225,7 @@ function Read-RunConfigDefaults {
         if ($null -ne $raw.stagePauseMs -and [int]$raw.stagePauseMs -ge 0) { $fallback.stagePauseMs = [int]$raw.stagePauseMs }
         if ($null -ne $raw.watchPauseMs -and [int]$raw.watchPauseMs -ge 0) { $fallback.watchPauseMs = [int]$raw.watchPauseMs }
     } catch {
-        Write-Host "[EquipQR E2E] WARNING: Could not read $defaultRunConfigPath; using built-in defaults."
+        Write-Host "[ZNTEQR E2E] WARNING: Could not read $defaultRunConfigPath; using built-in defaults."
     }
 
     return $fallback
@@ -378,31 +378,31 @@ function Invoke-PlaywrightViewportRun {
         $playwrightArgs += '--debug'
     }
 
-    Write-Host "[EquipQR E2E] Running suite: $Suite"
-    Write-Host "[EquipQR E2E] Run profile: $resolvedRunProfile"
-    Write-Host "[EquipQR E2E] Effective config: $runConfigPath"
-    Write-Host "[EquipQR E2E] Viewport mode: $Viewport"
-    Write-Host "[EquipQR E2E] Output folder: $absoluteOutputDir"
+    Write-Host "[ZNTEQR E2E] Running suite: $Suite"
+    Write-Host "[ZNTEQR E2E] Run profile: $resolvedRunProfile"
+    Write-Host "[ZNTEQR E2E] Effective config: $runConfigPath"
+    Write-Host "[ZNTEQR E2E] Viewport mode: $Viewport"
+    Write-Host "[ZNTEQR E2E] Output folder: $absoluteOutputDir"
     if ($effectiveWatch) {
-        Write-Host "[EquipQR E2E] Watch pacing: overlay=$resolvedOverlayMode, stagePause=$resolvedStagePauseMs ms, finalPause=$resolvedWatchPauseMs ms, slowMo=$resolvedSlowMoMs ms"
+        Write-Host "[ZNTEQR E2E] Watch pacing: overlay=$resolvedOverlayMode, stagePause=$resolvedStagePauseMs ms, finalPause=$resolvedWatchPauseMs ms, slowMo=$resolvedSlowMoMs ms"
     }
     if ($recordAllVideos) {
-        Write-Host "[EquipQR E2E] Recording videos for every test under tmp\playwright\test-results"
+        Write-Host "[ZNTEQR E2E] Recording videos for every test under tmp\playwright\test-results"
     }
     if ($actionCue) {
-        Write-Host "[EquipQR E2E] Demo action spotlight enabled."
+        Write-Host "[ZNTEQR E2E] Demo action spotlight enabled."
     }
     if ($resolvedOverlayMode -eq 'marketing') {
-        Write-Host "[EquipQR E2E] Marketing overlay enabled; Playwright video annotations are suppressed."
+        Write-Host "[ZNTEQR E2E] Marketing overlay enabled; Playwright video annotations are suppressed."
         if ($resolvedRecordingTitle) {
-            Write-Host "[EquipQR E2E] Recording title: $resolvedRecordingTitle"
+            Write-Host "[ZNTEQR E2E] Recording title: $resolvedRecordingTitle"
         }
     } elseif ($resolvedOverlayMode -eq 'debug') {
-        Write-Host "[EquipQR E2E] Debug overlay enabled; Playwright video annotations are enabled."
+        Write-Host "[ZNTEQR E2E] Debug overlay enabled; Playwright video annotations are enabled."
     } else {
-        Write-Host "[EquipQR E2E] Overlay disabled."
+        Write-Host "[ZNTEQR E2E] Overlay disabled."
     }
-    Write-Host "[EquipQR E2E] Command: npx $($playwrightArgs -join ' ')"
+    Write-Host "[ZNTEQR E2E] Command: npx $($playwrightArgs -join ' ')"
 
     $previousNoColor = $env:NO_COLOR
     try {
@@ -420,15 +420,15 @@ function Invoke-PlaywrightViewportRun {
     if ($runExitCode -ne 0) {
         $report = Join-Path $repoRoot 'tmp\playwright\report\index.html'
         if (Test-Path -LiteralPath $report) {
-            Write-Host "[EquipQR E2E] HTML report: $report"
+            Write-Host "[ZNTEQR E2E] HTML report: $report"
         }
     }
 
     if ($recordAllVideos) {
         $videoFiles = @(Get-ChildItem -LiteralPath $absoluteOutputDir -Recurse -Filter 'video.webm' -File -ErrorAction SilentlyContinue)
-        Write-Host "[EquipQR E2E] Video files retained: $($videoFiles.Count)"
+        Write-Host "[ZNTEQR E2E] Video files retained: $($videoFiles.Count)"
         if ($videoFiles.Count -gt 0) {
-            Write-Host "[EquipQR E2E] First video: $($videoFiles[0].FullName)"
+            Write-Host "[ZNTEQR E2E] First video: $($videoFiles[0].FullName)"
         }
     }
 

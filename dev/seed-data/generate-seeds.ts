@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * EquipQR local seed-data generator (#1164).
+ * ZNTEQR local seed-data generator (#1164).
  *
  * Emits deterministic volume seed SQL into supabase/seeds/generated/
  * (gitignored). `supabase db reset` applies these files after the committed
@@ -106,7 +106,7 @@ function main(): void {
 
   if (help) {
     console.log(`
-EquipQR seed-data generator (#1164)
+ZNTEQR seed-data generator (#1164)
 
 Usage:
   npx tsx dev/seed-data/generate-seeds.ts [--scale N] [--out DIR]

@@ -1,11 +1,11 @@
-# EquipQR - GitHub Copilot Code Review Instructions
+# ZNTEQR - GitHub Copilot Code Review Instructions
 
 These instructions guide Copilot code review across all files in this repository.
 Language and framework-specific rules are in `.github/instructions/`.
 
 ## Purpose
 
-EquipQR is a multi-tenant equipment management SaaS built with React, TypeScript, and Supabase.
+ZNTEQR is a multi-tenant equipment management SaaS built with React, TypeScript, and Supabase.
 Critical concerns: **multi-tenancy isolation**, **RLS security**, and **RBAC permissions**.
 
 ---

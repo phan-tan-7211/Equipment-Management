@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
-/** WCAG 2.1 AA tags used for EquipQR accessibility scans. */
+/** WCAG 2.1 AA tags used for ZNTEQR accessibility scans. */
 export const WCAG21_AA_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa'] as const;
 
 /** Third-party embeds that axe cannot fully analyze — exclude only these selectors. */

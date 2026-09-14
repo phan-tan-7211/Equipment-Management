@@ -27,9 +27,9 @@ describe('PrivacyPolicy', () => {
     expect(screen.getByText('1. Introduction')).toBeInTheDocument();
     expect(screen.getByText(/is committed to protecting the privacy of every person/)).toBeInTheDocument();
     expect(screen.getByText(/2\. Information We Collect.*Individual User Level/)).toBeInTheDocument();
-    expect(screen.getByText(/When you create an account or interact with EquipQR/)).toBeInTheDocument();
+    expect(screen.getByText(/When you create an account or interact with ZNTEQR/)).toBeInTheDocument();
     expect(screen.getByText(/3\. Information We Collect.*Organization Level/)).toBeInTheDocument();
-    expect(screen.getByText(/Organizations that use EquipQR store business data/)).toBeInTheDocument();
+    expect(screen.getByText(/Organizations that use ZNTEQR store business data/)).toBeInTheDocument();
     expect(screen.getByText('5. Cookies, Local Storage, and Session Data')).toBeInTheDocument();
     expect(screen.getByText(/We do not use any third-party tracking cookies/)).toBeInTheDocument();
     expect(screen.getByText('6. How We Use Your Information')).toBeInTheDocument();

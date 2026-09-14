@@ -11,7 +11,7 @@ export const RIGHT_TO_REPAIR_PATH = '/right-to-repair';
 export const RIGHT_TO_REPAIR_SEO = {
   title: 'Right to Repair',
   description:
-    'EquipQR supports your right to repair equipment you already own. We will not hold your records hostage. This page is a public stance, not a contract.',
+    'ZNTEQR supports your right to repair equipment you already own. We will not hold your records hostage. This page is a public stance, not a contract.',
   path: RIGHT_TO_REPAIR_PATH,
 } as const;
 
@@ -21,7 +21,7 @@ export const EQUIPQR_REPAIR_COMMITMENTS: readonly EquipQrCommitment[] = [
   {
     id: 'export',
     title: 'Your records leave with you',
-    body: 'Organization owners can export operational data. If you stop using EquipQR, we do not keep your history locked behind a login as leverage.',
+    body: 'Organization owners can export operational data. If you stop using ZNTEQR, we do not keep your history locked behind a login as leverage.',
   },
   {
     id: 'no-hostage',
@@ -31,7 +31,7 @@ export const EQUIPQR_REPAIR_COMMITMENTS: readonly EquipQrCommitment[] = [
   {
     id: 'no-pairing',
     title: 'We do not lock the machines you service',
-    body: 'EquipQR is a records and work-order system. We do not pair replacement parts to our software, withhold diagnostics as a rent, or brick equipment from the cloud.',
+    body: 'ZNTEQR is a records and work-order system. We do not pair replacement parts to our software, withhold diagnostics as a rent, or brick equipment from the cloud.',
   },
 ];
 

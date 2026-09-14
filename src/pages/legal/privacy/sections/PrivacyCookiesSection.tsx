@@ -9,13 +9,13 @@ export function PrivacyCookiesSection() {
       className="scroll-mt-24"
     >
             <p>
-              EquipQR uses minimal browser storage, exclusively for application functionality. We do
+              ZNTEQR uses minimal browser storage, exclusively for application functionality. We do
               not use any third-party tracking cookies, advertising pixels, or browser
               fingerprinting techniques.
             </p>
 
             <p>
-              On your first visit, EquipQR shows a cookies and browser-storage notice with explicit
+              On your first visit, ZNTEQR shows a cookies and browser-storage notice with explicit
               Accept and Reject choices. Your choice is stored in localStorage under{' '}
               <code>equipqr:cookie-consent</code> so the notice does not reappear on every page load
               (until you clear site data). Preference cookies and optional UI preferences are written
@@ -117,7 +117,7 @@ export function PrivacyCookiesSection() {
             <p>
               None of this data is sent to any server or third party. It remains in your browser
               and can be cleared at any time through your browser settings. Choosing Reject clears
-              optional UI preference keys EquipQR controls and stops writing them until you Accept;
+              optional UI preference keys ZNTEQR controls and stops writing them until you Accept;
               strictly necessary keys listed above remain available.
             </p>
 
@@ -131,7 +131,7 @@ export function PrivacyCookiesSection() {
             <h3>Authentication Session</h3>
             <p>
               Supabase Auth stores a JWT access token and refresh token in your browser. These
-              tokens are used solely to authenticate your requests to EquipQR and are managed
+              tokens are used solely to authenticate your requests to ZNTEQR and are managed
               entirely by the Supabase Auth SDK. They are not accessible to third-party scripts.
               Authentication storage remains available regardless of Accept or Reject.
             </p></LegalPolicySection>

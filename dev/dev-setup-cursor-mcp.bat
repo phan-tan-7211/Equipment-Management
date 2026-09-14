@@ -11,7 +11,7 @@ exit /b %ERRORLEVEL%
 :help
 echo Usage: dev-setup-cursor-mcp.bat [dev-setup-cursor-mcp.ps1 options]
 echo.
-echo Sets up Cursor MCP configuration for EquipQR local development.
+echo Sets up Cursor MCP configuration for ZNTEQR local development.
 echo.
 echo Options:
 echo   -help, --help, /help, /?

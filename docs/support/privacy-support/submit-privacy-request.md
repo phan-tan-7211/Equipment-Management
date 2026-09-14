@@ -26,7 +26,7 @@ If the captcha appears, complete it before submitting. It prevents automated abu
 
 ## 4. Submit and expect a response
 
-You see a success confirmation after submission. The EquipQR privacy operator reviews and acknowledges your request, then fulfils within the statutory window (typically 45 days, extendable to 90).
+You see a success confirmation after submission. The ZNTEQR privacy operator reviews and acknowledges your request, then fulfils within the statutory window (typically 45 days, extendable to 90).
 
 ## Related articles
 

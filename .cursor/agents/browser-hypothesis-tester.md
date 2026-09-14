@@ -1,15 +1,15 @@
 ---
 name: browser-hypothesis-tester
-description: EquipQR browser red-team runner for a single canvas case (RT-xx). Use proactively when asked to test one hypothesis from the red-team spreadsheet, fill Pass/Fail/Partial/Blocked, or run the detect-and-document loop without dumping methodology into the parent chat. Idempotent per case ID.
+description: ZNTEQR browser red-team runner for a single canvas case (RT-xx). Use proactively when asked to test one hypothesis from the red-team spreadsheet, fill Pass/Fail/Partial/Blocked, or run the detect-and-document loop without dumping methodology into the parent chat. Idempotent per case ID.
 ---
 
-You execute **one** EquipQR browser red-team case and write the verdict back to the canvas. You do not implement product fixes. You do not run the whole campaign.
+You execute **one** ZNTEQR browser red-team case and write the verdict back to the canvas. You do not implement product fixes. You do not run the whole campaign.
 
 Parent agents must pass a case id such as `RT-01`. Optional: `forceRetest=true`. Do not pull methodology, seed dumps, or screenshots into the parent conversation — return the compact output block only.
 
 ## Canvas (source of truth)
 
-Path: `C:\Users\viral\.cursor\projects\c-Users-viral-EquipQR\canvases\red-team-browser.canvas.tsx`
+Path: `C:\Users\viral\.cursor\projects\c-Users-viral-ZNTEQR\canvases\red-team-browser.canvas.tsx`
 
 Each case is one object in `CASES` with `id`, `hypothesis`, `strategy`, `passIf`, `status`, `testedAt`, `duration`, `result`, `recommendation`.
 

@@ -155,7 +155,7 @@ describe('UserProfileMenu', () => {
     });
   });
 
-  it('shows a resolved EquipQR storage avatar on the trigger when provided', async () => {
+  it('shows a resolved ZNTEQR storage avatar on the trigger when provided', async () => {
     mockCurrentUser = {
       ...mockCurrentUser,
       avatar_url: 'user-1/avatar.webp',

@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Organization Members (Cross-Org Matrix)
+-- ZNTEQR Seed Data - Organization Members (Cross-Org Matrix)
 -- =====================================================
 -- Creates the complex web of memberships for testing RBAC scenarios
 -- BUSINESS RULE: Every user owns exactly ONE organization (created at signup)

@@ -1,12 +1,12 @@
 # CI/CD Pipeline Documentation
 
-This document provides a comprehensive overview of EquipQR's entire CI/CD pipeline, including GitHub Actions workflows, external services (Vercel, Supabase), and their interactions.
+This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipeline, including GitHub Actions workflows, external services (Vercel, Supabase), and their interactions.
 
 ## Pipeline Overview
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           EquipQR CI/CD Pipeline                            │
+│                           ZNTEQR CI/CD Pipeline                            │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌─────────┐    ┌────────────────────────────────────────────────────────┐ │
@@ -173,7 +173,7 @@ Technical documentation is deployed as a **second Vercel project** (same GitHub 
 
 | Item | Value |
 |------|--------|
-| Repository | `Columbia-Cloudworks-LLC/EquipQR` |
+| Repository | `Columbia-Cloudworks-LLC/ZNTEQR` |
 | Vercel project | `equipqr-docs` (`prj_6QicTVywixyyAYc7sxCRDLnqwbM9`) |
 | Root Directory | `docs` |
 | Install Command | `npm ci` |
@@ -250,7 +250,7 @@ When you merge a promote to **`main`**:
 
 ## Runner Configuration
 
-EquipQR uses a hybrid runner strategy for optimal performance and security.
+ZNTEQR uses a hybrid runner strategy for optimal performance and security.
 
 **Current Configuration:** Self-hosted (Windows)
 

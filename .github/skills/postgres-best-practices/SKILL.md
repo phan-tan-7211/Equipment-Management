@@ -1,22 +1,22 @@
 ---
 name: postgres-best-practices
-description: Postgres performance optimization and best practices from Supabase, adapted to EquipQR's Supabase (Postgres + RLS) workflow. Use when editing SQL, migrations, indexes, or RLS policies.
+description: Postgres performance optimization and best practices from Supabase, adapted to ZNTEQR's Supabase (Postgres + RLS) workflow. Use when editing SQL, migrations, indexes, or RLS policies.
 license: MIT
 metadata:
   author: supabase
   version: "1.0.0"
   source_repo: supabase/agent-skills
   source_ref: main
-  adapted_for: EquipQR
+  adapted_for: ZNTEQR
 ---
 
-# Postgres Best Practices (Supabase, adapted for EquipQR)
+# Postgres Best Practices (Supabase, adapted for ZNTEQR)
 
 Comprehensive performance optimization guide for Postgres, maintained by Supabase. Contains rules across 8 categories, prioritized by impact to guide automated query optimization and schema design.
 
-## EquipQR applicability notes (important)
+## ZNTEQR applicability notes (important)
 
-EquipQR uses **Supabase Postgres**. When applying these rules in this repo:
+ZNTEQR uses **Supabase Postgres**. When applying these rules in this repo:
 
 - **Migrations live in**: `supabase/migrations/*.sql` (follow our migration standards: timestamped filenames, enable RLS by default, avoid overly complex RLS joins, etc.).
 - **RLS is mandatory**: Never add permissive “always true” policies without explicit, documented justification.

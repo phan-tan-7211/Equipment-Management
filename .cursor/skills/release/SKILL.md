@@ -77,7 +77,7 @@ git describe --tags --abbrev=0 origin/main
 
 Launch **changelog-version-curator** subagent with:
 
-> Curate the next EquipQR release from `origin/preview` for a **promote to main** (release/main mode). Follow `.cursor/rules/changelog.mdc`. Rewrite `[Unreleased]` into short customer-facing bullets. Do not move verbose prose as-is. No file lists, no implementation inventory, no migration names, no test counts. Batch routine dependency notes into one Changed bullet or drop them. Update `CHANGELOG.md`, `package.json`, `package-lock.json`, and the README version badge. Determine patch vs minor from user-visible outcomes on `origin/preview` since the last tag on `origin/main`. Empty `[Unreleased]` into a versioned section. Do not commit or push — the parent `/release` handles git.
+> Curate the next ZNTEQR release from `origin/preview` for a **promote to main** (release/main mode). Follow `.cursor/rules/changelog.mdc`. Rewrite `[Unreleased]` into short customer-facing bullets. Do not move verbose prose as-is. No file lists, no implementation inventory, no migration names, no test counts. Batch routine dependency notes into one Changed bullet or drop them. Update `CHANGELOG.md`, `package.json`, `package-lock.json`, and the README version badge. Determine patch vs minor from user-visible outcomes on `origin/preview` since the last tag on `origin/main`. Empty `[Unreleased]` into a versioned section. Do not commit or push — the parent `/release` handles git.
 
 Validate version consistency before continuing.
 

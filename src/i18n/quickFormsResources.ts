@@ -105,7 +105,7 @@ export const quickFormsResources = {
       "rotateAction": "Đổi liên kết",
       "alt": "Mã QR cho {{name}}",
       "instruction1": "In mã QR hoặc chia sẻ liên kết với người tại nơi làm việc",
-      "instruction2": "Ai cũng có thể mở và gửi biểu mẫu — không cần đăng nhập EquipQR",
+      "instruction2": "Ai cũng có thể mở và gửi biểu mẫu — không cần đăng nhập ZNTEQR",
       "instruction3": "Phản hồi xuất hiện trong sổ biểu mẫu nhanh dành cho chủ sở hữu và quản trị viên",
       "instruction4": "Đổi liên kết để vô hiệu các bản đã in hoặc chia sẻ"
     },
@@ -235,7 +235,7 @@ export const quickFormsResources = {
       "rotateAction": "Rotate link",
       "alt": "QR code for {{name}}",
       "instruction1": "Print this QR code or share the link with people on site",
-      "instruction2": "Anyone can open the form and submit — no EquipQR sign-in required",
+      "instruction2": "Anyone can open the form and submit — no ZNTEQR sign-in required",
       "instruction3": "Submissions appear in the Quick Forms ledger for owners and admins",
       "instruction4": "Rotate the link to revoke previously printed or shared copies"
     },

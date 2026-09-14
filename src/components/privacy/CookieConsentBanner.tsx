@@ -20,7 +20,7 @@ export function CookieConsentBanner() {
         <div className="space-y-1 text-sm text-muted-foreground">
           <p className="font-medium text-foreground">Cookies and browser storage</p>
           <p>
-            EquipQR uses cookies and browser storage for sign-in, security, and optional preferences
+            ZNTEQR uses cookies and browser storage for sign-in, security, and optional preferences
             such as sidebar layout. We do not use advertising or third-party tracking cookies. See{' '}
             <Link
               to="/privacy-policy#cookies"

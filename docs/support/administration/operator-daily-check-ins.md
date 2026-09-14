@@ -8,7 +8,7 @@ personas: ["owner", "admin"]
 **For:** Organization Owner, Admin  
 **Last reviewed:** 2026-07-06
 
-Organization owners and administrators configure **Daily Operator Check-Ins** under **Operations → Daily Check-Ins** in the EquipQR dashboard. Operators complete assigned checklists through a **separate public QR link** — no EquipQR login required.
+Organization owners and administrators configure **Daily Operator Check-Ins** under **Operations → Daily Check-Ins** in the ZNTEQR dashboard. Operators complete assigned checklists through a **separate public QR link** — no ZNTEQR login required.
 
 ## What Daily Operator Check-Ins do
 
@@ -125,7 +125,7 @@ Assign both templates on the same equipment record. Each assignment exposes its 
 
 ## Compliance wording
 
-EquipQR records support **safety and audit documentation**. They **do not** certify OSHA, DOT, FMCSA, or other legal or regulatory compliance. Use exports as supplemental evidence alongside your organization's official compliance program.
+ZNTEQR records support **safety and audit documentation**. They **do not** certify OSHA, DOT, FMCSA, or other legal or regulatory compliance. Use exports as supplemental evidence alongside your organization's official compliance program.
 
 ## Public route reference
 

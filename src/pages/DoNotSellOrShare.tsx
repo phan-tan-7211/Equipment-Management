@@ -11,8 +11,8 @@ export default function DoNotSellOrShare() {
   return (
     <div className="min-h-screen bg-background">
       <PageSEO
-        title="Do Not Sell or Share — EquipQR"
-        description="How EquipQR handles requests related to sale or sharing of personal information."
+        title="Do Not Sell or Share — ZNTEQR"
+        description="How ZNTEQR handles requests related to sale or sharing of personal information."
         path="/do-not-sell-or-share"
       />
       <div className="container max-w-3xl mx-auto px-4 py-10 space-y-6">
@@ -25,7 +25,7 @@ export default function DoNotSellOrShare() {
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none dark:prose-invert space-y-4">
             <p>
-              EquipQR is operated by <strong>ZNT LLC</strong>. We do{' '}
+              ZNTEQR is operated by <strong>ZNT LLC</strong>. We do{' '}
               <strong>not</strong> sell your personal information and we do <strong>not</strong>{' '}
               share it for cross-context behavioral advertising as those terms are commonly understood
               under California privacy laws.

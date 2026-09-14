@@ -1,5 +1,5 @@
 ---
-title: "Role overview for EquipQR"
+title: "Role overview for ZNTEQR"
 description: "A plain-language cheat sheet of the two role tiers (organization and team) and what each role can do."
 lastReviewed: 2026-07-06
 personas: ["all"]
@@ -7,7 +7,7 @@ personas: ["all"]
 
 **For:** Everyone  
 **Last reviewed:** 2026-07-06
-EquipQR has two role tiers. The **organization** tier decides who can manage your company account. The **team** tier decides who can act on the equipment inside that team.
+ZNTEQR has two role tiers. The **organization** tier decides who can manage your company account. The **team** tier decides who can act on the equipment inside that team.
 
 ![Organization member roles on the Members tab](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/07-organization-member-roles.png)
 

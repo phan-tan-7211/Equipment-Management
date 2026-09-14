@@ -11,7 +11,7 @@ exit /b %ERRORLEVEL%
 :help
 echo Usage: dev-stop-all.bat [dev-stop.ps1 options]
 echo.
-echo Stops running Playwright E2E tests, then the local EquipQR dev stack.
+echo Stops running Playwright E2E tests, then the local ZNTEQR dev stack.
 echo.
 echo Options:
 echo   -Force              Also stop Docker Desktop (passed to dev-stop.ps1).

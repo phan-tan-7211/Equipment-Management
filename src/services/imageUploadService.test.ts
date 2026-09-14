@@ -345,14 +345,14 @@ describe('imageUploadService', () => {
       );
     });
 
-    it('drops expired EquipQR signed URLs instead of passing them through', () => {
+    it('drops expired ZNTEQR signed URLs instead of passing them through', () => {
       const stale =
         'https://supabase.equipqr.app/storage/v1/object/sign/work-order-images/u/wo/n.jpg?token=expired';
       expect(displayUrlForStoredPrivateImage(null, stale)).toBeNull();
       expect(isEquipQrPrivateStorageUrl(stale)).toBe(true);
     });
 
-    it('drops tokenless EquipQR sign URLs instead of using them as img src', () => {
+    it('drops tokenless ZNTEQR sign URLs instead of using them as img src', () => {
       const unsigned =
         'http://localhost:54321/storage/v1/object/sign/equipment-note-images/u/eq/n.jpg';
       expect(displayUrlForStoredPrivateImage(unsigned, 'u/eq/n.jpg')).toBeNull();

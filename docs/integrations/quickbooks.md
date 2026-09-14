@@ -12,11 +12,11 @@ Step-by-step walkthroughs live in the Help Center:
 
 ## Connect
 
-From the sidebar, open **Integrations** (or Organization → Integrations). Click **Connect to QuickBooks Online**, sign in to the QuickBooks company, and grant the requested scopes. EquipQR reads customers, items, invoices, and payments. It writes draft invoices and can create missing product/service items used on those drafts. It does not touch payroll or banking.
+From the sidebar, open **Integrations** (or Organization → Integrations). Click **Connect to QuickBooks Online**, sign in to the QuickBooks company, and grant the requested scopes. ZNTEQR reads customers, items, invoices, and payments. It writes draft invoices and can create missing product/service items used on those drafts. It does not touch payroll or banking.
 
 You land back on the Integrations tab with a **Connected** badge. The card also offers **Disconnect**.
 
-QuickBooks refresh tokens last about 100 days. EquipQR refreshes short-lived access tokens in the background. If the connection health indicator in the top bar turns red, reconnect from this page.
+QuickBooks refresh tokens last about 100 days. ZNTEQR refreshes short-lived access tokens in the background. If the connection health indicator in the top bar turns red, reconnect from this page.
 
 ## Map teams to customers
 
@@ -30,12 +30,12 @@ On a **completed** work order, use **Export → QuickBooks**. Requirements:
 - That team has a QuickBooks customer mapping
 - You can manage QuickBooks (owner, admin, or a member granted access)
 
-Exported drafts include summarized billing lines from EquipQR work-order costs. EquipQR stays the source of truth for itemized inventory and labor detail.
+Exported drafts include summarized billing lines from ZNTEQR work-order costs. ZNTEQR stays the source of truth for itemized inventory and labor detail.
 
 - **Labor.** Billable labor from work-order cost rows.
 - **Parts.** One summarized non-inventory line for other work-order costs.
 
-**Private Note** on the QuickBooks invoice still holds the EquipQR work order ID, dates, private notes, and the full itemized cost breakdown. **Customer Memo** holds the timeline and resolution summary.
+**Private Note** on the QuickBooks invoice still holds the ZNTEQR work order ID, dates, private notes, and the full itemized cost breakdown. **Customer Memo** holds the timeline and resolution summary.
 
 ## Related
 

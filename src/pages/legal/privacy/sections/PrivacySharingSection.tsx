@@ -13,7 +13,7 @@ export function PrivacySharingSection() {
                 {
                   label: 'Subprocessors listed in Section 4:',
                   content:
-                    'We share data with the third-party service providers described above, strictly for the purposes stated. Each provider processes data only as necessary to deliver their specific service to EquipQR.',
+                    'We share data with the third-party service providers described above, strictly for the purposes stated. Each provider processes data only as necessary to deliver their specific service to ZNTEQR.',
                 },
                 {
                   label: 'Within your organization:',

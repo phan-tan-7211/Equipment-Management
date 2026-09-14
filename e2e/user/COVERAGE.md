@@ -1,4 +1,4 @@
-# EquipQR Playwright User Regression Coverage
+# ZNTEQR Playwright User Regression Coverage
 
 Local command matrix:
 

@@ -11,7 +11,7 @@ exit /b %ERRORLEVEL%
 :help
 echo Usage: dev-stop.bat [dev-stop.ps1 options]
 echo.
-echo Stops the local EquipQR development stack.
+echo Stops the local ZNTEQR development stack.
 echo.
 echo Options:
 echo   -help, --help, /help, /?

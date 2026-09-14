@@ -45,7 +45,7 @@ export function PrivacyCaliforniaSection() {
         </li>
         <li>
           <strong>From your organization:</strong> When an organization administrator connects Google
-          Workspace, directory user data (names, emails) may be synced into EquipQR.
+          Workspace, directory user data (names, emails) may be synced into ZNTEQR.
         </li>
         <li>
           <strong>Automatically:</strong> Browser push subscription endpoints, session tokens, and

@@ -11,10 +11,10 @@ export const content: FeaturePageContent = {
   showcaseTitle: 'Mobile work orders',
   showcaseDescription: 'Work orders, details, and PM checklists sized for a phone.',
   showcaseClassName: 'bg-muted/30',
-  ctaTitle: 'Open EquipQR on a phone',
+  ctaTitle: 'Open ZNTEQR on a phone',
   ctaDescription:
     'Create a free account and run the next job from a phone.',
-  ctaPrimaryText: 'Open EquipQR on a phone',
+  ctaPrimaryText: 'Open ZNTEQR on a phone',
 };
 
 export const benefits: Benefit[] = [
@@ -44,7 +44,7 @@ export const benefits: Benefit[] = [
     title: 'Phone in the yard, desktop in the office',
     subtitle: 'Same account on every screen',
     description:
-      'Use EquipQR on any device. iOS, Android, or desktop. The same account and data everywhere. Technicians work on phones in the field. Admins manage from larger screens.',
+      'Use ZNTEQR on any device. iOS, Android, or desktop. The same account and data everywhere. Technicians work on phones in the field. Admins manage from larger screens.',
     benefits: ['Works on all devices', 'Responsive layout', 'One app, any screen'],
     benefitColor: 'warning',
   },

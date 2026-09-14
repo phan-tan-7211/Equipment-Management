@@ -101,7 +101,7 @@ const RepairShops = () => {
                 Trusted by Heavy Equipment Repair Shops
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Real results from shops already using EquipQR daily.
+                Real results from shops already using ZNTEQR daily.
               </p>
             </div>
 
@@ -143,14 +143,14 @@ const RepairShops = () => {
                       <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-left shadow-sm shadow-primary/10">
                         <p className="text-4xl font-bold tracking-tight text-primary sm:text-5xl">100%</p>
                         <p className="mt-2 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/90">Field adoption</p>
-                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Every technician on the team uses EquipQR daily.</p>
+                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Every technician on the team uses ZNTEQR daily.</p>
                       </div>
                     </li>
                     <li className="list-none">
                       <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-left shadow-sm shadow-primary/10">
                         <p className="text-4xl font-bold tracking-tight text-primary sm:text-5xl">50%</p>
                         <p className="mt-2 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/90">Faster close times</p>
-                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Work orders close faster after moving the process into EquipQR.</p>
+                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Work orders close faster after moving the process into ZNTEQR.</p>
                       </div>
                     </li>
                   </ul>

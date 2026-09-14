@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Test Users (auth.users)
+-- ZNTEQR Seed Data - Test Users (auth.users)
 -- =====================================================
 -- These inserts only work in local Supabase where we have direct
 -- access to auth schema. Production uses Supabase Auth APIs.

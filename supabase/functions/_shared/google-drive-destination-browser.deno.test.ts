@@ -22,7 +22,7 @@ Deno.test("mapFolderToBrowseItem returns selectable folders with drive context",
     mapFolderToBrowseItem(
       {
         id: "folder-1",
-        name: "EquipQR Exports",
+        name: "ZNTEQR Exports",
         mimeType: "application/vnd.google-apps.folder",
         driveId: "drive-1",
         capabilities: { canAddChildren: true },
@@ -32,7 +32,7 @@ Deno.test("mapFolderToBrowseItem returns selectable folders with drive context",
     ),
     {
       id: "folder-1",
-      name: "EquipQR Exports",
+      name: "ZNTEQR Exports",
       kind: "folder",
       driveId: "drive-1",
       selectable: true,

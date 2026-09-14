@@ -92,7 +92,7 @@ describe('HeroAnimation', () => {
   it('renders a landmark region with the correct aria-label', () => {
     renderHero();
     expect(
-      screen.getByRole('region', { name: /EquipQR asset tracking demo/i }),
+      screen.getByRole('region', { name: /ZNTEQR asset tracking demo/i }),
     ).toBeInTheDocument();
   });
 

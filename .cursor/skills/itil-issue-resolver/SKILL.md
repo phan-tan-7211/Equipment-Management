@@ -1,13 +1,13 @@
 ---
 name: itil-issue-resolver
-description: Primary EquipQR implementation workflow for one approved issue or small change. Use when the user asks to resolve, implement, execute, or fix a single issue after the scope is clear. Default is local-iterate on the current checkout (branching.mdc). Integrate via merge-ready PR only when the user asked to publish, land the issue on preview, or open a PR. Production promote (preview → main) is a separate /release step.
+description: Primary ZNTEQR implementation workflow for one approved issue or small change. Use when the user asks to resolve, implement, execute, or fix a single issue after the scope is clear. Default is local-iterate on the current checkout (branching.mdc). Integrate via merge-ready PR only when the user asked to publish, land the issue on preview, or open a PR. Production promote (preview → main) is a separate /release step.
 ---
 
 # ITIL Issue Resolver
 
 ## Purpose
 
-Resolve one clear EquipQR issue or change without reintroducing the old Incident/Problem/Change Record ceremony. This is the default build path once the user has authorized implementation.
+Resolve one clear ZNTEQR issue or change without reintroducing the old Incident/Problem/Change Record ceremony. This is the default build path once the user has authorized implementation.
 
 ## When To Use
 

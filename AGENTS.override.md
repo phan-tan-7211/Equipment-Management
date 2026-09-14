@@ -1,4 +1,4 @@
-# EquipQR — ChatGPT / Codex Cloud Instructions
+# ZNTEQR — ChatGPT / Codex Cloud Instructions
 
 These instructions are optimized for ChatGPT/Codex working directly with this GitHub repository.
 They intentionally override the root `AGENTS.md`, which is primarily a Cursor-on-Windows handbook.

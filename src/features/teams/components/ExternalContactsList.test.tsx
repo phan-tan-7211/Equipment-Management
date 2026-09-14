@@ -197,7 +197,7 @@ describe('ExternalContactsList', () => {
       expect(screen.getByText('Riley Requestor')).toBeInTheDocument();
       expect(screen.getByText('Team Manager')).toBeInTheDocument();
       expect(screen.getByText('Requestor')).toBeInTheDocument();
-      expect(screen.getAllByText('EquipQR user')).toHaveLength(2);
+      expect(screen.getAllByText('ZNTEQR user')).toHaveLength(2);
     });
   });
 

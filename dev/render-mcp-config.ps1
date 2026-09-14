@@ -6,7 +6,7 @@
 
 .DESCRIPTION
   Reads dev/mcp.template.json (committed, contains op:// references),
-  resolves each op:// URI against the EquipQR Agents 1Password vault using
+  resolves each op:// URI against the ZNTEQR Agents 1Password vault using
   'op inject', and writes the rendered result to %USERPROFILE%\.cursor\mcp.json.
 
   Also writes the GCP service-account JSON from the `gcp-read` 1Password item
@@ -95,7 +95,7 @@ if ($PSCmdlet.ShouldProcess($mcpJsonPath, 'Render via op inject')) {
 }
 
 if ($injectExitCode -ne 0) {
-    Write-Fail "op inject failed (exit $injectExitCode). Likely cause: an op:// reference in the template points to an item or field that does not exist in the EquipQR Agents vault. Verify Phase 1 has minted all credentials."
+    Write-Fail "op inject failed (exit $injectExitCode). Likely cause: an op:// reference in the template points to an item or field that does not exist in the ZNTEQR Agents vault. Verify Phase 1 has minted all credentials."
     exit $injectExitCode
 }
 
@@ -142,7 +142,7 @@ if (-not $SkipGcp) {
 
     if ([string]::IsNullOrWhiteSpace($gcpJson)) {
         Write-Warn "Could not read GCP SA JSON from gcp-read (SERVICE_ACCOUNT_JSON or credential) or legacy gcp-viewer/credential. Skipping GCP SA write."
-        Write-Warn "  Re-run after the EquipQR Agents vault contains the viewer service-account JSON, or pass -SkipGcp to suppress this warning."
+        Write-Warn "  Re-run after the ZNTEQR Agents vault contains the viewer service-account JSON, or pass -SkipGcp to suppress this warning."
     } else {
         if ($PSCmdlet.ShouldProcess($gcpKeyPath, 'Write GCP SA JSON')) {
             Write-Ok "GCP SA JSON source: op://$vaultId/$gcpSource"

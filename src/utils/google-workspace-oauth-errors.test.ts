@@ -4,7 +4,7 @@ import { getGoogleWorkspaceOAuthErrorMessage } from '@/utils/google-workspace-oa
 describe('getGoogleWorkspaceOAuthErrorMessage', () => {
   it('maps known error codes to safe user-facing messages', () => {
     expect(getGoogleWorkspaceOAuthErrorMessage('not_workspace_admin')).toBe(
-      'Only Google Workspace administrators can connect EquipQR for your organization.',
+      'Only Google Workspace administrators can connect ZNTEQR for your organization.',
     );
   });
 
@@ -16,7 +16,7 @@ describe('getGoogleWorkspaceOAuthErrorMessage', () => {
 
   it('maps domain_already_linked to a specific user-facing message', () => {
     expect(getGoogleWorkspaceOAuthErrorMessage('domain_already_linked')).toBe(
-      'This Google Workspace domain is already linked to another EquipQR organization.',
+      'This Google Workspace domain is already linked to another ZNTEQR organization.',
     );
   });
 

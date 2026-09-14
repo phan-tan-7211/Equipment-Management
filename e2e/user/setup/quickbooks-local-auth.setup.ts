@@ -13,7 +13,7 @@ const SIGN_IN_TIMEOUT_MS = 600_000;
 const QB_CONNECT_TIMEOUT_MS = 600_000;
 
 /**
- * Headed one-time capture: sign in to EquipQR (manual if needed), connect QuickBooks
+ * Headed one-time capture: sign in to ZNTEQR (manual if needed), connect QuickBooks
  * on Integrations (manual Intuit OAuth), then persist Playwright storage state.
  *
  * OAuth tokens are stored server-side in quickbooks_credentials after Intuit redirects
@@ -38,7 +38,7 @@ setup('capture QuickBooks local integration @quickbooks-auth-setup', async ({ pa
     console.log(
       [
         '',
-        '[quickbooks-auth-setup] Sign in to EquipQR in the browser window.',
+        '[quickbooks-auth-setup] Sign in to ZNTEQR in the browser window.',
         '[quickbooks-auth-setup] Use Login with Google or your local test account.',
         '[quickbooks-auth-setup] Waiting up to 10 minutes for /dashboard ...',
         '',
@@ -87,7 +87,7 @@ setup('capture QuickBooks local integration @quickbooks-auth-setup', async ({ pa
   // eslint-disable-next-line no-console -- operator confirmation during headed capture
   console.log(
     [
-      `[quickbooks-auth-setup] Saved EquipQR session storage state to ${outputPath}`,
+      `[quickbooks-auth-setup] Saved ZNTEQR session storage state to ${outputPath}`,
       '[quickbooks-auth-setup] QuickBooks OAuth tokens are in local quickbooks_credentials (Supabase).',
       '[quickbooks-auth-setup] Verify API access: .\\dev\\qbo\\Invoke-QboQuery.ps1',
       '',

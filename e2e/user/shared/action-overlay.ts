@@ -176,7 +176,7 @@ export async function installActionOverlay(page: Page, title: string): Promise<v
 
         const label = document.createElement('div');
         label.setAttribute('data-eqr-overlay-label', 'true');
-        label.textContent = overlayMode === 'marketing' ? 'EquipQR demo' : 'EquipQR E2E';
+        label.textContent = overlayMode === 'marketing' ? 'ZNTEQR demo' : 'ZNTEQR E2E';
 
         const message = document.createElement('div');
         message.setAttribute('data-eqr-overlay-message', 'true');
@@ -270,7 +270,7 @@ export async function installActionOverlay(page: Page, title: string): Promise<v
         .replace(/\s+/g, ' ')
         .trim();
 
-      if (!cleaned) return 'EquipQR';
+      if (!cleaned) return 'ZNTEQR';
       if (/pm\s+templates/i.test(cleaned)) return 'PM Templates';
       if (/work\s+orders?/i.test(cleaned)) return 'Work Orders';
       if (/fleet\s+map/i.test(cleaned)) return 'Fleet Map';

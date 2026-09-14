@@ -2,7 +2,7 @@
 
 ## Overview
 
-This runbook covers the operational procedures for handling CCPA/CPRA Data Subject Requests in EquipQR. All DSR handling must follow these procedures to ensure lawful compliance and produce auditable evidence.
+This runbook covers the operational procedures for handling CCPA/CPRA Data Subject Requests in ZNTEQR. All DSR handling must follow these procedures to ensure lawful compliance and produce auditable evidence.
 
 ## Ownership
 
@@ -20,7 +20,7 @@ This runbook covers the operational procedures for handling CCPA/CPRA Data Subje
 | `access` | Right to Know | Provide the consumer with their personal data |
 | `deletion` | Right to Delete | Delete personal data, subject to legal exceptions |
 | `correction` | Right to Correct | Fix inaccurate personal information |
-| `opt_out` | Right to Opt-Out | Opt out of sale/sharing of PI (EquipQR does not sell PI) |
+| `opt_out` | Right to Opt-Out | Opt out of sale/sharing of PI (ZNTEQR does not sell PI) |
 | `limit_use` | Right to Limit | Limit use of sensitive personal information |
 
 ## Intake
@@ -104,7 +104,7 @@ Document any retained data and the exception basis in the event ledger.
 
 ### Opt-Out Requests
 
-EquipQR does not sell or share personal information. Acknowledge receipt, confirm no action required, and close with a note explaining the basis.
+ZNTEQR does not sell or share personal information. Acknowledge receipt, confirm no action required, and close with a note explaining the basis.
 
 ### Limit-Use Requests
 

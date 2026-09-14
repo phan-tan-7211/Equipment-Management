@@ -44,7 +44,7 @@ describe('RouteAnnouncer', () => {
   });
 
   it('focuses the route heading after client-side navigation', async () => {
-    document.title = 'Page A | EquipQR';
+    document.title = 'Page A | ZNTEQR';
 
     render(
       <MemoryRouter initialEntries={['/a']}>
@@ -69,7 +69,7 @@ describe('RouteAnnouncer', () => {
   });
 
   it('does not announce or move focus when only the query string changes', async () => {
-    document.title = 'List | EquipQR';
+    document.title = 'List | ZNTEQR';
 
     render(
       <MemoryRouter initialEntries={['/list']}>

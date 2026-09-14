@@ -47,7 +47,7 @@ export async function waitForEquipQrDashboardShell(page: Page): Promise<void> {
 /**
  * Open Organization → Integrations without racing the client router.
  * Playwright `goto(..., waitUntil: load)` often throws ERR_ABORTED here when
- * EquipQR is still redirecting after Google sign-in.
+ * ZNTEQR is still redirecting after Google sign-in.
  */
 export async function openIntegrationsPage(page: Page, baseUrl: string): Promise<void> {
   const integrationsPath = INTEGRATIONS_PATH;

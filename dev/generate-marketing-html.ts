@@ -147,7 +147,7 @@ export function prerenderMarketingHtmlTemplate(template: string, route: Marketin
     'og:url'
   );
 
-  const ogAlt = `${route.heading} - EquipQR`;
+  const ogAlt = `${route.heading} - ZNTEQR`;
   out = replaceOne(
     out,
     /<meta property="og:image:alt" content="[^"]*" \/>/,

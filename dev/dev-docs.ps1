@@ -31,7 +31,7 @@ function Receive-JobOutput {
     Receive-Job -Job $Job -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
 }
 
-Write-Host "[EquipQR] Docs dev server starting"
+Write-Host "[ZNTEQR] Docs dev server starting"
 
 if (-not (Test-Path -LiteralPath (Join-Path $docsRoot 'node_modules'))) {
     Write-Host "        docs/node_modules not found - running npm --prefix docs ci..."
@@ -45,12 +45,12 @@ if (-not (Test-Path -LiteralPath (Join-Path $docsRoot 'node_modules'))) {
 $listen5174 = Get-NetTCPConnection -LocalPort 5174 -State Listen -ErrorAction SilentlyContinue
 if ($listen5174 -and (Test-DocsResponding)) {
     Write-Host "        Docs already running on port 5174."
-    Write-Host "[EquipQR] Docs ready"
+    Write-Host "[ZNTEQR] Docs ready"
     exit 0
 }
 
 if ($listen5174 -and -not (Test-DocsResponding)) {
-    Write-Host "FAIL: Port 5174 is in use but not serving EquipQR docs. Free the port or run dev-stop."
+    Write-Host "FAIL: Port 5174 is in use but not serving ZNTEQR docs. Free the port or run dev-stop."
     exit 1
 }
 
@@ -86,7 +86,7 @@ if (-not $docsUp) {
     exit 1
 }
 
-Write-Host "[EquipQR] Docs ready"
+Write-Host "[ZNTEQR] Docs ready"
 
 try {
     while ((Get-Job -Id $docsJob.Id -ErrorAction SilentlyContinue).State -eq 'Running') {

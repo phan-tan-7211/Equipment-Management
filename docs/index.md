@@ -2,12 +2,12 @@
 layout: home
 
 hero:
-  name: EquipQR
+  name: ZNTEQR
   text: Docs for your fleet, work orders, and field teams
   tagline: Step-by-step guides for technicians, managers, admins, and equipment owners — the same product family as equipqr.app.
   image:
     src: /eqr-logo/icon.svg
-    alt: EquipQR logo
+    alt: ZNTEQR logo
   actions:
     - theme: brand
       text: Browse Help Center
@@ -18,7 +18,7 @@ hero:
 
 features:
   - title: Start Here
-    details: New to EquipQR? Orientation, navigation, invitations, and role overview.
+    details: New to ZNTEQR? Orientation, navigation, invitations, and role overview.
     link: /support/start-here/
     linkText: Get oriented
   - title: Technician Field Work
@@ -57,7 +57,7 @@ features:
 
 ## Need help inside the app?
 
-Signed-in users can **report issues and track tickets** on the EquipQR app support page:
+Signed-in users can **report issues and track tickets** on the ZNTEQR app support page:
 
 **[equipqr.app/dashboard/support](https://equipqr.app/dashboard/support)**
 

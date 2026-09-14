@@ -340,13 +340,13 @@ Deno.test("resolveGoogleWorkspaceOAuthErrorCode maps internal messages to safe c
   );
   assertEquals(
     resolveGoogleWorkspaceOAuthErrorCode(
-      new Error("Only Google Workspace administrators can connect their organization to EquipQR."),
+      new Error("Only Google Workspace administrators can connect their organization to ZNTEQR."),
     ),
     "not_workspace_admin",
   );
   assertEquals(
     resolveGoogleWorkspaceOAuthErrorCode(
-      new Error("This Google Workspace domain is already linked to another EquipQR organization."),
+      new Error("This Google Workspace domain is already linked to another ZNTEQR organization."),
     ),
     "domain_already_linked",
   );

@@ -2,8 +2,8 @@ export const publicChromeResources = {
   en: { publicChrome: {
     back: 'Back',
     landing: {
-      seoTitle: 'EquipQR | Free Work Order Software for Heavy Equipment Repair Shops',
-      seoDescription: 'Stop losing money to lost work orders. EquipQR gives heavy equipment repair shops secure QR code equipment tracking, team-based access, and one-click QuickBooks work order invoicing.',
+      seoTitle: 'ZNTEQR | Free Work Order Software for Heavy Equipment Repair Shops',
+      seoDescription: 'Stop losing money to lost work orders. ZNTEQR gives heavy equipment repair shops secure QR code equipment tracking, team-based access, and one-click QuickBooks work order invoicing.',
       loading: 'Loading page',
     },
     legalFooter: {
@@ -25,7 +25,7 @@ export const publicChromeResources = {
     },
     footer: {
       navigation: 'Footer navigation',
-      description: 'EquipQR helps teams track equipment, manage work orders, and run operations from one platform. Built for repair shops, rental ops, and field crews.',
+      description: 'ZNTEQR helps teams track equipment, manage work orders, and run operations from one platform. Built for repair shops, rental ops, and field crews.',
       product: 'Product', allFeatures: 'All features', qrTracking: 'QR equipment tracking',
       workOrderManagement: 'Work order management', quickBooksExport: 'QuickBooks export',
       partsInventory: 'Parts inventory', pricing: 'Pricing', company: 'Company',
@@ -34,17 +34,17 @@ export const publicChromeResources = {
       connect: 'Connect', demo: 'Schedule a Demo',
     },
     notFound: {
-      seoTitle: 'Page not found', seoDescription: 'The requested EquipQR page could not be found.',
+      seoTitle: 'Page not found', seoDescription: 'The requested ZNTEQR page could not be found.',
       title: 'Page not found',
-      description: "We couldn't find the public EquipQR page at {{path}}. Check the address or jump back to a known page.",
+      description: "We couldn't find the public ZNTEQR page at {{path}}. Check the address or jump back to a known page.",
       home: 'Return home', releases: 'View releases',
     },
     releases: {
-      seoTitle: 'Releases · EquipQR',
-      seoDescription: 'Customer-facing changes in each published EquipQR release.',
+      seoTitle: 'Releases · ZNTEQR',
+      seoDescription: 'Customer-facing changes in each published ZNTEQR release.',
       subtitle: 'Public release history', title: 'Releases',
       source: 'Build-time from `CHANGELOG.md`',
-      description: 'Customer-facing changes in each published EquipQR release. We omit the in-progress Unreleased section and collapse internal-only maintenance so this page stays useful to operators, admins, and evaluators.',
+      description: 'Customer-facing changes in each published ZNTEQR release. We omit the in-progress Unreleased section and collapse internal-only maintenance so this page stays useful to operators, admins, and evaluators.',
       filterTitle: 'Filter visible releases',
       filterHelp: 'Chips apply to the releases currently shown on the page.',
       filters: 'Release note filters',
@@ -68,8 +68,8 @@ export const publicChromeResources = {
   vi: { publicChrome: {
     back: 'Quay lại',
     landing: {
-      seoTitle: 'EquipQR | Phần mềm lệnh công việc miễn phí cho xưởng sửa chữa máy móc hạng nặng',
-      seoDescription: 'Không còn thất lạc lệnh công việc. EquipQR giúp xưởng sửa chữa máy móc hạng nặng theo dõi thiết bị an toàn bằng mã QR, phân quyền theo nhóm và tạo hóa đơn QuickBooks từ lệnh công việc bằng một lần nhấp.',
+      seoTitle: 'ZNTEQR | Phần mềm lệnh công việc miễn phí cho xưởng sửa chữa máy móc hạng nặng',
+      seoDescription: 'Không còn thất lạc lệnh công việc. ZNTEQR giúp xưởng sửa chữa máy móc hạng nặng theo dõi thiết bị an toàn bằng mã QR, phân quyền theo nhóm và tạo hóa đơn QuickBooks từ lệnh công việc bằng một lần nhấp.',
       loading: 'Đang tải trang',
     },
     legalFooter: {
@@ -91,7 +91,7 @@ export const publicChromeResources = {
     },
     footer: {
       navigation: 'Điều hướng chân trang',
-      description: 'EquipQR giúp các nhóm theo dõi thiết bị, quản lý lệnh công việc và vận hành trên một nền tảng. Phù hợp cho xưởng sửa chữa, đơn vị cho thuê và đội ngũ hiện trường.',
+      description: 'ZNTEQR giúp các nhóm theo dõi thiết bị, quản lý lệnh công việc và vận hành trên một nền tảng. Phù hợp cho xưởng sửa chữa, đơn vị cho thuê và đội ngũ hiện trường.',
       product: 'Sản phẩm', allFeatures: 'Tất cả tính năng', qrTracking: 'Theo dõi thiết bị bằng QR',
       workOrderManagement: 'Quản lý lệnh công việc', quickBooksExport: 'Xuất sang QuickBooks',
       partsInventory: 'Kho phụ tùng', pricing: 'Bảng giá', company: 'Công ty',
@@ -100,17 +100,17 @@ export const publicChromeResources = {
       connect: 'Kết nối', demo: 'Đặt lịch xem demo',
     },
     notFound: {
-      seoTitle: 'Không tìm thấy trang', seoDescription: 'Không tìm thấy trang EquipQR bạn yêu cầu.',
+      seoTitle: 'Không tìm thấy trang', seoDescription: 'Không tìm thấy trang ZNTEQR bạn yêu cầu.',
       title: 'Không tìm thấy trang',
-      description: 'Không tìm thấy trang EquipQR công khai tại {{path}}. Hãy kiểm tra địa chỉ hoặc quay về một trang bạn biết.',
+      description: 'Không tìm thấy trang ZNTEQR công khai tại {{path}}. Hãy kiểm tra địa chỉ hoặc quay về một trang bạn biết.',
       home: 'Về trang chủ', releases: 'Xem bản phát hành',
     },
     releases: {
-      seoTitle: 'Bản phát hành · EquipQR',
-      seoDescription: 'Những thay đổi dành cho khách hàng trong mỗi bản phát hành EquipQR.',
+      seoTitle: 'Bản phát hành · ZNTEQR',
+      seoDescription: 'Những thay đổi dành cho khách hàng trong mỗi bản phát hành ZNTEQR.',
       subtitle: 'Lịch sử phát hành công khai', title: 'Bản phát hành',
       source: 'Tạo lúc build từ `CHANGELOG.md`',
-      description: 'Những thay đổi dành cho khách hàng trong mỗi bản phát hành EquipQR. Chúng tôi bỏ qua mục Chưa phát hành và thu gọn các thay đổi bảo trì nội bộ để trang này hữu ích cho người vận hành, quản trị viên và người tìm hiểu sản phẩm.',
+      description: 'Những thay đổi dành cho khách hàng trong mỗi bản phát hành ZNTEQR. Chúng tôi bỏ qua mục Chưa phát hành và thu gọn các thay đổi bảo trì nội bộ để trang này hữu ích cho người vận hành, quản trị viên và người tìm hiểu sản phẩm.',
       filterTitle: 'Lọc bản phát hành hiển thị',
       filterHelp: 'Bộ lọc áp dụng cho những bản phát hành đang hiển thị trên trang.',
       filters: 'Bộ lọc ghi chú phát hành',
@@ -134,8 +134,8 @@ export const publicChromeResources = {
   ko: { publicChrome: {
     back: '뒤로',
     landing: {
-      seoTitle: 'EquipQR | 중장비 수리점을 위한 무료 작업 지시 소프트웨어',
-      seoDescription: '잃어버린 작업 지시로 인한 손실을 막으세요. EquipQR은 중장비 수리점에 QR 장비 추적, 팀별 접근 권한, 클릭 한 번으로 작성하는 QuickBooks 작업 지시 송장을 제공합니다.',
+      seoTitle: 'ZNTEQR | 중장비 수리점을 위한 무료 작업 지시 소프트웨어',
+      seoDescription: '잃어버린 작업 지시로 인한 손실을 막으세요. ZNTEQR은 중장비 수리점에 QR 장비 추적, 팀별 접근 권한, 클릭 한 번으로 작성하는 QuickBooks 작업 지시 송장을 제공합니다.',
       loading: '페이지 로드 중',
     },
     legalFooter: {
@@ -157,7 +157,7 @@ export const publicChromeResources = {
     },
     footer: {
       navigation: '바닥글 탐색',
-      description: 'EquipQR은 팀이 한 플랫폼에서 장비를 추적하고 작업 지시를 관리하며 운영하도록 돕습니다. 수리점, 임대 사업장, 현장 팀을 위해 만들었습니다.',
+      description: 'ZNTEQR은 팀이 한 플랫폼에서 장비를 추적하고 작업 지시를 관리하며 운영하도록 돕습니다. 수리점, 임대 사업장, 현장 팀을 위해 만들었습니다.',
       product: '제품', allFeatures: '모든 기능', qrTracking: 'QR 장비 추적',
       workOrderManagement: '작업 지시 관리', quickBooksExport: 'QuickBooks 내보내기',
       partsInventory: '부품 재고', pricing: '요금', company: '회사',
@@ -166,17 +166,17 @@ export const publicChromeResources = {
       connect: '연결', demo: '데모 예약',
     },
     notFound: {
-      seoTitle: '페이지를 찾을 수 없음', seoDescription: '요청한 EquipQR 페이지를 찾을 수 없습니다.',
+      seoTitle: '페이지를 찾을 수 없음', seoDescription: '요청한 ZNTEQR 페이지를 찾을 수 없습니다.',
       title: '페이지를 찾을 수 없음',
-      description: '{{path}}에서 공개 EquipQR 페이지를 찾을 수 없습니다. 주소를 확인하거나 다른 페이지로 이동하세요.',
+      description: '{{path}}에서 공개 ZNTEQR 페이지를 찾을 수 없습니다. 주소를 확인하거나 다른 페이지로 이동하세요.',
       home: '홈으로 돌아가기', releases: '릴리스 보기',
     },
     releases: {
-      seoTitle: '릴리스 · EquipQR',
-      seoDescription: '게시된 EquipQR 릴리스별 고객 대상 변경 사항입니다.',
+      seoTitle: '릴리스 · ZNTEQR',
+      seoDescription: '게시된 ZNTEQR 릴리스별 고객 대상 변경 사항입니다.',
       subtitle: '공개 릴리스 기록', title: '릴리스',
       source: '빌드 시 `CHANGELOG.md`에서 생성',
-      description: '게시된 EquipQR 릴리스별 고객 대상 변경 사항입니다. 진행 중인 미출시 항목을 제외하고 내부 유지보수 내용을 접어 운영자, 관리자 및 평가자가 유용하게 볼 수 있도록 했습니다.',
+      description: '게시된 ZNTEQR 릴리스별 고객 대상 변경 사항입니다. 진행 중인 미출시 항목을 제외하고 내부 유지보수 내용을 접어 운영자, 관리자 및 평가자가 유용하게 볼 수 있도록 했습니다.',
       filterTitle: '표시할 릴리스 필터',
       filterHelp: '필터는 현재 페이지에 표시된 릴리스에 적용됩니다.',
       filters: '릴리스 노트 필터',

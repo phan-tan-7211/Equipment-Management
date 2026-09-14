@@ -10,7 +10,7 @@ export interface FeatureFaqItem {
 
 export interface FeatureSeoEntry {
   path: string;
-  /** Used by PageSEO (suffix "| EquipQR" added automatically except path "/" elsewhere). */
+  /** Used by PageSEO (suffix "| ZNTEQR" added automatically except path "/" elsewhere). */
   pageTitle: string;
   description: string;
   breadcrumbLabel: string;
@@ -37,21 +37,21 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
       {
         question: 'Do technicians need to install an app to scan QR codes?',
         answer:
-          'Technicians can use the EquipQR web app with any smartphone browser or use built-in camera flows depending on device settings. QR stickers encode HTTPS URLs so scans route straight into the signed-in workflow.',
+          'Technicians can use the ZNTEQR web app with any smartphone browser or use built-in camera flows depending on device settings. QR stickers encode HTTPS URLs so scans route straight into the signed-in workflow.',
       },
       {
         question: 'Can QR scanning connect customers to service requests?',
         answer:
-          'EquipQR supports QR-powered workflows so stakeholders scanning equipment can land on role-appropriate experiences based on your org configuration and team assignments.',
+          'ZNTEQR supports QR-powered workflows so stakeholders scanning equipment can land on role-appropriate experiences based on your org configuration and team assignments.',
       },
       {
-        question: 'Is EquipQR free for heavy equipment repair shops?',
+        question: 'Is ZNTEQR free for heavy equipment repair shops?',
         answer:
-          'EquipQR ships with a free tier designed for repair-shop workloads. Unlimited seats with sensible limits such as storage. Expand capacity when you outgrow starter quotas.',
+          'ZNTEQR ships with a free tier designed for repair-shop workloads. Unlimited seats with sensible limits such as storage. Expand capacity when you outgrow starter quotas.',
       },
     ],
     howTo: {
-      name: 'How QR code tracking works in EquipQR',
+      name: 'How QR code tracking works in ZNTEQR',
       description: 'Print labels, stick them on machines, and scan on the job.',
     },
   },
@@ -76,13 +76,13 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
           'Completed work orders can be exported as QuickBooks Online draft invoices when integrations are configured. Summarized billing lines reduce duplicate entry.',
       },
       {
-        question: 'Does EquipQR support team assignment?',
+        question: 'Does ZNTEQR support team assignment?',
         answer:
           'Work orders can target teams or individual technicians with acceptance flows so dispatch stays accountable.',
       },
     ],
     howTo: {
-      name: 'How work orders flow in EquipQR',
+      name: 'How work orders flow in ZNTEQR',
       description: 'Work orders tie equipment, teams, PM templates, and inventory into one workflow.',
     },
   },
@@ -97,19 +97,19 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
       'Link QuickBooks Online, map teams to customers, and export completed work orders as draft invoices in one guided workflow.',
     faq: [
       {
-        question: 'Which QuickBooks product does EquipQR integrate with?',
+        question: 'Which QuickBooks product does ZNTEQR integrate with?',
         answer:
-          'EquipQR integrates with QuickBooks Online via Intuit OAuth. Connection status appears inside Organization Settings so admins know tokens remain healthy.',
+          'ZNTEQR integrates with QuickBooks Online via Intuit OAuth. Connection status appears inside Organization Settings so admins know tokens remain healthy.',
       },
       {
         question: 'What appears on customer-facing invoice exports?',
         answer:
-          'Exports summarize labor and parts per EquipQR billing conventions. Operators finalize wording inside QuickBooks before sending invoices.',
+          'Exports summarize labor and parts per ZNTEQR billing conventions. Operators finalize wording inside QuickBooks before sending invoices.',
       },
       {
         question: 'Can I reconnect QuickBooks if tokens expire?',
         answer:
-          'Revisit Organization Settings, then Integrations, to reconnect. Mappings persist wherever EquipQR stores team-customer relationships.',
+          'Revisit Organization Settings, then Integrations, to reconnect. Mappings persist wherever ZNTEQR stores team-customer relationships.',
       },
     ],
     howTo: {
@@ -135,12 +135,12 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
       {
         question: 'Do low-stock alerts notify teams?',
         answer:
-          'EquipQR highlights low-stock thresholds inside dashboards so purchasers can reorder before jobs stall.',
+          'ZNTEQR highlights low-stock thresholds inside dashboards so purchasers can reorder before jobs stall.',
       },
       {
         question: 'Is barcode or QR supported for inventory?',
         answer:
-          'EquipQR treats QR labels as first-class identifiers across equipment and inventory bins so scanning speeds receiving and issuing.',
+          'ZNTEQR treats QR labels as first-class identifiers across equipment and inventory bins so scanning speeds receiving and issuing.',
       },
     ],
     howTo: {
@@ -193,7 +193,7 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
       {
         question: 'Which equipment templates ship out of the box?',
         answer:
-          'EquipQR includes heavy-equipment-friendly templates such as forklifts, excavators, scissor lifts, skid steers, trailers, and compressors. Each is organized into inspection sections.',
+          'ZNTEQR includes heavy-equipment-friendly templates such as forklifts, excavators, scissor lifts, skid steers, trailers, and compressors. Each is organized into inspection sections.',
       },
       {
         question: 'Can templates evolve over time?',
@@ -203,7 +203,7 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
       {
         question: 'Do PM templates enforce photo evidence?',
         answer:
-          'Operators attach photos per checklist policy using existing EquipQR media workflows tied to work orders.',
+          'Operators attach photos per checklist policy using existing ZNTEQR media workflows tied to work orders.',
       },
     ],
     howTo: {
@@ -213,23 +213,23 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
   },
   '/features/google-workspace': {
     path: '/features/google-workspace',
-    pageTitle: 'Google Workspace SSO & Directory Sync for EquipQR',
+    pageTitle: 'Google Workspace SSO & Directory Sync for ZNTEQR',
     description:
       'Let technicians sign in with Google Workspace, sync directory users, and onboard shops without juggling separate passwords.',
     breadcrumbLabel: 'Google Workspace',
-    heroTitle: 'Google Workspace SSO & Directory Sync for EquipQR',
+    heroTitle: 'Google Workspace SSO & Directory Sync for ZNTEQR',
     heroDescription:
       'Import users from your directory. Sign in with existing Google accounts.',
     faq: [
       {
-        question: 'Does EquipQR replace Google MFA?',
+        question: 'Does ZNTEQR replace Google MFA?',
         answer:
-          'Google Authentication policies still apply. EquipQR inherits whatever MFA posture Workspace requires.',
+          'Google Authentication policies still apply. ZNTEQR inherits whatever MFA posture Workspace requires.',
       },
       {
         question: 'Can admins limit imported roles?',
         answer:
-          'During import, admins map Workspace users to EquipQR organization roles before invitations activate.',
+          'During import, admins map Workspace users to ZNTEQR organization roles before invitations activate.',
       },
       {
         question: 'Will directory sync pick up new hires?',
@@ -239,7 +239,7 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
     ],
     howTo: {
       name: 'How Google Workspace onboarding works',
-      description: 'Google Workspace integration connects your directory to EquipQR™ in a few steps.',
+      description: 'Google Workspace integration connects your directory to ZNTEQR™ in a few steps.',
     },
   },
   '/features/team-collaboration': {
@@ -265,11 +265,11 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
       {
         question: 'Are audit logs available?',
         answer:
-          'Sensitive actions remain attributable via EquipQR audit surfaces accessible to administrators.',
+          'Sensitive actions remain attributable via ZNTEQR audit surfaces accessible to administrators.',
       },
     ],
     howTo: {
-      name: 'How teams collaborate in EquipQR',
+      name: 'How teams collaborate in ZNTEQR',
       description: 'Teams connect people, equipment, and work orders in one place.',
     },
   },
@@ -284,7 +284,7 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
       "See every machine's last confirmed location on an interactive map.",
     faq: [
       {
-        question: 'Does EquipQR require GPS hardware?',
+        question: 'Does ZNTEQR require GPS hardware?',
         answer:
           'No dedicated GPS puck is required. Shops capture addresses or coordinates already recorded during dispatch.',
       },
@@ -353,7 +353,7 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
       {
         question: 'Are fonts and tap targets WCAG-minded?',
         answer:
-          'EquipQR follows dark-theme contrast guidance with generous tap targets for gloved hands.',
+          'ZNTEQR follows dark-theme contrast guidance with generous tap targets for gloved hands.',
       },
       {
         question: 'Can tablets run the same maps as desktops?',
@@ -363,7 +363,7 @@ export const FEATURE_SEO_BY_PATH: Record<string, FeatureSeoEntry> = {
     ],
     howTo: {
       name: 'How mobile-first workflows behave',
-      description: 'EquipQR™ works in the shop, in the field, or at a desk.',
+      description: 'ZNTEQR™ works in the shop, in the field, or at a desk.',
     },
   },
 };

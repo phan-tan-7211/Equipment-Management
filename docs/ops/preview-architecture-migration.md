@@ -4,7 +4,7 @@
 
 This document records the #1033 migration away from a persistent Supabase preview branch (`olsdirk`), then the #1282 restoration of git `preview` as the integration train.
 
-Related: [GitHub #1033](https://github.com/Columbia-Cloudworks-LLC/EquipQR/issues/1033) (Linear COL-310); [GitHub #1282](https://github.com/Columbia-Cloudworks-LLC/EquipQR/issues/1282).
+Related: [GitHub #1033](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/1033) (Linear COL-310); [GitHub #1282](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/1282).
 
 ---
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Verify EquipQR release metadata on PRs and local checks.
+ * Verify ZNTEQR release metadata on PRs and local checks.
  *
  * Modes (RELEASE_METADATA_MODE or options.mode):
  * - main (default): empty [Unreleased], semver bump when release-relevant,

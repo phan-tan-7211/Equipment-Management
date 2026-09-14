@@ -30,12 +30,12 @@ function Receive-JobOutput {
     Receive-Job -Job $Job -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
 }
 
-Write-Host "[EquipQR] Vite dev server starting"
+Write-Host "[ZNTEQR] Vite dev server starting"
 
 $listen8080 = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
 if ($listen8080 -and (Test-ViteResponding)) {
     Write-Host "        Vite already running on port 8080."
-    Write-Host "[EquipQR] Vite ready"
+    Write-Host "[ZNTEQR] Vite ready"
     exit 0
 }
 
@@ -71,7 +71,7 @@ if (-not $viteUp) {
     exit 1
 }
 
-Write-Host "[EquipQR] Vite ready"
+Write-Host "[ZNTEQR] Vite ready"
 
 try {
     while ((Get-Job -Id $viteJob.Id -ErrorAction SilentlyContinue).State -eq 'Running') {

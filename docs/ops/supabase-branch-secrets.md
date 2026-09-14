@@ -93,7 +93,7 @@ OAuth callback URIs are derived from `SUPABASE_URL` — do **not** set `QB_OAUTH
 
 | Secret Name | Required For | Example Value | Notes |
 |------------|--------------|---------------|-------|
-| `GITHUB_PAT` | `create-ticket` | `github_pat_...` | GitHub Personal Access Token (fine-grained) with **Issues: Read and write** permission scoped to `Columbia-Cloudworks-LLC/EquipQR`. Generate at: [GitHub Settings > Fine-grained tokens](https://github.com/settings/tokens?type=beta) |
+| `GITHUB_PAT` | `create-ticket` | `github_pat_...` | GitHub Personal Access Token (fine-grained) with **Issues: Read and write** permission scoped to `Columbia-Cloudworks-LLC/ZNTEQR`. Generate at: [GitHub Settings > Fine-grained tokens](https://github.com/settings/tokens?type=beta) |
 | `GITHUB_WEBHOOK_SECRET` | `github-issue-webhook` | Random hex string | Shared secret for HMAC-SHA256 webhook signature verification. Must match the secret configured in GitHub repo Settings > Webhooks. Generate with: `openssl rand -hex 32` |
 
 ## Edge Functions and Their Required Secrets
@@ -327,7 +327,7 @@ In the browser DevTools console:
 - `Your site URL to be authorized: https://<that-domain>/dashboard/fleet-map`
 - Followed by `TypeError: Cannot read properties of undefined (reading 'get')` originating in `marker.js` — the downstream crash that occurs because Google Maps half-initializes before rejecting the key.
 
-In the EquipQR UI: the Fleet Map renders the in-app `MapsAuthFailureCard` diagnostic (after [issue #617 follow-up](https://github.com/Columbia-Cloudworks-LLC/EquipQR/issues/617)) listing the exact URL to authorize.
+In the ZNTEQR UI: the Fleet Map renders the in-app `MapsAuthFailureCard` diagnostic (after [issue #617 follow-up](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/617)) listing the exact URL to authorize.
 
 ### Required allowlist entries
 
@@ -349,7 +349,7 @@ Set the same allowlist on every Google Cloud API key referenced as `GOOGLE_MAPS_
 
 ### Why this lives outside Supabase
 
-The HTTP-referrer restriction is a property of the Google Cloud API key itself, not of the EquipQR application or its Supabase Edge Function secrets. The Supabase secret only carries the key string; Google validates the referrer header on every Maps API request against the allowlist on the key. This means the allowlist:
+The HTTP-referrer restriction is a property of the Google Cloud API key itself, not of the ZNTEQR application or its Supabase Edge Function secrets. The Supabase secret only carries the key string; Google validates the referrer header on every Maps API request against the allowlist on the key. This means the allowlist:
 
 - Is **shared** across every Supabase project / environment that resolves to the same physical Google Cloud key.
 - Cannot be rotated by `dev/sync-supabase-secrets-from-1password.ps1` (which only touches Supabase secret values).

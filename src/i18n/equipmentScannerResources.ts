@@ -2,7 +2,7 @@ export const equipmentScannerResources = {
   en: {
     equipmentScanner: {
       title: 'Scan QR',
-      description: 'Point the camera at an EquipQR sticker, or upload a photo of the code.',
+      description: 'Point the camera at an ZNTEQR sticker, or upload a photo of the code.',
       readyHint: 'Tap Start camera scan below. Your browser may ask for camera permission.',
       startingCamera: 'Starting camera…',
       recognized: 'QR code recognized. Opening link.',
@@ -24,8 +24,8 @@ export const equipmentScannerResources = {
       noQrInImage: 'No QR code found in this image. Try another photo or use the camera.',
       parseEmpty: 'No QR content.',
       parseMalformed: 'Could not read this QR link.',
-      parseExternal: 'This QR code is not an EquipQR link.',
-      parseUnsupported: 'Unsupported EquipQR link.',
+      parseExternal: 'This QR code is not an ZNTEQR link.',
+      parseUnsupported: 'Unsupported ZNTEQR link.',
       cameraPolicyBlocked: "Camera access is blocked by this page's security policy. Use Upload QR image or contact support.",
       cameraDenied: 'Camera permission was denied. Allow camera access in your browser settings, then retry, or upload a QR image.',
       cameraNotFound: 'No camera was detected. Use upload below or open this page on a device with a camera.',
@@ -36,7 +36,7 @@ export const equipmentScannerResources = {
   vi: {
     equipmentScanner: {
       title: 'Quét QR',
-      description: 'Hướng camera vào tem EquipQR hoặc tải lên ảnh có mã QR.',
+      description: 'Hướng camera vào tem ZNTEQR hoặc tải lên ảnh có mã QR.',
       readyHint: 'Nhấn Bắt đầu quét bằng camera bên dưới. Trình duyệt có thể yêu cầu quyền dùng camera.',
       startingCamera: 'Đang khởi động camera…',
       recognized: 'Đã nhận diện mã QR. Đang mở liên kết.',
@@ -58,8 +58,8 @@ export const equipmentScannerResources = {
       noQrInImage: 'Không tìm thấy mã QR trong ảnh này. Hãy thử ảnh khác hoặc dùng camera.',
       parseEmpty: 'Mã QR không có nội dung.',
       parseMalformed: 'Không thể đọc liên kết QR này.',
-      parseExternal: 'Mã QR này không phải liên kết EquipQR.',
-      parseUnsupported: 'Liên kết EquipQR này không được hỗ trợ.',
+      parseExternal: 'Mã QR này không phải liên kết ZNTEQR.',
+      parseUnsupported: 'Liên kết ZNTEQR này không được hỗ trợ.',
       cameraPolicyBlocked: 'Quyền truy cập camera bị chặn bởi chính sách bảo mật của trang. Hãy dùng tải ảnh QR lên hoặc liên hệ hỗ trợ.',
       cameraDenied: 'Quyền camera đã bị từ chối. Hãy cho phép camera trong cài đặt trình duyệt rồi thử lại, hoặc tải ảnh QR lên.',
       cameraNotFound: 'Không phát hiện camera. Hãy tải ảnh lên bên dưới hoặc mở trang này trên thiết bị có camera.',
@@ -70,7 +70,7 @@ export const equipmentScannerResources = {
   ko: {
     equipmentScanner: {
       title: 'QR 스캔',
-      description: '카메라를 EquipQR 스티커에 비추거나 QR 코드 사진을 업로드하세요.',
+      description: '카메라를 ZNTEQR 스티커에 비추거나 QR 코드 사진을 업로드하세요.',
       readyHint: '아래의 카메라 스캔 시작을 누르세요. 브라우저에서 카메라 권한을 요청할 수 있습니다.',
       startingCamera: '카메라 시작 중…',
       recognized: 'QR 코드를 인식했습니다. 링크를 여는 중입니다.',
@@ -92,8 +92,8 @@ export const equipmentScannerResources = {
       noQrInImage: '이 이미지에서 QR 코드를 찾을 수 없습니다. 다른 사진을 사용하거나 카메라를 사용하세요.',
       parseEmpty: 'QR 내용이 없습니다.',
       parseMalformed: '이 QR 링크를 읽을 수 없습니다.',
-      parseExternal: '이 QR 코드는 EquipQR 링크가 아닙니다.',
-      parseUnsupported: '지원되지 않는 EquipQR 링크입니다.',
+      parseExternal: '이 QR 코드는 ZNTEQR 링크가 아닙니다.',
+      parseUnsupported: '지원되지 않는 ZNTEQR 링크입니다.',
       cameraPolicyBlocked: '이 페이지의 보안 정책으로 카메라 접근이 차단되었습니다. QR 이미지 업로드를 사용하거나 지원팀에 문의하세요.',
       cameraDenied: '카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 접근을 허용한 뒤 다시 시도하거나 QR 이미지를 업로드하세요.',
       cameraNotFound: '카메라가 감지되지 않았습니다. 아래에서 이미지를 업로드하거나 카메라가 있는 기기에서 이 페이지를 여세요.',

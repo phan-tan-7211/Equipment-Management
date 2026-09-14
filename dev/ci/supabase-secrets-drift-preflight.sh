@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Shared preflight for GitHub Actions Supabase secrets drift checks.
 # Usage: supabase-secrets-drift-preflight.sh <scope_label> <op_edge_item>
-# Env: OP_SERVICE_ACCOUNT_TOKEN, OP_VAULT (EquipQR Agents vault id)
+# Env: OP_SERVICE_ACCOUNT_TOKEN, OP_VAULT (ZNTEQR Agents vault id)
 
 set -euo pipefail
 

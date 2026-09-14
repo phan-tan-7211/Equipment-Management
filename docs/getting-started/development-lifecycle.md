@@ -1,4 +1,4 @@
-# EquipQR Development Lifecycle
+# ZNTEQR Development Lifecycle
 
 Authoritative day-to-day workflow. See also [`docs/ops/git-and-deploy.md`](../ops/git-and-deploy.md).
 

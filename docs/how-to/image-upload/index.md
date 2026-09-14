@@ -1,6 +1,6 @@
 ---
 title: Image upload (overview)
-description: Equipment image upload guides, quick reference, and links to field workflows for EquipQR.
+description: Equipment image upload guides, quick reference, and links to field workflows for ZNTEQR.
 ---
 
 # Equipment Image Upload Documentation

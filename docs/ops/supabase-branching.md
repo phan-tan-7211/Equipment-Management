@@ -1,6 +1,6 @@
 # Supabase Database Branching
 
-> Operational runbook for the per-PR ephemeral Supabase branching workflow that EquipQR enabled on 2026-05-03 as part of [issue #722](https://github.com/Columbia-Cloudworks-LLC/EquipQR/issues/722) (Sub-change 3 of 3).
+> Operational runbook for the per-PR ephemeral Supabase branching workflow that ZNTEQR enabled on 2026-05-03 as part of [issue #722](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/722) (Sub-change 3 of 3).
 
 ## Cloud hostname vs ephemeral branches
 
@@ -153,8 +153,8 @@ PR branching above is **schema/RLS validation only** (dataless, no Quick Login).
   <https://supabase.com/docs/guides/platform/manage-your-usage/branching>
 - GitHub integration:
   <https://supabase.com/docs/guides/deployment/branching/github-integration>
-- EquipQR Service Request on issue #722:
-  <https://github.com/Columbia-Cloudworks-LLC/EquipQR/issues/722#issuecomment-4366751122>
-- EquipQR Change Record on issue #722:
-  <https://github.com/Columbia-Cloudworks-LLC/EquipQR/issues/722#issuecomment-4366780373>
+- ZNTEQR Service Request on issue #722:
+  <https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/722#issuecomment-4366751122>
+- ZNTEQR Change Record on issue #722:
+  <https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/722#issuecomment-4366780373>
 - Cloud Agent ephemeral stack (#1249): [cloud-agent-ephemeral-stack.md](./cloud-agent-ephemeral-stack.md)
