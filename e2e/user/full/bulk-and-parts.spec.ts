@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 
 test.describe('bulk and parts @full', () => {
   test('bulk equipment grid route loads', async ({ page, assertHealthyShell }) => {
