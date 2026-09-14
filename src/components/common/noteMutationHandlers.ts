@@ -2,6 +2,7 @@ import { toast } from 'sonner';
 import type { NoteEditSubmitPayload } from '@/components/common/NoteEditDialog';
 import type { NoteActionPermissions } from '@/components/common/noteCardPermissions';
 import { finalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditCopy';
+import { getRuntimeFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditRuntime';
 
 type NoteForPermissions = {
   id: string;
@@ -47,7 +48,7 @@ function denyMutation(message: string): never {
 export function createNoteMutationHandlers<TNote extends NoteForPermissions>(
   deps: NoteMutationDeps<TNote>,
 ) {
-  const messages = deps.messages ?? finalHardcodedAuditCopy.en;
+  const messages = deps.messages ?? getRuntimeFinalHardcodedAuditCopy();
 
   const handleEditNote = async (note: TNote, payload: NoteEditSubmitPayload) => {
     if (!deps.organizationId) return;
