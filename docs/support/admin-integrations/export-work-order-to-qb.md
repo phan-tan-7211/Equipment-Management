@@ -27,7 +27,7 @@ From the equipment page, open the **Work Orders** tab and click **Create Work Or
 
 ![Create Work Order dialog with PM template selected below the title](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/admin-integrations/desktop/qb-05-create-work-order-pm-type.png)
 
-If you have not updated the equipment's working hours, EquipQR asks before creating:
+If you have not updated the equipment's working hours, ZNTEQR asks before creating:
 
 ![Working hours confirmation before creating the work order](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/admin-integrations/desktop/qb-06-create-work-order-hours-guard.png)
 
@@ -79,7 +79,7 @@ After the first export the QuickBooks submenu switches to **Update Invoice #…*
 
 ## 6. Review the draft invoice in QuickBooks
 
-**Open Invoice** takes you straight to the draft in QuickBooks Online. EquipQR maps the work order like this:
+**Open Invoice** takes you straight to the draft in QuickBooks Online. ZNTEQR maps the work order like this:
 
 | Work order data | Where it lands in QuickBooks |
 | --- | --- |
@@ -97,7 +97,7 @@ After the first export the QuickBooks submenu switches to **Update Invoice #…*
 ![Draft invoice totals, customer note, and hidden statement memo](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/admin-integrations/desktop/qb-16-qbo-invoice-totals.png)
 
 ::: tip Drafts only
-EquipQR always creates a **draft**. You review and send from QuickBooks — nothing is emailed to your customer automatically. Once sent or paid, the invoice status (and balance) mirrors back onto the work order automatically.
+ZNTEQR always creates a **draft**. You review and send from QuickBooks — nothing is emailed to your customer automatically. Once sent or paid, the invoice status (and balance) mirrors back onto the work order automatically.
 :::
 
 ## 7. Re-export if the work order changes

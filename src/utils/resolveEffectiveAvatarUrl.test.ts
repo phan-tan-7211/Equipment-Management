@@ -31,7 +31,7 @@ describe('googleAvatarUrlFromMetadata', () => {
 });
 
 describe('resolveEffectiveAvatarUrl', () => {
-  it('prefers EquipQR profile avatar over Google metadata', () => {
+  it('prefers ZNTEQR profile avatar over Google metadata', () => {
     expect(
       resolveEffectiveAvatarUrl('user-1/avatar.webp', {
         avatar_url: 'https://lh3.googleusercontent.com/a/google',

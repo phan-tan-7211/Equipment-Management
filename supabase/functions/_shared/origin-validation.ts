@@ -30,7 +30,7 @@ const ALLOWED_ORIGINS = [
  * Vercel generates preview URLs in these forms:
  *   - <project>-<hash>-<team>.vercel.app
  *
- * We anchor to the EquipQR Vercel project slug (`equipqr`; legacy `equip-qr` still
+ * We anchor to the ZNTEQR Vercel project slug (`equipqr`; legacy `equip-qr` still
  * accepted) so only deployments from this Vercel project are accepted — not
  * arbitrary third-party Vercel sites.
  *

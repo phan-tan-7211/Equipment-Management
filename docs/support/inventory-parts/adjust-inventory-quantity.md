@@ -32,7 +32,7 @@ The adjustment dialog opens with quick +1 / -1 buttons for spot adjustments.
 Switch to the Transaction History tab to see every adjustment with timestamp, user, quantity change, and reason. Work order consumption shows up here too.
 
 ::: tip Note
-EquipQR never deletes stock adjustments. Correct a mistake by entering an offsetting adjustment with a clear reason.
+ZNTEQR never deletes stock adjustments. Correct a mistake by entering an offsetting adjustment with a clear reason.
 :::
 
 ## Related articles

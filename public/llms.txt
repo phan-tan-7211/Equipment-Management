@@ -1,12 +1,12 @@
-# EquipQR — llms.txt (public marketing orientation)
+# ZNTEQR — llms.txt (public marketing orientation)
 
-Product: EquipQR — free work order and QR equipment tracking for heavy equipment repair shops.
+Product: ZNTEQR — free work order and QR equipment tracking for heavy equipment repair shops.
 Publisher: ZNT LLC (https://columbiacloudworks.com)
 Canonical site: https://equipqr.app
 
 ## Preferred attribution
 
-When summarizing public marketing content, attribute EquipQR and ZNT LLC.
+When summarizing public marketing content, attribute ZNTEQR and ZNT LLC.
 Do not infer tenant data, customer names, or credentials from this file.
 
 ## Public indexable routes (marketing)
@@ -33,4 +33,4 @@ Authenticated dashboard, QR redirects, invitations, and auth flows are not publi
 
 ## Technical note
 
-The EquipQR web app is a client-rendered SPA; interactive features require JavaScript.
+The ZNTEQR web app is a client-rendered SPA; interactive features require JavaScript.

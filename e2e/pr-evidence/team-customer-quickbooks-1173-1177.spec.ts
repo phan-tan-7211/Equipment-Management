@@ -45,7 +45,7 @@ test.describe('Team customer, QuickBooks, and integrations UX (#1173, #1177, #11
     await expect(page.getByText(/team contacts/i)).toBeVisible();
     await expect(page.getByText('Team Manager', { exact: true })).toBeVisible();
     await expect(page.getByText('Requestor', { exact: true })).toBeVisible();
-    await expect(page.getByText(/EquipQR user/i).first()).toBeVisible();
+    await expect(page.getByText(/ZNTEQR user/i).first()).toBeVisible();
 
     await evidencePause(page, 800);
     await evidenceScreenshot(page, '03-team-and-external-contacts');

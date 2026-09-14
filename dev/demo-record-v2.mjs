@@ -314,7 +314,7 @@ async function runWithArgs(args) {
           sceneClipRelativePaths,
           outputRelativePath: composedRelativePath,
           introText: scenario.title,
-          outroText: 'EquipQR Demo Complete'
+          outroText: 'ZNTEQR Demo Complete'
         });
         composed = Boolean(composeResult.composed);
         composeSkippedReason = composeResult.skippedReason || null;

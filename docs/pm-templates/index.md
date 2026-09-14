@@ -9,9 +9,9 @@ Preventive maintenance checklist templates for common equipment types:
 - [Scissor lift PM](./scissor-lift-pm-checklist)
 - [Skid steer PM](./skid-steer-pm-checklist)
 
-## EquipQR templates vs organization templates
+## ZNTEQR templates vs organization templates
 
-The templates above ship with EquipQR as **EquipQR Templates**. Assign them to equipment from the PM Templates page. Clone a template only when you need an organization copy you can edit.
+The templates above ship with ZNTEQR as **ZNTEQR Templates**. Assign them to equipment from the PM Templates page. Clone a template only when you need an organization copy you can edit.
 
 ## Apply a template to equipment in bulk
 

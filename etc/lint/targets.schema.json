@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://equipqr.app/schemas/lint-targets.json",
-  "title": "EquipQR lint catalog",
+  "title": "ZNTEQR lint catalog",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "targets"],

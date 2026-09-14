@@ -723,7 +723,7 @@ jobs:
           npm run build
         }
         $buildSize = (Get-ChildItem -Path dist -Recurse -File | Measure-Object -Property Length -Sum).Sum
-        $fontSize = (Get-ChildItem -Path dist/assets -Filter 'EquipQR-Report-KR-VI-*.ttf' -File | Measure-Object -Property Length -Sum).Sum
+        $fontSize = (Get-ChildItem -Path dist/assets -Filter 'ZNTEQR-Report-KR-VI-*.ttf' -File | Measure-Object -Property Length -Sum).Sum
         $appSize = $buildSize - $fontSize
         $maxSize = 13MB
         $maxFontSize = 3MB
@@ -747,7 +747,7 @@ jobs:
         fi
 
         build_size=$(du -sb dist/ | cut -f1)
-        font_size=$(find dist/assets -maxdepth 1 -type f -name 'EquipQR-Report-KR-VI-*.ttf' -printf '%s\n' | awk '{sum += $1} END {print sum+0}')
+        font_size=$(find dist/assets -maxdepth 1 -type f -name 'ZNTEQR-Report-KR-VI-*.ttf' -printf '%s\n' | awk '{sum += $1} END {print sum+0}')
         app_size=$((build_size - font_size))
         max_size=$((13 * 1024 * 1024))
         max_font_size=$((3 * 1024 * 1024))

@@ -54,7 +54,7 @@ const RESERVED_QR_FIRST_SEGMENTS = new Set([
   'quick-form',
 ]);
 
-export type ParseEquipQRTargetResult =
+export type ParseZNTEQRTargetResult =
   | { ok: true; kind: 'equipment'; equipmentId: string; path: string; orgId?: string }
   | { ok: true; kind: 'inventory'; itemId: string; path: string }
   | { ok: true; kind: 'workOrder'; workOrderId: string; path: string }
@@ -67,13 +67,13 @@ export type ParseEquipQRTargetResult =
     };
 
 /**
- * Parse QR decode results into EquipQR routes. Accepts relative paths and
- * absolute URLs on the current origin or known EquipQR production/preview hosts.
+ * Parse QR decode results into ZNTEQR routes. Accepts relative paths and
+ * absolute URLs on the current origin or known ZNTEQR production/preview hosts.
  */
-export function parseEquipQRTarget(
+export function parseZNTEQRTarget(
   rawValue: string,
   currentOrigin: string = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8080'
-): ParseEquipQRTargetResult {
+): ParseZNTEQRTargetResult {
   const trimmed = rawValue.trim();
   if (!trimmed) {
     return { ok: false, reason: 'empty', message: 'No QR content.' };
@@ -96,14 +96,14 @@ export function parseEquipQRTarget(
   const originAllowed = url.origin === baseOrigin || EQUIPQR_QR_ORIGINS.has(url.origin);
 
   if (!originAllowed) {
-    return { ok: false, reason: 'external', message: 'This QR code is not an EquipQR link.' };
+    return { ok: false, reason: 'external', message: 'This QR code is not a ZNTEQR link.' };
   }
 
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
   const segments = pathname.split('/').filter(Boolean);
 
   if (segments[0] !== 'qr') {
-    return { ok: false, reason: 'unsupported', message: 'Unsupported EquipQR link.' };
+    return { ok: false, reason: 'unsupported', message: 'Unsupported ZNTEQR link.' };
   }
 
   const second = segments[1];
@@ -155,7 +155,7 @@ export function parseEquipQRTarget(
     return { ok: true, kind: 'equipment', equipmentId, path, orgId };
   }
 
-  return { ok: false, reason: 'unsupported', message: 'Unsupported EquipQR link.' };
+  return { ok: false, reason: 'unsupported', message: 'Unsupported ZNTEQR link.' };
 }
 
 // ── Full-URL builder ──

@@ -1,4 +1,4 @@
-# EquipQR Seed Data
+# ZNTEQR Seed Data
 
 This folder contains the **durable core** of local development seed data — the minimal committed SQL that E2E fixtures and Playwright constants depend on. The files are executed in lexicographic order by the Supabase CLI.
 

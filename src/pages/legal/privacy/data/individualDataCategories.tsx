@@ -25,7 +25,7 @@ export const individualDataCategories: PrivacyDataCategoryRow[] = [
     category: 'QR Code Scans',
     dataPoints: (
       <>
-        Each time you scan an EquipQR code, we record the scan timestamp and your user identity.{' '}
+        Each time you scan an ZNTEQR code, we record the scan timestamp and your user identity.{' '}
         <strong>
           GPS coordinates are collected only if your organization administrator has enabled location
           collection.
@@ -47,7 +47,7 @@ export const individualDataCategories: PrivacyDataCategoryRow[] = [
   {
     category: 'CAPTCHA Verification',
     dataPoints:
-      "During signup, hCaptcha generates a one-time verification token. This token is sent to hCaptcha's servers for verification and then discarded — it is never stored in EquipQR.",
+      "During signup, hCaptcha generates a one-time verification token. This token is sent to hCaptcha's servers for verification and then discarded — it is never stored in ZNTEQR.",
   },
   {
     category: 'Notification Preferences',

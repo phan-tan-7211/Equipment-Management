@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Skid Steer PM Template (Global)
+-- ZNTEQR Seed Data - Skid Steer PM Template (Global)
 -- =====================================================
 -- This seed creates the global Skid Steer PM checklist template.
 -- Global templates have organization_id = NULL and is_protected = true.

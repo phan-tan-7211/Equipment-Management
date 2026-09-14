@@ -6,7 +6,7 @@
 
 ## Purpose
 
-This document defines the Access Control Policy for EquipQR production systems, databases, and infrastructure. This policy ensures that only authorized personnel have access to production resources and that access is properly controlled, monitored, and audited.
+This document defines the Access Control Policy for ZNTEQR production systems, databases, and infrastructure. This policy ensures that only authorized personnel have access to production resources and that access is properly controlled, monitored, and audited.
 
 ## Scope
 

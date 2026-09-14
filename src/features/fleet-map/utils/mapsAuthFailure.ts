@@ -4,7 +4,7 @@
  */
 
 export const MAPS_REFERRER_RUNBOOK_URL =
-  'https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/supabase-branch-secrets.md#google-maps-api-key--http-referrer-allowlist';
+  'https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/supabase-branch-secrets.md#google-maps-api-key--http-referrer-allowlist';
 
 export interface MapsAuthFailure {
   /** Full page URL (origin + pathname) — matches Google's own console error. */

@@ -1,6 +1,6 @@
 # Async export jobs (#1193)
 
-EquipQR supports an **async export job** path for heavy CSV reports (equipment and work orders) to cut database egress and avoid edge timeouts.
+ZNTEQR supports an **async export job** path for heavy CSV reports (equipment and work orders) to cut database egress and avoid edge timeouts.
 
 ## Flow
 

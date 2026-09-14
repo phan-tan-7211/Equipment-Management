@@ -121,7 +121,7 @@ export function RightToRepair(): JSX.Element {
               <h2 className="text-2xl font-bold">Why this sits with Legal</h2>
               <p className="text-muted-foreground">
                 Repair shops live this problem. A tractor that needs a dealer login, a printer that
-                rejects a legal cartridge, a hub that dies when a vendor cloud folds. EquipQR is
+                rejects a legal cartridge, a hub that dies when a vendor cloud folds. ZNTEQR is
                 software for those shops. Our job is the record of the work, not a second lock on
                 the asset.
               </p>

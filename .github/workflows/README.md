@@ -1,9 +1,9 @@
-# EquipQR GitHub Actions workflows
+# ZNTEQR GitHub Actions workflows
 
 ## 1Password secret-injection migration (in progress)
 
 We are migrating from per-secret GitHub Actions repo secrets to a single
-`OP_SERVICE_ACCOUNT_TOKEN` that fetches everything else from the **EquipQR
+`OP_SERVICE_ACCOUNT_TOKEN` that fetches everything else from the **ZNTEQR
 Agents** 1Password vault at job time. This:
 
 - Eliminates per-secret rotation across N services
@@ -15,10 +15,10 @@ Agents** 1Password vault at job time. This:
 
 | Workflow | Status | Secrets to migrate | Replacement |
 |---|---|---|---|
-| [`ci.yml`](./ci.yml) | TODO | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `CODECOV_TOKEN` | `op://EquipQR Agents/app-env-prod-public/SUPABASE_URL`, `op://EquipQR Agents/app-env-prod-public/SUPABASE_ANON_KEY` (confirm field labels on the item with `op item get` metadata), `op://EquipQR Agents/codecov-token/credential` |
+| [`ci.yml`](./ci.yml) | TODO | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `CODECOV_TOKEN` | `op://ZNTEQR Agents/app-env-prod-public/SUPABASE_URL`, `op://ZNTEQR Agents/app-env-prod-public/SUPABASE_ANON_KEY` (confirm field labels on the item with `op item get` metadata), `op://ZNTEQR Agents/codecov-token/credential` |
 | `preview-domain-alias.yml` | **REMOVED (#1282)** | — | Retired; see [`docs/ops/git-and-deploy.md`](../../docs/ops/git-and-deploy.md) — `preview.equipqr.app` tracks git `preview` via normal Vercel deploys |
-| [`export-schema.yml`](./export-schema.yml) | TODO | `PREVIEW_DATABASE_URL` (→ production pooler after #1033) | `op://EquipQR Agents/preview-database-url/credential` |
-| [`production-release-readiness.yml`](./production-release-readiness.yml) | LIVE | `OP_SERVICE_ACCOUNT_TOKEN` + `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `VERCEL_TOKEN` via 1Password | `op://EquipQR Agents/supabase-write/SUPABASE_ACCESS_TOKEN`, `op://EquipQR Agents/supabase-write/prod_db_password`, `op://EquipQR Agents/vercel-write/VERCEL_TOKEN` |
+| [`export-schema.yml`](./export-schema.yml) | TODO | `PREVIEW_DATABASE_URL` (→ production pooler after #1033) | `op://ZNTEQR Agents/preview-database-url/credential` |
+| [`production-release-readiness.yml`](./production-release-readiness.yml) | LIVE | `OP_SERVICE_ACCOUNT_TOKEN` + `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `VERCEL_TOKEN` via 1Password | `op://ZNTEQR Agents/supabase-write/SUPABASE_ACCESS_TOKEN`, `op://ZNTEQR Agents/supabase-write/prod_db_password`, `op://ZNTEQR Agents/vercel-write/VERCEL_TOKEN` |
 | [`deploy.yml`](./deploy.yml) | NEEDS AUDIT | (audit secret references) | TBD |
 | [`deployment-status.yml`](./deployment-status.yml) | NEEDS AUDIT | (audit secret references) | TBD |
 | [`version-tag.yml`](./version-tag.yml) | NO MIGRATION | only `GITHUB_TOKEN` (built-in) | n/a |
@@ -52,8 +52,8 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - uses: ./.github/actions/load-1p-secrets
         env:
-          VITE_SUPABASE_URL:      op://EquipQR Agents/app-env-prod-public/SUPABASE_URL
-          VITE_SUPABASE_ANON_KEY: op://EquipQR Agents/app-env-prod-public/SUPABASE_ANON_KEY
+          VITE_SUPABASE_URL:      op://ZNTEQR Agents/app-env-prod-public/SUPABASE_URL
+          VITE_SUPABASE_ANON_KEY: op://ZNTEQR Agents/app-env-prod-public/SUPABASE_ANON_KEY
       - run: npm run build
         # env vars are auto-injected by the previous step (export-env: true is the default in our composite action)
 ```
@@ -69,7 +69,7 @@ Notes:
 
 ### When to migrate each workflow
 
-Migrate after the corresponding 1Password items exist in the EquipQR Agents
+Migrate after the corresponding 1Password items exist in the ZNTEQR Agents
 vault. Use [`secrets-drift-check.yml`](./secrets-drift-check.yml) (runs daily)
 to confirm the items are present before flipping a workflow.
 

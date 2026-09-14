@@ -78,7 +78,7 @@ describe('PageSEO', () => {
     const { unmount } = render(<PageSEO title="Intake Form — Quick Form" noindex />);
 
     await waitFor(() => {
-      expect(document.title).toBe('Intake Form — Quick Form | EquipQR');
+      expect(document.title).toBe('Intake Form — Quick Form | ZNTEQR');
     });
 
     expect(
@@ -105,7 +105,7 @@ describe('PageSEO', () => {
     );
 
     await waitFor(() => {
-      expect(document.title).toBe('Feature | EquipQR');
+      expect(document.title).toBe('Feature | ZNTEQR');
     });
 
     expect(
@@ -124,7 +124,7 @@ describe('PageSEO', () => {
       document
         .querySelector('meta[property="og:title"][data-equipqr-page-seo]')
         ?.getAttribute('content')
-    ).toBe('Feature | EquipQR');
+    ).toBe('Feature | ZNTEQR');
     expect(
       document
         .querySelector('meta[property="og:image"][data-equipqr-page-seo]')
@@ -147,7 +147,7 @@ describe('PageSEO', () => {
   it('uses the marketing title without suffix on /', async () => {
     render(
       <PageSEO
-        title="EquipQR | Free Work Order Software for Heavy Equipment Repair Shops"
+        title="ZNTEQR | Free Work Order Software for Heavy Equipment Repair Shops"
         description="Home"
         path="/"
       />
@@ -155,7 +155,7 @@ describe('PageSEO', () => {
 
     await waitFor(() => {
       expect(document.title).toBe(
-        'EquipQR | Free Work Order Software for Heavy Equipment Repair Shops'
+        'ZNTEQR | Free Work Order Software for Heavy Equipment Repair Shops'
       );
     });
   });
@@ -163,14 +163,14 @@ describe('PageSEO', () => {
   it('keeps explicitly branded public page titles unchanged', async () => {
     render(
       <PageSEO
-        title="Releases · EquipQR"
+        title="Releases · ZNTEQR"
         description="Release history"
         path="/releases"
       />
     );
 
     await waitFor(() => {
-      expect(document.title).toBe('Releases · EquipQR');
+      expect(document.title).toBe('Releases · ZNTEQR');
     });
   });
 
@@ -184,7 +184,7 @@ describe('PageSEO', () => {
     );
 
     await waitFor(() => {
-      expect(document.title).toBe('Strict | EquipQR');
+      expect(document.title).toBe('Strict | ZNTEQR');
     });
 
     unmount();
@@ -195,14 +195,14 @@ describe('PageSEO', () => {
     const { rerender } = render(<PageSEO title="A" description="d1" path="/a" />);
 
     await waitFor(() => {
-      expect(document.title).toBe('A | EquipQR');
+      expect(document.title).toBe('A | ZNTEQR');
     });
     const firstCount = managedCount();
 
     rerender(<PageSEO title="B" description="d2" path="/b" />);
 
     await waitFor(() => {
-      expect(document.title).toBe('B | EquipQR');
+      expect(document.title).toBe('B | ZNTEQR');
     });
     expect(
       document.querySelector('meta[name="description"][data-equipqr-page-seo]')?.getAttribute(
@@ -234,7 +234,7 @@ describe('PageSEO', () => {
     const { unmount } = render(<PageSEO title="During" description="d" path="/p" />);
 
     await waitFor(() => {
-      expect(document.title).toBe('During | EquipQR');
+      expect(document.title).toBe('During | ZNTEQR');
     });
     expect(managedCount()).toBeGreaterThan(0);
 
@@ -257,7 +257,7 @@ describe('PageSEO', () => {
     );
 
     await waitFor(() => {
-      expect(document.title).toBe('Feature | EquipQR');
+      expect(document.title).toBe('Feature | ZNTEQR');
     });
 
     expect(document.head.querySelectorAll('meta[name="description"]').length).toBe(1);
@@ -278,7 +278,7 @@ describe('PageSEO', () => {
     );
 
     await waitFor(() => {
-      expect(document.title).toBe('Feature2 | EquipQR');
+      expect(document.title).toBe('Feature2 | ZNTEQR');
     });
 
     expect(document.head.querySelectorAll('meta[name="description"]').length).toBe(1);
@@ -308,7 +308,7 @@ describe('PageSEO', () => {
     );
 
     await waitFor(() => {
-      expect(document.title).toBe('Route | EquipQR');
+      expect(document.title).toBe('Route | ZNTEQR');
     });
 
     expect(document.querySelector('meta[name="description"]')?.getAttribute('content')).toBe(
@@ -318,13 +318,13 @@ describe('PageSEO', () => {
       document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.getAttribute('href')
     ).toBe('https://equipqr.app/features/route');
     expect(document.querySelector('meta[property="og:title"]')?.getAttribute('content')).toBe(
-      'Route | EquipQR'
+      'Route | ZNTEQR'
     );
     expect(document.querySelector('meta[property="og:image"]')?.getAttribute('content')).toBe(
       'https://equipqr.app/route-og.png'
     );
     expect(document.querySelector('meta[name="twitter:title"]')?.getAttribute('content')).toBe(
-      'Route | EquipQR'
+      'Route | ZNTEQR'
     );
     expect(document.querySelector('meta[name="twitter:image"]')?.getAttribute('content')).toBe(
       'https://equipqr.app/route-og.png'

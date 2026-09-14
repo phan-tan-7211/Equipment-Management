@@ -8,7 +8,7 @@
   op item create/edit (hangs or "invalid JSON in piped input"). This script
   spawns a detached powershell.exe child with a closed stdin contract.
 
-  Uses OP_SAT_EquipQR (write) by default. Pass -ReadOnly to use OP_SERVICE_ACCOUNT_TOKEN
+  Uses OP_SAT_ZNTEQR (write) by default. Pass -ReadOnly to use OP_SERVICE_ACCOUNT_TOKEN
   for get/list operations only.
 
 .PARAMETER Action
@@ -18,7 +18,7 @@
   Item title or ID (Edit/Get)
 
 .PARAMETER Vault
-  Vault name or ID (default: EquipQR Agents vault ID)
+  Vault name or ID (default: ZNTEQR Agents vault ID)
 
 .PARAMETER Assignment
   Repeatable assignment string(s). Use -- before assignments with dotted values.
@@ -69,9 +69,9 @@ $ErrorActionPreference = 'Stop'
 function Get-OpServiceAccountToken {
     param([switch]$Write)
     if ($Write) {
-        $token = [Environment]::GetEnvironmentVariable('OP_SAT_EquipQR', 'User')
+        $token = [Environment]::GetEnvironmentVariable('OP_SAT_ZNTEQR', 'User')
         if (-not $token) {
-            throw 'OP_SAT_EquipQR is not set in User scope. Provision write SAT for EquipQR Agents vault.'
+            throw 'OP_SAT_ZNTEQR is not set in User scope. Provision write SAT for ZNTEQR Agents vault.'
         }
         return $token
     }

@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Part Alternate Groups
+-- ZNTEQR Seed Data - Part Alternate Groups
 -- =====================================================
 -- Demonstrates part number interchangeability for technicians
 -- Enables searching by OEM/aftermarket part numbers to find alternatives

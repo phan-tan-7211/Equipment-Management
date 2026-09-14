@@ -2,7 +2,7 @@
 
 <!-- markdownlint-disable MD024 -->
 
-All notable changes to EquipQR by ZNT LLC will be documented in this file.
+All notable changes to ZNTEQR by ZNT LLC will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Entries through 3.28.0 are more verbose than the current policy. Newer notes are short customer-facing outcomes. Editorial rules live in `.cursor/rules/changelog.mdc`.
 
 ## [Unreleased]
+
+## [3.34.0] - 2026-09-14
+
+### Changed
+
+- **ZNTEQR brand consistency** — Product copy, documentation, tests, PWA notifications, SEO metadata, and internal source identifiers now use the ZNTEQR brand. Existing equipqr.app URLs and persisted browser keys remain compatible.
 
 ## [3.33.0] - 2026-09-13
 
@@ -35,7 +41,7 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 - **Work order calendar (#1530)** — Desktop planners can switch Work Orders to a month, week, or day calendar, drag due dates, and set optional due times.
 - **Work order list pages (#1534)** — The Work Orders list now pages on the server so large organizations no longer load every work order at once.
-- **PM template groups (#1536)** — EquipQR and organization sections on PM Templates can collapse. EquipQR starts closed when the organization already has a custom template.
+- **PM template groups (#1536)** — ZNTEQR and organization sections on PM Templates can collapse. ZNTEQR starts closed when the organization already has a custom template.
 
 ### Changed
 
@@ -56,7 +62,7 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ### Added
 
-- **Public releases page (#1460)** — The Legal footer version link now opens a public `/releases` page with build-time release notes from the EquipQR changelog.
+- **Public releases page (#1460)** — The Legal footer version link now opens a public `/releases` page with build-time release notes from the ZNTEQR changelog.
 
 ### Changed
 
@@ -78,5 +84,5 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 - **Completed work order revert actions are clearly labeled (#1484)** — Completed work orders now separate `Reopen work order` from `Revert PM`, explain each action, and require confirmation.
 - **Work order delete stays in the overflow menu (#1485)** — Desktop details keep Export as the primary header action and move delete into the overflow menu, while mobile leaves delete last and low-emphasis.
 - **Organization settings page alias (#1469)** — Opening `/dashboard/organization/settings` now renders the Settings form and organization tabs instead of a blank main panel.
-- **Starter PM template titles stay readable** — EquipQR starter cards now keep template names readable even when both EquipQR and Protected badges are present.
+- **Starter PM template titles stay readable** — ZNTEQR starter cards now keep template names readable even when both ZNTEQR and Protected badges are present.
 - **Fleet Map Team HQ marker stays interactive (#1461)** — Clicking a team headquarters marker now keeps the map mounted and opens the team popup.

@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Equipment
+-- ZNTEQR Seed Data - Equipment
 -- =====================================================
 -- Production-faithful equipment fixture (~150 rows across 6 orgs).
 -- Mirrors real prod patterns observed in project ymxkzronkhwxzcdcbnwq:

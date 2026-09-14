@@ -25,7 +25,7 @@ $stopFail = $false
 
 Write-Host ''
 Write-Host ' ============================================'
-Write-Host '  EquipQR - Stop E2E Tests and Dev Stack'
+Write-Host '  ZNTEQR - Stop E2E Tests and Dev Stack'
 Write-Host ' ============================================'
 Write-Host ''
 

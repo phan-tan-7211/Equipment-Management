@@ -1,5 +1,5 @@
 ---
-description: "Feature flags are NOT used for new functionality in EquipQR — ship directly behind RBAC/RLS. Apply when auditing or removing existing flags in src/lib/flags.ts."
+description: "Feature flags are NOT used for new functionality in ZNTEQR — ship directly behind RBAC/RLS. Apply when auditing or removing existing flags in src/lib/flags.ts."
 globs: "src/pages/**/*.tsx,src/features/**/*.tsx,src/lib/flags.ts"
 alwaysApply: false
 ---
@@ -10,7 +10,7 @@ alwaysApply: false
 
 ## Policy
 
-**Do NOT add feature flags for new functionality.** EquipQR is a solo-developer codebase with a single primary customer. Flag-gated rollouts add ceremony without the telemetry surface to justify them. Ship features directly behind real RBAC/RLS and let `preview.equipqr.app` be the staging gate.
+**Do NOT add feature flags for new functionality.** ZNTEQR is a solo-developer codebase with a single primary customer. Flag-gated rollouts add ceremony without the telemetry surface to justify them. Ship features directly behind real RBAC/RLS and let `preview.equipqr.app` be the staging gate.
 
 ```tsx
 // ✅ CORRECT — ship directly, gated only by RBAC/RLS

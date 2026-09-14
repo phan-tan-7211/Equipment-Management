@@ -48,7 +48,7 @@ Sync helper (read-only check first):
 
 ## 1Password source-of-truth items
 
-Update EquipQR Agents vault items so future syncs do not restore retired knobs:
+Update ZNTEQR Agents vault items so future syncs do not restore retired knobs:
 
 | Item | Action |
 |------|--------|
@@ -64,13 +64,13 @@ Re-run:
 
 ## Intuit Developer Portal
 
-1. Open the EquipQR app → **Keys & OAuth**.
+1. Open the ZNTEQR app → **Keys & OAuth**.
 2. Ensure redirect URIs include the derived preview and production callback URLs above.
 3. Remove any redirect URI using the retired host `supabase.preview.equipqr.app`.
 
 ## Google Cloud Console
 
-1. Open the shared OAuth web client used by EquipQR.
+1. Open the shared OAuth web client used by ZNTEQR.
 2. Under **Authorized redirect URIs**, ensure the derived preview and production Google Workspace callback URLs above are listed.
 3. Remove any redirect URI using `supabase.preview.equipqr.app`.
 

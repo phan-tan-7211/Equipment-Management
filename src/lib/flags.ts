@@ -1,5 +1,5 @@
 /**
- * Feature flags for EquipQR
+ * Feature flags for ZNTEQR
  * 
  * These flags control the availability of features in the application.
  * They can be configured via environment variables.

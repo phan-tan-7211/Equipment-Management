@@ -20,7 +20,7 @@ function extractAuthClaims(data: unknown): AuthClaims | null {
 /**
  * Return locally verified Supabase Auth JWT claims for identity-only client checks.
  *
- * EquipQR's Supabase project uses asymmetric ES256 signing, so supabase-js can
+ * ZNTEQR's Supabase project uses asymmetric ES256 signing, so supabase-js can
  * verify these claims locally from the cached JWKS instead of round-tripping to
  * the Auth server like getUser() does.
  */

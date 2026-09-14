@@ -13,7 +13,7 @@ export function PrivacyUsageSection() {
                   label: 'Providing the Service:',
                   content: (
                     <>
-                      To operate, maintain, and deliver the core EquipQR features &mdash; equipment
+                      To operate, maintain, and deliver the core ZNTEQR features &mdash; equipment
                       tracking, work order management, team collaboration, inventory management, QR code
                       scanning, and fleet map visualization.
                     </>

@@ -1,6 +1,6 @@
 ---
 title: "Check system status"
-description: "External uptime and incident monitoring for EquipQR. Always check here first if something looks broken."
+description: "External uptime and incident monitoring for ZNTEQR. Always check here first if something looks broken."
 lastReviewed: 2026-05-01
 personas: ["all"]
 ---

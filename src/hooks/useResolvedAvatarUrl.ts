@@ -12,7 +12,7 @@ const AVATAR_SIGNED_URL_REFRESH_MS = Math.max(60_000, (DEFAULT_SIGNED_URL_TTL_SE
 /**
  * Resolve a `user-avatars` storage path (or legacy Supabase URL form) to a
  * short-lived signed URL, refreshing before the default ~900s TTL.
- * External http(s) URLs that are not EquipQR storage refs (e.g. Google photos)
+ * External http(s) URLs that are not ZNTEQR storage refs (e.g. Google photos)
  * are returned as-is.
  */
 export function useResolvedAvatarUrl(stored: string | null | undefined) {

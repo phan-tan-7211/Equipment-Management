@@ -45,7 +45,7 @@ export const benefits: Benefit[] = [
     title: 'Connect in Organization Settings',
     subtitle: 'Sign in with Intuit, then map customers',
     description:
-      'Connect QuickBooks via OAuth in Organization Settings. Sign in with your Intuit account, authorize EquipQR™, and you\'re done. Tokens refresh automatically. Reconnect only if needed.',
+      'Connect QuickBooks via OAuth in Organization Settings. Sign in with your Intuit account, authorize ZNTEQR™, and you\'re done. Tokens refresh automatically. Reconnect only if needed.',
     benefits: ['Connect in Organization Settings', 'Auto token refresh', 'Sandbox & production'],
     benefitColor: 'warning',
   },
@@ -82,10 +82,10 @@ export const showcases: ShowcaseItem[] = [
   {
     kind: 'demo-video',
     baseName: 'mobile_export_to_quickbooks',
-    alt: 'Animated mobile demo showing a completed EquipQR work order being exported to QuickBooks Online as a draft invoice',
+    alt: 'Animated mobile demo showing a completed ZNTEQR work order being exported to QuickBooks Online as a draft invoice',
     title: 'Export a Work Order to QuickBooks on Mobile',
     description:
-      'Watch a completed work order flow from EquipQR into a QuickBooks Online draft invoice in a few taps. Labor, parts, and customer mapping carry over so you can review and send the invoice from QuickBooks.',
+      'Watch a completed work order flow from ZNTEQR into a QuickBooks Online draft invoice in a few taps. Labor, parts, and customer mapping carry over so you can review and send the invoice from QuickBooks.',
   },
   {
     kind: 'image',

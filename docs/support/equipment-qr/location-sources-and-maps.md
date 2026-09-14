@@ -8,7 +8,7 @@ personas: ["admin","owner","manager","technician"]
 **For:** Admin, Owner, Manager, Technician  
 **Last reviewed:** 2026-07-04
 
-EquipQR resolves an equipment pin from several sources. You can preview each source on the equipment detail map, Fleet Map, and work order detail pages without changing the underlying record until you save an override.
+ZNTEQR resolves an equipment pin from several sources. You can preview each source on the equipment detail map, Fleet Map, and work order detail pages without changing the underlying record until you save an override.
 
 ## Effective location order
 

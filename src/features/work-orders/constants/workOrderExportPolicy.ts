@@ -56,7 +56,7 @@ export const FIELD_WORKSHEET_EXPORT_POLICY: WorkOrderExportPolicy = {
   audience: 'internal',
   exportName: 'Printable Field Worksheet',
   title: 'Printable Field Worksheet',
-  description: 'Handwriting-friendly worksheet for technicians to complete PM checklists and log notes on paper. Results must be re-entered into EquipQR.',
+  description: 'Handwriting-friendly worksheet for technicians to complete PM checklists and log notes on paper. Results must be re-entered into ZNTEQR.',
   includeByDefault: [
     'work order summary and dates',
     'equipment details',

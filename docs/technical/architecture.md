@@ -1,12 +1,12 @@
-# EquipQR™ Architecture Documentation
+# ZNTEQR™ Architecture Documentation
 
-This document provides a comprehensive overview of EquipQR™'s system architecture and database schema, covering technology choices, design patterns, and data structures.
+This document provides a comprehensive overview of ZNTEQR™'s system architecture and database schema, covering technology choices, design patterns, and data structures.
 
 ## System Architecture
 
 ### Overview
 
-EquipQR™ is a modern, cloud-native fleet equipment management platform built with a focus on scalability, security, and maintainability. This document outlines the system architecture, technology choices, and design patterns used throughout the application.
+ZNTEQR™ is a modern, cloud-native fleet equipment management platform built with a focus on scalability, security, and maintainability. This document outlines the system architecture, technology choices, and design patterns used throughout the application.
 
 ### High-Level Architecture
 
@@ -333,7 +333,7 @@ const useRealtimeEquipment = (organizationId: string) => {
 ```
 
 Client-side service and hook code should use the shared auth-claims helper for
-identity-only checks. EquipQR's Supabase project uses asymmetric JWT signing
+identity-only checks. ZNTEQR's Supabase project uses asymmetric JWT signing
 (ES256), so `getClaims()` can verify the cached access token locally from JWKS
 instead of making the Auth `/user` network call used by `getUser()`. This is
 important for offline-capable write paths: use `claims.sub` anywhere a caller
@@ -474,7 +474,7 @@ FOR SELECT USING (
 
 ### Overview
 
-EquipQR™ uses a PostgreSQL database with Row Level Security (RLS) for multi-tenant data isolation. This section provides a comprehensive overview of the database schema, relationships, and security policies.
+ZNTEQR™ uses a PostgreSQL database with Row Level Security (RLS) for multi-tenant data isolation. This section provides a comprehensive overview of the database schema, relationships, and security policies.
 
 ### Schema Architecture
 
@@ -771,5 +771,5 @@ YYYYMMDDHHMMSS_description.sql
 4. **Audit Trails**: Track important changes with created_by/updated_by
 5. **Principle of Least Privilege**: Users only access their organization's data
 
-This architecture and schema provide a robust foundation for EquipQR™'s multi-tenant architecture while maintaining performance, security, and scalability.
+This architecture and schema provide a robust foundation for ZNTEQR™'s multi-tenant architecture while maintaining performance, security, and scalability.
 

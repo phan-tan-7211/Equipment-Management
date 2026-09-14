@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Teams
+-- ZNTEQR Seed Data - Teams
 -- =====================================================
 -- 6 Teams across all organizations.
 --

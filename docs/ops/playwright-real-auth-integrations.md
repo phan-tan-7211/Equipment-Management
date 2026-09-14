@@ -6,7 +6,7 @@ Opt-in Playwright project for validating connected vendor integrations on **prev
 
 | Role | Value |
 |------|--------|
-| EquipQR sign-in | `phantan7211@gmail.com` (Google OAuth) |
+| ZNTEQR sign-in | `phantan7211@gmail.com` (Google OAuth) |
 | Target app | `https://preview.equipqr.app` |
 | QuickBooks | Sandbox QBO company (`app.sandbox.qbo.intuit.com`) — preview edge sets `QBO_USE_SANDBOX=true` |
 | Storage file | `tmp/playwright/auth/nicholas-google-qbo.json` (gitignored) |
@@ -48,9 +48,9 @@ In the opened browser:
 2. If Google Workspace is not connected on Integrations, click **Connect Google Workspace** and finish consent (one-time setup).
 3. Wait for the setup script to save `tmp/playwright/auth/google-workspace-local.json`.
 
-### Local dev (EquipQR ↔ QuickBooks integration)
+### Local dev (ZNTEQR ↔ QuickBooks integration)
 
-OAuth tokens are stored in local Supabase (`quickbooks_credentials`) after Intuit redirects to the edge callback. A Playwright storage file replays the EquipQR session only.
+OAuth tokens are stored in local Supabase (`quickbooks_credentials`) after Intuit redirects to the edge callback. A Playwright storage file replays the ZNTEQR session only.
 
 ```powershell
 # Local stack must be running (.\dev\dev-start.bat)
@@ -59,7 +59,7 @@ npm run e2e:quickbooks-auth:capture
 
 In the opened browser:
 
-1. Sign in to EquipQR if redirected to `/auth` (reuses `google-workspace-local.json` when present).
+1. Sign in to ZNTEQR if redirected to `/auth` (reuses `google-workspace-local.json` when present).
 2. On **Organization → Integrations**, click **Connect** on the QuickBooks Online card.
 3. Complete Intuit sign-in and authorize your company.
 4. Wait until the script sees **Connected** and saves `tmp/playwright/auth/quickbooks-local.json`.
@@ -114,7 +114,7 @@ The test exports a work order to Google Docs and opens the returned `document_ur
 |----------|----------------|-------------|
 | `E2E_REAL_AUTH_STORAGE_STATE` | All `@real-auth` tests | Path to captured storage JSON |
 | `E2E_REAL_AUTH_BASE_URL` | Optional | Defaults to `https://preview.equipqr.app` |
-| `VERCEL_AUTOMATION_BYPASS_SECRET` | Protected preview runs | Vercel Deployment Protection bypass secret from `op://EquipQR Agents/vercel-automation-bypass/VERCEL_AUTOMATION_BYPASS_SECRET` |
+| `VERCEL_AUTOMATION_BYPASS_SECRET` | Protected preview runs | Vercel Deployment Protection bypass secret from `op://ZNTEQR Agents/vercel-automation-bypass/VERCEL_AUTOMATION_BYPASS_SECRET` |
 | `E2E_QBO_WORK_ORDER_ID` | Export test only | Known-safe **completed** preview work order UUID (`1660137f-a803-4510-9a0a-96c7048d0eb4`) |
 | `E2E_ALLOW_QBO_DRAFTS` | QBO export test only | Must be `true` to opt in to **sandbox** draft invoice create/update on preview |
 | `E2E_ALLOW_QBO_PRODUCTION_DRAFTS` | Rare prod QBO export test | When `true`, export test expects production QBO and opens `app.qbo.intuit.com` |
@@ -126,10 +126,10 @@ The test exports a work order to Google Docs and opens the returned `document_ur
 Load the Vercel bypass secret before running tests against protected preview:
 
 ```powershell
-$env:VERCEL_AUTOMATION_BYPASS_SECRET = op read "op://EquipQR Agents/vercel-automation-bypass/VERCEL_AUTOMATION_BYPASS_SECRET"
+$env:VERCEL_AUTOMATION_BYPASS_SECRET = op read "op://ZNTEQR Agents/vercel-automation-bypass/VERCEL_AUTOMATION_BYPASS_SECRET"
 ```
 
-To reuse a Google-only storage state as a starting point for the combined EquipQR + QBO state:
+To reuse a Google-only storage state as a starting point for the combined ZNTEQR + QBO state:
 
 ```powershell
 npx playwright codegen "https://preview.equipqr.app/auth?tab=signin" `
@@ -179,7 +179,7 @@ Spec file: `e2e/user/full/real-auth-integrations.spec.ts`
 
 | Symptom | Likely cause | Fix |
 |---------|----------------|-----|
-| Redirect to `/auth` | Expired EquipQR session | Re-capture storage state |
+| Redirect to `/auth` | Expired ZNTEQR session | Re-capture storage state |
 | Intuit sign-in page when opening invoice | Expired QBO cookies | Re-capture storage state with sandbox QBO login in same context |
 | `Export to QuickBooks` menu item missing | WO not completed, no team mapping, or QB not connected | Fix data/preconditions on preview |
 | `Export failed:` toast | Intuit API / mapping / tax errors | Check edge function response in Playwright trace |

@@ -1,25 +1,25 @@
 ---
 name: react-best-practices
-description: React performance optimization guidelines from Vercel Engineering, with EquipQR-specific mappings (Vite + React Router + TanStack Query). Use when writing, reviewing, or refactoring React code in this repo, especially around waterfalls, bundle size, and re-renders.
+description: React performance optimization guidelines from Vercel Engineering, with ZNTEQR-specific mappings (Vite + React Router + TanStack Query). Use when writing, reviewing, or refactoring React code in this repo, especially around waterfalls, bundle size, and re-renders.
 license: MIT
 metadata:
   author: vercel
   version: "1.0.0"
   source_repo: vercel-labs/agent-skills
   source_commit: c4399b192588e71fdf0cb507c7b6ad9e9657ce6b
-  adapted_for: EquipQR
+  adapted_for: ZNTEQR
 ---
 
-# React Best Practices (Vercel, adapted for EquipQR)
+# React Best Practices (Vercel, adapted for ZNTEQR)
 
 Comprehensive performance optimization guide for React and Next.js applications, maintained by Vercel. Contains 57 rules across 8 categories, prioritized by impact to guide automated refactoring and code generation.
 
-## EquipQR applicability notes (important)
+## ZNTEQR applicability notes (important)
 
 This repository is **Vite + React Router + TypeScript** (not Next.js). When applying these rules:
 
 - **Next.js-only APIs**: Ignore or translate examples referencing `next/dynamic`, Route Handlers (`export async function GET`), Server Actions (`"use server"`), RSC boundaries, or `after()`. Prefer the *underlying principle* (avoid waterfalls, reduce payload, parallelize independent work).
-- **Client data fetching**: Examples mention **SWR**; EquipQR uses **TanStack Query v5**. Apply the dedup/caching principles using React Query patterns (query keys, caching, de-duping via in-flight queries).
+- **Client data fetching**: Examples mention **SWR**; ZNTEQR uses **TanStack Query v5**. Apply the dedup/caching principles using React Query patterns (query keys, caching, de-duping via in-flight queries).
 - **Code splitting**: Translate `next/dynamic` to `React.lazy(() => import(...))` + `<Suspense>` (and route-level splitting where appropriate).
 - **Imports & bundle size**: The “avoid barrel imports” guidance still applies—prefer direct imports and avoid `index.ts` re-export barrels in hot paths.
 

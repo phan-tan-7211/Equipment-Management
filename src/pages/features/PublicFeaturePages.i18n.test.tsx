@@ -14,7 +14,7 @@ it('shows the translated hero, navigation and FAQ on a feature page', () => {
     </TestProviders>,
   );
 
-  expect(screen.getByRole('heading', { level: 1, name: 'Đăng nhập SSO và đồng bộ danh bạ Google Workspace cho EquipQR' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 1, name: 'Đăng nhập SSO và đồng bộ danh bạ Google Workspace cho ZNTEQR' })).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Câu hỏi thường gặp' })).toBeInTheDocument();
   expect(screen.getByText('Đồng bộ danh bạ Google')).toBeInTheDocument();
 });

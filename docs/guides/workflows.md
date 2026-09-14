@@ -1,8 +1,8 @@
 # Workflows Reference
 
-This document is the canonical technical reference for EquipQR's work-order
+This document is the canonical technical reference for ZNTEQR's work-order
 lifecycle, role capabilities, and status-transition rules. It is not the
-step-by-step walkthrough for end users — those live in the **EquipQR Help Center** at
+step-by-step walkthrough for end users — those live in the **ZNTEQR Help Center** at
 **`https://equipqr.info/support/`**. Signed-in users report issues at
 **`https://equipqr.app/dashboard/support`**.
 

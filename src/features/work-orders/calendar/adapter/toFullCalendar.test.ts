@@ -62,7 +62,7 @@ describe('toFullCalendarEvent', () => {
 });
 
 describe('rangeToFullCalendarView', () => {
-  it('maps EquipQR ranges to FullCalendar views', () => {
+  it('maps ZNTEQR ranges to FullCalendar views', () => {
     expect(rangeToFullCalendarView('month')).toBe('dayGridMonth');
     expect(rangeToFullCalendarView('week')).toBe('timeGridWeek');
     expect(rangeToFullCalendarView('day')).toBe('timeGridDay');

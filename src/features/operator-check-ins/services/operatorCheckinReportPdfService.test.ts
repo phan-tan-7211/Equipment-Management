@@ -14,7 +14,7 @@ describe('operatorCheckinReportPdfService', () => {
   });
 
   it.each(['vi', 'ko'] as const)('embeds the Unicode font in a real %s PDF', async (language) => {
-    const font = readFileSync(fileURLToPath(new URL('../assets/EquipQR-Report-KR-VI.ttf', import.meta.url)));
+    const font = readFileSync(fileURLToPath(new URL('../assets/ZNTEQR-Report-KR-VI.ttf', import.meta.url)));
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
       ok: true,
       arrayBuffer: async () => font.buffer.slice(font.byteOffset, font.byteOffset + font.byteLength),

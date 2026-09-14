@@ -15,7 +15,7 @@ describe('report-vitest-durations', () => {
   it('normalizes CI absolute paths to repo-relative', () => {
     expect(
       normalizeTestFilePath(
-        '/home/runner/work/EquipQR/EquipQR/src/features/inventory/pages/InventoryList.test.tsx',
+        '/home/runner/work/ZNTEQR/ZNTEQR/src/features/inventory/pages/InventoryList.test.tsx',
       ),
     ).toBe('src/features/inventory/pages/InventoryList.test.tsx');
   });
@@ -43,14 +43,14 @@ describe('report-vitest-durations', () => {
         JSON.stringify({
           testResults: [
             {
-              name: '/home/runner/work/EquipQR/EquipQR/src/a.test.tsx',
+              name: '/home/runner/work/ZNTEQR/ZNTEQR/src/a.test.tsx',
               assertionResults: [
                 { fullName: 'a slow', duration: 400, status: 'passed' },
                 { fullName: 'a fast', duration: 50 },
               ],
             },
             {
-              name: '/home/runner/work/EquipQR/EquipQR/src/b.test.tsx',
+              name: '/home/runner/work/ZNTEQR/ZNTEQR/src/b.test.tsx',
               assertionResults: [{ fullName: 'b mid', duration: 200, status: 'passed' }],
             },
           ],

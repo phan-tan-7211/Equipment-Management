@@ -11,7 +11,7 @@ Whenever an agent creates a plan file, Change Plan, implementation plan, PR-feed
 
 - Use semantic XML-style boundary tags with standard markdown headers. Required core top-level sections are `<context-anchor>`, `<execution-steps>`, `<authorized-commands>`, `<verification-plan>`, `<summary-checkpoints>`, and `<stop-conditions>`.
 - Additional optional top-level sections are allowed only when a skill or workflow explicitly defines them in its plan template. Any optional section must be named and described in that template so authors know when to include it.
-- Start with `<context-anchor>` and explicitly state the EquipQR stack: React, TypeScript, Vite, Tailwind, shadcn/ui, Supabase, TanStack Query, Vitest, React Testing Library, and PowerShell on Windows.
+- Start with `<context-anchor>` and explicitly state the ZNTEQR stack: React, TypeScript, Vite, Tailwind, shadcn/ui, Supabase, TanStack Query, Vitest, React Testing Library, and PowerShell on Windows.
 - In `<context-anchor>`, require the execution agent to ingest relevant `.cursor/rules/*.mdc`, `.cursor/skills/**/SKILL.md`, and `AGENTS.md` before modifying files.
 - Never wrap nested code snippets, schemas, SQL, JSON, PowerShell, bash, or commands in triple backticks inside the generated plan. Use plain indented text with exactly four leading spaces for nested snippet/example lines.
 - Boundary tags and markdown headers must start at column 0 (no leading spaces). Only nested snippet/example lines inside a section use four-space indentation.

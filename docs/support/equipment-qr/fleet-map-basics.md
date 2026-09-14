@@ -20,7 +20,7 @@ Use the **Location Source** legend and dropdown to filter markers by Effective l
 
 ![Fleet Map location source filter](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/01-fleet-map-source-filter.png)
 
-See [Equipment location sources and maps](./location-sources-and-maps) for how EquipQR picks the effective pin.
+See [Equipment location sources and maps](./location-sources-and-maps) for how ZNTEQR picks the effective pin.
 
 ## 3. Zoom to see clusters
 

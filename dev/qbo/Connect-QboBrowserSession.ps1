@@ -4,7 +4,7 @@
   Establish (or reuse) an unattended QuickBooks Online browser session for agent automation.
 
 .DESCRIPTION
-  Loads the quickbooks-developer credentials from the EquipQR Agents 1Password vault
+  Loads the quickbooks-developer credentials from the ZNTEQR Agents 1Password vault
   into process env (never printed), then runs dev/qbo/qbo-browser-signin.mjs which
   signs into app.qbo.intuit.com handling the password + TOTP challenges. The session is
   persisted in tmp/qbo-automation/profile so follow-up Playwright scripts (invoice
@@ -35,8 +35,8 @@ if (-not $env:OP_SERVICE_ACCOUNT_TOKEN) {
     $env:OP_SERVICE_ACCOUNT_TOKEN = [Environment]::GetEnvironmentVariable('OP_SERVICE_ACCOUNT_TOKEN', 'User')
 }
 
-$env:QBO_USERNAME = (op read 'op://EquipQR Agents/quickbooks-developer/username').Trim()
-$env:QBO_PASSWORD = (op read 'op://EquipQR Agents/quickbooks-developer/password').Trim()
+$env:QBO_USERNAME = (op read 'op://ZNTEQR Agents/quickbooks-developer/username').Trim()
+$env:QBO_PASSWORD = (op read 'op://ZNTEQR Agents/quickbooks-developer/password').Trim()
 $env:QBO_TARGET_URL = $TargetUrl
 
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)

@@ -13,7 +13,7 @@ function Get-EquipQrRepoRoot {
 
     $root = Split-Path -Parent $FromScriptRoot
     if (-not (Test-Path -LiteralPath (Join-Path $root 'package.json'))) {
-        throw "Could not resolve EquipQR repo root from $FromScriptRoot"
+        throw "Could not resolve ZNTEQR repo root from $FromScriptRoot"
     }
     return (Resolve-Path -LiteralPath $root).Path
 }
@@ -65,7 +65,7 @@ function Stop-EquipQrDevToolingProcesses {
     )
 
     $repoPattern = [regex]::Escape($RepoRoot) -replace '\\', '[\\/]'
-    $repoNamePattern = '(?i)[\\/]EquipQR[\\/]'
+    $repoNamePattern = '(?i)[\\/]ZNTEQR[\\/]'
 
     $toolingRegex = @(
         'node_modules[\\/]\.bin[\\/](vite|vitest|eslint)\.(cmd|ps1)?',

@@ -25,7 +25,7 @@ function Read-OpField {
     }
     if (-not $env:OP_SERVICE_ACCOUNT_TOKEN) { return $null }
     try {
-        return (op read "op://EquipQR Agents/$Item/$Field").Trim()
+        return (op read "op://ZNTEQR Agents/$Item/$Field").Trim()
     } catch {
         return $null
     }
@@ -45,7 +45,7 @@ if (-not $clientId -or -not $secret) {
 }
 
 $lines = @(
-    "# EquipQR local Supabase Auth (Google sign-in) - synced from 1Password item $appItem"
+    "# ZNTEQR local Supabase Auth (Google sign-in) - synced from 1Password item $appItem"
     "# Required by supabase/config.toml [auth.external.google] via env() bindings."
     "SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=$clientId"
     "SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=$secret"

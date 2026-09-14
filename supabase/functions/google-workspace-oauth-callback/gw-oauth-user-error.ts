@@ -51,7 +51,7 @@ function mapMessageToErrorCode(message: string): GoogleWorkspaceOAuthErrorCode {
   ) {
     return GW_OAUTH_ERROR_CODES.MISCONFIGURED;
   }
-  if (message.includes("already linked to another EquipQR organization")) {
+  if (message.includes("already linked to another ZNTEQR organization")) {
     return GW_OAUTH_ERROR_CODES.DOMAIN_ALREADY_LINKED;
   }
   return GW_OAUTH_ERROR_CODES.OAUTH_FAILED;

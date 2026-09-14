@@ -13,7 +13,7 @@ requirement: "Organization Owner or Admin."
 Organization Owner or Admin.
 :::
 
-EquipQR uses a two-step onboarding: first users join your**organization**, then you add them to a **team**. Members cannot see equipment until they belong to a team.
+ZNTEQR uses a two-step onboarding: first users join your**organization**, then you add them to a **team**. Members cannot see equipment until they belong to a team.
 
 ## 1. Open Organization → Members
 
@@ -44,8 +44,8 @@ Go to **Teams**, open the team that services the equipment this person will work
 
 Their invitation email comes from:
 
-- **Sender:** EquipQR <invite@equipqr.app>
-- **Subject:** "You're invited to join [Your Organization] on EquipQR"
+- **Sender:** ZNTEQR <invite@equipqr.app>
+- **Subject:** "You're invited to join [Your Organization] on ZNTEQR"
 - **Link expires:** 7 days after it is sent.
 
 ::: tip Note
@@ -54,5 +54,5 @@ If the invite does not arrive in 5-10 minutes, ask them to check spam before you
 
 ## Related articles
 
-- [Role overview for EquipQR](./role-overview)
+- [Role overview for ZNTEQR](./role-overview)
 - [Add or remove team members](../teams-roles/add-team-member)

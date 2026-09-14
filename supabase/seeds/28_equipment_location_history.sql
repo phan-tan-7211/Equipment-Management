@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Equipment Location History
+-- ZNTEQR Seed Data - Equipment Location History
 -- =====================================================
 -- Production-faithful scan history (prod has 4 rows, all source='scan',
 -- all with address_* columns NULL, all with formatted_address as the

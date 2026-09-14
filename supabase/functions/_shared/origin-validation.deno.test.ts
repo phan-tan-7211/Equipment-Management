@@ -15,7 +15,7 @@ Deno.test("isAllowedOrigin accepts legacy equip-qr Vercel preview hostnames", ()
   );
 });
 
-Deno.test("isAllowedOrigin rejects equipqr hostnames outside EquipQR Vercel team", () => {
+Deno.test("isAllowedOrigin rejects equipqr hostnames outside ZNTEQR Vercel team", () => {
   assertEquals(isAllowedOrigin("https://equipqr-abc123.vercel.app"), false);
   assertEquals(isAllowedOrigin("https://equipqr-abc123-evil-team.vercel.app"), false);
 });

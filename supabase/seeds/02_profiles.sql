@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - User Profiles
+-- ZNTEQR Seed Data - User Profiles
 -- =====================================================
 
 INSERT INTO public.profiles (id, email, name, created_at, updated_at)

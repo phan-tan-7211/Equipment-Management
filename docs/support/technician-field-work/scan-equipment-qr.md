@@ -1,13 +1,13 @@
 ---
 title: "Scan an equipment QR code from your phone"
-description: "Use your phone's built-in camera app to open an equipment record in EquipQR with the correct organization already selected."
+description: "Use your phone's built-in camera app to open an equipment record in ZNTEQR with the correct organization already selected."
 lastReviewed: 2026-07-06
 personas: ["technician","requestor"]
 ---
 
 **For:** Technician, Requestor  
 **Last reviewed:** 2026-07-06
-EquipQR QR codes are plain URLs — no extra app required. Your phone's camera opens the record directly in the browser or the EquipQR app if it is installed.
+ZNTEQR QR codes are plain URLs — no extra app required. Your phone's camera opens the record directly in the browser or the ZNTEQR app if it is installed.
 
 ![Equipment record opened from a QR scan](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/desktop/01-scan-qr-landing.png)
 
@@ -24,10 +24,10 @@ The camera shows a link like `https://equipqr.app/qr/equipment/<id>`. Tap it to 
 
 ## 3. Sign in if prompted
 
-If you are not already logged in, EquipQR asks you to sign in first. After authentication the app returns you to the equipment you scanned.
+If you are not already logged in, ZNTEQR asks you to sign in first. After authentication the app returns you to the equipment you scanned.
 
 ::: tip Note
-If you belong to more than one organization, EquipQR automatically switches you to the organization that owns the scanned equipment.
+If you belong to more than one organization, ZNTEQR automatically switches you to the organization that owns the scanned equipment.
 :::
 
 ## 4. Verify the equipment header

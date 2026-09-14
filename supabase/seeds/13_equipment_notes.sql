@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Equipment Notes
+-- ZNTEQR Seed Data - Equipment Notes
 -- =====================================================
 -- Comments and notes on equipment
 

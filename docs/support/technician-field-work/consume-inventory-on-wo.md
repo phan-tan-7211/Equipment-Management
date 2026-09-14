@@ -25,7 +25,7 @@ Type the part name, SKU, or a cross-reference number. Alternate groups surface e
 
 ## 3. Enter the quantity used
 
-EquipQR deducts that quantity from stock on hand and records the unit cost in the work order's total.
+ZNTEQR deducts that quantity from stock on hand and records the unit cost in the work order's total.
 
 ::: tip Note
 If the part drops below its low-stock threshold, Parts Managers and Admins receive a low-stock alert.

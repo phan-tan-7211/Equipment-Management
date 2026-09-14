@@ -6,9 +6,9 @@ export function PrivacySubprocessorsSection() {
   return (
     <LegalPolicySection title="4. External Service Providers (Subprocessors)">
       <p>
-        We use the following third-party service providers to operate EquipQR. For each provider we
+        We use the following third-party service providers to operate ZNTEQR. For each provider we
         disclose the purpose, what data flows to them, what data flows back, and what (if anything) is
-        stored in EquipQR as a result. Optional integrations are clearly marked and are only
+        stored in ZNTEQR as a result. Optional integrations are clearly marked and are only
         activated when an organization administrator explicitly connects them.
       </p>
       {subprocessorProviders.map((provider) => (

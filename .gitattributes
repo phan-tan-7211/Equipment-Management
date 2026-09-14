@@ -1,4 +1,4 @@
-# EquipQR .gitattributes
+# ZNTEQR .gitattributes
 # Normalise all text files to LF in the git object store and on checkout.
 # This overrides the Git for Windows default of core.autocrlf=true, which
 # otherwise causes phantom "modified" diffs and StrReplace failures whenever

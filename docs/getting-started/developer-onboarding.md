@@ -2,9 +2,9 @@
 
 Published documentation for this guide also lives at **`https://equipqr.info/getting-started/developer-onboarding`**.
 
-## Welcome to EquipQR™ Development!
+## Welcome to ZNTEQR™ Development!
 
-This guide will help you get up and running with the EquipQR™ codebase quickly and efficiently.
+This guide will help you get up and running with the ZNTEQR™ codebase quickly and efficiently.
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@ Before you begin, ensure you have the following installed on your development ma
 
 ### Required Software
 
-- **Node.js** — must satisfy `engines.node` in the root [`package.json`](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/package.json) (currently **Node 24.x LTS**). We recommend the latest **24.x** LTS release. [Download here](https://nodejs.org/)
+- **Node.js** — must satisfy `engines.node` in the root [`package.json`](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/package.json) (currently **Node 24.x LTS**). We recommend the latest **24.x** LTS release. [Download here](https://nodejs.org/)
 - **npm** (comes with Node.js) - We use npm exclusively (no yarn/pnpm/bun)
 - **Docker Desktop** — required for the full local stack (`dev-start.bat` / Supabase). [Download here](https://www.docker.com/products/docker-desktop)
 - **Git** - [Download here](https://git-scm.com/)
@@ -59,7 +59,7 @@ npm ci
 
 ### 3. Environment Setup (1Password Preferred)
 
-If you have 1Password access for EquipQR, use it as the default setup path.
+If you have 1Password access for ZNTEQR, use it as the default setup path.
 `dev-start.bat` now syncs both app `.env` and `supabase/functions/.env` from 1Password before continuing startup.
 
 ```powershell
@@ -88,8 +88,8 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 > **📋 Full Reference**: The `.env.example` file contains detailed documentation for all environment variables, including descriptions, file references, and generation commands. See also:
 > - **[Setup Guide - Environment Configuration](../technical/setup.md#environment-configuration)** - Overview of environment variable categories
-> - **[Supabase Branch Secrets](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/supabase-branch-secrets.md)** - Edge Function secrets for production/preview
-> - **[Local Supabase Development](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/local-supabase-development.md)** - Local development environment setup
+> - **[Supabase Branch Secrets](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/supabase-branch-secrets.md)** - Edge Function secrets for production/preview
+> - **[Local Supabase Development](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/local-supabase-development.md)** - Local development environment setup
 
 ### 4. Start Development Server
 
@@ -113,7 +113,7 @@ Visit `http://localhost:8080` to see the application running!
 
 > **⚠️ IMPORTANT: Local Supabase is the standard development method.**
 > 
-> All database development should be done locally first, then deployed to production. See [Local Supabase Development Guide](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/local-supabase-development.md) for complete setup instructions.
+> All database development should be done locally first, then deployed to production. See [Local Supabase Development Guide](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/local-supabase-development.md) for complete setup instructions.
 
 **For local development (recommended):**
 
@@ -441,7 +441,7 @@ describe('EquipmentCard', () => {
    npx supabase db push --linked
    ```
 
-**Note**: See [Local Supabase Development Guide](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/local-supabase-development.md) for detailed setup instructions.
+**Note**: See [Local Supabase Development Guide](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/local-supabase-development.md) for detailed setup instructions.
 
 ## Troubleshooting Common Issues
 
@@ -540,4 +540,4 @@ npm run size-check    # Check bundle size
 4. **Make a Small Change**: Try updating a component or adding a new feature
 5. **Join the Team**: Participate in code reviews and team discussions
 
-Welcome to the EquipQR™ development team!
+Welcome to the ZNTEQR™ development team!

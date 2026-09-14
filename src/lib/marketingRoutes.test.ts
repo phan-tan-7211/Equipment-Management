@@ -41,11 +41,11 @@ describe('MARKETING_ROUTES', () => {
     const landing = requireMarketingRoute('/landing');
 
     expect(resolveFullDocumentTitle(landing)).toBe(resolveFullDocumentTitle(home));
-    expect(resolveFullDocumentTitle(landing)).not.toMatch(/\| EquipQR \| EquipQR$/);
+    expect(resolveFullDocumentTitle(landing)).not.toMatch(/\| ZNTEQR \| ZNTEQR$/);
   });
 
   it('keeps explicitly branded public page titles unchanged', () => {
     const releases = requireMarketingRoute('/releases');
-    expect(resolveFullDocumentTitle(releases)).toBe('Releases · EquipQR');
+    expect(resolveFullDocumentTitle(releases)).toBe('Releases · ZNTEQR');
   });
 });

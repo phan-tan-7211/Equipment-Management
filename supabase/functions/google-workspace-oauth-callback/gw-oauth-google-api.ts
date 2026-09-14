@@ -176,8 +176,8 @@ export async function verifyGoogleWorkspaceAdmin(
 
   if (!isWorkspaceAdmin) {
     throw new Error(
-      "Only Google Workspace administrators can connect their organization to EquipQR. " +
-      "Please contact your Workspace admin to set up EquipQR for your organization."
+      "Only Google Workspace administrators can connect their organization to ZNTEQR. " +
+      "Please contact your Workspace admin to set up ZNTEQR for your organization."
     );
   }
 }

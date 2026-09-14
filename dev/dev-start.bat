@@ -11,7 +11,7 @@ exit /b %ERRORLEVEL%
 :help
 echo Usage: dev-start.bat [dev-start.ps1 options]
 echo.
-echo Starts the local EquipQR development stack.
+echo Starts the local ZNTEQR development stack.
 echo.
 echo Options:
 echo   -help, --help, /help, /?

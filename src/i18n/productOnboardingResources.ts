@@ -1,6 +1,6 @@
 export const productOnboardingResources = {
   en: { productOnboarding: {
-    pageTitle: 'Getting Started', welcome: 'Welcome to EquipQR', description: 'Complete these steps to connect your equipment to the field.',
+    pageTitle: 'Getting Started', welcome: 'Welcome to ZNTEQR', description: 'Complete these steps to connect your equipment to the field.',
     teamStep: 'Create your first team', equipmentStep: 'Add your first equipment', qrStep: 'Affix the QR code',
     setupComplete: 'Setup complete', setupCompleteDescription: 'Your organization is ready. Scan the QR code you printed to try it in the field.',
     finishFailed: 'Could not finish setup', tryAgain: 'Please try again.', loading: 'Loading onboarding',
@@ -19,11 +19,11 @@ export const productOnboardingResources = {
     qrInstructionUrl: 'Copy the URL and paste it into your preferred QR generator app if that is how you print labels',
     qrInstructionImage: 'Or download the QR image (PNG/JPG) and print it from your computer or phone',
     qrInstructionAffix: 'Affix the printed code to the equipment where technicians can scan it in the field',
-    qrInstructionPhysical: 'Without a physical QR label on the machine, EquipQR is just digital paperwork you already had',
+    qrInstructionPhysical: 'Without a physical QR label on the machine, ZNTEQR is just digital paperwork you already had',
     qrAlt: 'QR code for {{name}}', finishing: 'Finishing...', finish: 'Finish setup',
   } },
   vi: { productOnboarding: {
-    pageTitle: 'Bắt đầu', welcome: 'Chào mừng đến với EquipQR', description: 'Hoàn tất các bước để kết nối thiết bị với công việc tại hiện trường.',
+    pageTitle: 'Bắt đầu', welcome: 'Chào mừng đến với ZNTEQR', description: 'Hoàn tất các bước để kết nối thiết bị với công việc tại hiện trường.',
     teamStep: 'Tạo nhóm đầu tiên', equipmentStep: 'Thêm thiết bị đầu tiên', qrStep: 'Dán mã QR',
     setupComplete: 'Đã hoàn tất thiết lập', setupCompleteDescription: 'Tổ chức của bạn đã sẵn sàng. Hãy quét mã QR đã in để thử sử dụng tại hiện trường.',
     finishFailed: 'Không thể hoàn tất thiết lập', tryAgain: 'Vui lòng thử lại.', loading: 'Đang tải hướng dẫn thiết lập',
@@ -42,11 +42,11 @@ export const productOnboardingResources = {
     qrInstructionUrl: 'Sao chép URL và dán vào ứng dụng tạo mã QR bạn muốn dùng để in nhãn',
     qrInstructionImage: 'Hoặc tải ảnh mã QR (PNG/JPG) và in từ máy tính hoặc điện thoại',
     qrInstructionAffix: 'Dán mã đã in lên thiết bị ở vị trí kỹ thuật viên có thể quét tại hiện trường',
-    qrInstructionPhysical: 'Nếu không có nhãn QR trên máy, EquipQR chỉ là hồ sơ giấy tờ được số hóa',
+    qrInstructionPhysical: 'Nếu không có nhãn QR trên máy, ZNTEQR chỉ là hồ sơ giấy tờ được số hóa',
     qrAlt: 'Mã QR của {{name}}', finishing: 'Đang hoàn tất...', finish: 'Hoàn tất thiết lập',
   } },
   ko: { productOnboarding: {
-    pageTitle: '시작하기', welcome: 'EquipQR에 오신 것을 환영합니다', description: '아래 단계를 완료하여 현장에서 장비를 사용할 수 있게 설정하세요.',
+    pageTitle: '시작하기', welcome: 'ZNTEQR에 오신 것을 환영합니다', description: '아래 단계를 완료하여 현장에서 장비를 사용할 수 있게 설정하세요.',
     teamStep: '첫 팀 만들기', equipmentStep: '첫 장비 추가', qrStep: 'QR 코드 부착',
     setupComplete: '설정 완료', setupCompleteDescription: '조직 설정이 완료되었습니다. 인쇄한 QR 코드를 스캔하여 현장에서 사용해 보세요.',
     finishFailed: '설정을 완료하지 못했습니다', tryAgain: '다시 시도하세요.', loading: '설정 화면 불러오는 중',
@@ -65,7 +65,7 @@ export const productOnboardingResources = {
     qrInstructionUrl: 'QR 생성기 앱에 URL을 복사하여 붙여넣고 라벨을 인쇄하세요',
     qrInstructionImage: '또는 QR 이미지(PNG/JPG)를 다운로드하여 컴퓨터나 휴대전화에서 인쇄하세요',
     qrInstructionAffix: '기술자가 현장에서 스캔할 수 있도록 인쇄한 코드를 장비에 부착하세요',
-    qrInstructionPhysical: '장비에 실제 QR 라벨이 없으면 EquipQR도 기존 서류 업무를 디지털화한 것에 불과합니다',
+    qrInstructionPhysical: '장비에 실제 QR 라벨이 없으면 ZNTEQR도 기존 서류 업무를 디지털화한 것에 불과합니다',
     qrAlt: '{{name}} QR 코드', finishing: '완료 중...', finish: '설정 완료',
   } },
 } as const;

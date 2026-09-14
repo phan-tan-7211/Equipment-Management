@@ -23,7 +23,7 @@ test.describe('PR evidence public image layout @pr-evidence', () => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await dismissCookieBannerIfPresent(page);
 
-    await expectPublicImageOk(page, '/images/brand/icons/EquipQR-Icon-Purple-Small.png');
+    await expectPublicImageOk(page, '/images/brand/icons/ZNTEQR-Icon-512.png');
     await expectPublicImageOk(page, '/images/brand/logos/3A-Equipment-Logo-Medium.png');
     await expectPublicImageOk(page, '/images/brand/icons/Columbia-Cloudworks-Icon-Small.png');
     await expectPublicImageOk(page, '/images/equipment/excavator-svgrepo-com.svg');
@@ -59,7 +59,7 @@ test.describe('PR evidence dashboard brand icon @pr-evidence', () => {
   test('mobile topbar brand icon loads from public/images', async ({ page, gotoDashboard }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await gotoDashboard('/');
-    const brand = page.locator('img[src="/images/brand/icons/EquipQR-Icon-Purple-Small.png"]');
+    const brand = page.locator('img[src="/images/brand/icons/ZNTEQR-Icon-512.png"]');
     await expect(brand).toBeVisible({ timeout: 15_000 });
     await expect
       .poll(async () => brand.evaluate((img: HTMLImageElement) => img.naturalWidth))

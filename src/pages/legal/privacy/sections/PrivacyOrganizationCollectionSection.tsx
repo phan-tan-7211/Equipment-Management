@@ -6,7 +6,7 @@ export function PrivacyOrganizationCollectionSection() {
   return (
     <LegalPolicySection title="3. Information We Collect — Organization Level">
       <p>
-        Organizations that use EquipQR store business data within the platform. This data belongs to
+        Organizations that use ZNTEQR store business data within the platform. This data belongs to
         the organization and is isolated from other organizations through strict database-level
         security controls (Row Level Security). The table below details every category of
         organization-level data.

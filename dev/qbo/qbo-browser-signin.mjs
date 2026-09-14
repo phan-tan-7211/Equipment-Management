@@ -26,7 +26,7 @@ const TARGET_URL = process.env.QBO_TARGET_URL || 'https://qbo.intuit.com/app/hom
 const PROFILE_DIR = process.env.QBO_PROFILE_DIR || 'tmp/qbo-automation/profile';
 const SHOTS_DIR = process.env.QBO_SHOTS_DIR || 'tmp/qbo-automation/shots';
 const OP_TOTP_REF = process.env.QBO_OP_TOTP_REF
-  || 'op://EquipQR Agents/quickbooks-developer/one-time password?attribute=otp';
+  || 'op://ZNTEQR Agents/quickbooks-developer/one-time password?attribute=otp';
 mkdirSync(SHOTS_DIR, { recursive: true });
 
 function freshOtp() {

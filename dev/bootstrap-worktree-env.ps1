@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Copies env files from your canonical EquipQR checkout into the current git worktree.
+    Copies env files from your canonical ZNTEQR checkout into the current git worktree.
 
 .DESCRIPTION
     Git worktrees (including Cursor-managed folders) share history but not ignored files.
@@ -20,11 +20,11 @@
     Requires source and target on the same volume.
 
 .EXAMPLE
-    cd C:\Users\viral\.cursor\worktrees\EquipQR\mywt
-    powershell -NoProfile -ExecutionPolicy Bypass -File ..\..\..\..\..\EquipQR\dev\bootstrap-worktree-env.ps1
+    cd C:\Users\viral\.cursor\worktrees\ZNTEQR\mywt
+    powershell -NoProfile -ExecutionPolicy Bypass -File ..\..\..\..\..\ZNTEQR\dev\bootstrap-worktree-env.ps1
 
 .EXAMPLE
-    .\dev\bootstrap-worktree-env.ps1 -SourceRoot C:\Users\viral\EquipQR -InstallDeps
+    .\dev\bootstrap-worktree-env.ps1 -SourceRoot C:\Users\viral\ZNTEQR -InstallDeps
 #>
 [CmdletBinding()]
 param(
@@ -142,9 +142,9 @@ if ([string]::IsNullOrWhiteSpace($resolvedSource)) {
 No source checkout found with a .env file.
 
 Set the canonical repo explicitly:
-  -SourceRoot C:\path\to\EquipQR
+  -SourceRoot C:\path\to\ZNTEQR
 or environment variable (User or Machine):
-  EQUIPQR_MAIN_REPO=C:\path\to\EquipQR
+  EQUIPQR_MAIN_REPO=C:\path\to\ZNTEQR
 
 Refresh secrets in that checkout first (e.g. .\dev\dev-start.bat with 1Password), then re-run this script.
 "@

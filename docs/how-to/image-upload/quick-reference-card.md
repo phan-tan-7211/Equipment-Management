@@ -1,4 +1,4 @@
-# EquipQR image upload, quick reference
+# ZNTEQR image upload, quick reference
 
 ## Quick start
 

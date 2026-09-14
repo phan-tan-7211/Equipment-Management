@@ -39,7 +39,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
         if (!newWorker) return;
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            toast('A new version of EquipQR is available.', {
+            toast('A new version of ZNTEQR is available.', {
               duration: Infinity,
               action: {
                 label: 'Refresh',

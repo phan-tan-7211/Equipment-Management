@@ -674,7 +674,7 @@ export class WorkOrderFieldWorksheetPDFGenerator {
     this.doc.setTextColor(120, 120, 120);
 
     const reentryNameEnd = this.margin + this.contentWidth * 0.6;
-    this.addLabeledField('Entered into EquipQR By:', this.margin + 2, reentryNameEnd, this.textLayout.yPosition);
+    this.addLabeledField('Entered into ZNTEQR By:', this.margin + 2, reentryNameEnd, this.textLayout.yPosition);
     this.addLabeledField('Entry Date:', reentryNameEnd + 4, this.pageWidth - this.margin, this.textLayout.yPosition);
 
     this.doc.setTextColor(0, 0, 0);

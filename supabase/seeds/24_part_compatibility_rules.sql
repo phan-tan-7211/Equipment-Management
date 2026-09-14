@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Part Compatibility Rules
+-- ZNTEQR Seed Data - Part Compatibility Rules
 -- =====================================================
 -- Links inventory parts to equipment by manufacturer/model patterns
 -- These rules determine which parts are suggested for equipment in:

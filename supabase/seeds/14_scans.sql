@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - QR Code Scans
+-- ZNTEQR Seed Data - QR Code Scans
 -- =====================================================
 -- Scan history showing equipment location and usage
 

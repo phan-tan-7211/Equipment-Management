@@ -1,6 +1,6 @@
 # Developer Setup Guide
 
-This guide combines quick start instructions, environment configuration, and troubleshooting to help you get up and running with EquipQR™ development quickly.
+This guide combines quick start instructions, environment configuration, and troubleshooting to help you get up and running with ZNTEQR™ development quickly.
 
 ## Quick Start (5-Minute Setup)
 
@@ -31,7 +31,7 @@ This runs `stop-dev-and-e2e`, kills repo-scoped Vite/Vitest tooling, retries `np
 
 ### 3. Environment Setup (1Password Preferred)
 
-If you have access to the EquipQR Agents 1Password vault, use `dev-start.bat` as the default setup path. It syncs app `.env` from the editable `app-env-local-dev` item and Edge Function `supabase/functions/.env` from the editable `edge-env-local-dev` item automatically.
+If you have access to the ZNTEQR Agents 1Password vault, use `dev-start.bat` as the default setup path. It syncs app `.env` from the editable `app-env-local-dev` item and Edge Function `supabase/functions/.env` from the editable `edge-env-local-dev` item automatically.
 
 ```powershell
 # Optional: verify 1Password CLI is available
@@ -77,7 +77,7 @@ Visit `http://localhost:8080` to see the application running!
 
 ### Environment Variable Categories
 
-EquipQR uses three categories of environment variables:
+ZNTEQR uses three categories of environment variables:
 
 | Category | Prefix | Where to Set | Access |
 |----------|--------|--------------|--------|
@@ -121,7 +121,7 @@ VITE_GOOGLE_PICKER_APP_ID=your-google-cloud-project-number
 
 Edge Functions require secrets configured in the Supabase Dashboard. See the complete reference:
 
-👉 **[Supabase Branch Secrets Configuration](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/supabase-branch-secrets.md)**
+👉 **[Supabase Branch Secrets Configuration](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/supabase-branch-secrets.md)**
 
 Key secrets include:
 
@@ -147,13 +147,13 @@ SUPABASE_ANON_KEY=<local-anon-key>
 # Add integration secrets as needed (see .env.example for full list)
 ```
 
-See **[Local Supabase Development Guide](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/local-supabase-development.md)** for complete setup instructions.
+See **[Local Supabase Development Guide](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/local-supabase-development.md)** for complete setup instructions.
 
 ### Setting Up Supabase
 
 > **⚠️ IMPORTANT: Local Supabase is the standard development method.**
 > 
-> All database development should be done locally first, then deployed to production. See [Local Supabase Development Guide](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/local-supabase-development.md) for complete setup instructions.
+> All database development should be done locally first, then deployed to production. See [Local Supabase Development Guide](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/local-supabase-development.md) for complete setup instructions.
 
 **For local development (recommended):**
 
@@ -195,7 +195,7 @@ Before you begin, ensure you have the following installed on your development ma
 
 ### Required Software
 
-- **Node.js** — must satisfy `engines.node` in the root [`package.json`](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/package.json) (currently **Node 24.x LTS**). We recommend the latest **24.x** LTS release for local development. [Download here](https://nodejs.org/)
+- **Node.js** — must satisfy `engines.node` in the root [`package.json`](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/package.json) (currently **Node 24.x LTS**). We recommend the latest **24.x** LTS release for local development. [Download here](https://nodejs.org/)
 - **npm** (comes with Node.js) - We use npm exclusively (no yarn/pnpm/bun)
 - **Docker Desktop** — required for local Supabase ([download here](https://www.docker.com/products/docker-desktop)); `dev-start.ps1` checks `docker` on `PATH` and that the daemon is reachable
 - **Git** - [Download here](https://git-scm.com/)
@@ -300,7 +300,7 @@ A [git worktree](https://git-scm.com/docs/git-worktree) is a second checkout of 
 
 A Cursor-linked worktree is **not** a request to publish. Prefer the canonical clone for local iteration. Do not open a PR just because the session landed in a worktree.
 
-**Workflow:** Keep one canonical clone (for example `C:\Users\viral\EquipQR`) where you run `.\dev\dev-start.bat` so env files exist on disk. In any other worktree, bootstrap once:
+**Workflow:** Keep one canonical clone (for example `C:\Users\viral\ZNTEQR`) where you run `.\dev\dev-start.bat` so env files exist on disk. In any other worktree, bootstrap once:
 
 ```powershell
 # From inside the worktree (any subfolder is fine if git sees the repo)
@@ -310,8 +310,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\dev\bootstrap-worktree-env
 The script picks a source checkout automatically: another worktree of this repo that already has `.env`, preferring a path **not** under `.cursor\worktrees`. You can pin the source explicitly:
 
 ```powershell
-$env:EQUIPQR_MAIN_REPO = "C:\Users\viral\EquipQR"   # optional persistent default
-.\dev\bootstrap-worktree-env.ps1 -SourceRoot "C:\Users\viral\EquipQR" -InstallDeps
+$env:EQUIPQR_MAIN_REPO = "C:\Users\viral\ZNTEQR"   # optional persistent default
+.\dev\bootstrap-worktree-env.ps1 -SourceRoot "C:\Users\viral\ZNTEQR" -InstallDeps
 ```
 
 Use `-UseHardLink` if you want the worktree to share the same files as the source (same drive; edits apply to both). Otherwise the default is **copy**.
@@ -564,7 +564,7 @@ describe('EquipmentCard', () => {
    npx supabase db push --linked
    ```
 
-**Note**: See [Local Supabase Development Guide](https://github.com/Columbia-Cloudworks-LLC/EquipQR/blob/main/docs/ops/local-supabase-development.md) for detailed setup instructions.
+**Note**: See [Local Supabase Development Guide](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/local-supabase-development.md) for detailed setup instructions.
 
 ## Troubleshooting Common Issues
 
@@ -771,5 +771,5 @@ npm run size-check    # Check bundle size
 4. **Make a Small Change**: Try updating a component or adding a new feature
 5. **Join the Team**: Participate in code reviews and team discussions
 
-Welcome to the EquipQR™ development team!
+Welcome to the ZNTEQR™ development team!
 

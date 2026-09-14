@@ -63,7 +63,7 @@ If none apply, **do not** stop for a plan — proceed directly to implementation
 - [ ] Step 9: Watch PR checks until green; fix forward if any fail
 ```
 
-### Script helpers (EquipQR repository)
+### Script helpers (ZNTEQR repository)
 
 From the repo root, prefer the shared PowerShell drivers:
 

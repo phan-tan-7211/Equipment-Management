@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────────────────────
-# EquipQR — Cursor Cloud Agent bootstrap (Linux)
+# ZNTEQR — Cursor Cloud Agent bootstrap (Linux)
 #
 # Runs once per cold-boot of a Cursor Cloud Agent VM (called from
 # .cursor/environment.json `install` hook). Idempotent.
@@ -10,7 +10,7 @@
 #      Cursor Cloud Agent dashboard).
 #   2. Install 1Password CLI (`op`) via APT if missing.
 #   3. Render the local app .env and supabase/functions/.env from the
-#      EquipQR Agents 1Password vault.
+#      ZNTEQR Agents 1Password vault.
 #   4. Render the GCP service-account JSON for the gcloud MCP.
 #   5. Pre-warm `npx @google-cloud/gcloud-mcp` so first MCP invocation is fast.
 #
@@ -106,11 +106,11 @@ else
 fi
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 3. Render local app .env from EquipQR Agents vault
+# 3. Render local app .env from ZNTEQR Agents vault
 # ──────────────────────────────────────────────────────────────────────────────
-log "[3/5] Rendering .env files from EquipQR Agents vault..."
+log "[3/5] Rendering .env files from ZNTEQR Agents vault..."
 
-OP_VAULT='tgo2m6qbct5otqeqirjocn3joa'  # EquipQR Agents
+OP_VAULT='tgo2m6qbct5otqeqirjocn3joa'  # ZNTEQR Agents
 
 env_file_value() {
     local file_path="$1"
@@ -176,7 +176,7 @@ render_section_item() {
 
     if ! op item get "$item_name" --vault "$OP_VAULT" --format json > "$item_json" 2>/dev/null; then
         rm -f "$item_json" "$target_tmp"
-        warn "1Password item '${item_name}' not found in EquipQR Agents vault."
+        warn "1Password item '${item_name}' not found in ZNTEQR Agents vault."
         warn "  Skipping ${target_path}."
         return 1
     fi
@@ -239,7 +239,7 @@ render_dotenv_item() {
         ok "Rendered ${target_path} (${lines} env keys)"
         return 0
     else
-        warn "1Password item '${item_name}' not found in EquipQR Agents vault."
+        warn "1Password item '${item_name}' not found in ZNTEQR Agents vault."
         warn "  Create it (item type: API Credential) with a multi-line custom field named '${field_name}' containing the dotenv content."
         warn "  Skipping ${target_path}."
         return 1
@@ -333,7 +333,7 @@ NODE
         warn "Could not read valid GCP SA JSON from '${GCP_ITEM_NAME}/SERVICE_ACCOUNT_JSON' or '${GCP_ITEM_NAME}/credential'. SA JSON not written."
     fi
 else
-    warn "Neither 1Password item 'gcp-read' nor legacy item 'gcp-viewer' was found in EquipQR Agents vault. gcloud MCP will fail until the viewer service-account JSON is present."
+    warn "Neither 1Password item 'gcp-read' nor legacy item 'gcp-viewer' was found in ZNTEQR Agents vault. gcloud MCP will fail until the viewer service-account JSON is present."
 fi
 
 # ──────────────────────────────────────────────────────────────────────────────

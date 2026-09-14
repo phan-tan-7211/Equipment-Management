@@ -21,7 +21,7 @@ Deno.test("estimateDecodedSize approximates base64 payload size", () => {
 });
 
 Deno.test("decodeBase64Content round-trips simple payloads", () => {
-  const original = "EquipQR upload";
+  const original = "ZNTEQR upload";
   const encoded = btoa(original);
   const decoded = decodeBase64Content(encoded);
   assertEquals(new TextDecoder().decode(decoded), original);

@@ -13,7 +13,7 @@ export async function uploadToDrive(
   mimeType: string,
   parentId?: string,
 ): Promise<DriveFileResponse> {
-  const boundary = "----EquipQRUploadBoundary" + Date.now();
+  const boundary = "----ZNTEQRUploadBoundary" + Date.now();
 
   const metadata: { name: string; mimeType: string; parents?: string[] } = {
     name: filename,

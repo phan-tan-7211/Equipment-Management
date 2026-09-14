@@ -8,7 +8,7 @@ personas: ["all"]
 **For:** Everyone  
 **Last reviewed:** 2026-05-01
 
-::: tip In the EquipQR app
+::: tip In the ZNTEQR app
 This workflow runs on the signed-in support page: [https://equipqr.app/dashboard/support](https://equipqr.app/dashboard/support).
 :::
 
@@ -22,7 +22,7 @@ Tickets appear on the Support page below Get Help. Click a ticket to expand it a
 
 ## 3. Watch for live updates
 
-When the EquipQR team comments or closes the ticket, the row updates in real time. The status badge (Open / In Progress / Closed) mirrors GitHub.
+When the ZNTEQR team comments or closes the ticket, the row updates in real time. The status badge (Open / In Progress / Closed) mirrors GitHub.
 
 ## Related articles
 

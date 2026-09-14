@@ -4,7 +4,7 @@
 **Total Items:** 51  
 **Sections:** 9
 
-51 items. Default EquipQR template for pull trailers.
+51 items. Default ZNTEQR template for pull trailers.
 
 ---
 

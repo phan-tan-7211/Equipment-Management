@@ -192,7 +192,7 @@ export async function replaceQuickBooksExternalContacts(
 }
 
 /**
- * Import a QuickBooks customer as a new EquipQR customer account.
+ * Import a QuickBooks customer as a new ZNTEQR customer account.
  * Returns the created customer row.
  */
 export async function importCustomerFromQB(
@@ -248,7 +248,7 @@ export async function importCustomerFromQB(
 
 /**
  * Refresh QB-sourced fields on an existing customer without overwriting
- * EquipQR-only fields (name, notes, account_owner_id, status).
+ * ZNTEQR-only fields (name, notes, account_owner_id, status).
  */
 /**
  * Point an existing customer account at a different QuickBooks customer and

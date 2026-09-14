@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const APP_NAME = 'EquipQR';
+const APP_NAME = 'ZNTEQR';
 
 /**
  * Sets the document title for the current page.

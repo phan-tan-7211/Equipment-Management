@@ -3,7 +3,7 @@ import { evidenceScreenshot, evidencePause } from './shared/evidence-helpers';
 
 /**
  * PR evidence for #1378 — TopBar user menu shows resolved avatar
- * (EquipQR upload override, Google metadata fallback, or initials).
+ * (ZNTEQR upload override, Google metadata fallback, or initials).
  */
 test.describe('PR evidence user menu avatar @pr-evidence', () => {
   test('user menu trigger and open menu show avatar chrome', async ({

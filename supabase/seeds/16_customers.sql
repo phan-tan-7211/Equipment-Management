@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Customers (For Industrial Rentals)
+-- ZNTEQR Seed Data - Customers (For Industrial Rentals)
 -- =====================================================
 -- Customer records for the rental business scenario
 

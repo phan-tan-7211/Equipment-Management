@@ -138,7 +138,7 @@ export const showcases: ShowcaseItem[] = [
   {
     kind: 'demo-video',
     baseName: 'mobile_create_pm',
-    alt: 'Animated mobile demo showing a technician creating a preventative maintenance checklist in EquipQR',
+    alt: 'Animated mobile demo showing a technician creating a preventative maintenance checklist in ZNTEQR',
     title: 'Create a PM Checklist from a Phone',
     description:
       'Build a preventative maintenance checklist on a phone from the field. Pick a template, attach it to a work order, and start ticking off items with large touch-friendly controls. No laptop required.',

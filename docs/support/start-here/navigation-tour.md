@@ -39,5 +39,5 @@ If you do not see PM Templates in the sidebar, DSR Cockpit under Legal / Setting
 
 ## Related articles
 
-- [Role overview for EquipQR](./role-overview)
+- [Role overview for ZNTEQR](./role-overview)
 - [Check system status](../privacy-support/system-status)

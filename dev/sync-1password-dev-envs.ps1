@@ -49,7 +49,7 @@ function Add-EnvLines {
 function Read-OpItemEnvLines {
     param([string]$Item)
 
-    $opOutput = & op item get $Item --vault "EquipQR Agents" --format json 2>$null
+    $opOutput = & op item get $Item --vault "ZNTEQR Agents" --format json 2>$null
     if ($LASTEXITCODE -ne 0) {
         return @{ Ok = $false; ExitCode = $LASTEXITCODE; Lines = @(); Reason = 'op item get failed' }
     }

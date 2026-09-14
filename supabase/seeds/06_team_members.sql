@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Team Members
+-- ZNTEQR Seed Data - Team Members
 -- =====================================================
 -- Assigns users to teams with appropriate roles
 -- Team roles: owner, manager, technician, requestor, viewer

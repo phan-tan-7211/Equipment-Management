@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Work Orders (Various Statuses)
+-- ZNTEQR Seed Data - Work Orders (Various Statuses)
 -- =====================================================
 -- Work orders in all statuses for testing workflow transitions
 -- Includes: submitted, accepted, assigned, in_progress, on_hold, completed, cancelled

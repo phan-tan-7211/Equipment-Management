@@ -76,7 +76,7 @@ function Receive-JobOutput {
     Receive-Job -Job $Job -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
 }
 
-Write-Host "[EquipQR] Edge Functions serve starting"
+Write-Host "[ZNTEQR] Edge Functions serve starting"
 
 if (-not (Test-Path -LiteralPath $EDGE_ENV_FILE)) {
     Write-Host "FAIL: Edge env file does not exist: $EDGE_ENV_FILE"
@@ -101,7 +101,7 @@ try {
 if (Test-EdgeFunctionsServeRunning) {
     Write-Host "        Edge Functions serve already running."
     Invoke-KongUpstreamRefresh
-    Write-Host "[EquipQR] Edge Functions ready"
+    Write-Host "[ZNTEQR] Edge Functions ready"
     Write-Host "        Attach to the existing serve process or run dev-stop before restarting."
     exit 0
 }
@@ -134,7 +134,7 @@ if (-not $edgeUp) {
 }
 
 Invoke-KongUpstreamRefresh
-Write-Host "[EquipQR] Edge Functions ready"
+Write-Host "[ZNTEQR] Edge Functions ready"
 
 try {
     while ((Get-Job -Id $edgeJob.Id -ErrorAction SilentlyContinue).State -eq 'Running') {

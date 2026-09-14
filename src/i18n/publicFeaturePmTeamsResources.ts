@@ -29,7 +29,7 @@ export const publicFeaturePmTeamsResources = {
           getFeatureSeoByPath('/features/team-collaboration')!),
         extra: {
           title: 'Roles & Permissions',
-          description: 'EquipQR uses a two-tier role system: organization-level roles that govern your whole account, and team-level roles that control access within each team.',
+          description: 'ZNTEQR uses a two-tier role system: organization-level roles that govern your whole account, and team-level roles that control access within each team.',
           orgTitle: 'Organization Roles', orgSubtitle: 'Set once per member when they join your organization.',
           teamTitle: 'Team Roles', teamSubtitle: 'Assigned independently per team, giving fine-grained control within each crew.',
           orgRoles: [
@@ -68,14 +68,14 @@ export const publicFeaturePmTeamsResources = {
           ['Hồ sơ lâu dài', 'Khi lệnh công việc hoàn tất, danh sách kiểm tra bảo dưỡng trở thành hồ sơ lâu dài. Xem chi tiết bất kỳ lúc nào từ lịch sử lệnh hoặc hồ sơ dịch vụ thiết bị.'],
         ],
         showcases: [
-          ['Video di động mô tả kỹ thuật viên tạo danh sách kiểm tra bảo dưỡng trong EquipQR', 'Tạo danh sách kiểm tra trên điện thoại', 'Tạo danh sách kiểm tra bảo dưỡng tại hiện trường bằng điện thoại. Chọn mẫu, gắn vào lệnh công việc và đánh dấu các mục bằng nút dễ chạm. Không cần máy tính xách tay.'],
+          ['Video di động mô tả kỹ thuật viên tạo danh sách kiểm tra bảo dưỡng trong ZNTEQR', 'Tạo danh sách kiểm tra trên điện thoại', 'Tạo danh sách kiểm tra bảo dưỡng tại hiện trường bằng điện thoại. Chọn mẫu, gắn vào lệnh công việc và đánh dấu các mục bằng nút dễ chạm. Không cần máy tính xách tay.'],
           ['Danh sách sáu mẫu bảo dưỡng định kỳ có sẵn gồm xe nâng, máy đào và xe nâng cắt kéo', 'Duyệt mẫu có sẵn', 'Xem toàn bộ mẫu bảo dưỡng trong tổ chức. Mỗi thẻ hiển thị tên, mô tả, số nhóm và thao tác nhanh như Áp dụng cho thiết bị, Sao chép hoặc Cấu hình.'],
           ['Chi tiết mẫu bảo dưỡng xe nâng gồm 12 nhóm và 103 mục kiểm tra', 'Xem chi tiết mẫu', 'Mở mẫu để xem cấu trúc đầy đủ. Mẫu xe nâng có 12 nhóm và 103 mục gồm kiểm tra trực quan, động cơ, thủy lực, phanh, hệ thống điện và nhiều phần khác.'],
         ],
         seo: [
           'Mẫu bảo dưỡng và danh sách kiểm tra thiết bị hạng nặng', 'Dùng mẫu bảo dưỡng có cấu trúc cho xe nâng, máy đào, thiết bị nâng, rơ-moóc và các máy khác. Gắn vào lệnh công việc để kiểm tra nhất quán.',
           'Mẫu bảo dưỡng', 'Mẫu bảo dưỡng và danh sách kiểm tra thiết bị hạng nặng', 'Gắn mẫu bảo dưỡng cho nhiều loại máy vào lệnh công việc để kiểm tra nhất quán.',
-          'Có sẵn những mẫu thiết bị nào?', 'EquipQR có mẫu cho xe nâng, máy đào, xe nâng cắt kéo, máy xúc trượt, rơ-moóc và máy nén khí; mỗi mẫu được chia thành các nhóm kiểm tra.',
+          'Có sẵn những mẫu thiết bị nào?', 'ZNTEQR có mẫu cho xe nâng, máy đào, xe nâng cắt kéo, máy xúc trượt, rơ-moóc và máy nén khí; mỗi mẫu được chia thành các nhóm kiểm tra.',
           'Có thể cập nhật mẫu theo thời gian không?', 'Quản trị viên tổ chức có thể sao chép, chỉnh sửa và ngừng dùng mẫu mà vẫn giữ hồ sơ bảo dưỡng cũ trên lệnh đã đóng.',
           'Mẫu có bắt buộc ảnh làm bằng chứng không?', 'Nhân viên đính kèm ảnh theo chính sách danh sách kiểm tra bằng tính năng ảnh hiện có gắn với lệnh công việc.',
           'Cách gắn mẫu bảo dưỡng vào lệnh công việc', 'Gắn mẫu bảo dưỡng vào lệnh công việc và thực hiện danh sách kiểm tra trên lệnh đó.',
@@ -122,11 +122,11 @@ export const publicFeaturePmTeamsResources = {
           'Nhóm và vai trò', 'Vai trò và cộng tác nhóm cho tổ chức quản lý thiết bị', 'Vai trò tổ chức và nhóm kiểm soát quyền xem; mỗi thao tác được ghi nhận.',
           'Vai trò Người yêu cầu là gì?', 'Người yêu cầu là người được tin cậy, có thể dùng QR để gửi yêu cầu công việc mà không cần toàn bộ quyền của kỹ thuật viên.',
           'Nhóm có thể tách phạm vi thiết bị không?', 'Có. Gán thiết bị và lệnh công việc theo từng nhóm để nhóm khu vực chỉ tương tác với đội máy của mình.',
-          'Có nhật ký kiểm toán không?', 'Các thao tác nhạy cảm được gắn với người thực hiện qua tính năng kiểm toán EquipQR cho quản trị viên.',
-          'Cách các nhóm cộng tác trong EquipQR', 'Nhóm kết nối con người, thiết bị và lệnh công việc ở một nơi.',
+          'Có nhật ký kiểm toán không?', 'Các thao tác nhạy cảm được gắn với người thực hiện qua tính năng kiểm toán ZNTEQR cho quản trị viên.',
+          'Cách các nhóm cộng tác trong ZNTEQR', 'Nhóm kết nối con người, thiết bị và lệnh công việc ở một nơi.',
         ],
         extra: {
-          title: 'Vai trò và quyền', description: 'EquipQR có hai cấp vai trò: vai trò tổ chức quản lý toàn bộ tài khoản và vai trò nhóm kiểm soát quyền truy cập trong từng nhóm.',
+          title: 'Vai trò và quyền', description: 'ZNTEQR có hai cấp vai trò: vai trò tổ chức quản lý toàn bộ tài khoản và vai trò nhóm kiểm soát quyền truy cập trong từng nhóm.',
           orgTitle: 'Vai trò tổ chức', orgSubtitle: 'Đặt một lần cho mỗi người khi tham gia tổ chức.',
           teamTitle: 'Vai trò nhóm', teamSubtitle: 'Gán độc lập theo từng nhóm để kiểm soát quyền chi tiết.',
           orgRoles: [
@@ -165,7 +165,7 @@ export const publicFeaturePmTeamsResources = {
           ['영구 기록', '작업 지시를 완료하면 예방 정비 점검표가 영구 기록이 됩니다. 작업 이력이나 장비 서비스 기록에서 상세 내용을 언제든 확인하세요.'],
         ],
         showcases: [
-          ['기술자가 휴대폰에서 EquipQR 예방 정비 점검표를 만드는 애니메이션', '휴대폰에서 예방 정비 점검표 만들기', '현장에서 휴대폰으로 예방 정비 점검표를 만드세요. 템플릿을 작업 지시에 연결하고 터치하기 쉬운 버튼으로 항목을 처리할 수 있습니다. 노트북은 필요하지 않습니다.'],
+          ['기술자가 휴대폰에서 ZNTEQR 예방 정비 점검표를 만드는 애니메이션', '휴대폰에서 예방 정비 점검표 만들기', '현장에서 휴대폰으로 예방 정비 점검표를 만드세요. 템플릿을 작업 지시에 연결하고 터치하기 쉬운 버튼으로 항목을 처리할 수 있습니다. 노트북은 필요하지 않습니다.'],
           ['지게차, 굴착기, 시저 리프트를 포함한 기본 예방 정비 템플릿 6개 목록', '사용 가능한 템플릿 보기', '조직의 예방 정비 템플릿을 확인하세요. 각 카드에는 이름, 설명, 구역 수 및 장비에 적용, 복제, 설정 등의 빠른 작업이 표시됩니다.'],
           ['12개 구역과 103개 점검 항목이 있는 지게차 예방 정비 템플릿 상세', '템플릿 상세 보기', '템플릿의 전체 구조를 확인하세요. 지게차 템플릿은 육안 검사, 엔진, 유압, 브레이크 및 전기 시스템 등 12개 구역, 103개 항목으로 구성됩니다.'],
         ],
@@ -174,7 +174,7 @@ export const publicFeaturePmTeamsResources = {
           '예방 정비 템플릿', '중장비 예방 정비 템플릿 및 점검표', '여러 장비의 예방 정비 템플릿을 작업 지시에 연결해 일관되게 점검하세요.',
           '어떤 장비 템플릿이 기본으로 제공되나요?', '지게차, 굴착기, 시저 리프트, 스키드 스티어, 트레일러 및 압축기용 기본 템플릿이 제공되며 점검 구역별로 구성됩니다.',
           '템플릿을 나중에 변경할 수 있나요?', '조직 관리자는 완료된 작업의 과거 예방 정비 기록을 유지하면서 템플릿을 복제, 개선하거나 사용 중지할 수 있습니다.',
-          '예방 정비 템플릿에 사진 증빙이 필수인가요?', '작업자는 작업 지시와 연결된 기존 EquipQR 미디어 기능을 사용해 점검 정책에 따라 사진을 첨부합니다.',
+          '예방 정비 템플릿에 사진 증빙이 필수인가요?', '작업자는 작업 지시와 연결된 기존 ZNTEQR 미디어 기능을 사용해 점검 정책에 따라 사진을 첨부합니다.',
           '예방 정비 템플릿을 작업 지시에 연결하는 방법', '예방 정비 템플릿을 작업 지시에 연결하고 해당 작업에서 점검표를 완료하세요.',
         ],
         extra: {
@@ -219,11 +219,11 @@ export const publicFeaturePmTeamsResources = {
           '팀과 역할', '장비 조직을 위한 팀 역할과 협업', '조직 및 팀 역할로 조회 범위를 관리하고 각 작업의 수행자를 추적하세요.',
           '요청자 역할은 무엇인가요?', '요청자는 신뢰할 수 있는 고객 측 팀원으로, 기술자 전체 권한 없이 QR 기반 접수로 작업을 요청할 수 있습니다.',
           '팀별로 장비 범위를 분리할 수 있나요?', '예. 팀마다 장비와 작업 지시 범위를 할당해 지역 팀이 담당 장비에만 접근하도록 할 수 있습니다.',
-          '감사 로그를 사용할 수 있나요?', '민감한 작업은 관리자가 접근 가능한 EquipQR 감사 화면을 통해 수행자를 확인할 수 있습니다.',
-          'EquipQR 팀 협업 방법', '팀은 사람, 장비 및 작업 지시를 한곳에 연결합니다.',
+          '감사 로그를 사용할 수 있나요?', '민감한 작업은 관리자가 접근 가능한 ZNTEQR 감사 화면을 통해 수행자를 확인할 수 있습니다.',
+          'ZNTEQR 팀 협업 방법', '팀은 사람, 장비 및 작업 지시를 한곳에 연결합니다.',
         ],
         extra: {
-          title: '역할과 권한', description: 'EquipQR은 전체 계정을 관리하는 조직 역할과 각 팀 내 접근을 관리하는 팀 역할의 두 단계 권한을 사용합니다.',
+          title: '역할과 권한', description: 'ZNTEQR은 전체 계정을 관리하는 조직 역할과 각 팀 내 접근을 관리하는 팀 역할의 두 단계 권한을 사용합니다.',
           orgTitle: '조직 역할', orgSubtitle: '구성원이 조직에 참여할 때 한 번 설정합니다.',
           teamTitle: '팀 역할', teamSubtitle: '팀마다 독립적으로 지정해 구성원별로 세밀하게 제어합니다.',
           orgRoles: [

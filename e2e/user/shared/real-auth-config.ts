@@ -6,7 +6,7 @@ const TRUTHY = new Set(['1', 'true', 'yes', 'on']);
 /** Default captured storage file for Google sign-in + Workspace flows on local dev. */
 export const DEFAULT_GOOGLE_WORKSPACE_LOCAL_AUTH_PATH = 'tmp/playwright/auth/google-workspace-local.json';
 
-/** Default EquipQR session replay file after local QuickBooks Connect capture. */
+/** Default ZNTEQR session replay file after local QuickBooks Connect capture. */
 export const DEFAULT_QUICKBOOKS_LOCAL_AUTH_PATH = 'tmp/playwright/auth/quickbooks-local.json';
 
 /** Default Intuit Developer Portal session for agent browser replay. */
@@ -24,7 +24,7 @@ export function resolveGoogleWorkspaceAuthStoragePath(): string {
   return path.resolve(relative);
 }
 
-/** Path where local QuickBooks Connect capture writes EquipQR session storage state. */
+/** Path where local QuickBooks Connect capture writes ZNTEQR session storage state. */
 export function resolveQuickBooksLocalAuthStoragePath(): string {
   const raw = process.env.E2E_QB_LOCAL_AUTH_STORAGE_STATE?.trim();
   const relative = raw || DEFAULT_QUICKBOOKS_LOCAL_AUTH_PATH;

@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Environment Safeguard
+-- ZNTEQR Seed Data - Environment Safeguard
 -- =====================================================
 -- This file verifies we're running in a local development environment.
 --

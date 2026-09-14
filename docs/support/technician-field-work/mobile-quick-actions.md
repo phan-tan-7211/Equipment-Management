@@ -13,7 +13,7 @@ requirement: "Available on phones (small screens). Actions respect your normal p
 Available on phones (small screens). Actions respect your normal permissions.
 :::
 
-On mobile, EquipQR consolidates each page's contextual actions behind one **quick access button** so you are not hunting through menus with one hand on a ladder.
+On mobile, ZNTEQR consolidates each page's contextual actions behind one **quick access button** so you are not hunting through menus with one hand on a ladder.
 
 ## Equipment details
 

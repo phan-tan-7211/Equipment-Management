@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Equipment Part Compatibility (Direct Links)
+-- ZNTEQR Seed Data - Equipment Part Compatibility (Direct Links)
 -- =====================================================
 -- Links inventory items to specific equipment pieces
 

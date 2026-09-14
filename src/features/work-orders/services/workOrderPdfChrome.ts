@@ -14,7 +14,7 @@ export interface WorkOrderPdfPageLayout {
 export type WorkOrderPdfFooterVariant = 'report' | 'fieldWorksheet';
 
 const FIELD_WORKSHEET_DISCLAIMER =
-  'Field worksheet only \u2014 all results must be entered into EquipQR as the official record';
+  'Field worksheet only \u2014 all results must be entered into ZNTEQR as the official record';
 
 /** Format work order UUID for printed PDF identity lines (first4...last4). */
 export function formatWorkOrderIdForPdf(id: string): string {

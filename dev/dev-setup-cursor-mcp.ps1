@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Render Cursor MCP configuration from the EquipQR 1Password vault.
+  Render Cursor MCP configuration from the ZNTEQR 1Password vault.
 
 .DESCRIPTION
   Runs dev/render-mcp-config.ps1 outside of dev-start so local stack startup
@@ -49,7 +49,7 @@ if (-not (Test-Path -LiteralPath $renderScript)) {
 
 Write-Host ""
 Write-Host " ============================================"
-Write-Host "  EquipQR Cursor MCP Setup"
+Write-Host "  ZNTEQR Cursor MCP Setup"
 Write-Host " ============================================"
 Write-Host ""
 

@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Organizations
+-- ZNTEQR Seed Data - Organizations
 -- =====================================================
 -- 8 Organizations: 4 business orgs + 4 personal orgs (every user owns one org)
 

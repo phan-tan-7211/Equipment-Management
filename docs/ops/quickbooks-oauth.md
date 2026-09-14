@@ -40,7 +40,7 @@ Client-side: align `VITE_INTUIT_CLIENT_ID` in `app-env-preview-public` with `INT
 
 **OAuth redirect URI (derived — do not set separate redirect base secrets)**
 
-EquipQR derives the QuickBooks OAuth callback from the canonical Supabase URL:
+ZNTEQR derives the QuickBooks OAuth callback from the canonical Supabase URL:
 
 - Browser: `VITE_SUPABASE_URL`
 - Edge token exchange: `SUPABASE_URL`
@@ -85,7 +85,7 @@ Configure separately for each environment (preview, production).
 
 ## Invoice line items and Edge Function secrets
 
-Pre-create **Labor** as a **Service** item and **Parts** as a **Non-inventory** item in QuickBooks **Products & services**, or allow EquipQR to auto-create them when missing.
+Pre-create **Labor** as a **Service** item and **Parts** as a **Non-inventory** item in QuickBooks **Products & services**, or allow ZNTEQR to auto-create them when missing.
 
 Optional Edge Function secrets (Supabase → Edge Functions → Secrets):
 
@@ -173,7 +173,7 @@ Item resolution behavior:
 **"Could not find or create a valid Service Item" / income account errors**
 - Ensure your QuickBooks company has at least one active **Income** account
 - Optionally set `QBO_INVOICE_ITEM_INCOME_ACCOUNT_ID` or `QBO_INVOICE_ITEM_INCOME_ACCOUNT_NAME` so auto-created **Labor** / **Parts** items attach to the correct account
-- Confirm **Labor** and **Parts** products exist (or allow EquipQR to create them)
+- Confirm **Labor** and **Parts** products exist (or allow ZNTEQR to create them)
 
 ### API rate limits
 

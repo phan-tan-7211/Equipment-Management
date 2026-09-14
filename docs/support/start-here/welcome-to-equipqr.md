@@ -1,13 +1,13 @@
 ---
-title: "Welcome to EquipQR"
-description: "A 60-second overview of what EquipQR does and where each team role spends their time."
+title: "Welcome to ZNTEQR"
+description: "A 60-second overview of what ZNTEQR does and where each team role spends their time."
 lastReviewed: 2026-07-06
 personas: ["all"]
 ---
 
 **For:** Everyone  
 **Last reviewed:** 2026-07-06
-EquipQR is a multi-tenant fleet equipment management platform for field technicians, shop managers, and the customers who own the equipment. The platform pairs each piece of equipment with a durable QR code so anyone with permission can scan it and get straight to the record, work orders, and maintenance history.
+ZNTEQR is a multi-tenant fleet equipment management platform for field technicians, shop managers, and the customers who own the equipment. The platform pairs each piece of equipment with a durable QR code so anyone with permission can scan it and get straight to the record, work orders, and maintenance history.
 
 ![Signed-in dashboard home](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/01-dashboard-welcome.png)
 
@@ -41,4 +41,4 @@ The rest of the support library walks through each of those pieces in detail. If
 
 - [Find your way around the app](./navigation-tour)
 - [Invite your team](./invite-team-members)
-- [Role overview for EquipQR](./role-overview)
+- [Role overview for ZNTEQR](./role-overview)

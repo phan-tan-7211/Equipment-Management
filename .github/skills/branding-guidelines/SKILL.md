@@ -1,16 +1,16 @@
 ---
 name: brand-guidelines
-description: Applies EquipQR's brand colors and design-system tokens to any artifact that should match EquipQR's look-and-feel. Use it when brand colors, style guidelines, visual formatting, or EquipQR design standards apply.
+description: Applies ZNTEQR's brand colors and design-system tokens to any artifact that should match ZNTEQR's look-and-feel. Use it when brand colors, style guidelines, visual formatting, or ZNTEQR design standards apply.
 license: Complete terms in LICENSE.txt
 ---
 
-# EquipQR Brand Styling
+# ZNTEQR Brand Styling
 
 ## Overview
 
-Use this skill whenever Cursor should style an output to look like **EquipQR** (docs, UI mockups, slide decks, diagrams, emails, etc.). It summarizes the **source-of-truth design tokens** used by the EquipQR app so outputs stay consistent with the product.
+Use this skill whenever Cursor should style an output to look like **ZNTEQR** (docs, UI mockups, slide decks, diagrams, emails, etc.). It summarizes the **source-of-truth design tokens** used by the ZNTEQR app so outputs stay consistent with the product.
 
-**Keywords**: branding, corporate identity, visual identity, post-processing, styling, brand colors, typography, EquipQR brand, design tokens, Tailwind, shadcn/ui, visual formatting, visual design
+**Keywords**: branding, corporate identity, visual identity, post-processing, styling, brand colors, typography, ZNTEQR brand, design tokens, Tailwind, shadcn/ui, visual formatting, visual design
 
 ## Brand Guidelines
 
@@ -21,7 +21,7 @@ Use this skill whenever Cursor should style an output to look like **EquipQR** (
 
 ### Colors
 
-EquipQR uses **token-based colors** (HSL triplets) so the same semantic color names work in light and dark mode. Prefer semantic tokens (`brand`, `primary`, `secondary`, `foreground`, `muted-foreground`, etc.) over hard-coded hex values.
+ZNTEQR uses **token-based colors** (HSL triplets) so the same semantic color names work in light and dark mode. Prefer semantic tokens (`brand`, `primary`, `secondary`, `foreground`, `muted-foreground`, etc.) over hard-coded hex values.
 
 **Core (Light mode / `:root`):**
 
@@ -61,7 +61,7 @@ EquipQR uses **token-based colors** (HSL triplets) so the same semantic color na
 
 ### Typography
 
-EquipQR’s UI uses a **clean, product-style system font** approach (no decorative brand fonts required).
+ZNTEQR’s UI uses a **clean, product-style system font** approach (no decorative brand fonts required).
 
 - **Recommended stack (web/docs/email)**: `system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`
 - **Headings**: Slightly heavier weight (semibold/bold), tighter line-height
@@ -74,7 +74,7 @@ EquipQR’s UI uses a **clean, product-style system font** approach (no decorati
 
 - Uses semantic tokens (`brand`, `primary`, `foreground`, etc.) instead of hard-coded colors
 - Maintains contrast by pairing backgrounds with their `*-foreground` tokens
-- Keeps outputs consistent with EquipQR UI in both light and dark themes
+- Keeps outputs consistent with ZNTEQR UI in both light and dark themes
 
 ### Text Styling
 

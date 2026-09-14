@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Playwright E2E fixtures
+-- ZNTEQR Seed Data - Playwright E2E fixtures
 -- =====================================================
 -- Deterministic rows for invitation accept, DSR cockpit, and requestor RBAC.
 

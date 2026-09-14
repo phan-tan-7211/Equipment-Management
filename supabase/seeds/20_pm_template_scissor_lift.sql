@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Scissor Lift PM Template (Global)
+-- ZNTEQR Seed Data - Scissor Lift PM Template (Global)
 -- =====================================================
 -- This seed creates the global Scissor Lift PM checklist template.
 -- Global templates have organization_id = NULL and is_protected = true.

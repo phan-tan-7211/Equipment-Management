@@ -3,7 +3,7 @@ import type { Theme } from "vitepress";
 import "./custom.css";
 
 /**
- * EquipQR Help Center theme — default VitePress + Mission Control tokens.
+ * ZNTEQR Help Center theme — default VitePress + Mission Control tokens.
  * Token mirror lives in equipqr-tokens.css / custom.css (see deployment.md).
  */
 const theme: Theme = {

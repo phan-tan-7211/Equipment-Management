@@ -1,19 +1,19 @@
-# Agent secrets and access (EquipQR)
+# Agent secrets and access (ZNTEQR)
 
-Operational reference for Cursor agents and headless automation. ZNT LLC / EquipQR.
+Operational reference for Cursor agents and headless automation. ZNT LLC / ZNTEQR.
 
 ---
 
 ## Vault and tokens
 
-**Primary vault:** `EquipQR Agents` (`tgo2m6qbct5otqeqirjocn3joa`)
+**Primary vault:** `ZNTEQR Agents` (`tgo2m6qbct5otqeqirjocn3joa`)
 
-**ZNT Agents vault:** `mrviyowmjwrxv7syobdlhnmawa` — maintainer Google sign-in for admin.google.com and console.cloud.google.com. Readable with the same `OP_SERVICE_ACCOUNT_TOKEN` as EquipQR Agents.
+**ZNT Agents vault:** `mrviyowmjwrxv7syobdlhnmawa` — maintainer Google sign-in for admin.google.com and console.cloud.google.com. Readable with the same `OP_SERVICE_ACCOUNT_TOKEN` as ZNTEQR Agents.
 
 | Item | Item ID | Purpose |
 |---|---|---|
 | `Google (Business)` | `ukvy6bzwb2ikq5cfeambgcq5u4` | Workspace admin + GCP Console browser sign-in (`username`, `password`) |
-| `Google (Test User)` | `hlp7llqbvfm7mmic2z2e43ftem` | Alternate test-user record (Playwright E2E still uses EquipQR Agents `google-login`) |
+| `Google (Test User)` | `hlp7llqbvfm7mmic2z2e43ftem` | Alternate test-user record (Playwright E2E still uses ZNTEQR Agents `google-login`) |
 | `wordpress-mcp` | `ywccaftp6lat6kuq2fomu7byn4` | WordPress MCP credentials |
 
 Load Google Business credentials for browser automation:
@@ -34,7 +34,7 @@ Constants and helpers: `dev/op/columbia-cloudworks-agents-vault.ps1`.
 | Token env var | Service account | Permissions | Typical use |
 |---|---|---|---|
 | `OP_SERVICE_ACCOUNT_TOKEN` | `op-svc-equipqr-agents` | Read | `op read`, `op inject`, metadata, CI |
-| `OP_SAT_EquipQR` | Write SAT (maintainer-provisioned) | Read, Write & Share on vault | `op item create`, `op item edit` |
+| `OP_SAT_ZNTEQR` | Write SAT (maintainer-provisioned) | Read, Write & Share on vault | `op item create`, `op item edit` |
 
 Cloud Agents and GitHub Actions use the read-only token as a repo/org secret. Never commit either token.
 
@@ -77,7 +77,7 @@ Assignment rules ([official docs](https://www.1password.dev/cli/reference/manage
 - `field[text]=value` for plain text fields
 - For multi-field or sensitive bulk edits: `-Action Edit -TemplatePath C:\path\to\item.json` after `op item get ... --format json`
 
-Interactive maintainer terminals (`PS D:\EquipQR>`) can run `op` directly; agents should not rely on that.
+Interactive maintainer terminals (`PS D:\ZNTEQR>`) can run `op` directly; agents should not rely on that.
 
 ---
 

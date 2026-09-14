@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import EquipQRIcon from '@/components/ui/EquipQRIcon';
+import ZNTEQRIcon from '@/components/ui/ZNTEQRIcon';
 import { useAuth } from '@/hooks/useAuth';
 import { useSimpleOrganizationSafe } from '@/hooks/useSimpleOrganization';
 import { useSession } from '@/hooks/useSession';
@@ -319,9 +319,9 @@ const EquipmentQRScan = (): React.JSX.Element => {
             className="flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label={t('equipmentQRScan.productionAria')}
           >
-            <EquipQRIcon className="h-9 w-9" title="" />
+            <ZNTEQRIcon className="h-9 w-9" title="" />
             <div>
-              <p className="text-sm font-semibold">EquipQR</p>
+              <p className="text-sm font-semibold">ZNTEQR</p>
               <p className="text-xs text-muted-foreground">{t('equipmentQRScan.scannedEquipment')}</p>
             </div>
           </a>

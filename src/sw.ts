@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 /**
- * EquipQR Service Worker (vite-plugin-pwa injectManifest source)
+ * ZNTEQR Service Worker (vite-plugin-pwa injectManifest source)
  *
  * Two responsibilities:
  *   1. Precache the SPA shell (index.html + hashed /assets/*) so the app boots
@@ -73,7 +73,7 @@ self.addEventListener('push', (event) => {
   log('[SW] Push received:', event);
 
   let data: PushPayload = {
-    title: 'EquipQR',
+    title: 'ZNTEQR',
     body: 'You have a new notification',
     data: {},
   };
@@ -89,8 +89,8 @@ self.addEventListener('push', (event) => {
 
   const options: NotificationOptions = {
     body: data.body,
-    icon: '/images/brand/icons/EquipQR-Icon-Purple-Small.png',
-    badge: '/images/brand/icons/EquipQR-Icon-Purple-Small.png',
+    icon: '/images/brand/icons/ZNTEQR-Icon-512.png',
+    badge: '/images/brand/icons/ZNTEQR-Icon-512.png',
     // `vibrate`, `actions`, and `renotify` are valid Notification options
     // in all major browsers but not yet in lib.dom.ts; cast to any.
     ...({
@@ -111,7 +111,7 @@ self.addEventListener('push', (event) => {
     tag: data.data?.notification_id || 'equipqr-notification',
   };
 
-  event.waitUntil(self.registration.showNotification(data.title || 'EquipQR', options));
+  event.waitUntil(self.registration.showNotification(data.title || 'ZNTEQR', options));
 });
 
 self.addEventListener('notificationclick', (event) => {

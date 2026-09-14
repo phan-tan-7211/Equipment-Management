@@ -225,7 +225,7 @@ const Sidebar = React.forwardRef<
           >
             <SheetTitle className="sr-only">Main navigation</SheetTitle>
             <SheetDescription className="sr-only">
-              App sections and shortcuts. Use the links below to move around EquipQR.
+              App sections and shortcuts. Use the links below to move around ZNTEQR.
             </SheetDescription>
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>

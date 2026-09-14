@@ -106,7 +106,7 @@ if (-not (Test-IsAdmin)) {
 
 Write-Host ""
 Write-Host " ============================================"
-Write-Host "  EquipQR - Reserve Supabase Ports (one-time)"
+Write-Host "  ZNTEQR - Reserve Supabase Ports (one-time)"
 Write-Host " ============================================"
 Write-Host ""
 

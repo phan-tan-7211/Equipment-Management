@@ -1,10 +1,10 @@
 # Support
 
-Get help with **EquipQR™** — the fleet equipment management platform from ZNT LLC.
+Get help with **ZNTEQR™** — the fleet equipment management platform from ZNT LLC.
 
 ## Overview
 
-EquipQR™ helps organizations track equipment, manage work orders, and coordinate maintenance teams. This document explains how to get support, where to report issues, and where to find answers.
+ZNTEQR™ helps organizations track equipment, manage work orders, and coordinate maintenance teams. This document explains how to get support, where to report issues, and where to find answers.
 
 ---
 
@@ -50,9 +50,9 @@ We use **GitHub Issues** for bugs, feature requests, and general questions.
 
 ### How to report
 
-- **Bugs**: [Open an issue](https://github.com/Columbia-Cloudworks-LLC/EquipQR/issues/new) with a clear summary, steps to reproduce, expected vs actual behavior, and your environment (browser/OS, EquipQR version, role).
+- **Bugs**: [Open an issue](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/new) with a clear summary, steps to reproduce, expected vs actual behavior, and your environment (browser/OS, ZNTEQR version, role).
 - **Feature requests**: Same link; describe the use case, proposed solution, and who it helps.
-- **Questions**: Open an issue and add the `question` label, or use [GitHub Discussions](https://github.com/Columbia-Cloudworks-LLC/EquipQR/discussions) if you prefer.
+- **Questions**: Open an issue and add the `question` label, or use [GitHub Discussions](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/discussions) if you prefer.
 
 Detailed templates and labels (e.g. `bug`, `enhancement`, `documentation`) are in [CONTRIBUTING.md – Reporting Issues](CONTRIBUTING.md#reporting-issues).
 
@@ -60,7 +60,7 @@ Detailed templates and labels (e.g. `bug`, `enhancement`, `documentation`) are i
 
 ## Customer support
 
-If you’re an **EquipQR customer** (e.g. production or pilot) and need direct support:
+If you’re an **ZNTEQR customer** (e.g. production or pilot) and need direct support:
 
 - **Email:** [phantan7211@gmail.com](mailto:phantan7211@gmail.com)
 
@@ -78,7 +78,7 @@ Please include:
 To contribute code or docs:
 
 - Read [CONTRIBUTING.md](CONTRIBUTING.md) for branching, PRs, and coding guidelines.
-- Use [GitHub Pull Requests](https://github.com/Columbia-Cloudworks-LLC/EquipQR/pulls) for changes.
+- Use [GitHub Pull Requests](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/pulls) for changes.
 
 ---
 
@@ -91,4 +91,4 @@ To contribute code or docs:
 
 ---
 
-**EquipQR™** · [ZNT LLC](https://columbiacloudworks.com) · [Repository](https://github.com/Columbia-Cloudworks-LLC/EquipQR)
+**ZNTEQR™** · [ZNT LLC](https://columbiacloudworks.com) · [Repository](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR)

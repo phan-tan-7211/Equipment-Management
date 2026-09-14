@@ -432,7 +432,7 @@ describe('ContextBreadcrumb', () => {
     mockIsMobileRef.current = true;
 
     // /dashboard is a ROUTES_WITH_PAGE_H1 entry, so the section row used to
-    // render the EquipQR brand icon as a third stacked row. After the fix,
+    // render the ZNTEQR brand icon as a third stacked row. After the fix,
     // the row should be omitted entirely — the page H1 already shows the
     // title and the logo lives in the sidebar-trigger slot.
     renderWithTeamContext({
@@ -442,7 +442,7 @@ describe('ContextBreadcrumb', () => {
       initialEntries: ['/dashboard'],
     });
 
-    expect(screen.queryByAltText('EquipQR')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('ZNTEQR')).not.toBeInTheDocument();
   });
 
   describe('quick-create team button', () => {

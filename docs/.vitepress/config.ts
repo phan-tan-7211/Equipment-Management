@@ -5,7 +5,7 @@ import type { DefaultTheme } from "vitepress";
 const supportSidebarArticles: Record<string, { text: string; link: string }[]> =
   {
     "start-here": [
-      { text: "Welcome to EquipQR", link: "/support/start-here/welcome-to-equipqr" },
+      { text: "Welcome to ZNTEQR", link: "/support/start-here/welcome-to-equipqr" },
       { text: "Navigation tour", link: "/support/start-here/navigation-tour" },
       { text: "Invite your team", link: "/support/start-here/invite-team-members" },
       { text: "Role overview", link: "/support/start-here/role-overview" },
@@ -181,9 +181,9 @@ function supportSidebar(): DefaultTheme.SidebarItem[] {
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "EquipQR Docs",
+  title: "ZNTEQR Docs",
   description:
-    "User guides, workflows, and how-tos for EquipQR fleet equipment management — technicians, managers, admins, and equipment owners.",
+    "User guides, workflows, and how-tos for ZNTEQR fleet equipment management — technicians, managers, admins, and equipment owners.",
   lang: "en-US",
   // Mission Control is dark-only — force dark and hide the ineffective light toggle.
   appearance: "force-dark",
@@ -224,14 +224,14 @@ export default defineConfig({
       {
         name: "keywords",
         content:
-          "EquipQR,docs,help center,support,fleet management,work orders,QR codes,CMMS",
+          "ZNTEQR,docs,help center,support,fleet management,work orders,QR codes,CMMS",
       },
     ],
   ],
   themeConfig: {
-    logo: { src: "/eqr-logo/icon.svg", alt: "EquipQR" },
+    logo: { src: "/eqr-logo/icon.svg", alt: "ZNTEQR" },
     // Primary wordmark; CSS appends a secondary " Docs" label.
-    siteTitle: "EquipQR",
+    siteTitle: "ZNTEQR",
 
     search: {
       provider: "local",
@@ -330,7 +330,7 @@ export default defineConfig({
 
     footer: {
       message:
-        "EquipQR Docs — product app at equipqr.app · status at status.equipqr.app",
+        "ZNTEQR Docs — product app at equipqr.app · status at status.equipqr.app",
       copyright: "Copyright © ZNT LLC",
     },
   },

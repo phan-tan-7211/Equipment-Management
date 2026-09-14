@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# EquipQR Cursor Cloud Agent — ephemeral Supabase branch + Vite
+# ZNTEQR Cursor Cloud Agent — ephemeral Supabase branch + Vite
 #
 # Creates a session-scoped hosted Supabase Database Branch (Management API +
 # git_branch=preview so migrations deploy), applies a cloud-safe Quick Login

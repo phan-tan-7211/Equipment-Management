@@ -1,4 +1,4 @@
-# EquipQR Best Practices (for Qodo Merge)
+# ZNTEQR Best Practices (for Qodo Merge)
 
 > Read by `qodo-code-review[bot]` on every PR. Findings tagged
 > `ZNT best practice`. Pattern-based per
@@ -215,7 +215,7 @@ import { supabase } from '@/integrations/supabase/client';
 ---
 
 For the longer-form versions of these patterns and the rest of the
-EquipQR review checklist (accessibility, error handling, query
+ZNTEQR review checklist (accessibility, error handling, query
 optimization, design context), see:
 
 - [.github/copilot-instructions.md](.github/copilot-instructions.md) — full domain reviewer guide

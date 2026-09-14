@@ -33,7 +33,7 @@ On the work order details page, choose:
 1. Pick the correct template from the **PM template** dropdown. If the equipment has a default template but this job needs a different one, you can override it here.
 2. Select **Save PM Changes**.
 
-EquipQR creates the PM checklist and sets the work order to PM-enabled.
+ZNTEQR creates the PM checklist and sets the work order to PM-enabled.
 
 ![PM checklist section after attaching a template](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/work-order-pm/desktop/02-pm-checklist-after-add.png)
 
@@ -43,7 +43,7 @@ EquipQR creates the PM checklist and sets the work order to PM-enabled.
 2. Select a different checklist template.
 3. Select **Save PM Changes**.
 
-If the current checklist already has completed items or PM notes, EquipQR warns you before resetting the PM data. Only the PM checklist is replaced — work order photos and notes remain.
+If the current checklist already has completed items or PM notes, ZNTEQR warns you before resetting the PM data. Only the PM checklist is replaced — work order photos and notes remain.
 
 ::: tip Before you change templates
 Download the PM checklist PDF from the work order if you need a record of completed inspection items.

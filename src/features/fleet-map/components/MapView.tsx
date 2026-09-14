@@ -850,7 +850,7 @@ export const MapView: React.FC<MapViewProps> = ({
           defaultCenter={mapCenter}
           defaultZoom={totalMarkerCount === 1 ? 14 : totalMarkerCount > 0 ? 6 : 4}
           // colorScheme follows the app theme; with a Cloud-bound style on the
-          // Map ID, the basemap can render an EquipQR-branded dark palette.
+          // Map ID, the basemap can render an ZNTEQR-branded dark palette.
           colorScheme={isDark ? 'DARK' : 'LIGHT'}
           gestureHandling="greedy"
           disableDefaultUI={false}

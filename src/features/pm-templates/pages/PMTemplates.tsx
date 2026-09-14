@@ -104,7 +104,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
               {showStarterBadge && (
               <Badge className="text-xs">
                 <Globe className="w-3 h-3 mr-1" />
-                EquipQR
+                ZNTEQR
               </Badge>
               )}
               {showProtectedBadge && (

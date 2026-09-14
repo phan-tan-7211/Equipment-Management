@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Sync Vercel project env vars from the EquipQR Agents 1Password vault.
+  Sync Vercel project env vars from the ZNTEQR Agents 1Password vault.
 
 .DESCRIPTION
   For each VITE_* and Vercel-side env var, read the value from 1Password and
@@ -12,7 +12,7 @@
     - app-env-preview-public     -> preview Vercel env (VITE_* vars)
 
   Each item must contain individual fields per env var (NOT a multi-line dotenv
-  blob) so each can be referenced via op://EquipQR Agents/{item}/{field}.
+  blob) so each can be referenced via op://ZNTEQR Agents/{item}/{field}.
   Field labels on the current `app-env-*-public` items are mixed (for example
   `SUPABASE_URL` / `SUPABASE_ANON_KEY` alongside `VITE_*` keys); confirm with
   `op item get` (metadata) before changing references. The script lowercases
@@ -91,7 +91,7 @@ function Write-Fail { param([string]$M) Write-Host "  [sync-vercel] FAIL $M" -Fo
 # columns: name, value (masked), environments (comma-separated), created.
 # We extract the first whitespace-delimited token of each data row and only
 # keep rows whose environments column contains $TargetEnv.
-$OP_VAULT = 'tgo2m6qbct5otqeqirjocn3joa'  # EquipQR Agents
+$OP_VAULT = 'tgo2m6qbct5otqeqirjocn3joa'  # ZNTEQR Agents
 
 function Resolve-OpFieldLabels {
     param([string]$VercelVarName)
@@ -241,7 +241,7 @@ foreach ($envName in $envsToProcess) {
 
     $itemProbe = & op item get $opItem --vault $OP_VAULT --format json 2>&1
     if ($LASTEXITCODE -ne 0) {
-        Write-Warn "1Password item '$opItem' not found in EquipQR Agents vault. Skipping $envName."
+        Write-Warn "1Password item '$opItem' not found in ZNTEQR Agents vault. Skipping $envName."
         Write-Warn "  Create with fields: $(($cfg.Vars | ForEach-Object { $_.ToLower() }) -join ', ')"
         continue
     }

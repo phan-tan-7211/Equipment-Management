@@ -1,5 +1,5 @@
 -- =====================================================
--- EquipQR Seed Data - Cleanup Trigger-Created Organizations
+-- ZNTEQR Seed Data - Cleanup Trigger-Created Organizations
 -- =====================================================
 -- This file runs LAST (99_) and removes any organizations created by the
 -- handle_new_user trigger during seeding.

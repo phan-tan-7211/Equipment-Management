@@ -8,7 +8,7 @@ export default function TermsOfService() {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <PageSEO
         title="Terms of Service"
-        description="Review the Terms of Service for EquipQR, the fleet equipment management platform by ZNT LLC. Covers accounts, billing, data, and liability."
+        description="Review the Terms of Service for ZNTEQR, the fleet equipment management platform by ZNT LLC. Covers accounts, billing, data, and liability."
         path="/terms-of-service"
       />
       <div className="mb-8">
@@ -26,7 +26,7 @@ export default function TermsOfService() {
             <p>
               These Terms of Service ("<strong>Terms</strong>") are a contract between <strong>ZNT LLC</strong>,
               an Illinois limited liability company ("<strong>Company</strong>", "<strong>we</strong>", "<strong>us</strong>", or "<strong>our</strong>"),
-              and the person or entity that creates an account or otherwise uses <strong>EquipQR™</strong> (the "<strong>Service</strong>")
+              and the person or entity that creates an account or otherwise uses <strong>ZNTEQR™</strong> (the "<strong>Service</strong>")
               ("<strong>Customer</strong>", "<strong>you</strong>", or "<strong>your</strong>"). If you are using the Service on behalf of an entity,
               you represent that you have authority to bind that entity, and "you" refers to that entity. By accessing or using the Service, you agree to these Terms.
             </p></LegalPolicySection>

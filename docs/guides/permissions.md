@@ -1,6 +1,6 @@
 # Roles and permissions
 
-EquipQR has two role layers: organization roles (Owner, Admin, Member) and team roles (Manager, Technician, Requestor, Viewer). For who should hold each role, see [Teams & Roles](/support/teams-roles/) in the Help Center.
+ZNTEQR has two role layers: organization roles (Owner, Admin, Member) and team roles (Manager, Technician, Requestor, Viewer). For who should hold each role, see [Teams & Roles](/support/teams-roles/) in the Help Center.
 
 ## Permission matrix
 
@@ -14,7 +14,7 @@ EquipQR has two role layers: organization roles (Owner, Admin, Member) and team 
 | View Organization Details | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Switch Organizations | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-> Billing capabilities were removed from EquipQR in Jan 2025; there is no
+> Billing capabilities were removed from ZNTEQR in Jan 2025; there is no
 > billing surface to permission against. Historical billing tables
 > (`billing_events`, `organization_subscriptions`, etc.) are kept for
 > auditability only and are not exposed in the UI.

@@ -1,5 +1,5 @@
 /**
- * Generate sitemap.xml for EquipQR marketing pages (source: `src/lib/marketingRoutes.ts`).
+ * Generate sitemap.xml for ZNTEQR marketing pages (source: `src/lib/marketingRoutes.ts`).
  * De-dupes by canonical path so compatibility aliases like /landing do not produce
  * a separate <url> entry when they share a canonicalPath with another route.
  *

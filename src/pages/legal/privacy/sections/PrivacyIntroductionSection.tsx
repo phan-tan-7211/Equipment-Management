@@ -6,7 +6,7 @@ export function PrivacyIntroductionSection() {
   return (
     <LegalPolicySection title="1. Introduction">
       <p>
-        EquipQR™ (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;), developed and operated by{' '}
+        ZNTEQR™ (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;), developed and operated by{' '}
         <ExternalLink href="https://columbiacloudworks.com" className="hover:text-foreground">
           ZNT LLC
         </ExternalLink>
@@ -16,7 +16,7 @@ export function PrivacyIntroductionSection() {
         and what rights you have.
       </p>
       <p>
-        This policy applies to all users of the EquipQR web application located at{' '}
+        This policy applies to all users of the ZNTEQR web application located at{' '}
         <ExternalLink href="https://equipqr.app" className="hover:text-foreground">
           equipqr.app
         </ExternalLink>

@@ -1,12 +1,12 @@
 /**
- * EquipQR Docs — VitePress theme overrides aligned with equipqr.app.
+ * ZNTEQR Docs — VitePress theme overrides aligned with equipqr.app.
  * Token source: equipqr-tokens.css (mirrored from src/index.css).
  */
 
 @import "./equipqr-tokens.css";
 
 /* -------------------------------------------------------------------------- */
-/* Map EquipQR tokens → VitePress CSS variables (dark = product default)      */
+/* Map ZNTEQR tokens → VitePress CSS variables (dark = product default)      */
 /* -------------------------------------------------------------------------- */
 
 /*
@@ -201,7 +201,7 @@ div[class*="language-"] {
   width: calc(100% - 3rem);
 }
 
-/* Secondary "Docs" label after wordmark (nav title stays EquipQR) */
+/* Secondary "Docs" label after wordmark (nav title stays ZNTEQR) */
 .VPNavBarTitle .title::after {
   content: " Docs";
   font-weight: 500;

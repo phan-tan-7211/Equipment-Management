@@ -7,7 +7,7 @@
 #
 # Requires:
 #   - npx / Supabase CLI
-#   - Linked production project OR prod_db_password in 1Password (EquipQR Agents)
+#   - Linked production project OR prod_db_password in 1Password (ZNTEQR Agents)
 
 [CmdletBinding()]
 param(
@@ -28,7 +28,7 @@ function Get-OpProdPassword {
     if (-not $env:OP_SERVICE_ACCOUNT_TOKEN) {
         $env:OP_SERVICE_ACCOUNT_TOKEN = [Environment]::GetEnvironmentVariable('OP_SERVICE_ACCOUNT_TOKEN', 'User')
     }
-    $password = op read 'op://EquipQR Agents/supabase-write/prod_db_password' 2>$null
+    $password = op read 'op://ZNTEQR Agents/supabase-write/prod_db_password' 2>$null
     if (-not $password) {
         throw 'Could not resolve prod_db_password from 1Password.'
     }
@@ -142,7 +142,7 @@ $generatedAt = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
 $schemaPath = Join-Path $repoRoot 'supabase/rls-policies.sql'
 $lines = New-Object System.Collections.Generic.List[string]
 
-$lines.Add('-- EquipQR RLS reference baseline (read-only documentation artifact)')
+$lines.Add('-- ZNTEQR RLS reference baseline (read-only documentation artifact)')
 $lines.Add('-- Source: production Supabase project ymxkzronkhwxzcdcbnwq')
 $lines.Add("-- Generated (UTC): $generatedAt")
 $lines.Add('-- Regenerate: .\dev\export-schema-baseline.ps1')

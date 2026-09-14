@@ -20,7 +20,7 @@ describe('NotFound Page', () => {
   it('renders the missing path copy', () => {
     render(<NotFound />);
 
-    expect(screen.getByText(/we couldn't find the public equipqr page at/i)).toBeInTheDocument();
+    expect(screen.getByText(/we couldn't find the public znteqr page at/i)).toBeInTheDocument();
     expect(screen.getByText(/at \/\. Check the address/i)).toBeInTheDocument();
   });
 

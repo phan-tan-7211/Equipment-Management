@@ -1,6 +1,6 @@
 # Account Deletion Operator Runbook
 
-ZNT LLC — EquipQR internal operations guide for hybrid self-service account deletion.
+ZNT LLC — ZNTEQR internal operations guide for hybrid self-service account deletion.
 
 ## What self-service deletion does
 

@@ -275,7 +275,7 @@ describe('GoogleWorkspaceExportDestinationCard', () => {
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith({
         title: 'Organization folder saved',
-        description: 'EquipQR files for Test Org will save to Ops Exports.',
+        description: 'ZNTEQR files for Test Org will save to Ops Exports.',
       });
     });
 

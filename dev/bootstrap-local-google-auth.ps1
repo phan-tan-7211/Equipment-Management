@@ -14,7 +14,7 @@ if (-not $env:OP_SERVICE_ACCOUNT_TOKEN) {
     throw 'OP_SERVICE_ACCOUNT_TOKEN is required to read production auth config.'
 }
 
-$token = (op read 'op://EquipQR Agents/supabase-write/SUPABASE_ACCESS_TOKEN').Trim()
+$token = (op read 'op://ZNTEQR Agents/supabase-write/SUPABASE_ACCESS_TOKEN').Trim()
 $headers = @{ Authorization = "Bearer $token"; 'Content-Type' = 'application/json' }
 $prodAuth = Invoke-RestMethod -Uri 'https://api.supabase.com/v1/projects/ymxkzronkhwxzcdcbnwq/config/auth' -Headers $headers -Method Get
 
@@ -23,10 +23,10 @@ $authSecret = $prodAuth.external_google_secret.Trim()
 if ($authSecret -notmatch '^GOCSPX-') {
     throw @"
 Supabase Management API external_google_secret is not a usable Google OAuth client secret (expected GOCSPX-*).
-Copy the secret from GCP Console -> EquipQR Google Login -> Client secrets, then update production Supabase Auth and app-env-local-dev manually.
+Copy the secret from GCP Console -> ZNTEQR Google Login -> Client secrets, then update production Supabase Auth and app-env-local-dev manually.
 "@
 }
-$workspaceClientId = (op read "op://EquipQR Agents/$EdgeItem/GOOGLE_WORKSPACE_CLIENT_ID").Trim()
+$workspaceClientId = (op read "op://ZNTEQR Agents/$EdgeItem/GOOGLE_WORKSPACE_CLIENT_ID").Trim()
 
 $mutateScript = Join-Path $PSScriptRoot 'op-item-mutate.ps1'
 $assignments = @(

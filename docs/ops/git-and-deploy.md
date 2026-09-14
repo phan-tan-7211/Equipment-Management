@@ -1,6 +1,6 @@
 # Git and Deploy (authoritative)
 
-Solo-developer workflow for EquipQR after #1282 restored the feat → preview → main train.
+Solo-developer workflow for ZNTEQR after #1282 restored the feat → preview → main train.
 
 ## Branches
 

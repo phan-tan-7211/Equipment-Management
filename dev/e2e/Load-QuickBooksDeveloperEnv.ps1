@@ -4,7 +4,7 @@
   Load Intuit Developer / QuickBooks sandbox sign-in env vars for agent browser automation.
 
 .DESCRIPTION
-  Sources credentials from the EquipQR Agents vault item `quickbooks-developer`.
+  Sources credentials from the ZNTEQR Agents vault item `quickbooks-developer`.
   Prefer captured developer portal storage when available:
     npm run e2e:quickbooks-developer-auth:capture
     . .\dev\e2e\Load-QuickBooksDeveloperStorageEnv.ps1
@@ -27,7 +27,7 @@ if (-not $env:OP_SERVICE_ACCOUNT_TOKEN) {
     }
 }
 
-$vault = 'EquipQR Agents'
+$vault = 'ZNTEQR Agents'
 $itemId = '62ng22yntivrjdt25gmsjqrin4'
 
 $env:QUICKBOOKS_DEVELOPER_EMAIL = (op read "op://$vault/$itemId/username").Trim()

@@ -1,10 +1,10 @@
 # Better Stack Monitoring & Status Page
 
-> Operational reference for the EquipQR uptime monitors and public status page hosted by Better Stack.
+> Operational reference for the ZNTEQR uptime monitors and public status page hosted by Better Stack.
 
 ## Overview
 
-Better Stack provides two uptime monitors and a public status page for EquipQR:
+Better Stack provides two uptime monitors and a public status page for ZNTEQR:
 
 | Component | Purpose |
 |---|---|
@@ -18,7 +18,7 @@ Better Stack provides two uptime monitors and a public status page for EquipQR:
 
 | Field | Value |
 |---|---|
-| Monitor name | `EquipQR Web` |
+| Monitor name | `ZNTEQR Web` |
 | Target URL | `https://equipqr.app/` |
 | Check type | HTTP(S) keyword / status code |
 | Expected status | 200 |
@@ -29,7 +29,7 @@ Better Stack provides two uptime monitors and a public status page for EquipQR:
 
 | Field | Value |
 |---|---|
-| Monitor name | `EquipQR API Health` |
+| Monitor name | `ZNTEQR API Health` |
 | Target URL | `https://ymxkzronkhwxzcdcbnwq.supabase.co/functions/v1/healthcheck` |
 | Check type | HTTP(S) keyword |
 | Expected status | 200 |
@@ -60,10 +60,10 @@ When the database check fails or times out, the endpoint returns HTTP 503 with `
 
 | Field | Value |
 |---|---|
-| Status page title | EquipQR Status |
+| Status page title | ZNTEQR Status |
 | Status page URL | `https://status.equipqr.app` |
 | Better Stack subdomain | `equipqr.betteruptime.com` |
-| Components shown | EquipQR Web, EquipQR API Health |
+| Components shown | ZNTEQR Web, ZNTEQR API Health |
 | History / uptime chart | Enabled (90-day history) |
 
 ## DNS / Custom Domain Setup
@@ -120,7 +120,7 @@ Use this after installing or re-authenticating the Better Stack Cursor plugin to
 
 ### Standard 4-step validation
 
-1. **Uptime monitors** — call `uptime_list_monitors_tool`. Pass: no auth/tool errors; expected monitors include **EquipQR Web** and **EquipQR API Health** (see tables above).
+1. **Uptime monitors** — call `uptime_list_monitors_tool`. Pass: no auth/tool errors; expected monitors include **ZNTEQR Web** and **ZNTEQR API Health** (see tables above).
 2. **Uptime incidents** — call `uptime_list_incidents_tool`. Pass: success; history or empty set with valid status fields.
 3. **Telemetry inventory** — call `telemetry_list_sources_tool` or `telemetry_list_applications_tool`. Pass: success; at least one source/application when telemetry is configured.
 4. **Error tracking visibility** — call `telemetry_list_error_states_tool`, or fall back to `telemetry_list_applications_tool` if error states are not enabled. Pass: success; structured rows or empty-but-valid result.

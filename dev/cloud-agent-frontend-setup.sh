@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# EquipQR Cursor Cloud frontend bootstrap (Linux)
+# ZNTEQR Cursor Cloud frontend bootstrap (Linux)
 #
 # Purpose:
 # - prepare env files when 1Password service-account auth is available

@@ -43,7 +43,7 @@ jobs:
 
       # ── 1Password secrets → .env files ──────────────────────────────────────
       # agent-bootstrap.sh installs the op CLI, renders .env and
-      # supabase/functions/.env from the EquipQR Agents vault, and writes the
+      # supabase/functions/.env from the ZNTEQR Agents vault, and writes the
       # GCP viewer SA JSON used by the gcloud MCP.
       # The step is skipped gracefully when the token is absent (fork PRs, etc.)
       # Probe writes a non-sensitive boolean flag so the bootstrap if: guard can

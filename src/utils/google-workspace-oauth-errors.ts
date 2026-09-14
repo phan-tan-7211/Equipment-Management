@@ -1,7 +1,7 @@
 const GOOGLE_WORKSPACE_OAUTH_ERROR_MESSAGES: Record<string, string> = {
   access_denied: 'Google Workspace connection was cancelled.',
   not_workspace_admin:
-    'Only Google Workspace administrators can connect EquipQR for your organization.',
+    'Only Google Workspace administrators can connect ZNTEQR for your organization.',
   session_expired: 'Your Google Workspace connection session expired. Please try again.',
   misconfigured:
     'Google Workspace is not configured correctly. Please contact your administrator.',
@@ -9,7 +9,7 @@ const GOOGLE_WORKSPACE_OAUTH_ERROR_MESSAGES: Record<string, string> = {
   invalid_grant: 'The authorization link expired or was already used. Please try again.',
   csrf_error: 'We could not verify this connection request. Please try again.',
   domain_already_linked:
-    'This Google Workspace domain is already linked to another EquipQR organization.',
+    'This Google Workspace domain is already linked to another ZNTEQR organization.',
   oauth_failed: 'Failed to connect Google Workspace. Please try again.',
 };
 

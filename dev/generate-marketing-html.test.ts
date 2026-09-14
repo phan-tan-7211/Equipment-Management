@@ -25,7 +25,7 @@ const MINIMAL_DIST_TEMPLATE = `<!DOCTYPE html>
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <title>EquipQR | Placeholder</title>
+    <title>ZNTEQR | Placeholder</title>
     <meta name="description" content="Placeholder description." />
     <link rel="canonical" href="https://equipqr.app" />
     <meta property="og:title" content="OG Old" />
@@ -51,7 +51,7 @@ describe('prerenderMarketingHtmlTemplate', () => {
     const html = prerenderMarketingHtmlTemplate(MINIMAL_DIST_TEMPLATE, route);
 
     expect(html).toContain(
-      '<title>Work Order Management Software for Heavy Equipment Repair | EquipQR</title>'
+      '<title>Work Order Management Software for Heavy Equipment Repair | ZNTEQR</title>'
     );
     expect(html).toContain(
       '<link rel="canonical" href="https://equipqr.app/features/work-order-management" />'
@@ -69,15 +69,15 @@ describe('prerenderMarketingHtmlTemplate', () => {
     expect(html).not.toContain('href="/landing"');
   });
 
-  it('keeps branded releases metadata without appending a second EquipQR suffix', () => {
+  it('keeps branded releases metadata without appending a second ZNTEQR suffix', () => {
     const route = requireMarketingRoute('/releases');
 
     const html = prerenderMarketingHtmlTemplate(MINIMAL_DIST_TEMPLATE, route);
 
-    expect(html).toContain('<title>Releases · EquipQR</title>');
+    expect(html).toContain('<title>Releases · ZNTEQR</title>');
     expect(html).toContain('<link rel="canonical" href="https://equipqr.app/releases" />');
-    expect(html).toContain('Customer-facing changes in each published EquipQR release.');
-    expect(html).not.toContain('Releases · EquipQR | EquipQR');
+    expect(html).toContain('Customer-facing changes in each published ZNTEQR release.');
+    expect(html).not.toContain('Releases · ZNTEQR | ZNTEQR');
   });
 
   it('uses canonical home metadata for the /landing compatibility route', () => {
@@ -86,16 +86,16 @@ describe('prerenderMarketingHtmlTemplate', () => {
     const html = prerenderMarketingHtmlTemplate(MINIMAL_DIST_TEMPLATE, route);
 
     expect(html).toContain(
-      '<title>EquipQR | Free Work Order Software for Heavy Equipment Repair Shops</title>'
+      '<title>ZNTEQR | Free Work Order Software for Heavy Equipment Repair Shops</title>'
     );
     expect(html).toContain('<link rel="canonical" href="https://equipqr.app/" />');
     expect(html).toContain(
-      '<meta property="og:title" content="EquipQR | Free Work Order Software for Heavy Equipment Repair Shops" />'
+      '<meta property="og:title" content="ZNTEQR | Free Work Order Software for Heavy Equipment Repair Shops" />'
     );
     expect(html).toContain(
-      '<meta name="twitter:title" content="EquipQR | Free Work Order Software for Heavy Equipment Repair Shops" />'
+      '<meta name="twitter:title" content="ZNTEQR | Free Work Order Software for Heavy Equipment Repair Shops" />'
     );
-    expect(html).not.toContain('| EquipQR | EquipQR');
+    expect(html).not.toContain('| ZNTEQR | ZNTEQR');
     // Nav must include canonical Home and must not include the /landing alias as a separate link
     expect(html).toContain('href="/"');
     expect(html).not.toContain('href="/landing"');
