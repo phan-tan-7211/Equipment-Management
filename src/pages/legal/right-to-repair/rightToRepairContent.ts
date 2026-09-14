@@ -1,5 +1,5 @@
 import type {
-  EquipQrCommitment,
+  ZnteqrCommitment,
   LandscapeCase,
   LandscapeLens,
   LandscapeMechanism,
@@ -17,7 +17,7 @@ export const RIGHT_TO_REPAIR_SEO = {
 
 export const RIGHT_TO_REPAIR_REVIEWED_ON = 'August 19, 2026';
 
-export const EQUIPQR_REPAIR_COMMITMENTS: readonly EquipQrCommitment[] = [
+export const ZNTEQR_REPAIR_COMMITMENTS: readonly ZnteqrCommitment[] = [
   {
     id: 'export',
     title: 'Your records leave with you',
