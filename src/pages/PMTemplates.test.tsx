@@ -357,7 +357,7 @@ describe('PMTemplates Page', () => {
     });
   });
 
-  function expandEquipQrTemplates() {
+  function expandZnteqrTemplates() {
     const trigger = screen.getByRole('button', { name: /ZNTEQR Templates/i });
     if (trigger.getAttribute('aria-expanded') === 'false') {
       fireEvent.click(trigger);
@@ -371,7 +371,7 @@ describe('PMTemplates Page', () => {
       </TestProviders>
     );
 
-    expandEquipQrTemplates();
+    expandZnteqrTemplates();
     const title = screen.getByText(pmFixtures.forklift.name);
     expect(title).toBeInTheDocument();
   });
@@ -385,7 +385,7 @@ describe('PMTemplates Page', () => {
       );
 
       expect(screen.getByText('ZNTEQR Templates')).toBeInTheDocument();
-      expandEquipQrTemplates();
+      expandZnteqrTemplates();
       expect(screen.getByText(pmFixtures.forklift.name)).toBeInTheDocument();
       expect(screen.getByText(pmFixtures.forklift.description)).toBeInTheDocument();
     });
@@ -508,7 +508,7 @@ describe('PMTemplates Page', () => {
         </TestProviders>
       );
 
-      expandEquipQrTemplates();
+      expandZnteqrTemplates();
       const forkliftCard = screen.getByLabelText(`Open details for template ${pmFixtures.forklift.name}`);
 
       expect(within(forkliftCard).getByText(pmFixtures.forklift.name)).toBeInTheDocument();
@@ -529,7 +529,7 @@ describe('PMTemplates Page', () => {
         </TestProviders>
       );
 
-      expandEquipQrTemplates();
+      expandZnteqrTemplates();
       for (const templateName of ['Forklift PM Checklist', 'Compact Excavator PM', 'Excavator PM']) {
         const cardHeader = screen.getByLabelText(`Open details for template ${templateName}`);
         const title = within(cardHeader).getByText(templateName);
@@ -553,7 +553,7 @@ describe('PMTemplates Page', () => {
         </TestProviders>
       );
 
-      expandEquipQrTemplates();
+      expandZnteqrTemplates();
       expect(screen.getByTestId(`assignment-menu-${pmFixtures.forklift.id}`)).toBeInTheDocument();
       expect(
         screen.getByTestId(`assignment-menu-${pmFixtures.customOrgTemplate.id}`),
@@ -568,7 +568,7 @@ describe('PMTemplates Page', () => {
         </TestProviders>
       );
 
-      expandEquipQrTemplates();
+      expandZnteqrTemplates();
       const cloneButtons = screen.getAllByRole('button', { name: 'Clone' });
       fireEvent.click(cloneButtons[0]);
 
@@ -663,7 +663,7 @@ describe('PMTemplates Page', () => {
         </TestProviders>
       );
 
-      expandEquipQrTemplates();
+      expandZnteqrTemplates();
       const cloneButtons = screen.getAllByRole('button', { name: 'Clone' });
       fireEvent.click(cloneButtons[0]);
 
