@@ -1,4 +1,4 @@
-import { test, expect, quickLogin } from '../fixtures/equipqr-test';
+import { test, expect, quickLogin } from '../fixtures/znteqr-test';
 
 const INTEGRATIONS_PATH = '/dashboard/organization/integrations';
 
