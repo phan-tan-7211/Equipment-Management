@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { openSidebarLink } from '../shared/page-helpers';
 
 const dashboardRoutes: Array<{ link: RegExp | string; path: RegExp }> = [
