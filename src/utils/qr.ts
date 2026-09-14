@@ -40,7 +40,7 @@ export function quickFormQRPath(token: string): string {
 }
 
 /** Origins accepted when decoding printed stickers against a different dev host. */
-const EQUIPQR_QR_ORIGINS = new Set([
+const ZNTEQR_QR_ORIGINS = new Set([
   'https://equipqr.app',
   'https://www.equipqr.app',
   'https://preview.equipqr.app',
@@ -93,7 +93,7 @@ export function parseZNTEQRTarget(
     return { ok: false, reason: 'malformed', message: 'Could not read this QR link.' };
   }
 
-  const originAllowed = url.origin === baseOrigin || EQUIPQR_QR_ORIGINS.has(url.origin);
+  const originAllowed = url.origin === baseOrigin || ZNTEQR_QR_ORIGINS.has(url.origin);
 
   if (!originAllowed) {
     return { ok: false, reason: 'external', message: 'This QR code is not a ZNTEQR link.' };
