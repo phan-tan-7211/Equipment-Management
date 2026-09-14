@@ -310,7 +310,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\dev\bootstrap-worktree-env
 The script picks a source checkout automatically: another worktree of this repo that already has `.env`, preferring a path **not** under `.cursor\worktrees`. You can pin the source explicitly:
 
 ```powershell
-$env:EQUIPQR_MAIN_REPO = "C:\Users\viral\ZNTEQR"   # optional persistent default
+$env:ZNTEQR_MAIN_REPO = "C:\Users\viral\ZNTEQR"   # optional persistent default
 .\dev\bootstrap-worktree-env.ps1 -SourceRoot "C:\Users\viral\ZNTEQR" -InstallDeps
 ```
 
