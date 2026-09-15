@@ -289,6 +289,7 @@ const koSections: readonly PrivacyPolicyLocalizedSection[] = [
 ];
 
 export const privacyPolicyContentResources = {
+  en: { privacyPolicyContent: [] as const },
   vi: { privacyPolicyContent: viSections },
   ko: { privacyPolicyContent: koSections },
 } as const;
