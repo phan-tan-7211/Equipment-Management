@@ -46,6 +46,21 @@ const MECHANISM_OPTIONS: Array<LandscapeMechanism | 'all'> = [
   'buy-vs-license',
 ];
 
+const LENS_TRANSLATION_KEYS: Record<LandscapeLens, string> = {
+  software: 'software',
+  hardware: 'hardware',
+  physical: 'physical',
+};
+
+const MECHANISM_TRANSLATION_KEYS: Record<LandscapeMechanism, string> = {
+  'cloud-tether': 'cloudTether',
+  'subscription-lock': 'subscriptionLock',
+  'parts-pairing': 'partsPairing',
+  'firmware-paywall': 'firmwarePaywall',
+  'diagnostic-lockout': 'diagnosticLockout',
+  'buy-vs-license': 'buyVsLicense',
+};
+
 function FilterRow<T extends string>({
   legend,
   value,
@@ -107,12 +122,12 @@ function CaseCard({
         <div className="flex flex-wrap gap-1">
           {item.lenses.map((lens) => (
             <Badge key={lens} variant="secondary">
-              {t(`publicLegal.landscape.${lens === 'all' ? 'allLayers' : lens}`)}
+              {t(`publicLegal.landscape.${LENS_TRANSLATION_KEYS[lens]}`)}
             </Badge>
           ))}
           {item.mechanisms.map((mechanism) => (
             <Badge key={mechanism} variant="outline">
-              {t(`publicLegal.landscape.${mechanism.replaceAll('-', '') === 'cloudtether' ? 'cloudTether' : mechanism.replaceAll('-', '') === 'subscriptionlock' ? 'subscriptionLock' : mechanism.replaceAll('-', '') === 'partspairing' ? 'partsPairing' : mechanism.replaceAll('-', '') === 'firmwarepaywall' ? 'firmwarePaywall' : mechanism.replaceAll('-', '') === 'diagnosticlockout' ? 'diagnosticLockout' : 'buyVsLicense'}`)}
+              {t(`publicLegal.landscape.${MECHANISM_TRANSLATION_KEYS[mechanism]}`)}
             </Badge>
           ))}
         </div>
