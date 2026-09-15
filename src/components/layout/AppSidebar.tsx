@@ -26,7 +26,6 @@ import {
   Warehouse,
   Search,
   Layers,
-  Plug,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -36,7 +35,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebar } from "@/components/ui/sidebar-context";
 import Logo from "@/components/ui/Logo";
-import { ORGANIZATION_INTEGRATIONS_PATH, ORGANIZATION_MEMBERS_PATH } from "@/features/organization/constants/routes";
+import { ORGANIZATION_MEMBERS_PATH } from "@/features/organization/constants/routes";
 import { useInventoryAccess } from "@/features/inventory/hooks/useInventoryAccess";
 import { useI18n } from '@/i18n';
 
@@ -80,7 +79,6 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { translationKey: "navigation.items.teams", url: "/dashboard/teams", icon: Users },
       { translationKey: "navigation.items.organization", url: ORGANIZATION_MEMBERS_PATH, icon: Building },
-      { translationKey: "navigation.items.integrations", url: ORGANIZATION_INTEGRATIONS_PATH, icon: Plug, adminOnly: true },
     ],
   },
   // Audit Log lives under Organization settings (#1122).
@@ -127,8 +125,7 @@ const AppSidebar = () => {
   const renderNavItem = (item: NavigationItem) => {
     const isActive =
       item.url === ORGANIZATION_MEMBERS_PATH
-        ? location.pathname.startsWith('/dashboard/organization') &&
-          !location.pathname.startsWith(ORGANIZATION_INTEGRATIONS_PATH)
+        ? location.pathname.startsWith('/dashboard/organization')
         : location.pathname === item.url;
     return (
       <SidebarMenuItem key={item.translationKey}>
