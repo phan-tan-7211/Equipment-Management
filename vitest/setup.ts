@@ -171,7 +171,7 @@ beforeAll(() => {
 
   const checkDialogA11y = () => {
     const dialogContents = document.querySelectorAll(
-      '[data-equipqr-dialog-content="true"][data-state="open"]',
+      '[data-znteqr-dialog-content="true"][data-state="open"]',
     );
     dialogContents.forEach((dialog) => {
       const describedBy = dialog.getAttribute('aria-describedby');
