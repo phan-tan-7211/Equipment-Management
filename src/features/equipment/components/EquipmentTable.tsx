@@ -51,6 +51,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
   const [imageHover, setImageHover] = useState<EquipmentImageHover | null>(null);
   const [imageHoverVisible, setImageHoverVisible] = useState(false);
   const imageHoverCloseTimer = useRef<number | null>(null);
+  const imageHoverRef = useRef<EquipmentImageHover | null>(null);
   const [columnSizing, setColumnSizing] = usePersistedColumnSizing(COLUMN_SIZING_STORAGE_KEY, getDefaultEquipmentColumnSizing());
 
   const clearImageHoverCloseTimer = useCallback(() => {
@@ -60,48 +61,60 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
   }, []);
 
   const closeImageHover = useCallback(() => {
+    if (!imageHoverRef.current) return;
     setImageHoverVisible(false);
     if (imageHoverCloseTimer.current !== null) return;
     imageHoverCloseTimer.current = window.setTimeout(() => {
+      imageHoverRef.current = null;
       setImageHover(null);
       imageHoverCloseTimer.current = null;
     }, IMAGE_HOVER_TRANSITION_MS);
   }, [clearImageHoverCloseTimer]);
 
-  const openImageHover = useCallback((item: EquipmentTableRow, event: React.PointerEvent) => {
-    const src = displayableImageSrc(item.image_url);
-    if (!src || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const openImageHover = useCallback((thumbnail: HTMLElement, clientX: number, clientY: number) => {
+    const src = thumbnail.dataset.equipmentImageSrc;
+    if (!src || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      closeImageHover();
+      return;
+    }
     clearImageHoverCloseTimer();
+    const nextHover = {
+      src,
+      alt: thumbnail.dataset.equipmentImageAlt ?? 'Equipment image',
+      ...getImageHoverPosition(clientX, clientY),
+    };
+    imageHoverRef.current = nextHover;
     setImageHoverVisible(true);
-    setImageHover({ src, alt: `${item.name} equipment`, ...getImageHoverPosition(event.clientX, event.clientY) });
-  }, [clearImageHoverCloseTimer]);
-  const moveImageHover = useCallback((item: EquipmentTableRow, event: React.PointerEvent) => {
-    const src = displayableImageSrc(item.image_url);
-    if (!src) return;
-    setImageHover((current) => current?.src === src ? { ...current, ...getImageHoverPosition(event.clientX, event.clientY) } : current);
-  }, []);
+    setImageHover(nextHover);
+  }, [clearImageHoverCloseTimer, closeImageHover]);
 
   useEffect(() => {
-    if (!imageHover) return;
-
-    const closeWhenPointerLeavesThumbnail = (event: PointerEvent) => {
+    const handlePointerMove = (event: PointerEvent) => {
       const target = event.target;
-      if (!(target instanceof Element) || !target.closest('[data-equipment-thumbnail]')) {
+      const thumbnail = target instanceof Element
+        ? target.closest<HTMLElement>('[data-equipment-thumbnail]')
+        : null;
+      if (!thumbnail) {
         closeImageHover();
+        return;
       }
+      openImageHover(thumbnail, event.clientX, event.clientY);
     };
 
-    document.addEventListener('pointermove', closeWhenPointerLeavesThumbnail, true);
+    document.addEventListener('pointermove', handlePointerMove, true);
     document.addEventListener('mouseleave', closeImageHover, true);
     window.addEventListener('blur', closeImageHover);
     return () => {
-      document.removeEventListener('pointermove', closeWhenPointerLeavesThumbnail, true);
+      document.removeEventListener('pointermove', handlePointerMove, true);
       document.removeEventListener('mouseleave', closeImageHover, true);
       window.removeEventListener('blur', closeImageHover);
     };
-  }, [closeImageHover, imageHover]);
+  }, [closeImageHover, openImageHover]);
 
-  useEffect(() => () => clearImageHoverCloseTimer(), [clearImageHoverCloseTimer]);
+  useEffect(() => () => {
+    clearImageHoverCloseTimer();
+    imageHoverRef.current = null;
+  }, [clearImageHoverCloseTimer]);
   const isColumnVisible = useCallback((key:EquipmentTableColumnKey)=>{ const meta=getEquipmentTableColumnMeta(key); if(meta&&!meta.canHide)return true; return visibleColumns?.[key]??true; },[visibleColumns]);
   const visibleColumnKeys=useMemo(()=>EQUIPMENT_TABLE_COLUMN_ORDER.filter((key)=>isColumnVisible(key)),[isColumnVisible]);
   const handleSortClick=useCallback((field:EquipmentTableSortField)=>{ if(!onSortChange)return; const next=sortConfig?.field===field?(sortConfig.direction==='asc'?'desc':'asc'):'asc'; onSortChange(field,next); },[onSortChange,sortConfig]);
@@ -116,8 +129,8 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
           <div
             className={cn('relative flex min-h-16 h-full w-full items-center justify-center overflow-hidden bg-muted/30', imageSrc && 'cursor-zoom-in')}
             data-equipment-thumbnail
-            onPointerEnter={(event) => openImageHover(item, event)}
-            onPointerMove={(event) => moveImageHover(item, event)}
+            data-equipment-image-src={imageSrc || undefined}
+            data-equipment-image-alt={imageSrc ? item.name : undefined}
             title={getEquipmentTableCellDisplayValue(item, 'status', settings)}
           >
             {imageSrc ? (
@@ -155,7 +168,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
     }}} as ColumnDef<EquipmentTableRow>; });
     const actionsColumn:ColumnDef<EquipmentTableRow>={id:EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY,size:columnSizing[EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY]??56,minSize:56,maxSize:56,enableResizing:false,header:()=>null,cell:({row})=><div className="flex justify-end"><Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={()=>onShowQRCode(row.original.id)} aria-label={t('equipment.showQrFor',{name:row.original.name})}><QrCode className="h-4 w-4" aria-hidden="true" /></Button></div>};
     return [...dataColumns,actionsColumn];
-  },[activeEquipmentId,beginTransition,columnSizing,handleSortClick,moveImageHover,onShowQRCode,openImageHover,settings,sortConfig?.direction,sortConfig?.field,t,visibleColumnKeys]);
+  },[activeEquipmentId,beginTransition,columnSizing,handleSortClick,onShowQRCode,settings,sortConfig?.direction,sortConfig?.field,t,visibleColumnKeys]);
   const table=useReactTable({data:equipment,columns,state:{columnSizing},onColumnSizingChange:setColumnSizing,columnResizeMode:'onEnd',enableColumnResizing:true,getCoreRowModel:getCoreRowModel()});
   const tableWidth=getResizableTableWidth(table.getTotalSize());
   if(equipment.length===0)return <DataTableEmptyState message={t('equipment.noTableMatches')} />;
