@@ -123,6 +123,14 @@ describe('Auth Page', () => {
       expect(screen.getByText('Sign in to your account to get started')).toBeInTheDocument();
     });
 
+    it('renders the language selector', () => {
+      render(<Auth />);
+
+      const languageSelector = screen.getByRole('combobox', { name: /^Language$/i });
+      expect(languageSelector).toHaveValue('en');
+      expect(languageSelector).toHaveDisplayValue('English');
+    });
+
     it('renders logo component', () => {
       render(<Auth />);
 

@@ -4,6 +4,7 @@ import { useActiveSection } from '@/hooks/useActiveSection';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Logo from '@/components/ui/Logo';
+import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
 import { Menu } from 'lucide-react';
 import {
   Sheet,
@@ -111,15 +112,17 @@ const LandingHeader = () => {
             </div>
           </div>
 
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center">
+          {/* Desktop language and CTA */}
+          <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
             <Button asChild>
               <Link to="/auth">{t('publicChrome.header.getStarted')}</Link>
             </Button>
           </div>
 
-          {/* Mobile Navigation */}
-          <div className="md:hidden">
+          {/* Mobile language selector and navigation */}
+          <div className="md:hidden flex items-center gap-2">
+            <LanguageSwitcher />
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label={t('publicChrome.header.openMenu')}>
