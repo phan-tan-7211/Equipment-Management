@@ -16,6 +16,7 @@ import {
   useReleasesPageState,
 } from '@/features/releases/hooks/useReleasesPageState';
 import type { PublicReleaseFilter } from '@/features/releases/lib/publicReleaseTypes';
+import { getLocalizedPublicReleaseEntry } from '@/i18n/publicReleaseResources';
 
 const FILTER_ORDER: readonly PublicReleaseFilter[] = ['all', 'features', 'fixes', 'security'];
 
@@ -227,27 +228,31 @@ export function Releases(): JSX.Element {
                                       : section.label}
                                   </h2>
                                   <ul className="space-y-2">
-                                    {section.entries.map((entry, index) => (
-                                      <li
-                                        key={`${release.version}-${section.id}-${index}`}
-                                        className="text-sm leading-6 text-foreground"
-                                      >
-                                        {entry.title ? (
-                                          <>
-                                            <span className="font-semibold">{entry.title}</span>
-                                            {entry.body ? (
-                                              <>
-                                                {' '}
-                                                —{' '}
-                                                <span className="text-muted-foreground">{entry.body}</span>
-                                              </>
-                                            ) : null}
-                                          </>
-                                        ) : (
-                                          <span className="text-muted-foreground">{entry.body}</span>
-                                        )}
-                                      </li>
-                                    ))}
+                                    {section.entries.map((entry, index) => {
+                                      const localizedEntry = getLocalizedPublicReleaseEntry(language, release, section, index);
+
+                                      return (
+                                        <li
+                                          key={`${release.version}-${section.id}-${index}`}
+                                          className="text-sm leading-6 text-foreground"
+                                        >
+                                          {localizedEntry.title ? (
+                                            <>
+                                              <span className="font-semibold">{localizedEntry.title}</span>
+                                              {localizedEntry.body ? (
+                                                <>
+                                                  {' '}
+                                                  —{' '}
+                                                  <span className="text-muted-foreground">{localizedEntry.body}</span>
+                                                </>
+                                              ) : null}
+                                            </>
+                                          ) : (
+                                            <span className="text-muted-foreground">{localizedEntry.body}</span>
+                                          )}
+                                        </li>
+                                      );
+                                    })}
                                   </ul>
                                 </section>
                               ))}

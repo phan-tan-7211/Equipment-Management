@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.8] - 2026-09-15
+
+### Changed
+
+- Public release notes now follow the selected Vietnamese, English, or Korean language.
+
 ## [3.34.7] - 2026-09-15
 
 ### Added
