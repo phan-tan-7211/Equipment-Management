@@ -2,7 +2,7 @@
  * Help Center docs media — "Start Here" collection, desktop (#1161).
  *
  * One continuous demo capturing the four Start Here articles:
- *   welcome-to-equipqr, navigation-tour, invite-team-members, role-overview.
+ *   welcome-to-znteqr, navigation-tour, invite-team-members, role-overview.
  *
  * Capture:
  *   .\dev\pr-evidence\Invoke-PrEvidence.ps1 -Flow "docs-start-here-desktop" `
@@ -23,7 +23,7 @@ test.describe('Docs media: Start Here desktop @pr-evidence', () => {
     assertHealthyShell,
     page,
   }) => {
-    // --- welcome-to-equipqr: the signed-in home base ---
+    // --- welcome-to-znteqr: the signed-in home base ---
     await gotoDashboard('/');
     await assertHealthyShell();
     await expect(page.getByRole('navigation').first()).toBeVisible({ timeout: 60_000 });
