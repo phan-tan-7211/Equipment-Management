@@ -118,7 +118,6 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
             data-equipment-thumbnail
             onPointerEnter={(event) => openImageHover(item, event)}
             onPointerMove={(event) => moveImageHover(item, event)}
-            onPointerLeave={closeImageHover}
             title={getEquipmentTableCellDisplayValue(item, 'status', settings)}
           >
             {imageSrc ? (
