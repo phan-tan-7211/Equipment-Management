@@ -1,4 +1,4 @@
-import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
 import { PageBackButton } from '@/components/layout/PageBackButton';
 import { PageSEO } from '@/components/seo/PageSEO';
 import { useI18n } from '@/i18n/I18nProvider';
