@@ -11,6 +11,13 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.9] - 2026-09-15
+
+### Added
+
+- Invited employees can create their own email/password account on mobile and join the inviting organization without creating a separate workspace.
+
+
 ## [3.34.8] - 2026-09-15
 
 ### Changed
