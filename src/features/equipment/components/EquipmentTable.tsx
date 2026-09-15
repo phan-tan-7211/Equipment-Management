@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { Forklift, QrCode } from 'lucide-react';
@@ -23,6 +23,7 @@ const STATUS_COLUMN_KEY: EquipmentTableColumnKey = 'status';
 const COLUMN_SIZING_STORAGE_KEY = 'equipqr:equipment-table-column-sizing:v3';
 const COLUMN_KEYS: Record<EquipmentTableColumnKey, string> = { status:'equipment.status', name:'equipment.name', manufacturer:'equipment.manufacturer', model:'equipment.model', serial_number:'equipment.serialNumber', working_hours:'equipment.hours', location:'equipment.location', team_name:'equipment.team', last_maintenance:'equipment.lastMaintenanceFull' };
 type EquipmentImageHover = { src: string; alt: string; x: number; y: number; size: number };
+const IMAGE_HOVER_TRANSITION_MS = 140;
 
 function getImageHoverPosition(clientX: number, clientY: number) {
   const margin = 12;
@@ -48,17 +49,59 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
   const { beginTransition, activeEquipmentId } = useEquipmentCardTransition();
   const { settings } = useUserSettings();
   const [imageHover, setImageHover] = useState<EquipmentImageHover | null>(null);
+  const [imageHoverVisible, setImageHoverVisible] = useState(false);
+  const imageHoverCloseTimer = useRef<number | null>(null);
   const [columnSizing, setColumnSizing] = usePersistedColumnSizing(COLUMN_SIZING_STORAGE_KEY, getDefaultEquipmentColumnSizing());
-  const openImageHover = useCallback((item: EquipmentTableRow, event: React.MouseEvent) => {
+
+  const clearImageHoverCloseTimer = useCallback(() => {
+    if (imageHoverCloseTimer.current === null) return;
+    window.clearTimeout(imageHoverCloseTimer.current);
+    imageHoverCloseTimer.current = null;
+  }, []);
+
+  const closeImageHover = useCallback(() => {
+    setImageHoverVisible(false);
+    if (imageHoverCloseTimer.current !== null) return;
+    imageHoverCloseTimer.current = window.setTimeout(() => {
+      setImageHover(null);
+      imageHoverCloseTimer.current = null;
+    }, IMAGE_HOVER_TRANSITION_MS);
+  }, [clearImageHoverCloseTimer]);
+
+  const openImageHover = useCallback((item: EquipmentTableRow, event: React.PointerEvent) => {
     const src = displayableImageSrc(item.image_url);
     if (!src || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    clearImageHoverCloseTimer();
+    setImageHoverVisible(true);
     setImageHover({ src, alt: `${item.name} equipment`, ...getImageHoverPosition(event.clientX, event.clientY) });
-  }, []);
-  const moveImageHover = useCallback((item: EquipmentTableRow, event: React.MouseEvent) => {
+  }, [clearImageHoverCloseTimer]);
+  const moveImageHover = useCallback((item: EquipmentTableRow, event: React.PointerEvent) => {
     const src = displayableImageSrc(item.image_url);
     if (!src) return;
     setImageHover((current) => current?.src === src ? { ...current, ...getImageHoverPosition(event.clientX, event.clientY) } : current);
   }, []);
+
+  useEffect(() => {
+    if (!imageHover) return;
+
+    const closeWhenPointerLeavesThumbnail = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element) || !target.closest('[data-equipment-thumbnail]')) {
+        closeImageHover();
+      }
+    };
+
+    document.addEventListener('pointermove', closeWhenPointerLeavesThumbnail, true);
+    document.addEventListener('mouseleave', closeImageHover, true);
+    window.addEventListener('blur', closeImageHover);
+    return () => {
+      document.removeEventListener('pointermove', closeWhenPointerLeavesThumbnail, true);
+      document.removeEventListener('mouseleave', closeImageHover, true);
+      window.removeEventListener('blur', closeImageHover);
+    };
+  }, [closeImageHover, imageHover]);
+
+  useEffect(() => () => clearImageHoverCloseTimer(), [clearImageHoverCloseTimer]);
   const isColumnVisible = useCallback((key:EquipmentTableColumnKey)=>{ const meta=getEquipmentTableColumnMeta(key); if(meta&&!meta.canHide)return true; return visibleColumns?.[key]??true; },[visibleColumns]);
   const visibleColumnKeys=useMemo(()=>EQUIPMENT_TABLE_COLUMN_ORDER.filter((key)=>isColumnVisible(key)),[isColumnVisible]);
   const handleSortClick=useCallback((field:EquipmentTableSortField)=>{ if(!onSortChange)return; const next=sortConfig?.field===field?(sortConfig.direction==='asc'?'desc':'asc'):'asc'; onSortChange(field,next); },[onSortChange,sortConfig]);
@@ -73,9 +116,9 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
           <div
             className={cn('relative flex min-h-16 h-full w-full items-center justify-center overflow-hidden bg-muted/30', imageSrc && 'cursor-zoom-in')}
             data-equipment-thumbnail
-            onMouseEnter={(event) => openImageHover(item, event)}
-            onMouseMove={(event) => moveImageHover(item, event)}
-            onMouseLeave={() => setImageHover(null)}
+            onPointerEnter={(event) => openImageHover(item, event)}
+            onPointerMove={(event) => moveImageHover(item, event)}
+            onPointerLeave={closeImageHover}
             title={getEquipmentTableCellDisplayValue(item, 'status', settings)}
           >
             {imageSrc ? (
@@ -121,7 +164,10 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
     <ResizableFixedDataTable table={table} tableWidth={tableWidth} withTooltipProvider getHeaderProps={(header)=>{ const columnId=header.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); return {className:cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isActionsColumn&&'w-14 px-2','relative select-none',isStatusColumn&&'sticky left-0 z-20 bg-card px-2'),ariaSort:meta?.sortable&&sortConfig?.field===meta.sortField?(sortConfig.direction==='asc'?'ascending':'descending'):'none',onAutoFit:isActionsColumn?undefined:()=>handleAutoFitColumn(columnId as EquipmentTableColumnKey)};}} getCellClassName={(cell)=>{ const columnId=cell.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); return cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isStatusColumn&&'sticky left-0 z-10 bg-card p-0 align-middle',isActionsColumn&&'w-14 px-2','overflow-hidden');}} />
     {imageHover ? (
       <div
-        className="equipment-image-hover-preview pointer-events-none fixed z-[9999] box-border overflow-hidden rounded-xl border border-border bg-white p-2 shadow-2xl dark:bg-card"
+        className={cn(
+          'equipment-image-hover-preview pointer-events-none fixed z-[9999] box-border overflow-hidden rounded-xl border border-border bg-white p-2 shadow-2xl transition-[opacity,transform] duration-150 ease-out dark:bg-card',
+          imageHoverVisible ? 'scale-100 opacity-100' : 'scale-[0.97] opacity-0',
+        )}
         data-equipment-image-hover-preview
         aria-hidden="true"
         style={{ left: imageHover.x, top: imageHover.y, width: imageHover.size, height: imageHover.size }}
