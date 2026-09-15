@@ -43,7 +43,7 @@ export default function DoNotSellOrShare() {
               </Button>
             </p>
             <p>
-              {t('publicLegal.doNotSell.questions)}{' '}
+              {t('publicLegal.doNotSell.questions')}{' '}
               <a href={CONTACT_EMAIL} className="underline">
                 phantan7211@gmail.com
               </a>
