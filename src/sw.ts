@@ -108,7 +108,7 @@ self.addEventListener('push', (event) => {
       dateOfArrival: Date.now(),
     },
     requireInteraction: false,
-    tag: data.data?.notification_id || 'equipqr-notification',
+    tag: data.data?.notification_id || 'znteqr-notification',
   };
 
   event.waitUntil(self.registration.showNotification(data.title || 'ZNTEQR', options));
