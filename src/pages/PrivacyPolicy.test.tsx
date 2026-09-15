@@ -118,4 +118,19 @@ describe('PrivacyPolicy', () => {
     const privacyRequestLink = screen.getByText('equipqr.app/privacy-request');
     expect(privacyRequestLink.closest('a')).toHaveAttribute('href', '/privacy-request');
   });
+  it('renders the localized policy body when Vietnamese is selected', () => {
+    window.localStorage.setItem('znteqr-language', 'vi');
+
+    try {
+      render(<PrivacyPolicy />);
+
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Chính sách quyền riêng tư');
+      expect(screen.getByText('1. Giới thiệu')).toBeInTheDocument();
+      expect(screen.getByText(/ZNTEQR.*cam kết bảo vệ quyền riêng tư/)).toBeInTheDocument();
+      expect(screen.getByText('Không bán thông tin cá nhân')).toBeInTheDocument();
+    } finally {
+      window.localStorage.removeItem('znteqr-language');
+    }
+  });
+
 });
