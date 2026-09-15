@@ -127,7 +127,7 @@ describe('PrivacyPolicy', () => {
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Chính sách quyền riêng tư');
       expect(screen.getByText('1. Giới thiệu')).toBeInTheDocument();
       expect(screen.getByText(/ZNTEQR.*cam kết bảo vệ quyền riêng tư/)).toBeInTheDocument();
-      expect(screen.getByText('Không bán thông tin cá nhân')).toBeInTheDocument();
+      expect(screen.getByText(/Chúng tôi không bán thông tin cá nhân/)).toBeInTheDocument();
     } finally {
       window.localStorage.removeItem('znteqr-language');
     }
