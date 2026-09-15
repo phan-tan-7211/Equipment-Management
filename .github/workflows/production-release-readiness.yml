@@ -1,16 +1,19 @@
 name: Production Release Readiness
 
-# After a merge to `main`, applies pending Supabase migrations to the production
-# project, verifies production schema_migrations alignment (strict drift check),
-# waits until the Vercel deployment for the same commit is READY, promotes
-# that deployment so equipqr.app serves the new build, then deploys Edge
-# Functions last so an earlier failure cannot leave production edge ahead of
-# the promoted frontend.
+# After a merge to `main`, applies pending Supabase migrations to production,
+# verifies schema_migrations alignment, waits for the matching Vercel deployment,
+# promotes it to production, then deploys Edge Functions last.
 #
-# Required repo-level GitHub Actions secrets:
+# Source of truth:
+#   - Non-secret deployment targets: .github/deployment-targets.json
+#   - Authentication: GitHub Actions secrets
+# Required secrets:
 #   - SUPABASE_ACCESS_TOKEN
 #   - SUPABASE_DB_PASSWORD
 #   - VERCEL_TOKEN
+#
+# Runtime application variables remain managed natively in Vercel and Supabase.
+# 1Password is not part of this production release path.
 
 on:
   push:
@@ -20,18 +23,17 @@ on:
 permissions:
   contents: read
 
-env:
-  SUPABASE_PROJECT_REF: wgynakhoppqkrutnslmv
-
 jobs:
   production-release-readiness:
     name: Migrate, verify schema, promote Vercel, deploy edge
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    environment: production
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -41,20 +43,52 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Load production deployment targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = '.github/deployment-targets.json';
+          const config = JSON.parse(fs.readFileSync(path, 'utf8'));
+          const production = config.production || {};
+          const values = {
+            SUPABASE_PROJECT_REF: production.supabaseProjectRef,
+            VERCEL_TEAM_ID: production.vercelTeamId,
+            VERCEL_PROJECT_ID: production.vercelProjectId,
+          };
+          for (const [name, value] of Object.entries(values)) {
+            if (typeof value !== 'string' || !value.trim()) {
+              throw new Error(`${name} is missing from ${path}`);
+            }
+          }
+          fs.appendFileSync(
+            process.env.GITHUB_ENV,
+            Object.entries(values).map(([name, value]) => `${name}=${value.trim()}\n`).join(''),
+          );
+          console.log(`Loaded production deployment targets from ${path}`);
+          NODE
+
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520
         with:
           version: 2.72.8
 
-      - name: Verify release secrets
+      - name: Verify release configuration
         shell: bash
         run: |
           set -euo pipefail
           fail=0
-          for var in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD VERCEL_TOKEN; do
+          for var in \
+            SUPABASE_PROJECT_REF \
+            VERCEL_TEAM_ID \
+            VERCEL_PROJECT_ID \
+            SUPABASE_ACCESS_TOKEN \
+            SUPABASE_DB_PASSWORD \
+            VERCEL_TOKEN; do
             val="${!var:-}"
             if [[ -z "$val" ]]; then
-              echo "::error title=production-release-readiness::$var is empty — add it as a repo-level GitHub Actions secret."
+              echo "::error title=production-release-readiness::$var is empty. Check .github/deployment-targets.json or GitHub Actions secrets."
               fail=1
             fi
           done
@@ -81,8 +115,6 @@ jobs:
       - name: Wait for Vercel deployment (main, READY)
         id: wait_vercel
         env:
-          VERCEL_TEAM_ID: team_78VeGDURoofThjZNJOKEBpP5
-          VERCEL_PROJECT_ID: prj_P9hRun4B2OdGy8ACCnb0f7jNG6UA
           GITHUB_SHA: ${{ github.sha }}
         shell: bash
         run: |
@@ -91,8 +123,6 @@ jobs:
 
       - name: Promote Vercel deployment to production
         env:
-          VERCEL_TEAM_ID: team_78VeGDURoofThjZNJOKEBpP5
-          VERCEL_PROJECT_ID: prj_P9hRun4B2OdGy8ACCnb0f7jNG6UA
           VERCEL_DEPLOYMENT_URL: ${{ steps.wait_vercel.outputs.deployment_url }}
           VERCEL_DEPLOYMENT_ID: ${{ steps.wait_vercel.outputs.deployment_id }}
           GITHUB_SHA: ${{ github.sha }}
@@ -118,5 +148,5 @@ jobs:
             echo "- **Vercel:** main deployment READY and **promoted to production** (\`equipqr.app\`)."
             echo "- **Deployment:** ${{ steps.wait_vercel.outputs.deployment_url }}"
             echo ""
-            echo "No manual Vercel dashboard promote or \`supabase functions deploy\` is required when this workflow succeeds."
+            echo "Deployment targets came from versioned config-as-code; authentication came from GitHub Secrets."
           } >> "$GITHUB_STEP_SUMMARY"
