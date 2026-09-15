@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.7] - 2026-09-15
+
+### Added
+
+- Localized the complete Privacy Policy body for Vietnamese and Korean.
+
 ## [3.34.6] - 2026-09-15
 
 ### Added
