@@ -68,9 +68,9 @@ describe('TermsOfService', () => {
     const contactEmailLink = screen.getByRole('link', { name: /phantan7211@gmail\.com/i });
     expect(contactEmailLink).toHaveAttribute('href', 'mailto:phantan7211@gmail.com');
 
-    const equipQrLink = screen.getByRole('link', { name: /equipqr\.app/i });
-    expect(equipQrLink).toHaveAttribute('href', 'https://equipqr.app');
-    expect(equipQrLink).toHaveAttribute('target', '_blank');
-    expect(equipQrLink).toHaveAttribute('rel', 'noopener noreferrer');
+    const productionAppLink = screen.getByRole('link', { name: /equipqr\.app/i });
+    expect(productionAppLink).toHaveAttribute('href', 'https://equipqr.app');
+    expect(productionAppLink).toHaveAttribute('target', '_blank');
+    expect(productionAppLink).toHaveAttribute('rel', 'noopener noreferrer');
   });
 });

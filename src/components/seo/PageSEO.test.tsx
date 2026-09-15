@@ -3,7 +3,7 @@ import { StrictMode } from 'react';
 import { render, cleanup, waitFor } from '@testing-library/react';
 import { PageSEO } from './PageSEO';
 
-const MANAGED = '[data-equipqr-page-seo]';
+const MANAGED = '[data-znteqr-page-seo]';
 const TEST_SEED_ATTR = 'data-page-seo-test-seed';
 
 function managedCount(): number {
@@ -82,10 +82,10 @@ describe('PageSEO', () => {
     });
 
     expect(
-      document.querySelector('meta[name="robots"][data-equipqr-page-seo]')?.getAttribute('content')
+      document.querySelector('meta[name="robots"][data-znteqr-page-seo]')?.getAttribute('content')
     ).toBe('noindex, nofollow');
     expect(document.querySelector('link[rel="canonical"]')).toBeNull();
-    expect(document.querySelector('meta[name="description"][data-equipqr-page-seo]')).toBeNull();
+    expect(document.querySelector('meta[name="description"][data-znteqr-page-seo]')).toBeNull();
 
     unmount();
     expect(document.title).toBe('InitialTitle');
@@ -109,7 +109,7 @@ describe('PageSEO', () => {
     });
 
     expect(
-      document.querySelector('meta[name="description"][data-equipqr-page-seo]')?.getAttribute(
+      document.querySelector('meta[name="description"][data-znteqr-page-seo]')?.getAttribute(
         'content'
       )
     ).toBe('A great feature');
@@ -118,26 +118,26 @@ describe('PageSEO', () => {
 
     const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     expect(canonical?.getAttribute('href')).toBe('https://equipqr.app/features/foo');
-    expect(canonical?.hasAttribute('data-equipqr-page-seo')).toBe(true);
+    expect(canonical?.hasAttribute('data-znteqr-page-seo')).toBe(true);
 
     expect(
       document
-        .querySelector('meta[property="og:title"][data-equipqr-page-seo]')
+        .querySelector('meta[property="og:title"][data-znteqr-page-seo]')
         ?.getAttribute('content')
     ).toBe('Feature | ZNTEQR');
     expect(
       document
-        .querySelector('meta[property="og:image"][data-equipqr-page-seo]')
+        .querySelector('meta[property="og:image"][data-znteqr-page-seo]')
         ?.getAttribute('content')
     ).toBe('https://equipqr.app/custom.png');
     expect(
       document
-        .querySelector('meta[name="twitter:card"][data-equipqr-page-seo]')
+        .querySelector('meta[name="twitter:card"][data-znteqr-page-seo]')
         ?.getAttribute('content')
     ).toBe('summary_large_image');
     expect(
       document
-        .querySelector('meta[name="twitter:site"][data-equipqr-page-seo]')
+        .querySelector('meta[name="twitter:site"][data-znteqr-page-seo]')
         ?.getAttribute('content')
     ).toBe('@equipqr');
 
@@ -205,7 +205,7 @@ describe('PageSEO', () => {
       expect(document.title).toBe('B | ZNTEQR');
     });
     expect(
-      document.querySelector('meta[name="description"][data-equipqr-page-seo]')?.getAttribute(
+      document.querySelector('meta[name="description"][data-znteqr-page-seo]')?.getAttribute(
         'content'
       )
     ).toBe('d2');

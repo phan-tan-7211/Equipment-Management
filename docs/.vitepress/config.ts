@@ -5,7 +5,7 @@ import type { DefaultTheme } from "vitepress";
 const supportSidebarArticles: Record<string, { text: string; link: string }[]> =
   {
     "start-here": [
-      { text: "Welcome to ZNTEQR", link: "/support/start-here/welcome-to-equipqr" },
+      { text: "Welcome to ZNTEQR", link: "/support/start-here/welcome-to-znteqr" },
       { text: "Navigation tour", link: "/support/start-here/navigation-tour" },
       { text: "Invite your team", link: "/support/start-here/invite-team-members" },
       { text: "Role overview", link: "/support/start-here/role-overview" },

@@ -119,10 +119,10 @@ export async function pinContextToOrg(
   organizationId: string,
 ): Promise<void> {
   await context.addInitScript((orgId) => {
-    if (sessionStorage.getItem('equipqr_e2e_org_pin_applied') === 'true') {
+    if (sessionStorage.getItem('znteqr_e2e_org_pin_applied') === 'true') {
       return;
     }
-    sessionStorage.setItem('equipqr_e2e_org_pin_applied', 'true');
+    sessionStorage.setItem('znteqr_e2e_org_pin_applied', 'true');
 
     const selectionTimestamp = new Date().toISOString();
     localStorage.setItem('equipqr_current_organization', orgId);

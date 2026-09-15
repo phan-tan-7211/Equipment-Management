@@ -16,7 +16,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-dev",
+        "group": "znteqr-dev",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -36,11 +36,11 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-edge",
+        "group": "znteqr-edge",
         "showReuseMessage": false
       },
       "problemMatcher": {
-        "owner": "equipqr-edge",
+        "owner": "znteqr-edge",
         "pattern": {
           "regexp": "^$"
         },
@@ -66,11 +66,11 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-docs",
+        "group": "znteqr-docs",
         "showReuseMessage": false
       },
       "problemMatcher": {
-        "owner": "equipqr-docs",
+        "owner": "znteqr-docs",
         "pattern": {
           "regexp": "^$"
         },
@@ -96,11 +96,11 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-vite",
+        "group": "znteqr-vite",
         "showReuseMessage": false
       },
       "problemMatcher": {
-        "owner": "equipqr-vite",
+        "owner": "znteqr-vite",
         "pattern": {
           "regexp": "^$"
         },
@@ -137,7 +137,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-dev",
+        "group": "znteqr-dev",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -156,7 +156,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-stop",
+        "group": "znteqr-stop",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -176,7 +176,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-stop",
+        "group": "znteqr-stop",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -195,7 +195,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-stop",
+        "group": "znteqr-stop",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -215,7 +215,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-stop",
+        "group": "znteqr-stop",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -229,7 +229,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-e2e",
+        "group": "znteqr-e2e",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -243,7 +243,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-e2e",
+        "group": "znteqr-e2e",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -257,7 +257,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-e2e",
+        "group": "znteqr-e2e",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -271,7 +271,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-e2e",
+        "group": "znteqr-e2e",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -285,7 +285,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-e2e",
+        "group": "znteqr-e2e",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -306,7 +306,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-e2e",
+        "group": "znteqr-e2e",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -320,7 +320,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-e2e",
+        "group": "znteqr-e2e",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -342,7 +342,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-e2e",
+        "group": "znteqr-e2e",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -356,7 +356,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-e2e",
+        "group": "znteqr-e2e",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -370,7 +370,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-e2e",
+        "group": "znteqr-e2e",
         "showReuseMessage": false
       },
       "problemMatcher": []
@@ -384,7 +384,7 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "always",
-        "group": "equipqr-e2e",
+        "group": "znteqr-e2e",
         "showReuseMessage": false
       },
       "problemMatcher": []

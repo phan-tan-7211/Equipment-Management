@@ -1,6 +1,6 @@
 import { useEffect, useId, type FC } from 'react';
 
-const MANAGED_ATTR = 'data-equipqr-jsonld';
+const MANAGED_ATTR = 'data-znteqr-jsonld';
 
 export interface JsonLdProps {
   /** Stable unique id for this script node (multiple JsonLd instances per document). */
@@ -15,7 +15,7 @@ export interface JsonLdProps {
  */
 export const JsonLd: FC<JsonLdProps> = ({ id: explicitId, data }) => {
   const reactId = useId().replace(/:/g, '');
-  const scriptId = explicitId ?? `equipqr-jsonld-${reactId}`;
+  const scriptId = explicitId ?? `znteqr-jsonld-${reactId}`;
   const serialized = JSON.stringify(data);
 
   useEffect(() => {

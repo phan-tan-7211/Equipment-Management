@@ -22,7 +22,7 @@ type PageSEOProps = PageSEOIndexedProps | PageSEONoindexProps;
 const BASE_URL = 'https://equipqr.app';
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 
-const MANAGED_ATTR = 'data-equipqr-page-seo';
+const MANAGED_ATTR = 'data-znteqr-page-seo';
 
 /** Attribute pairs excluding the managed marker (captured before we set MANAGED_ATTR). */
 type AttrSnapshot = Array<[string, string]>;

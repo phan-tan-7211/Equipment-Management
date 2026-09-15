@@ -73,7 +73,7 @@ async function playFocusAnimation(locator: Locator): Promise<void> {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      const containerId = 'equipqr-docs-demo-focus';
+      const containerId = 'znteqr-docs-demo-focus';
       document.getElementById(containerId)?.remove();
 
       const container = document.createElement('div');

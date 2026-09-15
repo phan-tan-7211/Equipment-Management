@@ -20,9 +20,9 @@ function regexLiteral(value) {
 function demoCuePrelude(label) {
   const safeLabel = jsString(label);
   return `
-      const __equipqrDemoCue = async (element) => {
-        const ringId = 'equipqr-demo-action-spotlight';
-        const labelId = 'equipqr-demo-action-spotlight-label';
+      const __znteqrDemoCue = async (element) => {
+        const ringId = 'znteqr-demo-action-spotlight';
+        const labelId = 'znteqr-demo-action-spotlight-label';
         document.getElementById(ringId)?.remove();
         document.getElementById(labelId)?.remove();
         element.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
@@ -123,7 +123,7 @@ export function createDemoStepActions(deps) {
       const byRole = Array.from(document.querySelectorAll('[role=\\'${roleEscaped}\\']')).find((el) => needle.test(el.textContent || '') && !el.hasAttribute('disabled'));
       if (byRole) {
         console.log('${markerPrimary}');
-        await __equipqrDemoCue(byRole);
+        await __znteqrDemoCue(byRole);
         byRole.click();
         return;
       }
@@ -132,7 +132,7 @@ export function createDemoStepActions(deps) {
         const fallbackMatch = Array.from(document.querySelectorAll(selector)).find((el) => needle.test(el.textContent || '') && !el.hasAttribute('disabled'));
         if (fallbackMatch) {
           console.log('${markerFallback}:' + selector);
-          await __equipqrDemoCue(fallbackMatch);
+          await __znteqrDemoCue(fallbackMatch);
           fallbackMatch.click();
           return;
         }
@@ -232,7 +232,7 @@ export function createDemoStepActions(deps) {
         const selector = jsString(String(step.selector || 'button,[role="button"],a'));
         await withRetries(context.sceneId, context.stepIndex, step, async () => {
           await runPlaywrightEval(
-            `async () => { ${demoCuePrelude(`Click ${rawText}`)} const el = Array.from(document.querySelectorAll('${selector}')).find((node) => new RegExp('${text}', 'i').test(node.textContent || '') && !node.hasAttribute('disabled')); if (!el) throw new Error('clickText missing element'); await __equipqrDemoCue(el); el.click(); }`,
+            `async () => { ${demoCuePrelude(`Click ${rawText}`)} const el = Array.from(document.querySelectorAll('${selector}')).find((node) => new RegExp('${text}', 'i').test(node.textContent || '') && !node.hasAttribute('disabled')); if (!el) throw new Error('clickText missing element'); await __znteqrDemoCue(el); el.click(); }`,
           );
         });
         recordSpotlight(context.sceneId, context.stepIndex, actionName);
@@ -269,7 +269,7 @@ export function createDemoStepActions(deps) {
               }
             }
             if (!input) throw new Error('fillRole missing input');
-            await __equipqrDemoCue(input);
+            await __znteqrDemoCue(input);
             input.focus();
             input.value = '${value}';
             input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -295,7 +295,7 @@ export function createDemoStepActions(deps) {
         const selector = jsString(String(step.selector || 'select'));
         const value = jsString(String(step.value || ''));
         await runPlaywrightEval(
-          `async () => { ${demoCuePrelude(`Select ${String(step.value || '')}`)} const el = document.querySelector('${selector}'); if (!el) throw new Error('selectOption missing select'); await __equipqrDemoCue(el); el.value = '${value}'; el.dispatchEvent(new Event('change', { bubbles: true })); }`,
+          `async () => { ${demoCuePrelude(`Select ${String(step.value || '')}`)} const el = document.querySelector('${selector}'); if (!el) throw new Error('selectOption missing select'); await __znteqrDemoCue(el); el.value = '${value}'; el.dispatchEvent(new Event('change', { bubbles: true })); }`,
         );
         recordSpotlight(context.sceneId, context.stepIndex, actionName);
         context.actionCountRef.value += 1;
@@ -306,7 +306,7 @@ export function createDemoStepActions(deps) {
       case 'openDialog': {
         const selector = jsString(String(step.selector || 'button,[role="button"]'));
         await runPlaywrightEval(
-          `async () => { ${demoCuePrelude(actionName.replace(/^open/i, 'Open '))} const el = document.querySelector('${selector}'); if (!el) throw new Error('open action missing selector'); await __equipqrDemoCue(el); el.click(); }`,
+          `async () => { ${demoCuePrelude(actionName.replace(/^open/i, 'Open '))} const el = document.querySelector('${selector}'); if (!el) throw new Error('open action missing selector'); await __znteqrDemoCue(el); el.click(); }`,
         );
         recordSpotlight(context.sceneId, context.stepIndex, actionName);
         context.actionCountRef.value += 1;
@@ -331,7 +331,7 @@ export function createDemoStepActions(deps) {
       case 'focusElement': {
         const selector = jsString(String(step.selector || 'input,button,[tabindex]'));
         await runPlaywrightEval(
-          `async () => { ${demoCuePrelude('Focus field')} const el = document.querySelector('${selector}'); if (!el) throw new Error('focusElement missing selector'); await __equipqrDemoCue(el); el.focus(); }`,
+          `async () => { ${demoCuePrelude('Focus field')} const el = document.querySelector('${selector}'); if (!el) throw new Error('focusElement missing selector'); await __znteqrDemoCue(el); el.focus(); }`,
         );
         recordSpotlight(context.sceneId, context.stepIndex, actionName);
         context.actionCountRef.value += 1;
@@ -340,7 +340,7 @@ export function createDemoStepActions(deps) {
       case 'hoverReveal': {
         const selector = jsString(String(step.selector || 'button,a,[role="button"]'));
         await runPlaywrightEval(
-          `async () => { ${demoCuePrelude('Reveal actions')} const el = document.querySelector('${selector}'); if (!el) throw new Error('hoverReveal missing selector'); await __equipqrDemoCue(el); el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); }`,
+          `async () => { ${demoCuePrelude('Reveal actions')} const el = document.querySelector('${selector}'); if (!el) throw new Error('hoverReveal missing selector'); await __znteqrDemoCue(el); el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); }`,
         );
         recordSpotlight(context.sceneId, context.stepIndex, actionName);
         context.actionCountRef.value += 1;
@@ -365,7 +365,7 @@ export function createDemoStepActions(deps) {
             const needle = new RegExp('${label}', 'i');
             const el = Array.from(document.querySelectorAll('[aria-label]')).find((node) => needle.test(node.getAttribute('aria-label') || '') && !node.hasAttribute('disabled'));
             if (!el) throw new Error('clickByLabel missing element for label');
-            await __equipqrDemoCue(el);
+            await __znteqrDemoCue(el);
             el.click();
           }`);
         });
@@ -391,7 +391,7 @@ export function createDemoStepActions(deps) {
               parent.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
               parent.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
             }
-            await __equipqrDemoCue(button);
+            await __znteqrDemoCue(button);
             button.click();
           }`);
         });
@@ -426,7 +426,7 @@ export function createDemoStepActions(deps) {
               input = Array.from(document.querySelectorAll('input[type=\\'number\\'],[role=\\'spinbutton\\']')).find((el) => needle.test(el.getAttribute('aria-label') || ''));
             }
             if (!input) throw new Error('fillNumberInput missing number input');
-            await __equipqrDemoCue(input);
+            await __znteqrDemoCue(input);
             input.focus();
             const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
             setter.call(input, '${value}');
@@ -448,7 +448,7 @@ export function createDemoStepActions(deps) {
             const needle = new RegExp('${name}', 'i');
             const tab = Array.from(document.querySelectorAll('[role=\\'tab\\']')).find((el) => needle.test(el.textContent || '') && !el.hasAttribute('disabled'));
             if (!tab) throw new Error('clickTab missing tab');
-            await __equipqrDemoCue(tab);
+            await __znteqrDemoCue(tab);
             tab.click();
           }`);
           const deadline = Date.now() + 2000;

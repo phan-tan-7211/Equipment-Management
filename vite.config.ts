@@ -27,7 +27,7 @@ function httpLogger(): PluginOption {
 
 function marketingPrerenderPlugin(): PluginOption {
   return {
-    name: 'equipqr-marketing-prerender',
+    name: 'znteqr-marketing-prerender',
     apply: 'build',
     writeBundle() {
       writeMarketingHtmlFiles();
