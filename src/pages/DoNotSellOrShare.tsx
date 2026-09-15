@@ -1,56 +1,58 @@
 import { Link } from 'react-router-dom';
 import { PageBackButton } from '@/components/layout/PageBackButton';
+import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageSEO } from '@/components/seo/PageSEO';
+import { useI18n } from '@/i18n/I18nProvider';
 
-const EFFECTIVE_DATE = 'May 3, 2026';
 const CONTACT_EMAIL = 'mailto:phantan7211@gmail.com';
 
 export default function DoNotSellOrShare() {
+  const { t } = useI18n();
+
   return (
     <div className="min-h-screen bg-background">
       <PageSEO
-        title="Do Not Sell or Share — ZNTEQR"
-        description="How ZNTEQR handles requests related to sale or sharing of personal information."
+        title={t('publicLegal.doNotSell.seoTitle')}
+        description={t('publicLegal.doNotSell.seoDescription')}
         path="/do-not-sell-or-share"
       />
       <div className="container max-w-3xl mx-auto px-4 py-10 space-y-6">
-        <PageBackButton />
+        <div className="flex items-center justify-between gap-4">
+          <PageBackButton />
+          <LanguageSwitcher />
+        </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Do Not Sell or Share My Personal Information</CardTitle>
-            <p className="text-sm text-muted-foreground pt-2">Effective date: {EFFECTIVE_DATE}</p>
+            <CardTitle className="text-2xl">{t('publicLegal.doNotSell.title')}</CardTitle>
+            <p className="text-sm text-muted-foreground pt-2">
+              {t('publicLegal.doNotSell.effectiveDate')}
+            </p>
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none dark:prose-invert space-y-4">
             <p>
-              ZNTEQR is operated by <strong>ZNT LLC</strong>. We do{' '}
-              <strong>not</strong> sell your personal information and we do <strong>not</strong>{' '}
-              share it for cross-context behavioral advertising as those terms are commonly understood
-              under California privacy laws.
+              {t('publicLegal.doNotSell.operatedBy')} <strong>ZNT LLC</strong>.{' '}
+              {t('publicLegal.doNotSell.noSell')}
             </p>
-            <p>
-              If you wish to exercise privacy rights available in your jurisdiction — including
-              California opt-out of sale/share, access, deletion, or correction requests — use our
-              privacy request intake so we can verify and fulfill your request:
-            </p>
+            <p>{t('publicLegal.doNotSell.rights')}</p>
             <p>
               <Button asChild>
-                <Link to="/privacy-request">Submit a privacy request</Link>
+                <Link to="/privacy-request">{t('publicLegal.doNotSell.submit')}</Link>
               </Button>
             </p>
             <p>
-              For questions, contact{' '}
+              {t('publicLegal.doNotSell.questions')}{' '}
               <a href={CONTACT_EMAIL} className="underline">
                 phantan7211@gmail.com
               </a>
               .
             </p>
             <p>
-              See also our{' '}
+              {t('publicLegal.doNotSell.seeAlso')}{' '}
               <Link to="/privacy-policy" className="underline">
-                Privacy Policy
+                {t('publicLegal.doNotSell.privacyPolicy')}
               </Link>
               .
             </p>

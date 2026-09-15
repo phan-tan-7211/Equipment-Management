@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RightToRepairLandscape } from '@/pages/legal/right-to-repair/RightToRepairLandscape';
 import {
   ZNTEQR_REPAIR_COMMITMENTS,
-  RIGHT_TO_REPAIR_REVIEWED_ON,
   RIGHT_TO_REPAIR_SEO,
 } from '@/pages/legal/right-to-repair/rightToRepairContent';
 import type { ZnteqrCommitmentId } from '@/pages/legal/right-to-repair/types';
@@ -63,14 +62,13 @@ export function RightToRepair(): JSX.Element {
                     {t('marketingTrust.repair.introduction')}
                   </p>
                   <p className="mt-4 text-sm text-muted-foreground">
-                    Last reviewed {RIGHT_TO_REPAIR_REVIEWED_ON}. This page is a statement of
-                    principles. It is not a contract and does not change the{' '}
+                    {t('publicLegal.rightToRepair.reviewed')}{' '}
                     <Link to="/terms-of-service" className="underline hover:text-foreground">
-                      Terms of Service
+                      {t('publicLegal.rightToRepair.terms')}
                     </Link>{' '}
-                    or{' '}
+                    {t('publicLegal.rightToRepair.or')}{' '}
                     <Link to="/privacy-policy" className="underline hover:text-foreground">
-                      Privacy Policy
+                      {t('publicLegal.rightToRepair.privacy')}
                     </Link>
                     .
                   </p>
@@ -118,16 +116,10 @@ export function RightToRepair(): JSX.Element {
 
           <section className="border-t border-border/50 bg-muted/20 py-16">
             <div className="container mx-auto max-w-3xl space-y-4 px-4">
-              <h2 className="text-2xl font-bold">Why this sits with Legal</h2>
+              <h2 className="text-2xl font-bold">{t('publicLegal.rightToRepair.whyTitle')}</h2>
+              <p className="text-muted-foreground">{t('publicLegal.rightToRepair.whyBody')}</p>
               <p className="text-muted-foreground">
-                Repair shops live this problem. A tractor that needs a dealer login, a printer that
-                rejects a legal cartridge, a hub that dies when a vendor cloud folds. ZNTEQR is
-                software for those shops. Our job is the record of the work, not a second lock on
-                the asset.
-              </p>
-              <p className="text-muted-foreground">
-                The examples above are the pattern, not a catalog of every docket. We kept numbers
-                and 2026 filings out unless they are well documented. If a fact here drifts, email{' '}
+                {t('publicLegal.rightToRepair.whyNote')}{' '}
                 <a
                   href="mailto:phantan7211@gmail.com"
                   className="underline hover:text-foreground"
