@@ -22,6 +22,7 @@ import MFAVerification from '@/components/auth/MFAVerification';
 import LegalFooter from '@/components/layout/LegalFooter';
 import { useAppToast } from '@/hooks/useAppToast';
 import { useI18n } from '@/i18n';
+import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
 
 type AuthMode = 'signin' | 'signup';
 
@@ -189,7 +190,10 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-linear-to-br from-info/10 to-primary/20">
+    <div className="relative min-h-screen flex flex-col bg-linear-to-br from-info/10 to-primary/20">
+      <div className="absolute right-4 top-4 z-10 sm:right-6 sm:top-6">
+        <LanguageSwitcher />
+      </div>
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center px-6 pt-6 pb-4 sm:px-7 sm:pt-7 sm:pb-5">
