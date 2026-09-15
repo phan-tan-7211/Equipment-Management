@@ -348,7 +348,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         </div>
       )}
 
-      {!isInvitationSignup && !emailSignupOpen ? (
+      {!isInvitationSignup && !emailSignupOpen && (
         <>
           <AuthGoogleSignInButton
             onClick={handleGoogleSignUp}
