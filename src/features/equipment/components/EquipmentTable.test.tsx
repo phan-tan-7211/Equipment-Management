@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, within, waitFor } from '@vitest-harness/utils/test-utils';
+import { act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import EquipmentTable from './EquipmentTable';
@@ -36,6 +37,7 @@ const mockEquipment = [
     team_name: 'Alpha',
     team_id: 'team-1',
     working_hours: 1234,
+    image_url: 'https://example.com/forklift-a1.jpg',
   },
   {
     id: 'eq-2',
@@ -45,6 +47,7 @@ const mockEquipment = [
     serial_number: 'SN67890',
     status: 'maintenance',
     location: 'Warehouse B',
+    image_url: 'https://example.com/excavator-b2.jpg',
   },
 ];
 
@@ -80,6 +83,49 @@ describe('EquipmentTable', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     expect(screen.getByText('Active')).toHaveClass('sr-only');
     expect(screen.getByText('Under Maintenance')).toHaveClass('sr-only');
+  });
+
+  it('renders the equipment thumbnail inside the sortable Status column', () => {
+    render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
+    const thumbnail = screen.getByRole('img', { name: 'Forklift A1 equipment' });
+    expect(thumbnail).toHaveAttribute('src', 'https://example.com/forklift-a1.jpg');
+    expect(screen.getAllByText('Under Maintenance')[0]).toHaveClass('sr-only');
+  });
+
+  it('shows a larger desktop preview while hovering the thumbnail', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('hover'),
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    try {
+      const { container } = render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
+      const thumbnail = screen.getByRole('img', { name: 'Forklift A1 equipment' });
+
+      fireEvent.pointerMove(thumbnail);
+      expect(container.querySelector('[data-equipment-image-hover-preview]')).toBeInTheDocument();
+      const nextThumbnail = screen.getByRole('img', { name: 'Excavator B2 equipment' });
+      fireEvent.pointerMove(nextThumbnail);
+      expect(container.querySelector('[data-equipment-image-hover-preview] img')).toHaveAttribute(
+        'src',
+        'https://example.com/excavator-b2.jpg',
+      );
+      fireEvent.pointerMove(document.body);
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(container.querySelector('[data-equipment-image-hover-preview]')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('renders the Status column first with a slim sortable header', () => {

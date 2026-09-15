@@ -57,6 +57,13 @@ describe('AppSidebar', () => {
     expect(screen.getByRole('link', { name: /pm templates/i })).toBeInTheDocument();
   });
 
+  it('keeps integrations inside Organization instead of duplicating it in the sidebar', () => {
+    renderAsPersona(<AppSidebar />, 'admin');
+
+    expect(screen.getByRole('link', { name: /^organization$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /integrations/i })).not.toBeInTheDocument();
+  });
+
   it('does not expose DSR Cockpit or audit log in main navigation', () => {
     renderAsPersona(<AppSidebar />, 'admin');
 
