@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { newPersonaPage } from '../shared/auth-helpers';
 import { switchOrganizationFromSwitcher } from '../shared/org-helpers';
 import { orgNames, seedEquipment } from '../shared/seed-data';

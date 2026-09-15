@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 
 test.describe('support audit dsr @full', () => {
   test('dashboard support ticket hub loads', async ({ gotoDashboard, page, assertHealthyShell }) => {

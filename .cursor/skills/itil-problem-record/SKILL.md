@@ -1,6 +1,6 @@
 ---
 name: itil-problem-record
-description: Lightweight root-cause triage for one EquipQR bug issue. Use when the user asks to investigate, diagnose, reproduce, or explain a bug before implementation. Produces a concise problem summary and recommended fix direction, then hands off to itil-issue-resolver when the user authorizes implementation.
+description: Lightweight root-cause triage for one ZNTEQR bug issue. Use when the user asks to investigate, diagnose, reproduce, or explain a bug before implementation. Produces a concise problem summary and recommended fix direction, then hands off to itil-issue-resolver when the user authorizes implementation.
 ---
 
 # ITIL Problem Triage

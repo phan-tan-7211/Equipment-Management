@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { seedEquipment } from '../user/shared/seed-data';
 import { openWorkOrderCreateDialog } from '../user/shared/ui-form-helpers';
 import { evidencePause, evidenceScreenshot } from './shared/evidence-helpers';

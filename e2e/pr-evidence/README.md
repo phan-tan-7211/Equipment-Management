@@ -24,7 +24,7 @@ If you choose to capture evidence and no feature spec exists, `smoke-dashboard.s
 Example skeleton:
 
 ```typescript
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { evidenceScreenshot, evidencePause } from './shared/evidence-helpers';
 
 test.describe('my feature @pr-evidence', () => {

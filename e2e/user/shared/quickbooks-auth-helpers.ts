@@ -38,7 +38,7 @@ export async function isQuickBooksConnected(page: Page): Promise<boolean> {
 }
 
 /** Wait for post-auth SPA bootstrap (workspace gate) before hard navigation. */
-export async function waitForEquipQrDashboardShell(page: Page): Promise<void> {
+export async function waitForZnteqrDashboardShell(page: Page): Promise<void> {
   await page.waitForURL(/\/dashboard/i, { timeout: 600_000 });
   await expect(page.getByText('Checking workspace access')).toBeHidden({ timeout: 120_000 });
   await page.waitForLoadState('domcontentloaded');

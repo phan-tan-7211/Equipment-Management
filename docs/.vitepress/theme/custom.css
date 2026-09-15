@@ -1,9 +1,9 @@
 /**
  * ZNTEQR Docs — VitePress theme overrides aligned with equipqr.app.
- * Token source: equipqr-tokens.css (mirrored from src/index.css).
+ * Token source: znteqr-tokens.css (mirrored from src/index.css).
  */
 
-@import "./equipqr-tokens.css";
+@import "./znteqr-tokens.css";
 
 /* -------------------------------------------------------------------------- */
 /* Map ZNTEQR tokens → VitePress CSS variables (dark = product default)      */

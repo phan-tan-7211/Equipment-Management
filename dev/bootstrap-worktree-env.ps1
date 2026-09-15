@@ -9,7 +9,7 @@
 
 .PARAMETER SourceRoot
     Explicit path to the repo root that has .env (and optionally .env.local, supabase/functions/.env).
-    If omitted, uses environment variable EQUIPQR_MAIN_REPO, then auto-detects another worktree
+    If omitted, uses environment variable ZNTEQR_MAIN_REPO, then auto-detects another worktree
     of the same repo that contains .env and is not under .cursor/worktrees (preferred).
 
 .PARAMETER InstallDeps
@@ -135,7 +135,7 @@ function Install-EnvFile {
 }
 
 $targetRoot = Get-RepoRootFromGit
-$resolvedSource = Resolve-SourceRoot -TargetRoot $targetRoot -ExplicitSource $SourceRoot -EnvMainRepo $env:EQUIPQR_MAIN_REPO
+$resolvedSource = Resolve-SourceRoot -TargetRoot $targetRoot -ExplicitSource $SourceRoot -EnvMainRepo $env:ZNTEQR_MAIN_REPO
 
 if ([string]::IsNullOrWhiteSpace($resolvedSource)) {
     Write-Host @"
@@ -144,7 +144,7 @@ No source checkout found with a .env file.
 Set the canonical repo explicitly:
   -SourceRoot C:\path\to\ZNTEQR
 or environment variable (User or Machine):
-  EQUIPQR_MAIN_REPO=C:\path\to\ZNTEQR
+  ZNTEQR_MAIN_REPO=C:\path\to\ZNTEQR
 
 Refresh secrets in that checkout first (e.g. .\dev\dev-start.bat with 1Password), then re-run this script.
 "@

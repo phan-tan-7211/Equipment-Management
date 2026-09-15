@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { clickWithDemoCue } from '../shared/page-helpers';
 
 const MOBILE_VIEWPORT = { width: 390, height: 844 };

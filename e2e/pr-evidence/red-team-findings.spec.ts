@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { newPersonaPage, gotoDashboardRoute, pinContextToApex } from '../user/shared/auth-helpers';
 import { metroOrgId, seedEquipment, seedWorkOrders } from '../user/shared/seed-data';
 import { evidenceScreenshot, evidencePause } from './shared/evidence-helpers';

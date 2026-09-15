@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { evidenceScreenshot, evidencePause } from './shared/evidence-helpers';
 
 const MOBILE_USER_AGENT =

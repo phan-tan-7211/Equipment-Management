@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { evidenceScreenshot, evidencePause } from './shared/evidence-helpers';
 
 // Unauthenticated — default owner storage would redirect `/` to the dashboard.

@@ -1,6 +1,6 @@
 ---
 name: itil-service-request
-description: Lightweight feasibility and scope workflow for one EquipQR feature, enhancement, integration, or vendor-cost request. Use when the user asks whether to build something, what it would cost in dollars, or how to scope a non-bug issue before implementation.
+description: Lightweight feasibility and scope workflow for one ZNTEQR feature, enhancement, integration, or vendor-cost request. Use when the user asks whether to build something, what it would cost in dollars, or how to scope a non-bug issue before implementation.
 ---
 
 # ITIL Service Request
@@ -85,6 +85,6 @@ Use this compact format:
 
 - Keep costs in dollars only. No engineering-hour estimates.
 - Do not fabricate vendor pricing, setup steps, or product capabilities.
-- Prefer existing EquipQR patterns and vendors over adding a new service.
+- Prefer existing ZNTEQR patterns and vendors over adding a new service.
 - Do not modify code from this skill.
 - Do not require a Change Record unless the user asks for one or the scope needs a formal plan.

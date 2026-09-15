@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 
 test.describe('dashboard scanner @critical', () => {
   test('scan page loads upload and camera affordances', async ({ gotoDashboard, page, assertHealthyShell }) => {

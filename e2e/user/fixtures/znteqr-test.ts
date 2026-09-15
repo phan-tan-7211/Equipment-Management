@@ -13,14 +13,14 @@ import {
 } from '../shared/page-helpers';
 import type { PersonaKey } from '../shared/seed-data';
 
-type EquipQrFixtures = {
+type ZnteqrFixtures = {
   actionOverlay: void;
   consoleErrors: string[];
   gotoDashboard: (route: string) => Promise<void>;
   assertHealthyShell: () => Promise<void>;
 };
 
-export const test = base.extend<EquipQrFixtures>({
+export const test = base.extend<ZnteqrFixtures>({
   actionOverlay: [
     async ({ page }, use, testInfo) => {
       void testInfo;

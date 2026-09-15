@@ -25,8 +25,8 @@ function Write-ManagedBlock {
         $initialContent = Get-Content -LiteralPath $FilePath -Raw
     }
 
-    $startMarker = "# >>> EQUIPQR LOCAL SUPABASE OVERRIDES >>>"
-    $endMarker = "# <<< EQUIPQR LOCAL SUPABASE OVERRIDES <<<"
+    $startMarker = "# >>> ZNTEQR LOCAL SUPABASE OVERRIDES >>>"
+    $endMarker = "# <<< ZNTEQR LOCAL SUPABASE OVERRIDES <<<"
     $escapedStart = [regex]::Escape($startMarker)
     $escapedEnd = [regex]::Escape($endMarker)
     $blockPattern = "(?s)\r?\n?$escapedStart.*?$escapedEnd\r?\n?"

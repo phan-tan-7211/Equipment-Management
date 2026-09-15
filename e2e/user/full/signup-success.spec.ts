@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/equipqr-test';
+import { test, expect } from '../fixtures/znteqr-test';
 import { solveHcaptchaIfPresent } from '../shared/hcaptcha-helpers';
 
 test.describe('signup success UX @full', () => {

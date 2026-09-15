@@ -11,7 +11,7 @@ import {
 
 const CONTACT_EMAIL = 'mailto:phantan7211@gmail.com';
 const GITHUB_REPO_URL = 'https://github.com/Columbia-Cloudworks-LLC/ZNTEQR';
-const EQUIPQR_APP_URL = 'https://equipqr.app';
+const ZNTEQR_APP_URL = 'https://equipqr.app';
 const COLUMBIA_CLOUDWORKS_URL = 'https://columbiacloudworks.com';
 
 interface FooterLinkItem {
@@ -76,7 +76,7 @@ const footerSections: FooterSection[] = [
         labelKey: 'demo',
         type: 'external',
       },
-      { href: EQUIPQR_APP_URL, label: 'ZNTEQR™.app', type: 'external' },
+      { href: ZNTEQR_APP_URL, label: 'ZNTEQR™.app', type: 'external' },
       {
         href: GITHUB_REPO_URL,
         label: 'GitHub',

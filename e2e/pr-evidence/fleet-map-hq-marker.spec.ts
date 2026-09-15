@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { evidencePause, evidenceScreenshot } from './shared/evidence-helpers';
 import {
   closeFleetMapPanelIfOpen,

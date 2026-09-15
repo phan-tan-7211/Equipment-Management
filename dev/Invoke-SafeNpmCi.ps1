@@ -32,7 +32,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $repoRoot
 
-. (Join-Path $PSScriptRoot 'Release-EquipQrNodeModuleLocks.ps1')
+. (Join-Path $PSScriptRoot 'Release-ZnteqrNodeModuleLocks.ps1')
 
 Write-Host ''
 Write-Host ' ============================================'
@@ -50,7 +50,7 @@ if (-not $SkipStackStop) {
     Write-Host ''
 }
 
-Stop-EquipQrDevToolingProcesses -RepoRoot $repoRoot
+Stop-ZnteqrDevToolingProcesses -RepoRoot $repoRoot
 Start-Sleep -Seconds 2
 Remove-RepoNodeModulesScrap -ParentDirectory $repoRoot
 
@@ -60,10 +60,10 @@ $ciParams = @{
 if ($PreferOffline) { $ciParams['PreferOffline'] = $true }
 if ($NoAudit) { $ciParams['NoAudit'] = $true }
 
-Invoke-EquipQrSafeNpmCi @ciParams
+Invoke-ZnteqrSafeNpmCi @ciParams
 
 if ($Docs) {
-    Invoke-EquipQrSafeNpmCi @ciParams -NpmPrefix 'docs' -SkipToolingStop
+    Invoke-ZnteqrSafeNpmCi @ciParams -NpmPrefix 'docs' -SkipToolingStop
 }
 
 Write-Host ''

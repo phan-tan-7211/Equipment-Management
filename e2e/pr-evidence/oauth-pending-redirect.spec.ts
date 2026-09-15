@@ -1,4 +1,4 @@
-import { test, expect } from '../user/fixtures/equipqr-test';
+import { test, expect } from '../user/fixtures/znteqr-test';
 import { evidenceScreenshot, evidencePause } from './shared/evidence-helpers';
 import { logoutFromApp } from '../user/shared/auth-helpers';
 import { seedEquipment } from '../user/shared/seed-data';
