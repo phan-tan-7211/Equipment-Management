@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
-import { QrCode } from 'lucide-react';
+import { Forklift, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTableEmptyState, ResizableFixedDataTable } from '@/components/common/dataTableShared';
 import { applyAutoFitColumnWidth, createResizableSortableColumnBase, getDataTableAlignClass, getResizableTableWidth, usePersistedColumnSizing } from '@/components/common/dataTableSharedUtils';
@@ -16,9 +16,11 @@ import { useEquipmentCardTransition } from '@/features/equipment/transitions/use
 import { getEquipmentViewTransitionStyle } from '@/features/equipment/transitions/equipmentViewTransitionNames';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
+import { displayableImageSrc } from '@/services/imageUploadService';
+import { getEquipmentStatusRailClass } from '@/lib/status-colors';
 
 const STATUS_COLUMN_KEY: EquipmentTableColumnKey = 'status';
-const COLUMN_SIZING_STORAGE_KEY = 'equipqr:equipment-table-column-sizing:v2';
+const COLUMN_SIZING_STORAGE_KEY = 'equipqr:equipment-table-column-sizing:v3';
 const COLUMN_KEYS: Record<EquipmentTableColumnKey, string> = { status:'equipment.status', name:'equipment.name', manufacturer:'equipment.manufacturer', model:'equipment.model', serial_number:'equipment.serialNumber', working_hours:'equipment.hours', location:'equipment.location', team_name:'equipment.team', last_maintenance:'equipment.lastMaintenanceFull' };
 export interface EquipmentTableProps { equipment: EquipmentTableRow[]; onShowQRCode: (id:string)=>void; pmStatuses?:Map<string,EquipmentPMStatus>; sortConfig?:SortConfig; onSortChange?:(field:string,direction?:'asc'|'desc')=>void; visibleColumns?:Record<string,boolean>; }
 
@@ -34,7 +36,38 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
   const columns=useMemo<ColumnDef<EquipmentTableRow>[]>(()=>{
     const dataColumns=visibleColumnKeys.map((columnKey)=>{ const rawMeta=getEquipmentTableColumnMeta(columnKey); if(!rawMeta)throw new Error(`Missing equipment table column meta for ${columnKey}`); const meta={...rawMeta,title:t(COLUMN_KEYS[columnKey])}; return { ...createResizableSortableColumnBase(columnKey,columnSizing,meta,{active:sortConfig?.field===meta.sortField,sortOrder:sortConfig?.field===meta.sortField?sortConfig.direction:undefined,onSort:()=>handleSortClick(meta.sortField),hideVisibleTitle:columnKey===STATUS_COLUMN_KEY}), cell:({row})=>{ const item=row.original; switch(columnKey){
       case 'name': { const active=activeEquipmentId===item.id; return <div className="min-w-0"><button type="button" className="block w-full truncate text-left font-medium hover:text-primary" data-equipment-id={item.id} {...(active?{'data-equipment-transition-active':''}:{})} style={getEquipmentViewTransitionStyle('name',active)} onClick={()=>{void beginTransition({equipmentId:item.id,to:`/dashboard/equipment/${item.id}`});}}>{item.name}</button>{item.management_code ? <span className="mt-0.5 block truncate font-mono text-xs text-muted-foreground">{item.management_code}</span> : null}</div>; }
-      case 'status': return <div className="flex items-center justify-center"><DotStatus status={item.status} className="mt-0" /></div>;
+      case 'status': {
+        const imageSrc = displayableImageSrc(item.image_url);
+        const statusRailClass = getEquipmentStatusRailClass(item.status);
+        return (
+          <div
+            className="relative flex min-h-16 h-full w-full items-center justify-center overflow-hidden bg-muted/30"
+            title={getEquipmentTableCellDisplayValue(item, 'status', settings)}
+          >
+            {imageSrc ? (
+              <img
+                src={imageSrc}
+                alt={`${item.name} equipment`}
+                className="absolute inset-0 h-full w-full object-cover"
+                loading="lazy"
+                decoding="async"
+                onError={(event) => {
+                  event.currentTarget.src = '/images/ui/placeholder.svg';
+                }}
+              />
+            ) : (
+              <Forklift className="h-7 w-7 text-muted-foreground/55" aria-hidden="true" />
+            )}
+            {statusRailClass ? (
+              <span
+                className={cn('pointer-events-none absolute inset-y-0 left-0 z-10 w-1', statusRailClass)}
+                aria-hidden="true"
+              />
+            ) : null}
+            <DotStatus status={item.status} className="sr-only" />
+          </div>
+        );
+      }
       case 'manufacturer': return <span className="block truncate">{item.manufacturer||'—'}</span>;
       case 'model': return <span className="block truncate">{item.model||'—'}</span>;
       case 'serial_number': return <span className="block truncate font-mono text-sm">{item.serial_number||'—'}</span>;
@@ -50,6 +83,6 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
   const table=useReactTable({data:equipment,columns,state:{columnSizing},onColumnSizingChange:setColumnSizing,columnResizeMode:'onEnd',enableColumnResizing:true,getCoreRowModel:getCoreRowModel()});
   const tableWidth=getResizableTableWidth(table.getTotalSize());
   if(equipment.length===0)return <DataTableEmptyState message={t('equipment.noTableMatches')} />;
-  return <ResizableFixedDataTable table={table} tableWidth={tableWidth} withTooltipProvider getHeaderProps={(header)=>{ const columnId=header.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); return {className:cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isActionsColumn&&'w-14 px-2','relative select-none',isStatusColumn&&'sticky left-0 z-20 bg-card px-2'),ariaSort:meta?.sortable&&sortConfig?.field===meta.sortField?(sortConfig.direction==='asc'?'ascending':'descending'):'none',onAutoFit:isActionsColumn?undefined:()=>handleAutoFitColumn(columnId as EquipmentTableColumnKey)};}} getCellClassName={(cell)=>{ const columnId=cell.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); return cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isStatusColumn&&'sticky left-0 z-10 bg-card px-2 align-middle',isActionsColumn&&'w-14 px-2','overflow-hidden');}} />;
+  return <ResizableFixedDataTable table={table} tableWidth={tableWidth} withTooltipProvider getHeaderProps={(header)=>{ const columnId=header.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); return {className:cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isActionsColumn&&'w-14 px-2','relative select-none',isStatusColumn&&'sticky left-0 z-20 bg-card px-2'),ariaSort:meta?.sortable&&sortConfig?.field===meta.sortField?(sortConfig.direction==='asc'?'ascending':'descending'):'none',onAutoFit:isActionsColumn?undefined:()=>handleAutoFitColumn(columnId as EquipmentTableColumnKey)};}} getCellClassName={(cell)=>{ const columnId=cell.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); return cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isStatusColumn&&'sticky left-0 z-10 bg-card p-0 align-middle',isActionsColumn&&'w-14 px-2','overflow-hidden');}} />;
 };
 export default EquipmentTable;

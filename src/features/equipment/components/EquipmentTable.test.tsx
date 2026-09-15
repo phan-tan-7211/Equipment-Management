@@ -36,6 +36,7 @@ const mockEquipment = [
     team_name: 'Alpha',
     team_id: 'team-1',
     working_hours: 1234,
+    image_url: 'https://example.com/forklift-a1.jpg',
   },
   {
     id: 'eq-2',
@@ -80,6 +81,13 @@ describe('EquipmentTable', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     expect(screen.getByText('Active')).toHaveClass('sr-only');
     expect(screen.getByText('Under Maintenance')).toHaveClass('sr-only');
+  });
+
+  it('renders the equipment thumbnail inside the sortable Status column', () => {
+    render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
+    const thumbnail = screen.getByRole('img', { name: 'Forklift A1 equipment' });
+    expect(thumbnail).toHaveAttribute('src', 'https://example.com/forklift-a1.jpg');
+    expect(screen.getAllByText('Under Maintenance')[0]).toHaveClass('sr-only');
   });
 
   it('renders the Status column first with a slim sortable header', () => {

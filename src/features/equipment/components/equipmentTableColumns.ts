@@ -53,9 +53,11 @@ export const EQUIPMENT_TABLE_COLUMN_META: readonly EquipmentTableColumnMeta[] = 
     title: 'Status',
     canHide: false,
     defaultVisible: true,
-    defaultWidth: 48,
-    minWidth: 48,
-    maxWidth: 48,
+    // The status column also carries the desktop thumbnail. Keep it structural
+    // so status filtering/sorting continues to work while the row stays dense.
+    defaultWidth: 72,
+    minWidth: 72,
+    maxWidth: 72,
     align: 'center',
     sortable: true,
     resizable: false,
