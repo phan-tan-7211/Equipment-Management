@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.6] - 2026-09-15
+
+### Added
+
+- Added Vietnamese, English, and Korean language switching across the remaining public legal and feature pages.
+
 ## [3.34.5] - 2026-09-15
 
 ### Changed
