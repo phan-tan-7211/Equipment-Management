@@ -53,6 +53,7 @@ const en = {
     scanHint: 'Complete sign in to view scanned equipment',
     createOrganizationHint: 'Create an organization to get started',
     signInHint: 'Sign in to your account to get started',
+    inviteOnlySignup: 'Account creation is available by organization invitation only.',
     checkEmail: 'Check your email',
     verificationSentTo: 'We sent a verification link to {{email}}.',
     verificationSent: 'We sent you a verification link.',
