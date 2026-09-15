@@ -3,9 +3,10 @@ import { PageBackButton } from '@/components/layout/PageBackButton';
 import { PageSEO } from '@/components/seo/PageSEO';
 import { useI18n } from '@/i18n/I18nProvider';
 import { privacyPolicySectionComponents } from '@/pages/legal/privacy/privacyPolicySectionComponents';
+import { LocalizedPrivacyPolicyContent } from '@/pages/legal/privacy/LocalizedPrivacyPolicyContent';
 
 export default function PrivacyPolicy() {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -25,11 +26,15 @@ export default function PrivacyPolicy() {
         </div>
       </div>
 
-      <div className="space-y-8">
-        {privacyPolicySectionComponents.map(({ id, Component }) => (
-          <Component key={id} />
-        ))}
-      </div>
+      {language === 'en' ? (
+        <div className="space-y-8">
+          {privacyPolicySectionComponents.map(({ id, Component }) => (
+            <Component key={id} />
+          ))}
+        </div>
+      ) : (
+        <LocalizedPrivacyPolicyContent />
+      )}
     </div>
   );
 }

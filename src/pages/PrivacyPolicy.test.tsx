@@ -118,4 +118,5 @@ describe('PrivacyPolicy', () => {
     const privacyRequestLink = screen.getByText('equipqr.app/privacy-request');
     expect(privacyRequestLink.closest('a')).toHaveAttribute('href', '/privacy-request');
   });
+
 });
