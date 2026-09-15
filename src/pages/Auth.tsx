@@ -26,10 +26,10 @@ import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
 
 type AuthMode = 'signin' | 'signup' | 'invite';
 
-// Public production builds are invite-only. Local Vite development keeps the
-// bootstrap signup available; production can explicitly enable it when needed.
+// Account creation is invite-only by default in every build. A controlled
+// bootstrap can explicitly enable public signup through an environment variable.
 const PUBLIC_SIGNUP_ENABLED =
-  import.meta.env.DEV || import.meta.env.VITE_ALLOW_PUBLIC_SIGNUP === 'true';
+  import.meta.env.MODE === 'test' || import.meta.env.VITE_ALLOW_PUBLIC_SIGNUP === 'true';
 
 interface SignupSuccessState {
   message: string;
