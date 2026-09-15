@@ -53,6 +53,7 @@ const vi = {
     scanHint: 'Hoàn tất đăng nhập để xem thiết bị đã quét',
     createOrganizationHint: 'Tạo tổ chức để bắt đầu',
     signInHint: 'Đăng nhập tài khoản để bắt đầu',
+    inviteOnlySignup: 'Chỉ có thể tạo tài khoản thông qua lời mời của tổ chức.',
     checkEmail: 'Kiểm tra email của bạn',
     verificationSentTo: 'Chúng tôi đã gửi liên kết xác minh tới {{email}}.',
     verificationSent: 'Chúng tôi đã gửi cho bạn một liên kết xác minh.',
