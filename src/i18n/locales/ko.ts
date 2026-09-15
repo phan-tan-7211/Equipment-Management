@@ -53,6 +53,7 @@ const ko = {
     scanHint: '스캔한 설비를 보려면 로그인을 완료하세요',
     createOrganizationHint: '조직을 생성하고 시작하세요',
     signInHint: '계정에 로그인하여 시작하세요',
+    inviteOnlySignup: '계정 생성은 조직 초대를 통해서만 가능합니다.',
     checkEmail: '이메일을 확인하세요',
     verificationSentTo: '{{email}}로 인증 링크를 보냈습니다.',
     verificationSent: '인증 링크를 보냈습니다.',
