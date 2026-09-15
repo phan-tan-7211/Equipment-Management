@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface FeatureCTAProps {
   title: string;
@@ -17,10 +18,13 @@ export const FeatureCTA = ({
   description,
   primaryCtaText,
   primaryCtaLink = '/auth?tab=signup',
-  secondaryCtaText = 'Explore More Features',
+  secondaryCtaText,
   secondaryCtaLink = '/#features',
   className = 'bg-muted/30',
 }: FeatureCTAProps) => {
+  const { t } = useI18n();
+  const secondaryLabel = secondaryCtaText ?? t('publicLegal.featureCta.exploreMoreFeatures');
+
   return (
     <section className={`py-24 ${className}`}>
       <div className="container px-4 mx-auto">
@@ -35,7 +39,7 @@ export const FeatureCTA = ({
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-              <Link to={secondaryCtaLink}>{secondaryCtaText}</Link>
+              <Link to={secondaryCtaLink}>{secondaryLabel}</Link>
             </Button>
           </div>
         </div>
