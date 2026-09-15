@@ -96,12 +96,12 @@ const Auth = () => {
     const parsed: AuthMode =
       modeParam === 'signin' || modeParam === 'signup' || modeParam === 'invite'
         ? modeParam
-        : tabParam === 'signin' || tabParam === 'signup'
-          ? tabParam
-          : inviteToken
-            ? 'invite'
-            : orgId || orgName
-              ? 'signup'
+        : inviteToken
+          ? 'invite'
+          : orgId || orgName
+            ? 'signup'
+            : tabParam === 'signin' || tabParam === 'signup'
+              ? tabParam
               : 'signin';
     return {
       parsedMode: parsed,
