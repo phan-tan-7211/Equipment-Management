@@ -1,0 +1,82 @@
+name: Verify ZNTEQR cleanup follow-up once
+
+on:
+  push:
+    branches:
+      - chore/znteqr-deep-cleanup-followup
+
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: 24.x
+  VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+  VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+  VITE_APP_VERSION: 3.34.4
+
+jobs:
+  verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: chore/znteqr-deep-cleanup-followup
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Verify release metadata
+        run: node dev/verify-release-metadata.mjs
+        env:
+          RELEASE_METADATA_MODE: main
+          RELEASE_METADATA_BASE_SHA: 829513d4d974008121bd07a7916574128433868f
+
+      - name: Verify Node policy
+        run: npm run verify:node-policy
+
+      - name: Provision PSScriptAnalyzer
+        run: node dev/lint-catalog.mjs --mode provision --only psscriptanalyzer
+
+      - name: Lint all
+        run: npm run lint:all
+
+      - name: Verify root layout
+        run: npm run verify:root-layout
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Unit tests
+        run: npm run test:unit
+        env:
+          CI: 'true'
+          NODE_OPTIONS: '--max-old-space-size=4096'
+
+      - name: Production build
+        run: npm run build
+
+      - name: Verify SPA routing
+        run: npm run verify:spa-routing
+
+      - name: Docs build
+        run: npm run docs:build
+
+      - name: Remove one-shot workflow
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/znteqr-followup-verify-once.yml
+          git commit -m "ci: remove one-shot verification workflow"
+          git push origin HEAD:chore/znteqr-deep-cleanup-followup
