@@ -8517,6 +8517,7 @@ DECLARE
   has_workspace_invite boolean := false;
   skip_personal_org boolean := false;
   skip_personal_onboarding boolean := false;
+  has_standard_invite boolean := false;
 BEGIN
   INSERT INTO public.profiles (id, email, name)
   VALUES (
@@ -8571,6 +8572,19 @@ BEGIN
       AND oi.expires_at > now()
       AND oi.invited_by IS DISTINCT FROM NEW.id
   );
+
+  has_standard_invite := EXISTS (
+    SELECT 1
+    FROM public.organization_invitations oi
+    WHERE public.normalize_email(oi.email) = public.normalize_email(NEW.email)
+      AND oi.status = 'pending'
+      AND oi.expires_at > now()
+      AND oi.invited_by IS DISTINCT FROM NEW.id
+  );
+
+  -- Invited employees join through the invitation acceptance RPC instead of
+  -- receiving an unrelated personal organization at signup time.
+  skip_personal_org := skip_personal_org OR has_standard_invite;
 
   SELECT organization_id INTO personal_org_id
   FROM public.personal_organizations
@@ -8658,7 +8672,7 @@ $$;
 ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
 
 
-COMMENT ON FUNCTION "public"."handle_new_user"() IS 'Trigger for new user registration. Creates profile and personal org when allowed; invited signup users skip personal onboarding checklist.';
+COMMENT ON FUNCTION "public"."handle_new_user"() IS 'Trigger for new user registration. Creates profile and personal org when allowed; invited signup users skip personal org creation until invitation acceptance.';
 
 
 
