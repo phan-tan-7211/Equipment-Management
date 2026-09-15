@@ -11,6 +11,13 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.10] - 2026-09-15
+
+### Changed
+
+- Public account creation is now invite-only in production so employees cannot create unrelated organizations.
+
+
 ## [3.34.9] - 2026-09-15
 
 ### Added
