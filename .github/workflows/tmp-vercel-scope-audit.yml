@@ -1,0 +1,53 @@
+name: Temporary Vercel scope audit
+
+on:
+  push:
+    branches:
+      - chore/centralize-production-config
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24'
+      - name: List accessible Vercel teams and projects
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${VERCEL_TOKEN:-}" ]]; then
+            echo '::error::VERCEL_TOKEN is not available to this workflow.'
+            exit 1
+          fi
+          node <<'NODE'
+          const token = process.env.VERCEL_TOKEN;
+          const headers = { Authorization: `Bearer ${token}` };
+          async function get(url) {
+            const r = await fetch(url, { headers });
+            const text = await r.text();
+            if (!r.ok) throw new Error(`${r.status} ${text.slice(0, 300)}`);
+            return JSON.parse(text);
+          }
+          const user = await get('https://api.vercel.com/v2/user');
+          console.log(`USER login=${user.user?.username || user.user?.name || '(unknown)'} id=${user.user?.id || '(unknown)'}`);
+          const teams = (await get('https://api.vercel.com/v2/teams?limit=100')).teams || [];
+          console.log(`TEAMS ${teams.length}`);
+          for (const team of teams) {
+            console.log(`TEAM name=${team.name} slug=${team.slug} id=${team.id}`);
+            const data = await get(`https://api.vercel.com/v9/projects?teamId=${encodeURIComponent(team.id)}&limit=100`);
+            for (const project of data.projects || []) {
+              console.log(`PROJECT team=${team.id} name=${project.name} id=${project.id}`);
+            }
+          }
+          const personal = await get('https://api.vercel.com/v9/projects?limit=100');
+          for (const project of personal.projects || []) {
+            console.log(`PERSONAL_PROJECT name=${project.name} id=${project.id}`);
+          }
+          NODE
