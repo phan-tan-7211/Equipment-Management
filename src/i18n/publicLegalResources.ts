@@ -1,6 +1,7 @@
 export const publicLegalResources = {
   en: {
     publicLegal: {
+      featureCta: { exploreMoreFeatures: 'Explore More Features' },
       doNotSell: {
         seoTitle: 'Do Not Sell or Share — ZNTEQR',
         seoDescription: 'How ZNTEQR handles requests related to sale or sharing of personal information.',
@@ -146,6 +147,7 @@ export const publicLegalResources = {
   },
   vi: {
     publicLegal: {
+      featureCta: { exploreMoreFeatures: 'Khám phá thêm tính năng' },
       doNotSell: {
         seoTitle: 'Không bán hoặc chia sẻ — ZNTEQR',
         seoDescription: 'Cách ZNTEQR xử lý các yêu cầu liên quan đến việc bán hoặc chia sẻ thông tin cá nhân.',
@@ -241,6 +243,7 @@ export const publicLegalResources = {
   },
   ko: {
     publicLegal: {
+      featureCta: { exploreMoreFeatures: '더 많은 기능 살펴보기' },
       doNotSell: {
         seoTitle: '판매 또는 공유하지 않음 — ZNTEQR',
         seoDescription: 'ZNTEQR이 개인정보 판매 또는 공유 관련 요청을 처리하는 방법입니다.',
