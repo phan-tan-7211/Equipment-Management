@@ -187,7 +187,7 @@ export const publicLegalResources = {
         },
       },
       rightToRepair: {
-        reviewed: 'Xem xét lần cuối ngày 19 tháng 8, 2026. Trang này là tuyên bố về nguyên tắc, không phải hợp đồng và không thay đổi',
+        reviewed: 'Last reviewed August 19, 2026. This page is a statement of principles. It is not a contract and does not change the',
         terms: 'Điều khoản dịch vụ',
         or: 'hoặc',
         privacy: 'Chính sách quyền riêng tư',
@@ -283,7 +283,7 @@ export const publicLegalResources = {
         },
       },
       rightToRepair: {
-        reviewed: '최종 검토일은 2026년 8월 19일입니다. 이 페이지는 원칙을 밝힌 것이며 계약이 아니고 다음 내용을 변경하지 않습니다:',
+        reviewed: 'Last reviewed August 19, 2026. This page is a statement of principles. It is not a contract and does not change the',
         terms: '서비스 약관',
         or: '또는',
         privacy: '개인정보 처리방침',
