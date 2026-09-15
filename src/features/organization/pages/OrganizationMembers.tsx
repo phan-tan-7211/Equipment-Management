@@ -22,6 +22,40 @@ import { BookOpen, TriangleAlert, Users } from 'lucide-react';
 import { useMemo } from 'react';
 import { useI18n } from '@/i18n';
 
+type GuideTableProps = {
+  headers: [string, string];
+  rows: Array<[string, string]>;
+};
+
+const GuideTable = ({ headers, rows }: GuideTableProps) => (
+  <div className="overflow-x-auto rounded-md border">
+    <table className="w-full min-w-[520px] text-left text-sm">
+      <thead className="bg-muted/60">
+        <tr>
+          <th className="px-3 py-2 font-medium">{headers[0]}</th>
+          <th className="px-3 py-2 font-medium">{headers[1]}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(([label, value]) => (
+          <tr key={`${label}-${value}`} className="border-t">
+            <td className="px-3 py-2 align-top font-medium">{label}</td>
+            <td className="px-3 py-2 align-top text-muted-foreground">{value}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const GuideSteps = ({ steps }: { steps: string[] }) => (
+  <ol className="space-y-2 text-sm list-decimal pl-5">
+    {steps.map((step) => (
+      <li key={step} className="pl-1">{step}</li>
+    ))}
+  </ol>
+);
+
 const OrganizationMembers = () => {
   const { t } = useI18n();
   const { currentOrganization, isLoading } = useOrganization();
@@ -118,29 +152,122 @@ const OrganizationMembers = () => {
                   {t('organizationMembers.setupGuide')}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+              <DialogContent size="xl" className="max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{t('organizationMembers.setupGuideTitle')}</DialogTitle>
                   <DialogDescription>{t('organizationMembers.setupGuideDescription')}</DialogDescription>
                 </DialogHeader>
 
-                <ol className="space-y-4 text-sm list-decimal pl-5">
-                  <li className="pl-1">
-                    <p>{t('organizationMembers.setupStep1')}</p>
-                    <code className="mt-2 block rounded-md bg-muted px-3 py-2 text-xs sm:text-sm">
+                <div className="space-y-8">
+                  <section className="space-y-3">
+                    <h2 className="text-base font-semibold">1. {t('organizationMembers.setupAdminTitle')}</h2>
+                    <GuideSteps steps={[
+                      t('organizationMembers.setupAdminStep1'),
+                      t('organizationMembers.setupAdminStep2'),
+                      t('organizationMembers.setupAdminStep3'),
+                      t('organizationMembers.setupAdminStep4'),
+                      t('organizationMembers.setupAdminStep5'),
+                      t('organizationMembers.setupAdminStep6'),
+                      t('organizationMembers.setupAdminStep7'),
+                      t('organizationMembers.setupAdminStep8'),
+                    ]} />
+                    <code className="block rounded-md bg-muted px-3 py-2 text-xs sm:text-sm">
                       VITE_ALLOW_PUBLIC_SIGNUP=true
                     </code>
-                  </li>
-                  <li className="pl-1">{t('organizationMembers.setupStep2')}</li>
-                  <li className="pl-1">{t('organizationMembers.setupStep3')}</li>
-                  <li className="pl-1">{t('organizationMembers.setupStep4')}</li>
-                  <li className="pl-1">{t('organizationMembers.setupStep5')}</li>
-                  <li className="pl-1">{t('organizationMembers.setupStep6')}</li>
-                </ol>
+                    <div className="flex gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+                      <TriangleAlert className="h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
+                      <p>{t('organizationMembers.setupAdminWarning')}</p>
+                    </div>
+                  </section>
 
-                <div className="flex gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
-                  <TriangleAlert className="h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
-                  <p>{t('organizationMembers.setupWarning')}</p>
+                  <section className="space-y-3">
+                    <h2 className="text-base font-semibold">2. {t('organizationMembers.setupInviteTitle')}</h2>
+                    <GuideSteps steps={[
+                      t('organizationMembers.setupInviteStep1'),
+                      t('organizationMembers.setupInviteStep2'),
+                      t('organizationMembers.setupInviteStep3'),
+                      t('organizationMembers.setupInviteStep4'),
+                      t('organizationMembers.setupInviteStep5'),
+                      t('organizationMembers.setupInviteStep6'),
+                      t('organizationMembers.setupInviteStep7'),
+                    ]} />
+                  </section>
+
+                  <section className="space-y-3">
+                    <h2 className="text-base font-semibold">3. {t('organizationMembers.setupEmployeeTitle')}</h2>
+                    <GuideSteps steps={[
+                      t('organizationMembers.setupEmployeeStep1'),
+                      t('organizationMembers.setupEmployeeStep2'),
+                      t('organizationMembers.setupEmployeeStep3'),
+                      t('organizationMembers.setupEmployeeStep4'),
+                      t('organizationMembers.setupEmployeeStep5'),
+                      t('organizationMembers.setupEmployeeStep6'),
+                      t('organizationMembers.setupEmployeeStep7'),
+                    ]} />
+                    <p className="text-sm text-muted-foreground">{t('organizationMembers.setupEmployeeNote')}</p>
+                  </section>
+
+                  <section className="space-y-3">
+                    <h2 className="text-base font-semibold">4. {t('organizationMembers.setupLoginTitle')}</h2>
+                    <GuideTable
+                      headers={[
+                        t('organizationMembers.setupLoginUserHeader'),
+                        t('organizationMembers.setupLoginMethodHeader'),
+                      ]}
+                      rows={[
+                        [t('organizationMembers.setupLoginAdmin'), t('organizationMembers.setupLoginAdminMethod')],
+                        [t('organizationMembers.setupLoginEmployee'), t('organizationMembers.setupLoginEmployeeMethod')],
+                        [t('organizationMembers.setupLoginGoogle'), t('organizationMembers.setupLoginGoogleMethod')],
+                        [t('organizationMembers.setupLoginNewPhone'), t('organizationMembers.setupLoginNewPhoneMethod')],
+                      ]}
+                    />
+                  </section>
+
+                  <section className="space-y-3">
+                    <h2 className="text-base font-semibold">5. {t('organizationMembers.setupLinksTitle')}</h2>
+                    <GuideTable
+                      headers={[
+                        t('organizationMembers.setupLinksPathHeader'),
+                        t('organizationMembers.setupLinksFunctionHeader'),
+                      ]}
+                      rows={[
+                        ['/auth', t('organizationMembers.setupLinkAuth')],
+                        ['/auth?tab=signup', t('organizationMembers.setupLinkSignup')],
+                        [t('organizationMembers.setupLinkInvitePath'), t('organizationMembers.setupLinkInvite')],
+                        ['Organization → Members', t('organizationMembers.setupLinkMembers')],
+                        ['Organization → Members → Invite Member', t('organizationMembers.setupLinkInviteMember')],
+                      ]}
+                    />
+                  </section>
+
+                  <section className="space-y-3">
+                    <h2 className="text-base font-semibold">6. {t('organizationMembers.setupLocalTitle')}</h2>
+                    <p className="text-sm">{t('organizationMembers.setupLocalEnable')}</p>
+                    <pre className="overflow-x-auto rounded-md bg-muted p-3 text-xs sm:text-sm"><code>{`$env:VITE_ALLOW_PUBLIC_SIGNUP="true"\nnpm run build\nnpm run preview -- --port 4174 --strictPort`}</code></pre>
+                    <p className="text-sm">{t('organizationMembers.setupLocalDisable')}</p>
+                    <pre className="overflow-x-auto rounded-md bg-muted p-3 text-xs sm:text-sm"><code>{`Remove-Item Env:VITE_ALLOW_PUBLIC_SIGNUP\nnpm run build\nnpm run preview -- --port 4174 --strictPort`}</code></pre>
+                    <p className="text-sm text-muted-foreground">{t('organizationMembers.setupStrictPortNote')}</p>
+                  </section>
+
+                  <section className="space-y-3">
+                    <h2 className="text-base font-semibold">7. {t('organizationMembers.setupSecurityTitle')}</h2>
+                    <GuideTable
+                      headers={[
+                        t('organizationMembers.setupSecurityRuleHeader'),
+                        t('organizationMembers.setupSecurityStatusHeader'),
+                      ]}
+                      rows={[
+                        [t('organizationMembers.setupSecurityOutsider'), t('organizationMembers.setupStatusLocked')],
+                        [t('organizationMembers.setupSecurityEmployeeOrg'), t('organizationMembers.setupStatusLocked')],
+                        [t('organizationMembers.setupSecurityEmployeePassword'), t('organizationMembers.setupStatusAllowed')],
+                        [t('organizationMembers.setupSecurityAdminInvite'), t('organizationMembers.setupStatusAllowed')],
+                        [t('organizationMembers.setupSecurityEmployeePhone'), t('organizationMembers.setupStatusAllowed')],
+                        [t('organizationMembers.setupSecurityPublicSignup'), t('organizationMembers.setupStatusNotRecommended')],
+                      ]}
+                    />
+                    <p className="text-sm font-medium">{t('organizationMembers.setupFlowLabel')}</p>
+                    <pre className="whitespace-pre-wrap rounded-md bg-muted p-3 text-xs sm:text-sm">{t('organizationMembers.setupFlow')}</pre>
+                  </section>
                 </div>
               </DialogContent>
             </Dialog>
