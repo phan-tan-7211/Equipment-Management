@@ -63,7 +63,7 @@ test.describe('Six-issue UX pass — desktop @pr-evidence', () => {
     await gotoDashboard('/pm-templates');
     await assertHealthyShell();
 
-    await expect(page.getByRole('heading', { name: /equipqr templates/i })).toBeVisible({
+    await expect(page.getByRole('heading', { name: /znteqr templates/i })).toBeVisible({
       timeout: 30_000,
     });
     await expandZnteqrTemplatesIfCollapsed(page);

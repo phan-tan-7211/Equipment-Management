@@ -141,7 +141,7 @@ export function buildCreationRunData(prefix?: string): CreationRunData {
       description: `Cross-reference group for Playwright inventory items (${token})`,
       status: 'verified',
       notes: `Verified by Playwright UI flow ${token}`,
-      evidenceUrl: 'https://example.com/equipqr-playwright-cross-reference',
+      evidenceUrl: 'https://example.com/znteqr-playwright-cross-reference',
     },
   };
 }

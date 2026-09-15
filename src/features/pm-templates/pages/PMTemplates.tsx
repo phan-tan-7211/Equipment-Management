@@ -467,8 +467,8 @@ const PMTemplates = () => {
           {/* Global Templates */}
           {globalTemplates.length > 0 && (
             <CollapsibleTemplateSection
-              title={t('pmTemplates.list.equipqrTemplates')}
-              description={t('pmTemplates.list.equipqrDescription')}
+              title={t('pmTemplates.list.znteqrTemplates')}
+              description={t('pmTemplates.list.znteqrDescription')}
               icon={<Globe className="h-5 w-5" aria-hidden />}
               count={globalTemplates.length}
               defaultOpen={!hasVisibleOrgTemplates}

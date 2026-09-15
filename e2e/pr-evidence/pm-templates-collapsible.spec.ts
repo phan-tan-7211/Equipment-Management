@@ -22,29 +22,29 @@ test.describe('PM template collapsible sections @pr-evidence', () => {
       timeout: 60_000,
     });
 
-    const equipQrTrigger = page.getByRole('button', { name: /equipqr templates/i });
-    await expect(equipQrTrigger).toBeVisible({ timeout: 30_000 });
+    const znteqrTrigger = page.getByRole('button', { name: /znteqr templates/i });
+    await expect(znteqrTrigger).toBeVisible({ timeout: 30_000 });
 
     const orgTrigger = page.getByRole('button', { name: /organization templates/i });
     const hasOrgTemplates = await orgTrigger.isVisible();
 
     if (hasOrgTemplates) {
-      await expect(equipQrTrigger).toHaveAttribute('aria-expanded', 'false');
+      await expect(znteqrTrigger).toHaveAttribute('aria-expanded', 'false');
       await expect(orgTrigger).toHaveAttribute('aria-expanded', 'true');
       await expect(page.getByText(/custom templates created by your organization/i)).toBeVisible();
     } else {
-      await expect(equipQrTrigger).toHaveAttribute('aria-expanded', 'true');
+      await expect(znteqrTrigger).toHaveAttribute('aria-expanded', 'true');
       await expect(
         page.getByText(/ready to use — assign directly, no clone needed/i).first(),
       ).toBeVisible();
     }
 
     await evidencePause(page, 500);
-    await evidenceScreenshot(page, '01-pm-templates-default-sections', { target: equipQrTrigger });
+    await evidenceScreenshot(page, '01-pm-templates-default-sections', { target: znteqrTrigger });
 
-    const startingExpanded = (await equipQrTrigger.getAttribute('aria-expanded')) === 'true';
-    await equipQrTrigger.click();
-    await expect(equipQrTrigger).toHaveAttribute(
+    const startingExpanded = (await znteqrTrigger.getAttribute('aria-expanded')) === 'true';
+    await znteqrTrigger.click();
+    await expect(znteqrTrigger).toHaveAttribute(
       'aria-expanded',
       startingExpanded ? 'false' : 'true',
     );
@@ -60,10 +60,10 @@ test.describe('PM template collapsible sections @pr-evidence', () => {
     }
 
     await evidencePause(page, 400);
-    await evidenceScreenshot(page, '02-equipqr-templates-toggled', { target: equipQrTrigger });
+    await evidenceScreenshot(page, '02-znteqr-templates-toggled', { target: znteqrTrigger });
 
-    await equipQrTrigger.click();
-    await expect(equipQrTrigger).toHaveAttribute(
+    await znteqrTrigger.click();
+    await expect(znteqrTrigger).toHaveAttribute(
       'aria-expanded',
       startingExpanded ? 'true' : 'false',
     );

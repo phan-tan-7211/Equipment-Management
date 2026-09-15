@@ -46,8 +46,8 @@ export async function spotlightLocator(locator: Locator, label: string): Promise
   await locator
     .evaluate(
       async (element, options) => {
-        const ringId = 'equipqr-e2e-action-spotlight';
-        const labelId = 'equipqr-e2e-action-spotlight-label';
+        const ringId = 'znteqr-e2e-action-spotlight';
+        const labelId = 'znteqr-e2e-action-spotlight-label';
         document.getElementById(ringId)?.remove();
         document.getElementById(labelId)?.remove();
 
@@ -146,7 +146,7 @@ export async function installActionOverlay(page: Page, title: string): Promise<v
   const mode = runConfig.overlayMode;
 
   await page.addInitScript(({ initialTitle, overlayMode, recordingTitle }) => {
-    const overlayId = 'equipqr-e2e-action-overlay';
+    const overlayId = 'znteqr-e2e-action-overlay';
     const ensureOverlay = () => {
       let overlay = document.getElementById(overlayId);
       if (overlay && overlay.getAttribute('data-mode') !== overlayMode) {
@@ -306,8 +306,8 @@ export async function installActionOverlay(page: Page, title: string): Promise<v
       }
     };
 
-    (window as Window & { __equipqrE2ESetStatus?: (message: string) => void })
-      .__equipqrE2ESetStatus = setStatus;
+    (window as Window & { __znteqrE2ESetStatus?: (message: string) => void })
+      .__znteqrE2ESetStatus = setStatus;
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => setStatus(initialTitle), {
@@ -339,8 +339,8 @@ export async function setActionOverlay(
     await page
       .evaluate((status) => {
         const setter = (window as Window & {
-          __equipqrE2ESetStatus?: (message: string) => void;
-        }).__equipqrE2ESetStatus;
+          __znteqrE2ESetStatus?: (message: string) => void;
+        }).__znteqrE2ESetStatus;
         setter?.(status);
       }, message)
       .catch(() => undefined);

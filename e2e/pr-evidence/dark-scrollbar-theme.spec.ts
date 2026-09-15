@@ -18,11 +18,11 @@ test.describe('Dark scrollbar theme @pr-evidence', () => {
     });
 
     await expandZnteqrTemplatesIfCollapsed(page);
-    const equipQrHeading = page.getByRole('heading', { name: /equipqr templates/i });
-    await expect(equipQrHeading).toBeVisible({ timeout: 30_000 });
+    const znteqrHeading = page.getByRole('heading', { name: /znteqr templates/i });
+    await expect(znteqrHeading).toBeVisible({ timeout: 30_000 });
 
-    const equipQrSection = equipQrHeading.locator('..');
-    const assignmentTrigger = equipQrSection
+    const znteqrSection = znteqrHeading.locator('..');
+    const assignmentTrigger = znteqrSection
       .getByRole('button', { name: /apply to equipment/i })
       .first();
 

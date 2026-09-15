@@ -104,7 +104,7 @@ export async function evidencePause(page: Page, ms: number): Promise<void> {
 
 /** Expand the ZNTEQR Templates section when an org already has custom templates. */
 export async function expandZnteqrTemplatesIfCollapsed(page: Page): Promise<void> {
-  const trigger = page.getByRole('button', { name: /equipqr templates/i });
+  const trigger = page.getByRole('button', { name: /znteqr templates/i });
   await trigger.waitFor({ state: 'visible', timeout: 30_000 });
   if ((await trigger.getAttribute('aria-expanded')) === 'false') {
     await trigger.click();

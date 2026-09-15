@@ -19,12 +19,12 @@ test.describe('PM template assignment UX — desktop @pr-evidence', () => {
     });
 
     await expandZnteqrTemplatesIfCollapsed(page);
-    const equipQrHeading = page.getByRole('heading', { name: /equipqr templates/i });
-    await expect(equipQrHeading).toBeVisible({ timeout: 30_000 });
+    const znteqrHeading = page.getByRole('heading', { name: /znteqr templates/i });
+    await expect(znteqrHeading).toBeVisible({ timeout: 30_000 });
 
-    const equipQrSection = equipQrHeading.locator('..');
-    const equipQrGrid = equipQrSection.locator('.grid').first();
-    const assignmentTriggers = equipQrSection.getByRole('button', {
+    const znteqrSection = znteqrHeading.locator('..');
+    const znteqrGrid = znteqrSection.locator('.grid').first();
+    const assignmentTriggers = znteqrSection.getByRole('button', {
       name: /apply to equipment|assigned equipment/i,
     });
 
@@ -33,7 +33,7 @@ test.describe('PM template assignment UX — desktop @pr-evidence', () => {
 
     await evidencePause(page, 600);
     await evidenceScreenshot(page, '01-pm-templates-grid-outline-triggers', {
-      target: equipQrGrid,
+      target: znteqrGrid,
     });
 
     const firstTrigger = assignmentTriggers.first();
@@ -51,7 +51,7 @@ test.describe('PM template assignment UX — desktop @pr-evidence', () => {
     await evidenceScreenshot(page, '02-assignment-picker-open', { target: pickerSearch });
     await page.keyboard.press('Escape');
 
-    const assignedTrigger = equipQrSection
+    const assignedTrigger = znteqrSection
       .getByRole('button', { name: /assigned equipment \(\d+\)/i })
       .first();
     if (await assignedTrigger.isVisible().catch(() => false)) {

@@ -18,15 +18,15 @@ test.describe('PM template starter title readability @pr-evidence', () => {
     await assertHealthyShell();
 
     await expandZnteqrTemplatesIfCollapsed(page);
-    const equipQrHeading = page.getByRole('heading', { name: /equipqr templates/i });
-    await expect(equipQrHeading).toBeVisible({ timeout: 30_000 });
+    const znteqrHeading = page.getByRole('heading', { name: /znteqr templates/i });
+    await expect(znteqrHeading).toBeVisible({ timeout: 30_000 });
 
-    const equipQrSection = equipQrHeading.locator('..');
-    const equipQrGrid = equipQrSection.locator('.grid').first();
-    await expect(equipQrGrid).toBeVisible({ timeout: 30_000 });
+    const znteqrSection = znteqrHeading.locator('..');
+    const znteqrGrid = znteqrSection.locator('.grid').first();
+    await expect(znteqrGrid).toBeVisible({ timeout: 30_000 });
 
     for (const matcher of starterTemplateMatchers) {
-      const cardHeader = equipQrGrid.getByRole('button', { name: matcher.cardName }).first();
+      const cardHeader = znteqrGrid.getByRole('button', { name: matcher.cardName }).first();
       const title = cardHeader.getByRole('heading', { name: matcher.titleName }).first();
       const badgeRow = cardHeader.locator('.flex.flex-wrap.items-center.gap-1').first();
 
@@ -47,9 +47,9 @@ test.describe('PM template starter title readability @pr-evidence', () => {
     }
 
     await evidencePause(page, 600);
-    await evidenceScreenshot(page, '01-pm-template-starter-title-grid', { target: equipQrGrid });
+    await evidenceScreenshot(page, '01-pm-template-starter-title-grid', { target: znteqrGrid });
 
-    const forkliftCard = equipQrGrid
+    const forkliftCard = znteqrGrid
       .getByRole('button', { name: /open details for template .*forklift/i })
       .first();
     await evidencePause(page, 400);
