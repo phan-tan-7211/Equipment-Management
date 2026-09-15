@@ -1,38 +1,32 @@
 #!/usr/bin/env node
 /**
- * Poll the Vercel REST API until a deployment for a given commit on `main`
- * reaches READY, or timeout. Used by `.github/workflows/production-release-readiness.yml`.
+ * Poll Vercel until the deployment for the requested commit/branch is READY.
+ * Production target IDs are intentionally NOT hard-coded here; GitHub Actions
+ * injects them from the `production` Environment.
  *
- * Env (required unless noted):
+ * Required env:
  *   VERCEL_TOKEN
- *   GITHUB_SHA or VERCEL_COMMIT_SHA — full git SHA
+ *   VERCEL_TEAM_ID
+ *   VERCEL_PROJECT_ID
+ *   GITHUB_SHA or VERCEL_COMMIT_SHA
  *
- * Env (optional):
- *   VERCEL_TEAM_ID — default ZNT team id
- *   VERCEL_PROJECT_ID — default equipqr SPA project id
+ * Optional env:
  *   VERCEL_BRANCH — default main
  *   VERCEL_POLL_INTERVAL_SEC — default 20
  *   VERCEL_WAIT_TIMEOUT_MINUTES — default 45
- *   VERCEL_FETCH_TIMEOUT_MS — per-request HTTP timeout (default 45000)
- *
- * On success, prints validated `deployment_url=` / `deployment_id=` lines to stdout
- * for the workflow step to append to GITHUB_OUTPUT (avoids CodeQL http-to-file in JS).
- *
- * Does not run `vercel promote` — see promote-vercel-production.mjs.
+ *   VERCEL_FETCH_TIMEOUT_MS — default 45000
  */
-
-
-const DEFAULT_TEAM = 'team_78VeGDURoofThjZNJOKEBpP5';
-const DEFAULT_PROJECT = 'prj_P9hRun4B2OdGy8ACCnb0f7jNG6UA';
 
 function usage() {
   process.stdout.write(`Usage: wait-for-vercel-deployment.mjs
 
-Environment:
-  VERCEL_TOKEN                 Bearer token (required)
-  GITHUB_SHA / VERCEL_COMMIT_SHA  Git commit to match (required)
-  VERCEL_TEAM_ID               Default: ${DEFAULT_TEAM}
-  VERCEL_PROJECT_ID            Default: ${DEFAULT_PROJECT}
+Required environment:
+  VERCEL_TOKEN
+  VERCEL_TEAM_ID
+  VERCEL_PROJECT_ID
+  GITHUB_SHA / VERCEL_COMMIT_SHA
+
+Optional environment:
   VERCEL_BRANCH                Default: main
   VERCEL_POLL_INTERVAL_SEC     Default: 20
   VERCEL_WAIT_TIMEOUT_MINUTES  Default: 45
@@ -40,170 +34,120 @@ Environment:
 `);
 }
 
-function deploymentPublicUrl(d) {
-  const u = d.url;
-  if (!u) return '';
-  return u.startsWith('http://') || u.startsWith('https://') ? u : `https://${u}`;
+function deploymentPublicUrl(deployment) {
+  const value = deployment?.url || '';
+  if (!value) return '';
+  return value.startsWith('http://') || value.startsWith('https://') ? value : `https://${value}`;
 }
 
 function commitRefMatches(meta, branch) {
-  const ref = meta.githubCommitRef || '';
+  const ref = meta?.githubCommitRef || '';
   return ref === branch || ref === `refs/heads/${branch}`;
 }
 
 function shaMatches(meta, sha) {
-  const msha = meta.githubCommitSha || '';
-  return msha === sha;
+  return (meta?.githubCommitSha || '') === sha;
 }
 
 function terminalErrorStates(deployments, sha, branch) {
-  return deployments.filter((d) => {
-    const st = d.readyState || d.state || '';
-    if (!['ERROR', 'CANCELED', 'DELETED'].includes(st)) return false;
-    const meta = d.meta || {};
-    if (!shaMatches(meta, sha)) return false;
-    return commitRefMatches(meta, branch);
+  return deployments.filter((deployment) => {
+    const state = deployment.readyState || deployment.state || '';
+    return (
+      ['ERROR', 'CANCELED', 'DELETED'].includes(state) &&
+      shaMatches(deployment.meta || {}, sha) &&
+      commitRefMatches(deployment.meta || {}, branch)
+    );
   });
 }
 
 function pickReadyDeployment(deployments, sha, branch) {
-  const candidates = deployments.filter((d) => {
-    const st = d.readyState || d.state || '';
-    if (st !== 'READY') return false;
-    const meta = d.meta || {};
-    if (!shaMatches(meta, sha)) return false;
-    if (!commitRefMatches(meta, branch)) return false;
-    return true;
+  const candidates = deployments.filter((deployment) => {
+    const state = deployment.readyState || deployment.state || '';
+    const meta = deployment.meta || {};
+    return state === 'READY' && shaMatches(meta, sha) && commitRefMatches(meta, branch);
   });
+
   if (candidates.length === 0) return null;
 
-  const preferNoTarget = candidates.filter((d) => d.target == null);
-  if (preferNoTarget.length > 0) {
-    preferNoTarget.sort((a, b) => (b.createdAt || b.created || 0) - (a.createdAt || a.created || 0));
-    return preferNoTarget[0];
-  }
-  candidates.sort((a, b) => (b.createdAt || b.created || 0) - (a.createdAt || a.created || 0));
-  return candidates[0];
+  const sortNewest = (a, b) => (b.createdAt || b.created || 0) - (a.createdAt || a.created || 0);
+  const previewCandidates = candidates.filter((deployment) => deployment.target == null).sort(sortNewest);
+  if (previewCandidates.length > 0) return previewCandidates[0];
+  return candidates.sort(sortNewest)[0];
 }
 
-/**
- * List deployments from Vercel; transient failures do not exit the process —
- * callers retry until deadline. Auth / client errors exit non‑zero immediately.
- *
- * @param {object} p
- * @returns {Promise<{ ok: true, deployments: any[] } | { ok: false, transient: boolean, detail: string }>}
- */
 async function listDeployments({ token, teamId, projectId, sha, branch, timeoutMs }) {
-  const u = new URL('https://api.vercel.com/v6/deployments');
-  u.searchParams.set('teamId', teamId);
-  u.searchParams.set('projectId', projectId);
-  u.searchParams.set('sha', sha);
-  u.searchParams.set('branch', branch);
-  u.searchParams.set('limit', '25');
+  const url = new URL('https://api.vercel.com/v6/deployments');
+  url.searchParams.set('teamId', teamId);
+  url.searchParams.set('projectId', projectId);
+  url.searchParams.set('sha', sha);
+  url.searchParams.set('branch', branch);
+  url.searchParams.set('limit', '25');
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(u, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
       signal: controller.signal,
     });
+    const text = await response.text();
 
-    const text = await res.text();
-
-    if (!res.ok) {
-      if (res.status === 429 || res.status >= 500) {
-        return {
-          ok: false,
-          transient: true,
-          detail: `HTTP ${res.status}: ${text.slice(0, 300)}`,
-        };
-      }
+    if (!response.ok) {
       return {
         ok: false,
-        transient: false,
-        detail: `Vercel API ${res.status}: ${text.slice(0, 400)}`,
+        transient: response.status === 429 || response.status >= 500,
+        detail: `Vercel API ${response.status}: ${text.slice(0, 400)}`,
       };
     }
 
-    let data;
     try {
-      data = JSON.parse(text);
+      return { ok: true, deployments: JSON.parse(text).deployments || [] };
     } catch {
-      return {
-        ok: false,
-        transient: true,
-        detail: `invalid JSON (${text.slice(0, 200)})`,
-      };
+      return { ok: false, transient: true, detail: `invalid JSON (${text.slice(0, 200)})` };
     }
-    return { ok: true, deployments: data.deployments || [] };
-  } catch (err) {
-    const message =
-      err && typeof err === 'object' && 'name' in err && err.name === 'AbortError'
+  } catch (error) {
+    const detail =
+      error && typeof error === 'object' && 'name' in error && error.name === 'AbortError'
         ? `request timeout after ${timeoutMs}ms`
-        : err instanceof Error
-          ? err.message
-          : String(err);
-    return { ok: false, transient: true, detail: message };
+        : error instanceof Error
+          ? error.message
+          : String(error);
+    return { ok: false, transient: true, detail };
   } finally {
     clearTimeout(timeoutId);
   }
 }
 
 function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** @param {string} name */
-function isSafeGithubOutputName(name) {
-  return /^[A-Za-z0-9_]+$/.test(name);
-}
-
-/** @param {string} value */
-function sanitizeGithubOutputScalar(value) {
-  return String(value).replace(/[\r\n]/g, '');
-}
-
-/** @param {string} raw */
-function buildSafeVercelDeploymentUrl(raw) {
-  const scalar = sanitizeGithubOutputScalar(raw);
+function safeDeploymentUrl(raw) {
   try {
-    const parsed = new URL(scalar);
+    const parsed = new URL(String(raw).replace(/[\r\n]/g, ''));
     if (parsed.protocol !== 'https:') return null;
-    if (!parsed.hostname.endsWith('.vercel.app') && !parsed.hostname.endsWith('.equipqr.app')) {
-      return null;
-    }
-    // Reconstruct from parsed parts so CodeQL does not treat API body as a direct file write sink.
+    if (!parsed.hostname.endsWith('.vercel.app') && !parsed.hostname.endsWith('.equipqr.app')) return null;
     return `https://${parsed.hostname}${parsed.pathname || '/'}${parsed.search || ''}`;
   } catch {
     return null;
   }
 }
 
-/** @param {string} raw */
-function buildSafeVercelDeploymentId(raw) {
-  const scalar = sanitizeGithubOutputScalar(raw);
-  const match = /^([A-Za-z0-9_-]+)$/.exec(scalar);
+function safeDeploymentId(raw) {
+  const match = /^([A-Za-z0-9_-]+)$/.exec(String(raw).replace(/[\r\n]/g, ''));
   return match ? match[1] : null;
 }
 
-function formatGithubStepOutputLines(name, value) {
-  if (!name || !isSafeGithubOutputName(name)) return [];
-
-  let safeValue = null;
-  if (name === 'deployment_url') {
-    safeValue = buildSafeVercelDeploymentUrl(value);
-  } else if (name === 'deployment_id') {
-    safeValue = buildSafeVercelDeploymentId(value);
-  } else {
-    return [];
+function requiredEnv(name) {
+  const value = (process.env[name] || '').trim();
+  if (!value) {
+    process.stderr.write(
+      `::error title=wait-for-vercel-deployment::${name} is required. Configure GitHub Environment 'production'.\n`,
+    );
+    return null;
   }
-
-  if (!safeValue) return [];
-  return [`${name}=${safeValue}`];
+  return value;
 }
 
 async function main() {
@@ -213,130 +157,73 @@ async function main() {
     process.exit(0);
   }
 
-  const token = process.env.VERCEL_TOKEN || '';
-  const sha = process.env.GITHUB_SHA || process.env.VERCEL_COMMIT_SHA || '';
-  const teamId = process.env.VERCEL_TEAM_ID || DEFAULT_TEAM;
-  const projectId = process.env.VERCEL_PROJECT_ID || DEFAULT_PROJECT;
-  const branch = process.env.VERCEL_BRANCH || 'main';
-  const intervalSec = Math.max(
-    5,
-    Number.parseInt(process.env.VERCEL_POLL_INTERVAL_SEC || '20', 10) || 20,
-  );
-  const timeoutMin = Math.max(
-    1,
-    Number.parseInt(process.env.VERCEL_WAIT_TIMEOUT_MINUTES || '45', 10) || 45,
-  );
-  const fetchTimeoutMs = Math.max(
-    5000,
-    Number.parseInt(process.env.VERCEL_FETCH_TIMEOUT_MS || '45000', 10) || 45000,
-  );
-
-  if (!token || token.startsWith('op://')) {
-    process.stderr.write(
-      '::error title=wait-for-vercel-deployment::VERCEL_TOKEN missing or unresolved (still an op:// reference).\n',
-    );
-    process.exit(1);
-  }
+  const token = requiredEnv('VERCEL_TOKEN');
+  const teamId = requiredEnv('VERCEL_TEAM_ID');
+  const projectId = requiredEnv('VERCEL_PROJECT_ID');
+  const sha = (process.env.GITHUB_SHA || process.env.VERCEL_COMMIT_SHA || '').trim();
   if (!sha) {
     process.stderr.write(
       '::error title=wait-for-vercel-deployment::GITHUB_SHA / VERCEL_COMMIT_SHA is required.\n',
     );
-    process.exit(1);
   }
+  if (!token || !teamId || !projectId || !sha) process.exit(1);
 
+  const branch = (process.env.VERCEL_BRANCH || 'main').trim() || 'main';
+  const intervalSec = Math.max(5, Number.parseInt(process.env.VERCEL_POLL_INTERVAL_SEC || '20', 10) || 20);
+  const timeoutMin = Math.max(1, Number.parseInt(process.env.VERCEL_WAIT_TIMEOUT_MINUTES || '45', 10) || 45);
+  const fetchTimeoutMs = Math.max(5000, Number.parseInt(process.env.VERCEL_FETCH_TIMEOUT_MS || '45000', 10) || 45000);
   const deadline = Date.now() + timeoutMin * 60_000;
   let attempt = 0;
 
   process.stderr.write(
-    `Polling Vercel for READY deployment: project=${projectId} branch=${branch} sha=${sha.slice(0, 7)}\n`,
+    `Polling Vercel for READY deployment: team=${teamId} project=${projectId} branch=${branch} sha=${sha.slice(0, 7)}\n`,
   );
 
   while (Date.now() < deadline) {
     attempt += 1;
-
-    const listed = await listDeployments({
-      token,
-      teamId,
-      projectId,
-      sha,
-      branch,
-      timeoutMs: fetchTimeoutMs,
-    });
+    const listed = await listDeployments({ token, teamId, projectId, sha, branch, timeoutMs: fetchTimeoutMs });
 
     if (!listed.ok) {
       if (!listed.transient) {
-        process.stderr.write(
-          `::error title=wait-for-vercel-deployment::${listed.detail}\n`,
-        );
+        process.stderr.write(`::error title=wait-for-vercel-deployment::${listed.detail}\n`);
         process.exit(1);
       }
-
       process.stderr.write(
-        `::warning title=wait-for-vercel-deployment::Transient Vercel list failure (attempt ${attempt}): ${listed.detail}. Retrying...\n`,
+        `::warning title=wait-for-vercel-deployment::Transient Vercel API failure (attempt ${attempt}): ${listed.detail}. Retrying...\n`,
       );
-
-      if (attempt === 1 || attempt % 5 === 0) {
-        process.stderr.write(
-          `[wait] attempt ${attempt}: still polling after transient API error (${intervalSec}s interval)\n`,
-        );
-      }
       await sleep(intervalSec * 1000);
       continue;
     }
 
-    const { deployments } = listed;
-
-    const failed = terminalErrorStates(deployments, sha, branch);
+    const failed = terminalErrorStates(listed.deployments, sha, branch);
     if (failed.length > 0) {
-      const f = failed[0];
-      const msg = f.errorMessage || f.errorCode || 'deployment failed';
+      const deployment = failed[0];
+      const message = deployment.errorMessage || deployment.errorCode || 'deployment failed';
       process.stderr.write(
-        `::error title=wait-for-vercel-deployment::Vercel deployment failed (${f.readyState || f.state}): ${msg}\n`,
+        `::error title=wait-for-vercel-deployment::Vercel deployment failed (${deployment.readyState || deployment.state}): ${message}\n`,
       );
       process.exit(1);
     }
 
-    const ready = pickReadyDeployment(deployments, sha, branch);
+    const ready = pickReadyDeployment(listed.deployments, sha, branch);
     if (ready) {
-      const url = deploymentPublicUrl(ready);
-      if (!url || typeof url !== 'string' || url.trim() === '') {
+      const url = safeDeploymentUrl(deploymentPublicUrl(ready));
+      const id = safeDeploymentId(ready.uid || ready.id || '');
+      if (!url) {
         process.stderr.write(
-          '::error title=wait-for-vercel-deployment::READY deployment missing public URL — cannot confirm deployment for operator.\n',
+          '::error title=wait-for-vercel-deployment::READY deployment URL failed validation.\n',
         );
         process.exit(1);
       }
 
-      const deploymentId = ready.uid || ready.id || '';
-      const outputLines = [
-        ...formatGithubStepOutputLines('deployment_url', url),
-        ...(deploymentId ? formatGithubStepOutputLines('deployment_id', deploymentId) : []),
-      ];
-      if (outputLines.length === 0) {
-        process.stderr.write(
-          '::error title=wait-for-vercel-deployment::READY deployment URL/id failed validation — cannot emit workflow outputs.\n',
-        );
-        process.exit(1);
-      }
-
-      for (const line of outputLines) {
-        process.stdout.write(`${line}\n`);
-      }
-
+      process.stdout.write(`deployment_url=${url}\n`);
+      if (id) process.stdout.write(`deployment_id=${id}\n`);
       process.stderr.write(`::notice::Vercel deployment READY: ${url}\n`);
-      if (deploymentId) {
-        process.stderr.write(`::notice::Vercel deployment id: ${deploymentId}\n`);
-      }
-      process.stderr.write(
-        `Production release readiness will promote this deployment to equipqr.app in the next workflow step.\n`,
-      );
-
       process.exit(0);
     }
 
     if (attempt === 1 || attempt % 5 === 0) {
-      process.stderr.write(
-        `[wait] attempt ${attempt}: no READY deployment yet for this commit (interval ${intervalSec}s)\n`,
-      );
+      process.stderr.write(`[wait] attempt ${attempt}: no READY deployment yet for this commit\n`);
     }
     await sleep(intervalSec * 1000);
   }
@@ -347,9 +234,9 @@ async function main() {
   process.exit(1);
 }
 
-main().catch((err) => {
+main().catch((error) => {
   process.stderr.write(
-    `::error title=wait-for-vercel-deployment::${err instanceof Error ? err.message : String(err)}\n`,
+    `::error title=wait-for-vercel-deployment::${error instanceof Error ? error.message : String(error)}\n`,
   );
   process.exit(1);
 });
