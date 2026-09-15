@@ -265,6 +265,10 @@ const OrganizationMembers = () => {
                         [t('organizationMembers.setupSecurityPublicSignup'), t('organizationMembers.setupStatusNotRecommended')],
                       ]}
                     />
+                    <div className="flex gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+                      <TriangleAlert className="h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
+                      <p>{t('organizationMembers.setupBackendWarning')}</p>
+                    </div>
                     <p className="text-sm font-medium">{t('organizationMembers.setupFlowLabel')}</p>
                     <pre className="whitespace-pre-wrap rounded-md bg-muted p-3 text-xs sm:text-sm">{t('organizationMembers.setupFlow')}</pre>
                   </section>
