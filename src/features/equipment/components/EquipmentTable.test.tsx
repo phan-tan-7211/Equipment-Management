@@ -109,10 +109,10 @@ describe('EquipmentTable', () => {
       const { container } = render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
       const thumbnail = screen.getByRole('img', { name: 'Forklift A1 equipment' });
 
-      fireEvent.pointerEnter(thumbnail.parentElement!);
+      fireEvent.pointerMove(thumbnail);
       expect(container.querySelector('[data-equipment-image-hover-preview]')).toBeInTheDocument();
       const nextThumbnail = screen.getByRole('img', { name: 'Excavator B2 equipment' });
-      fireEvent.pointerEnter(nextThumbnail.parentElement!);
+      fireEvent.pointerMove(nextThumbnail);
       expect(container.querySelector('[data-equipment-image-hover-preview] img')).toHaveAttribute(
         'src',
         'https://example.com/excavator-b2.jpg',
