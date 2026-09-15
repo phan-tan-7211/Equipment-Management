@@ -26,6 +26,11 @@ import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
 
 type AuthMode = 'signin' | 'signup' | 'invite';
 
+// Public production builds are invite-only. Local Vite development keeps the
+// bootstrap signup available; production can explicitly enable it when needed.
+const PUBLIC_SIGNUP_ENABLED =
+  import.meta.env.DEV || import.meta.env.VITE_ALLOW_PUBLIC_SIGNUP === 'true';
+
 interface SignupSuccessState {
   message: string;
   email?: string;
@@ -104,7 +109,7 @@ const Auth = () => {
               ? tabParam
               : 'signin';
     return {
-      parsedMode: parsed,
+      parsedMode: parsed === 'signup' && !PUBLIC_SIGNUP_ENABLED ? 'signin' : parsed,
       prefillEmail: params.get('email') || undefined,
       invitedOrgId: orgId,
       invitedOrgName: orgName,
@@ -114,6 +119,7 @@ const Auth = () => {
 
   const [mode, setMode] = useState<AuthMode>(parsedMode);
   const isInvitationFlow = Boolean(inviteToken);
+  const canSelfSignup = PUBLIC_SIGNUP_ENABLED && !isInvitationFlow;
 
   useEffect(() => {
     setMode(parsedMode);
@@ -281,16 +287,20 @@ const Auth = () => {
                 )}
                 <p className="mt-6 text-center text-sm text-muted-foreground">
                   {mode === 'signin' ? (
-                    <>
-                      {t('auth.newToZnteqr')}{' '}
-                      <button
-                        type="button"
-                        className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
-                        onClick={() => setMode(isInvitationFlow ? 'invite' : 'signup')}
-                      >
-                        {t('auth.createAccount')}
-                      </button>
-                    </>
+                    canSelfSignup ? (
+                      <>
+                        {t('auth.newToZnteqr')}{' '}
+                        <button
+                          type="button"
+                          className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
+                          onClick={() => setMode('signup')}
+                        >
+                          {t('auth.createAccount')}
+                        </button>
+                      </>
+                    ) : (
+                      <span>{t('auth.inviteOnlySignup')}</span>
+                    )
                   ) : (
                     <>
                       {t('auth.alreadyHaveAccount')}{' '}
