@@ -24,7 +24,7 @@ const viTranslations: ReleaseTranslationVersions = {
     changed: [{ body: 'Đã tập trung hóa cấu hình triển khai production trên GitHub, loại bỏ các mã đích Vercel được hard-code khỏi công cụ phát hành và loại bỏ 1Password khỏi quy trình phát hành production trên Vercel.' }],
   },
   '3.34.4': {
-    changed: [{ body: 'Đã hoàn tất đợt dọn dẹp sâu ZNTEQR bằng cách đổi tên các mã định danh runtime nội bộ còn lại và chuyển bài viết chào mừng của Trung tâm trợ giúp sang slug chuẩn \`welcome-to-znteqr\`, đồng thời giữ URL cũ bằng chuyển hướng vĩnh viễn.' }],
+    changed: [{ body: 'Đã hoàn tất đợt dọn dẹp sâu ZNTEQR bằng cách đổi tên các mã định danh runtime nội bộ còn lại và chuyển bài viết chào mừng của Trung tâm trợ giúp sang slug chuẩn `welcome-to-znteqr`, đồng thời giữ URL cũ bằng chuyển hướng vĩnh viễn.' }],
   },
   '3.34.3': {
     changed: [{ title: 'Nhất quán thương hiệu ZNTEQR', body: 'Khách hàng, công nghệ hỗ trợ và tài liệu công khai giờ đây đều nhận diện nền tảng thiết bị là ZNTEQR.' }],
@@ -68,7 +68,7 @@ const viTranslations: ReleaseTranslationVersions = {
   },
   '3.30.0': {
     added: [
-      { title: 'Trang bản phát hành công khai', body: 'Liên kết phiên bản trong chân trang pháp lý giờ đây mở trang \`/releases\` công khai với ghi chú phát hành được tạo lúc build từ changelog ZNTEQR.' },
+      { title: 'Trang bản phát hành công khai', body: 'Liên kết phiên bản trong chân trang pháp lý giờ đây mở trang `/releases` công khai với ghi chú phát hành được tạo lúc build từ changelog ZNTEQR.' },
     ],
     changed: [
       { title: 'Các bước tiếp theo của lệnh công việc trên điện thoại', body: 'Kỹ thuật viên hiện trường có thể thao tác ngay trên trang mà không cần mở quick actions; quản lý có thể mở lại lệnh công việc bị khóa hoặc gọi liên hệ khách hàng trên màn hình điện thoại.' },
@@ -87,7 +87,7 @@ const viTranslations: ReleaseTranslationVersions = {
       { title: 'Xác nhận xóa thành viên hoạt động trên chi tiết nhóm', body: 'Owner và quản lý nhóm giờ đây nhận được hộp thoại xác nhận thực sự trước khi xóa thành viên.' },
       { title: 'Các thao tác mở lại lệnh công việc đã hoàn tất được gắn nhãn rõ ràng', body: 'Lệnh công việc đã hoàn tất giờ đây tách riêng Reopen work order và Revert PM, giải thích từng thao tác và yêu cầu xác nhận.' },
       { title: 'Xóa lệnh công việc nằm trong menu thao tác bổ sung', body: 'Chi tiết trên máy tính giữ Export là thao tác chính ở header và chuyển xóa vào menu bổ sung; trên di động, xóa nằm cuối và được giảm mức nhấn mạnh.' },
-      { title: 'Bí danh trang cài đặt tổ chức', body: 'Mở \`/dashboard/organization/settings\` giờ đây hiển thị biểu mẫu Settings và các tab tổ chức thay vì panel chính trống.' },
+      { title: 'Bí danh trang cài đặt tổ chức', body: 'Mở `/dashboard/organization/settings` giờ đây hiển thị biểu mẫu Settings và các tab tổ chức thay vì panel chính trống.' },
       { title: 'Tên mẫu PM khởi đầu vẫn dễ đọc', body: 'Thẻ mẫu khởi đầu ZNTEQR giờ đây giữ tên mẫu dễ đọc ngay cả khi có cả badge ZNTEQR và Protected.' },
       { title: 'Marker Team HQ trên Fleet Map vẫn tương tác được', body: 'Nhấp marker trụ sở đội nhóm giờ đây vẫn giữ bản đồ và mở popup của đội nhóm.' },
     ],
@@ -105,7 +105,7 @@ const koTranslations: ReleaseTranslationVersions = {
     changed: [{ body: 'GitHub에서 프로덕션 배포 설정을 중앙화하고, 릴리스 도구의 하드코딩된 Vercel 대상 ID와 Vercel 프로덕션 릴리스 경로의 1Password 의존성을 제거했습니다.' }],
   },
   '3.34.4': {
-    changed: [{ body: '남아 있던 활성 내부 런타임 식별자를 변경하고 Help Center 환영 문서를 표준 \`welcome-to-znteqr\` slug로 옮겼으며, 기존 URL은 영구 리디렉션으로 유지해 ZNTEQR 심층 정리를 완료했습니다.' }],
+    changed: [{ body: '남아 있던 활성 내부 런타임 식별자를 변경하고 Help Center 환영 문서를 표준 `welcome-to-znteqr` slug로 옮겼으며, 기존 URL은 영구 리디렉션으로 유지해 ZNTEQR 심층 정리를 완료했습니다.' }],
   },
   '3.34.3': {
     changed: [{ title: 'ZNTEQR 브랜드 일관성', body: '고객, 보조 기술 및 공개 문서가 이제 장비 플랫폼을 일관되게 ZNTEQR로 식별합니다.' }],
@@ -149,7 +149,7 @@ const koTranslations: ReleaseTranslationVersions = {
   },
   '3.30.0': {
     added: [
-      { title: '공개 릴리스 페이지', body: '법적 고지 바닥글의 버전 링크가 이제 ZNTEQR changelog에서 빌드 시 생성된 릴리스 노트가 있는 공개 \`/releases\` 페이지를 엽니다.' },
+      { title: '공개 릴리스 페이지', body: '법적 고지 바닥글의 버전 링크가 이제 ZNTEQR changelog에서 빌드 시 생성된 릴리스 노트가 있는 공개 `/releases` 페이지를 엽니다.' },
     ],
     changed: [
       { title: '작업 지시 다음 단계가 휴대폰에 유지됨', body: '현장 기술자는 quick actions를 열지 않고 페이지에서 바로 작업할 수 있으며, 관리자는 잠긴 작업 지시를 되돌리거나 휴대폰 화면에서 고객 연락처에 연결할 수 있습니다.' },
@@ -168,7 +168,7 @@ const koTranslations: ReleaseTranslationVersions = {
       { title: '팀 상세에서 멤버 삭제 확인이 작동함', body: 'Owner와 팀 관리자는 이제 팀원을 제거하기 전에 실제 확인 대화상자를 받습니다.' },
       { title: '완료된 작업 지시 되돌리기 동작의 라벨을 명확히 함', body: '완료된 작업 지시에서 이제 Reopen work order와 Revert PM을 분리하고 각각을 설명하며 확인을 요구합니다.' },
       { title: '작업 지시 삭제가 추가 작업 메뉴에 유지됨', body: '데스크톱 상세에서는 Export를 기본 헤더 동작으로 유지하고 삭제를 추가 메뉴로 옮기며, 모바일에서는 삭제를 마지막에 낮은 강조로 표시합니다.' },
-      { title: '조직 설정 페이지 별칭', body: '\`/dashboard/organization/settings\`를 열면 이제 빈 메인 패널 대신 Settings 폼과 조직 탭이 표시됩니다.' },
+      { title: '조직 설정 페이지 별칭', body: '`/dashboard/organization/settings`를 열면 이제 빈 메인 패널 대신 Settings 폼과 조직 탭이 표시됩니다.' },
       { title: '스타터 PM 템플릿 제목이 계속 읽기 쉬움', body: 'ZNTEQR 스타터 카드에서 이제 ZNTEQR과 Protected 배지가 모두 있어도 템플릿 이름을 읽기 쉽게 유지합니다.' },
       { title: 'Fleet Map Team HQ 마커가 계속 상호작용 가능함', body: '팀 본부 마커를 클릭해도 이제 지도가 유지되고 팀 팝업이 열립니다.' },
     ],
