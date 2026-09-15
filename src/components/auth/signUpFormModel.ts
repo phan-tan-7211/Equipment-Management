@@ -35,6 +35,7 @@ export type SignUpValidationContext = {
   submitAttempted: boolean;
   hcaptchaEnabled: boolean;
   hcaptchaToken: string | null;
+  isInvitationSignup?: boolean;
 };
 
 export function isSignupEmailValid(email: string): boolean {
@@ -143,15 +144,19 @@ export function getSignupAcceptanceError(
       );
 }
 
-export function isSignupFormValid(ctx: SignUpValidationContext): boolean {
+export function isSignupFormValid(
+  ctx: SignUpValidationContext,
+  options: { isInvitationSignup?: boolean } = {},
+): boolean {
+  const isInvitationSignup = options.isInvitationSignup ?? ctx.isInvitationSignup;
   const baseValid =
     ctx.formData.name.trim() &&
     ctx.formData.email.trim() &&
     ctx.complexity.valid &&
     ctx.formData.confirmPassword &&
-    ctx.formData.organizationName.trim() &&
+    (isInvitationSignup || ctx.formData.organizationName.trim()) &&
     ctx.passwordMatch === true &&
-    !ctx.orgNameError &&
+    (isInvitationSignup || !ctx.orgNameError) &&
     ctx.termsAccepted;
 
   return ctx.hcaptchaEnabled ? Boolean(baseValid && ctx.hcaptchaToken) : Boolean(baseValid);
@@ -159,12 +164,15 @@ export function isSignupFormValid(ctx: SignUpValidationContext): boolean {
 
 export function buildSignupUserMetadata(
   formData: SignUpFormFields,
-  options: { invitedOrgId?: string; invitedOrgName?: string },
+  options: { invitedOrgId?: string; invitedOrgName?: string; isInvitationSignup?: boolean },
 ): Record<string, string> {
   const signUpData: Record<string, string> = {
     name: formData.name.trim(),
-    organization_name: formData.organizationName.trim(),
   };
+
+  if (!options.isInvitationSignup) {
+    signUpData.organization_name = formData.organizationName.trim();
+  }
 
   if (options.invitedOrgId) {
     signUpData.invited_organization_id = options.invitedOrgId;

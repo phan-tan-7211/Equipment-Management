@@ -233,9 +233,11 @@ const InvitationAccept = () => {
     const currentPath = window.location.pathname + window.location.search;
     sessionStorage.setItem('pendingRedirect', currentPath);
 
-    // Build auth URL with signup tab and prefilled email
+    // Build an invitation-specific auth URL so employees create their own password
+    // and can return to this invitation after email verification.
     const authParams = new URLSearchParams();
-    authParams.set('tab', 'signup');
+    authParams.set('mode', 'invite');
+    authParams.set('token', token);
     if (invitation.email) authParams.set('email', invitation.email);
     if (invitation.organization_id) authParams.set('invitedOrgId', invitation.organization_id);
     if (invitation.organization_name) authParams.set('invitedOrgName', invitation.organization_name);

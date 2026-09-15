@@ -24,7 +24,7 @@ import { useAppToast } from '@/hooks/useAppToast';
 import { useI18n } from '@/i18n';
 import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
 
-type AuthMode = 'signin' | 'signup';
+type AuthMode = 'signin' | 'signup' | 'invite';
 
 interface SignupSuccessState {
   message: string;
@@ -86,27 +86,34 @@ const Auth = () => {
   const suppressAuthRedirectRef = useRef(false);
   const { error: showErrorToast, success: showSuccessToast } = useAppToast();
 
-  const { parsedMode, prefillEmail, invitedOrgId, invitedOrgName } = useMemo(() => {
+  const { parsedMode, prefillEmail, invitedOrgId, invitedOrgName, inviteToken } = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const orgId = params.get('invitedOrgId') || undefined;
     const orgName = params.get('invitedOrgName') || undefined;
     const modeParam = params.get('mode');
     const tabParam = params.get('tab');
+    const inviteToken = params.get('token') || params.get('inviteToken') || undefined;
     const parsed: AuthMode =
-      modeParam === 'signin' || modeParam === 'signup'
+      modeParam === 'signin' || modeParam === 'signup' || modeParam === 'invite'
         ? modeParam
-        : tabParam === 'signin' || tabParam === 'signup'
-          ? tabParam
-          : 'signin';
+        : inviteToken
+          ? 'invite'
+          : orgId || orgName
+            ? 'signup'
+            : tabParam === 'signin' || tabParam === 'signup'
+              ? tabParam
+              : 'signin';
     return {
-      parsedMode: orgId || orgName ? 'signup' : parsed,
+      parsedMode: parsed,
       prefillEmail: params.get('email') || undefined,
       invitedOrgId: orgId,
       invitedOrgName: orgName,
+      inviteToken,
     };
   }, [location.search]);
 
   const [mode, setMode] = useState<AuthMode>(parsedMode);
+  const isInvitationFlow = Boolean(inviteToken);
 
   useEffect(() => {
     setMode(parsedMode);
@@ -154,7 +161,13 @@ const Auth = () => {
     suppressAuthRedirectRef.current = false;
     setSuccess(null);
     setMode('signin');
-    navigate('/auth?mode=signin', { replace: true });
+
+    const params = new URLSearchParams({ mode: 'signin' });
+    if (inviteToken) params.set('token', inviteToken);
+    if (prefillEmail) params.set('email', prefillEmail);
+    if (invitedOrgId) params.set('invitedOrgId', invitedOrgId);
+    if (invitedOrgName) params.set('invitedOrgName', invitedOrgName);
+    navigate(`/auth?${params.toString()}`, { replace: true });
   };
 
   const handleError = (errorMessage: string) => {
@@ -199,12 +212,22 @@ const Auth = () => {
           <CardHeader className="text-center px-6 pt-6 pb-4 sm:px-7 sm:pt-7 sm:pb-5">
             <div className="mx-auto mb-4"><Logo size="xl" /></div>
             <CardTitle as="h1" className="text-2xl">
-              {pendingQRScan ? t('auth.signInToContinue') : mode === 'signup' ? t('auth.createOrganization') : t('auth.signInToZnteqr')}
+              {pendingQRScan
+                ? t('auth.signInToContinue')
+                : mode === 'invite'
+                  ? t('auth.joinOrganization')
+                  : mode === 'signup'
+                    ? t('auth.createOrganization')
+                    : t('auth.signInToZnteqr')}
             </CardTitle>
             <CardDescription>
               {pendingQRScan ? (
                 <span className="flex items-center justify-center gap-2 text-info"><QrCode className="h-4 w-4" /><span>{t('auth.scanHint')}</span></span>
-              ) : mode === 'signup' ? t('auth.createOrganizationHint') : t('auth.signInHint')}
+              ) : mode === 'invite'
+                ? t('auth.joinOrganizationHint', { name: invitedOrgName || '' })
+                : mode === 'signup'
+                  ? t('auth.createOrganizationHint')
+                  : t('auth.signInHint')}
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6 pb-8 sm:px-7 sm:pb-8">
@@ -232,12 +255,54 @@ const Auth = () => {
             ) : (
               <div className="w-full">
                 {mode === 'signin' ? (
-                  <SignInForm onError={handleError} isLoading={isLoading} setIsLoading={setIsLoading} onGoogleSignIn={() => void handleGoogleSignIn()} onMFARequired={handleMFARequired} />
+                  <SignInForm
+                    onError={handleError}
+                    isLoading={isLoading}
+                    setIsLoading={setIsLoading}
+                    onGoogleSignIn={() => void handleGoogleSignIn()}
+                    onMFARequired={handleMFARequired}
+                    prefillEmail={isInvitationFlow ? prefillEmail : undefined}
+                    lockEmail={isInvitationFlow && Boolean(prefillEmail)}
+                  />
                 ) : (
-                  <SignUpForm onBeforeSignupSubmit={() => { suppressAuthRedirectRef.current = true; }} onSuccess={handleSuccess} onError={handleError} onGoogleSignUp={(organizationName) => void handleGoogleSignIn(organizationName)} isLoading={isLoading} setIsLoading={setIsLoading} prefillEmail={prefillEmail} invitedOrgId={invitedOrgId} invitedOrgName={invitedOrgName} />
+                  <SignUpForm
+                    onBeforeSignupSubmit={() => { suppressAuthRedirectRef.current = true; }}
+                    onSuccess={handleSuccess}
+                    onError={handleError}
+                    onGoogleSignUp={(organizationName) => void handleGoogleSignIn(organizationName)}
+                    isLoading={isLoading}
+                    setIsLoading={setIsLoading}
+                    prefillEmail={prefillEmail}
+                    invitedOrgId={invitedOrgId}
+                    invitedOrgName={invitedOrgName}
+                    isInvitationSignup={mode === 'invite'}
+                    inviteToken={inviteToken}
+                  />
                 )}
                 <p className="mt-6 text-center text-sm text-muted-foreground">
-                  {mode === 'signin' ? <>{t('auth.newToZnteqr')} <button type="button" className="font-medium text-foreground underline underline-offset-4 hover:text-primary" onClick={() => setMode('signup')}>{t('auth.createAccount')}</button></> : <>{t('auth.alreadyHaveAccount')} <button type="button" className="font-medium text-foreground underline underline-offset-4 hover:text-primary" onClick={() => setMode('signin')}>{t('auth.signIn')}</button></>}
+                  {mode === 'signin' ? (
+                    <>
+                      {t('auth.newToZnteqr')}{' '}
+                      <button
+                        type="button"
+                        className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
+                        onClick={() => setMode(isInvitationFlow ? 'invite' : 'signup')}
+                      >
+                        {t('auth.createAccount')}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {t('auth.alreadyHaveAccount')}{' '}
+                      <button
+                        type="button"
+                        className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
+                        onClick={handleReturnToSignIn}
+                      >
+                        {t('auth.signIn')}
+                      </button>
+                    </>
+                  )}
                 </p>
               </div>
             )}

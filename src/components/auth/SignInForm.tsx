@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,8 @@ interface SignInFormProps {
   setIsLoading: (loading: boolean) => void;
   onGoogleSignIn: () => void;
   onMFARequired?: () => void;
+  prefillEmail?: string;
+  lockEmail?: boolean;
 }
 
 const SignInForm: React.FC<SignInFormProps> = ({
@@ -28,12 +30,20 @@ const SignInForm: React.FC<SignInFormProps> = ({
   setIsLoading,
   onGoogleSignIn,
   onMFARequired,
+  prefillEmail,
+  lockEmail = false,
 }) => {
   const { signIn } = useAuth();
   const { t } = useI18n();
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ email: prefillEmail || '', password: '' });
   const [errors, setErrors] = useState<{ email?: string; password?: string; auth?: string } | null>(null);
-  const [emailSignInOpen, setEmailSignInOpen] = useState(false);
+  const [emailSignInOpen, setEmailSignInOpen] = useState(Boolean(prefillEmail));
+
+  useEffect(() => {
+    if (!prefillEmail) return;
+    setEmailSignInOpen(true);
+    setFormData(prev => ({ ...prev, email: prefillEmail }));
+  }, [prefillEmail]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +119,7 @@ const SignInForm: React.FC<SignInFormProps> = ({
               autoCorrect="off"
               autoCapitalize="none"
               value={formData.email}
+              readOnly={lockEmail}
               onChange={(e) => {
                 setFormData((prev) => ({ ...prev, email: e.target.value }));
                 setErrors((prev) => {

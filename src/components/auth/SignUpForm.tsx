@@ -43,6 +43,8 @@ interface SignUpFormProps {
   prefillEmail?: string;
   invitedOrgId?: string;
   invitedOrgName?: string;
+  isInvitationSignup?: boolean;
+  inviteToken?: string;
 }
 
 const SignUpForm: React.FC<SignUpFormProps> = ({
@@ -55,6 +57,8 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   prefillEmail,
   invitedOrgId,
   invitedOrgName,
+  isInvitationSignup = false,
+  inviteToken,
 }) => {
   const { t } = useI18n();
   const [formData, setFormData] = useState({
@@ -74,7 +78,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   const [acceptanceTouched, setAcceptanceTouched] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [showRetryAcceptance, setShowRetryAcceptance] = useState(false);
-  const [emailSignupOpen, setEmailSignupOpen] = useState(Boolean(prefillEmail));
+  const [emailSignupOpen, setEmailSignupOpen] = useState(Boolean(prefillEmail || isInvitationSignup));
 
   const complexity = validatePasswordComplexity(formData.password);
   const strength = calculatePasswordStrength(formData.password);
@@ -92,6 +96,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
       submitAttempted,
       hcaptchaEnabled,
       hcaptchaToken,
+      isInvitationSignup,
     }),
     [
       formData,
@@ -105,6 +110,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
       submitAttempted,
       hcaptchaEnabled,
       hcaptchaToken,
+      isInvitationSignup,
     ],
   );
 
@@ -148,7 +154,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   const getFieldError = (field: string) => getSignupFieldError(field, validationContext, t);
   const getAcceptanceError = () =>
     getSignupAcceptanceError(termsAccepted, acceptanceTouched, submitAttempted, t);
-  const formIsValid = () => isSignupFormValid(validationContext);
+  const formIsValid = () => isSignupFormValid(validationContext, { isInvitationSignup });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,9 +190,23 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         return;
       }
 
-      const redirectUrl = `${window.location.origin}/`;
       const submittedEmail = formData.email.trim();
-      const signUpData = buildSignupUserMetadata(formData, { invitedOrgId, invitedOrgName });
+      const inviteRedirectParams = new URLSearchParams({
+        mode: 'invite',
+        ...(inviteToken ? { token: inviteToken } : {}),
+        email: submittedEmail,
+        ...(invitedOrgId ? { invitedOrgId } : {}),
+        ...(invitedOrgName ? { invitedOrgName } : {}),
+      });
+      const redirectUrl =
+        isInvitationSignup && inviteToken
+          ? `${window.location.origin}/auth?${inviteRedirectParams.toString()}`
+          : `${window.location.origin}/`;
+      const signUpData = buildSignupUserMetadata(formData, {
+        invitedOrgId,
+        invitedOrgName,
+        isInvitationSignup,
+      });
 
       const { data, error } = await signUpWithEmail({
         email: submittedEmail,
@@ -296,35 +316,39 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {invitedOrgName && <SignUpInviteBanner invitedOrgName={invitedOrgName} />}
+      {invitedOrgName && (
+        <SignUpInviteBanner invitedOrgName={invitedOrgName} invitationOnly={isInvitationSignup} />
+      )}
       <SignUpPrivacyNotice />
 
-      <div className="space-y-2">
-        <Label htmlFor="signup-organization">{t('auth.organizationName')}</Label>
-        <Input
-          id="signup-organization"
-          type="text"
-          value={formData.organizationName}
-          onChange={e => handleInputChange('organizationName', e.target.value)}
-          onBlur={() => handleBlur('organizationName')}
-          placeholder={
-            invitedOrgName
-              ? t('auth.organizationPlaceholderInvite', { name: invitedOrgName })
-              : t('auth.organizationPlaceholder')
-          }
-          required
-          aria-invalid={!!getFieldError('organizationName')}
-          aria-describedby={getFieldError('organizationName') ? 'signup-org-error' : undefined}
-        />
-        {getFieldError('organizationName') && (
-          <p id="signup-org-error" className="text-sm text-destructive flex items-center gap-1" aria-live="polite">
-            <XCircle className="h-3 w-3" />
-            {getFieldError('organizationName')}
-          </p>
-        )}
-      </div>
+      {!isInvitationSignup && (
+        <div className="space-y-2">
+          <Label htmlFor="signup-organization">{t('auth.organizationName')}</Label>
+          <Input
+            id="signup-organization"
+            type="text"
+            value={formData.organizationName}
+            onChange={e => handleInputChange('organizationName', e.target.value)}
+            onBlur={() => handleBlur('organizationName')}
+            placeholder={
+              invitedOrgName
+                ? t('auth.organizationPlaceholderInvite', { name: invitedOrgName })
+                : t('auth.organizationPlaceholder')
+            }
+            required
+            aria-invalid={!!getFieldError('organizationName')}
+            aria-describedby={getFieldError('organizationName') ? 'signup-org-error' : undefined}
+          />
+          {getFieldError('organizationName') && (
+            <p id="signup-org-error" className="text-sm text-destructive flex items-center gap-1" aria-live="polite">
+              <XCircle className="h-3 w-3" />
+              {getFieldError('organizationName')}
+            </p>
+          )}
+        </div>
+      )}
 
-      {emailSignupOpen ? null : (
+      {!isInvitationSignup && !emailSignupOpen && (
         <>
           <AuthGoogleSignInButton
             onClick={handleGoogleSignUp}
@@ -373,6 +397,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
               value={formData.email}
               onChange={e => handleInputChange('email', e.target.value)}
               onBlur={() => handleBlur('email')}
+              readOnly={isInvitationSignup && Boolean(prefillEmail)}
               required
               aria-invalid={!!(emailError || (touched.email && !formData.email.trim()))}
               aria-describedby={getFieldError('email') ? 'signup-email-error' : undefined}
@@ -430,7 +455,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             }}
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-label={t('auth.creatingAccount')} />}
-            {t('auth.createAccountOrganization')}
+            {isInvitationSignup ? t('auth.createAccountAndJoin') : t('auth.createAccountOrganization')}
           </Button>
 
           {showRetryAcceptance && (
@@ -443,14 +468,16 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             <p className="text-xs text-muted-foreground text-center">{t('auth.fillRequiredFields')}</p>
           )}
 
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2 text-sm font-medium text-foreground underline underline-offset-4 hover:text-primary"
-            onClick={() => setEmailSignupOpen(false)}
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden />
-            {t('auth.backToGoogleSignup')}
-          </button>
+          {!isInvitationSignup && (
+            <button
+              type="button"
+              className="flex w-full items-center justify-center gap-2 text-sm font-medium text-foreground underline underline-offset-4 hover:text-primary"
+              onClick={() => setEmailSignupOpen(false)}
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden />
+              {t('auth.backToGoogleSignup')}
+            </button>
+          )}
         </>
       ) : null}
     </form>
