@@ -16,6 +16,19 @@ function renderHeader() {
 }
 
 describe('LandingHeader', () => {
+  it('exposes the language selector in the landing header', () => {
+    renderHeader();
+
+    const header = screen.getByRole('banner');
+    const languageSelectors = within(header).getAllByRole('combobox', { name: /^Language$/i });
+
+    expect(languageSelectors).toHaveLength(2);
+    for (const selector of languageSelectors) {
+      expect(selector).toHaveValue('en');
+      expect(selector).toHaveDisplayValue('English');
+    }
+  });
+
   it('exposes a single Get Started account CTA to /auth', () => {
     renderHeader();
 
