@@ -5,6 +5,13 @@
   "installCommand": "npm ci",
   "framework": null,
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/support/start-here/welcome-to-equipqr",
+      "destination": "/support/start-here/welcome-to-znteqr",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/sw.js",
