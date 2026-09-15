@@ -279,7 +279,8 @@ describe('InvitationAccept Page', () => {
 
       const navigateCall = mockNavigate.mock.calls[0][0];
       expect(navigateCall).toContain('/auth');
-      expect(navigateCall).toContain('tab=signup');
+      expect(navigateCall).toContain('mode=invite');
+      expect(navigateCall).toContain('token=valid-token');
     });
 
     it('stores pending redirect in session storage', async () => {
