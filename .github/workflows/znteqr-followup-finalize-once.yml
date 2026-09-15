@@ -1,0 +1,250 @@
+name: ZNTEQR follow-up finalize once
+
+on:
+  push:
+    branches:
+      - chore/znteqr-deep-cleanup-followup
+    paths:
+      - .github/workflows/znteqr-followup-finalize-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    env:
+      NODE_VERSION: 24.x
+      VITE_APP_VERSION: 3.34.4
+      VITE_SUPABASE_URL: ''
+      VITE_SUPABASE_ANON_KEY: ''
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: chore/znteqr-deep-cleanup-followup
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            docs/package-lock.json
+
+      - name: Apply targeted identifier cleanup
+        shell: python
+        run: |
+          from pathlib import Path
+
+          replacements = {
+              'docs/package.json': [
+                  ('"name": "equipqr-docs"', '"name": "znteqr-docs"'),
+              ],
+              'docs/package-lock.json': [
+                  ('"name": "equipqr-docs"', '"name": "znteqr-docs"'),
+              ],
+              'e2e/user/shared/action-overlay.ts': [
+                  ('equipqr-e2e-action-spotlight', 'znteqr-e2e-action-spotlight'),
+                  ('equipqr-e2e-action-overlay', 'znteqr-e2e-action-overlay'),
+                  ('__equipqrE2ESetStatus', '__znteqrE2ESetStatus'),
+              ],
+              'e2e/pr-evidence/shared/docs-demo-helpers.ts': [
+                  ('equipqr-docs-demo-focus', 'znteqr-docs-demo-focus'),
+              ],
+              'dev/lib/demoStepActions.mjs': [
+                  ('equipqr-demo-action-spotlight', 'znteqr-demo-action-spotlight'),
+                  ('__equipqrDemoCue', '__znteqrDemoCue'),
+              ],
+              'e2e/user/shared/create-flow-data.ts': [
+                  ('https://example.com/equipqr-playwright-cross-reference', 'https://example.com/znteqr-playwright-cross-reference'),
+              ],
+              '.vscode/tasks.json': [
+                  ('equipqr-dev', 'znteqr-dev'),
+                  ('equipqr-edge', 'znteqr-edge'),
+                  ('equipqr-docs', 'znteqr-docs'),
+                  ('equipqr-vite', 'znteqr-vite'),
+                  ('equipqr-stop', 'znteqr-stop'),
+                  ('equipqr-e2e', 'znteqr-e2e'),
+              ],
+              'src/i18n/pmTemplateResources.ts': [
+                  ('"equipqrDescription":', '"znteqrDescription":'),
+                  ('"equipqrTemplates":', '"znteqrTemplates":'),
+              ],
+              'src/features/pm-templates/pages/PMTemplates.tsx': [
+                  ('pmTemplates.list.equipqrTemplates', 'pmTemplates.list.znteqrTemplates'),
+                  ('pmTemplates.list.equipqrDescription', 'pmTemplates.list.znteqrDescription'),
+              ],
+              'e2e/pr-evidence/pm-templates-collapsible.spec.ts': [
+                  ('equipqr templates', 'znteqr templates'),
+                  ('equipQr', 'znteqr'),
+                  ('equipqr-templates', 'znteqr-templates'),
+              ],
+              'e2e/pr-evidence/shared/evidence-helpers.ts': [
+                  ('equipqr templates', 'znteqr templates'),
+                  ('equipQr', 'znteqr'),
+              ],
+              'e2e/pr-evidence/dark-scrollbar-theme.spec.ts': [
+                  ('equipqr templates', 'znteqr templates'),
+                  ('equipQr', 'znteqr'),
+              ],
+              'e2e/pr-evidence/pm-template-assignment-ux.spec.ts': [
+                  ('equipqr templates', 'znteqr templates'),
+                  ('equipQr', 'znteqr'),
+              ],
+              'e2e/pr-evidence/pm-template-starter-titles.spec.ts': [
+                  ('equipqr templates', 'znteqr templates'),
+                  ('equipQr', 'znteqr'),
+              ],
+              'e2e/pr-evidence/six-issue-ux-pass.spec.ts': [
+                  ('equipqr templates', 'znteqr templates'),
+                  ('equipQr', 'znteqr'),
+              ],
+          }
+
+          changed = []
+          for filename, pairs in replacements.items():
+              path = Path(filename)
+              text = path.read_text(encoding='utf-8')
+              original = text
+              for old, new in pairs:
+                  if old in text:
+                      text = text.replace(old, new)
+              if text != original:
+                  path.write_text(text, encoding='utf-8')
+                  changed.append(filename)
+
+          print('Targeted cleanup changed:')
+          for filename in changed:
+              print(f'  - {filename}')
+
+      - name: Audit active legacy identifiers
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          roots = [Path('src'), Path('e2e'), Path('dev'), Path('vitest'), Path('.vscode')]
+          extra_files = [Path('vite.config.ts'), Path('docs/package.json'), Path('docs/package-lock.json')]
+          ignored_parts = {'node_modules', 'dist', '.git', 'coverage', 'test-results', 'playwright-report'}
+          hard_patterns = [
+              re.compile(r'data-equipqr', re.I),
+              re.compile(r'equipqr-marketing-prerender', re.I),
+              re.compile(r'equipqr-notification', re.I),
+              re.compile(r'equipqr\.invalid', re.I),
+              re.compile(r'__equipqr'),
+              re.compile(r'equipQr'),
+              re.compile(r'EquipQr'),
+              re.compile(r'EQUIPQR'),
+              re.compile(r'equipqrTemplates'),
+              re.compile(r'equipqrDescription'),
+              re.compile(r'equipqr-e2e-action'),
+              re.compile(r'equipqr-demo-action'),
+              re.compile(r'equipqr-docs-demo-focus'),
+              re.compile(r'"name"\s*:\s*"equipqr-docs"'),
+          ]
+
+          files = []
+          for root in roots:
+              if root.exists():
+                  files.extend(p for p in root.rglob('*') if p.is_file() and not ignored_parts.intersection(p.parts))
+          files.extend(p for p in extra_files if p.exists())
+
+          failures = []
+          for path in files:
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  continue
+              for lineno, line in enumerate(text.splitlines(), 1):
+                  if any(pattern.search(line) for pattern in hard_patterns):
+                      failures.append(f'{path}:{lineno}:{line.strip()}')
+
+          if failures:
+              print('Active legacy identifiers still found:')
+              print('\n'.join(failures))
+              raise SystemExit(1)
+          print('No hard active legacy identifier patterns remain in source/test/dev tooling scope.')
+
+      - name: Inventory all remaining equipqr occurrences
+        shell: bash
+        run: |
+          set +e
+          git grep -nEi 'EquipQR|EquipQr|EQUIPQR|equipqr|data-equipqr|equipqr-|equipqr_' -- \
+            ':!CHANGELOG.md' ':!supabase/migrations/**' > /tmp/equipqr-audit.txt
+          status=$?
+          set -e
+          if [ "$status" -gt 1 ]; then exit "$status"; fi
+          echo "Remaining occurrence count: $(wc -l < /tmp/equipqr-audit.txt)"
+          cat /tmp/equipqr-audit.txt
+
+      - name: Install root dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Install docs dependencies
+        run: npm --prefix docs ci --prefer-offline --no-audit
+
+      - name: Verify release metadata
+        env:
+          RELEASE_METADATA_MODE: main
+          RELEASE_METADATA_BASE_SHA: 829513d4d974008121bd07a7916574128433868f
+        run: node dev/verify-release-metadata.mjs
+
+      - name: Verify Node policy
+        run: npm run verify:node-policy
+
+      - name: Provision PSScriptAnalyzer
+        run: node dev/lint-catalog.mjs --mode provision --only psscriptanalyzer
+
+      - name: Lint all
+        run: npm run lint:all
+
+      - name: Verify root layout
+        run: npm run verify:root-layout
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Unit tests
+        env:
+          CI: true
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: npm run test:unit
+
+      - name: Production build
+        run: npm run build
+
+      - name: Verify SPA routing
+        run: npm run verify:spa-routing
+
+      - name: Docs build
+        run: npm run docs:build
+
+      - name: Collect relevant E2E specs
+        run: npx playwright test e2e/pr-evidence/pm-templates-collapsible.spec.ts e2e/pr-evidence/six-issue-ux-pass.spec.ts --list
+
+      - name: Commit cleanup and remove one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/znteqr-followup-finalize-once.yml
+          git add docs/package.json docs/package-lock.json \
+            e2e/user/shared/action-overlay.ts \
+            e2e/pr-evidence/shared/docs-demo-helpers.ts \
+            dev/lib/demoStepActions.mjs \
+            e2e/user/shared/create-flow-data.ts \
+            .vscode/tasks.json \
+            src/i18n/pmTemplateResources.ts \
+            src/features/pm-templates/pages/PMTemplates.tsx \
+            e2e/pr-evidence/pm-templates-collapsible.spec.ts \
+            e2e/pr-evidence/shared/evidence-helpers.ts \
+            e2e/pr-evidence/dark-scrollbar-theme.spec.ts \
+            e2e/pr-evidence/pm-template-assignment-ux.spec.ts \
+            e2e/pr-evidence/pm-template-starter-titles.spec.ts \
+            e2e/pr-evidence/six-issue-ux-pass.spec.ts
+          git commit -m "chore(brand): finish active ZNTEQR identifier cleanup"
+          git push origin HEAD:chore/znteqr-deep-cleanup-followup
