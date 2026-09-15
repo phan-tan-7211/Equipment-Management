@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { Forklift, QrCode } from 'lucide-react';
@@ -22,13 +22,43 @@ import { getEquipmentStatusRailClass } from '@/lib/status-colors';
 const STATUS_COLUMN_KEY: EquipmentTableColumnKey = 'status';
 const COLUMN_SIZING_STORAGE_KEY = 'equipqr:equipment-table-column-sizing:v3';
 const COLUMN_KEYS: Record<EquipmentTableColumnKey, string> = { status:'equipment.status', name:'equipment.name', manufacturer:'equipment.manufacturer', model:'equipment.model', serial_number:'equipment.serialNumber', working_hours:'equipment.hours', location:'equipment.location', team_name:'equipment.team', last_maintenance:'equipment.lastMaintenanceFull' };
+type EquipmentImageHover = { src: string; alt: string; x: number; y: number; size: number };
+
+function getImageHoverPosition(clientX: number, clientY: number) {
+  const margin = 12;
+  const gap = 14;
+  const size = Math.min(
+    360,
+    Math.max(180, window.innerWidth - margin * 2),
+    Math.max(180, window.innerHeight - margin * 2),
+  );
+  let x = clientX + gap;
+  let y = clientY - size - gap;
+
+  if (x + size > window.innerWidth - margin) x = clientX - size - gap;
+  x = Math.max(margin, Math.min(x, window.innerWidth - size - margin));
+  y = Math.max(margin, Math.min(y, window.innerHeight - size - margin));
+
+  return { x, y, size };
+}
 export interface EquipmentTableProps { equipment: EquipmentTableRow[]; onShowQRCode: (id:string)=>void; pmStatuses?:Map<string,EquipmentPMStatus>; sortConfig?:SortConfig; onSortChange?:(field:string,direction?:'asc'|'desc')=>void; visibleColumns?:Record<string,boolean>; }
 
 const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode, sortConfig, onSortChange, visibleColumns }) => {
   const { t } = useI18n();
   const { beginTransition, activeEquipmentId } = useEquipmentCardTransition();
   const { settings } = useUserSettings();
+  const [imageHover, setImageHover] = useState<EquipmentImageHover | null>(null);
   const [columnSizing, setColumnSizing] = usePersistedColumnSizing(COLUMN_SIZING_STORAGE_KEY, getDefaultEquipmentColumnSizing());
+  const openImageHover = useCallback((item: EquipmentTableRow, event: React.MouseEvent) => {
+    const src = displayableImageSrc(item.image_url);
+    if (!src || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    setImageHover({ src, alt: `${item.name} equipment`, ...getImageHoverPosition(event.clientX, event.clientY) });
+  }, []);
+  const moveImageHover = useCallback((item: EquipmentTableRow, event: React.MouseEvent) => {
+    const src = displayableImageSrc(item.image_url);
+    if (!src) return;
+    setImageHover((current) => current?.src === src ? { ...current, ...getImageHoverPosition(event.clientX, event.clientY) } : current);
+  }, []);
   const isColumnVisible = useCallback((key:EquipmentTableColumnKey)=>{ const meta=getEquipmentTableColumnMeta(key); if(meta&&!meta.canHide)return true; return visibleColumns?.[key]??true; },[visibleColumns]);
   const visibleColumnKeys=useMemo(()=>EQUIPMENT_TABLE_COLUMN_ORDER.filter((key)=>isColumnVisible(key)),[isColumnVisible]);
   const handleSortClick=useCallback((field:EquipmentTableSortField)=>{ if(!onSortChange)return; const next=sortConfig?.field===field?(sortConfig.direction==='asc'?'desc':'asc'):'asc'; onSortChange(field,next); },[onSortChange,sortConfig]);
@@ -41,7 +71,11 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
         const statusRailClass = getEquipmentStatusRailClass(item.status);
         return (
           <div
-            className="relative flex min-h-16 h-full w-full items-center justify-center overflow-hidden bg-muted/30"
+            className={cn('relative flex min-h-16 h-full w-full items-center justify-center overflow-hidden bg-muted/30', imageSrc && 'cursor-zoom-in')}
+            data-equipment-thumbnail
+            onMouseEnter={(event) => openImageHover(item, event)}
+            onMouseMove={(event) => moveImageHover(item, event)}
+            onMouseLeave={() => setImageHover(null)}
             title={getEquipmentTableCellDisplayValue(item, 'status', settings)}
           >
             {imageSrc ? (
@@ -79,10 +113,22 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
     }}} as ColumnDef<EquipmentTableRow>; });
     const actionsColumn:ColumnDef<EquipmentTableRow>={id:EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY,size:columnSizing[EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY]??56,minSize:56,maxSize:56,enableResizing:false,header:()=>null,cell:({row})=><div className="flex justify-end"><Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={()=>onShowQRCode(row.original.id)} aria-label={t('equipment.showQrFor',{name:row.original.name})}><QrCode className="h-4 w-4" aria-hidden="true" /></Button></div>};
     return [...dataColumns,actionsColumn];
-  },[activeEquipmentId,beginTransition,columnSizing,handleSortClick,onShowQRCode,settings,sortConfig?.direction,sortConfig?.field,t,visibleColumnKeys]);
+  },[activeEquipmentId,beginTransition,columnSizing,handleSortClick,moveImageHover,onShowQRCode,openImageHover,settings,sortConfig?.direction,sortConfig?.field,t,visibleColumnKeys]);
   const table=useReactTable({data:equipment,columns,state:{columnSizing},onColumnSizingChange:setColumnSizing,columnResizeMode:'onEnd',enableColumnResizing:true,getCoreRowModel:getCoreRowModel()});
   const tableWidth=getResizableTableWidth(table.getTotalSize());
   if(equipment.length===0)return <DataTableEmptyState message={t('equipment.noTableMatches')} />;
-  return <ResizableFixedDataTable table={table} tableWidth={tableWidth} withTooltipProvider getHeaderProps={(header)=>{ const columnId=header.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); return {className:cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isActionsColumn&&'w-14 px-2','relative select-none',isStatusColumn&&'sticky left-0 z-20 bg-card px-2'),ariaSort:meta?.sortable&&sortConfig?.field===meta.sortField?(sortConfig.direction==='asc'?'ascending':'descending'):'none',onAutoFit:isActionsColumn?undefined:()=>handleAutoFitColumn(columnId as EquipmentTableColumnKey)};}} getCellClassName={(cell)=>{ const columnId=cell.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); return cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isStatusColumn&&'sticky left-0 z-10 bg-card p-0 align-middle',isActionsColumn&&'w-14 px-2','overflow-hidden');}} />;
+  return <>
+    <ResizableFixedDataTable table={table} tableWidth={tableWidth} withTooltipProvider getHeaderProps={(header)=>{ const columnId=header.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); return {className:cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isActionsColumn&&'w-14 px-2','relative select-none',isStatusColumn&&'sticky left-0 z-20 bg-card px-2'),ariaSort:meta?.sortable&&sortConfig?.field===meta.sortField?(sortConfig.direction==='asc'?'ascending':'descending'):'none',onAutoFit:isActionsColumn?undefined:()=>handleAutoFitColumn(columnId as EquipmentTableColumnKey)};}} getCellClassName={(cell)=>{ const columnId=cell.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); return cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isStatusColumn&&'sticky left-0 z-10 bg-card p-0 align-middle',isActionsColumn&&'w-14 px-2','overflow-hidden');}} />
+    {imageHover ? (
+      <div
+        className="equipment-image-hover-preview pointer-events-none fixed z-[9999] box-border overflow-hidden rounded-xl border border-border bg-white p-2 shadow-2xl dark:bg-card"
+        data-equipment-image-hover-preview
+        aria-hidden="true"
+        style={{ left: imageHover.x, top: imageHover.y, width: imageHover.size, height: imageHover.size }}
+      >
+        <img src={imageHover.src} alt="" className="block h-full w-full rounded-md bg-white object-contain dark:bg-card" />
+      </div>
+    ) : null}
+  </>;
 };
 export default EquipmentTable;
