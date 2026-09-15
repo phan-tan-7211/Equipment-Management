@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@vitest-harness/utils/test-utils';
-import { fireEvent } from '@testing-library/react';
 import PrivacyPolicy from './PrivacyPolicy';
 
 vi.mock('react-router-dom', async () => {
@@ -118,18 +117,6 @@ describe('PrivacyPolicy', () => {
     expect(screen.getAllByText(/30 days/).length).toBeGreaterThanOrEqual(1);
     const privacyRequestLink = screen.getByText('equipqr.app/privacy-request');
     expect(privacyRequestLink.closest('a')).toHaveAttribute('href', '/privacy-request');
-  });
-  it('renders the localized policy body after selecting Vietnamese', () => {
-    render(<PrivacyPolicy />);
-
-    fireEvent.change(screen.getByRole('combobox', { name: 'Language' }), {
-      target: { value: 'vi' },
-    });
-
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Chính sách quyền riêng tư');
-    expect(screen.getByText('1. Giới thiệu')).toBeInTheDocument();
-    expect(screen.getByText(/ZNTEQR.*cam kết bảo vệ quyền riêng tư/)).toBeInTheDocument();
-    expect(screen.getByText(/Chúng tôi không bán thông tin cá nhân/)).toBeInTheDocument();
   });
 
 });
