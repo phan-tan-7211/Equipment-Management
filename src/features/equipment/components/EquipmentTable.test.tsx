@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, within, waitFor } from '@vitest-harness/utils/test-utils';
+import { act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import EquipmentTable from './EquipmentTable';
@@ -91,6 +92,7 @@ describe('EquipmentTable', () => {
   });
 
   it('shows a larger desktop preview while hovering the thumbnail', () => {
+    vi.useFakeTimers();
     vi.stubGlobal('matchMedia', (query: string) => ({
       matches: query.includes('hover'),
       media: query,
@@ -106,9 +108,15 @@ describe('EquipmentTable', () => {
       const { container } = render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
       const thumbnail = screen.getByRole('img', { name: 'Forklift A1 equipment' });
 
-      fireEvent.mouseEnter(thumbnail.parentElement!);
+      fireEvent.pointerEnter(thumbnail.parentElement!);
       expect(container.querySelector('[data-equipment-image-hover-preview]')).toBeInTheDocument();
+      fireEvent.pointerMove(document.body);
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(container.querySelector('[data-equipment-image-hover-preview]')).not.toBeInTheDocument();
     } finally {
+      vi.useRealTimers();
       vi.unstubAllGlobals();
     }
   });
