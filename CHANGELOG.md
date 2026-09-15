@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.5] - 2026-09-15
+
+### Changed
+
+- Centralized production deployment configuration in GitHub, removed hard-coded Vercel target IDs from release tooling, and removed 1Password from the Vercel production release path.
+
 ## [3.34.4] - 2026-09-15
 
 ### Changed
