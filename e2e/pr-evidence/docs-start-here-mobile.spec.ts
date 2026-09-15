@@ -23,7 +23,7 @@ test.describe('Docs media: Start Here mobile @pr-evidence', () => {
     assertHealthyShell,
     page,
   }) => {
-    // --- welcome-to-equipqr on a phone ---
+    // --- welcome-to-znteqr on a phone ---
     await gotoDashboard('/');
     await assertHealthyShell();
     await settleForDemo(page);
