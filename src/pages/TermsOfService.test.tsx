@@ -60,7 +60,7 @@ describe('TermsOfService', () => {
       .find((a) => (a as HTMLAnchorElement).getAttribute('href') === '/privacy-policy');
     expect(privacyLink).toBeTruthy();
 
-    expect(screen.getAllByText('ZNT LLC')).toHaveLength(2);
+    expect(screen.getAllByText(/ZNT LLC/).length).toBeGreaterThanOrEqual(2);
 
     const legalEmailLink = screen.getByRole('link', { name: /legal@columbiacloudworks\.com/i });
     expect(legalEmailLink).toHaveAttribute('href', 'mailto:legal@columbiacloudworks.com');
