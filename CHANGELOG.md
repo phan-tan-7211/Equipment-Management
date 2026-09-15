@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.4] - 2026-09-15
+
+### Changed
+
+- Completed the ZNTEQR deep-cleanup follow-up by renaming remaining active internal runtime identifiers and moving the Help Center welcome article to the canonical `welcome-to-znteqr` slug while preserving the legacy URL with a permanent redirect.
+
 ## [3.34.3] - 2026-09-15
 
 ### Changed
