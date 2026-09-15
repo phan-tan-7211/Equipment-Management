@@ -47,6 +47,7 @@ const mockEquipment = [
     serial_number: 'SN67890',
     status: 'maintenance',
     location: 'Warehouse B',
+    image_url: 'https://example.com/excavator-b2.jpg',
   },
 ];
 
@@ -110,6 +111,12 @@ describe('EquipmentTable', () => {
 
       fireEvent.pointerEnter(thumbnail.parentElement!);
       expect(container.querySelector('[data-equipment-image-hover-preview]')).toBeInTheDocument();
+      const nextThumbnail = screen.getByRole('img', { name: 'Excavator B2 equipment' });
+      fireEvent.pointerEnter(nextThumbnail.parentElement!);
+      expect(container.querySelector('[data-equipment-image-hover-preview] img')).toHaveAttribute(
+        'src',
+        'https://example.com/excavator-b2.jpg',
+      );
       fireEvent.pointerMove(document.body);
       act(() => {
         vi.advanceTimersByTime(200);
