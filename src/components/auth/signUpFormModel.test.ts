@@ -82,6 +82,41 @@ describe('signUpFormModel name handling', () => {
   });
 });
 
+
+describe('invitation-only signup', () => {
+  it('does not require an organization name', () => {
+    expect(
+      isSignupFormValid(
+        baseContext({
+          formData: { ...baseContext().formData, organizationName: '' },
+          isInvitationSignup: true,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('omits personal organization metadata', () => {
+    const metadata = buildSignupUserMetadata(
+      {
+        name: '  Ada Lovelace  ',
+        email: 'ada@example.com',
+        password: 'SecurePass1!',
+        confirmPassword: 'SecurePass1!',
+        organizationName: '',
+      },
+      {
+        invitedOrgId: 'org-1',
+        invitedOrgName: 'Analytical Engines',
+        isInvitationSignup: true,
+      },
+    );
+
+    expect(metadata.organization_name).toBeUndefined();
+    expect(metadata.invited_organization_id).toBe('org-1');
+    expect(metadata.signup_source).toBe('invite');
+  });
+});
+
 describe('canStartGoogleSignup', () => {
   it('requires a trimmed organization name and no conflict error', () => {
     expect(canStartGoogleSignup('', null)).toBe(false);
