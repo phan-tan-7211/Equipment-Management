@@ -5,7 +5,7 @@ import { JsonLd } from './JsonLd';
 describe('JsonLd', () => {
   afterEach(() => {
     cleanup();
-    document.head.querySelectorAll('script[data-equipqr-jsonld]').forEach((n) => n.remove());
+    document.head.querySelectorAll('script[data-znteqr-jsonld]').forEach((n) => n.remove());
   });
 
   it('injects JSON-LD script into document.head and updates on prop change', async () => {
@@ -17,7 +17,7 @@ describe('JsonLd', () => {
     );
 
     await waitFor(() => {
-      const el = document.head.querySelector('script[data-equipqr-jsonld="test-schema"]');
+      const el = document.head.querySelector('script[data-znteqr-jsonld="test-schema"]');
       expect(el).not.toBeNull();
       expect(el?.textContent).toContain('"name":"A"');
     });
@@ -27,8 +27,17 @@ describe('JsonLd', () => {
     );
 
     await waitFor(() => {
-      const el = document.head.querySelector('script[data-equipqr-jsonld="test-schema"]');
+      const el = document.head.querySelector('script[data-znteqr-jsonld="test-schema"]');
       expect(el?.textContent).toContain('"name":"B"');
+    });
+  });
+
+  it('uses a ZNTEQR-prefixed marker value when no explicit id is provided', async () => {
+    render(<JsonLd data={{ '@context': 'https://schema.org', '@type': 'Thing' }} />);
+
+    await waitFor(() => {
+      const el = document.head.querySelector('script[data-znteqr-jsonld]');
+      expect(el?.getAttribute('data-znteqr-jsonld')).toMatch(/^znteqr-jsonld-/);
     });
   });
 
@@ -38,11 +47,11 @@ describe('JsonLd', () => {
     );
 
     await waitFor(() => {
-      expect(document.head.querySelector('script[data-equipqr-jsonld="temp-schema"]')).not.toBeNull();
+      expect(document.head.querySelector('script[data-znteqr-jsonld="temp-schema"]')).not.toBeNull();
     });
 
     unmount();
 
-    expect(document.head.querySelector('script[data-equipqr-jsonld="temp-schema"]')).toBeNull();
+    expect(document.head.querySelector('script[data-znteqr-jsonld="temp-schema"]')).toBeNull();
   });
 });
