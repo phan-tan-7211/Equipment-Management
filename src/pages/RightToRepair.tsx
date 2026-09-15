@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RightToRepairLandscape } from '@/pages/legal/right-to-repair/RightToRepairLandscape';
 import {
   ZNTEQR_REPAIR_COMMITMENTS,
-  RIGHT_TO_REPAIR_REVIEWED_ON,
   RIGHT_TO_REPAIR_SEO,
 } from '@/pages/legal/right-to-repair/rightToRepairContent';
 import type { ZnteqrCommitmentId } from '@/pages/legal/right-to-repair/types';
