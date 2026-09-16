@@ -29,6 +29,8 @@ const CSV_HEADERS = [
   'Team',
   'Warranty Expiration',
   'Installation Date',
+  'Management Responsible Primary',
+  'Management Responsible Secondary',
 ];
 
 function equipmentToCsvRows(equipment: EquipmentRecord[]): string[][] {
@@ -44,6 +46,8 @@ function equipmentToCsvRows(equipment: EquipmentRecord[]): string[][] {
     eq.team_name ?? '',
     eq.warranty_expiration ?? '',
     eq.installation_date ?? '',
+    eq.management_responsible_primary ?? '',
+    eq.management_responsible_secondary ?? '',
   ]);
 }
 
