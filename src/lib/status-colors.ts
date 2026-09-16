@@ -23,6 +23,8 @@ const WORK_ORDER_STATUS_BORDER: Record<string, string> = {
 };
 
 const EQUIPMENT_STATUS_BORDER: Record<string, string> = {
+  active: 'border-l-equipment-operational',
+  operational: 'border-l-equipment-operational',
   maintenance: 'border-l-equipment-maintenance',
   repair: 'border-l-equipment-repair',
   broken: 'border-l-equipment-repair',
@@ -32,6 +34,8 @@ const EQUIPMENT_STATUS_BORDER: Record<string, string> = {
 };
 
 const EQUIPMENT_STATUS_RAIL: Record<string, string> = {
+  active: 'bg-equipment-operational',
+  operational: 'bg-equipment-operational',
   maintenance: 'bg-equipment-maintenance',
   repair: 'bg-equipment-repair',
   broken: 'bg-equipment-repair',
@@ -40,9 +44,9 @@ const EQUIPMENT_STATUS_RAIL: Record<string, string> = {
   inactive: 'bg-equipment-retired',
 };
 
-/** Semantic card rail legend entries for equipment list filter UI (active = no rail). */
+/** Semantic card rail legend entries for the equipment list filter UI. */
 export const EQUIPMENT_STATUS_RAIL_LEGEND = [
-  { status: 'active', railClass: '' },
+  { status: 'active', railClass: 'bg-equipment-operational' },
   { status: 'maintenance', railClass: 'bg-equipment-maintenance' },
   { status: 'inactive', railClass: 'bg-equipment-retired' },
   { status: 'out_of_service', railClass: 'bg-equipment-repair' },
@@ -79,14 +83,11 @@ export const getWorkOrderStatusBorderWithOverdue = (
 };
 
 export const getEquipmentStatusBorderClass = (status: string): string => {
-  const key = status?.toLowerCase() ?? '';
-  if (key === 'active' || key === 'operational') return '';
   return lookupBorderClass(status, EQUIPMENT_STATUS_BORDER);
 };
 
 export const getEquipmentStatusRailClass = (status: string): string => {
   const key = status?.toLowerCase() ?? '';
-  if (key === 'active' || key === 'operational') return '';
   return EQUIPMENT_STATUS_RAIL[key] ?? 'bg-muted';
 };
 

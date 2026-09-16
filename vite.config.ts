@@ -35,6 +35,48 @@ function marketingPrerenderPlugin(): PluginOption {
   };
 }
 
+/**
+ * Keep Vite's local production preview aligned with the deployed SPA fallback.
+ *
+ * The build intentionally replaces dist/index.html with the crawlable marketing
+ * document and keeps the empty SPA shell in dist/app-shell.html. Vite preview
+ * normally falls back to index.html for every unknown URL, which makes a hard
+ * refresh of an authenticated route render the marketing document instead of
+ * booting React. Serve the same shell used by Vercel/Netlify for app routes.
+ */
+function appRoutePreviewFallbackPlugin(): PluginOption {
+  const appRoutePrefixes = ['/dashboard', '/auth', '/invitation', '/qr', '/debug-'];
+
+  return {
+    name: 'equipqr-app-route-preview-fallback',
+    configurePreviewServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const pathname = (req.url ?? '').split('?', 1)[0];
+        const isAppRoute = appRoutePrefixes.some(
+          (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+        );
+
+        if (!isAppRoute) {
+          next();
+          return;
+        }
+
+        const appShellPath = path.resolve(__dirname, 'dist', APP_SHELL_HTML_BASENAME);
+        if (!fs.existsSync(appShellPath)) {
+          next();
+          return;
+        }
+
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.end(fs.readFileSync(appShellPath, 'utf-8'));
+      });
+    },
+  };
+}
+
+const APP_SHELL_HTML_BASENAME = 'app-shell.html';
+
 // Read package.json version safely at config time
 const pkg = JSON.parse(fs.readFileSync(new URL("./package.json", import.meta.url), "utf-8"));
 const PKG_VERSION = pkg.version || "0.0.0";
@@ -107,6 +149,7 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' && httpLogger(),
     react(),
     marketingPrerenderPlugin(),
+    appRoutePreviewFallbackPlugin(),
     // PWA / service worker. We use `injectManifest` mode so we can keep our
     // own custom Push notification handlers (see `src/sw.ts`); generateSW
     // would overwrite them. The output filename MUST stay `sw.js` because

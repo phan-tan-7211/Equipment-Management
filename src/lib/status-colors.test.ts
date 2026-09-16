@@ -6,10 +6,15 @@ import {
 } from '@/lib/status-colors';
 
 describe('equipment status rail classes', () => {
-  it('returns no border, rail, or tint for active equipment', () => {
-    expect(getEquipmentStatusBorderClass('active')).toBe('');
-    expect(getEquipmentStatusRailClass('active')).toBe('');
+  it('returns the green operational color for active equipment', () => {
+    expect(getEquipmentStatusBorderClass('active')).toContain('border-l-equipment-operational');
+    expect(getEquipmentStatusRailClass('active')).toBe('bg-equipment-operational');
     expect(getEquipmentStatusBackgroundTint('active')).toBe('');
+  });
+
+  it('uses the same green operational color for the operational alias', () => {
+    expect(getEquipmentStatusBorderClass('operational')).toContain('border-l-equipment-operational');
+    expect(getEquipmentStatusRailClass('operational')).toBe('bg-equipment-operational');
   });
 
   it('returns maintenance rail and tint for maintenance status', () => {
