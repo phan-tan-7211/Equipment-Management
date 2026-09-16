@@ -27,6 +27,8 @@ const mockEquipment: EquipmentRecord = {
   team_name: 'Fleet',
   warranty_expiration: null,
   installation_date: null,
+  management_responsible_primary: 'Mr. Trung',
+  management_responsible_secondary: 'Ms. Lan',
   created_at: '2024-01-01T00:00:00.000Z',
   updated_at: '2024-01-02T00:00:00.000Z',
 };
@@ -52,6 +54,10 @@ describe('EquipmentDownloadMenu', () => {
     const csvArg = vi.mocked(exportUtils.downloadCsv).mock.calls[0][0];
     expect(csvArg).toContain('Forklift A1');
     expect(csvArg).toContain('SN12345');
+    expect(csvArg).toContain('Management Responsible Primary');
+    expect(csvArg).toContain('Management Responsible Secondary');
+    expect(csvArg).toContain('Mr. Trung');
+    expect(csvArg).toContain('Ms. Lan');
   });
 });
 
