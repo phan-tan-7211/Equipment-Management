@@ -39,6 +39,7 @@ async function flushPendingThumbnailResolutions(): Promise<void> {
     );
 
     batch.forEach((item, index) => {
+      thumbnailResolutionCache.delete(item.key);
       item.resolve(resolvedUrls[index] ?? null);
     });
   } catch {
