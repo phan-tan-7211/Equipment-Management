@@ -59,7 +59,17 @@ During implementation:
 - Use this mode only for ordinary bounded feature/fix implementation. It never bypasses safety requirements for destructive data changes, secrets, production deploys, migrations that require validation, force-push/history rewrite, or other explicitly high-risk operations.
 - When `FAST-HANDOFF` is active: implement the requested change, perform one scoped diff/self-review, create one coherent task commit, push the working feature branch to `origin`, then STOP and hand the branch to the maintainer for local testing.
 - In this mode, do not spend time on executable local verification in an unavailable cloud checkout, waiting for GitHub CI, waiting for Vercel, PR screenshots/video evidence, PR creation, merge, release/version bumps, or deployment unless the user explicitly asks for one of those in the same request.
-- The handoff response must state the exact branch and pushed commit, clearly mark executable checks as not run when applicable, and provide the shortest safe PowerShell flow that performs exactly one branch fetch, fast-forwards/switches to that branch, verifies `HEAD` equals the expected commit, then runs the repository's relevant type-check/test/build/preview commands.
+- The handoff response must state the exact branch and pushed commit and clearly mark executable checks as not run when applicable.
+- When the code being tested is already on `main` (including after an explicitly requested immediate merge), the FAST-HANDOFF response must output this exact command block as the maintainer pull/build/preview handoff, without adding alternate Git/test commands:
+
+```powershell
+git pull --ff-only origin main
+npm ci
+npm run build
+npm run preview -- --host 0.0.0.0 --port 4174 --strictPort
+```
+
+- If the work has not been merged to `main` yet, do not claim the block above tests the feature branch. State the feature branch and pushed commit and wait for the maintainer's merge authorization or provide a branch-specific pull command only when explicitly requested.
 - If the maintainer reports `FAIL`, continue on the same branch, make the smallest correction, create and push a new commit, and return a new exact-commit test handoff. Do not open or merge a PR.
 - If the maintainer reports `PASS` or `OK` for that `FAST-HANDOFF` branch, treat that as authorization to proceed with the repository's normal publication/PR/merge workflow for the same branch. Run any required remote publication gates at that stage unless the maintainer explicitly instructs an immediate merge or another narrower action.
 
