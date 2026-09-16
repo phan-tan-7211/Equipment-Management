@@ -46,6 +46,24 @@ describe('InlineEditCustomAttributes', () => {
       expect(screen.getByText('Red')).toBeInTheDocument();
     });
 
+    it('renders object attributes as readable key-value rows', () => {
+      render(
+        <InlineEditCustomAttributes
+          attributes={{
+            Migration: { source_status: 'DISPOSED', source_project: 'CEV-CMMS' },
+            'Criticality Facts': { hasBackup: false, capacityImpact: false },
+          }}
+          onSave={mockOnSave}
+          canEdit={false}
+        />,
+      );
+
+      expect(screen.getByText('Source Status:')).toBeInTheDocument();
+      expect(screen.getByText('DISPOSED')).toBeInTheDocument();
+      expect(screen.getByText('Source Project:')).toBeInTheDocument();
+      expect(screen.getAllByText('No')).toHaveLength(2);
+    });
+
     it('does not show edit button when canEdit is false', () => {
       render(
         <InlineEditCustomAttributes 
@@ -130,5 +148,3 @@ describe('InlineEditCustomAttributes', () => {
     });
   });
 });
-
-
