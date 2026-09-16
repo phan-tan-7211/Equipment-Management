@@ -112,6 +112,17 @@ export function getEquipmentDisplayImageUrl(
   return displayableImageSrc(storedRef);
 }
 
+export function getInventoryItemDisplayImageUrl(
+  storedRef: string | null | undefined,
+  variant: DisplayImageVariantName = 'full',
+): string | null {
+  if (!storedRef?.trim()) return null;
+  if (isDisplayImageV2Ref(storedRef)) {
+    return getDisplayImagePublicUrl(storedRef, variant);
+  }
+  return displayableImageSrc(storedRef);
+}
+
 /** Default signed URL TTL — within the 5–15 minute compliance window. */
 export const DEFAULT_SIGNED_URL_TTL_SECONDS = 900;
 
@@ -480,16 +491,42 @@ export async function batchResolveEquipmentNoteImageDisplayUrls(
   );
 }
 
-/** Batch-sign `inventory-item-images` paths (one Storage round-trip when possible). */
+/**
+ * Resolve Inventory image references to a requested V2 public variant, while
+ * preserving signed-URL fallback for legacy inventory-item-images references.
+ */
 export async function batchResolveInventoryItemImageDisplayUrls(
   storedRefs: (string | null | undefined)[],
-  options?: { expiresInSeconds?: number },
+  options?: {
+    expiresInSeconds?: number;
+    /** V2 display-image variant to resolve without signing. */
+    variant?: DisplayImageVariantName;
+  },
 ): Promise<(string | null)[]> {
-  return batchResolveStoredRefsForPrivateBucket(
+  const v2Refs = storedRefs.map((stored) => isDisplayImageV2Ref(stored));
+  if (!v2Refs.some(Boolean)) {
+    return batchResolveStoredRefsForPrivateBucket(
+      'inventory-item-images',
+      storedRefs,
+      'inventory-item-images batch',
+      options,
+    );
+  }
+
+  const legacyRefs = storedRefs.map((stored, index) =>
+    v2Refs[index] ? null : stored,
+  );
+  const legacyUrls = await batchResolveStoredRefsForPrivateBucket(
     'inventory-item-images',
-    storedRefs,
+    legacyRefs,
     'inventory-item-images batch',
     options,
+  );
+
+  return storedRefs.map((stored, index) =>
+    v2Refs[index]
+      ? getDisplayImagePublicUrl(stored, options?.variant ?? 'full')
+      : legacyUrls[index],
   );
 }
 

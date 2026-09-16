@@ -6,15 +6,21 @@ import { getPrimaryInventoryItemImageRefs } from '@/features/inventory/services/
 import {
   batchResolveInventoryItemImageDisplayUrls,
   displayableImageSrc,
+  getInventoryItemDisplayImageUrl,
 } from '@/services/imageUploadService';
 import { cn } from '@/lib/utils';
 
 type InventoryThumbnailItem = Pick<InventoryItem, 'id' | 'organization_id' | 'image_url'>;
 
+type InventoryThumbnailUrls = {
+  src: string | null;
+  hoverSrc: string | null;
+};
+
 type PendingThumbnailResolution = {
   key: string;
   item: InventoryThumbnailItem;
-  resolve: (url: string | null) => void;
+  resolve: (urls: InventoryThumbnailUrls) => void;
 };
 
 type ImageHover = {
@@ -23,7 +29,7 @@ type ImageHover = {
   size: number;
 };
 
-const thumbnailResolutionCache = new Map<string, Promise<string | null>>();
+const thumbnailResolutionCache = new Map<string, Promise<InventoryThumbnailUrls>>();
 const pendingThumbnailResolutions = new Map<string, PendingThumbnailResolution>();
 let thumbnailFlushScheduled = false;
 const IMAGE_HOVER_TRANSITION_MS = 140;
@@ -81,26 +87,33 @@ async function flushPendingThumbnailResolutions(): Promise<void> {
 
     let resolvedUrls: (string | null)[];
     try {
-      resolvedUrls = await batchResolveInventoryItemImageDisplayUrls(storedRefs);
+      resolvedUrls = await batchResolveInventoryItemImageDisplayUrls(
+        storedRefs,
+        { variant: 'thumb' },
+      );
     } catch {
       resolvedUrls = storedRefs.map((storedRef) => displayableImageSrc(storedRef));
     }
 
     organizationBatch.forEach((pending, index) => {
       thumbnailResolutionCache.delete(pending.key);
-      pending.resolve(
-        resolvedUrls[index] ?? displayableImageSrc(storedRefs[index]) ?? null,
-      );
+      const src = resolvedUrls[index] ?? displayableImageSrc(storedRefs[index]) ?? null;
+      pending.resolve({
+        src,
+        // V2 hover previews use the immutable 512px variant. Legacy refs keep
+        // the already-resolved thumbnail because they have no parallel set.
+        hoverSrc: getInventoryItemDisplayImageUrl(storedRefs[index], 'preview') ?? src,
+      });
     });
   }
 }
 
-function resolveThumbnailUrl(item: InventoryThumbnailItem): Promise<string | null> {
+function resolveThumbnailUrl(item: InventoryThumbnailItem): Promise<InventoryThumbnailUrls> {
   const key = thumbnailCacheKey(item);
   const cached = thumbnailResolutionCache.get(key);
   if (cached) return cached;
 
-  const pending = new Promise<string | null>((resolve) => {
+  const pending = new Promise<InventoryThumbnailUrls>((resolve) => {
     pendingThumbnailResolutions.set(key, { key, item, resolve });
 
     if (!thumbnailFlushScheduled) {
@@ -125,21 +138,23 @@ export function InventoryItemThumbnail({
   const itemId = item.id;
   const organizationId = item.organization_id;
   const legacyImageUrl = item.image_url;
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<InventoryThumbnailUrls | null>(null);
   const [imageHover, setImageHover] = useState<ImageHover | null>(null);
+  const imageSrc = imageUrls?.src ?? null;
+  const imageHoverSrc = imageUrls?.hoverSrc ?? imageSrc;
   const [imageHoverVisible, setImageHoverVisible] = useState(false);
   const imageHoverCloseTimer = useRef<number | null>(null);
 
   useEffect(() => {
     let active = true;
-    setImageSrc(null);
+    setImageUrls(null);
 
     void resolveThumbnailUrl({
       id: itemId,
       organization_id: organizationId,
       image_url: legacyImageUrl,
     }).then((resolved) => {
-      if (active) setImageSrc(resolved);
+      if (active) setImageUrls(resolved);
     });
 
     return () => {
@@ -208,7 +223,7 @@ export function InventoryItemThumbnail({
             loading="lazy"
             decoding="async"
             onError={() => {
-              setImageSrc(null);
+              setImageUrls(null);
               closeImageHover();
             }}
           />
@@ -231,7 +246,7 @@ export function InventoryItemThumbnail({
               }}
             >
               <img
-                src={imageSrc}
+                src={imageHoverSrc ?? imageSrc}
                 alt=""
                 className="block h-full w-full rounded-md bg-white object-contain dark:bg-card"
               />

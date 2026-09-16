@@ -38,17 +38,20 @@ function structuredLocationFromFormData(
 }
 import { bulkSetCompatibilityRules } from '@/features/inventory/services/inventoryCompatibilityRulesService';
 import {
-  uploadImageToStorage,
   compressImageFile,
   deleteImageFromStorage,
   deleteImagesFromStorage,
-  generateFilePath,
   validateImageFile,
   requireAuthUserId,
   getCurrentUserName,
   displayUrlForStoredPrivateImage,
   batchResolveInventoryItemImageDisplayUrls,
 } from '@/services/imageUploadService';
+import { isDisplayImageV2Ref } from '@/services/displayImageStorageService';
+import {
+  removeInventoryDisplayImageSet,
+  uploadInventoryDisplayImage,
+} from '@/features/inventory/services/inventoryDisplayImageService';
 import { validateStorageQuota } from '@/utils/storageQuota';
 
 // ============================================
@@ -420,13 +423,21 @@ export const deleteInventoryItem = async (
   itemId: string
 ): Promise<void> => {
   try {
-    // Clean up storage files for images before deleting the item
-    // (DB rows are deleted via ON DELETE CASCADE, but storage files need manual cleanup)
+    // Legacy objects keep their existing best-effort cleanup before the item delete.
+    // V2 display-image sets are removed after the DB delete so all three variants
+    // remain available until the metadata cascade has succeeded.
     const { data: images, error: imagesError } = await supabase
       .from('inventory_item_images')
       .select('file_url')
       .eq('inventory_item_id', itemId)
       .eq('organization_id', organizationId);
+
+    const legacyUrls = (images ?? [])
+      .filter((image) => !isDisplayImageV2Ref(image.file_url))
+      .map((image) => image.file_url);
+    const v2Refs = (images ?? [])
+      .filter((image) => isDisplayImageV2Ref(image.file_url))
+      .map((image) => image.file_url);
 
     if (imagesError) {
       logger.error('Error fetching inventory item images for cleanup:', {
@@ -435,12 +446,11 @@ export const deleteInventoryItem = async (
         itemId,
       });
       // Continue with DB delete even if image metadata fetch fails
-    } else if (images && images.length > 0) {
-      const urls = images.map(img => img.file_url);
+    } else if (legacyUrls.length > 0) {
       try {
-        await deleteImagesFromStorage('inventory-item-images', urls);
+        await deleteImagesFromStorage('inventory-item-images', legacyUrls);
       } catch (storageError) {
-        logger.error('Error deleting inventory item images from storage (best-effort):', {
+        logger.error('Error deleting legacy inventory item images from storage (best-effort):', {
           error: storageError,
           organizationId,
           itemId,
@@ -456,6 +466,19 @@ export const deleteInventoryItem = async (
       .eq('organization_id', organizationId);
 
     if (error) throw error;
+
+    for (const storedRef of v2Refs) {
+      try {
+        await removeInventoryDisplayImageSet(organizationId, itemId, storedRef);
+      } catch (storageError) {
+        logger.error('Error deleting Inventory V2 image set (best-effort):', {
+          error: storageError,
+          organizationId,
+          itemId,
+          storedRef,
+        });
+      }
+    }
   } catch (error) {
     logger.error('Error deleting inventory item:', error);
     throw error;
@@ -678,7 +701,10 @@ export const getInventoryItemImages = async (
 
     if (error) throw error;
     const rows = data || [];
-    const signedBatch = await batchResolveInventoryItemImageDisplayUrls(rows.map(row => row.file_url));
+    const signedBatch = await batchResolveInventoryItemImageDisplayUrls(
+      rows.map(row => row.file_url),
+      { variant: 'full' },
+    );
     return rows
       .map((row, i) => {
         const url = displayUrlForStoredPrivateImage(signedBatch[i], row.file_url);
@@ -717,7 +743,7 @@ export const uploadInventoryItemImages = async (
     const existingCount = count || 0;
     if (existingCount + files.length > MAX_IMAGES_PER_ITEM) {
       throw new Error(
-        `Cannot upload ${files.length} image(s). This item already has ${existingCount} of ${MAX_IMAGES_PER_ITEM} allowed images.`
+        `Cannot upload \${files.length} image(s). This item already has \${existingCount} of \${MAX_IMAGES_PER_ITEM} allowed images.`
       );
     }
 
@@ -726,58 +752,63 @@ export const uploadInventoryItemImages = async (
       validateImageFile(file, 20);
     }
 
-    // Compress all files up front so quota validation uses the bytes that will
-    // actually be written to storage, not the original (larger) file sizes.
-    // This prevents false "quota exceeded" errors when uncompressed totals
-    // exceed remaining quota but compressed totals would fit.
+    // Keep the existing quota guard based on the bounded source that feeds
+    // the V2 generator. The generator then writes thumb, preview, and full
+    // WebP variants from that source.
     const filesToStore = await Promise.all(files.map(f => compressImageFile(f)));
     const totalSize = filesToStore.reduce((sum, f) => sum + f.size, 0);
     await validateStorageQuota(organizationId, totalSize);
 
-    // Upload each pre-compressed file and save metadata; track successes for rollback on partial failure
+    // Upload each image set and save metadata; track successes for rollback on partial failure.
     const results: InventoryItemImage[] = [];
     const uploadedImages: { id: string; fileUrl: string }[] = [];
 
     try {
       for (let i = 0; i < files.length; i++) {
         const fileToStore = filesToStore[i];
-        const filePath = generateFilePath(organizationId, itemId, fileToStore);
-        const publicUrl = await uploadImageToStorage(
-          'inventory-item-images',
-          filePath,
-          fileToStore,
-          { compress: false }
-        );
+        let uploadedRef: string | null = null;
 
-        const { data: record, error: insertError } = await supabase
-          .from('inventory_item_images')
-          .insert({
-            inventory_item_id: itemId,
-            organization_id: organizationId,
-            file_url: publicUrl,
-            file_name: fileToStore.name,
-            file_size: fileToStore.size,
-            mime_type: fileToStore.type,
-            uploaded_by: userId,
-            uploaded_by_name: userName,
-          })
-          .select()
-          .single();
+        try {
+          const uploaded = await uploadInventoryDisplayImage({
+            organizationId,
+            inventoryItemId: itemId,
+            source: fileToStore,
+          });
+          uploadedRef = uploaded.canonicalRef;
 
-        if (insertError) {
-          logger.error('Error saving inventory item image record:', insertError);
-          // Clean up the orphaned storage object since the DB insert failed
-          try {
-            await deleteImageFromStorage('inventory-item-images', publicUrl);
-          } catch (deleteError) {
-            logger.error('Failed to delete orphaned inventory image from storage:', deleteError);
+          const { data: record, error: insertError } = await supabase
+            .from('inventory_item_images')
+            .insert({
+              inventory_item_id: itemId,
+              organization_id: organizationId,
+              file_url: uploaded.canonicalRef,
+              file_name: fileToStore.name,
+              file_size: fileToStore.size,
+              mime_type: fileToStore.type,
+              uploaded_by: userId,
+              uploaded_by_name: userName,
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            logger.error('Error saving inventory item image record:', insertError);
+            throw insertError;
           }
-          throw insertError;
-        }
 
-        const imageRecord = record as InventoryItemImage;
-        results.push(imageRecord);
-        uploadedImages.push({ id: imageRecord.id, fileUrl: imageRecord.file_url });
+          const imageRecord = record as InventoryItemImage;
+          results.push(imageRecord);
+          uploadedImages.push({ id: imageRecord.id, fileUrl: imageRecord.file_url });
+        } catch (imageError) {
+          if (uploadedRef) {
+            try {
+              await removeInventoryDisplayImageSet(organizationId, itemId, uploadedRef);
+            } catch (deleteError) {
+              logger.error('Failed to delete orphaned Inventory V2 image set:', deleteError);
+            }
+          }
+          throw imageError;
+        }
       }
 
       return results;
@@ -810,9 +841,9 @@ export const uploadInventoryItemImages = async (
             continue;
           }
           try {
-            await deleteImageFromStorage('inventory-item-images', image.fileUrl);
+            await removeInventoryDisplayImageSet(organizationId, itemId, image.fileUrl);
           } catch (storageErr) {
-            logger.error('Rollback: failed to delete storage object:', storageErr);
+            logger.error('Rollback: failed to delete Inventory V2 image set:', storageErr);
           }
         }
       }
@@ -827,14 +858,34 @@ export const uploadInventoryItemImages = async (
 /**
  * Delete a single inventory item image (storage + metadata), scoped to the organization.
  * Deletes the DB row first so a storage failure never leaves a dangling record
- * pointing at a missing file; storage cleanup is best-effort.
+ * pointing at a missing storage object; storage cleanup is best-effort.
  */
 export const deleteInventoryItemImage = async (
   imageId: string,
   fileUrl: string,
   organizationId: string
 ): Promise<void> => {
-  // Remove metadata row first (scoped by organization_id for tenant isolation)
+  // Read the canonical stored reference before deleting the row. The UI receives
+  // a display URL, while V2 cleanup needs the DB's immutable full.webp reference.
+  const { data: storedImage, error: lookupError } = await supabase
+    .from('inventory_item_images')
+    .select('inventory_item_id, file_url')
+    .eq('id', imageId)
+    .eq('organization_id', organizationId)
+    .maybeSingle();
+
+  if (lookupError) {
+    logger.error('Error loading inventory item image metadata:', {
+      error: lookupError,
+      imageId,
+      organizationId,
+    });
+    throw lookupError;
+  }
+
+  const storedRef = storedImage?.file_url ?? fileUrl;
+
+  // Remove metadata row first (scoped by organization_id for tenant isolation).
   const { error } = await supabase
     .from('inventory_item_images')
     .delete()
@@ -853,17 +904,27 @@ export const deleteInventoryItemImage = async (
   // Best-effort storage cleanup — DB row is already gone so the UI won't
   // reference this file even if the storage delete fails.
   try {
-    await deleteImageFromStorage('inventory-item-images', fileUrl);
+    const removedV2 = storedImage?.inventory_item_id
+      ? await removeInventoryDisplayImageSet(
+          organizationId,
+          storedImage.inventory_item_id,
+          storedRef,
+        )
+      : false;
+
+    // Never send a V2 display-images ref to the legacy private bucket.
+    if (!removedV2 && !isDisplayImageV2Ref(storedRef)) {
+      await deleteImageFromStorage('inventory-item-images', storedRef);
+    }
   } catch (storageError) {
     logger.error('Error deleting inventory item image file from storage:', {
       error: storageError,
       imageId,
-      fileUrl,
+      fileUrl: storedRef,
       organizationId,
     });
   }
 };
-
 // ============================================
 // Bulk Update (metadata only — no quantity_on_hand)
 // ============================================

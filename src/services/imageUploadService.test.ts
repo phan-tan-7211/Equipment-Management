@@ -66,6 +66,7 @@ import {
   displayUrlForStoredPrivateImage,
   displayableImageSrc,
   getEquipmentDisplayImageUrl,
+  getInventoryItemDisplayImageUrl,
   isZnteqrPrivateStorageUrl,
   isFetchableSignedStorageUrl,
   toAbsoluteSignedStorageUrl,
@@ -440,6 +441,33 @@ describe('imageUploadService', () => {
       expect(out).toHaveLength(3);
       expect(mockCreateSignedUrls).toHaveBeenCalledTimes(1);
       expect(mockCreateSignedUrls.mock.calls[0][0]).toEqual(['org/item/a.jpg', 'org/item/b.jpg']);
+    });
+ 
+
+    it('resolves V2 inventory refs to the requested public variant without signing', async () => {
+      mockGetPublicUrl.mockImplementation((path: string) => ({
+        data: {
+          publicUrl: `https://example.supabase.co/storage/v1/object/public/display-images/${path}`,
+        },
+      }));
+
+      const canonicalRef =
+        'display-images/org/org-1/inventory/item-1/set-1/full.webp';
+
+      expect(getInventoryItemDisplayImageUrl(canonicalRef, 'preview')).toBe(
+        'https://example.supabase.co/storage/v1/object/public/display-images/org/org-1/inventory/item-1/set-1/preview.webp',
+      );
+
+      await expect(
+        batchResolveInventoryItemImageDisplayUrls([canonicalRef], {
+          variant: 'thumb',
+        }),
+      ).resolves.toEqual([
+        'https://example.supabase.co/storage/v1/object/public/display-images/org/org-1/inventory/item-1/set-1/thumb.webp',
+      ]);
+
+      expect(mockCreateSignedUrl).not.toHaveBeenCalled();
+      expect(mockCreateSignedUrls).not.toHaveBeenCalled();
     });
   });
 

@@ -3,7 +3,10 @@ import { fireEvent, render, waitFor } from '@vitest-harness/utils/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { InventoryItemThumbnail } from './InventoryItemThumbnail';
 import { getPrimaryInventoryItemImageRefs } from '@/features/inventory/services/inventoryListThumbnailService';
-import { batchResolveInventoryItemImageDisplayUrls } from '@/services/imageUploadService';
+import {
+  batchResolveInventoryItemImageDisplayUrls,
+  getInventoryItemDisplayImageUrl,
+} from '@/services/imageUploadService';
 
 vi.mock('@/features/inventory/services/inventoryListThumbnailService', () => ({
   getPrimaryInventoryItemImageRefs: vi.fn(),
@@ -14,6 +17,7 @@ vi.mock('@/services/imageUploadService', () => ({
     url?.startsWith('https://') ? url : null,
   ),
   batchResolveInventoryItemImageDisplayUrls: vi.fn(),
+  getInventoryItemDisplayImageUrl: vi.fn(),
 }));
 
 const makeItem = (id: string, imageUrl: string | null = null) => ({
@@ -25,6 +29,12 @@ const makeItem = (id: string, imageUrl: string | null = null) => ({
 describe('InventoryItemThumbnail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getInventoryItemDisplayImageUrl).mockImplementation(
+      (storedRef, variant = 'full') =>
+        storedRef?.startsWith('display-images/')
+          ? `https://public.example.com/${variant}.webp`
+          : null,
+    );
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
       writable: true,
@@ -63,9 +73,10 @@ describe('InventoryItemThumbnail', () => {
     });
 
     expect(getPrimaryInventoryItemImageRefs).toHaveBeenCalledWith('org-1', ['item-primary']);
-    expect(batchResolveInventoryItemImageDisplayUrls).toHaveBeenCalledWith([
-      'org-1/item-primary/primary.jpg',
-    ]);
+    expect(batchResolveInventoryItemImageDisplayUrls).toHaveBeenCalledWith(
+      ['org-1/item-primary/primary.jpg'],
+      { variant: 'thumb' },
+    );
   });
 
   it('falls back to legacy image_url when no uploaded image row exists', async () => {
@@ -87,9 +98,10 @@ describe('InventoryItemThumbnail', () => {
       );
     });
 
-    expect(batchResolveInventoryItemImageDisplayUrls).toHaveBeenCalledWith([
-      'https://example.com/legacy-fallback.jpg',
-    ]);
+    expect(batchResolveInventoryItemImageDisplayUrls).toHaveBeenCalledWith(
+      ['https://example.com/legacy-fallback.jpg'],
+      { variant: 'thumb' },
+    );
   });
 
   it('batches thumbnails mounted in the same render wave', async () => {
@@ -150,6 +162,43 @@ describe('InventoryItemThumbnail', () => {
     expect(preview).toHaveClass('fixed');
     expect(preview).toHaveClass('opacity-100');
     expect(preview?.querySelector('img')).toHaveClass('object-contain');
+  });
+
+
+  it('uses the thumb variant for the list and preview variant on hover for V2 refs', async () => {
+    const storedRef =
+      'display-images/org/org-1/inventory/item-v2/set-1/full.webp';
+    vi.mocked(getPrimaryInventoryItemImageRefs).mockResolvedValue({
+      'item-v2': storedRef,
+    });
+    vi.mocked(batchResolveInventoryItemImageDisplayUrls).mockResolvedValue([
+      'https://public.example.com/thumb.webp',
+    ]);
+
+    const { container } = render(
+      <InventoryItemThumbnail item={makeItem('item-v2')} />,
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('img')).toHaveAttribute(
+        'src',
+        'https://public.example.com/thumb.webp',
+      );
+    });
+
+    const thumbnail = container.querySelector('[data-inventory-item-thumbnail]');
+    fireEvent.pointerMove(thumbnail as Element, { clientX: 220, clientY: 240 });
+
+    await waitFor(() => {
+      expect(
+        document.body
+          .querySelector('[data-inventory-item-image-hover-preview] img'),
+      ).toHaveAttribute('src', 'https://public.example.com/preview.webp');
+    });
+    expect(batchResolveInventoryItemImageDisplayUrls).toHaveBeenCalledWith(
+      [storedRef],
+      { variant: 'thumb' },
+    );
   });
 
   it('keeps mobile thumbnails non-hoverable', async () => {
