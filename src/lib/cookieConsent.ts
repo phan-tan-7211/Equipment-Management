@@ -30,6 +30,8 @@ const OPTIONAL_LOCAL_STORAGE_EXACT = new Set([
   'equipqr:work-orders-view-mode',
   'equipqr:alternate-groups-table-column-sizing',
   'equipqr:equipment-table-column-sizing:v2',
+  'equipqr:equipment-table-column-sizing:v3',
+  'equipqr:equipment-table-column-order:v1',
   'equipqr-user-settings',
   'audit-dashboard-grid-v1',
 ]);
@@ -37,6 +39,7 @@ const OPTIONAL_LOCAL_STORAGE_EXACT = new Set([
 const OPTIONAL_LOCAL_STORAGE_PREFIXES = [
   'equipqr:selectedTeamId:',
   'equipqr:equipment-table-columns:',
+  'equipqr:equipment-table-pinned-columns:',
   'equipqr:inventory-table-preferences:',
   'equipqr-operator-checkin-starter-catalog-expanded:',
   'equipqr_dashboard_layout_',
