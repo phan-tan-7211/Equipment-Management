@@ -11,6 +11,13 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.11] - 2026-09-16
+
+### Added
+
+- Added direct part linking and new-part creation from an equipment's Parts tab.
+
+
 ## [3.34.10] - 2026-09-15
 
 ### Changed
