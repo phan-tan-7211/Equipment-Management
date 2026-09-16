@@ -227,6 +227,19 @@ describe('DashboardRouteLayout loading shell', () => {
     expect(screen.queryByText('Organization settings content')).not.toBeInTheDocument();
   });
 
+  it('locks the equipment list route so only its table owns scrolling', () => {
+    renderLayout('/dashboard/equipment');
+
+    expect(screen.getByRole('main')).toHaveClass('min-h-0', 'overflow-hidden');
+  });
+
+  it('keeps the regular dashboard scroll behavior on other routes', () => {
+    renderLayout('/dashboard/notifications');
+
+    expect(screen.getByRole('main')).toHaveClass('overflow-auto');
+    expect(screen.getByRole('main')).not.toHaveClass('overflow-hidden');
+  });
+
   it('keeps shell chrome visible while workspace access is loading', () => {
     mockAuthState.user = {
       id: 'user-1',

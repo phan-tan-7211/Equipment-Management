@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { Routes } from 'react-router-dom';
+import { Routes, useLocation } from 'react-router-dom';
 import { TeamProvider } from '@/contexts/TeamContext';
 import { SelectedTeamProvider } from '@/contexts/SelectedTeamContext';
 import { SimpleOrganizationProvider } from '@/contexts/SimpleOrganizationProvider';
@@ -19,11 +19,14 @@ import { AppSidebar, TopBar, BottomNav } from '@/routes/lazyDashboardPages';
 import { OptionalOfflineQueueProvider } from '@/routes/OptionalOfflineQueueProvider';
 import { dashboardRouteElements } from '@/routes/DashboardRoutes';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 
 const BrandedTopBar = () => <TopBar />;
 
 export const DashboardRouteLayout = () => {
   const { t } = useI18n();
+  const location = useLocation();
+  const isEquipmentListRoute = /^\/dashboard\/equipment\/?$/.test(location.pathname);
 
   const authLoadingFallback = (
     <DashboardLoadingShell
@@ -89,7 +92,10 @@ export const DashboardRouteLayout = () => {
                             <main
                               id="main-content"
                               tabIndex={-1}
-                              className="flex-1 overflow-auto min-w-0 pb-16 md:pb-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                              className={cn(
+                                'flex-1 min-w-0 pb-16 md:pb-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                                isEquipmentListRoute ? 'min-h-0 overflow-hidden' : 'overflow-auto',
+                              )}
                             >
                               <Suspense fallback={<PageSkeleton />}>
                                 <Routes>{dashboardRouteElements}</Routes>

@@ -113,7 +113,7 @@ const Equipment = () => {
   const handleEquipmentCreated = (equipmentId: string) => { setSelectedTeamId(null); navigate(`/dashboard/equipment/${equipmentId}`); };
 
   return (
-    <Page maxWidth="full" padding="none" className={cn('p-2 sm:p-3 lg:p-4', viewMode === 'table' && 'h-full min-h-0')}>
+    <Page maxWidth="full" padding="none" className={cn('p-2 sm:p-3 lg:p-4', viewMode === 'table' && 'h-full min-h-0 overflow-hidden')}>
       <EquipmentListTransitionRoot className={cn('space-y-2 md:space-y-3', viewMode === 'table' && 'flex h-full min-h-0 flex-col gap-2 md:gap-3 space-y-0', isMobile && canCreate && 'pb-28')}>
         <div data-equipment-list-chrome="" className={viewMode === 'table' ? 'shrink-0' : undefined}>
           <PageHeader
