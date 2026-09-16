@@ -30,13 +30,35 @@ const EquipmentToolbar: React.FC<EquipmentToolbarProps> = ({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2">
+      <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-1.5">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <ToolbarSearchInput value={filters.search} onChange={(value) => onFilterChange('search', value)} placeholder={t('equipment.searchPlaceholder')} ariaLabel={t('equipment.searchAria')} />
           <Separator orientation="vertical" className="h-5" />
           <EquipmentFilterPopover filters={filters} onFilterChange={onFilterChange} onClearFilters={onClearFilters} onQuickFilter={onQuickFilter} filterOptions={filterOptions} activeFilterCount={activeFilterCount} activeQuickFilter={activeQuickFilter} />
           {viewMode !== 'table' && <EquipmentSortPopover sortConfig={sortConfig} onSortChange={onSortChange} />}
           {columnPicker}
+          <div
+            className={`flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto whitespace-nowrap ${hasActiveFilters ? '' : 'invisible'}`}
+            aria-live="polite"
+            aria-hidden={!hasActiveFilters}
+          >
+            <span className="shrink-0 text-xs text-muted-foreground">{t('equipment.active')}:</span>
+            {filters.status !== 'all' && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{t('equipment.status')}: {filters.status.replace('_', ' ')}<button onClick={() => onFilterChange('status', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearStatusFilter')}><X className="h-3 w-3" /></button></Badge>}
+            {filters.manufacturer !== 'all' && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{filters.manufacturer}<button onClick={() => onFilterChange('manufacturer', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearManufacturerFilter')}><X className="h-3 w-3" /></button></Badge>}
+            {filters.location !== 'all' && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{filters.location}<button onClick={() => onFilterChange('location', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearLocationFilter')}><X className="h-3 w-3" /></button></Badge>}
+            {filters.warrantyExpiring && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{t('equipment.warrantyExpiring')}<button onClick={() => onFilterChange('warrantyExpiring' as keyof EquipmentFilters, 'false')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearWarrantyFilter')}><X className="h-3 w-3" /></button></Badge>}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-6 shrink-0 px-2 text-xs text-muted-foreground hover:text-foreground ${hasActiveFilters ? '' : 'invisible'}`}
+            onClick={onClearFilters}
+            disabled={!hasActiveFilters}
+            tabIndex={hasActiveFilters ? 0 : -1}
+            aria-hidden={!hasActiveFilters}
+          >
+            {t('equipment.clearAll')}
+          </Button>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {showRightControls && <>{canImport && <EquipmentImportMenu onImportCsv={onImportCsv ?? (() => {})} />}{canExport && <EquipmentDownloadMenu equipment={equipment} />}</>}
@@ -45,30 +67,6 @@ const EquipmentToolbar: React.FC<EquipmentToolbarProps> = ({
         </div>
       </div>
 
-      <div className="flex min-h-8 items-center gap-2 px-1">
-        <div
-          className={`flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto whitespace-nowrap ${hasActiveFilters ? '' : 'invisible'}`}
-          aria-live="polite"
-          aria-hidden={!hasActiveFilters}
-        >
-          <span className="shrink-0 text-xs text-muted-foreground">{t('equipment.active')}:</span>
-          {filters.status !== 'all' && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{t('equipment.status')}: {filters.status.replace('_', ' ')}<button onClick={() => onFilterChange('status', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearStatusFilter')}><X className="h-3 w-3" /></button></Badge>}
-          {filters.manufacturer !== 'all' && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{filters.manufacturer}<button onClick={() => onFilterChange('manufacturer', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearManufacturerFilter')}><X className="h-3 w-3" /></button></Badge>}
-          {filters.location !== 'all' && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{filters.location}<button onClick={() => onFilterChange('location', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearLocationFilter')}><X className="h-3 w-3" /></button></Badge>}
-          {filters.warrantyExpiring && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{t('equipment.warrantyExpiring')}<button onClick={() => onFilterChange('warrantyExpiring' as keyof EquipmentFilters, 'false')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearWarrantyFilter')}><X className="h-3 w-3" /></button></Badge>}
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={`h-6 shrink-0 px-2 text-xs text-muted-foreground hover:text-foreground ${hasActiveFilters ? '' : 'invisible'}`}
-          onClick={onClearFilters}
-          disabled={!hasActiveFilters}
-          tabIndex={hasActiveFilters ? 0 : -1}
-          aria-hidden={!hasActiveFilters}
-        >
-          {t('equipment.clearAll')}
-        </Button>
-      </div>
     </div>
   );
 };
