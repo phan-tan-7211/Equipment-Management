@@ -129,7 +129,9 @@ function applyHeaderDragPreview(event: ReactDragEvent<HTMLElement>) {
   const requestedOffsetY = Number.isFinite(nativeEvent.offsetY) ? nativeEvent.offsetY : previewHeight / 2;
   const offsetX = Math.max(12, Math.min(requestedOffsetX, previewWidth - 12));
   const offsetY = Math.max(8, Math.min(requestedOffsetY, previewHeight - 8));
-  event.dataTransfer.setDragImage(preview, offsetX, offsetY);
+  if (typeof event.dataTransfer.setDragImage === 'function') {
+    event.dataTransfer.setDragImage(preview, offsetX, offsetY);
+  }
 
   window.setTimeout(() => preview.remove(), 0);
 }
@@ -186,7 +188,7 @@ export function ResizableTableSurface<TData>({
                   ? { ...style, zIndex: hasPinnedOffset ? 50 : 40 }
                   : style;
                 const resolvedDraggable = Boolean(onDragStart || draggable);
-                const resolvedPointerDown = resolvedDraggable ? undefined : onPointerDown;
+                const resolvedPointerDown = onPointerDown;
                 const isDragSource = draggedHeaderId === header.id;
                 const isDropTarget = dragOverHeaderId === header.id && draggedHeaderId !== header.id;
 
@@ -267,6 +269,7 @@ export function ResizableTableSurface<TData>({
                           resolvedDraggable && 'cursor-grab active:cursor-grabbing',
                         )}
                         draggable={resolvedDraggable}
+                        onPointerDown={(event) => event.stopPropagation()}
                         onDragStart={startDragFromSurface}
                         onDragEnd={endDragFromSurface}
                         {...(dataColumnKey ? { 'data-table-column-drag-surface': dataColumnKey } : {})}
