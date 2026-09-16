@@ -113,8 +113,8 @@ const Equipment = () => {
   const handleEquipmentCreated = (equipmentId: string) => { setSelectedTeamId(null); navigate(`/dashboard/equipment/${equipmentId}`); };
 
   return (
-    <Page maxWidth="full" padding="none" className={cn('p-2 sm:p-3 lg:p-4', viewMode === 'table' && 'h-full min-h-0 overflow-hidden')}>
-      <EquipmentListTransitionRoot className={cn('space-y-2 md:space-y-3', viewMode === 'table' && 'flex h-full min-h-0 flex-col gap-2 md:gap-3 space-y-0', isMobile && canCreate && 'pb-28')}>
+    <Page maxWidth="full" padding="none" className={cn('p-px', viewMode === 'table' && 'h-full min-h-0 overflow-hidden')}>
+      <EquipmentListTransitionRoot className={cn('flex min-h-0 flex-col gap-px', viewMode === 'table' && 'h-full overflow-hidden', isMobile && canCreate && 'pb-28')}>
         <div data-equipment-list-chrome="" className="shrink-0">
           <PageHeader
             title={t('equipment.title')}
@@ -137,7 +137,7 @@ const Equipment = () => {
           <EquipmentFilters filters={filters} sortConfig={sortConfig} onFilterChange={updateFilter} onClearFilters={clearFilters} onQuickFilter={applyQuickFilter} onSortChange={updateSort} filterOptions={filterOptions} hasActiveFilters={hasActiveFilters} activeQuickFilter={activeQuickFilter} viewMode={viewMode} onViewModeChange={handleViewModeChange} canImport={canImport} canExport={canExport} onImportCsv={() => setShowImportCsv(true)} equipment={equipment} columnPicker={viewMode === 'table' ? <EquipmentColumnPicker allColumns={EQUIPMENT_TABLE_COLUMN_META} visibleColumns={visibleColumns} onToggle={toggleColumn} onReset={resetColumnVisibility} hasOverrides={hasColumnOverrides} /> : undefined} />
         </div>
 
-        <div className={viewMode === 'table' ? 'flex min-h-0 flex-1 flex-col gap-2 md:gap-3' : 'space-y-3'}>
+        <div className={viewMode === 'table' ? 'flex min-h-0 flex-1 flex-col gap-px' : 'space-y-1'}>
           <EquipmentGrid equipment={mergedEquipment} searchQuery={filters.search} statusFilter={filters.status} organizationName={currentOrganization.name} canCreate={canCreate} onShowQRCode={setShowQRCode} onAddEquipment={handleAddEquipment} onClearFilters={clearFilters} viewMode={viewMode} pmStatuses={pmStatuses} sortConfig={sortConfig} onSortChange={updateSort} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} organizationId={currentOrganization.id} columnFilterOptions={columnFilterOptions} columnFilters={columnFilters} onColumnFilterChange={updateColumnFilter} />
           <div data-equipment-list-chrome="" className="shrink-0"><EquipmentPaginationFooter totalItems={totalFilteredCount} page={currentPage} pageSize={pageSize} pageSizeOptions={pageSizeOptions} itemLabel={t('equipment.result')} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} /></div>
         </div>

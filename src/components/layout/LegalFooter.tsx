@@ -35,7 +35,7 @@ type LegalFooterViewProps = {
 function LegalFooterView({ canManageDsr }: LegalFooterViewProps): JSX.Element {
   const { t } = useI18n();
   return (
-    <footer className="hidden h-10 shrink-0 border-t border-border bg-background/50 backdrop-blur-sm md:block">
+    <footer className="hidden h-8 shrink-0 border-t border-border bg-background/50 backdrop-blur-sm md:block">
       <div className="container mx-auto h-full px-4">
         <div className="flex h-full min-w-0 flex-nowrap items-center justify-between gap-x-4 text-xs leading-none text-muted-foreground">
           <p className="inline-flex min-w-0 truncate items-center gap-x-1">

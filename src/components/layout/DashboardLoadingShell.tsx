@@ -60,7 +60,7 @@ export function DashboardLoadingShell({
         <header
           aria-label={copy.headerLoading}
           data-testid="dashboard-loading-header"
-          className="flex h-14 shrink-0 items-center gap-3 border-b px-4 sm:h-16"
+          className="flex h-10 shrink-0 items-center gap-3 border-b px-4"
         >
           <Skeleton className="h-8 w-8 rounded-md" />
           <div className="hidden h-4 w-px bg-border sm:block" />

@@ -29,8 +29,8 @@ const EquipmentToolbar: React.FC<EquipmentToolbarProps> = ({
   const showRightControls = canImport || canExport;
 
   return (
-    <div className="flex flex-col gap-1.5" data-equipment-toolbar="">
-      <div className="flex h-10 items-center gap-2 rounded-lg border bg-card px-2.5 py-1">
+    <div className="flex flex-col gap-px" data-equipment-toolbar="">
+      <div className="flex h-9 items-center gap-2 rounded-lg border bg-card px-2 py-0.5">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <ToolbarSearchInput value={filters.search} onChange={(value) => onFilterChange('search', value)} placeholder={t('equipment.searchPlaceholder')} ariaLabel={t('equipment.searchAria')} />
           <Separator orientation="vertical" className="h-5" />

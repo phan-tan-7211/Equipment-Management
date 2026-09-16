@@ -54,7 +54,7 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
     <div
       className={cn(
         'flex flex-col gap-4 border-t pt-4',
-        compact && 'gap-1.5 pt-1.5 md:flex-row md:items-center md:justify-between',
+        compact && 'gap-px pt-1 md:flex-row md:items-center md:justify-between',
       )}
       data-testid={testId}
     >

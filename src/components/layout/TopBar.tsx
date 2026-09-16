@@ -15,7 +15,7 @@ const TopBar: React.FC = () => {
 
   return (
     <header
-      className="flex h-14 shrink-0 items-center gap-2 border-b transition-none sm:h-16 sm:border-b-0 group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+      className="flex h-10 shrink-0 items-center gap-2 border-b transition-none sm:border-b-0"
     >
       <div className="flex items-center gap-2 px-3 sm:px-4 w-full text-foreground">
         {/* Mobile: brand logo doubles as the sidebar trigger. */}
