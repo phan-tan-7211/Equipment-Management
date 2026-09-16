@@ -13,6 +13,7 @@ import {
   getListPageRange,
 } from '@/utils/listPagination';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 
 type ListPaginationFooterProps = {
   totalItems: number;
@@ -23,6 +24,7 @@ type ListPaginationFooterProps = {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   testId?: string;
+  density?: 'default' | 'compact';
 };
 
 const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
@@ -34,6 +36,7 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
   onPageChange,
   onPageSizeChange,
   testId = 'list-pagination-footer',
+  density = 'default',
 }) => {
   const { language, t } = useI18n();
   const pageSizeSelectId = useId();
@@ -45,15 +48,23 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
     return null;
   }
 
+  const compact = density === 'compact';
+
   return (
-    <div className="flex flex-col gap-4 border-t pt-4" data-testid={testId}>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
+    <div
+      className={cn(
+        'flex flex-col gap-4 border-t pt-4',
+        compact && 'gap-1.5 pt-1.5 md:flex-row md:items-center md:justify-between',
+      )}
+      data-testid={testId}
+    >
+      <div className={cn('flex items-center justify-between gap-3', compact && 'md:min-w-0 md:flex-1')}>
+        <p className={cn('text-sm text-muted-foreground', compact && 'text-xs')}>
           {t('commonPagination.showing', { start, end, total: totalItems, label: displayItemLabel })}
         </p>
 
-        <div className="hidden md:flex items-center gap-2">
-          <label htmlFor={pageSizeSelectId} className="text-sm text-muted-foreground whitespace-nowrap">
+        <div className="hidden items-center gap-2 md:flex">
+          <label htmlFor={pageSizeSelectId} className={cn('whitespace-nowrap text-sm text-muted-foreground', compact && 'text-xs')}>
             {t('commonPagination.perPage')}
           </label>
           <Select
@@ -63,7 +74,7 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
               onPageChange(1);
             }}
           >
-            <SelectTrigger id={pageSizeSelectId} className="w-22">
+            <SelectTrigger id={pageSizeSelectId} className={cn('w-22', compact && 'h-7 text-xs')}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -105,22 +116,24 @@ const ListPaginationFooter: React.FC<ListPaginationFooterProps> = ({
             </Button>
           </div>
 
-          <div className="hidden md:flex items-center justify-center gap-2">
+          <div className={cn('hidden items-center justify-center gap-2 md:flex', compact && 'md:shrink-0 md:gap-1.5')}>
             <Button
               variant="outline"
               size="sm"
+              className={compact ? 'h-8 text-xs' : undefined}
               onClick={() => onPageChange(page - 1)}
               disabled={page <= 1}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
               {t('commonPagination.previous')}
             </Button>
-            <span className="text-sm px-4 whitespace-nowrap">
+            <span className={cn('whitespace-nowrap px-4 text-sm', compact && 'px-2 text-xs')}>
               {t('commonPagination.pageOf', { page, totalPages })}
             </span>
             <Button
               variant="outline"
               size="sm"
+              className={compact ? 'h-8 text-xs' : undefined}
               onClick={() => onPageChange(page + 1)}
               disabled={page >= totalPages}
             >

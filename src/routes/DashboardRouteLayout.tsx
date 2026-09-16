@@ -75,7 +75,7 @@ export const DashboardRouteLayout = () => {
                           >
                             <AppSidebar />
                           </Suspense>
-                          <SidebarInset className="flex h-svh min-h-0 flex-1 min-w-0">
+                          <SidebarInset className="flex h-svh min-h-0 min-w-0 flex-1">
                             <Suspense
                               fallback={
                                 <div className="h-14 sm:h-16 border-b">

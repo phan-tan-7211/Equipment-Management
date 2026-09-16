@@ -13,7 +13,7 @@ describe('PageHeader', () => {
       expect(root?.className).not.toContain('lg:space-y-2');
     });
 
-    it('renders compact density with tighter desktop spacing', () => {
+    it('renders compact density with stable tighter spacing', () => {
       const { container } = render(
         <PageHeader
           title="Detail Page"
@@ -25,9 +25,9 @@ describe('PageHeader', () => {
         />,
       );
 
-      const root = container.querySelector('.space-y-4');
+      const root = container.querySelector('.space-y-2');
       expect(root).toBeInTheDocument();
-      expect(root?.className).toContain('lg:space-y-2');
+      expect(root?.className).not.toContain('lg:space-y-2');
 
       expect(screen.getByText('List')).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Detail Page' })).toBeInTheDocument();
@@ -38,10 +38,9 @@ describe('PageHeader', () => {
         <PageHeader title="Custom" className="mt-8" density="compact" />,
       );
 
-      const root = container.querySelector('.space-y-4');
+      const root = container.querySelector('.space-y-2');
       expect(root).toBeInTheDocument();
       expect(root?.className).toContain('mt-8');
-      expect(root?.className).toContain('lg:space-y-2');
     });
   });
 

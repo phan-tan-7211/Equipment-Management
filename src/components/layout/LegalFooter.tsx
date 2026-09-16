@@ -35,10 +35,10 @@ type LegalFooterViewProps = {
 function LegalFooterView({ canManageDsr }: LegalFooterViewProps): JSX.Element {
   const { t } = useI18n();
   return (
-    <footer className="hidden md:block border-t border-border bg-background/50 backdrop-blur-sm mt-auto">
-      <div className="container mx-auto px-4 py-2">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs leading-tight text-muted-foreground">
-          <p className="inline-flex min-w-0 flex-wrap items-center gap-x-1">
+    <footer className="hidden h-10 shrink-0 border-t border-border bg-background/50 backdrop-blur-sm md:block">
+      <div className="container mx-auto h-full px-4">
+        <div className="flex h-full min-w-0 flex-nowrap items-center justify-between gap-x-4 text-xs leading-none text-muted-foreground">
+          <p className="inline-flex min-w-0 truncate items-center gap-x-1">
             <span className="whitespace-nowrap font-medium">ZNTEQR</span>
             <span aria-hidden="true" className="text-muted-foreground/40">·</span>
             <span className="whitespace-nowrap">{t('publicChrome.legalFooter.byline')}</span>
@@ -54,7 +54,7 @@ function LegalFooterView({ canManageDsr }: LegalFooterViewProps): JSX.Element {
 
           <nav
             aria-label={t('publicChrome.legalFooter.navigation')}
-            className="flex flex-wrap items-center gap-x-2 gap-y-0.5"
+            className="flex shrink-0 flex-nowrap items-center gap-x-2 whitespace-nowrap"
           >
             <ExternalLink
               href="https://equipqr.info/support"
