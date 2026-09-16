@@ -21,8 +21,6 @@ const CUSTOM_ATTRIBUTE_LABEL_KEYS: Record<string, string> = {
   'managing department': 'equipmentCustomAttributes.attributeLabels.managingDepartment',
   'source equipment id': 'equipmentCustomAttributes.attributeLabels.sourceEquipmentId',
   'source control number': 'equipmentCustomAttributes.attributeLabels.sourceControlNumber',
-  'management responsible primary': 'equipmentCustomAttributes.attributeLabels.managementResponsiblePrimary',
-  'management responsible secondary': 'equipmentCustomAttributes.attributeLabels.managementResponsibleSecondary',
 };
 
 const normalizeCustomAttributeKey = (key: string): string =>
@@ -35,18 +33,6 @@ export function getCustomAttributeLabelKey(key: string): string | undefined {
 export function getLocalizedCustomAttributeKey(key: string, t: Translate): string {
   const translationKey = getCustomAttributeLabelKey(key);
   return translationKey ? t(translationKey) : humanizeCustomAttributeKey(key);
-}
-
-export function getCustomAttributeValue(
-  attributes: Record<string, unknown> | null | undefined,
-  semanticKey: 'managementResponsiblePrimary' | 'managementResponsibleSecondary',
-): unknown {
-  if (!attributes) return null;
-  const target = semanticKey === 'managementResponsiblePrimary'
-    ? 'management responsible primary'
-    : 'management responsible secondary';
-  const entry = Object.entries(attributes).find(([key]) => normalizeCustomAttributeKey(key) === target);
-  return entry?.[1] ?? null;
 }
 
 export function stringifyCustomAttributeValue(value: unknown): string {
