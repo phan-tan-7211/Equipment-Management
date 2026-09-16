@@ -232,18 +232,31 @@ registerRoute(
   })
 );
 
-// Supabase Storage public objects (equipment images, team images, etc.).
-// Safe to cache because the URL path encodes the bucket + object id.
+// Immutable V2 display-image objects only. The exact path shape keeps
+// legacy public buckets and private signed-image URLs outside this cache.
+const DISPLAY_IMAGE_V2_PUBLIC_PATH =
+  /^\/storage\/v1\/object\/public\/display-images\/org\/[A-Za-z0-9][A-Za-z0-9._~-]*\/(?:equipment|inventory)\/[A-Za-z0-9][A-Za-z0-9._~-]*\/[A-Za-z0-9][A-Za-z0-9._~-]*\/(?:thumb|preview|full)\.webp$/;
+
+function isSupabaseStorageHost(url: URL): boolean {
+  return (
+    url.hostname.endsWith('.supabase.co') ||
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    url.hostname === '[::1]'
+  );
+}
+
 registerRoute(
-  ({ url }) =>
-    url.hostname.endsWith('.supabase.co') &&
-    url.pathname.startsWith('/storage/v1/object/public/'),
+  ({ url, request }) =>
+    request.method === 'GET' &&
+    isSupabaseStorageHost(url) &&
+    DISPLAY_IMAGE_V2_PUBLIC_PATH.test(url.pathname),
   new CacheFirst({
-    cacheName: 'equipqr-supabase-storage-v1',
+    cacheName: 'equipqr-display-images-v2',
     plugins: [
       new ExpirationPlugin({
-        maxEntries: 200,
-        maxAgeSeconds: 7 * 24 * 60 * 60,
+        maxEntries: 1000,
+        maxAgeSeconds: 90 * 24 * 60 * 60,
         purgeOnQuotaError: true,
       }),
     ],
