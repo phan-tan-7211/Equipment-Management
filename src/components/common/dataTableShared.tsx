@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { flexRender, type Cell, type Header, type Table as TanStackTable } from '@tanstack/react-table';
-import type { CSSProperties, DragEventHandler, ReactNode } from 'react';
+import type { CSSProperties, DragEventHandler, PointerEventHandler, ReactNode } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
@@ -65,6 +65,8 @@ type ResizableTableSurfaceProps<TData> = {
     onDragOver?: DragEventHandler<HTMLTableCellElement>;
     onDrop?: DragEventHandler<HTMLTableCellElement>;
     onDragEnd?: DragEventHandler<HTMLTableCellElement>;
+    onPointerDown?: PointerEventHandler<HTMLTableCellElement>;
+    dataColumnKey?: string;
   };
   getCellClassName: (cell: Cell<TData, unknown>) => string;
   getCellStyle?: (cell: Cell<TData, unknown>) => CSSProperties | undefined;
@@ -117,6 +119,8 @@ export function ResizableTableSurface<TData>({
                   onDragOver,
                   onDrop,
                   onDragEnd,
+                  onPointerDown,
+                  dataColumnKey,
                 } = getHeaderProps(header);
 
                 return (
@@ -130,6 +134,8 @@ export function ResizableTableSurface<TData>({
                     onDragOver={onDragOver}
                     onDrop={onDrop}
                     onDragEnd={onDragEnd}
+                    onPointerDown={onPointerDown}
+                    {...(dataColumnKey ? { 'data-table-column-key': dataColumnKey } : {})}
                   >
                     <div className="group relative min-h-8 min-w-0 pr-6">
                       {header.isPlaceholder
@@ -189,6 +195,8 @@ type ResizableFixedDataTableProps<TData> = {
     onDragOver?: DragEventHandler<HTMLTableCellElement>;
     onDrop?: DragEventHandler<HTMLTableCellElement>;
     onDragEnd?: DragEventHandler<HTMLTableCellElement>;
+    onPointerDown?: PointerEventHandler<HTMLTableCellElement>;
+    dataColumnKey?: string;
   };
   getCellClassName: (cell: Cell<TData, unknown>) => string;
   getCellStyle?: (cell: Cell<TData, unknown>) => CSSProperties | undefined;
@@ -272,6 +280,9 @@ export function DataTableColumnResizeHandle<THeader>({
         event.preventDefault();
         event.stopPropagation();
         header.getResizeHandler()(event);
+      }}
+      onPointerDown={(event) => {
+        event.stopPropagation();
       }}
       onTouchStart={(event) => {
         event.preventDefault();

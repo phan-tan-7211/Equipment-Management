@@ -91,9 +91,10 @@ describe('EquipmentGrid', () => {
       expect(grid).toHaveClass('min-w-0');
       expect(grid).toHaveClass('w-full');
       expect(grid).toHaveClass('md:grid');
-      expect(grid).toHaveClass('md:gap-6');
+      expect(grid).toHaveClass('md:gap-3');
       expect(grid).toHaveClass('md:grid-cols-2');
       expect(grid).toHaveClass('lg:grid-cols-3');
+      expect(grid).toHaveClass('lg:gap-4');
     });
   });
 
@@ -228,5 +229,4 @@ describe('EquipmentGrid', () => {
     });
   });
 });
-
 

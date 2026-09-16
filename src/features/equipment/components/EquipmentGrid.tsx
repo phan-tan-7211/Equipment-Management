@@ -138,7 +138,7 @@ const EquipmentGrid: React.FC<EquipmentGridProps> = ({
   }
 
   return (
-    <div className="flex min-w-0 w-full flex-col gap-2 md:grid md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+    <div className="flex min-w-0 w-full flex-col gap-2 md:grid md:grid-cols-2 md:gap-3 lg:grid-cols-3 lg:gap-4">
       {equipmentWithCodes.map((item, index) => (
         <div key={item.id} className="min-w-0 md:cv-auto-lg md:h-full">
           <EquipmentCard
