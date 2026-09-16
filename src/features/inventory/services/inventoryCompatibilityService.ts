@@ -73,6 +73,38 @@ export const getCompatibleEquipmentForItem = async (
   }
 };
 
+export const linkItemToEquipment = async (
+  organizationId: string,
+  itemId: string,
+  equipmentId: string,
+): Promise<void> => {
+  try {
+    await assertInventoryEquipmentLinkScope(organizationId, itemId, equipmentId);
+
+    const { data: existingLink, error: existingLinkError } = await supabase
+      .from('equipment_part_compatibility')
+      .select('equipment_id')
+      .eq('equipment_id', equipmentId)
+      .eq('inventory_item_id', itemId)
+      .maybeSingle();
+
+    if (existingLinkError) throw existingLinkError;
+    if (existingLink) return;
+
+    const { error } = await supabase
+      .from('equipment_part_compatibility')
+      .insert({
+        equipment_id: equipmentId,
+        inventory_item_id: itemId,
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    logger.error('Error linking item to equipment:', error);
+    throw error;
+  }
+};
+
 // ============================================
 // Link/Unlink Items to Equipment
 // ============================================

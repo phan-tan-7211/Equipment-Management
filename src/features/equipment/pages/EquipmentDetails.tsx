@@ -90,7 +90,7 @@ const EquipmentDetails = () => {
   );
   const isMobile = useIsMobile();
   const isQRScan = searchParams.get('qr') === 'true';
-  const { canView: canViewInventory, isLoading: inventoryAccessLoading } = useInventoryAccess();
+  const { canView: canViewInventory, canEdit: canEditInventory, isLoading: inventoryAccessLoading } = useInventoryAccess();
   const { activeEquipmentId } = useEquipmentCardTransitionState();
   const isTransitionActive = !!equipmentId && activeEquipmentId === equipmentId;
 
@@ -312,7 +312,7 @@ const EquipmentDetails = () => {
           <TabsContent value="work-orders">
             {activeTab === 'work-orders' && <Suspense fallback={<TabContentSkeleton />}><EquipmentWorkOrdersTab equipmentId={equipment.id} organizationId={currentOrganization.id} onCreateWorkOrder={() => setIsWorkOrderFormOpen(true)} equipmentManufacturer={equipment.manufacturer} equipmentModel={equipment.model} equipmentSerialNumber={equipment.serial_number} equipment={equipment} assignedTeamName={assignedTeam?.name ?? null} /></Suspense>}
           </TabsContent>
-          {canViewInventory && <TabsContent value="parts">{activeTab === 'parts' && <Suspense fallback={<TabContentSkeleton />}><EquipmentPartsTab equipmentId={equipment.id} organizationId={currentOrganization.id} /></Suspense>}</TabsContent>}
+          {canViewInventory && <TabsContent value="parts">{activeTab === 'parts' && <Suspense fallback={<TabContentSkeleton />}><EquipmentPartsTab equipmentId={equipment.id} organizationId={currentOrganization.id} canEditInventory={canEditInventory} /></Suspense>}</TabsContent>}
           <TabsContent value="images">{activeTab === 'images' && <Suspense fallback={<TabContentSkeleton />}><EquipmentImagesTab equipmentId={equipment.id} organizationId={currentOrganization.id} equipmentTeamId={equipment.team_id || undefined} currentDisplayImage={equipment.image_url || undefined} equipmentName={equipment.name} /></Suspense>}</TabsContent>
           <TabsContent value="check-ins">{activeTab === 'check-ins' && <Suspense fallback={<TabContentSkeleton />}><EquipmentOperatorCheckinLedgerTab organizationId={currentOrganization.id} equipmentId={equipment.id} equipmentName={equipment.name} isAdmin={isAdmin} onOpenQrCodeForAssignment={(assignmentId) => handleOpenQrCode(`assignment:${assignmentId}`)} /></Suspense>}</TabsContent>
           <TabsContent value="scan-history">{activeTab === 'scan-history' && <Suspense fallback={<TabContentSkeleton />}><EquipmentScanHistoryTab equipmentId={equipment.id} organizationId={currentOrganization.id} scanLocationCollectionEnabled={currentOrganization.scanLocationCollectionEnabled} /></Suspense>}</TabsContent>

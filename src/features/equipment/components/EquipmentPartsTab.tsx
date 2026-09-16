@@ -11,10 +11,12 @@ import { DesktopPartsToolbar, MobilePartsToolbar } from './parts-tab';
 import type { PartialInventoryItem } from '@/features/inventory/types/inventory';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
+import EquipmentPartsAddDialog from './EquipmentPartsAddDialog';
 
 interface EquipmentPartsTabProps {
   equipmentId: string;
   organizationId: string;
+  canEditInventory?: boolean;
 }
 
 interface PartCardProps {
@@ -132,6 +134,7 @@ const PartCard: React.FC<PartCardProps> = ({ part, onClick, isMobile }) => {
 const EquipmentPartsTab: React.FC<EquipmentPartsTabProps> = ({
   equipmentId,
   organizationId,
+  canEditInventory = false,
 }) => {
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -182,13 +185,22 @@ const EquipmentPartsTab: React.FC<EquipmentPartsTabProps> = ({
   if (compatibleParts.length === 0) {
     return (
       <div className="space-y-6">
-        <div className={isMobile ? 'text-center' : ''}>
-          <h3 className={cn('font-semibold', isMobile ? 'text-base' : 'text-lg')}>
-            {t('equipmentParts.compatibleParts')}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {t('equipmentParts.compatibleCountPlural', { count: 0 })}
-          </p>
+        <div className={cn('flex items-start justify-between gap-3', isMobile && 'text-center')}>
+          <div>
+            <h3 className={cn('font-semibold', isMobile ? 'text-base' : 'text-lg')}>
+              {t('equipmentParts.compatibleParts')}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {t('equipmentParts.compatibleCountPlural', { count: 0 })}
+            </p>
+          </div>
+          {canEditInventory && (
+            <EquipmentPartsAddDialog
+              equipmentId={equipmentId}
+              organizationId={organizationId}
+              linkedItemIds={compatibleParts.map((part) => part.id)}
+            />
+          )}
         </div>
         <Card>
           <CardContent className="text-center py-12">
@@ -209,18 +221,27 @@ const EquipmentPartsTab: React.FC<EquipmentPartsTabProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className={isMobile ? 'text-center' : ''}>
-        <h3 className={cn('font-semibold', isMobile ? 'text-base' : 'text-lg')}>
-          {t('equipmentParts.compatibleParts')}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {hasActiveFilters
-            ? t('equipmentParts.showing', {
-                filtered: filteredParts.length,
-                total: compatibleParts.length,
-              })
-            : t(compatibleCountKey, { count: compatibleParts.length })}
-        </p>
+      <div className={cn('flex items-start justify-between gap-3', isMobile && 'text-center')}>
+        <div>
+          <h3 className={cn('font-semibold', isMobile ? 'text-base' : 'text-lg')}>
+            {t('equipmentParts.compatibleParts')}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {hasActiveFilters
+              ? t('equipmentParts.showing', {
+                  filtered: filteredParts.length,
+                  total: compatibleParts.length,
+                })
+              : t(compatibleCountKey, { count: compatibleParts.length })}
+          </p>
+        </div>
+        {canEditInventory && (
+          <EquipmentPartsAddDialog
+            equipmentId={equipmentId}
+            organizationId={organizationId}
+            linkedItemIds={compatibleParts.map((part) => part.id)}
+          />
+        )}
       </div>
 
       {isMobile ? (
