@@ -24,7 +24,6 @@ import { getEquipmentTableCellDisplayValue, type EquipmentTableRow } from '@/fea
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useEquipmentCardTransition } from '@/features/equipment/transitions/useEquipmentCardTransition';
 import { getEquipmentViewTransitionStyle } from '@/features/equipment/transitions/equipmentViewTransitionNames';
-import { getCustomAttributeValue, stringifyCustomAttributeValue } from '@/features/equipment/utils/customAttributeDisplay';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
 import { displayableImageSrc } from '@/services/imageUploadService';
@@ -464,8 +463,8 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
       case 'location': return <span className="block truncate">{item.location||'—'}</span>;
       case 'team_name': return item.team_id&&item.team_name?<Link to={`/dashboard/teams/${item.team_id}`} className="block truncate hover:text-primary" onClick={(e)=>e.stopPropagation()}>{item.team_name}</Link>:<span className="block truncate text-muted-foreground">—</span>;
       case 'last_maintenance': return <span className="block truncate text-right tabular-nums">{!item.last_maintenance?'—':(safeFormatDate(item.last_maintenance,settings)??'—')}</span>;
-      case 'management_responsible_primary': return <span className="block truncate">{item.management_responsible_primary || stringifyCustomAttributeValue(getCustomAttributeValue(item.custom_attributes, 'managementResponsiblePrimary')) || '—'}</span>;
-      case 'management_responsible_secondary': return <span className="block truncate">{item.management_responsible_secondary || stringifyCustomAttributeValue(getCustomAttributeValue(item.custom_attributes, 'managementResponsibleSecondary')) || '—'}</span>;
+      case 'management_responsible_primary': return <span className="block truncate">{item.management_responsible_primary || '—'}</span>;
+      case 'management_responsible_secondary': return <span className="block truncate">{item.management_responsible_secondary || '—'}</span>;
       default: { const exhaustive:never=columnKey; return exhaustive; }
     }}} as ColumnDef<EquipmentTableRow>; });
     const actionsColumn:ColumnDef<EquipmentTableRow>={id:EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY,size:56,minSize:56,maxSize:56,enableResizing:false,header:()=>null,cell:({row})=><div className="flex justify-end"><Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={()=>onShowQRCode(row.original.id)} aria-label={t('equipment.showQrFor',{name:row.original.name})}><QrCode className="h-4 w-4" aria-hidden="true" /></Button></div>};

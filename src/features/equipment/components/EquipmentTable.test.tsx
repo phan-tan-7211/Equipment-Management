@@ -79,16 +79,12 @@ describe('EquipmentTable', () => {
     expect(screen.getByText('SN67890')).toBeInTheDocument();
   });
 
-  it('renders management responsible columns from custom attributes', () => {
+  it('renders management responsible columns from standard equipment fields', () => {
     render(
       <EquipmentTable
         equipment={[
           {
             ...mockEquipment[0],
-            custom_attributes: {
-              'Management Responsible Primary': 'Mr.TRUNG',
-              'Management Responsible Secondary': 'Mr.TẤN',
-            },
             management_responsible_primary: 'Mr.TRUNG',
             management_responsible_secondary: 'Mr.TẤN',
           },
