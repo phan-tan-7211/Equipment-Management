@@ -2,12 +2,14 @@ import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Check } from 'lucide-react';
+import { InventoryEquipmentThumbnail } from '@/features/inventory/components/InventoryEquipmentThumbnail';
 
 export type InventoryEquipmentPickerItem = {
   id: string;
   name: string;
   manufacturer?: string | null;
   model?: string | null;
+  image_url?: string | null;
 };
 
 export type InventoryEquipmentPickerRowProps = {
@@ -26,21 +28,22 @@ export function InventoryEquipmentPickerRow({
   return (
     <div
       key={equipment.id}
-      className="flex items-center space-x-3 p-2 hover:bg-muted/50 rounded"
+      className="flex items-center gap-3 rounded p-2 hover:bg-muted/50"
     >
       <Checkbox
         checked={isSelected}
         onCheckedChange={(checked) => onToggle(equipment.id, checked as boolean)}
       />
-      <div className="flex-1 min-w-0">
-        <div className="font-medium">{equipment.name}</div>
-        <div className="text-sm text-muted-foreground">
+      <InventoryEquipmentThumbnail equipment={equipment} />
+      <div className="min-w-0 flex-1">
+        <div className="truncate font-medium">{equipment.name}</div>
+        <div className="truncate text-sm text-muted-foreground">
           {equipment.manufacturer} {equipment.model}
         </div>
       </div>
       {isSelected && (
-        <Badge variant="secondary" className="text-xs">
-          <Check className="h-3 w-3 mr-1" />
+        <Badge variant="secondary" className="shrink-0 text-xs">
+          <Check className="mr-1 h-3 w-3" />
           {selectedBadgeLabel}
         </Badge>
       )}
