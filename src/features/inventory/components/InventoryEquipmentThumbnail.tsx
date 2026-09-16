@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Forklift } from 'lucide-react';
 import {
   batchResolveEquipmentDisplayImageUrls,
@@ -17,12 +18,37 @@ type PendingThumbnailResolution = {
   resolve: (url: string | null) => void;
 };
 
+type EquipmentImageHover = {
+  x: number;
+  y: number;
+  size: number;
+};
+
 const thumbnailResolutionCache = new Map<string, Promise<string | null>>();
 const pendingThumbnailResolutions = new Map<string, PendingThumbnailResolution>();
 let thumbnailFlushScheduled = false;
+const IMAGE_HOVER_TRANSITION_MS = 140;
 
 function thumbnailCacheKey(equipmentId: string, storedRef: string): string {
   return `${equipmentId}:${storedRef}`;
+}
+
+function getImageHoverPosition(clientX: number, clientY: number): EquipmentImageHover {
+  const margin = 12;
+  const gap = 14;
+  const size = Math.min(
+    360,
+    Math.max(180, window.innerWidth - margin * 2),
+    Math.max(180, window.innerHeight - margin * 2),
+  );
+  let x = clientX + gap;
+  let y = clientY - size - gap;
+
+  if (x + size > window.innerWidth - margin) x = clientX - size - gap;
+  x = Math.max(margin, Math.min(x, window.innerWidth - size - margin));
+  y = Math.max(margin, Math.min(y, window.innerHeight - size - margin));
+
+  return { x, y, size };
 }
 
 async function flushPendingThumbnailResolutions(): Promise<void> {
@@ -86,6 +112,9 @@ export function InventoryEquipmentThumbnail({
 }) {
   const storedRef = equipment.image_url ?? null;
   const [imageSrc, setImageSrc] = useState<string | null>(() => displayableImageSrc(storedRef));
+  const [imageHover, setImageHover] = useState<EquipmentImageHover | null>(null);
+  const [imageHoverVisible, setImageHoverVisible] = useState(false);
+  const imageHoverCloseTimer = useRef<number | null>(null);
 
   useEffect(() => {
     const immediatelyDisplayable = displayableImageSrc(storedRef);
@@ -103,21 +132,87 @@ export function InventoryEquipmentThumbnail({
     };
   }, [equipment.id, storedRef]);
 
+  useEffect(() => () => {
+    if (imageHoverCloseTimer.current !== null) {
+      window.clearTimeout(imageHoverCloseTimer.current);
+      imageHoverCloseTimer.current = null;
+    }
+  }, []);
+
+  const clearImageHoverCloseTimer = () => {
+    if (imageHoverCloseTimer.current === null) return;
+    window.clearTimeout(imageHoverCloseTimer.current);
+    imageHoverCloseTimer.current = null;
+  };
+
+  const closeImageHover = () => {
+    setImageHoverVisible(false);
+    if (imageHoverCloseTimer.current !== null) return;
+    imageHoverCloseTimer.current = window.setTimeout(() => {
+      setImageHover(null);
+      imageHoverCloseTimer.current = null;
+    }, IMAGE_HOVER_TRANSITION_MS);
+  };
+
+  const openImageHover = (clientX: number, clientY: number) => {
+    if (!imageSrc || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      closeImageHover();
+      return;
+    }
+
+    clearImageHoverCloseTimer();
+    setImageHover(getImageHoverPosition(clientX, clientY));
+    setImageHoverVisible(true);
+  };
+
   return (
-    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border/70 bg-muted">
-      <div className="absolute inset-0 flex items-center justify-center">
-        <Forklift className="h-4 w-4 text-muted-foreground/50" aria-hidden="true" />
+    <>
+      <div
+        className={`relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border/70 bg-muted ${imageSrc ? 'cursor-zoom-in' : ''}`}
+        data-inventory-equipment-thumbnail
+        onPointerEnter={(event) => openImageHover(event.clientX, event.clientY)}
+        onPointerMove={(event) => openImageHover(event.clientX, event.clientY)}
+        onPointerLeave={closeImageHover}
+      >
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Forklift className="h-4 w-4 text-muted-foreground/50" aria-hidden="true" />
+        </div>
+        {imageSrc && (
+          <img
+            src={imageSrc}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+            onError={() => {
+              setImageSrc(null);
+              closeImageHover();
+            }}
+          />
+        )}
       </div>
-      {imageSrc && (
-        <img
-          src={imageSrc}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-          loading="lazy"
-          decoding="async"
-          onError={() => setImageSrc(null)}
-        />
-      )}
-    </div>
+      {imageHover && imageSrc && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className={`equipment-image-hover-preview pointer-events-none fixed z-[9999] box-border overflow-hidden rounded-xl border border-border bg-white p-2 shadow-2xl transition-[opacity,transform] duration-150 ease-out dark:bg-card ${imageHoverVisible ? 'scale-100 opacity-100' : 'scale-[0.97] opacity-0'}`}
+              data-equipment-image-hover-preview
+              aria-hidden="true"
+              style={{
+                left: imageHover.x,
+                top: imageHover.y,
+                width: imageHover.size,
+                height: imageHover.size,
+              }}
+            >
+              <img
+                src={imageSrc}
+                alt=""
+                className="block h-full w-full rounded-md bg-white object-contain dark:bg-card"
+              />
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   );
 }
