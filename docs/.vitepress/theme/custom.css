@@ -6,19 +6,31 @@
 @import "./znteqr-tokens.css";
 
 /* -------------------------------------------------------------------------- */
-/* Map ZNTEQR tokens → VitePress CSS variables (dark = product default)      */
+/* Map ZNTEQR tokens → VitePress CSS variables.                            */
 /* -------------------------------------------------------------------------- */
 
 /*
- * Dark-only (appearance: force-dark). Tokens apply on :root because VitePress
- * always renders with the dark scheme; no separate light palette.
+ * VitePress owns the dark class and persists the user's appearance choice.
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   --vp-c-brand-1: hsl(var(--eqr-primary));
+  --vp-c-brand-2: hsl(220 80% 45%);
+  --vp-c-brand-3: hsl(220 75% 38%);
+  --vp-c-brand-soft: hsl(var(--eqr-primary) / 0.14);
+}
+
+.dark {
+  color-scheme: dark;
+
   --vp-c-brand-2: hsl(258 90% 72%);
   --vp-c-brand-3: hsl(258 80% 62%);
+}
+
+:root {
+
+  --vp-c-brand-1: hsl(var(--eqr-primary));
   --vp-c-brand-soft: hsl(var(--eqr-primary) / 0.14);
 
   --vp-c-bg: hsl(var(--eqr-background));

@@ -35,3 +35,23 @@
   --eqr-font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
+
+:root:not(.dark) {
+  --eqr-background: 210 20% 98%;
+  --eqr-foreground: 222 47% 11%;
+  --eqr-card: 0 0% 100%;
+  --eqr-card-elevated: 210 20% 96%;
+  --eqr-primary: 220 87% 51%;
+  --eqr-primary-foreground: 0 0% 100%;
+  --eqr-secondary: 214 32% 94%;
+  --eqr-muted: 214 32% 94%;
+  --eqr-muted-foreground: 215 16% 40%;
+  --eqr-accent: 214 32% 94%;
+  --eqr-border: 214 20% 86%;
+  --eqr-ring: 220 87% 51%;
+  --eqr-success: 145 63% 35%;
+  --eqr-info: 213 80% 42%;
+  --eqr-warning: 35 90% 38%;
+  --eqr-destructive: 0 72% 46%;
+  --eqr-sidebar-background: 0 0% 100%;
+}

@@ -207,6 +207,100 @@
   }
 }
 
+/*
+ * Light mode is the first-run fallback and the explicit light selection.
+ * The existing :root palette above remains the dark palette so the dark
+ * experience keeps its current visual identity; these semantic overrides
+ * make every token switch together when the root is not .dark.
+ */
+@layer base {
+  :root:not(.dark) {
+    color-scheme: light;
+
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --card-elevated: 210 20% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --secondary: 214 32% 94%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 214 32% 94%;
+    --muted-foreground: 215 16% 40%;
+    --accent: 214 32% 94%;
+    --accent-foreground: 222 47% 11%;
+
+    --primary-foreground: 0 0% 100%;
+    --success: 145 63% 35%;
+    --success-foreground: 0 0% 100%;
+    --info: 213 80% 42%;
+    --info-foreground: 0 0% 100%;
+    --warning: 35 90% 38%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 0 0% 100%;
+
+    --status-open: 213 80% 42%;
+    --status-open-foreground: 0 0% 100%;
+    --status-assigned: 213 80% 42%;
+    --status-assigned-foreground: 0 0% 100%;
+    --status-in-progress: 35 90% 38%;
+    --status-in-progress-foreground: 0 0% 100%;
+    --status-completed: 145 63% 35%;
+    --status-completed-foreground: 0 0% 100%;
+    --status-cancelled: 215 16% 40%;
+    --status-cancelled-foreground: 0 0% 100%;
+    --status-overdue: 0 72% 46%;
+    --status-overdue-foreground: 0 0% 100%;
+
+    --equipment-operational: 145 63% 35%;
+    --equipment-maintenance: 35 90% 38%;
+    --equipment-repair: 0 72% 46%;
+    --equipment-retired: 215 16% 40%;
+    --priority-low: 213 80% 42%;
+    --priority-medium: 35 90% 38%;
+    --priority-high: 25 85% 42%;
+    --priority-critical: 0 72% 46%;
+
+    --border: 214 20% 86%;
+    --input: 214 20% 86%;
+    --ring: 220 87% 51%;
+
+    --chart-1: 213 80% 42%;
+    --chart-2: 145 63% 35%;
+    --chart-3: 35 90% 38%;
+    --chart-4: 25 85% 42%;
+    --chart-5: 220 87% 51%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 220 87% 51%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 32% 94%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 20% 86%;
+    --sidebar-ring: 220 87% 51%;
+
+    --scrollbar-thumb: 214 16% 72%;
+    --scrollbar-thumb-hover: 214 16% 58%;
+
+    --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.06);
+    --shadow: 0 1px 3px 0 rgb(15 23 42 / 0.1), 0 1px 2px -1px rgb(15 23 42 / 0.08);
+    --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.08);
+    --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.1), 0 4px 6px -4px rgb(15 23 42 / 0.08);
+    --shadow-xl: 0 20px 25px -5px rgb(15 23 42 / 0.12), 0 8px 10px -6px rgb(15 23 42 / 0.08);
+    --shadow-elevation-1: var(--shadow-sm);
+    --shadow-elevation-2: var(--shadow-md);
+    --shadow-elevation-3: var(--shadow-lg);
+    --shadow-elevation-4: var(--shadow-xl);
+    --shadow-card: var(--shadow-elevation-1);
+    --shadow-card-hover: var(--shadow-elevation-2);
+    --shadow-card-active: var(--shadow-elevation-3);
+  }
+}
+
 @layer components {
   [data-slot="card-content"] {
     padding: 1rem;
@@ -721,12 +815,11 @@
  *
  * Google's InfoWindow renders with a hardcoded white background and its
  * .gm-style ancestor sets color/font at higher specificity than Tailwind.
- * We swap the bubble surface to the dark card token and re-declare the
- * design-system variables inside the popup so Tailwind utility classes
- * (text-foreground, badges, etc.) resolve correctly.
+ * We swap the bubble surface to the themed card token. The popup inherits
+ * the active semantic variables from the document in both Light and Dark.
  */
 
-/* Swap bubble background to match the dark card surface */
+/* Swap bubble background to match the active card surface */
 .gm-style .gm-style-iw-c {
   background-color: hsl(var(--card)) !important;
   box-shadow:
@@ -747,22 +840,6 @@
 .gm-style .gm-style-iw-d {
   overflow: hidden !important;
   max-height: none !important;
-  --background: 0 0% 7%;
-  --foreground: 0 0% 98%;
-  --muted: 240 5% 13%;
-  --muted-foreground: 240 4% 65%;
-  --primary: 258 100% 81%;
-  --primary-foreground: 0 0% 4%;
-  --border: 240 4% 16%;
-  --input: 240 4% 16%;
-  --ring: 258 100% 81%;
-  --info: 213 100% 68%;
-  --info-foreground: 0 0% 4%;
-  --success: 145 80% 65%;
-  --success-foreground: 0 0% 4%;
-  --warning: 42 100% 67%;
-  --warning-foreground: 0 0% 4%;
-
   color: hsl(var(--foreground)) !important;
   font-family: var(--font-body) !important;
 }
@@ -771,9 +848,15 @@
   border-color: hsl(var(--border));
 }
 
-/* Close button — invert to stay visible against dark bubble */
-.gm-style .gm-ui-hover-effect {
+/* Close button — invert only on the dark bubble. */
+.dark .gm-style .gm-ui-hover-effect {
   filter: invert(1) brightness(0.9) !important;
+  opacity: 0.75 !important;
+}
+
+.light .gm-style .gm-ui-hover-effect,
+:root:not(.dark) .gm-style .gm-ui-hover-effect {
+  filter: none !important;
   opacity: 0.75 !important;
 }
 .gm-style .gm-ui-hover-effect:hover {

@@ -185,8 +185,8 @@ export default defineConfig({
   description:
     "User guides, workflows, and how-tos for ZNTEQR fleet equipment management — technicians, managers, admins, and equipment owners.",
   lang: "en-US",
-  // Mission Control is dark-only — force dark and hide the ineffective light toggle.
-  appearance: "force-dark",
+  // Use the visitor's system preference on first visit, then remember their choice.
+  appearance: true,
   lastUpdated: true,
   cleanUrls: true,
   srcDir: ".",

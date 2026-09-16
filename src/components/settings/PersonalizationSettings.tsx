@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useI18n } from '@/i18n';
+import { useTheme } from 'next-themes';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSettings } from '@/contexts/useSettings';
@@ -9,9 +10,27 @@ import { timezoneOptions } from '@/types/settings';
 const PersonalizationSettings = () => {
   const { t } = useI18n();
   const { settings, updateSetting } = useSettings();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="space-y-2">
+        <Label htmlFor="theme" className="text-sm font-medium">{t('settingsForms.theme')}</Label>
+        <Select
+          value={theme ?? 'system'}
+          onValueChange={(value: string) => setTheme(value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={t('settingsForms.selectTheme')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="system">{t('settingsForms.themeSystem')}</SelectItem>
+            <SelectItem value="light">{t('settingsForms.themeLight')}</SelectItem>
+            <SelectItem value="dark">{t('settingsForms.themeDark')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="timezone" className="text-sm font-medium">{t('settingsForms.timezone')}</Label>
         <Select

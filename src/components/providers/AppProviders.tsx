@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
+import { ThemeProvider, useTheme } from 'next-themes';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { MFAProvider } from '@/contexts/MFAContext';
 import { UserProvider } from '@/contexts/UserContext';
@@ -19,13 +19,30 @@ import { TooltipProvider } from '@/components/ui/tooltip';
  * stays visible while dialogs are open.
  */
 const AppSonnerToaster: React.FC = () => (
-  <SonnerToaster
-    theme="dark"
+  <ThemedSonnerToaster />
+);
+
+/** Keep Sonner aligned with the app's explicit Light/Dark/System selection. */
+const ThemedSonnerToaster: React.FC = () => {
+  const { resolvedTheme } = useTheme();
+
+  return (
+    <SonnerToaster
+    theme={resolvedTheme === 'light' ? 'light' : 'dark'}
     position="bottom-right"
     closeButton
     style={{ zIndex: 'var(--z-toast)' } as React.CSSProperties}
   />
-);
+  );
+};
+
+const themeProviderProps = {
+  attribute: 'class' as const,
+  defaultTheme: 'system' as const,
+  enableSystem: true,
+  storageKey: 'znteqr-theme',
+  disableTransitionOnChange: true,
+};
 
 /** TanStack Query retries should stop on hard auth/RBAC failures (not only numeric 401/403 strings). */
 function isNonRetryableQueryError(error: unknown): boolean {
@@ -79,7 +96,7 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   if (isQrEntry) {
     return (
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" forcedTheme="dark">
+        <ThemeProvider {...themeProviderProps}>
           <CookieConsentProvider>
             <TooltipProvider>
               <AuthProvider>
@@ -97,7 +114,7 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" forcedTheme="dark">
+      <ThemeProvider {...themeProviderProps}>
         <CookieConsentProvider>
           <TooltipProvider>
             <AuthProvider>
