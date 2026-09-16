@@ -45,6 +45,14 @@ During implementation:
 - run broader verification only when appropriate for the changed surface;
 - never claim a test, build, CI check, browser check, or deployment succeeded unless evidence was actually observed.
 
+### Cloud runtime verification
+
+- Treat a connector-only ChatGPT/Codex Cloud session with no mounted repository checkout as a normal supported mode, not a condition that must be repaired.
+- Attempt at most one lightweight local-availability probe when verification would benefit from a checkout. If the repository is not mounted, or that probe shows outbound/DNS access to GitHub is unavailable, do not retry cloning, fetching, installing, or alternate network workarounds just to obtain local verification.
+- In that mode, continue with the available remote evidence: GitHub file/diff/compare reads, commit and branch state, CI/check runs, and deployment status where accessible.
+- If executable local checks are unavailable, state that plainly instead of spending extra turns trying to manufacture a local environment, and provide the exact maintainer-side commands needed for type-check, tests, build, or preview.
+- Only run local verification when the repository is already available in the runtime or can be accessed without a network workaround.
+
 Passing the requested acceptance criteria is a STOP CONDITION.
 Once the requested behavior is verified, stop modifying the code.
 
