@@ -122,19 +122,25 @@ export function ResizableTableSurface<TData>({
                   onPointerDown,
                   dataColumnKey,
                 } = getHeaderProps(header);
+                const hasPinnedOffset = stickyHeader && style?.left !== undefined;
+                const resolvedHeaderStyle = stickyHeader
+                  ? { ...style, zIndex: hasPinnedOffset ? 50 : 40 }
+                  : style;
+                const resolvedDraggable = onDragStart ? true : draggable;
+                const resolvedPointerDown = onDragStart ? undefined : onPointerDown;
 
                 return (
                   <TableHead
                     key={header.id}
-                    className={stickyHeader ? cn(className, 'sticky top-0 z-30 bg-card') : className}
+                    className={stickyHeader ? cn(className, 'sticky top-0 bg-card') : className}
                     aria-sort={ariaSort ?? 'none'}
-                    style={style}
-                    draggable={draggable}
+                    style={resolvedHeaderStyle}
+                    draggable={resolvedDraggable}
                     onDragStart={onDragStart}
                     onDragOver={onDragOver}
                     onDrop={onDrop}
                     onDragEnd={onDragEnd}
-                    onPointerDown={onPointerDown}
+                    onPointerDown={resolvedPointerDown}
                     {...(dataColumnKey ? { 'data-table-column-key': dataColumnKey } : {})}
                   >
                     <div className="group relative min-h-8 min-w-0 pr-6">
