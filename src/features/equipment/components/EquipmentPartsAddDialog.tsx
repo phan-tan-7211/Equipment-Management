@@ -217,7 +217,6 @@ const EquipmentPartsAddDialog: React.FC<EquipmentPartsAddDialogProps> = ({
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder={t('equipmentParts.searchInventory')}
                   className="pl-9"
-                  autoFocus
                 />
               </div>
               <div className="max-h-72 space-y-1 overflow-y-auto rounded-md border p-2">
@@ -262,7 +261,6 @@ const EquipmentPartsAddDialog: React.FC<EquipmentPartsAddDialogProps> = ({
                     onChange={(event) => updateDraft('name', event.target.value)}
                     placeholder={t('equipmentParts.partNamePlaceholder')}
                     disabled={isMutating}
-                    autoFocus
                   />
                 </div>
                 <div className="space-y-2">
