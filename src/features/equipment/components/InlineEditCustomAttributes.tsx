@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Edit2, Check, X } from 'lucide-react';
-import { responsiveHoverEditIconClassName } from './inlineEditStyles';
+import { inlineEditIconClassName } from './inlineEditStyles';
 import CustomAttributesSection from './CustomAttributesSection';
 import { CustomAttributesReadOnlyGrid } from '@/features/equipment/components/CustomAttributesReadOnlyGrid';
 import { stringifyCustomAttributeValue } from '@/features/equipment/utils/customAttributeDisplay';
@@ -70,7 +70,7 @@ const InlineEditCustomAttributes: React.FC<InlineEditCustomAttributesProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            className={responsiveHoverEditIconClassName}
+            className={inlineEditIconClassName}
             onClick={handleStartEdit}
             aria-label={t('equipmentCustomAttributes.editAria')}
           >
