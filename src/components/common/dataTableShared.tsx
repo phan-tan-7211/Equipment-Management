@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { flexRender, type Cell, type Header, type Table as TanStackTable } from '@tanstack/react-table';
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties, DragEventHandler, ReactNode } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
@@ -59,6 +59,11 @@ type ResizableTableSurfaceProps<TData> = {
     ariaSort?: 'ascending' | 'descending' | 'none';
     onAutoFit?: () => void;
     style?: CSSProperties;
+    draggable?: boolean;
+    onDragStart?: DragEventHandler<HTMLTableCellElement>;
+    onDragOver?: DragEventHandler<HTMLTableCellElement>;
+    onDrop?: DragEventHandler<HTMLTableCellElement>;
+    onDragEnd?: DragEventHandler<HTMLTableCellElement>;
   };
   getCellClassName: (cell: Cell<TData, unknown>) => string;
   getCellStyle?: (cell: Cell<TData, unknown>) => CSSProperties | undefined;
@@ -100,7 +105,17 @@ export function ResizableTableSurface<TData>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
-                const { className, ariaSort, onAutoFit, style } = getHeaderProps(header);
+                const {
+                  className,
+                  ariaSort,
+                  onAutoFit,
+                  style,
+                  draggable,
+                  onDragStart,
+                  onDragOver,
+                  onDrop,
+                  onDragEnd,
+                } = getHeaderProps(header);
 
                 return (
                   <TableHead
@@ -108,6 +123,11 @@ export function ResizableTableSurface<TData>({
                     className={className}
                     aria-sort={ariaSort ?? 'none'}
                     style={style}
+                    draggable={draggable}
+                    onDragStart={onDragStart}
+                    onDragOver={onDragOver}
+                    onDrop={onDrop}
+                    onDragEnd={onDragEnd}
                   >
                     <div className="group relative min-h-8 min-w-0 pr-6">
                       {header.isPlaceholder
@@ -160,6 +180,11 @@ type ResizableFixedDataTableProps<TData> = {
     ariaSort?: 'ascending' | 'descending' | 'none';
     onAutoFit?: () => void;
     style?: CSSProperties;
+    draggable?: boolean;
+    onDragStart?: DragEventHandler<HTMLTableCellElement>;
+    onDragOver?: DragEventHandler<HTMLTableCellElement>;
+    onDrop?: DragEventHandler<HTMLTableCellElement>;
+    onDragEnd?: DragEventHandler<HTMLTableCellElement>;
   };
   getCellClassName: (cell: Cell<TData, unknown>) => string;
   getCellStyle?: (cell: Cell<TData, unknown>) => CSSProperties | undefined;

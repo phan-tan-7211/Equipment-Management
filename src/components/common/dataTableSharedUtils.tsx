@@ -5,7 +5,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import type { ColumnSizingState } from '@tanstack/react-table';
+import type { ColumnOrderState, ColumnSizingState } from '@tanstack/react-table';
 import {
   DataTableSortableHeaderButton,
   DataTableStaticHeaderLabel,
@@ -146,6 +146,49 @@ export function usePersistedColumnSizing(storageKey: string, defaults: ColumnSiz
   }, [columnSizing, storageKey]);
 
   return [columnSizing, setColumnSizing] as const;
+}
+
+export function loadPersistedColumnOrder(
+  storageKey: string,
+  defaults: ColumnOrderState,
+): ColumnOrderState {
+  if (typeof window === 'undefined') return defaults;
+
+  try {
+    const raw = getPreferenceLocalStorage(storageKey);
+    if (!raw) return defaults;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return defaults;
+    const saved = parsed.filter((value): value is string => typeof value === 'string');
+    return [...saved.filter((key) => defaults.includes(key)), ...defaults.filter((key) => !saved.includes(key))];
+  } catch {
+    return defaults;
+  }
+}
+
+export function usePersistedColumnOrder(storageKey: string, defaults: ColumnOrderState) {
+  const [columnOrder, setColumnOrder] = useState<ColumnOrderState>(() =>
+    loadPersistedColumnOrder(storageKey, defaults),
+  );
+  const columnOrderRef = useRef(columnOrder);
+  columnOrderRef.current = columnOrder;
+
+  const rehydrateOrFlush = useCallback(() => {
+    const raw = getPreferenceLocalStorage(storageKey);
+    if (raw) {
+      setColumnOrder(loadPersistedColumnOrder(storageKey, defaults));
+      return;
+    }
+    setPreferenceLocalStorage(storageKey, JSON.stringify(columnOrderRef.current));
+  }, [defaults, storageKey]);
+  useWhenPreferenceStorageAllowed(rehydrateOrFlush);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setPreferenceLocalStorage(storageKey, JSON.stringify(columnOrder));
+  }, [columnOrder, storageKey]);
+
+  return [columnOrder, setColumnOrder] as const;
 }
 
 export function getResizableTableWidth(totalSize: number, minWidth = 960): number {

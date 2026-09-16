@@ -305,4 +305,25 @@ describe('EquipmentTable', () => {
     expect(headerTexts.some((t) => t.includes('Manufacturer'))).toBe(false);
     expect(headerTexts.some((t) => t.includes('Last Maintenance'))).toBe(false);
   });
+
+  it('reorders columns while dragging a header onto another header', () => {
+    render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
+    const nameHeader = getHeaderByTitle('Name');
+    const manufacturerHeader = getHeaderByTitle('Manufacturer');
+    const dataTransfer = {
+      effectAllowed: '',
+      dropEffect: '',
+      setData: vi.fn(),
+      getData: vi.fn(() => 'name'),
+    };
+
+    fireEvent.dragStart(nameHeader, { dataTransfer });
+    fireEvent.dragOver(manufacturerHeader, { dataTransfer });
+    fireEvent.drop(manufacturerHeader, { dataTransfer });
+
+    const headers = screen.getAllByRole('columnheader');
+    const nameIndex = headers.findIndex((header) => header.textContent?.includes('Name'));
+    const manufacturerIndex = headers.findIndex((header) => header.textContent?.includes('Manufacturer'));
+    expect(nameIndex).toBeGreaterThan(manufacturerIndex);
+  });
 });
