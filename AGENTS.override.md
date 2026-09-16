@@ -45,6 +45,24 @@ During implementation:
 - run broader verification only when appropriate for the changed surface;
 - never claim a test, build, CI check, browser check, or deployment succeeded unless evidence was actually observed.
 
+### Cloud runtime verification
+
+- Treat a connector-only ChatGPT/Codex Cloud session with no mounted repository checkout as a normal supported mode, not a condition that must be repaired.
+- Attempt at most one lightweight local-availability probe when verification would benefit from a checkout. If the repository is not mounted, or that probe shows outbound/DNS access to GitHub is unavailable, do not retry cloning, fetching, installing, or alternate network workarounds just to obtain local verification.
+- In that mode, continue with the available remote evidence: GitHub file/diff/compare reads, commit and branch state, CI/check runs, and deployment status where accessible.
+- If executable local checks are unavailable, state that plainly instead of spending extra turns trying to manufacture a local environment, and provide the exact maintainer-side commands needed for type-check, tests, build, or preview.
+- Only run local verification when the repository is already available in the runtime or can be accessed without a network workaround.
+
+### Fast maintainer handoff mode
+
+- Activation keyword: `FAST-HANDOFF` (case-insensitive). It must appear explicitly in the user's request. Without this keyword, follow the normal workflow in this file and the applicable repository runbooks.
+- Use this mode only for ordinary bounded feature/fix implementation. It never bypasses safety requirements for destructive data changes, secrets, production deploys, migrations that require validation, force-push/history rewrite, or other explicitly high-risk operations.
+- When `FAST-HANDOFF` is active: implement the requested change, perform one scoped diff/self-review, create one coherent task commit, push the working feature branch to `origin`, then STOP and hand the branch to the maintainer for local testing.
+- In this mode, do not spend time on executable local verification in an unavailable cloud checkout, waiting for GitHub CI, waiting for Vercel, PR screenshots/video evidence, PR creation, merge, release/version bumps, or deployment unless the user explicitly asks for one of those in the same request.
+- The handoff response must state the exact branch and pushed commit, clearly mark executable checks as not run when applicable, and provide the shortest safe PowerShell flow that performs exactly one branch fetch, fast-forwards/switches to that branch, verifies `HEAD` equals the expected commit, then runs the repository's relevant type-check/test/build/preview commands.
+- If the maintainer reports `FAIL`, continue on the same branch, make the smallest correction, create and push a new commit, and return a new exact-commit test handoff. Do not open or merge a PR.
+- If the maintainer reports `PASS` or `OK` for that `FAST-HANDOFF` branch, treat that as authorization to proceed with the repository's normal publication/PR/merge workflow for the same branch. Run any required remote publication gates at that stage unless the maintainer explicitly instructs an immediate merge or another narrower action.
+
 Passing the requested acceptance criteria is a STOP CONDITION.
 Once the requested behavior is verified, stop modifying the code.
 
