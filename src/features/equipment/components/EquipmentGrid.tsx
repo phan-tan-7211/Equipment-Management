@@ -37,6 +37,8 @@ interface EquipmentGridProps {
   onSortChange?: (field: string, direction?: 'asc' | 'desc') => void;
   /** Forwarded to `EquipmentTable` when `viewMode === 'table'`. */
   visibleColumns?: Record<string, boolean>;
+  onToggleColumn?: (key: string) => void;
+  organizationId?: string;
 }
 
 const EquipmentGrid: React.FC<EquipmentGridProps> = ({
@@ -53,6 +55,8 @@ const EquipmentGrid: React.FC<EquipmentGridProps> = ({
   sortConfig,
   onSortChange,
   visibleColumns,
+  onToggleColumn,
+  organizationId,
 }) => {
   const equipmentIds = useMemo(() => equipment.map((item) => item.id).sort(), [equipment]);
   const { data: managementCodes = [] } = useQuery({
@@ -99,6 +103,8 @@ const EquipmentGrid: React.FC<EquipmentGridProps> = ({
         sortConfig={sortConfig}
         onSortChange={onSortChange}
         visibleColumns={visibleColumns}
+        onToggleColumn={onToggleColumn}
+        organizationId={organizationId}
       />
     );
   }

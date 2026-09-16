@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { flexRender, type Cell, type Header, type Table as TanStackTable } from '@tanstack/react-table';
+import type { CSSProperties, ReactNode } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
@@ -57,8 +58,11 @@ type ResizableTableSurfaceProps<TData> = {
     className: string;
     ariaSort?: 'ascending' | 'descending' | 'none';
     onAutoFit?: () => void;
+    style?: CSSProperties;
   };
   getCellClassName: (cell: Cell<TData, unknown>) => string;
+  getCellStyle?: (cell: Cell<TData, unknown>) => CSSProperties | undefined;
+  renderHeaderActions?: (header: Header<TData, unknown>) => ReactNode;
   getRowClassName?: (rowIndex: number) => string | undefined;
   emptyMessage?: string;
   emptyColSpan?: number;
@@ -71,6 +75,8 @@ export function ResizableTableSurface<TData>({
   scrollClassName = 'overflow-x-auto',
   getHeaderProps,
   getCellClassName,
+  getCellStyle,
+  renderHeaderActions,
   getRowClassName,
   emptyMessage,
   emptyColSpan,
@@ -94,17 +100,21 @@ export function ResizableTableSurface<TData>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
-                const { className, ariaSort, onAutoFit } = getHeaderProps(header);
+                const { className, ariaSort, onAutoFit, style } = getHeaderProps(header);
 
                 return (
                   <TableHead
                     key={header.id}
                     className={className}
                     aria-sort={ariaSort ?? 'none'}
+                    style={style}
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                    <div className="group relative min-h-8 min-w-0 pr-6">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                      {renderHeaderActions?.(header)}
+                    </div>
                     <DataTableColumnResizeHandle header={header} onAutoFit={onAutoFit} />
                   </TableHead>
                 );
@@ -126,7 +136,7 @@ export function ResizableTableSurface<TData>({
             rows.map((row, rowIndex) => (
               <TableRow key={row.id} className={getRowClassName?.(rowIndex)}>
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className={getCellClassName(cell)}>
+                  <TableCell key={cell.id} className={getCellClassName(cell)} style={getCellStyle?.(cell)}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
@@ -149,8 +159,11 @@ type ResizableFixedDataTableProps<TData> = {
     className: string;
     ariaSort?: 'ascending' | 'descending' | 'none';
     onAutoFit?: () => void;
+    style?: CSSProperties;
   };
   getCellClassName: (cell: Cell<TData, unknown>) => string;
+  getCellStyle?: (cell: Cell<TData, unknown>) => CSSProperties | undefined;
+  renderHeaderActions?: (header: Header<TData, unknown>) => ReactNode;
 };
 
 export function ResizableFixedDataTable<TData>({
@@ -161,6 +174,8 @@ export function ResizableFixedDataTable<TData>({
   cardClassName = 'overflow-hidden',
   getHeaderProps,
   getCellClassName,
+  getCellStyle,
+  renderHeaderActions,
 }: ResizableFixedDataTableProps<TData>) {
   const content = (
     <Card className={cardClassName}>
@@ -171,6 +186,8 @@ export function ResizableFixedDataTable<TData>({
           scrollClassName={scrollClassName}
           getHeaderProps={getHeaderProps}
           getCellClassName={getCellClassName}
+          getCellStyle={getCellStyle}
+          renderHeaderActions={renderHeaderActions}
         />
       </CardContent>
     </Card>

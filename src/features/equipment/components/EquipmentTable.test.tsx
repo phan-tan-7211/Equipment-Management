@@ -156,7 +156,7 @@ describe('EquipmentTable', () => {
       />,
     );
     const nameHeader = getHeaderByTitle('Name');
-    fireEvent.click(within(nameHeader).getByRole('button'));
+    fireEvent.click(within(nameHeader).getByRole('button', { name: 'Sort by Name' }));
     expect(onSortChange).toHaveBeenCalledWith('name', 'desc');
   });
 
