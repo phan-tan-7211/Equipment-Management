@@ -45,16 +45,30 @@ const EquipmentToolbar: React.FC<EquipmentToolbarProps> = ({
         </div>
       </div>
 
-      {hasActiveFilters && (
-        <div className="flex flex-wrap items-center gap-1.5 px-1">
-          <span className="text-xs text-muted-foreground">{t('equipment.active')}:</span>
-          {filters.status !== 'all' && <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">{t('equipment.status')}: {filters.status.replace('_', ' ')}<button onClick={() => onFilterChange('status', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearStatusFilter')}><X className="h-3 w-3" /></button></Badge>}
-          {filters.manufacturer !== 'all' && <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">{filters.manufacturer}<button onClick={() => onFilterChange('manufacturer', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearManufacturerFilter')}><X className="h-3 w-3" /></button></Badge>}
-          {filters.location !== 'all' && <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">{filters.location}<button onClick={() => onFilterChange('location', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearLocationFilter')}><X className="h-3 w-3" /></button></Badge>}
-          {filters.warrantyExpiring && <Badge variant="secondary" className="flex items-center gap-1 text-xs h-5 px-2">{t('equipment.warrantyExpiring')}<button onClick={() => onFilterChange('warrantyExpiring' as keyof EquipmentFilters, 'false')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearWarrantyFilter')}><X className="h-3 w-3" /></button></Badge>}
-          <Button variant="ghost" size="sm" className="h-5 px-2 text-xs text-muted-foreground hover:text-foreground" onClick={onClearFilters}>{t('equipment.clearAll')}</Button>
+      <div className="flex min-h-8 items-center gap-2 px-1">
+        <div
+          className={`flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto whitespace-nowrap ${hasActiveFilters ? '' : 'invisible'}`}
+          aria-live="polite"
+          aria-hidden={!hasActiveFilters}
+        >
+          <span className="shrink-0 text-xs text-muted-foreground">{t('equipment.active')}:</span>
+          {filters.status !== 'all' && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{t('equipment.status')}: {filters.status.replace('_', ' ')}<button onClick={() => onFilterChange('status', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearStatusFilter')}><X className="h-3 w-3" /></button></Badge>}
+          {filters.manufacturer !== 'all' && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{filters.manufacturer}<button onClick={() => onFilterChange('manufacturer', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearManufacturerFilter')}><X className="h-3 w-3" /></button></Badge>}
+          {filters.location !== 'all' && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{filters.location}<button onClick={() => onFilterChange('location', 'all')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearLocationFilter')}><X className="h-3 w-3" /></button></Badge>}
+          {filters.warrantyExpiring && <Badge variant="secondary" className="flex h-5 shrink-0 items-center gap-1 px-2 text-xs">{t('equipment.warrantyExpiring')}<button onClick={() => onFilterChange('warrantyExpiring' as keyof EquipmentFilters, 'false')} className="ml-0.5 hover:text-foreground" aria-label={t('equipment.clearWarrantyFilter')}><X className="h-3 w-3" /></button></Badge>}
         </div>
-      )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`h-6 shrink-0 px-2 text-xs text-muted-foreground hover:text-foreground ${hasActiveFilters ? '' : 'invisible'}`}
+          onClick={onClearFilters}
+          disabled={!hasActiveFilters}
+          tabIndex={hasActiveFilters ? 0 : -1}
+          aria-hidden={!hasActiveFilters}
+        >
+          {t('equipment.clearAll')}
+        </Button>
+      </div>
     </div>
   );
 };
