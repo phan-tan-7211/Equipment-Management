@@ -2,6 +2,7 @@ import { useI18n } from '@/i18n';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppToast } from '@/hooks/useAppToast';
 import {
+  linkItemToEquipment,
   unlinkItemFromEquipment,
 } from '@/features/inventory/services/inventoryCompatibilityService';
 
@@ -23,6 +24,31 @@ export function invalidateEquipmentLinkQueries(
   });
   queryClient.invalidateQueries({
     queryKey: ['compatible-inventory-items', variables.organizationId],
+  });
+}
+
+export function useLinkItemToEquipment() {
+  const queryClient = useQueryClient();
+  const { toast } = useAppToast();
+  const { t } = useI18n();
+
+  return useMutation({
+    mutationFn: async (variables: LinkVariables) =>
+      linkItemToEquipment(variables.organizationId, variables.itemId, variables.equipmentId),
+    onSuccess: (_, variables) => {
+      invalidateEquipmentLinkQueries(queryClient, variables);
+      toast({
+        title: t('inventoryMutation.linkUpdated'),
+        description: t('inventoryMutation.equipmentAdded', { count: 1 }),
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: t('inventoryMutation.linkUpdateError'),
+        description: error instanceof Error ? error.message : t('inventoryMutation.linkUpdateFailed'),
+        variant: 'error',
+      });
+    },
   });
 }
 
