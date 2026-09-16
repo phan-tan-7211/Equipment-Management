@@ -23,13 +23,11 @@ import {
   toEquipmentCreateData,
   toEquipmentUpdateData,
 } from '@/features/equipment/utils/equipmentFormMappers';
-import {
-  createEquipmentNoteWithImages,
-  updateEquipmentDisplayImage,
-} from '@/features/equipment/services/equipmentNotesService';
+import { createEquipmentNoteWithImages } from '@/features/equipment/services/equipmentNotesService';
+import { replaceEquipmentDisplayImage } from '@/features/equipment/services/equipmentDisplayImageService';
 import type { EquipmentFormPendingMedia } from '@/features/equipment/components/form/EquipmentFormMediaSection';
 import { equipment } from '@/lib/queryKeys';
-import { extractEquipmentDisplayImagePath } from '@/services/imageUploadService';
+
 import { useI18n } from '@/i18n';
 
 /**
@@ -145,11 +143,19 @@ export const useEquipmentForm = (
       const pending = mediaRef.current;
       if (pending.files.length > 0) {
         try {
+          const displayFile =
+            pending.files[pending.displayIndex] ?? pending.files[0];
+          await replaceEquipmentDisplayImage({
+            organizationId: currentOrganization.id,
+            equipmentId: result.data.id,
+            source: displayFile,
+          });
+
           const userName = user.email?.split('@')[0] || 'User';
           const noteContent =
             pending.files.length === 1
-              ? `${userName} uploaded a display image`
-              : `${userName} uploaded ${pending.files.length} images at creation`;
+              ? userName + ' uploaded a display image'
+              : userName + ' uploaded ' + pending.files.length + ' images at creation';
           const note = await createEquipmentNoteWithImages(
             result.data.id,
             noteContent,
@@ -160,29 +166,12 @@ export const useEquipmentForm = (
           );
           if (!note.images || note.images.length === 0) {
             mediaUploadFailed = true;
-          } else {
-            if (note.images.length < pending.files.length) {
-              mediaUploadFailed = true;
-            }
-            const displayImage =
-              note.images[pending.displayIndex] ?? note.images[0] ?? null;
-            if (displayImage?.file_url) {
-              try {
-                const path =
-                  extractEquipmentDisplayImagePath(displayImage.file_url) ?? displayImage.file_url;
-                await updateEquipmentDisplayImage(currentOrganization.id, result.data.id, path);
-              } catch (displayError) {
-                console.error('Post-create equipment display image update failed:', displayError);
-                mediaUploadFailed = true;
-              }
-            }
+          } else if (note.images.length < pending.files.length) {
+            mediaUploadFailed = true;
           }
         } catch (error) {
           console.error('Post-create equipment media upload failed:', error);
           mediaUploadFailed = true;
-        }
-        if (mediaUploadFailed) {
-          await queryClient.invalidateQueries({ queryKey: equipment.images(result.data.id) });
         }
       }
 

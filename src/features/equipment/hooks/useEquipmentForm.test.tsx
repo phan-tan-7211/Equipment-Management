@@ -68,6 +68,12 @@ vi.mock('@/features/equipment/services/equipmentNotesService', () => ({
   updateEquipmentDisplayImage: vi.fn(),
 }));
 
+vi.mock('@/features/equipment/services/equipmentDisplayImageService', () => ({
+  replaceEquipmentDisplayImage: vi.fn().mockResolvedValue(
+    'display-images/org-1/equipment/eq-new/generated-set/full.webp',
+  ),
+}));
+
 import { useEquipmentForm } from '@/features/equipment/hooks/useEquipmentForm';
 import { EquipmentFormData, EquipmentRecord } from '@/features/equipment/types/equipment';
 import { toast } from 'sonner';

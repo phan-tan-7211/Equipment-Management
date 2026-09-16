@@ -11,6 +11,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 import { requireAuthUserIdFromClaims } from '@/lib/authClaims';
+import {
+  getDisplayImagePublicUrl,
+  isDisplayImageV2Ref,
+} from '@/services/displayImageStorageService';
+import type { DisplayImageVariantName } from '@/services/displayImageVariantService';
 
 export type StorageBucket =
   | 'organization-logos'
@@ -94,6 +99,17 @@ export function displayableImageSrc(url: string | null | undefined): string | nu
   const absolute = toAbsoluteSignedStorageUrl(url.trim());
   if (!absolute) return null;
   return isFetchableSignedStorageUrl(absolute) ? absolute : null;
+}
+
+export function getEquipmentDisplayImageUrl(
+  storedRef: string | null | undefined,
+  variant: DisplayImageVariantName = 'full',
+): string | null {
+  if (!storedRef?.trim()) return null;
+  if (isDisplayImageV2Ref(storedRef)) {
+    return getDisplayImagePublicUrl(storedRef, variant);
+  }
+  return displayableImageSrc(storedRef);
 }
 
 /** Default signed URL TTL — within the 5–15 minute compliance window. */
@@ -556,6 +572,8 @@ export async function batchResolveEquipmentDisplayImageUrls(
     expiresInSeconds?: number;
     /** Equipment ids aligned with `storedRefs`; enables single-bucket signing. */
     equipmentIds?: (string | null | undefined)[];
+    /** V2 display-image variant to resolve without signing. */
+    variant?: DisplayImageVariantName;
   }
 ): Promise<(string | null)[]> {
   const expiresIn = options?.expiresInSeconds ?? DEFAULT_SIGNED_URL_TTL_SECONDS;
@@ -572,6 +590,14 @@ export async function batchResolveEquipmentDisplayImageUrls(
     }
 
     const trimmed = stored.trim();
+    if (isDisplayImageV2Ref(trimmed)) {
+      results[idx] = getDisplayImagePublicUrl(
+        trimmed,
+        options?.variant ?? 'full',
+      );
+      return;
+    }
+
     const woNorm = normalizeStoredObjectPath(trimmed, 'work-order-images');
     const eqNorm = normalizeStoredObjectPath(trimmed, 'equipment-note-images');
     if (/^https?:\/\//i.test(trimmed) && !woNorm && !eqNorm) {
@@ -676,10 +702,16 @@ export async function batchResolveEquipmentDisplayImageUrls(
 
 export async function withResolvedEquipmentImages<
   T extends { id?: string; image_url?: string | null },
->(rows: T[]): Promise<T[]> {
+>(
+  rows: T[],
+  options?: { variant?: DisplayImageVariantName },
+): Promise<T[]> {
   const urls = await batchResolveEquipmentDisplayImageUrls(
     rows.map(row => row.image_url ?? null),
-    { equipmentIds: rows.map(row => row.id ?? null) },
+    {
+      equipmentIds: rows.map(row => row.id ?? null),
+      variant: options?.variant,
+    },
   );
   return rows.map((row, index) => ({
     ...row,

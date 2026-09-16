@@ -632,7 +632,7 @@ export class EquipmentService {
         team_name: (data.team as { name?: string } | null | undefined)?.name ?? undefined,
       };
 
-      const resolved = await withResolvedEquipmentImages([flattened]);
+      const resolved = await withResolvedEquipmentImages([flattened], { variant: 'full' });
       return createServiceSuccessResponse(resolved[0]);
     } catch (error) {
       return createServiceErrorResponse(error, 'EquipmentService error');

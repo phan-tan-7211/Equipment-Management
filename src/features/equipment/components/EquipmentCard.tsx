@@ -17,7 +17,7 @@ import type { EquipmentPMStatus } from '@/features/equipment/hooks/useEquipmentP
 import type { MergedEquipment } from '@/features/equipment/hooks/useOfflineMergedEquipment';
 import { isOfflineEquipmentId } from '@/features/equipment/hooks/useOfflineMergedEquipment';
 import { toast } from 'sonner';
-import { displayableImageSrc } from '@/services/imageUploadService';
+import { getEquipmentDisplayImageUrl } from '@/services/imageUploadService';
 import { getEquipmentViewTransitionStyle } from '@/features/equipment/transitions/equipmentViewTransitionNames';
 import { useEquipmentCardTransition } from '@/features/equipment/transitions/useEquipmentCardTransition';
 import { useI18n } from '@/i18n';
@@ -41,7 +41,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({ equipment, onShowQRCode, 
   const statusRailClass = getEquipmentStatusRailClass(equipment.status);
   const statusTintClass = viewMode === 'grid' ? getEquipmentStatusBackgroundTint(equipment.status) : '';
   const imageLoading = listIndex < EQUIPMENT_ABOVE_FOLD_IMAGE_COUNT ? ('eager' as const) : ('lazy' as const);
-  const resolvedImageSrc = displayableImageSrc(equipment.image_url);
+  const resolvedImageSrc = getEquipmentDisplayImageUrl(equipment.image_url, 'thumb');
   const isTransitionActive = activeEquipmentId === equipment.id;
 
   const pending = (description: string) => toast.info(t('equipment.pendingSync'), { description });

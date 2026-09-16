@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import {
+  createDisplayImageVariants,
   DISPLAY_IMAGE_VARIANT_NAMES,
   type DisplayImageVariantName,
 } from '@/services/displayImageVariantService';
@@ -20,6 +21,36 @@ export type CanonicalDisplayImageRefInput = Omit<
   DisplayImagePathInput,
   'variant'
 >;
+
+export interface DisplayImageSetUploadInput
+  extends Omit<CanonicalDisplayImageRefInput, 'imageSetId'> {
+  source: File;
+  imageSetId?: string;
+}
+
+export interface UploadedDisplayImageSet {
+  imageSetId: string;
+  canonicalRef: string;
+  objectPaths: Record<DisplayImageVariantName, string>;
+}
+
+export const DISPLAY_IMAGE_UPLOAD_OPTIONS = {
+  upsert: false,
+  cacheControl: '31536000',
+  contentType: 'image/webp',
+} as const;
+
+export class DisplayImageUploadError extends Error {
+  readonly variant: DisplayImageVariantName;
+  readonly cause: unknown;
+
+  constructor(variant: DisplayImageVariantName, cause: unknown) {
+    super('Failed to upload ' + variant + ' display image variant.');
+    this.name = 'DisplayImageUploadError';
+    this.variant = variant;
+    this.cause = cause;
+  }
+}
 
 export interface ParsedDisplayImageRef {
   canonicalRef: string;
@@ -159,6 +190,43 @@ export function createDisplayImageSetId(): string {
   }
 
   return randomUUID.call(globalThis.crypto);
+}
+
+export async function uploadDisplayImageSet(
+  input: DisplayImageSetUploadInput,
+): Promise<UploadedDisplayImageSet> {
+  const imageSetId = input.imageSetId ?? createDisplayImageSetId();
+  const canonicalInput: CanonicalDisplayImageRefInput = {
+    organizationId: input.organizationId,
+    entity: input.entity,
+    entityId: input.entityId,
+    imageSetId,
+  };
+  const canonicalRef = createCanonicalDisplayImageRef(canonicalInput);
+  const variants = await createDisplayImageVariants(input.source);
+  const objectPaths = {} as Record<DisplayImageVariantName, string>;
+
+  for (const variant of DISPLAY_IMAGE_VARIANT_NAMES) {
+    const objectPath = createDisplayImagePath({
+      ...canonicalInput,
+      variant,
+    });
+    const { error } = await supabase.storage
+      .from(DISPLAY_IMAGE_BUCKET)
+      .upload(objectPath, variants[variant], DISPLAY_IMAGE_UPLOAD_OPTIONS);
+
+    if (error) {
+      throw new DisplayImageUploadError(variant, error);
+    }
+
+    objectPaths[variant] = objectPath;
+  }
+
+  return {
+    imageSetId,
+    canonicalRef,
+    objectPaths,
+  };
 }
 
 function decodeStoragePath(path: string): string | null {
@@ -317,6 +385,31 @@ export function getDisplayImagePublicUrls(
   }
 
   return urls;
+}
+
+export async function removeDisplayImageSet(
+  storedRef: string | null | undefined,
+): Promise<boolean> {
+  if (!storedRef?.trim()) return false;
+
+  const parsed = parseDisplayImageRef(storedRef.trim());
+  if (!parsed) return false;
+
+  const objectPaths = DISPLAY_IMAGE_VARIANT_NAMES.map((variant) =>
+    createDisplayImagePath({
+      organizationId: parsed.organizationId,
+      entity: parsed.entity,
+      entityId: parsed.entityId,
+      imageSetId: parsed.imageSetId,
+      variant,
+    }),
+  );
+  const { error } = await supabase.storage
+    .from(DISPLAY_IMAGE_BUCKET)
+    .remove(objectPaths);
+
+  if (error) throw error;
+  return true;
 }
 
 /**

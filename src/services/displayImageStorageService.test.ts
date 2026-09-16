@@ -5,11 +5,15 @@ const {
   mockCreateSignedUrls,
   mockFrom,
   mockGetPublicUrl,
+  mockRemove,
+  mockUpload,
 } = vi.hoisted(() => ({
   mockCreateSignedUrl: vi.fn(),
   mockCreateSignedUrls: vi.fn(),
   mockFrom: vi.fn(),
   mockGetPublicUrl: vi.fn(),
+  mockRemove: vi.fn(),
+  mockUpload: vi.fn(),
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
@@ -24,11 +28,15 @@ vi.mock('browser-image-compression', () => ({
   default: vi.fn(),
 }));
 
+import imageCompression from 'browser-image-compression';
+
 import {
   createCanonicalDisplayImageRef,
   createDisplayImagePath,
   createDisplayImageSetId,
   getDisplayImageObjectPath,
+  removeDisplayImageSet,
+  uploadDisplayImageSet,
   getDisplayImagePublicUrl,
   getDisplayImagePublicUrls,
   isDisplayImageV2Ref,
@@ -60,11 +68,16 @@ function publicUrlFor(path: string): string {
 
 describe('displayImageStorageService', () => {
   beforeEach(() => {
+    vi.mocked(imageCompression).mockReset();
     mockCreateSignedUrl.mockReset();
     mockCreateSignedUrls.mockReset();
     mockGetPublicUrl.mockReset();
+    mockRemove.mockReset();
+    mockUpload.mockReset();
     mockFrom.mockReset();
 
+    mockUpload.mockResolvedValue({ data: { path: 'uploaded/path.webp' }, error: null });
+    mockRemove.mockResolvedValue({ data: [], error: null });
     mockGetPublicUrl.mockImplementation((path: string) => ({
       data: { publicUrl: publicUrlFor(path) },
     }));
@@ -72,6 +85,8 @@ describe('displayImageStorageService', () => {
       getPublicUrl: mockGetPublicUrl,
       createSignedUrl: mockCreateSignedUrl,
       createSignedUrls: mockCreateSignedUrls,
+      remove: mockRemove,
+      upload: mockUpload,
     }));
   });
 
@@ -213,5 +228,69 @@ describe('displayImageStorageService', () => {
         variant: 'full',
       }),
     ).toThrow('organizationId must be a non-empty path segment');
+  });
+
+  it('uploads all immutable WebP variants with cacheable non-upsert options', async () => {
+    const randomUUID = vi.fn(() => 'generated-set');
+    vi.stubGlobal('crypto', { randomUUID });
+    vi.mocked(imageCompression).mockImplementation(async () =>
+      new Blob(['webp'], { type: 'image/webp' }),
+    );
+
+    const source = {
+      size: 1,
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+      name: 'source.jpg',
+      type: 'image/jpeg',
+      lastModified: 123,
+    } as File;
+
+    try {
+      const uploaded = await uploadDisplayImageSet({
+        ...EQUIPMENT_INPUT,
+        source,
+      });
+
+      expect(uploaded).toEqual({
+        imageSetId: 'generated-set',
+        canonicalRef:
+          'display-images/org/org-123/equipment/equipment-456/generated-set/full.webp',
+        objectPaths: {
+          thumb: 'org/org-123/equipment/equipment-456/generated-set/thumb.webp',
+          preview: 'org/org-123/equipment/equipment-456/generated-set/preview.webp',
+          full: 'org/org-123/equipment/equipment-456/generated-set/full.webp',
+        },
+      });
+      expect(mockUpload).toHaveBeenCalledTimes(3);
+      expect(mockUpload.mock.calls.map((call) => call[0])).toEqual([
+        'org/org-123/equipment/equipment-456/generated-set/thumb.webp',
+        'org/org-123/equipment/equipment-456/generated-set/preview.webp',
+        'org/org-123/equipment/equipment-456/generated-set/full.webp',
+      ]);
+      for (const call of mockUpload.mock.calls) {
+        expect(call[1]).toBeInstanceOf(File);
+        expect(call[2]).toEqual({
+          upsert: false,
+          cacheControl: '31536000',
+          contentType: 'image/webp',
+        });
+      }
+      expect(mockCreateSignedUrl).not.toHaveBeenCalled();
+      expect(mockCreateSignedUrls).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('removes all variants for a valid V2 display image reference', async () => {
+    const canonicalRef = createCanonicalDisplayImageRef(EQUIPMENT_INPUT);
+
+    await expect(removeDisplayImageSet(canonicalRef)).resolves.toBe(true);
+
+    expect(mockRemove).toHaveBeenCalledWith([
+      'org/org-123/equipment/equipment-456/set-789/thumb.webp',
+      'org/org-123/equipment/equipment-456/set-789/preview.webp',
+      'org/org-123/equipment/equipment-456/set-789/full.webp',
+    ]);
   });
 });

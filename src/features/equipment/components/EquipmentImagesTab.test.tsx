@@ -39,6 +39,10 @@ vi.mock('@/features/equipment/services/equipmentNotesService', () => ({
   createEquipmentNoteWithImages: vi.fn()
 }));
 
+vi.mock('@/features/equipment/services/equipmentDisplayImageService', () => ({
+  replaceEquipmentDisplayImage: vi.fn()
+}));
+
 vi.mock('@/components/common/ImageGallery', () => ({
   default: ({ images }: { images?: Array<{ file_url?: string; url?: string }> }) => (
     <div data-testid="image-gallery">

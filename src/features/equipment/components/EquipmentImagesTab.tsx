@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/contexts/OrganizationContext';
@@ -14,11 +14,13 @@ import {
   type EquipmentImageData,
 } from '@/features/equipment/services/equipmentImagesService';
 import { createEquipmentNoteWithImages } from '@/features/equipment/services/equipmentNotesService';
+import { replaceEquipmentDisplayImage } from '@/features/equipment/services/equipmentDisplayImageService';
+import { validateImageFile } from '@/services/imageUploadService';
 import { equipment } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Images, Upload } from 'lucide-react';
+import { Images, ImagePlus, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
 
@@ -46,6 +48,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [optionalNote, setOptionalNote] = useState('');
   const [explorerOpen, setExplorerOpen] = useState(false);
+  const displayImageInputRef = useRef<HTMLInputElement>(null);
 
   const media = useEquipmentMediaLibrary({
     equipmentId,
@@ -109,6 +112,43 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
       );
     },
   });
+
+  const replaceDisplayImageMutation = useMutation({
+    mutationFn: (source: File) => {
+      if (!permissions.canSetDisplayImage) {
+        throw new Error('Display image permission denied');
+      }
+      return replaceEquipmentDisplayImage({
+        organizationId,
+        equipmentId,
+        source,
+      });
+    },
+    onSuccess: () => {
+      invalidateMedia();
+      toast.success(t('equipmentMedia.displayImageUpdated'));
+    },
+    onError: (error) => {
+      console.error('Error replacing display image:', error);
+      toast.error(t('equipmentMedia.displayImageUpdateFailed'));
+    },
+  });
+
+  const handleDisplayImageUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const source = event.target.files?.[0];
+    event.target.value = '';
+    if (!source) return;
+
+    try {
+      validateImageFile(source);
+      replaceDisplayImageMutation.mutate(source);
+    } catch (error) {
+      console.error('Error validating display image:', error);
+      toast.error(t('equipmentMedia.displayImageUpdateFailed'));
+    }
+  };
 
   const uploadImagesMutation = useMutation({
     mutationFn: async (files: File[]) => {
@@ -193,12 +233,39 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
             <Images className="mr-1.5 h-3.5 w-3.5" aria-hidden />
             {t('equipmentMedia.openExplorer')}
           </Button>
+          {permissions.canSetDisplayImage && (
+            <>
+              <input
+                ref={displayImageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                className="sr-only"
+                aria-label={t('equipmentForm.displayImage')}
+                onChange={handleDisplayImageUpload}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8"
+                disabled={
+                  replaceDisplayImageMutation.isPending ||
+                  uploadImagesMutation.isPending
+                }
+                onClick={() => displayImageInputRef.current?.click()}
+              >
+                <ImagePlus className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                {t('equipmentForm.displayImage')}
+              </Button>
+            </>
+          )}
           {permissions.canUploadImages && (
             <Button
               type="button"
               variant="outline"
               size="sm"
               className="h-8"
+              disabled={replaceDisplayImageMutation.isPending}
               onClick={() => setShowUploadForm((open) => !open)}
             >
               <Upload className="mr-1.5 h-3.5 w-3.5" aria-hidden />

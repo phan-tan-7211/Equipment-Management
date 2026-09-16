@@ -8,7 +8,7 @@ import { PendingSyncBadge } from '@/features/offline-queue/components/PendingSyn
 import { EquipmentCardWorkOrderMenu } from '@/features/equipment/components/EquipmentCardWorkOrderMenu';
 import type { EquipmentCardDisplayModel } from '@/features/equipment/utils/getEquipmentCardDisplayModel';
 import type { EquipmentCardPmReadout } from '@/features/equipment/utils/getEquipmentCardPmReadout';
-import { displayableImageSrc } from '@/services/imageUploadService';
+import { getEquipmentDisplayImageUrl } from '@/services/imageUploadService';
 import { getPMComplianceLevel } from '@/features/equipment/hooks/useEquipmentPMStatus';
 import type { EquipmentPMStatus } from '@/features/equipment/hooks/useEquipmentPMStatus';
 import { getEquipmentViewTransitionStyle } from '@/features/equipment/transitions/equipmentViewTransitionNames';
@@ -32,7 +32,7 @@ export function EquipmentCardGridView({ equipment, display, pmReadout, pmStatus,
   const { t } = useI18n();
   const pmLevel = getPMComplianceLevel(pmStatus);
   const isPmOverdue = pmLevel === 'overdue';
-  const resolvedImageSrc = displayableImageSrc(equipment.image_url);
+  const resolvedImageSrc = getEquipmentDisplayImageUrl(equipment.image_url, 'thumb');
   return <div className="hidden md:flex md:flex-col md:h-full">
     <CardHeader className="space-y-1 px-3 py-3 sm:px-4"><div className="flex items-start justify-between gap-2"><div className="min-w-0 flex-1 space-y-0.5">{equipment.team_name ? <p className="truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{equipment.team_name}</p> : null}<div className="flex flex-wrap items-center gap-1.5"><CardTitle className="text-base font-semibold leading-tight sm:text-lg" style={getEquipmentViewTransitionStyle('name', isTransitionActive)}>{equipment.name}</CardTitle>{isPendingSync ? <PendingSyncBadge className="flex-shrink-0" /> : null}</div>{equipment.management_code ? <p className="truncate font-mono text-[11px] font-medium text-primary/90">{equipment.management_code}</p> : null}<div style={getEquipmentViewTransitionStyle('meta', isTransitionActive)}><p className="truncate text-xs text-muted-foreground">{display.assetDescriptor}</p><p className="truncate font-tabular text-[11px] text-muted-foreground">{display.serialDisplay}</p></div></div><Tooltip><TooltipTrigger asChild><Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0 border-border/80 bg-background/80" onClick={onQRClick} aria-label={t('equipment.showQrFor',{name:equipment.name})}><QrCode className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent>{t('equipment.showQrCode')}</TooltipContent></Tooltip></div></CardHeader>
     <CardContent className="flex flex-1 flex-col space-y-2 px-3 pb-3 pt-0 sm:px-4"><div className="relative aspect-[16/6] w-full overflow-hidden rounded-md border border-border/80 bg-muted" style={getEquipmentViewTransitionStyle('image', isTransitionActive)}>{resolvedImageSrc ? <img src={resolvedImageSrc} alt={display.imageAlt} className="h-full w-full object-cover" loading={imageLoading} decoding="async" onError={(e)=>{e.currentTarget.src=display.imageFallbackSrc;}}/> : <div className="flex h-full w-full items-center justify-center"><Forklift className="h-10 w-10 text-muted-foreground/50" /></div>}</div>

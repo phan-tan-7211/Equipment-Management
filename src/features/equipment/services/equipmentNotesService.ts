@@ -6,7 +6,6 @@ import {
   displayUrlForStoredPrivateImage,
   deleteImageFromStorage,
   batchResolveEquipmentNoteImageDisplayUrls,
-  extractEquipmentDisplayImagePath,
 } from '@/services/imageUploadService';
 import type { EquipmentNote, EquipmentNoteImage } from '@/features/equipment/types/equipmentNotes';
 import { noteMachineHoursInsertFields } from '@/services/noteMachineHoursInsert';
@@ -16,6 +15,7 @@ import {
   updateEquipmentNoteRpc,
 } from '@/services/noteMutationRpc';
 import { uploadFilesToNoteImageBucket } from '@/services/noteImageUploadShared';
+import { setEquipmentDisplayImageRef } from '@/features/equipment/services/equipmentDisplayImageService';
 
 async function validateEquipmentNoteImageQuota(
   equipmentId: string,
@@ -277,30 +277,4 @@ export const updateEquipmentDisplayImage = async (
   organizationId: string,
   equipmentId: string,
   imageUrl: string
-): Promise<void> => {
-  if (!imageUrl.trim()) {
-    const { error } = await supabase
-      .from('equipment')
-      .update({ image_url: null })
-      .eq('id', equipmentId)
-      .eq('organization_id', organizationId);
-
-    if (error) throw error;
-    return;
-  }
-
-  const canonical = extractEquipmentDisplayImagePath(imageUrl);
-  if (!canonical) {
-    throw new Error(
-      'Could not resolve that image to a durable storage path. Choose an image from work orders or equipment notes again.',
-    );
-  }
-
-  const { error } = await supabase
-    .from('equipment')
-    .update({ image_url: canonical })
-    .eq('id', equipmentId)
-    .eq('organization_id', organizationId);
-
-  if (error) throw error;
-};
+): Promise<void> => setEquipmentDisplayImageRef(organizationId, equipmentId, imageUrl);
