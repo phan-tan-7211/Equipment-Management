@@ -170,7 +170,9 @@ function EquipmentColumnHeaderMenu({
           open={filterOpen}
           onOpenChange={setFilterOpen}
           hideTrigger
-          anchor={<span className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2" aria-hidden="true" />}
+          // Anchor the popover to the bottom edge of the header. This removes
+          // the dead hover gap between the `…` menu item and the value list.
+          anchor={<span className="absolute inset-x-0 bottom-0 h-px" aria-hidden="true" />}
         />
       ) : null}
     </>
@@ -253,7 +255,7 @@ function EquipmentColumnFilter({
       </PopoverTrigger> : null}
       <PopoverContent
         align="start"
-        sideOffset={6}
+        sideOffset={0}
         className="w-64 p-0"
         onPointerDown={(event) => event.stopPropagation()}
       >
