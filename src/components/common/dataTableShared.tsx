@@ -188,7 +188,16 @@ export function ResizableTableSurface<TData>({
                   ? { ...style, zIndex: hasPinnedOffset ? 50 : 40 }
                   : style;
                 const resolvedDraggable = Boolean(onDragStart || draggable);
-                const resolvedPointerDown = onPointerDown;
+                const resolvedPointerDown: PointerEventHandler<HTMLTableCellElement> | undefined =
+                  resolvedDraggable && onPointerDown
+                    ? (event) => {
+                        // Desktop mouse reordering is handled exclusively by native HTML5 drag.
+                        // Keeping the legacy pointer-capture path active at the same time can
+                        // swallow menu clicks and leave the cursor stuck in a dragging state.
+                        if (event.pointerType === 'mouse') return;
+                        onPointerDown(event);
+                      }
+                    : onPointerDown;
                 const isDragSource = draggedHeaderId === header.id;
                 const isDropTarget = dragOverHeaderId === header.id && draggedHeaderId !== header.id;
 
@@ -201,30 +210,11 @@ export function ResizableTableSurface<TData>({
                     }
                   : undefined;
 
-                const startDragFromSurface: DragEventHandler<HTMLDivElement> | undefined = resolvedDraggable
-                  ? (event) => {
-                      event.stopPropagation();
-                      applyHeaderDragPreview(event);
-                      setDraggedHeaderId(header.id);
-                      setDragOverHeaderId(null);
-                      onDragStart?.(event as unknown as ReactDragEvent<HTMLTableCellElement>);
-                    }
-                  : undefined;
-
                 const endDragFromCell: DragEventHandler<HTMLTableCellElement> | undefined = resolvedDraggable
                   ? (event) => {
                       setDraggedHeaderId(null);
                       setDragOverHeaderId(null);
                       onDragEnd?.(event);
-                    }
-                  : undefined;
-
-                const endDragFromSurface: DragEventHandler<HTMLDivElement> | undefined = resolvedDraggable
-                  ? (event) => {
-                      event.stopPropagation();
-                      setDraggedHeaderId(null);
-                      setDragOverHeaderId(null);
-                      onDragEnd?.(event as unknown as ReactDragEvent<HTMLTableCellElement>);
                     }
                   : undefined;
 
@@ -239,7 +229,7 @@ export function ResizableTableSurface<TData>({
                     )}
                     aria-sort={ariaSort ?? 'none'}
                     style={resolvedHeaderStyle}
-                    draggable={false}
+                    draggable={resolvedDraggable}
                     onDragStart={startDragFromCell}
                     onDragOver={
                       onDragOver
@@ -268,10 +258,6 @@ export function ResizableTableSurface<TData>({
                           'min-h-8 min-w-0',
                           resolvedDraggable && 'cursor-grab active:cursor-grabbing',
                         )}
-                        draggable={resolvedDraggable}
-                        onPointerDown={(event) => event.stopPropagation()}
-                        onDragStart={startDragFromSurface}
-                        onDragEnd={endDragFromSurface}
                         {...(dataColumnKey ? { 'data-table-column-drag-surface': dataColumnKey } : {})}
                       >
                         {header.isPlaceholder
