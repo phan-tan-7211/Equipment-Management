@@ -213,6 +213,18 @@ describe('EquipmentTable', () => {
     expect(headers[0].className).toContain('left-0');
   });
 
+  it('keeps every column title sticky while the table scrolls', () => {
+    render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
+    const headers = screen.getAllByRole('columnheader');
+
+    expect(headers.length).toBeGreaterThan(1);
+    for (const header of headers) {
+      expect(header.className).toContain('sticky');
+      expect(header.className).toContain('top-0');
+      expect(header.className).toContain('bg-card');
+    }
+  });
+
   it('renders column resize handles on resizable data columns', () => {
     const { container } = render(
       <EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />,

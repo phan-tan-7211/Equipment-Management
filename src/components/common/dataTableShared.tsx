@@ -54,6 +54,7 @@ type ResizableTableSurfaceProps<TData> = {
   table: TanStackTable<TData>;
   tableWidth: number;
   scrollClassName?: string;
+  stickyHeader?: boolean;
   getHeaderProps: (header: Header<TData, unknown>) => {
     className: string;
     ariaSort?: 'ascending' | 'descending' | 'none';
@@ -78,6 +79,7 @@ export function ResizableTableSurface<TData>({
   table,
   tableWidth,
   scrollClassName = 'overflow-x-auto',
+  stickyHeader = false,
   getHeaderProps,
   getCellClassName,
   getCellStyle,
@@ -120,7 +122,7 @@ export function ResizableTableSurface<TData>({
                 return (
                   <TableHead
                     key={header.id}
-                    className={className}
+                    className={stickyHeader ? cn(className, 'sticky top-0 z-30 bg-card') : className}
                     aria-sort={ariaSort ?? 'none'}
                     style={style}
                     draggable={draggable}
@@ -175,6 +177,8 @@ type ResizableFixedDataTableProps<TData> = {
   withTooltipProvider?: boolean;
   scrollClassName?: string;
   cardClassName?: string;
+  contentClassName?: string;
+  stickyHeader?: boolean;
   getHeaderProps: (header: Header<TData, unknown>) => {
     className: string;
     ariaSort?: 'ascending' | 'descending' | 'none';
@@ -197,6 +201,8 @@ export function ResizableFixedDataTable<TData>({
   withTooltipProvider = false,
   scrollClassName = 'overflow-x-auto',
   cardClassName = 'overflow-hidden',
+  contentClassName = 'p-0',
+  stickyHeader = false,
   getHeaderProps,
   getCellClassName,
   getCellStyle,
@@ -204,11 +210,12 @@ export function ResizableFixedDataTable<TData>({
 }: ResizableFixedDataTableProps<TData>) {
   const content = (
     <Card className={cardClassName}>
-      <CardContent className="p-0">
+      <CardContent className={contentClassName}>
         <ResizableTableSurface
           table={table}
           tableWidth={tableWidth}
           scrollClassName={scrollClassName}
+          stickyHeader={stickyHeader}
           getHeaderProps={getHeaderProps}
           getCellClassName={getCellClassName}
           getCellStyle={getCellStyle}
