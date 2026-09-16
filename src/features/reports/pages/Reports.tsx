@@ -152,7 +152,7 @@ const Reports: React.FC = () => {
 
   if (teamsLoading || scopedTeamsLoading) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <div className="py-12 text-center text-sm text-muted-foreground">{t('reports.loadingConsole')}</div>
       </Page>
     );
@@ -192,7 +192,7 @@ const Reports: React.FC = () => {
   };
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-6">
         <PageHeader
           title={isScopedConsole ? t('reports.workOrderExports') : t('reports.consoleTitle')}

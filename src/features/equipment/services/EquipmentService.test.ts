@@ -472,5 +472,36 @@ describe('EquipmentService', () => {
       expect(result.data?.data[0].image_url).toBe('https://signed.example/equipment.jpg');
       expect(result.data?.data[0].team_name).toBe('Crew');
     });
+
+    it('applies direct table column filters to the server query', async () => {
+      const mockQuery = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        is: vi.fn().mockReturnThis(),
+        or: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        range: vi.fn().mockResolvedValue({ data: [], count: 0, error: null }),
+      };
+      (supabase.from as ReturnType<typeof vi.fn>).mockReturnValue(mockQuery);
+
+      await EquipmentService.getFilteredList(
+        organizationId,
+        {
+          columnFilters: {
+            name: ['Forklift A1'],
+            status: ['active'],
+            working_hours: ['1234'],
+            team_name: ['team-1'],
+          },
+        },
+        { page: 1, pageSize: 10 },
+      );
+
+      expect(mockQuery.in).toHaveBeenCalledWith('name', ['Forklift A1']);
+      expect(mockQuery.in).toHaveBeenCalledWith('status', ['active']);
+      expect(mockQuery.in).toHaveBeenCalledWith('working_hours', [1234]);
+      expect(mockQuery.in).toHaveBeenCalledWith('team_id', ['team-1']);
+    });
   });
 });

@@ -314,7 +314,7 @@ const InventoryList = () => {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={t('inventoryList.title')}
           description={t('inventoryList.selectOrganization')}
@@ -325,7 +325,7 @@ const InventoryList = () => {
 
   if (isInventoryPending && items.length === 0) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader title={t('inventoryList.title')} />
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
@@ -368,7 +368,7 @@ const InventoryList = () => {
   );
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div
         className={cn(
           'space-y-4 md:space-y-6',

@@ -30,8 +30,8 @@ interface PageHeaderProps {
 }
 
 const densityClasses = {
-  default: 'space-y-4',
-  compact: 'space-y-4 lg:space-y-2',
+  default: 'space-y-2',
+  compact: 'space-y-1',
 } as const;
 
 const PageHeader: React.FC<PageHeaderProps> = ({
@@ -90,8 +90,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         </nav>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1 space-y-1">
+      <div className={cn(
+        'flex flex-col sm:flex-row sm:items-start sm:justify-between',
+        density === 'compact' ? 'gap-1' : 'gap-2',
+      )}>
+        <div className={cn('min-w-0 flex-1', density === 'compact' ? 'space-y-0' : 'space-y-0.5')}>
           <div className="flex flex-wrap items-center gap-2">
             <h1
               className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"

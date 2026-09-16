@@ -21,7 +21,7 @@ export function DashboardLoadingShell({
   const sections = [copy.fleet, copy.operations, copy.infrastructure];
 
   return (
-    <div data-testid="dashboard-loading-shell" className="flex min-h-screen w-full bg-background">
+    <div data-testid="dashboard-loading-shell" className="flex h-svh min-h-0 w-full overflow-hidden bg-background">
       <aside
         aria-label={copy.navigationLoading}
         data-testid="dashboard-loading-sidebar"
@@ -56,11 +56,11 @@ export function DashboardLoadingShell({
         </div>
       </aside>
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <div className="flex h-svh min-h-0 min-w-0 flex-1 flex-col">
         <header
           aria-label={copy.headerLoading}
           data-testid="dashboard-loading-header"
-          className="flex h-14 shrink-0 items-center gap-3 border-b px-4 sm:h-16"
+          className="flex h-10 shrink-0 items-center gap-3 border-b px-4"
         >
           <Skeleton className="h-8 w-8 rounded-md" />
           <div className="hidden h-4 w-px bg-border sm:block" />
@@ -74,7 +74,7 @@ export function DashboardLoadingShell({
         <main
           id="main-content"
           tabIndex={-1}
-          className="flex-1 overflow-auto pb-16 md:pb-0 outline-none"
+          className="min-h-0 flex-1 overflow-auto pb-16 outline-none md:pb-0"
         >
           <div role="status" aria-label={resolvedStatusLabel} className="sr-only">
             {resolvedMessage}

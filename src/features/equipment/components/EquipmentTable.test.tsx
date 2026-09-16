@@ -79,6 +79,26 @@ describe('EquipmentTable', () => {
     expect(screen.getByText('SN67890')).toBeInTheDocument();
   });
 
+  it('renders management responsible columns from standard equipment fields', () => {
+    render(
+      <EquipmentTable
+        equipment={[
+          {
+            ...mockEquipment[0],
+            management_responsible_primary: 'Mr.TRUNG',
+            management_responsible_secondary: 'Mr.TẤN',
+          },
+        ]}
+        onShowQRCode={onShowQRCode}
+      />,
+    );
+
+    expect(getHeaderByTitle('Management Responsible Primary')).toBeInTheDocument();
+    expect(getHeaderByTitle('Management Responsible Secondary')).toBeInTheDocument();
+    expect(screen.getByText('Mr.TRUNG')).toBeInTheDocument();
+    expect(screen.getByText('Mr.TẤN')).toBeInTheDocument();
+  });
+
   it('renders compact DotStatus with labels only for assistive tech', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     expect(screen.getByText('Active')).toHaveClass('sr-only');
@@ -160,11 +180,49 @@ describe('EquipmentTable', () => {
     expect(onSortChange).toHaveBeenCalledWith('name', 'desc');
   });
 
+  it('opens a direct column filter and reports selected values', () => {
+    const onColumnFilterChange = vi.fn();
+    render(
+      <EquipmentTable
+        equipment={mockEquipment}
+        onShowQRCode={onShowQRCode}
+        onColumnFilterChange={onColumnFilterChange}
+        columnFilterOptions={{
+          name: [
+            { value: 'Forklift A1', label: 'Forklift A1' },
+            { value: 'Excavator B2', label: 'Excavator B2' },
+          ],
+        }}
+      />,
+    );
+
+    const nameHeader = getHeaderByTitle('Name');
+    const optionsButton = within(nameHeader).getByRole('button', { name: 'Options for Name' });
+    fireEvent.pointerDown(optionsButton);
+    fireEvent.click(optionsButton);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Filter Name' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Forklift A1' }));
+
+    expect(onColumnFilterChange).toHaveBeenCalledWith('name', ['Forklift A1']);
+  });
+
   it('freezes the Status column with sticky left-0', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     const headers = screen.getAllByRole('columnheader');
     expect(headers[0].className).toContain('sticky');
     expect(headers[0].className).toContain('left-0');
+  });
+
+  it('keeps every column title sticky while the table scrolls', () => {
+    render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
+    const headers = screen.getAllByRole('columnheader');
+
+    expect(headers.length).toBeGreaterThan(1);
+    for (const header of headers) {
+      expect(header.className).toContain('sticky');
+      expect(header.className).toContain('top-0');
+      expect(header.className).toContain('bg-card');
+    }
   });
 
   it('renders column resize handles on resizable data columns', () => {
@@ -304,5 +362,28 @@ describe('EquipmentTable', () => {
     expect(headerTexts.some((t) => t.includes('Name'))).toBe(true);
     expect(headerTexts.some((t) => t.includes('Manufacturer'))).toBe(false);
     expect(headerTexts.some((t) => t.includes('Last Maintenance'))).toBe(false);
+  });
+
+  it('reorders columns on native drop without changing the pinned status column', () => {
+    render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
+    const nameHeader = getHeaderByTitle('Name');
+    const manufacturerHeader = getHeaderByTitle('Manufacturer');
+    const dataTransfer = {
+      effectAllowed: '',
+      dropEffect: '',
+      setData: vi.fn(),
+      getData: vi.fn(() => 'name'),
+    };
+
+    fireEvent.dragStart(nameHeader, { dataTransfer });
+    fireEvent.dragOver(manufacturerHeader, { dataTransfer });
+    fireEvent.drop(manufacturerHeader, { dataTransfer });
+
+    const headers = screen.getAllByRole('columnheader');
+    const statusIndex = headers.findIndex((header) => header.textContent?.includes('Status'));
+    const nameIndex = headers.findIndex((header) => header.textContent?.includes('Name'));
+    const manufacturerIndex = headers.findIndex((header) => header.textContent?.includes('Manufacturer'));
+    expect(statusIndex).toBe(0);
+    expect(nameIndex).toBeGreaterThan(manufacturerIndex);
   });
 });

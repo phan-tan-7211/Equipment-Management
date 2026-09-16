@@ -16,7 +16,7 @@ describe('InlineEditCustomAttributes', () => {
   });
 
   describe('Core Rendering', () => {
-    it('keeps the edit trigger visible through mobile widths and uses md hover reveal', () => {
+    it('keeps the edit trigger visible when editing is allowed', () => {
       render(
         <InlineEditCustomAttributes
           attributes={mockAttributes}
@@ -27,10 +27,7 @@ describe('InlineEditCustomAttributes', () => {
 
       const editButton = screen.getByLabelText('Edit custom attributes');
       expect(editButton.className).toContain('h-11');
-      expect(editButton.className).toContain('md:opacity-0');
-      expect(editButton.className).toContain('md:group-hover:opacity-100');
-      expect(editButton.className).not.toContain('sm:opacity-0');
-      expect(editButton.className).not.toContain('sm:group-hover:opacity-100');
+      expect(editButton.className).not.toContain('opacity-0');
     });
 
     it('renders custom attributes', () => {
@@ -44,6 +41,24 @@ describe('InlineEditCustomAttributes', () => {
       
       expect(screen.getByText('Color')).toBeInTheDocument();
       expect(screen.getByText('Red')).toBeInTheDocument();
+    });
+
+    it('renders object attributes as readable key-value rows', () => {
+      render(
+        <InlineEditCustomAttributes
+          attributes={{
+            Migration: { source_status: 'DISPOSED', source_project: 'CEV-CMMS' },
+            'Criticality Facts': { hasBackup: false, capacityImpact: false },
+          }}
+          onSave={mockOnSave}
+          canEdit={false}
+        />,
+      );
+
+      expect(screen.getByText('Source Status:')).toBeInTheDocument();
+      expect(screen.getByText('DISPOSED')).toBeInTheDocument();
+      expect(screen.getByText('Source Project:')).toBeInTheDocument();
+      expect(screen.getAllByText('No')).toHaveLength(2);
     });
 
     it('does not show edit button when canEdit is false', () => {
@@ -130,5 +145,3 @@ describe('InlineEditCustomAttributes', () => {
     });
   });
 });
-
-

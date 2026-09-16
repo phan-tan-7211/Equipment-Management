@@ -64,7 +64,7 @@ export const DashboardRouteLayout = () => {
                   <SelectedTeamProvider>
                     <SidebarProvider>
                       <BugReportProvider>
-                        <div className="flex min-h-screen w-full">
+                        <div className="flex h-svh min-h-0 w-full overflow-hidden">
                           <IdleSessionTimeoutGuard />
                           <Suspense
                             fallback={
@@ -75,10 +75,10 @@ export const DashboardRouteLayout = () => {
                           >
                             <AppSidebar />
                           </Suspense>
-                          <SidebarInset className="flex-1 min-w-0">
+                          <SidebarInset className="flex h-svh min-h-0 min-w-0 flex-1">
                             <Suspense
                               fallback={
-                                <div className="h-14 sm:h-16 border-b">
+                                <div className="h-10 border-b">
                                   <div className="animate-pulse h-full bg-muted/20" />
                                 </div>
                               }
@@ -89,7 +89,7 @@ export const DashboardRouteLayout = () => {
                             <main
                               id="main-content"
                               tabIndex={-1}
-                              className="flex-1 overflow-auto min-w-0 pb-16 md:pb-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                              className="flex-1 min-h-0 min-w-0 overflow-auto pb-16 md:pb-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                             >
                               <Suspense fallback={<PageSkeleton />}>
                                 <Routes>{dashboardRouteElements}</Routes>

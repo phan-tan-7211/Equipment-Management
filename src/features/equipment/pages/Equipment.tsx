@@ -68,7 +68,7 @@ const Equipment = () => {
   }, [isMobile]);
   useWhenPreferenceStorageAllowed(rehydrateOrFlushViewMode);
 
-  const { filters, sortConfig, paginatedEquipment, filterOptions, isLoading, hasActiveFilters, activeQuickFilter, equipment, currentPage, pageSize, pageSizeOptions, totalFilteredCount, updateFilter, updateSort, clearFilters, applyQuickFilter, setCurrentPage, setPageSize } = useEquipmentFiltering(currentOrganization?.id, viewMode);
+  const { filters, sortConfig, paginatedEquipment, filterOptions, columnFilterOptions, columnFilters, isLoading, hasActiveFilters, activeQuickFilter, equipment, currentPage, pageSize, pageSizeOptions, totalFilteredCount, updateFilter, updateColumnFilter, updateSort, clearFilters, applyQuickFilter, setCurrentPage, setPageSize } = useEquipmentFiltering(currentOrganization?.id, viewMode);
   const mergedEquipment = useOfflineMergedEquipment(paginatedEquipment);
   const { visibleColumns, toggleColumn, resetToDefaults: resetColumnVisibility, hasOverrides: hasColumnOverrides } = useEquipmentTableColumns(currentOrganization?.id);
   const { data: pmStatusList } = useOrgEquipmentPMStatuses(currentOrganization?.id);
@@ -105,21 +105,22 @@ const Equipment = () => {
   const canImport = hasRole(['owner', 'admin']);
   const canExport = hasRole(['owner', 'admin', 'member']);
 
-  if (!currentOrganization) return <Page maxWidth="7xl" padding="responsive"><PageHeader title={t('equipment.title')} description={t('equipment.selectOrganization')} /></Page>;
-  if (isLoading) return <Page maxWidth="7xl" padding="responsive"><EquipmentLoadingState /></Page>;
+  if (!currentOrganization) return <Page maxWidth="full" padding="workspace"><PageHeader title={t('equipment.title')} description={t('equipment.selectOrganization')} /></Page>;
+  if (isLoading) return <Page maxWidth="full" padding="workspace"><EquipmentLoadingState /></Page>;
 
   const handleAddEquipment = () => { setEditingEquipment(null); setShowForm(true); };
   const handleCloseForm = () => { setShowForm(false); setEditingEquipment(null); };
   const handleEquipmentCreated = (equipmentId: string) => { setSelectedTeamId(null); navigate(`/dashboard/equipment/${equipmentId}`); };
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
-      <EquipmentListTransitionRoot className={cn('space-y-4 md:space-y-6', isMobile && canCreate && 'pb-28')}>
-        <div data-equipment-list-chrome="">
+    <Page maxWidth="full" padding="none" className={cn('p-px', viewMode === 'table' && 'h-full min-h-0 overflow-hidden')}>
+      <EquipmentListTransitionRoot className={cn('flex min-h-0 flex-col gap-px', viewMode === 'table' && 'h-full overflow-hidden', isMobile && canCreate && 'pb-28')}>
+        <div data-equipment-list-chrome="" className="shrink-0">
           <PageHeader
             title={t('equipment.title')}
             description={t('equipment.manageFor', { name: currentOrganization.name })}
             hideDescriptionOnMobile
+            density="compact"
             actions={canCreate && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild><Button className="hidden sm:inline-flex"><Plus className="h-4 w-4 mr-2" />{t('equipment.addEquipment')}<ChevronDown className="ml-1 h-4 w-4" aria-hidden /></Button></DropdownMenuTrigger>
@@ -132,13 +133,13 @@ const Equipment = () => {
           />
         </div>
 
-        <div data-equipment-list-chrome="">
+        <div data-equipment-list-chrome="" className="shrink-0">
           <EquipmentFilters filters={filters} sortConfig={sortConfig} onFilterChange={updateFilter} onClearFilters={clearFilters} onQuickFilter={applyQuickFilter} onSortChange={updateSort} filterOptions={filterOptions} hasActiveFilters={hasActiveFilters} activeQuickFilter={activeQuickFilter} viewMode={viewMode} onViewModeChange={handleViewModeChange} canImport={canImport} canExport={canExport} onImportCsv={() => setShowImportCsv(true)} equipment={equipment} columnPicker={viewMode === 'table' ? <EquipmentColumnPicker allColumns={EQUIPMENT_TABLE_COLUMN_META} visibleColumns={visibleColumns} onToggle={toggleColumn} onReset={resetColumnVisibility} hasOverrides={hasColumnOverrides} /> : undefined} />
         </div>
 
-        <div className="space-y-4">
-          <EquipmentGrid equipment={mergedEquipment} searchQuery={filters.search} statusFilter={filters.status} organizationName={currentOrganization.name} canCreate={canCreate} onShowQRCode={setShowQRCode} onAddEquipment={handleAddEquipment} onClearFilters={clearFilters} viewMode={viewMode} pmStatuses={pmStatuses} sortConfig={sortConfig} onSortChange={updateSort} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} organizationId={currentOrganization.id} />
-          <div data-equipment-list-chrome=""><EquipmentPaginationFooter totalItems={totalFilteredCount} page={currentPage} pageSize={pageSize} pageSizeOptions={pageSizeOptions} itemLabel={t('equipment.result')} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} /></div>
+        <div className={viewMode === 'table' ? 'flex min-h-0 flex-1 flex-col gap-px' : 'space-y-1'}>
+          <EquipmentGrid equipment={mergedEquipment} searchQuery={filters.search} statusFilter={filters.status} organizationName={currentOrganization.name} canCreate={canCreate} onShowQRCode={setShowQRCode} onAddEquipment={handleAddEquipment} onClearFilters={clearFilters} viewMode={viewMode} pmStatuses={pmStatuses} sortConfig={sortConfig} onSortChange={updateSort} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} organizationId={currentOrganization.id} columnFilterOptions={columnFilterOptions} columnFilters={columnFilters} onColumnFilterChange={updateColumnFilter} />
+          <div data-equipment-list-chrome="" className="shrink-0"><EquipmentPaginationFooter totalItems={totalFilteredCount} page={currentPage} pageSize={pageSize} pageSizeOptions={pageSizeOptions} itemLabel={t('equipment.result')} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} /></div>
         </div>
 
         <EquipmentForm open={showForm} onClose={handleCloseForm} equipment={editingEquipment} onCreated={editingEquipment ? undefined : handleEquipmentCreated} />

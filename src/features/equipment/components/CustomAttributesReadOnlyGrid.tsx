@@ -1,15 +1,17 @@
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
-  humanizeCustomAttributeKey,
+  getLocalizedCustomAttributeKey,
   renderCustomAttributeValue,
 } from '@/features/equipment/utils/customAttributeDisplay';
+import { useI18n } from '@/i18n';
 
 type CustomAttributesReadOnlyGridProps = {
   attributes: Record<string, unknown>;
 };
 
 export function CustomAttributesReadOnlyGrid({ attributes }: CustomAttributesReadOnlyGridProps) {
+  const { t } = useI18n();
   return (
     <TooltipProvider>
       <div className="flex flex-wrap gap-4">
@@ -18,16 +20,16 @@ export function CustomAttributesReadOnlyGrid({ attributes }: CustomAttributesRea
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="text-sm font-medium text-muted-foreground mb-1 cursor-default">
-                  {humanizeCustomAttributeKey(key)}
+                  {getLocalizedCustomAttributeKey(key, t)}
                 </div>
               </TooltipTrigger>
-              {humanizeCustomAttributeKey(key) !== key && (
+              {getLocalizedCustomAttributeKey(key, t) !== key && (
                 <TooltipContent side="top">
                   <p>{key}</p>
                 </TooltipContent>
               )}
             </Tooltip>
-            {renderCustomAttributeValue(String(val))}
+            {renderCustomAttributeValue(val, t)}
           </div>
         ))}
       </div>

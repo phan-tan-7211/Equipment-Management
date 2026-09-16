@@ -5,7 +5,14 @@ import EquipmentEmptyState from './EquipmentEmptyState';
 import EquipmentTable from './EquipmentTable';
 import type { EquipmentViewMode } from './EquipmentCard';
 import type { EquipmentPMStatus } from '@/features/equipment/hooks/useEquipmentPMStatus';
-import type { SortConfig } from '@/features/equipment/hooks/useEquipmentFiltering';
+import type {
+  EquipmentColumnFilterOptions,
+  SortConfig,
+} from '@/features/equipment/hooks/useEquipmentFiltering';
+import type {
+  EquipmentColumnFilterKey,
+  EquipmentColumnFilters,
+} from '@/features/equipment/services/EquipmentService';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Equipment {
@@ -20,6 +27,9 @@ interface Equipment {
   image_url?: string;
   team_name?: string;
   management_code?: string | null;
+  custom_attributes?: Record<string, unknown> | null;
+  management_responsible_primary?: string | null;
+  management_responsible_secondary?: string | null;
 }
 
 interface EquipmentGridProps {
@@ -39,6 +49,9 @@ interface EquipmentGridProps {
   visibleColumns?: Record<string, boolean>;
   onToggleColumn?: (key: string) => void;
   organizationId?: string;
+  columnFilterOptions?: EquipmentColumnFilterOptions;
+  columnFilters?: EquipmentColumnFilters;
+  onColumnFilterChange?: (key: EquipmentColumnFilterKey, values: string[]) => void;
 }
 
 const EquipmentGrid: React.FC<EquipmentGridProps> = ({
@@ -57,27 +70,39 @@ const EquipmentGrid: React.FC<EquipmentGridProps> = ({
   visibleColumns,
   onToggleColumn,
   organizationId,
+  columnFilterOptions,
+  columnFilters,
+  onColumnFilterChange,
 }) => {
   const equipmentIds = useMemo(() => equipment.map((item) => item.id).sort(), [equipment]);
   const { data: managementCodes = [] } = useQuery({
-    queryKey: ['equipment-management-codes', equipmentIds],
+    queryKey: ['equipment-management-codes', equipmentIds, viewMode],
     enabled: equipmentIds.length > 0,
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('equipment')
-        .select('id, management_code')
+        .select(viewMode === 'table' ? 'id, management_code, management_responsible_primary, management_responsible_secondary' : 'id, management_code')
         .in('id', equipmentIds);
       if (error) throw error;
-      return (data ?? []) as Array<{ id: string; management_code: string | null }>;
+      return (data ?? []) as Array<{
+        id: string;
+        management_code: string | null;
+        management_responsible_primary?: string | null;
+        management_responsible_secondary?: string | null;
+      }>;
     },
   });
 
   const equipmentWithCodes = useMemo(() => {
     const codeById = new Map(managementCodes.map((row) => [row.id, row.management_code]));
+    const primaryById = new Map(managementCodes.map((row) => [row.id, row.management_responsible_primary ?? null]));
+    const secondaryById = new Map(managementCodes.map((row) => [row.id, row.management_responsible_secondary ?? null]));
     return equipment.map((item) => ({
       ...item,
       management_code: item.management_code ?? codeById.get(item.id) ?? null,
+      management_responsible_primary: item.management_responsible_primary ?? primaryById.get(item.id) ?? null,
+      management_responsible_secondary: item.management_responsible_secondary ?? secondaryById.get(item.id) ?? null,
     }));
   }, [equipment, managementCodes]);
 
@@ -105,6 +130,9 @@ const EquipmentGrid: React.FC<EquipmentGridProps> = ({
         visibleColumns={visibleColumns}
         onToggleColumn={onToggleColumn}
         organizationId={organizationId}
+        columnFilterOptions={columnFilterOptions}
+        columnFilters={columnFilters}
+        onColumnFilterChange={onColumnFilterChange}
       />
     );
   }

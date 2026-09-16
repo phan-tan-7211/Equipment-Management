@@ -1,6 +1,10 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { useEquipmentList, useEquipmentSummaries } from '@/features/equipment/hooks/useEquipment';
-import type { EquipmentListFilters } from '@/features/equipment/services/EquipmentService';
+import type {
+  EquipmentColumnFilterKey,
+  EquipmentColumnFilters,
+  EquipmentListFilters,
+} from '@/features/equipment/services/EquipmentService';
 import { useTeamMembership } from '@/features/teams/hooks/useTeamMembership';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { isOrgAdminRole } from '@/features/teams/utils/teamAccessScope';
@@ -11,6 +15,12 @@ import {
   EQUIPMENT_CARD_PAGE_SIZE_OPTIONS,
   EQUIPMENT_TABLE_PAGE_SIZE_OPTIONS,
 } from '@/features/equipment/utils/equipmentListPagination';
+import { getStatusDisplayInfo } from '@/features/equipment/utils/equipmentHelpers';
+
+const naturalValueCompare = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: 'base',
+}).compare;
 
 export interface EquipmentFilters {
   search: string;
@@ -29,6 +39,15 @@ export interface SortConfig {
   field: string;
   direction: 'asc' | 'desc';
 }
+
+export interface EquipmentColumnFilterOption {
+  value: string;
+  label: string;
+}
+
+export type EquipmentColumnFilterOptions = Partial<
+  Record<EquipmentColumnFilterKey, EquipmentColumnFilterOption[]>
+>;
 
 const initialFilters: EquipmentFilters = {
   search: '',
@@ -75,6 +94,7 @@ export const useEquipmentFiltering = (
   const [cardPageSize, setCardPageSize] = useState(DEFAULT_EQUIPMENT_CARD_PAGE_SIZE);
   const [tablePageSize, setTablePageSize] = useState(DEFAULT_EQUIPMENT_TABLE_PAGE_SIZE);
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
+  const [columnFilters, setColumnFilters] = useState<EquipmentColumnFilters>({});
 
   const currentPage = viewMode === 'table' ? tablePage : cardPage;
   const pageSize = viewMode === 'table' ? tablePageSize : cardPageSize;
@@ -92,6 +112,8 @@ export const useEquipmentFiltering = (
   filtersRef.current = filters;
   const sortConfigRef = useRef(sortConfig);
   sortConfigRef.current = sortConfig;
+  const columnFiltersRef = useRef(columnFilters);
+  columnFiltersRef.current = columnFilters;
 
   // Derive RBAC inputs for the server-side query so team-scoped users only
   // see equipment on their teams (mirrors the app-layer gate in the non-
@@ -123,11 +145,12 @@ export const useEquipmentFiltering = (
       installationDateFrom: filters.installationDateFrom || undefined,
       installationDateTo: filters.installationDateTo || undefined,
       warrantyExpiring: filters.warrantyExpiring || undefined,
+      columnFilters,
       isOrgAdmin,
       userTeamIds: rbacUserTeamIds,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filters, isOrgAdmin, rbacUserTeamIds?.join(',')],
+    [filters, columnFilters, isOrgAdmin, rbacUserTeamIds?.join(',')],
   );
 
   const listQuery = useEquipmentList(organizationId, serverFilters, {
@@ -165,11 +188,60 @@ export const useEquipmentFiltering = (
   const filterOptions = useMemo(() => {
     const manufacturers = [...new Set(equipment.map(item => item.manufacturer ?? ''))]
       .filter(m => m && m.trim() !== '')
-      .sort();
+      .sort(naturalValueCompare);
     const locations = [...new Set(equipment.map(item => item.location ?? ''))]
       .filter(l => l && l.trim() !== '')
-      .sort();
+      .sort(naturalValueCompare);
     return { manufacturers, locations } as const;
+  }, [equipment]);
+
+  const columnFilterOptions = useMemo<EquipmentColumnFilterOptions>(() => {
+    const uniqueOptions = (
+      values: Array<{ value: string | null | undefined; label?: string }>,
+    ): EquipmentColumnFilterOption[] => {
+      const seen = new Set<string>();
+      return values
+        .filter((item) => item.value != null && item.value !== '')
+        .map((item) => ({ value: String(item.value), label: item.label ?? String(item.value) }))
+        .filter((item) => {
+          if (seen.has(item.value)) return false;
+          seen.add(item.value);
+          return true;
+        })
+        .sort((a, b) => naturalValueCompare(a.label, b.label));
+    };
+
+    return {
+      name: uniqueOptions(equipment.map((item) => ({ value: item.name }))),
+      status: uniqueOptions(
+        equipment.map((item) => ({
+          value: item.status,
+          label: getStatusDisplayInfo(item.status).label,
+        })),
+      ),
+      manufacturer: uniqueOptions(equipment.map((item) => ({ value: item.manufacturer }))),
+      model: uniqueOptions(equipment.map((item) => ({ value: item.model }))),
+      serial_number: uniqueOptions(equipment.map((item) => ({ value: item.serial_number }))),
+      working_hours: uniqueOptions(
+        equipment.map((item) => ({
+          value: item.working_hours == null ? null : String(item.working_hours),
+          label: item.working_hours == null ? undefined : item.working_hours.toLocaleString(),
+        })),
+      ),
+      location: uniqueOptions(equipment.map((item) => ({ value: item.location }))),
+      team_name: uniqueOptions(
+        equipment.map((item) => ({
+          value: item.team_id ?? '__unassigned__',
+          label: item.team_name ?? 'Unassigned',
+        })),
+      ),
+      last_maintenance: uniqueOptions(
+        equipment.map((item) => ({
+          value: item.last_maintenance,
+          label: item.last_maintenance?.slice(0, 10),
+        })),
+      ),
+    };
   }, [equipment]);
 
   // For consumers that previously read `filteredAndSortedEquipment` to
@@ -179,6 +251,7 @@ export const useEquipmentFiltering = (
   const applyQuickFilter = useCallback((type: string) => {
     if (activeQuickFilter === type) {
       setFilters(initialFilters);
+      setColumnFilters({});
       setSortConfig(initialSort);
       setActiveQuickFilter(null);
       resetPagination();
@@ -186,6 +259,7 @@ export const useEquipmentFiltering = (
     }
 
     setFilters(initialFilters);
+    setColumnFilters({});
     setSortConfig(initialSort);
 
     switch (type) {
@@ -216,6 +290,29 @@ export const useEquipmentFiltering = (
     [resetPagination],
   );
 
+  const updateColumnFilter = useCallback(
+    (key: EquipmentColumnFilterKey, values: string[]) => {
+      const nextValues = [...new Set(values)];
+      const previousValues = columnFiltersRef.current[key] ?? [];
+      if (
+        previousValues.length === nextValues.length &&
+        previousValues.every((value, index) => value === nextValues[index])
+      ) {
+        return;
+      }
+
+      setColumnFilters((current) => {
+        const next = { ...current };
+        if (nextValues.length) next[key] = nextValues;
+        else delete next[key];
+        return next;
+      });
+      setActiveQuickFilter(null);
+      resetPagination();
+    },
+    [resetPagination],
+  );
+
   const updateSort = useCallback((field: string, direction?: 'asc' | 'desc') => {
     const prev = sortConfigRef.current;
     const nextDirection =
@@ -227,6 +324,7 @@ export const useEquipmentFiltering = (
 
   const clearFilters = useCallback(() => {
     setFilters(initialFilters);
+    setColumnFilters({});
     setSortConfig(initialSort);
     setActiveQuickFilter(null);
     resetPagination();
@@ -243,7 +341,7 @@ export const useEquipmentFiltering = (
       }
       return value !== 'all';
     });
-  }, [filters]);
+  }, [filters]) || Object.values(columnFilters).some((values) => values.length > 0);
 
   const totalPages = Math.max(1, Math.ceil(totalFilteredCount / pageSize));
 
@@ -276,6 +374,8 @@ export const useEquipmentFiltering = (
     filteredAndSortedEquipment,
     paginatedEquipment,
     filterOptions,
+    columnFilterOptions,
+    columnFilters,
     isLoading,
     hasActiveFilters,
     activeQuickFilter,
@@ -290,6 +390,7 @@ export const useEquipmentFiltering = (
     totalPages,
     totalFilteredCount,
     updateFilter,
+    updateColumnFilter,
     updateSort,
     clearFilters,
     applyQuickFilter,

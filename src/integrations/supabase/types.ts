@@ -444,6 +444,8 @@ export type Database = {
           last_maintenance: string | null
           last_maintenance_work_order_id: string | null
           location: string
+          management_responsible_primary: string | null
+          management_responsible_secondary: string | null
           manufacturer: string
           model: string
           name: string
@@ -476,6 +478,8 @@ export type Database = {
           last_maintenance?: string | null
           last_maintenance_work_order_id?: string | null
           location: string
+          management_responsible_primary?: string | null
+          management_responsible_secondary?: string | null
           manufacturer: string
           model: string
           name: string
@@ -508,6 +512,8 @@ export type Database = {
           last_maintenance?: string | null
           last_maintenance_work_order_id?: string | null
           location?: string
+          management_responsible_primary?: string | null
+          management_responsible_secondary?: string | null
           manufacturer?: string
           model?: string
           name?: string

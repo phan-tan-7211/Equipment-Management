@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { flexRender, type Cell, type Header, type Table as TanStackTable } from '@tanstack/react-table';
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties, DragEventHandler, ReactNode } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
@@ -54,11 +54,17 @@ type ResizableTableSurfaceProps<TData> = {
   table: TanStackTable<TData>;
   tableWidth: number;
   scrollClassName?: string;
+  stickyHeader?: boolean;
   getHeaderProps: (header: Header<TData, unknown>) => {
     className: string;
     ariaSort?: 'ascending' | 'descending' | 'none';
     onAutoFit?: () => void;
     style?: CSSProperties;
+    draggable?: boolean;
+    onDragStart?: DragEventHandler<HTMLTableCellElement>;
+    onDragOver?: DragEventHandler<HTMLTableCellElement>;
+    onDrop?: DragEventHandler<HTMLTableCellElement>;
+    onDragEnd?: DragEventHandler<HTMLTableCellElement>;
   };
   getCellClassName: (cell: Cell<TData, unknown>) => string;
   getCellStyle?: (cell: Cell<TData, unknown>) => CSSProperties | undefined;
@@ -73,6 +79,7 @@ export function ResizableTableSurface<TData>({
   table,
   tableWidth,
   scrollClassName = 'overflow-x-auto',
+  stickyHeader = false,
   getHeaderProps,
   getCellClassName,
   getCellStyle,
@@ -100,14 +107,29 @@ export function ResizableTableSurface<TData>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
-                const { className, ariaSort, onAutoFit, style } = getHeaderProps(header);
+                const {
+                  className,
+                  ariaSort,
+                  onAutoFit,
+                  style,
+                  draggable,
+                  onDragStart,
+                  onDragOver,
+                  onDrop,
+                  onDragEnd,
+                } = getHeaderProps(header);
 
                 return (
                   <TableHead
                     key={header.id}
-                    className={className}
+                    className={stickyHeader ? cn(className, 'sticky top-0 z-30 bg-card') : className}
                     aria-sort={ariaSort ?? 'none'}
                     style={style}
+                    draggable={draggable}
+                    onDragStart={onDragStart}
+                    onDragOver={onDragOver}
+                    onDrop={onDrop}
+                    onDragEnd={onDragEnd}
                   >
                     <div className="group relative min-h-8 min-w-0 pr-6">
                       {header.isPlaceholder
@@ -155,11 +177,18 @@ type ResizableFixedDataTableProps<TData> = {
   withTooltipProvider?: boolean;
   scrollClassName?: string;
   cardClassName?: string;
+  contentClassName?: string;
+  stickyHeader?: boolean;
   getHeaderProps: (header: Header<TData, unknown>) => {
     className: string;
     ariaSort?: 'ascending' | 'descending' | 'none';
     onAutoFit?: () => void;
     style?: CSSProperties;
+    draggable?: boolean;
+    onDragStart?: DragEventHandler<HTMLTableCellElement>;
+    onDragOver?: DragEventHandler<HTMLTableCellElement>;
+    onDrop?: DragEventHandler<HTMLTableCellElement>;
+    onDragEnd?: DragEventHandler<HTMLTableCellElement>;
   };
   getCellClassName: (cell: Cell<TData, unknown>) => string;
   getCellStyle?: (cell: Cell<TData, unknown>) => CSSProperties | undefined;
@@ -172,6 +201,8 @@ export function ResizableFixedDataTable<TData>({
   withTooltipProvider = false,
   scrollClassName = 'overflow-x-auto',
   cardClassName = 'overflow-hidden',
+  contentClassName = 'p-0',
+  stickyHeader = false,
   getHeaderProps,
   getCellClassName,
   getCellStyle,
@@ -179,11 +210,12 @@ export function ResizableFixedDataTable<TData>({
 }: ResizableFixedDataTableProps<TData>) {
   const content = (
     <Card className={cardClassName}>
-      <CardContent className="p-0">
+      <CardContent className={contentClassName}>
         <ResizableTableSurface
           table={table}
           tableWidth={tableWidth}
           scrollClassName={scrollClassName}
+          stickyHeader={stickyHeader}
           getHeaderProps={getHeaderProps}
           getCellClassName={getCellClassName}
           getCellStyle={getCellStyle}
@@ -236,8 +268,17 @@ export function DataTableColumnResizeHandle<THeader>({
   return (
     <div
       data-slot="column-resize-handle"
-      onMouseDown={header.getResizeHandler()}
-      onTouchStart={header.getResizeHandler()}
+      onMouseDown={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        header.getResizeHandler()(event);
+      }}
+      onTouchStart={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        header.getResizeHandler()(event);
+      }}
+      onClick={(event) => event.stopPropagation()}
       onDoubleClick={
         onAutoFit
           ? (event) => {
