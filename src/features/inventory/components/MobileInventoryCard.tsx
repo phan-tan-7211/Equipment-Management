@@ -16,6 +16,7 @@ import {
   InventoryItemActionsMenu,
   type InventoryItemActionHandlers,
 } from '@/features/inventory/components/InventoryItemActionsMenu';
+import { InventoryItemThumbnail } from '@/features/inventory/components/InventoryItemThumbnail';
 import { InventoryStockBar } from '@/features/inventory/components/InventoryStockBar';
 import type { InventoryItem } from '@/features/inventory/types/inventory';
 import { cn } from '@/lib/utils';
@@ -76,8 +77,9 @@ const MobileInventoryCard: React.FC<MobileInventoryCardProps> = ({
     >
       <CardContent className="px-3 py-3">
         <div className="grid min-w-0 grid-cols-[1fr_auto] gap-x-2.5 gap-y-1">
-          <div className="col-start-1 row-start-1 min-w-0">
-            <h3 className="line-clamp-2 text-base font-semibold leading-snug text-foreground">
+          <div className="col-start-1 row-start-1 flex min-w-0 items-start gap-2.5">
+            <InventoryItemThumbnail item={item} enableHover={false} size="md" />
+            <h3 className="min-w-0 line-clamp-2 pt-0.5 text-base font-semibold leading-snug text-foreground">
               {item.name}
             </h3>
           </div>

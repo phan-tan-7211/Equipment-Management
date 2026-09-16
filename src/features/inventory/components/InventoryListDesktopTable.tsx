@@ -31,6 +31,7 @@ import {
   type InventoryTableColumnKey,
 } from '@/features/inventory/components/inventoryTableColumns';
 import { InventoryItemActionsMenu } from '@/features/inventory/components/InventoryItemActionsMenu';
+import { InventoryItemThumbnail } from '@/features/inventory/components/InventoryItemThumbnail';
 import type { InventoryFilters, InventoryItem, InventorySortField, InventoryTableDensity } from '@/features/inventory/types/inventory';
 import { getStockHealthPresentation } from '@/features/inventory/utils/stockHealth';
 import { resolveStockHealthTier } from '@/features/inventory/utils/stockHealthLevels';
@@ -128,22 +129,25 @@ export function InventoryListDesktopTable({
           switch (key) {
             case 'name':
               return (
-                <div className="min-w-0">
-                  <button
-                    type="button"
-                    className="block w-full truncate text-left font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:underline focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
-                    onClick={() => onViewItem(item.id)}
-                  >
-                    {item.name}
-                  </button>
-                  {vm.alternateGroupCount > 0 && (
-                    <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                      <Layers className="h-3 w-3" aria-hidden />
-                      {vm.alternateGroupCount === 1
-                        ? t('inventoryList.alternateGroup', { count: vm.alternateGroupCount })
-                        : t('inventoryList.alternateGroups', { count: vm.alternateGroupCount })}
-                    </p>
-                  )}
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <InventoryItemThumbnail item={item} />
+                  <div className="min-w-0 flex-1">
+                    <button
+                      type="button"
+                      className="block w-full truncate text-left font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:underline focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
+                      onClick={() => onViewItem(item.id)}
+                    >
+                      {item.name}
+                    </button>
+                    {vm.alternateGroupCount > 0 && (
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                        <Layers className="h-3 w-3" aria-hidden />
+                        {vm.alternateGroupCount === 1
+                          ? t('inventoryList.alternateGroup', { count: vm.alternateGroupCount })
+                          : t('inventoryList.alternateGroups', { count: vm.alternateGroupCount })}
+                      </p>
+                    )}
+                  </div>
                 </div>
               );
             case 'sku':
