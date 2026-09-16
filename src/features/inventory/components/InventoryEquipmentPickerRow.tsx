@@ -1,8 +1,8 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Check, Forklift } from 'lucide-react';
-import { displayableImageSrc } from '@/services/imageUploadService';
+import { Check } from 'lucide-react';
+import { InventoryEquipmentThumbnail } from '@/features/inventory/components/InventoryEquipmentThumbnail';
 
 export type InventoryEquipmentPickerItem = {
   id: string;
@@ -25,8 +25,6 @@ export function InventoryEquipmentPickerRow({
   onToggle,
   selectedBadgeLabel,
 }: InventoryEquipmentPickerRowProps) {
-  const imageSrc = displayableImageSrc(equipment.image_url);
-
   return (
     <div
       key={equipment.id}
@@ -36,23 +34,7 @@ export function InventoryEquipmentPickerRow({
         checked={isSelected}
         onCheckedChange={(checked) => onToggle(equipment.id, checked as boolean)}
       />
-      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border/70 bg-muted">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Forklift className="h-4 w-4 text-muted-foreground/50" aria-hidden="true" />
-        </div>
-        {imageSrc && (
-          <img
-            src={imageSrc}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
-            onError={(event) => {
-              event.currentTarget.hidden = true;
-            }}
-          />
-        )}
-      </div>
+      <InventoryEquipmentThumbnail equipment={equipment} />
       <div className="min-w-0 flex-1">
         <div className="truncate font-medium">{equipment.name}</div>
         <div className="truncate text-sm text-muted-foreground">

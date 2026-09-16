@@ -3,6 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { verifyInventoryItemInOrganization } from '@/features/inventory/services/inventoryItemAccess';
 import type { Equipment } from '@/features/equipment/services/EquipmentService';
 
+export type CompatibleEquipmentSummary = Pick<
+  Equipment,
+  'id' | 'name' | 'organization_id' | 'manufacturer' | 'model' | 'image_url'
+>;
+
 async function assertEquipmentInOrganization(
   organizationId: string,
   equipmentId: string,
@@ -35,7 +40,7 @@ async function assertInventoryEquipmentLinkScope(
 export const getCompatibleEquipmentForItem = async (
   organizationId: string,
   itemId: string
-): Promise<Equipment[]> => {
+): Promise<CompatibleEquipmentSummary[]> => {
   try {
     await verifyInventoryItemInOrganization(organizationId, itemId);
 
@@ -46,6 +51,9 @@ export const getCompatibleEquipmentForItem = async (
         equipment:equipment_id(
           id,
           name,
+          manufacturer,
+          model,
+          image_url,
           organization_id
         )
       `)
@@ -56,7 +64,7 @@ export const getCompatibleEquipmentForItem = async (
 
     const equipment = (data || [])
       .map((row: { equipment: unknown }) => row.equipment)
-      .filter(Boolean) as Equipment[];
+      .filter(Boolean) as CompatibleEquipmentSummary[];
 
     return equipment;
   } catch (error) {

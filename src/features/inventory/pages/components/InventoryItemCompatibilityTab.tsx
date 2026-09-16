@@ -23,12 +23,14 @@ import type {
   VerificationStatus,
 } from '@/features/inventory/types/inventory';
 import { getCompatibilityRuleMatchTypeLabel } from '@/features/inventory/utils/compatibilityRulePresentation';
+import { InventoryEquipmentThumbnail } from '@/features/inventory/components/InventoryEquipmentThumbnail';
 
 type CompatibleEquipmentSummary = {
   id: string;
   name: string;
   manufacturer?: string | null;
   model?: string | null;
+  image_url?: string | null;
 };
 
 type EquipmentMatchedByRule = {
@@ -263,20 +265,23 @@ const InventoryItemCompatibilityTab: React.FC<InventoryItemCompatibilityTabProps
         ) : (
           <div className="space-y-2">
             {compatibleEquipment.map((equipment) => (
-              <div key={equipment.id} className="flex items-center justify-between p-3 border rounded-lg">
+              <div key={equipment.id} className="flex items-center justify-between gap-3 p-3 border rounded-lg">
                 <div
                   role="button"
                   tabIndex={0}
-                  className="flex-1 min-w-0 cursor-pointer hover:text-primary text-left"
+                  className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left hover:text-primary"
                   onClick={() => onNavigateToEquipment(equipment.id)}
                   onKeyDown={(e) =>
                     handleKeyboardActivation(e, () => onNavigateToEquipment(equipment.id))
                   }
                 >
-                  <p className="font-medium">{equipment.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {equipment.manufacturer} {equipment.model}
-                  </p>
+                  <InventoryEquipmentThumbnail equipment={equipment} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{equipment.name}</p>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {equipment.manufacturer} {equipment.model}
+                    </p>
+                  </div>
                 </div>
                 {canEdit && (
                   <Button
