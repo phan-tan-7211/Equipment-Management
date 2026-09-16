@@ -170,4 +170,24 @@ describe('useEquipmentFiltering (server-paginated)', () => {
     expect(result.current.filterOptions.manufacturers).toEqual(['Acme', 'Globex']);
     expect(result.current.filterOptions.locations).toEqual(['LA', 'NY', 'SF']);
   });
+
+  it('sorts direct column values naturally when labels contain numbers', () => {
+    (useEquipmentSummaries as Mock).mockReturnValue({
+      data: [
+        { ...summariesFixture[0], name: 'MÁY 1' },
+        { ...summariesFixture[0], id: 'eq10', name: 'MÁY 10' },
+        { ...summariesFixture[0], id: 'eq11', name: 'MÁY 11' },
+        { ...summariesFixture[0], id: 'eq2', name: 'MÁY 2' },
+      ],
+      isLoading: false,
+    });
+
+    const { result } = renderHook(() => useEquipmentFiltering('org-1'), { wrapper });
+    expect(result.current.columnFilterOptions.name?.map((option) => option.label)).toEqual([
+      'MÁY 1',
+      'MÁY 2',
+      'MÁY 10',
+      'MÁY 11',
+    ]);
+  });
 });

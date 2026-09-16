@@ -17,6 +17,11 @@ import {
 } from '@/features/equipment/utils/equipmentListPagination';
 import { getStatusDisplayInfo } from '@/features/equipment/utils/equipmentHelpers';
 
+const naturalValueCompare = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: 'base',
+}).compare;
+
 export interface EquipmentFilters {
   search: string;
   status: string;
@@ -183,10 +188,10 @@ export const useEquipmentFiltering = (
   const filterOptions = useMemo(() => {
     const manufacturers = [...new Set(equipment.map(item => item.manufacturer ?? ''))]
       .filter(m => m && m.trim() !== '')
-      .sort();
+      .sort(naturalValueCompare);
     const locations = [...new Set(equipment.map(item => item.location ?? ''))]
       .filter(l => l && l.trim() !== '')
-      .sort();
+      .sort(naturalValueCompare);
     return { manufacturers, locations } as const;
   }, [equipment]);
 
@@ -203,7 +208,7 @@ export const useEquipmentFiltering = (
           seen.add(item.value);
           return true;
         })
-        .sort((a, b) => a.label.localeCompare(b.label));
+        .sort((a, b) => naturalValueCompare(a.label, b.label));
     };
 
     return {
