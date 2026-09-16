@@ -307,7 +307,7 @@ const PMTemplates = () => {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold">{t('pmTemplates.list.title')}</h1>
@@ -322,7 +322,7 @@ const PMTemplates = () => {
 
   if (!isAdmin) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold">{t('pmTemplates.list.title')}</h1>
@@ -397,7 +397,7 @@ const PMTemplates = () => {
   const showMobileFab = isMobile && isAdmin && canCreateCustomTemplates;
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className={cn('space-y-6', showMobileFab && 'pb-28')}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

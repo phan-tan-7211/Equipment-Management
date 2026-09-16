@@ -351,7 +351,7 @@ const WorkOrders = () => {
 
   if (isLoading) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader 
           title={t('workOrders.list.title')} 
           description={t('workOrders.list.loading')} 
@@ -401,7 +401,7 @@ const WorkOrders = () => {
     : null;
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-4">
         <PageHeader 
           title={t('workOrders.list.title')} 

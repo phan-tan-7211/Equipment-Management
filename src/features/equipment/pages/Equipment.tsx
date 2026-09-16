@@ -105,15 +105,15 @@ const Equipment = () => {
   const canImport = hasRole(['owner', 'admin']);
   const canExport = hasRole(['owner', 'admin', 'member']);
 
-  if (!currentOrganization) return <Page maxWidth="7xl" padding="responsive"><PageHeader title={t('equipment.title')} description={t('equipment.selectOrganization')} /></Page>;
-  if (isLoading) return <Page maxWidth="7xl" padding="responsive"><EquipmentLoadingState /></Page>;
+  if (!currentOrganization) return <Page maxWidth="full" padding="workspace"><PageHeader title={t('equipment.title')} description={t('equipment.selectOrganization')} /></Page>;
+  if (isLoading) return <Page maxWidth="full" padding="workspace"><EquipmentLoadingState /></Page>;
 
   const handleAddEquipment = () => { setEditingEquipment(null); setShowForm(true); };
   const handleCloseForm = () => { setShowForm(false); setEditingEquipment(null); };
   const handleEquipmentCreated = (equipmentId: string) => { setSelectedTeamId(null); navigate(`/dashboard/equipment/${equipmentId}`); };
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <EquipmentListTransitionRoot className={cn('space-y-4 md:space-y-6', isMobile && canCreate && 'pb-28')}>
         <div data-equipment-list-chrome="">
           <PageHeader

@@ -13,7 +13,7 @@ interface PageProps {
    * Padding variant for consistent spacing
    * @default "responsive" - uses responsive padding that matches App.tsx
    */
-  padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'responsive';
+  padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'responsive' | 'workspace';
   /**
    * Whether to center the content horizontally
    * @default true
@@ -35,6 +35,8 @@ const Page: React.FC<PageProps> = ({
     md: 'p-content',
     lg: 'p-content-lg',
     responsive: 'p-3 sm:p-4 lg:p-6 xl:p-8',
+    // Data workspaces use the available viewport while keeping a compact gutter.
+    workspace: 'p-3 sm:p-4 lg:p-5 xl:p-6',
   };
 
   const maxWidthClasses = {
@@ -67,4 +69,3 @@ const Page: React.FC<PageProps> = ({
 };
 
 export default Page;
-
