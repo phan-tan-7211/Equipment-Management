@@ -227,17 +227,16 @@ describe('DashboardRouteLayout loading shell', () => {
     expect(screen.queryByText('Organization settings content')).not.toBeInTheDocument();
   });
 
-  it('locks the equipment list route so only its table owns scrolling', () => {
+  it('keeps the dashboard scrollport bounded for the equipment list', () => {
     renderLayout('/dashboard/equipment');
 
-    expect(screen.getByRole('main')).toHaveClass('min-h-0', 'overflow-hidden');
+    expect(screen.getByRole('main')).toHaveClass('min-h-0', 'overflow-auto');
   });
 
   it('keeps the regular dashboard scroll behavior on other routes', () => {
     renderLayout('/dashboard/notifications');
 
     expect(screen.getByRole('main')).toHaveClass('overflow-auto');
-    expect(screen.getByRole('main')).not.toHaveClass('overflow-hidden');
   });
 
   it('keeps shell chrome visible while workspace access is loading', () => {
