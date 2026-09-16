@@ -79,6 +79,30 @@ describe('EquipmentTable', () => {
     expect(screen.getByText('SN67890')).toBeInTheDocument();
   });
 
+  it('renders management responsible columns from custom attributes', () => {
+    render(
+      <EquipmentTable
+        equipment={[
+          {
+            ...mockEquipment[0],
+            custom_attributes: {
+              'Management Responsible Primary': 'Mr.TRUNG',
+              'Management Responsible Secondary': 'Mr.TẤN',
+            },
+            management_responsible_primary: 'Mr.TRUNG',
+            management_responsible_secondary: 'Mr.TẤN',
+          },
+        ]}
+        onShowQRCode={onShowQRCode}
+      />,
+    );
+
+    expect(getHeaderByTitle('Management Responsible Primary')).toBeInTheDocument();
+    expect(getHeaderByTitle('Management Responsible Secondary')).toBeInTheDocument();
+    expect(screen.getByText('Mr.TRUNG')).toBeInTheDocument();
+    expect(screen.getByText('Mr.TẤN')).toBeInTheDocument();
+  });
+
   it('renders compact DotStatus with labels only for assistive tech', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     expect(screen.getByText('Active')).toHaveClass('sr-only');

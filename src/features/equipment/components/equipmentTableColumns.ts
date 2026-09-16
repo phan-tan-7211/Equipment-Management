@@ -7,7 +7,9 @@ export type EquipmentTableColumnKey =
   | 'working_hours'
   | 'location'
   | 'team_name'
-  | 'last_maintenance';
+  | 'last_maintenance'
+  | 'management_responsible_primary'
+  | 'management_responsible_secondary';
 
 export type EquipmentTableSortField = EquipmentTableColumnKey;
 
@@ -38,6 +40,8 @@ export const EQUIPMENT_TABLE_COLUMN_ORDER: readonly EquipmentTableColumnKey[] = 
   'location',
   'team_name',
   'last_maintenance',
+  'management_responsible_primary',
+  'management_responsible_secondary',
 ] as const;
 
 /**
@@ -161,6 +165,30 @@ export const EQUIPMENT_TABLE_COLUMN_META: readonly EquipmentTableColumnMeta[] = 
     align: 'right',
     mono: true,
     sortable: true,
+    resizable: true,
+  },
+  {
+    key: 'management_responsible_primary',
+    sortField: 'management_responsible_primary',
+    title: 'Management Responsible Primary',
+    canHide: true,
+    defaultVisible: true,
+    defaultWidth: 190,
+    minWidth: 130,
+    maxWidth: 320,
+    sortable: false,
+    resizable: true,
+  },
+  {
+    key: 'management_responsible_secondary',
+    sortField: 'management_responsible_secondary',
+    title: 'Management Responsible Secondary',
+    canHide: true,
+    defaultVisible: true,
+    defaultWidth: 190,
+    minWidth: 130,
+    maxWidth: 320,
+    sortable: false,
     resizable: true,
   },
 ] as const;

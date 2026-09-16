@@ -14,6 +14,7 @@ import type {
   EquipmentColumnFilters,
 } from '@/features/equipment/services/EquipmentService';
 import { supabase } from '@/integrations/supabase/client';
+import { getCustomAttributeValue, stringifyCustomAttributeValue } from '@/features/equipment/utils/customAttributeDisplay';
 
 interface Equipment {
   id: string;
@@ -27,6 +28,9 @@ interface Equipment {
   image_url?: string;
   team_name?: string;
   management_code?: string | null;
+  custom_attributes?: Record<string, unknown> | null;
+  management_responsible_primary?: string | null;
+  management_responsible_secondary?: string | null;
 }
 
 interface EquipmentGridProps {
@@ -73,24 +77,28 @@ const EquipmentGrid: React.FC<EquipmentGridProps> = ({
 }) => {
   const equipmentIds = useMemo(() => equipment.map((item) => item.id).sort(), [equipment]);
   const { data: managementCodes = [] } = useQuery({
-    queryKey: ['equipment-management-codes', equipmentIds],
+    queryKey: ['equipment-management-codes', equipmentIds, viewMode],
     enabled: equipmentIds.length > 0,
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('equipment')
-        .select('id, management_code')
+        .select(viewMode === 'table' ? 'id, management_code, custom_attributes' : 'id, management_code')
         .in('id', equipmentIds);
       if (error) throw error;
-      return (data ?? []) as Array<{ id: string; management_code: string | null }>;
+      return (data ?? []) as Array<{ id: string; management_code: string | null; custom_attributes?: Record<string, unknown> | null }>;
     },
   });
 
   const equipmentWithCodes = useMemo(() => {
     const codeById = new Map(managementCodes.map((row) => [row.id, row.management_code]));
+    const attributesById = new Map(managementCodes.map((row) => [row.id, row.custom_attributes ?? null]));
     return equipment.map((item) => ({
       ...item,
       management_code: item.management_code ?? codeById.get(item.id) ?? null,
+      custom_attributes: item.custom_attributes ?? attributesById.get(item.id) ?? null,
+      management_responsible_primary: stringifyCustomAttributeValue(getCustomAttributeValue(item.custom_attributes ?? attributesById.get(item.id), 'managementResponsiblePrimary')) || null,
+      management_responsible_secondary: stringifyCustomAttributeValue(getCustomAttributeValue(item.custom_attributes ?? attributesById.get(item.id), 'managementResponsibleSecondary')) || null,
     }));
   }, [equipment, managementCodes]);
 

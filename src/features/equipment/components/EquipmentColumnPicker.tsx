@@ -9,6 +9,7 @@ export interface EquipmentColumnPickerProps { allColumns: readonly EquipmentTabl
 
 const COLUMN_KEYS: Record<string, string> = {
   status: 'equipment.status', name: 'equipment.name', manufacturer: 'equipment.manufacturer', model: 'equipment.model', serial_number: 'equipment.serialNumber', working_hours: 'equipment.hours', location: 'equipment.location', team_name: 'equipment.team', last_maintenance: 'equipment.lastMaintenanceFull',
+  management_responsible_primary: 'equipmentCustomAttributes.managementResponsiblePrimary', management_responsible_secondary: 'equipmentCustomAttributes.managementResponsibleSecondary',
 };
 
 const EquipmentColumnPicker: React.FC<EquipmentColumnPickerProps> = ({ allColumns, visibleColumns, onToggle, onReset, hasOverrides }) => {

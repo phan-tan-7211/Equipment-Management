@@ -4,6 +4,7 @@ import { Edit2, Check, X } from 'lucide-react';
 import { responsiveHoverEditIconClassName } from './inlineEditStyles';
 import CustomAttributesSection from './CustomAttributesSection';
 import { CustomAttributesReadOnlyGrid } from '@/features/equipment/components/CustomAttributesReadOnlyGrid';
+import { stringifyCustomAttributeValue } from '@/features/equipment/utils/customAttributeDisplay';
 import type { CustomAttribute } from '@/hooks/useCustomAttributes';
 import { useI18n } from '@/i18n';
 
@@ -30,7 +31,7 @@ const InlineEditCustomAttributes: React.FC<InlineEditCustomAttributesProps> = ({
     const attributeArray = Object.entries(attributesData).map(([key, val]) => ({
       id: crypto.randomUUID(),
       key,
-      value: String(val)
+      value: stringifyCustomAttributeValue(val)
     }));
     setEditAttributes(attributeArray.length > 0 ? attributeArray : []);
     setIsEditing(true);

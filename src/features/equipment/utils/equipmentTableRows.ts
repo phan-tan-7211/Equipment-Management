@@ -19,6 +19,9 @@ export interface EquipmentTableRow {
   team_id?: string | null;
   working_hours?: number | null;
   management_code?: string | null;
+  custom_attributes?: Record<string, unknown> | null;
+  management_responsible_primary?: string | null;
+  management_responsible_secondary?: string | null;
   [key: string]: unknown;
 }
 
@@ -47,6 +50,10 @@ export function getEquipmentTableCellDisplayValue(
     case 'last_maintenance':
       if (!row.last_maintenance) return '—';
       return safeFormatDate(row.last_maintenance, settings) ?? '—';
+    case 'management_responsible_primary':
+      return row.management_responsible_primary || '—';
+    case 'management_responsible_secondary':
+      return row.management_responsible_secondary || '—';
     default: {
       const exhaustive: never = columnKey;
       return exhaustive;
