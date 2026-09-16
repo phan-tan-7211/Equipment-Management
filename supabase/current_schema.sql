@@ -768,14 +768,12 @@ DECLARE
   v_entity_name TEXT;
   v_metadata JSONB := '{}';
 BEGIN
-  -- Determine entity name
   IF TG_OP = 'DELETE' THEN
     v_entity_name := OLD.name;
   ELSE
     v_entity_name := NEW.name;
   END IF;
-  
-  -- Build changes object based on operation
+
   IF TG_OP = 'INSERT' THEN
     v_changes := jsonb_build_object(
       'name', jsonb_build_object('old', NULL, 'new', NEW.name),
@@ -787,16 +785,16 @@ BEGIN
       'installation_date', jsonb_build_object('old', NULL, 'new', NEW.installation_date),
       'warranty_expiration', jsonb_build_object('old', NULL, 'new', NEW.warranty_expiration),
       'notes', jsonb_build_object('old', NULL, 'new', NEW.notes),
-      'custom_attributes', jsonb_build_object('old', NULL, 'new', NEW.custom_attributes)
+      'custom_attributes', jsonb_build_object('old', NULL, 'new', NEW.custom_attributes),
+      'management_responsible_primary', jsonb_build_object('old', NULL, 'new', NEW.management_responsible_primary),
+      'management_responsible_secondary', jsonb_build_object('old', NULL, 'new', NEW.management_responsible_secondary)
     );
     v_metadata := jsonb_build_object(
       'team_id', NEW.team_id,
       'default_pm_template_id', NEW.default_pm_template_id,
       'customer_id', NEW.customer_id
     );
-    
   ELSIF TG_OP = 'UPDATE' THEN
-    -- Only track fields that changed
     IF OLD.name IS DISTINCT FROM NEW.name THEN
       v_changes := v_changes || jsonb_build_object('name', jsonb_build_object('old', OLD.name, 'new', NEW.name));
     END IF;
@@ -845,15 +843,19 @@ BEGIN
     IF OLD.custom_attributes IS DISTINCT FROM NEW.custom_attributes THEN
       v_changes := v_changes || jsonb_build_object('custom_attributes', jsonb_build_object('old', OLD.custom_attributes, 'new', NEW.custom_attributes));
     END IF;
+    IF OLD.management_responsible_primary IS DISTINCT FROM NEW.management_responsible_primary THEN
+      v_changes := v_changes || jsonb_build_object('management_responsible_primary', jsonb_build_object('old', OLD.management_responsible_primary, 'new', NEW.management_responsible_primary));
+    END IF;
+    IF OLD.management_responsible_secondary IS DISTINCT FROM NEW.management_responsible_secondary THEN
+      v_changes := v_changes || jsonb_build_object('management_responsible_secondary', jsonb_build_object('old', OLD.management_responsible_secondary, 'new', NEW.management_responsible_secondary));
+    END IF;
     IF OLD.last_known_location IS DISTINCT FROM NEW.last_known_location THEN
       v_changes := v_changes || jsonb_build_object('last_known_location', jsonb_build_object('old', OLD.last_known_location, 'new', NEW.last_known_location));
     END IF;
-    
-    -- Skip if no tracked fields changed (e.g., only updated_at changed)
+
     IF v_changes = '{}'::JSONB THEN
       RETURN NEW;
     END IF;
-    
   ELSIF TG_OP = 'DELETE' THEN
     v_changes := jsonb_build_object(
       'name', jsonb_build_object('old', OLD.name, 'new', NULL),
@@ -862,11 +864,12 @@ BEGIN
       'model', jsonb_build_object('old', OLD.model, 'new', NULL),
       'serial_number', jsonb_build_object('old', OLD.serial_number, 'new', NULL),
       'location', jsonb_build_object('old', OLD.location, 'new', NULL),
-      'custom_attributes', jsonb_build_object('old', OLD.custom_attributes, 'new', NULL)
+      'custom_attributes', jsonb_build_object('old', OLD.custom_attributes, 'new', NULL),
+      'management_responsible_primary', jsonb_build_object('old', OLD.management_responsible_primary, 'new', NULL),
+      'management_responsible_secondary', jsonb_build_object('old', OLD.management_responsible_secondary, 'new', NULL)
     );
   END IF;
-  
-  -- Log the audit entry
+
   PERFORM public.log_audit_entry(
     COALESCE(NEW.organization_id, OLD.organization_id),
     'equipment',
@@ -876,7 +879,7 @@ BEGIN
     v_changes,
     v_metadata
   );
-  
+
   RETURN COALESCE(NEW, OLD);
 END;
 $$;
@@ -8922,14 +8925,11 @@ DECLARE
   service_role_key text;
   supabase_url text;
   request_id bigint;
-  cron_job_id text;
 BEGIN
-  cron_job_id := current_setting('cron.job_id', true);
-
-  -- SECURITY DEFINER resets current_user to the function owner; session_user
-  -- preserves the real session identity (caller), which pg_cron uses as postgres.
-  IF session_user::text <> 'postgres' OR cron_job_id IS NULL THEN
-    RAISE EXCEPTION 'Access denied: invoke_queue_worker can only be called by the pg_cron scheduler as postgres';
+  -- cron.job.username is postgres for the scheduled queue drainer. Do not
+  -- require cron.job_id because hosted pg_cron may leave that setting unset.
+  IF session_user::text <> 'postgres' THEN
+    RAISE EXCEPTION 'Access denied: invoke_queue_worker can only be called as postgres';
   END IF;
 
   SELECT decrypted_secret INTO service_role_key
@@ -8947,7 +8947,7 @@ BEGIN
     RETURN;
   END IF;
 
-  IF supabase_url !~ '^https://[A-Za-z0-9.-]+\.supabase\.co/?$' THEN
+  IF supabase_url !~ '^https://[A-Za-z0-9.-]+\\.supabase\\.co/?$' THEN
     RAISE WARNING 'Queue worker invocation skipped: invalid supabase_url format in vault secrets';
     RETURN;
   END IF;
@@ -16114,7 +16114,9 @@ CREATE TABLE IF NOT EXISTS "public"."equipment" (
     "assigned_location_lng" double precision,
     "use_team_location" boolean DEFAULT false NOT NULL,
     "equipment_group_id" "uuid",
-    "management_code" "text"
+    "management_code" "text",
+    "management_responsible_primary" "text",
+    "management_responsible_secondary" "text"
 );
 
 
@@ -16150,6 +16152,14 @@ COMMENT ON COLUMN "public"."equipment"."assigned_location_lng" IS 'Longitude fro
 
 
 COMMENT ON COLUMN "public"."equipment"."use_team_location" IS 'When true, this equipment defers to its team location if the team has override_equipment_location enabled';
+
+
+
+COMMENT ON COLUMN "public"."equipment"."management_responsible_primary" IS 'Primary person responsible for managing the equipment.';
+
+
+
+COMMENT ON COLUMN "public"."equipment"."management_responsible_secondary" IS 'Secondary person responsible for managing the equipment.';
 
 
 
