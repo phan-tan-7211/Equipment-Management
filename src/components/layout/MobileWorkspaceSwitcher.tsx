@@ -96,9 +96,9 @@ const MobileWorkspaceSwitcher: React.FC<MobileWorkspaceSwitcherProps> = ({
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen(true)}
-        className="h-auto w-full min-w-0 flex-col items-center gap-0.5 px-1 py-1 hover:bg-accent/50"
+        className="h-9 w-full min-w-0 flex-row items-center justify-start gap-1.5 px-0 py-0 hover:bg-accent/50"
       >
-        <span className="inline-flex max-w-full items-center justify-center gap-1.5">
+        <span className="inline-flex shrink-0 items-center gap-1.5">
           <WorkspaceAvatar
             kind="organization"
             src={currentOrganization.logo}
@@ -114,11 +114,11 @@ const MobileWorkspaceSwitcher: React.FC<MobileWorkspaceSwitcherProps> = ({
             />
           )}
         </span>
-        <span className="w-full text-center text-sm font-medium leading-snug line-clamp-2">
+        <span className="min-w-0 truncate text-sm font-medium leading-none">
           {currentOrganization.name}
         </span>
         {showTeamSegment && (
-          <span className="mt-0.5 inline-flex max-w-full items-center gap-1 text-xs text-muted-foreground">
+          <span className="inline-flex min-w-0 max-w-[44%] shrink items-center gap-1 text-xs text-muted-foreground">
             <span className="truncate">{teamLabel}</span>
             <ChevronsUpDown className="h-3 w-3 shrink-0 opacity-50" aria-hidden="true" />
           </span>

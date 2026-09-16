@@ -386,4 +386,45 @@ describe('EquipmentTable', () => {
     expect(statusIndex).toBe(0);
     expect(nameIndex).toBeGreaterThan(manufacturerIndex);
   });
+
+  it('reorders columns with pointer drag without triggering the sort control', () => {
+    render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
+    const nameHeader = getHeaderByTitle('Name');
+    const manufacturerHeader = getHeaderByTitle('Manufacturer');
+    const originalElementFromPoint = document.elementFromPoint;
+
+    Object.defineProperty(document, 'elementFromPoint', {
+      configurable: true,
+      value: vi.fn(() => manufacturerHeader),
+    });
+
+    try {
+      fireEvent.pointerDown(nameHeader, {
+        button: 0,
+        isPrimary: true,
+        pointerId: 1,
+        clientX: 10,
+        clientY: 10,
+      });
+      fireEvent.pointerMove(document, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 30,
+        clientY: 10,
+      });
+      fireEvent.pointerUp(document, { pointerId: 1, clientX: 30, clientY: 10 });
+    } finally {
+      Object.defineProperty(document, 'elementFromPoint', {
+        configurable: true,
+        value: originalElementFromPoint,
+      });
+    }
+
+    const headers = screen.getAllByRole('columnheader');
+    const statusIndex = headers.findIndex((header) => header.textContent?.includes('Status'));
+    const nameIndex = headers.findIndex((header) => header.textContent?.includes('Name'));
+    const manufacturerIndex = headers.findIndex((header) => header.textContent?.includes('Manufacturer'));
+    expect(statusIndex).toBe(0);
+    expect(nameIndex).toBeGreaterThan(manufacturerIndex);
+  });
 });
