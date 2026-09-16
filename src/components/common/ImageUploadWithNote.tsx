@@ -81,6 +81,20 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
     addFiles(files);
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    if (disabled) return;
+
+    const files = Array.from(e.clipboardData.items)
+      .filter(item => item.kind === 'file' && item.type.startsWith('image/'))
+      .map(item => item.getAsFile())
+      .filter((file): file is File => file !== null);
+
+    if (files.length === 0) return;
+
+    e.preventDefault();
+    addFiles(files);
+  };
+
   const handleUpload = async () => {
     if (selectedFiles.length === 0) {
       toast.error(t('sharedUi.selectImage'));
@@ -111,11 +125,19 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
     <Card>
       <CardContent standalone className="space-y-4">
         <div
-          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
             dragActive 
               ? 'border-primary bg-primary/5' 
               : 'border-muted-foreground/25 hover:border-muted-foreground/50'
           }`}
+          tabIndex={disabled ? -1 : 0}
+          aria-disabled={disabled}
+          onClick={(event) => {
+            if (!disabled && !(event.target as HTMLElement).closest('button,input')) {
+              event.currentTarget.focus();
+            }
+          }}
+          onPaste={handlePaste}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
