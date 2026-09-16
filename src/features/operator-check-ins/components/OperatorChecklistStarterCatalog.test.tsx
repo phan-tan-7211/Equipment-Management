@@ -22,12 +22,13 @@ describe('OperatorChecklistStarterCatalog', () => {
     vi.mocked(catalogPreferences.getStarterCatalogExpandedPreference).mockReturnValue(null);
   });
 
-  it('renders both starters with Clone template buttons', () => {
+  it('renders all starters with Clone template buttons', () => {
     render(<OperatorChecklistStarterCatalog {...defaultProps} />);
 
     expect(screen.getByText('Odometer Log')).toBeInTheDocument();
     expect(screen.getByText('FMCSA-style DVIR starter')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Clone template' })).toHaveLength(2);
+    expect(screen.getByText('Chain conveyor oven daily pre-start')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Clone template' })).toHaveLength(3);
     expect(screen.queryByRole('button', { name: 'Use template' })).not.toBeInTheDocument();
   });
 
@@ -43,7 +44,7 @@ describe('OperatorChecklistStarterCatalog', () => {
     render(<OperatorChecklistStarterCatalog {...defaultProps} />);
 
     expect(screen.getByText('Starter Template Catalog')).toBeInTheDocument();
-    expect(screen.getByText('2 available')).toBeInTheDocument();
+    expect(screen.getByText('3 available')).toBeInTheDocument();
     expect(screen.getByText('Clone a ready-made checklist to get started quickly.')).toBeInTheDocument();
   });
 
@@ -93,6 +94,6 @@ describe('OperatorChecklistStarterCatalog', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Cloning…' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Clone template' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Clone template' })).toHaveLength(2);
   });
 });

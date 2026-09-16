@@ -18,6 +18,21 @@ const STARTER_ICON_MAP: Record<string, ReactNode> = {
   Truck: <Truck className="h-5 w-5" aria-hidden />,
 };
 
+const STARTER_COPY_KEYS: Record<string, { name: string; description: string }> = {
+  'starter-odometer-log': {
+    name: 'operatorCheckinDetail.odometerName',
+    description: 'operatorCheckinDetail.odometerDescription',
+  },
+  'starter-fmcsa-dvir': {
+    name: 'operatorCheckinDetail.dvirName',
+    description: 'operatorCheckinDetail.dvirDescription',
+  },
+  'starter-chain-conveyor-oven-daily': {
+    name: 'operatorCheckinDetail.chainConveyorName',
+    description: 'operatorCheckinDetail.chainConveyorDescription',
+  },
+};
+
 function resolveStarterIcon(iconKey: string): ReactNode {
   return STARTER_ICON_MAP[iconKey] ?? <Sparkles className="h-5 w-5" aria-hidden />;
 }
@@ -101,51 +116,54 @@ export function OperatorChecklistStarterCatalog({
         <CollapsibleContent>
           <CardContent className="pt-0">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {OPERATOR_CHECKLIST_STARTER_TEMPLATES.map((starter) => (
-                <Card
-                  key={starter.id}
-                  className={cn('flex flex-col border-dashed bg-muted/20')}
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start gap-3">
-                      <div
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground"
-                        aria-hidden
+              {OPERATOR_CHECKLIST_STARTER_TEMPLATES.map((starter) => {
+                const copyKeys = STARTER_COPY_KEYS[starter.id];
+                return (
+                  <Card
+                    key={starter.id}
+                    className={cn('flex flex-col border-dashed bg-muted/20')}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start gap-3">
+                        <div
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground"
+                          aria-hidden
+                        >
+                          {resolveStarterIcon(starter.icon)}
+                        </div>
+                        <div className="min-w-0 space-y-1">
+                          <CardTitle className="text-base leading-tight">
+                            {copyKeys ? t(copyKeys.name) : starter.name}
+                          </CardTitle>
+                          <CardDescription className="text-xs leading-snug">
+                            {copyKeys ? t(copyKeys.description) : starter.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="mt-auto flex flex-col gap-3 pt-0">
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary" className="font-normal">
+                          {t('operatorCheckinDetail.starterFields', { count: starter.templateData.dataFields.length })}
+                        </Badge>
+                        <Badge variant="outline" className="font-normal">
+                          {t('operatorCheckinDetail.starterItems', { count: starter.templateData.checklistItems.length })}
+                        </Badge>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto sm:self-end"
+                        disabled={isCloning}
+                        onClick={() => onClone(starter.id)}
                       >
-                        {resolveStarterIcon(starter.icon)}
-                      </div>
-                      <div className="min-w-0 space-y-1">
-                        <CardTitle className="text-base leading-tight">
-                          {t(starter.id === 'starter-odometer-log' ? 'operatorCheckinDetail.odometerName' : 'operatorCheckinDetail.dvirName')}
-                        </CardTitle>
-                        <CardDescription className="text-xs leading-snug">
-                          {t(starter.id === 'starter-odometer-log' ? 'operatorCheckinDetail.odometerDescription' : 'operatorCheckinDetail.dvirDescription')}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="mt-auto flex flex-col gap-3 pt-0">
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="font-normal">
-                        {t('operatorCheckinDetail.starterFields', { count: starter.templateData.dataFields.length })}
-                      </Badge>
-                      <Badge variant="outline" className="font-normal">
-                        {t('operatorCheckinDetail.starterItems', { count: starter.templateData.checklistItems.length })}
-                      </Badge>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-full sm:w-auto sm:self-end"
-                      disabled={isCloning}
-                      onClick={() => onClone(starter.id)}
-                    >
-                      {cloningStarterId === starter.id ? t('operatorCheckinDetail.cloning') : t('operatorCheckinDetail.clone')}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                        {cloningStarterId === starter.id ? t('operatorCheckinDetail.cloning') : t('operatorCheckinDetail.clone')}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </CardContent>
         </CollapsibleContent>
