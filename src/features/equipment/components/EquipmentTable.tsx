@@ -83,6 +83,9 @@ function EquipmentColumnHeaderMenu({
   onToggleColumn,
   onTogglePin,
   onHideColumn,
+  filterOptions,
+  selectedFilterValues,
+  onColumnFilterChange,
 }: {
   columnKey: EquipmentTableColumnKey;
   visibleColumns: Record<string, boolean>;
@@ -90,6 +93,9 @@ function EquipmentColumnHeaderMenu({
   onToggleColumn: (key: EquipmentTableColumnKey) => void;
   onTogglePin: (key: EquipmentTableColumnKey) => void;
   onHideColumn: (key: EquipmentTableColumnKey) => void;
+  filterOptions?: EquipmentColumnFilterOption[];
+  selectedFilterValues: string[];
+  onColumnFilterChange?: (key: EquipmentColumnFilterKey, values: string[]) => void;
 }) {
   const { t } = useI18n();
   const meta = getEquipmentTableColumnMeta(columnKey);
@@ -112,6 +118,26 @@ function EquipmentColumnHeaderMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
+        {filterOptions?.length && onColumnFilterChange ? (
+          <EquipmentColumnFilter
+            columnKey={columnKey}
+            label={label}
+            options={filterOptions}
+            selectedValues={selectedFilterValues}
+            onChange={onColumnFilterChange}
+            trigger={
+              <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+                <Filter className="mr-2 h-4 w-4" aria-hidden="true" />
+                <span>{t('equipment.filterColumn', { column: label })}</span>
+                {selectedFilterValues.length > 0 ? (
+                  <span className="ml-auto rounded-full bg-primary px-1.5 text-[10px] leading-4 text-primary-foreground">
+                    {selectedFilterValues.length > 9 ? '9+' : selectedFilterValues.length}
+                  </span>
+                ) : null}
+              </DropdownMenuItem>
+            }
+          />
+        ) : null}
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <Columns3 className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -150,12 +176,14 @@ function EquipmentColumnFilter({
   options,
   selectedValues,
   onChange,
+  trigger,
 }: {
   columnKey: EquipmentColumnFilterKey;
   label: string;
   options: EquipmentColumnFilterOption[];
   selectedValues: string[];
   onChange: (key: EquipmentColumnFilterKey, values: string[]) => void;
+  trigger?: React.ReactNode;
 }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -182,26 +210,28 @@ function EquipmentColumnFilter({
       if (!nextOpen) setSearch('');
     }}>
       <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={cn(
-            'relative h-6 w-6 shrink-0 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground',
-            selectedValues.length > 0 && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary',
-          )}
-          aria-label={t('equipment.filterColumn', { column: label })}
-          aria-pressed={selectedValues.length > 0}
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <Filter className="h-3.5 w-3.5" aria-hidden="true" />
-          {selectedValues.length > 0 ? (
-            <span className="absolute -right-1 -top-1 min-w-3.5 rounded-full bg-primary px-0.5 text-[9px] font-semibold leading-3 text-primary-foreground">
-              {selectedValues.length > 9 ? '9+' : selectedValues.length}
-            </span>
-          ) : null}
-        </Button>
+        {trigger ?? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={cn(
+              'relative h-6 w-6 shrink-0 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground',
+              selectedValues.length > 0 && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary',
+            )}
+            aria-label={t('equipment.filterColumn', { column: label })}
+            aria-pressed={selectedValues.length > 0}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Filter className="h-3.5 w-3.5" aria-hidden="true" />
+            {selectedValues.length > 0 ? (
+              <span className="absolute -right-1 -top-1 min-w-3.5 rounded-full bg-primary px-0.5 text-[9px] font-semibold leading-3 text-primary-foreground">
+                {selectedValues.length > 9 ? '9+' : selectedValues.length}
+              </span>
+            ) : null}
+          </Button>
+        )}
       </PopoverTrigger>
       <PopoverContent
         align="start"
@@ -400,7 +430,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
   const handleSortClick=useCallback((field:EquipmentTableSortField)=>{ if(!onSortChange)return; const next=sortConfig?.field===field?(sortConfig.direction==='asc'?'desc':'asc'):'asc'; onSortChange(field,next); },[onSortChange,sortConfig]);
   const handleAutoFitColumn=useCallback((columnKey:EquipmentTableColumnKey)=>{ const meta=getEquipmentTableColumnMeta(columnKey); if(!meta)return; applyAutoFitColumnWidth(setColumnSizing,columnKey,equipment.map((row)=>getEquipmentTableCellDisplayValue(row,columnKey,settings)),meta); },[equipment,settings,setColumnSizing]);
   const columns=useMemo<ColumnDef<EquipmentTableRow>[]>(()=>{
-    const dataColumns=orderedVisibleColumnKeys.map((columnKey)=>{ const rawMeta=getEquipmentTableColumnMeta(columnKey); if(!rawMeta)throw new Error(`Missing equipment table column meta for ${columnKey}`); const meta={...rawMeta,title:t(COLUMN_KEYS[columnKey])}; const base=createResizableSortableColumnBase(columnKey,DEFAULT_EQUIPMENT_COLUMN_SIZING,meta,{active:sortConfig?.field===meta.sortField,sortOrder:sortConfig?.field===meta.sortField?sortConfig.direction:undefined,onSort:()=>handleSortClick(meta.sortField),hideVisibleTitle:columnKey===STATUS_COLUMN_KEY}); return { ...base, header:()=> <div className="flex min-w-0 items-center gap-1"><div className="min-w-0 flex-1">{base.header()}</div>{onColumnFilterChange&&columnFilterOptions?.[columnKey]?.length ? <EquipmentColumnFilter columnKey={columnKey} label={meta.title} options={columnFilterOptions[columnKey] ?? []} selectedValues={getColumnFilterValues(columnKey)} onChange={onColumnFilterChange} /> : null}</div>, cell:({row})=>{ const item=row.original; switch(columnKey){
+    const dataColumns=orderedVisibleColumnKeys.map((columnKey)=>{ const rawMeta=getEquipmentTableColumnMeta(columnKey); if(!rawMeta)throw new Error(`Missing equipment table column meta for ${columnKey}`); const meta={...rawMeta,title:t(COLUMN_KEYS[columnKey])}; const base=createResizableSortableColumnBase(columnKey,DEFAULT_EQUIPMENT_COLUMN_SIZING,meta,{active:sortConfig?.field===meta.sortField,sortOrder:sortConfig?.field===meta.sortField?sortConfig.direction:undefined,onSort:()=>handleSortClick(meta.sortField),hideVisibleTitle:columnKey===STATUS_COLUMN_KEY}); return { ...base, header:()=> <div className="min-w-0">{base.header()}</div>, cell:({row})=>{ const item=row.original; switch(columnKey){
       case 'name': { const active=activeEquipmentId===item.id; return <div className="min-w-0"><button type="button" className="block w-full truncate text-left font-medium hover:text-primary" data-equipment-id={item.id} {...(active?{'data-equipment-transition-active':''}:{})} style={getEquipmentViewTransitionStyle('name',active)} onClick={()=>{void beginTransition({equipmentId:item.id,to:`/dashboard/equipment/${item.id}`});}}>{item.name}</button>{item.management_code ? <span className="mt-0.5 block truncate font-mono text-xs text-muted-foreground">{item.management_code}</span> : null}</div>; }
       case 'status': {
         const imageSrc = displayableImageSrc(item.image_url);
@@ -448,12 +478,12 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
     }}} as ColumnDef<EquipmentTableRow>; });
     const actionsColumn:ColumnDef<EquipmentTableRow>={id:EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY,size:56,minSize:56,maxSize:56,enableResizing:false,header:()=>null,cell:({row})=><div className="flex justify-end"><Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={()=>onShowQRCode(row.original.id)} aria-label={t('equipment.showQrFor',{name:row.original.name})}><QrCode className="h-4 w-4" aria-hidden="true" /></Button></div>};
     return [...dataColumns,actionsColumn];
-  },[activeEquipmentId,beginTransition,columnFilterOptions,getColumnFilterValues,handleSortClick,onColumnFilterChange,onShowQRCode,orderedVisibleColumnKeys,settings,sortConfig?.direction,sortConfig?.field,t]);
+  },[activeEquipmentId,beginTransition,handleSortClick,onShowQRCode,orderedVisibleColumnKeys,settings,sortConfig?.direction,sortConfig?.field,t]);
   const table=useReactTable({data:equipment,columns,state:{columnSizing},onColumnSizingChange:setColumnSizing,columnResizeMode:'onChange',enableColumnResizing:true,getCoreRowModel:getCoreRowModel()});
   const tableWidth=getResizableTableWidth(table.getTotalSize());
   if(equipment.length===0)return <DataTableEmptyState message={t('equipment.noTableMatches')} />;
   return <>
-    <ResizableFixedDataTable table={table} tableWidth={tableWidth} withTooltipProvider getHeaderProps={(header)=>{ const columnId=header.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); const pinnedOffset=pinnedLeftOffsets.get(columnId as EquipmentTableColumnKey); const isPinned=pinnedOffset!==undefined; const isDragged=draggedColumnId===columnId; const reorderable=!isActionsColumn; return {className:cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isActionsColumn&&'w-14 px-2','relative select-none',reorderable&&'cursor-grab active:cursor-grabbing',isDragged&&'opacity-50',isPinned&&'sticky z-40 isolate bg-card',isPinned&&pinnedOffset===0&&'left-0',isStatusColumn&&'px-2'),style:isPinned?{left:pinnedOffset}:undefined,draggable:reorderable,onDragStart:reorderable?(event)=>handleColumnDragStart(event,columnId as EquipmentTableColumnKey):undefined,onDragOver:reorderable?handleColumnDragOver:undefined,onDrop:reorderable?(event)=>handleColumnDrop(event,columnId as EquipmentTableColumnKey):undefined,onDragEnd:reorderable?handleColumnDragEnd:undefined,ariaSort:meta?.sortable&&sortConfig?.field===meta.sortField?(sortConfig.direction==='asc'?'ascending':'descending'):'none',onAutoFit:isActionsColumn?undefined:()=>handleAutoFitColumn(columnId as EquipmentTableColumnKey)};}} getCellClassName={(cell)=>{ const columnId=cell.column.id; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); const isPinned=pinnedLeftOffsets.has(columnId as EquipmentTableColumnKey); return cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isPinned&&'sticky z-30 isolate bg-card',isPinned&&pinnedLeftOffsets.get(columnId as EquipmentTableColumnKey)===0&&'left-0',isActionsColumn&&'w-14 px-2','overflow-hidden');}} getCellStyle={(cell)=>{ const pinnedOffset=pinnedLeftOffsets.get(cell.column.id as EquipmentTableColumnKey); return pinnedOffset===undefined?undefined:{left:pinnedOffset}; }} renderHeaderActions={(header)=>{ const columnId=header.column.id as EquipmentTableColumnKey; if(columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY)return null; return <EquipmentColumnHeaderMenu columnKey={columnId} visibleColumns={effectiveVisibleColumns} pinned={pinnedLeftOffsets.has(columnId)} onToggleColumn={handleToggleColumn} onTogglePin={handleTogglePin} onHideColumn={handleHideColumn} />;}} />
+    <ResizableFixedDataTable table={table} tableWidth={tableWidth} withTooltipProvider getHeaderProps={(header)=>{ const columnId=header.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); const pinnedOffset=pinnedLeftOffsets.get(columnId as EquipmentTableColumnKey); const isPinned=pinnedOffset!==undefined; const isDragged=draggedColumnId===columnId; const reorderable=!isActionsColumn; return {className:cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isActionsColumn&&'w-14 px-2','relative select-none',reorderable&&'cursor-grab active:cursor-grabbing',isDragged&&'opacity-50',isPinned&&'sticky z-40 isolate bg-card',isPinned&&pinnedOffset===0&&'left-0',isStatusColumn&&'px-2'),style:isPinned?{left:pinnedOffset}:undefined,draggable:reorderable,onDragStart:reorderable?(event)=>handleColumnDragStart(event,columnId as EquipmentTableColumnKey):undefined,onDragOver:reorderable?handleColumnDragOver:undefined,onDrop:reorderable?(event)=>handleColumnDrop(event,columnId as EquipmentTableColumnKey):undefined,onDragEnd:reorderable?handleColumnDragEnd:undefined,ariaSort:meta?.sortable&&sortConfig?.field===meta.sortField?(sortConfig.direction==='asc'?'ascending':'descending'):'none',onAutoFit:isActionsColumn?undefined:()=>handleAutoFitColumn(columnId as EquipmentTableColumnKey)};}} getCellClassName={(cell)=>{ const columnId=cell.column.id; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); const isPinned=pinnedLeftOffsets.has(columnId as EquipmentTableColumnKey); return cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isPinned&&'sticky z-30 isolate bg-card',isPinned&&pinnedLeftOffsets.get(columnId as EquipmentTableColumnKey)===0&&'left-0',isActionsColumn&&'w-14 px-2','overflow-hidden');}} getCellStyle={(cell)=>{ const pinnedOffset=pinnedLeftOffsets.get(cell.column.id as EquipmentTableColumnKey); return pinnedOffset===undefined?undefined:{left:pinnedOffset}; }} renderHeaderActions={(header)=>{ const columnId=header.column.id as EquipmentTableColumnKey; if(columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY)return null; return <EquipmentColumnHeaderMenu columnKey={columnId} visibleColumns={effectiveVisibleColumns} pinned={pinnedLeftOffsets.has(columnId)} onToggleColumn={handleToggleColumn} onTogglePin={handleTogglePin} onHideColumn={handleHideColumn} filterOptions={columnFilterOptions?.[columnId]} selectedFilterValues={getColumnFilterValues(columnId)} onColumnFilterChange={onColumnFilterChange} />;}} />
     {imageHover ? (
       <div
         className={cn(

@@ -177,7 +177,10 @@ describe('EquipmentTable', () => {
     );
 
     const nameHeader = getHeaderByTitle('Name');
-    fireEvent.click(within(nameHeader).getByRole('button', { name: 'Filter Name' }));
+    const optionsButton = within(nameHeader).getByRole('button', { name: 'Options for Name' });
+    fireEvent.pointerDown(optionsButton);
+    fireEvent.click(optionsButton);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Filter Name' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Forklift A1' }));
 
     expect(onColumnFilterChange).toHaveBeenCalledWith('name', ['Forklift A1']);
