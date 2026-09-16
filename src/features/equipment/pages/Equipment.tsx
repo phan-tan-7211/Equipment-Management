@@ -68,7 +68,7 @@ const Equipment = () => {
   }, [isMobile]);
   useWhenPreferenceStorageAllowed(rehydrateOrFlushViewMode);
 
-  const { filters, sortConfig, paginatedEquipment, filterOptions, isLoading, hasActiveFilters, activeQuickFilter, equipment, currentPage, pageSize, pageSizeOptions, totalFilteredCount, updateFilter, updateSort, clearFilters, applyQuickFilter, setCurrentPage, setPageSize } = useEquipmentFiltering(currentOrganization?.id, viewMode);
+  const { filters, sortConfig, paginatedEquipment, filterOptions, columnFilterOptions, columnFilters, isLoading, hasActiveFilters, activeQuickFilter, equipment, currentPage, pageSize, pageSizeOptions, totalFilteredCount, updateFilter, updateColumnFilter, updateSort, clearFilters, applyQuickFilter, setCurrentPage, setPageSize } = useEquipmentFiltering(currentOrganization?.id, viewMode);
   const mergedEquipment = useOfflineMergedEquipment(paginatedEquipment);
   const { visibleColumns, toggleColumn, resetToDefaults: resetColumnVisibility, hasOverrides: hasColumnOverrides } = useEquipmentTableColumns(currentOrganization?.id);
   const { data: pmStatusList } = useOrgEquipmentPMStatuses(currentOrganization?.id);
@@ -137,7 +137,7 @@ const Equipment = () => {
         </div>
 
         <div className="space-y-4">
-          <EquipmentGrid equipment={mergedEquipment} searchQuery={filters.search} statusFilter={filters.status} organizationName={currentOrganization.name} canCreate={canCreate} onShowQRCode={setShowQRCode} onAddEquipment={handleAddEquipment} onClearFilters={clearFilters} viewMode={viewMode} pmStatuses={pmStatuses} sortConfig={sortConfig} onSortChange={updateSort} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} organizationId={currentOrganization.id} />
+          <EquipmentGrid equipment={mergedEquipment} searchQuery={filters.search} statusFilter={filters.status} organizationName={currentOrganization.name} canCreate={canCreate} onShowQRCode={setShowQRCode} onAddEquipment={handleAddEquipment} onClearFilters={clearFilters} viewMode={viewMode} pmStatuses={pmStatuses} sortConfig={sortConfig} onSortChange={updateSort} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} organizationId={currentOrganization.id} columnFilterOptions={columnFilterOptions} columnFilters={columnFilters} onColumnFilterChange={updateColumnFilter} />
           <div data-equipment-list-chrome=""><EquipmentPaginationFooter totalItems={totalFilteredCount} page={currentPage} pageSize={pageSize} pageSizeOptions={pageSizeOptions} itemLabel={t('equipment.result')} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} /></div>
         </div>
 

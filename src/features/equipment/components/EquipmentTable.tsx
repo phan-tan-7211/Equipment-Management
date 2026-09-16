@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
-import { Columns3, EyeOff, Forklift, MoreVertical, Pin, PinOff, QrCode } from 'lucide-react';
+import { Columns3, EyeOff, Filter, Forklift, MoreVertical, Pin, PinOff, QrCode, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -29,6 +29,11 @@ import { useI18n } from '@/i18n';
 import { displayableImageSrc } from '@/services/imageUploadService';
 import { getEquipmentStatusRailClass } from '@/lib/status-colors';
 import { getPreferenceLocalStorage, setPreferenceLocalStorage } from '@/lib/cookieConsent';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import type { EquipmentColumnFilterKey, EquipmentColumnFilters } from '@/features/equipment/services/EquipmentService';
+import type { EquipmentColumnFilterOption, EquipmentColumnFilterOptions } from '@/features/equipment/hooks/useEquipmentFiltering';
 
 const STATUS_COLUMN_KEY: EquipmentTableColumnKey = 'status';
 const COLUMN_SIZING_STORAGE_KEY = 'equipqr:equipment-table-column-sizing:v3';
@@ -56,7 +61,7 @@ function getImageHoverPosition(clientX: number, clientY: number) {
 
   return { x, y, size };
 }
-export interface EquipmentTableProps { equipment: EquipmentTableRow[]; onShowQRCode: (id:string)=>void; pmStatuses?:Map<string,EquipmentPMStatus>; sortConfig?:SortConfig; onSortChange?:(field:string,direction?:'asc'|'desc')=>void; visibleColumns?:Record<string,boolean>; onToggleColumn?:(key:string)=>void; organizationId?:string; }
+export interface EquipmentTableProps { equipment: EquipmentTableRow[]; onShowQRCode: (id:string)=>void; pmStatuses?:Map<string,EquipmentPMStatus>; sortConfig?:SortConfig; onSortChange?:(field:string,direction?:'asc'|'desc')=>void; visibleColumns?:Record<string,boolean>; onToggleColumn?:(key:string)=>void; organizationId?:string; columnFilterOptions?:EquipmentColumnFilterOptions; columnFilters?:EquipmentColumnFilters; onColumnFilterChange?:(key:EquipmentColumnFilterKey,values:string[])=>void; }
 
 function readPinnedColumns(storageKey: string): EquipmentTableColumnKey[] {
   const defaultPinned: EquipmentTableColumnKey[] = [STATUS_COLUMN_KEY];
@@ -139,7 +144,139 @@ function EquipmentColumnHeaderMenu({
   );
 }
 
-const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode, sortConfig, onSortChange, visibleColumns, onToggleColumn, organizationId }) => {
+function EquipmentColumnFilter({
+  columnKey,
+  label,
+  options,
+  selectedValues,
+  onChange,
+}: {
+  columnKey: EquipmentColumnFilterKey;
+  label: string;
+  options: EquipmentColumnFilterOption[];
+  selectedValues: string[];
+  onChange: (key: EquipmentColumnFilterKey, values: string[]) => void;
+}) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const selected = useMemo(() => new Set(selectedValues), [selectedValues]);
+  const filteredOptions = useMemo(() => {
+    const normalizedSearch = search.trim().toLocaleLowerCase();
+    if (!normalizedSearch) return options;
+    return options.filter((option) => option.label.toLocaleLowerCase().includes(normalizedSearch));
+  }, [options, search]);
+
+  const toggleValue = useCallback((value: string) => {
+    const next = selected.has(value)
+      ? selectedValues.filter((item) => item !== value)
+      : [...selectedValues, value];
+    onChange(columnKey, next);
+  }, [columnKey, onChange, selected, selectedValues]);
+
+  if (!options.length) return null;
+
+  return (
+    <Popover open={open} onOpenChange={(nextOpen) => {
+      setOpen(nextOpen);
+      if (!nextOpen) setSearch('');
+    }}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'relative h-6 w-6 shrink-0 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground',
+            selectedValues.length > 0 && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary',
+          )}
+          aria-label={t('equipment.filterColumn', { column: label })}
+          aria-pressed={selectedValues.length > 0}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <Filter className="h-3.5 w-3.5" aria-hidden="true" />
+          {selectedValues.length > 0 ? (
+            <span className="absolute -right-1 -top-1 min-w-3.5 rounded-full bg-primary px-0.5 text-[9px] font-semibold leading-3 text-primary-foreground">
+              {selectedValues.length > 9 ? '9+' : selectedValues.length}
+            </span>
+          ) : null}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        sideOffset={6}
+        className="w-64 p-0"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <div className="border-b p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="min-w-0 truncate text-sm font-medium">{label}</div>
+            {selectedValues.length > 0 ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 shrink-0 px-2 text-xs"
+                onClick={() => onChange(columnKey, [])}
+              >
+                <X className="mr-1 h-3 w-3" aria-hidden="true" />
+                {t('equipment.clearColumnFilter')}
+              </Button>
+            ) : null}
+          </div>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={t('equipment.searchColumnValues')}
+              aria-label={t('equipment.searchColumnValues')}
+              className="h-8 pl-8 text-xs"
+            />
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-2 border-b px-3 py-2 text-xs">
+          <span className="text-muted-foreground">
+            {selectedValues.length > 0
+              ? t('equipment.columnFilterSelected', { count: selectedValues.length })
+              : t('equipment.columnFilterAllValues', { count: options.length })}
+          </span>
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            className="h-auto p-0 text-xs"
+            onClick={() => onChange(columnKey, options.map((option) => option.value))}
+          >
+            {t('equipment.selectAllColumnValues')}
+          </Button>
+        </div>
+        <div className="max-h-64 overflow-y-auto p-2">
+          {filteredOptions.length ? filteredOptions.map((option) => (
+            <label
+              key={option.value}
+              className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
+            >
+              <Checkbox
+                checked={selected.has(option.value)}
+                onCheckedChange={() => toggleValue(option.value)}
+                aria-label={option.label}
+              />
+              <span className="min-w-0 truncate">{option.label}</span>
+            </label>
+          )) : (
+            <div className="px-2 py-4 text-center text-xs text-muted-foreground">
+              {t('equipment.noColumnValues')}
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode, sortConfig, onSortChange, visibleColumns, onToggleColumn, organizationId, columnFilterOptions, columnFilters, onColumnFilterChange }) => {
   const { t } = useI18n();
   const { beginTransition, activeEquipmentId } = useEquipmentCardTransition();
   const { settings } = useUserSettings();
@@ -156,6 +293,12 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
   const pinnedStorageKey = `${PINNED_COLUMNS_STORAGE_PREFIX}${organizationId ?? 'default'}`;
   const [pinnedColumns, setPinnedColumns] = useState<EquipmentTableColumnKey[]>(() => readPinnedColumns(pinnedStorageKey));
   const [draggedColumnId, setDraggedColumnId] = useState<EquipmentTableColumnKey | null>(null);
+  const columnFiltersRef = useRef(columnFilters ?? {});
+  columnFiltersRef.current = columnFilters ?? {};
+  const getColumnFilterValues = useCallback(
+    (key: EquipmentColumnFilterKey) => columnFiltersRef.current[key] ?? [],
+    [],
+  );
 
   useEffect(() => {
     setPinnedColumns(readPinnedColumns(pinnedStorageKey));
@@ -257,7 +400,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
   const handleSortClick=useCallback((field:EquipmentTableSortField)=>{ if(!onSortChange)return; const next=sortConfig?.field===field?(sortConfig.direction==='asc'?'desc':'asc'):'asc'; onSortChange(field,next); },[onSortChange,sortConfig]);
   const handleAutoFitColumn=useCallback((columnKey:EquipmentTableColumnKey)=>{ const meta=getEquipmentTableColumnMeta(columnKey); if(!meta)return; applyAutoFitColumnWidth(setColumnSizing,columnKey,equipment.map((row)=>getEquipmentTableCellDisplayValue(row,columnKey,settings)),meta); },[equipment,settings,setColumnSizing]);
   const columns=useMemo<ColumnDef<EquipmentTableRow>[]>(()=>{
-    const dataColumns=orderedVisibleColumnKeys.map((columnKey)=>{ const rawMeta=getEquipmentTableColumnMeta(columnKey); if(!rawMeta)throw new Error(`Missing equipment table column meta for ${columnKey}`); const meta={...rawMeta,title:t(COLUMN_KEYS[columnKey])}; return { ...createResizableSortableColumnBase(columnKey,DEFAULT_EQUIPMENT_COLUMN_SIZING,meta,{active:sortConfig?.field===meta.sortField,sortOrder:sortConfig?.field===meta.sortField?sortConfig.direction:undefined,onSort:()=>handleSortClick(meta.sortField),hideVisibleTitle:columnKey===STATUS_COLUMN_KEY}), cell:({row})=>{ const item=row.original; switch(columnKey){
+    const dataColumns=orderedVisibleColumnKeys.map((columnKey)=>{ const rawMeta=getEquipmentTableColumnMeta(columnKey); if(!rawMeta)throw new Error(`Missing equipment table column meta for ${columnKey}`); const meta={...rawMeta,title:t(COLUMN_KEYS[columnKey])}; const base=createResizableSortableColumnBase(columnKey,DEFAULT_EQUIPMENT_COLUMN_SIZING,meta,{active:sortConfig?.field===meta.sortField,sortOrder:sortConfig?.field===meta.sortField?sortConfig.direction:undefined,onSort:()=>handleSortClick(meta.sortField),hideVisibleTitle:columnKey===STATUS_COLUMN_KEY}); return { ...base, header:()=> <div className="flex min-w-0 items-center gap-1"><div className="min-w-0 flex-1">{base.header()}</div>{onColumnFilterChange&&columnFilterOptions?.[columnKey]?.length ? <EquipmentColumnFilter columnKey={columnKey} label={meta.title} options={columnFilterOptions[columnKey] ?? []} selectedValues={getColumnFilterValues(columnKey)} onChange={onColumnFilterChange} /> : null}</div>, cell:({row})=>{ const item=row.original; switch(columnKey){
       case 'name': { const active=activeEquipmentId===item.id; return <div className="min-w-0"><button type="button" className="block w-full truncate text-left font-medium hover:text-primary" data-equipment-id={item.id} {...(active?{'data-equipment-transition-active':''}:{})} style={getEquipmentViewTransitionStyle('name',active)} onClick={()=>{void beginTransition({equipmentId:item.id,to:`/dashboard/equipment/${item.id}`});}}>{item.name}</button>{item.management_code ? <span className="mt-0.5 block truncate font-mono text-xs text-muted-foreground">{item.management_code}</span> : null}</div>; }
       case 'status': {
         const imageSrc = displayableImageSrc(item.image_url);
@@ -305,7 +448,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
     }}} as ColumnDef<EquipmentTableRow>; });
     const actionsColumn:ColumnDef<EquipmentTableRow>={id:EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY,size:56,minSize:56,maxSize:56,enableResizing:false,header:()=>null,cell:({row})=><div className="flex justify-end"><Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={()=>onShowQRCode(row.original.id)} aria-label={t('equipment.showQrFor',{name:row.original.name})}><QrCode className="h-4 w-4" aria-hidden="true" /></Button></div>};
     return [...dataColumns,actionsColumn];
-  },[activeEquipmentId,beginTransition,handleSortClick,onShowQRCode,orderedVisibleColumnKeys,settings,sortConfig?.direction,sortConfig?.field,t]);
+  },[activeEquipmentId,beginTransition,columnFilterOptions,getColumnFilterValues,handleSortClick,onColumnFilterChange,onShowQRCode,orderedVisibleColumnKeys,settings,sortConfig?.direction,sortConfig?.field,t]);
   const table=useReactTable({data:equipment,columns,state:{columnSizing},onColumnSizingChange:setColumnSizing,columnResizeMode:'onChange',enableColumnResizing:true,getCoreRowModel:getCoreRowModel()});
   const tableWidth=getResizableTableWidth(table.getTotalSize());
   if(equipment.length===0)return <DataTableEmptyState message={t('equipment.noTableMatches')} />;

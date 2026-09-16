@@ -160,6 +160,29 @@ describe('EquipmentTable', () => {
     expect(onSortChange).toHaveBeenCalledWith('name', 'desc');
   });
 
+  it('opens a direct column filter and reports selected values', () => {
+    const onColumnFilterChange = vi.fn();
+    render(
+      <EquipmentTable
+        equipment={mockEquipment}
+        onShowQRCode={onShowQRCode}
+        onColumnFilterChange={onColumnFilterChange}
+        columnFilterOptions={{
+          name: [
+            { value: 'Forklift A1', label: 'Forklift A1' },
+            { value: 'Excavator B2', label: 'Excavator B2' },
+          ],
+        }}
+      />,
+    );
+
+    const nameHeader = getHeaderByTitle('Name');
+    fireEvent.click(within(nameHeader).getByRole('button', { name: 'Filter Name' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Forklift A1' }));
+
+    expect(onColumnFilterChange).toHaveBeenCalledWith('name', ['Forklift A1']);
+  });
+
   it('freezes the Status column with sticky left-0', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     const headers = screen.getAllByRole('columnheader');

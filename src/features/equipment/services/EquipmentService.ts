@@ -119,10 +119,25 @@ export interface EquipmentListFilters {
   installationDateTo?: string;
   /** When true, filters to rows whose warranty_expiration is within 30 days. */
   warrantyExpiring?: boolean;
+  /** Exact-value filters used by the direct per-column table controls. */
+  columnFilters?: EquipmentColumnFilters;
   // Team-based access control (RBAC) — populated by the page.
   userTeamIds?: string[];
   isOrgAdmin?: boolean;
 }
+
+export type EquipmentColumnFilterKey =
+  | 'name'
+  | 'status'
+  | 'manufacturer'
+  | 'model'
+  | 'serial_number'
+  | 'working_hours'
+  | 'location'
+  | 'team_name'
+  | 'last_maintenance';
+
+export type EquipmentColumnFilters = Partial<Record<EquipmentColumnFilterKey, string[]>>;
 
 export interface EquipmentListResult {
   data: EquipmentWithTeam[];
@@ -498,6 +513,47 @@ export class EquipmentService {
         query = query.is('team_id', null);
       } else if (isSpecificEquipmentFilter(filters.team)) {
         query = query.eq('team_id', filters.team);
+      }
+
+      // The table's direct header filters use exact values from the lightweight
+      // summary projection. Keeping these predicates in the same paginated
+      // query preserves the total count and avoids filtering only the visible
+      // page in the browser.
+      const columnFilters = filters.columnFilters ?? {};
+      const applyColumnInFilter = (
+        key: 'name' | 'status' | 'manufacturer' | 'model' | 'serial_number' | 'location' | 'last_maintenance',
+        column: 'name' | 'status' | 'manufacturer' | 'model' | 'serial_number' | 'location' | 'last_maintenance',
+      ) => {
+        const values = columnFilters[key]?.filter((value) => value.trim() !== '');
+        if (values?.length) {
+          query = query.in(column, values);
+        }
+      };
+
+      applyColumnInFilter('name', 'name');
+      applyColumnInFilter('status', 'status');
+      applyColumnInFilter('manufacturer', 'manufacturer');
+      applyColumnInFilter('model', 'model');
+      applyColumnInFilter('serial_number', 'serial_number');
+      applyColumnInFilter('location', 'location');
+      applyColumnInFilter('last_maintenance', 'last_maintenance');
+
+      const workingHours = columnFilters.working_hours
+        ?.map((value) => Number(value))
+        .filter((value) => Number.isFinite(value));
+      if (workingHours?.length) {
+        query = query.in('working_hours', workingHours);
+      }
+
+      const selectedTeams = columnFilters.team_name ?? [];
+      const teamIds = selectedTeams.filter((value) => value !== '__unassigned__');
+      const includesUnassigned = selectedTeams.includes('__unassigned__');
+      if (includesUnassigned && teamIds.length) {
+        query = query.or(`team_id.is.null,team_id.in.(${teamIds.join(',')})`);
+      } else if (includesUnassigned) {
+        query = query.is('team_id', null);
+      } else if (teamIds.length) {
+        query = query.in('team_id', teamIds);
       }
 
       query = applyEquipmentListDateFilters(query, filters);

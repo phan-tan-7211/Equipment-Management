@@ -5,7 +5,14 @@ import EquipmentEmptyState from './EquipmentEmptyState';
 import EquipmentTable from './EquipmentTable';
 import type { EquipmentViewMode } from './EquipmentCard';
 import type { EquipmentPMStatus } from '@/features/equipment/hooks/useEquipmentPMStatus';
-import type { SortConfig } from '@/features/equipment/hooks/useEquipmentFiltering';
+import type {
+  EquipmentColumnFilterOptions,
+  SortConfig,
+} from '@/features/equipment/hooks/useEquipmentFiltering';
+import type {
+  EquipmentColumnFilterKey,
+  EquipmentColumnFilters,
+} from '@/features/equipment/services/EquipmentService';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Equipment {
@@ -39,6 +46,9 @@ interface EquipmentGridProps {
   visibleColumns?: Record<string, boolean>;
   onToggleColumn?: (key: string) => void;
   organizationId?: string;
+  columnFilterOptions?: EquipmentColumnFilterOptions;
+  columnFilters?: EquipmentColumnFilters;
+  onColumnFilterChange?: (key: EquipmentColumnFilterKey, values: string[]) => void;
 }
 
 const EquipmentGrid: React.FC<EquipmentGridProps> = ({
@@ -57,6 +67,9 @@ const EquipmentGrid: React.FC<EquipmentGridProps> = ({
   visibleColumns,
   onToggleColumn,
   organizationId,
+  columnFilterOptions,
+  columnFilters,
+  onColumnFilterChange,
 }) => {
   const equipmentIds = useMemo(() => equipment.map((item) => item.id).sort(), [equipment]);
   const { data: managementCodes = [] } = useQuery({
@@ -105,6 +118,9 @@ const EquipmentGrid: React.FC<EquipmentGridProps> = ({
         visibleColumns={visibleColumns}
         onToggleColumn={onToggleColumn}
         organizationId={organizationId}
+        columnFilterOptions={columnFilterOptions}
+        columnFilters={columnFilters}
+        onColumnFilterChange={onColumnFilterChange}
       />
     );
   }
