@@ -31,7 +31,7 @@ import { getEquipmentStatusRailClass } from '@/lib/status-colors';
 import { getPreferenceLocalStorage, setPreferenceLocalStorage } from '@/lib/cookieConsent';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { EquipmentColumnFilterKey, EquipmentColumnFilters } from '@/features/equipment/services/EquipmentService';
 import type { EquipmentColumnFilterOption, EquipmentColumnFilterOptions } from '@/features/equipment/hooks/useEquipmentFiltering';
 
@@ -98,75 +98,82 @@ function EquipmentColumnHeaderMenu({
   onColumnFilterChange?: (key: EquipmentColumnFilterKey, values: string[]) => void;
 }) {
   const { t } = useI18n();
+  const [filterOpen, setFilterOpen] = useState(false);
   const meta = getEquipmentTableColumnMeta(columnKey);
   if (!meta) return null;
   const label = t(COLUMN_KEYS[columnKey]);
   const canHide = meta.canHide;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="absolute right-1 top-1/2 z-20 h-6 w-6 -translate-y-1/2 rounded-md bg-background/90 text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-          aria-label={t('equipment.columnOptions', { column: label })}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <MoreVertical className="h-4 w-4" aria-hidden="true" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
-        {filterOptions?.length && onColumnFilterChange ? (
-          <EquipmentColumnFilter
-            columnKey={columnKey}
-            label={label}
-            options={filterOptions}
-            selectedValues={selectedFilterValues}
-            onChange={onColumnFilterChange}
-            trigger={
-              <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
-                <Filter className="mr-2 h-4 w-4" aria-hidden="true" />
-                <span>{t('equipment.filterColumn', { column: label })}</span>
-                {selectedFilterValues.length > 0 ? (
-                  <span className="ml-auto rounded-full bg-primary px-1.5 text-[10px] leading-4 text-primary-foreground">
-                    {selectedFilterValues.length > 9 ? '9+' : selectedFilterValues.length}
-                  </span>
-                ) : null}
-              </DropdownMenuItem>
-            }
-          />
-        ) : null}
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <Columns3 className="mr-2 h-4 w-4" aria-hidden="true" />
-            <span>{t('equipment.showColumns')}</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="max-h-80 w-56 overflow-y-auto">
-            {EQUIPMENT_TABLE_COLUMN_META.map((column) => (
-              <DropdownMenuCheckboxItem
-                key={column.key}
-                checked={visibleColumns[column.key] ?? column.defaultVisible}
-                disabled={!column.canHide}
-                onCheckedChange={() => onToggleColumn(column.key)}
-                onSelect={(event) => event.preventDefault()}
-              >
-                {t(COLUMN_KEYS[column.key])}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-        <DropdownMenuItem onSelect={() => onTogglePin(columnKey)}>
-          {pinned ? <PinOff className="mr-2 h-4 w-4" aria-hidden="true" /> : <Pin className="mr-2 h-4 w-4" aria-hidden="true" />}
-          {pinned ? t('equipment.unpinColumn') : t('equipment.pinColumn')}
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled={!canHide} onSelect={() => onHideColumn(columnKey)}>
-          <EyeOff className="mr-2 h-4 w-4" aria-hidden="true" />
-          {t('equipment.hideColumn')}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1/2 z-20 h-6 w-6 -translate-y-1/2 rounded-md bg-background/90 text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+            aria-label={t('equipment.columnOptions', { column: label })}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <MoreVertical className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-52">
+          {filterOptions?.length && onColumnFilterChange ? (
+            <DropdownMenuItem onSelect={() => setFilterOpen(true)}>
+              <Filter className="mr-2 h-4 w-4" aria-hidden="true" />
+              <span>{t('equipment.filterColumn', { column: label })}</span>
+              {selectedFilterValues.length > 0 ? (
+                <span className="ml-auto rounded-full bg-primary px-1.5 text-[10px] leading-4 text-primary-foreground">
+                  {selectedFilterValues.length > 9 ? '9+' : selectedFilterValues.length}
+                </span>
+              ) : null}
+            </DropdownMenuItem>
+          ) : null}
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Columns3 className="mr-2 h-4 w-4" aria-hidden="true" />
+              <span>{t('equipment.showColumns')}</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="max-h-80 w-56 overflow-y-auto">
+              {EQUIPMENT_TABLE_COLUMN_META.map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.key}
+                  checked={visibleColumns[column.key] ?? column.defaultVisible}
+                  disabled={!column.canHide}
+                  onCheckedChange={() => onToggleColumn(column.key)}
+                  onSelect={(event) => event.preventDefault()}
+                >
+                  {t(COLUMN_KEYS[column.key])}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuItem onSelect={() => onTogglePin(columnKey)}>
+            {pinned ? <PinOff className="mr-2 h-4 w-4" aria-hidden="true" /> : <Pin className="mr-2 h-4 w-4" aria-hidden="true" />}
+            {pinned ? t('equipment.unpinColumn') : t('equipment.pinColumn')}
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={!canHide} onSelect={() => onHideColumn(columnKey)}>
+            <EyeOff className="mr-2 h-4 w-4" aria-hidden="true" />
+            {t('equipment.hideColumn')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {filterOptions?.length && onColumnFilterChange ? (
+        <EquipmentColumnFilter
+          columnKey={columnKey}
+          label={label}
+          options={filterOptions}
+          selectedValues={selectedFilterValues}
+          onChange={onColumnFilterChange}
+          open={filterOpen}
+          onOpenChange={setFilterOpen}
+          hideTrigger
+          anchor={<span className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2" aria-hidden="true" />}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -177,6 +184,10 @@ function EquipmentColumnFilter({
   selectedValues,
   onChange,
   trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  hideTrigger = false,
+  anchor,
 }: {
   columnKey: EquipmentColumnFilterKey;
   label: string;
@@ -184,10 +195,16 @@ function EquipmentColumnFilter({
   selectedValues: string[];
   onChange: (key: EquipmentColumnFilterKey, values: string[]) => void;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+  anchor?: React.ReactNode;
 }) {
   const { t } = useI18n();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
   const selected = useMemo(() => new Set(selectedValues), [selectedValues]);
   const filteredOptions = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();
@@ -209,7 +226,8 @@ function EquipmentColumnFilter({
       setOpen(nextOpen);
       if (!nextOpen) setSearch('');
     }}>
-      <PopoverTrigger asChild>
+      {anchor ? <PopoverAnchor asChild>{anchor}</PopoverAnchor> : null}
+      {!hideTrigger ? <PopoverTrigger asChild>
         {trigger ?? (
           <Button
             type="button"
@@ -232,7 +250,7 @@ function EquipmentColumnFilter({
             ) : null}
           </Button>
         )}
-      </PopoverTrigger>
+      </PopoverTrigger> : null}
       <PopoverContent
         align="start"
         sideOffset={6}
