@@ -1,4 +1,3 @@
-
 export interface UserSettings {
   // Personalization
   timezone: string;
@@ -23,6 +22,7 @@ export const timezoneOptions = [
   { value: 'Europe/Paris', label: 'Central European Time (CET)' },
   { value: 'Europe/Berlin', label: 'Germany Time' },
   { value: 'Asia/Tokyo', label: 'Japan Standard Time (JST)' },
+  { value: 'Asia/Ho_Chi_Minh', label: 'Vietnam Time (ICT, UTC+7)' },
   { value: 'Asia/Shanghai', label: 'China Standard Time (CST)' },
   { value: 'Asia/Kolkata', label: 'India Standard Time (IST)' },
   { value: 'Australia/Sydney', label: 'Australian Eastern Time (AET)' },
