@@ -1,6 +1,13 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { flexRender, type Cell, type Header, type Table as TanStackTable } from '@tanstack/react-table';
-import type { CSSProperties, DragEventHandler, PointerEventHandler, ReactNode } from 'react';
+import {
+  useState,
+  type CSSProperties,
+  type DragEvent as ReactDragEvent,
+  type DragEventHandler,
+  type PointerEventHandler,
+  type ReactNode,
+} from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
@@ -77,6 +84,56 @@ type ResizableTableSurfaceProps<TData> = {
   emptyCellClassName?: string;
 };
 
+function applyHeaderDragPreview(event: ReactDragEvent<HTMLElement>) {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return;
+
+  const source = event.currentTarget;
+  const headerCell = source.closest('th');
+  const sourceRect = source.getBoundingClientRect();
+  const preview = source.cloneNode(true) as HTMLElement;
+  const computed = window.getComputedStyle(headerCell ?? source);
+  const previewWidth = Math.min(Math.max(sourceRect.width, 120), 360);
+  const previewHeight = Math.max(sourceRect.height, 40);
+
+  preview.querySelectorAll('[data-table-column-options], [data-slot="column-resize-handle"]').forEach((node) => node.remove());
+  preview.removeAttribute('draggable');
+  preview.setAttribute('aria-hidden', 'true');
+  preview.setAttribute('data-table-column-drag-preview', '');
+  preview.style.position = 'fixed';
+  preview.style.left = '-10000px';
+  preview.style.top = '-10000px';
+  preview.style.width = `${previewWidth}px`;
+  preview.style.height = `${previewHeight}px`;
+  preview.style.boxSizing = 'border-box';
+  preview.style.display = 'flex';
+  preview.style.alignItems = 'center';
+  preview.style.overflow = 'hidden';
+  preview.style.whiteSpace = 'nowrap';
+  preview.style.padding = '8px 12px';
+  preview.style.backgroundColor = computed.backgroundColor;
+  preview.style.color = computed.color;
+  preview.style.fontFamily = computed.fontFamily;
+  preview.style.fontSize = computed.fontSize;
+  preview.style.fontWeight = computed.fontWeight;
+  preview.style.border = '1px solid rgba(148, 163, 184, 0.35)';
+  preview.style.borderRadius = '8px';
+  preview.style.boxShadow = '0 18px 40px rgba(15, 23, 42, 0.24)';
+  preview.style.opacity = '0.96';
+  preview.style.pointerEvents = 'none';
+  preview.style.zIndex = '99999';
+
+  document.body.appendChild(preview);
+
+  const nativeEvent = event.nativeEvent;
+  const requestedOffsetX = Number.isFinite(nativeEvent.offsetX) ? nativeEvent.offsetX : previewWidth / 2;
+  const requestedOffsetY = Number.isFinite(nativeEvent.offsetY) ? nativeEvent.offsetY : previewHeight / 2;
+  const offsetX = Math.max(12, Math.min(requestedOffsetX, previewWidth - 12));
+  const offsetY = Math.max(8, Math.min(requestedOffsetY, previewHeight - 8));
+  event.dataTransfer.setDragImage(preview, offsetX, offsetY);
+
+  window.setTimeout(() => preview.remove(), 0);
+}
+
 export function ResizableTableSurface<TData>({
   table,
   tableWidth,
@@ -92,6 +149,8 @@ export function ResizableTableSurface<TData>({
   emptyCellClassName,
 }: ResizableTableSurfaceProps<TData>) {
   const rows = table.getRowModel().rows;
+  const [draggedHeaderId, setDraggedHeaderId] = useState<string | null>(null);
+  const [dragOverHeaderId, setDragOverHeaderId] = useState<string | null>(null);
 
   return (
     <div className={scrollClassName}>
@@ -126,27 +185,96 @@ export function ResizableTableSurface<TData>({
                 const resolvedHeaderStyle = stickyHeader
                   ? { ...style, zIndex: hasPinnedOffset ? 50 : 40 }
                   : style;
-                const resolvedDraggable = onDragStart ? true : draggable;
-                const resolvedPointerDown = onDragStart ? undefined : onPointerDown;
+                const resolvedDraggable = Boolean(onDragStart || draggable);
+                const resolvedPointerDown = resolvedDraggable ? undefined : onPointerDown;
+                const isDragSource = draggedHeaderId === header.id;
+                const isDropTarget = dragOverHeaderId === header.id && draggedHeaderId !== header.id;
+
+                const startDragFromCell: DragEventHandler<HTMLTableCellElement> | undefined = onDragStart
+                  ? (event) => {
+                      applyHeaderDragPreview(event);
+                      setDraggedHeaderId(header.id);
+                      setDragOverHeaderId(null);
+                      onDragStart(event);
+                    }
+                  : undefined;
+
+                const startDragFromSurface: DragEventHandler<HTMLDivElement> | undefined = resolvedDraggable
+                  ? (event) => {
+                      event.stopPropagation();
+                      applyHeaderDragPreview(event);
+                      setDraggedHeaderId(header.id);
+                      setDragOverHeaderId(null);
+                      onDragStart?.(event as unknown as ReactDragEvent<HTMLTableCellElement>);
+                    }
+                  : undefined;
+
+                const endDragFromCell: DragEventHandler<HTMLTableCellElement> | undefined = resolvedDraggable
+                  ? (event) => {
+                      setDraggedHeaderId(null);
+                      setDragOverHeaderId(null);
+                      onDragEnd?.(event);
+                    }
+                  : undefined;
+
+                const endDragFromSurface: DragEventHandler<HTMLDivElement> | undefined = resolvedDraggable
+                  ? (event) => {
+                      event.stopPropagation();
+                      setDraggedHeaderId(null);
+                      setDragOverHeaderId(null);
+                      onDragEnd?.(event as unknown as ReactDragEvent<HTMLTableCellElement>);
+                    }
+                  : undefined;
 
                 return (
                   <TableHead
                     key={header.id}
-                    className={stickyHeader ? cn(className, 'sticky top-0 bg-card') : className}
+                    className={cn(
+                      stickyHeader ? cn(className, 'sticky top-0 bg-card') : className,
+                      resolvedDraggable && 'transition-[opacity,box-shadow] duration-150',
+                      isDragSource && 'opacity-55',
+                      isDropTarget && 'ring-2 ring-inset ring-primary/70',
+                    )}
                     aria-sort={ariaSort ?? 'none'}
                     style={resolvedHeaderStyle}
-                    draggable={resolvedDraggable}
-                    onDragStart={onDragStart}
-                    onDragOver={onDragOver}
-                    onDrop={onDrop}
-                    onDragEnd={onDragEnd}
+                    draggable={false}
+                    onDragStart={startDragFromCell}
+                    onDragOver={
+                      onDragOver
+                        ? (event) => {
+                            setDragOverHeaderId(header.id);
+                            onDragOver(event);
+                          }
+                        : undefined
+                    }
+                    onDrop={
+                      onDrop
+                        ? (event) => {
+                            setDraggedHeaderId(null);
+                            setDragOverHeaderId(null);
+                            onDrop(event);
+                          }
+                        : undefined
+                    }
+                    onDragEnd={endDragFromCell}
                     onPointerDown={resolvedPointerDown}
                     {...(dataColumnKey ? { 'data-table-column-key': dataColumnKey } : {})}
                   >
                     <div className="group relative min-h-8 min-w-0 pr-6">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                      <div
+                        className={cn(
+                          'min-h-8 min-w-0',
+                          resolvedDraggable && 'cursor-grab active:cursor-grabbing',
+                        )}
+                        draggable={resolvedDraggable}
+                        onDragStart={startDragFromSurface}
+                        onDragEnd={endDragFromSurface}
+                        {...(dataColumnKey ? { 'data-table-column-drag-surface': dataColumnKey } : {})}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </div>
                       {renderHeaderActions?.(header)}
                     </div>
                     <DataTableColumnResizeHandle header={header} onAutoFit={onAutoFit} />
