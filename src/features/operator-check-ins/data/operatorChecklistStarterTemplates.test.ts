@@ -5,10 +5,11 @@ import {
 } from '@/features/operator-check-ins/data/operatorChecklistStarterTemplates';
 
 describe('operatorChecklistStarterTemplates', () => {
-  it('includes odometer log and FMCSA-style DVIR starters', () => {
+  it('includes odometer, FMCSA-style DVIR, and chain conveyor oven starters', () => {
     const ids = OPERATOR_CHECKLIST_STARTER_TEMPLATES.map((starter) => starter.id);
     expect(ids).toContain('starter-odometer-log');
     expect(ids).toContain('starter-fmcsa-dvir');
+    expect(ids).toContain('starter-chain-conveyor-oven-daily');
   });
 
   it('materializes fresh field and item ids on clone', () => {
@@ -31,5 +32,25 @@ describe('operatorChecklistStarterTemplates', () => {
     const labels = materialized.templateData.dataFields.map((field) => field.label);
     expect(labels).toContain('Your name');
     expect(labels).toContain('Odometer reading');
+  });
+
+  it('chain conveyor oven starter keeps the daily pre-start check compact', () => {
+    const starter = OPERATOR_CHECKLIST_STARTER_TEMPLATES.find(
+      (item) => item.id === 'starter-chain-conveyor-oven-daily',
+    );
+    expect(starter).toBeDefined();
+
+    const materialized = materializeOperatorChecklistStarter(starter!);
+    expect(materialized.templateData.dataFields).toHaveLength(5);
+    expect(materialized.templateData.checklistItems).toHaveLength(10);
+    expect(materialized.templateData.checklistItems.every((item) => item.required)).toBe(true);
+
+    const labels = materialized.templateData.dataFields.map((field) => field.label);
+    expect(labels).toEqual(expect.arrayContaining(['Operator name', 'Equipment name', 'Startup notes / abnormalities']));
+
+    const titles = materialized.templateData.checklistItems.map((item) => item.title);
+    expect(titles).toContain(
+      'Heating system (coil heater or IR, as fitted) starts normally with no visibly failed or damaged element',
+    );
   });
 });
