@@ -7,7 +7,7 @@ import {
 } from '@/features/inventory/components/InventoryEquipmentPickerRow';
 
 export const COMPATIBLE_EQUIPMENT_LIST_CLASS =
-  'max-h-48 overflow-y-auto border rounded-md p-2 space-y-2 md:h-[clamp(20rem,42dvh,30rem)] md:max-h-[calc(100dvh-22rem)] md:min-h-80';
+  'max-h-48 overflow-y-auto border rounded-md p-2 space-y-2 md:h-[clamp(20rem,42dvh,30rem)] md:max-h-[calc(100dvh-20rem)]';
 
 type InventoryCompatibleEquipmentPickerProps = {
   allEquipment: InventoryEquipmentPickerItem[];
