@@ -28,10 +28,13 @@ if (document.documentElement.dataset.appRoute === 'true') {
   const bootScreen = document.getElementById('app-boot-loading');
   const clearBootScreen = () => {
     const staleMarketingBody = appRoot.querySelector('[data-prerendered-marketing-route]');
-    if (staleMarketingBody || appRoot.childElementCount === 0) {
+    if (appRoot.childElementCount === 0) {
       return false;
     }
 
+    // React may briefly append its tree before removing a stale prerendered
+    // body. Remove that body only once the app has actually mounted.
+    staleMarketingBody?.remove();
     document.documentElement.removeAttribute('data-app-route');
     bootScreen?.remove();
     return true;

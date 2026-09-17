@@ -35,7 +35,6 @@ const APP_SHELL_REDIRECT_RULES = [
 ];
 
 /** @param {string} content */
-/** @param {string} content */
 export function hasExplicitAppShellRedirects(content) {
   const activeLines = new Set(
     content
@@ -46,7 +45,10 @@ export function hasExplicitAppShellRedirects(content) {
   return APP_SHELL_REDIRECT_RULES.every((rule) => activeLines.has(rule));
 }
 
-/** @param {string} block @param {string} rule */
+/**
+ * @param {string} block
+ * @param {string} rule
+ */
 function netlifyBlockHasAppShellRedirect(block, rule) {
   const [from, to, status] = rule.split(' ');
   const activeBlock = stripFullLineComments(block);
