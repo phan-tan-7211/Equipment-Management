@@ -1,7 +1,7 @@
 import { extractEquipmentDisplayImagePath } from '@/services/imageUploadService';
 import type { EquipmentImageData } from '@/features/equipment/services/equipmentImagesService';
 
-export type EquipmentMediaSourceFilter = 'all' | 'equipment_note' | 'work_order_note';
+export type EquipmentMediaSourceFilter = 'all' | 'equipment_display' | 'equipment_note' | 'work_order_note';
 
 export type EquipmentMediaSortField = 'created_at' | 'source' | 'uploader' | 'file_name';
 

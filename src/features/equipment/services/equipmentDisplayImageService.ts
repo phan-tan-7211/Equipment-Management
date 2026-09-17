@@ -156,3 +156,10 @@ export async function setEquipmentDisplayImageRef(
     previousRef,
   );
 }
+
+export async function removeEquipmentDisplayImage(
+  organizationId: string,
+  equipmentId: string,
+): Promise<void> {
+  await setEquipmentDisplayImageRef(organizationId, equipmentId, '');
+}

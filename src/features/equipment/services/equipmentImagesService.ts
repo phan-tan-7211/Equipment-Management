@@ -2,6 +2,11 @@ import { logger } from '@/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { getEquipmentImages } from './equipmentNotesService';
 import { getWorkOrderImages } from '@/features/work-orders/services/workOrderNotesService';
+import { getEquipmentDisplayImageUrl } from '@/services/imageUploadService';
+import {
+  isDisplayImageV2Ref,
+  parseDisplayImageRef,
+} from '@/services/displayImageStorageService';
 
 export interface EquipmentImageData {
   id: string;
@@ -15,8 +20,32 @@ export interface EquipmentImageData {
   note_content?: string;
   note_author_name?: string;
   is_private_note?: boolean;
-  source_type: 'equipment_note' | 'work_order_note';
+  source_type: 'equipment_display' | 'equipment_note' | 'work_order_note';
   source_id?: string; // note_id or work_order_id
+}
+
+export function createEquipmentDisplayMediaItem(
+  equipmentId: string,
+  equipmentName: string,
+  currentDisplayImage?: string | null,
+): EquipmentImageData | null {
+  if (!currentDisplayImage || !isDisplayImageV2Ref(currentDisplayImage)) return null;
+
+  const parsed = parseDisplayImageRef(currentDisplayImage);
+  if (!parsed || parsed.entity !== 'equipment' || parsed.entityId !== equipmentId) return null;
+
+  const previewUrl = getEquipmentDisplayImageUrl(parsed.canonicalRef, 'preview');
+  if (!previewUrl) return null;
+
+  return {
+    id: `equipment-display:${parsed.canonicalRef}`,
+    file_name: `${equipmentName} display.webp`,
+    file_url: previewUrl,
+    created_at: new Date().toISOString(),
+    uploaded_by: 'display-image',
+    source_type: 'equipment_display',
+    source_id: parsed.canonicalRef,
+  };
 }
 
 // Get all images for equipment from both equipment notes and work order notes

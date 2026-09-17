@@ -14,7 +14,10 @@ import {
   type EquipmentImageData,
 } from '@/features/equipment/services/equipmentImagesService';
 import { createEquipmentNoteWithImages } from '@/features/equipment/services/equipmentNotesService';
-import { replaceEquipmentDisplayImage } from '@/features/equipment/services/equipmentDisplayImageService';
+import {
+  removeEquipmentDisplayImage,
+  replaceEquipmentDisplayImage,
+} from '@/features/equipment/services/equipmentDisplayImageService';
 import { validateImageFile } from '@/services/imageUploadService';
 import { equipment } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
@@ -72,16 +75,18 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
       workOrderId,
     }: {
       imageId: string;
-      sourceType: 'equipment_note' | 'work_order_note';
+      sourceType: 'equipment_display' | 'equipment_note' | 'work_order_note';
       workOrderId?: string;
     }) =>
-      deleteEquipmentImage({
+      sourceType === 'equipment_display'
+        ? removeEquipmentDisplayImage(organizationId, equipmentId)
+        : deleteEquipmentImage({
         imageId,
         sourceType,
         organizationId,
         equipmentId,
         workOrderId,
-      }),
+        }),
     onSuccess: () => {
       invalidateMedia();
       toast.success(t('equipmentMedia.imageDeleted'));
@@ -182,6 +187,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   });
 
   const canDeleteImage = (image: EquipmentImageData): boolean => {
+    if (image.source_type === 'equipment_display') return permissions.canSetDisplayImage;
     if (image.uploaded_by === user?.id) return true;
     return permissions.canDeleteImages;
   };

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import {
   getAllEquipmentImages,
+  createEquipmentDisplayMediaItem,
   type EquipmentImageData,
 } from '@/features/equipment/services/equipmentImagesService';
 import { equipment } from '@/lib/queryKeys';
@@ -43,14 +44,23 @@ export function useEquipmentMediaLibrary({
 
   const images = useMemo(() => query.data ?? [], [query.data]);
 
+  const imagesWithDisplay = useMemo(() => {
+    const displayImage = createEquipmentDisplayMediaItem(
+      equipmentId,
+      currentOrganization?.name || 'Equipment',
+      currentDisplayImage,
+    );
+    return displayImage ? [displayImage, ...images] : images;
+  }, [currentDisplayImage, currentOrganization?.name, equipmentId, images]);
+
   const filteredImages = useMemo(
-    () => filterAndSortEquipmentMedia(images, filters),
-    [images, filters],
+    () => filterAndSortEquipmentMedia(imagesWithDisplay, filters),
+    [imagesWithDisplay, filters],
   );
 
   const displayOrderedImages = useMemo(
-    () => orderEquipmentMediaForDisplayCarousel(images, currentDisplayImage),
-    [images, currentDisplayImage],
+    () => orderEquipmentMediaForDisplayCarousel(imagesWithDisplay, currentDisplayImage),
+    [imagesWithDisplay, currentDisplayImage],
   );
 
   const recentThumbnails = useMemo(
@@ -89,7 +99,7 @@ export function useEquipmentMediaLibrary({
   const activeFilterCount = countActiveEquipmentMediaFilters(filters);
 
   return {
-    images,
+    images: imagesWithDisplay,
     filteredImages,
     displayOrderedImages,
     recentThumbnails,
