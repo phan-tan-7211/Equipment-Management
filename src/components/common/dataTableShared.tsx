@@ -188,16 +188,7 @@ export function ResizableTableSurface<TData>({
                   ? { ...style, zIndex: hasPinnedOffset ? 50 : 40 }
                   : style;
                 const resolvedDraggable = Boolean(onDragStart || draggable);
-                const resolvedPointerDown: PointerEventHandler<HTMLTableCellElement> | undefined =
-                  resolvedDraggable && onPointerDown
-                    ? (event) => {
-                        // Mouse uses the dedicated native drag surface below so Chromium can
-                        // render its ghost preview. Pointer capture remains the touch fallback.
-                        // The menu is outside that surface and keeps normal click behavior.
-                        if (event.pointerType === 'mouse') return;
-                        onPointerDown(event);
-                      }
-                    : onPointerDown;
+                const resolvedPointerDown: PointerEventHandler<HTMLTableCellElement> | undefined = onPointerDown;
                 const isDragSource = draggedHeaderId === header.id;
                 const isDropTarget = dragOverHeaderId === header.id && draggedHeaderId !== header.id;
 
@@ -210,30 +201,11 @@ export function ResizableTableSurface<TData>({
                     }
                   : undefined;
 
-                const startDragFromSurface: DragEventHandler<HTMLDivElement> | undefined = resolvedDraggable
-                  ? (event) => {
-                      event.stopPropagation();
-                      applyHeaderDragPreview(event);
-                      setDraggedHeaderId(header.id);
-                      setDragOverHeaderId(null);
-                      onDragStart?.(event as unknown as ReactDragEvent<HTMLTableCellElement>);
-                    }
-                  : undefined;
-
                 const endDragFromCell: DragEventHandler<HTMLTableCellElement> | undefined = resolvedDraggable
                   ? (event) => {
                       setDraggedHeaderId(null);
                       setDragOverHeaderId(null);
                       onDragEnd?.(event);
-                    }
-                  : undefined;
-
-                const endDragFromSurface: DragEventHandler<HTMLDivElement> | undefined = resolvedDraggable
-                  ? (event) => {
-                      event.stopPropagation();
-                      setDraggedHeaderId(null);
-                      setDragOverHeaderId(null);
-                      onDragEnd?.(event as unknown as ReactDragEvent<HTMLTableCellElement>);
                     }
                   : undefined;
 
@@ -248,8 +220,8 @@ export function ResizableTableSurface<TData>({
                     )}
                     aria-sort={ariaSort ?? 'none'}
                     style={resolvedHeaderStyle}
-                    // Keep the cell itself non-draggable. The inner drag surface provides
-                    // the native ghost without covering the column menu or resize handle.
+                    // Reordering is pointer-driven so it works when the sortable title
+                    // button is inside the header. The menu stops propagation at its trigger.
                     draggable={false}
                     onDragStart={startDragFromCell}
                     onDragOver={
@@ -277,11 +249,9 @@ export function ResizableTableSurface<TData>({
                       <div
                         className={cn(
                           'min-h-8 min-w-0',
-                          resolvedDraggable && 'cursor-grab active:cursor-grabbing',
+                          resolvedDraggable && 'cursor-grab active:cursor-grabbing touch-none',
                         )}
-                        draggable={resolvedDraggable}
-                        onDragStart={startDragFromSurface}
-                        onDragEnd={endDragFromSurface}
+                        draggable={false}
                         {...(dataColumnKey ? { 'data-table-column-drag-surface': dataColumnKey } : {})}
                       >
                         {header.isPlaceholder
