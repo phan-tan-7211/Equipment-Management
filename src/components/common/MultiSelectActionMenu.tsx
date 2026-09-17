@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,6 +15,8 @@ export interface MultiSelectActionOption {
   id: string;
   label: string;
   sublabel?: string;
+  /** Optional leading visual such as an equipment thumbnail. */
+  leading?: ReactNode;
   /** Extra text matched by the search box in addition to label/sublabel. */
   searchText?: string;
   /**
@@ -201,6 +203,7 @@ export function MultiSelectActionMenu({
                       disabled={isLocked || isPending}
                       onCheckedChange={(checked) => toggleOption(option.id, checked === true)}
                     />
+                    {option.leading && <div className="shrink-0">{option.leading}</div>}
                     <Label
                       htmlFor={checkboxId}
                       className="min-w-0 flex-1 cursor-pointer space-y-1"
