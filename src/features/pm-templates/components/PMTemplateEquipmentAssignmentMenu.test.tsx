@@ -34,7 +34,7 @@ function makeEquipment(overrides: Partial<EquipmentSummary>): EquipmentSummary {
     status: 'active',
     team_id: overrides.team_id ?? null,
     location: null,
-    image_url: null,
+    image_url: overrides.image_url ?? null,
     working_hours: null,
     last_maintenance: null,
     last_known_location: null,
@@ -108,6 +108,54 @@ describe('PMTemplateEquipmentAssignmentMenu', () => {
     );
 
     expect(screen.getByRole('button', { name: /Assigned Equipment \(1\)/i })).toBeInTheDocument();
+  });
+
+  it('renders the shared equipment thumbnail and hover preview in the picker', async () => {
+    mockUseEquipmentSummaries.mockReturnValue({
+      data: [
+        makeEquipment({
+          id: 'eq-1',
+          name: 'Truck 101',
+          image_url: 'https://example.com/truck-101.jpg',
+        }),
+      ],
+      isLoading: false,
+    });
+
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query === '(hover: hover) and (pointer: fine)',
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+
+    render(
+      <PMTemplateEquipmentAssignmentMenu templateId="template-1" templateName="Forklift PM" />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Apply to Equipment/i }));
+    await screen.findByText(/Apply Forklift PM/i);
+
+    const thumbnail = await waitFor(() => {
+      const element = document.querySelector('[data-inventory-equipment-thumbnail]');
+      if (!element) throw new Error('shared equipment thumbnail did not render');
+      return element;
+    });
+    expect(thumbnail.querySelector('img')).toHaveAttribute(
+      'src',
+      'https://example.com/truck-101.jpg',
+    );
+
+    fireEvent.pointerMove(thumbnail, { clientX: 220, clientY: 240 });
+    expect(document.body.querySelector('[data-equipment-image-hover-preview]')).toBeInTheDocument();
   });
 
   it('opens the picker with current-default markers for assigned equipment', async () => {

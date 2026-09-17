@@ -22,6 +22,8 @@ export interface MultiSelectActionOption {
    * used for records that already have the assignment/grant.
    */
   lockedNote?: string;
+  /** Optional leading content, such as a shared equipment thumbnail. */
+  leading?: ReactElement | null;
 }
 
 interface MultiSelectActionMenuProps {
@@ -201,6 +203,7 @@ export function MultiSelectActionMenu({
                       disabled={isLocked || isPending}
                       onCheckedChange={(checked) => toggleOption(option.id, checked === true)}
                     />
+                    {option.leading ? <div className="shrink-0">{option.leading}</div> : null}
                     <Label
                       htmlFor={checkboxId}
                       className="min-w-0 flex-1 cursor-pointer space-y-1"

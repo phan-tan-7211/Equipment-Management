@@ -11,6 +11,7 @@ import { useSelectedTeam } from '@/hooks/useSelectedTeam';
 import { useEquipmentSummaries } from '@/features/equipment/hooks/useEquipment';
 import { useBulkAssignTemplate } from '@/features/equipment/hooks/useEquipmentTemplateManagement';
 import { filterEquipmentSummariesBySelectedTeam } from '@/features/equipment/utils/filterEquipmentSummariesBySelectedTeam';
+import { InventoryEquipmentThumbnail } from '@/features/inventory/components/InventoryEquipmentThumbnail';
 
 interface PMTemplateEquipmentAssignmentMenuProps {
   templateId: string;
@@ -59,6 +60,7 @@ export function PMTemplateEquipmentAssignmentMenu({
       label: item.name,
       sublabel: `${item.serial_number ? t('pmTemplates.list.unitNumber', { number: item.serial_number }) : t('pmTemplates.list.noSerialNumber')} · ${item.team_name ?? t('pmTemplates.list.unassigned')}`,
       searchText: [item.manufacturer ?? '', item.model ?? '', item.location ?? ''].join(' '),
+      leading: <InventoryEquipmentThumbnail equipment={{ id: item.id, image_url: item.image_url }} />,
       lockedNote: item.default_pm_template_id === templateId ? t('pmTemplates.list.currentDefault') : undefined,
     }));
   }, [scopedEquipment, templateId, t]);
