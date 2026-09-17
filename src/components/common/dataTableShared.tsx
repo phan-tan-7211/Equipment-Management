@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, GripVertical } from 'lucide-react';
 import { flexRender, type Cell, type Header, type Table as TanStackTable } from '@tanstack/react-table';
 import { useSortable, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -310,21 +310,38 @@ export function ResizableTableSurface<TData>({
 }
 
 function DataTableDndHeaderSurface({ id, children }: { id: string; children: ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const {
+    attributes,
+    listeners,
+    setActivatorNodeRef,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
 
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        'min-h-8 min-w-0 touch-none cursor-grab active:cursor-grabbing',
+        'relative min-h-8 min-w-0',
         isDragging && 'opacity-45',
       )}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       data-table-column-drag-surface={id}
-      {...attributes}
-      {...listeners}
     >
       {children}
+      <button
+        ref={setActivatorNodeRef}
+        type="button"
+        className="absolute right-6 top-1/2 z-10 flex h-6 w-5 -translate-y-1/2 cursor-grab items-center justify-center rounded-sm text-muted-foreground/70 hover:bg-accent hover:text-foreground active:cursor-grabbing"
+        aria-label={`Drag ${id} column`}
+        data-table-column-drag-handle={id}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-3.5 w-3.5" aria-hidden="true" />
+      </button>
     </div>
   );
 }

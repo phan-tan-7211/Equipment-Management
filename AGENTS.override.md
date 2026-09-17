@@ -150,6 +150,17 @@ Claude/Cursor skills or introduce a translation service merely to apply these ru
 - Before finishing, inspect the scoped diff for unrelated files and check key parity, missing or empty translations, and placeholder parity. Run focused lint/tests where available; report checks actually run.
 - Static i18n verification does not require screenshots or MP4. Use a browser check only when the task changes interactions or layout and it would verify that change.
 
+## 9.1 Equipment table column drag-and-drop contract
+
+The Equipment table uses TanStack Table with `@dnd-kit/core` and `@dnd-kit/sortable`. Preserve the interaction contract documented in [`docs/technical/equipment-column-dnd-contract.md`](docs/technical/equipment-column-dnd-contract.md):
+
+- Start a column drag only from the dedicated drag handle; never attach dnd-kit listeners or native drag handlers to the whole header or its menu surface.
+- Keep column menus, sort controls, filters, pin/hide actions, and Show columns actions as ordinary interactive controls outside the drag activator.
+- Keep one drag implementation only. Do not reintroduce document-level pointer handlers, native HTML5 column drag events, or click suppression for this table.
+- Preserve the `DragOverlay`, keyboard sensor, and focused regression tests for menu actions and column reorder/ghost behavior.
+
+Before changing this flow, read the contract and update its focused tests in the same change.
+
 ## 10. Final response
 
 When finished, state concisely:

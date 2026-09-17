@@ -206,6 +206,47 @@ describe('EquipmentTable', () => {
     expect(onColumnFilterChange).toHaveBeenCalledWith('name', ['Forklift A1']);
   });
 
+  it('applies column menu actions without starting a drag gesture', async () => {
+    const onToggleColumn = vi.fn();
+    render(
+      <EquipmentTable
+        equipment={mockEquipment}
+        onShowQRCode={onShowQRCode}
+        onToggleColumn={onToggleColumn}
+      />,
+    );
+
+    const nameHeader = getHeaderByTitle('Name');
+    const optionsButton = within(nameHeader).getByRole('button', { name: 'Options for Name' });
+    fireEvent.pointerDown(optionsButton);
+    fireEvent.click(optionsButton);
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Pin' }));
+    expect(onToggleColumn).not.toHaveBeenCalled();
+
+    const modelHeader = getHeaderByTitle('Model');
+    const modelOptionsButton = within(modelHeader).getByRole('button', { name: 'Options for Model' });
+    fireEvent.pointerDown(modelOptionsButton);
+    fireEvent.click(modelOptionsButton);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Hide' }));
+    expect(onToggleColumn).toHaveBeenCalledWith('model');
+  });
+
+  it('toggles a column from the Show columns submenu', async () => {
+    render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
+
+    const modelHeader = getHeaderByTitle('Model');
+    const optionsButton = within(modelHeader).getByRole('button', { name: 'Options for Model' });
+    fireEvent.pointerDown(optionsButton);
+    fireEvent.click(optionsButton);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Show columns' }));
+    fireEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Model' }));
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('columnheader').some((header) => header.textContent?.includes('Model'))).toBe(false);
+    });
+  });
+
   it('freezes the Status column with sticky left-0', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     const headers = screen.getAllByRole('columnheader');
@@ -368,9 +409,11 @@ describe('EquipmentTable', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     const nameHeader = getHeaderByTitle('Name');
     const dragSurface = nameHeader.querySelector('[data-table-column-drag-surface="name"]');
-    expect(dragSurface).toHaveAttribute('role', 'button');
-    expect(dragSurface).toHaveAttribute('aria-roledescription', 'sortable');
-    expect(dragSurface).toHaveAttribute('tabindex', '0');
+    const dragHandle = nameHeader.querySelector('[data-table-column-drag-handle="name"]');
+    expect(dragSurface).toBeInTheDocument();
+    expect(dragHandle).toHaveAttribute('aria-label', 'Drag name column');
+    expect(dragHandle).toHaveAttribute('aria-roledescription', 'sortable');
+    expect(dragHandle).toHaveAttribute('tabindex', '0');
     expect(nameHeader).toHaveAttribute('draggable', 'false');
     const optionsButton = within(nameHeader).getByRole('button', { name: 'Options for Name' });
     expect(dragSurface).not.toContainElement(optionsButton);
