@@ -1,6 +1,10 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import { isAllowedOrigin } from "./origin-validation.ts";
 
+Deno.test("isAllowedOrigin accepts eqr.zinitek.com production origin", () => {
+  assertEquals(isAllowedOrigin("https://eqr.zinitek.com"), true);
+});
+
 Deno.test("isAllowedOrigin accepts equipqr Vercel preview hostnames", () => {
   assertEquals(
     isAllowedOrigin("https://equipqr-abc123-columbia-cloudworks-llc.vercel.app"),
