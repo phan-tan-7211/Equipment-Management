@@ -42,6 +42,28 @@ describe('PageHeader', () => {
       expect(root).toBeInTheDocument();
       expect(root?.className).toContain('mt-8');
     });
+
+    it('renders an optional leading icon without changing the title scale', () => {
+      const { container } = render(
+        <PageHeader title="Equipment" icon={<span data-testid="header-icon" />} />,
+      );
+
+      expect(container.querySelector('[data-testid="header-icon"]')).toBeInTheDocument();
+      expect(container.querySelector('h1')?.className).toContain('text-xl');
+      expect(container.querySelector('h1')?.className).toContain('sm:text-2xl');
+    });
+
+    it('keeps inline mobile metadata to one rendered instance', () => {
+      render(
+        <PageHeader
+          title="Notifications"
+          meta={<span>1 unread</span>}
+          inlineMetaOnMobile
+        />,
+      );
+
+      expect(screen.getAllByText('1 unread')).toHaveLength(1);
+    });
   });
 
   it('exposes route heading focus target for RouteAnnouncer', () => {

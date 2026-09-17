@@ -20,6 +20,8 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useNavigate } from 'react-router-dom';
 import CreateTeamDialog from '@/features/teams/components/CreateTeamDialog';
 import { useI18n } from '@/i18n';
+import Page from '@/components/layout/Page';
+import PageHeader from '@/components/layout/PageHeader';
 
 const Teams = () => {
   const { t } = useI18n();
@@ -100,17 +102,11 @@ const Teams = () => {
 
   if (isLoading) {
     return (
-      <div data-testid="teams-loading" className="container mx-auto py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">{t('teamsList.title')}</h1>
-            <p className="text-muted-foreground mt-1">
-              {t('teamsList.description')}
-            </p>
-          </div>
-        </div>
+      <div data-testid="teams-loading">
+        <Page maxWidth="full" padding="workspace" className="space-y-6">
+          <PageHeader title={t('teamsList.title')} description={t('teamsList.description')} />
         
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
@@ -125,19 +121,15 @@ const Teams = () => {
               </CardContent>
             </Card>
           ))}
-        </div>
+          </div>
+        </Page>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{t('teamsList.title')}</h1>
-        <p className="text-muted-foreground mt-1">
-          {t('teamsList.description')}
-        </p>
-      </div>
+    <Page maxWidth="full" padding="workspace" className="space-y-6">
+      <PageHeader title={t('teamsList.title')} description={t('teamsList.description')} />
 
       {/* Search + Sort + Create toolbar */}
       <div className="flex items-center gap-3">
@@ -380,7 +372,7 @@ const Teams = () => {
         onClose={() => setShowCreateDialog(false)}
         organizationId={currentOrganization?.id || ''}
       />
-    </div>
+    </Page>
   );
 };
 

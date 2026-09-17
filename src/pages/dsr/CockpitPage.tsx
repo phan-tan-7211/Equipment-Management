@@ -9,6 +9,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useDsrQueue } from '@/features/dsr/hooks/useDsrQueue';
 import { DsrQueueRail } from '@/features/dsr/components/DsrQueueRail';
 import { DsrAdminAccessGate } from '@/features/dsr/components/DsrAdminAccessGate';
+import PageHeader from '@/components/layout/PageHeader';
 
 function DSRCockpitPage() {
   const { t } = useI18n();
@@ -25,17 +26,13 @@ function DSRCockpitPage() {
       noOrganizationDescription={t('dsr.cockpitSelectOrg')}
       restrictedDescription={t('dsr.cockpitRestricted')}
     >
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <ShieldCheck className="h-7 w-7 text-primary" />
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('dsr.cockpit')}</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              {t('dsr.cockpitDescription')}
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title={t('dsr.cockpit')}
+          description={t('dsr.cockpitDescription')}
+          icon={<ShieldCheck className="h-5 w-5" />}
+        />
 
         {queueQuery.isError ? (
           <Alert variant="destructive">

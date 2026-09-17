@@ -134,7 +134,7 @@ const PMTemplateView: React.FC = () => {
       {!currentOrganization && (
         <Card className="p-6">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold">{t('pmTemplates.list.title')}</h1>
+            <h2 className="text-2xl font-semibold">{t('pmTemplates.list.title')}</h2>
             <p className="text-muted-foreground">{t('pmTemplates.list.selectOrganization')}</p>
           </div>
         </Card>
@@ -142,7 +142,7 @@ const PMTemplateView: React.FC = () => {
       {currentOrganization && !isAdmin && (
         <Card className="p-6">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold">{t('pmTemplates.list.title')}</h1>
+            <h2 className="text-2xl font-semibold">{t('pmTemplates.list.title')}</h2>
             <p className="text-muted-foreground">{t('pmTemplates.list.adminRequired')}</p>
           </div>
         </Card>
