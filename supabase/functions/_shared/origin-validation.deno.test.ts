@@ -5,6 +5,10 @@ Deno.test("isAllowedOrigin accepts eqr.zinitek.com production origin", () => {
   assertEquals(isAllowedOrigin("https://eqr.zinitek.com"), true);
 });
 
+Deno.test("isAllowedOrigin accepts local preview port 4174", () => {
+  assertEquals(isAllowedOrigin("http://localhost:4174"), true);
+});
+
 Deno.test("isAllowedOrigin accepts equipqr Vercel preview hostnames", () => {
   assertEquals(
     isAllowedOrigin("https://equipqr-abc123-columbia-cloudworks-llc.vercel.app"),

@@ -6,6 +6,7 @@ import {
   MultiSelectActionMenu,
   type MultiSelectActionOption,
 } from '@/components/common/MultiSelectActionMenu';
+import { InventoryEquipmentThumbnail } from '@/features/inventory/components/InventoryEquipmentThumbnail';
 import type { EquipmentSummary } from '@/features/equipment/services/EquipmentService';
 import type { EquipmentOperatorCheckinAssignment } from '@/features/operator-check-ins/services/operatorCheckinSettingsService';
 
@@ -47,6 +48,7 @@ export function OperatorTemplateEquipmentAssignmentMenu({
         id: item.id,
         label: item.name,
         sublabel: `${item.serial_number ? t('operatorEquipment.unit', { serial: item.serial_number }) : t('operatorEquipment.noSerial')} · ${item.team_name ?? t('operatorEquipment.unassigned')}`,
+        leading: <InventoryEquipmentThumbnail equipment={item} />,
         searchText: item.location ?? '',
         lockedNote: assignedEquipmentIds.has(item.id) ? t('operatorEquipment.assigned') : undefined,
       })),
