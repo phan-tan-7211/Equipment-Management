@@ -230,7 +230,10 @@ export const deleteEquipmentNoteImage = async (
   organizationId: string,
   equipmentId: string,
 ): Promise<void> => {
-  await deleteEquipmentNoteImageAuditedRpc({ organizationId, equipmentId, imageId });
+  const storagePath = await deleteEquipmentNoteImageAuditedRpc({ organizationId, equipmentId, imageId });
+  if (storagePath) {
+    await deleteImageFromStorage('equipment-note-images', storagePath);
+  }
 };
 
 export const updateEquipmentNote = async (
