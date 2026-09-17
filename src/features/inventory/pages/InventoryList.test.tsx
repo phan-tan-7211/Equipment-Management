@@ -151,9 +151,10 @@ function mockMetadata() {
 }
 
 function renderUntilCatalogVisible() {
-  render(<InventoryList />);
+  const rendered = render(<InventoryList />);
   // Catalog data is sync-mocked — avoid findBy polling (#1314).
   expect(screen.getByText('Healthy Part')).toBeInTheDocument();
+  return rendered;
 }
 
 /** Radix DropdownMenu needs userEvent pointer sequencing. */
@@ -193,6 +194,13 @@ describe('InventoryList — mobile', () => {
     expect(search).toHaveAttribute('placeholder', 'Search by name, SKU, or ID…');
     expect(screen.getByRole('button', { name: /open personalization/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /open filters/i })).toBeInTheDocument();
+  });
+
+  it('uses compact full-width page chrome like Equipment', () => {
+    const { container } = renderUntilCatalogVisible();
+
+    expect(container.querySelector('.p-px')).toBeInTheDocument();
+    expect(container.querySelector('.space-y-1')).toBeInTheDocument();
   });
 
   it('toggles low stock filter from the filter sheet', async () => {
