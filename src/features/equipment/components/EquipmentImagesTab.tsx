@@ -20,6 +20,7 @@ import {
 } from '@/features/equipment/services/equipmentDisplayImageService';
 import { validateImageFile } from '@/services/imageUploadService';
 import { equipment } from '@/lib/queryKeys';
+import { isEquipmentDisplayImage } from '@/features/equipment/utils/equipmentMediaFilters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -70,23 +71,37 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
 
   const deleteImageMutation = useMutation({
     mutationFn: ({
-      imageId,
-      sourceType,
-      workOrderId,
+      image,
     }: {
-      imageId: string;
-      sourceType: 'equipment_display' | 'equipment_note' | 'work_order_note';
-      workOrderId?: string;
+      image: EquipmentImageData;
     }) =>
-      sourceType === 'equipment_display'
-        ? removeEquipmentDisplayImage(organizationId, equipmentId)
-        : deleteEquipmentImage({
-        imageId,
-        sourceType,
-        organizationId,
-        equipmentId,
-        workOrderId,
-        }),
+      (async () => {
+        if (image.source_type === 'equipment_display') {
+          if (isEquipmentDisplayImage(image, currentDisplayImage)) {
+            await removeEquipmentDisplayImage(organizationId, equipmentId);
+          }
+
+          // Display uploads are persisted as equipment-note media so they can
+          // remain in the library. Delete that media record as well.
+          if (!image.id.startsWith('equipment-display:')) {
+            await deleteEquipmentImage({
+              imageId: image.id,
+              sourceType: 'equipment_note',
+              organizationId,
+              equipmentId,
+            });
+          }
+          return;
+        }
+
+        return deleteEquipmentImage({
+          imageId: image.id,
+          sourceType: image.source_type,
+          organizationId,
+          equipmentId,
+          workOrderId: image.source_type === 'work_order_note' ? image.source_id : undefined,
+        });
+      })(),
     onSuccess: () => {
       invalidateMedia();
       toast.success(t('equipmentMedia.imageDeleted'));
@@ -207,11 +222,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   const handleDeleteImage = async (imageId: string) => {
     const image = media.images.find((img) => img.id === imageId);
     if (!image) return;
-    await deleteImageMutation.mutateAsync({
-      imageId,
-      sourceType: image.source_type,
-      workOrderId: image.source_type === 'work_order_note' ? image.source_id : undefined,
-    });
+    await deleteImageMutation.mutateAsync({ image });
   };
 
   if (media.isLoading) {
