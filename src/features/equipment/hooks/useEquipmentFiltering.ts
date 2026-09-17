@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useEquipmentList, useEquipmentSummaries } from '@/features/equipment/hooks/useEquipment';
 import type {
   EquipmentColumnFilterKey,
@@ -67,6 +67,50 @@ const initialSort: SortConfig = {
   direction: 'asc'
 };
 
+type EquipmentListStateSnapshot = {
+  filters: EquipmentFilters;
+  sortConfig: SortConfig;
+  cardPage: number;
+  tablePage: number;
+  cardPageSize: number;
+  tablePageSize: number;
+  activeQuickFilter: string | null;
+  columnFilters: EquipmentColumnFilters;
+};
+
+/**
+ * Keep list state while the SPA moves from Equipment to a detail page and
+ * back. The cache is scoped by organization and intentionally lives only in
+ * memory, so a sign-out or full browser restart never leaks filter values.
+ */
+const equipmentListStateCache = new Map<string, EquipmentListStateSnapshot>();
+
+function cloneEquipmentListState(
+  state: EquipmentListStateSnapshot,
+): EquipmentListStateSnapshot {
+  return {
+    ...state,
+    filters: { ...state.filters },
+    sortConfig: { ...state.sortConfig },
+    columnFilters: Object.fromEntries(
+      Object.entries(state.columnFilters).map(([key, values]) => [key, [...values]]),
+    ),
+  } as EquipmentListStateSnapshot;
+}
+
+function getCachedEquipmentListState(
+  organizationId?: string,
+): EquipmentListStateSnapshot | null {
+  if (!organizationId) return null;
+  const cached = equipmentListStateCache.get(organizationId);
+  return cached ? cloneEquipmentListState(cached) : null;
+}
+
+/** Clear in-memory list state between isolated tests. */
+export function clearEquipmentListStateCache(): void {
+  equipmentListStateCache.clear();
+}
+
 /**
  * Equipment list state: filters, sort, pagination — all driven server-side
  * via `useEquipmentList`. The previous implementation pulled the entire
@@ -86,15 +130,47 @@ export const useEquipmentFiltering = (
   organizationId?: string,
   viewMode: EquipmentViewMode = 'grid',
 ) => {
-  const [filters, setFilters] = useState<EquipmentFilters>(initialFilters);
-  const [sortConfig, setSortConfig] = useState<SortConfig>(initialSort);
+  const [filters, setFilters] = useState<EquipmentFilters>(() =>
+    getCachedEquipmentListState(organizationId)?.filters ?? initialFilters,
+  );
+  const [sortConfig, setSortConfig] = useState<SortConfig>(() =>
+    getCachedEquipmentListState(organizationId)?.sortConfig ?? initialSort,
+  );
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [cardPage, setCardPage] = useState(1);
-  const [tablePage, setTablePage] = useState(1);
-  const [cardPageSize, setCardPageSize] = useState(DEFAULT_EQUIPMENT_CARD_PAGE_SIZE);
-  const [tablePageSize, setTablePageSize] = useState(DEFAULT_EQUIPMENT_TABLE_PAGE_SIZE);
-  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
-  const [columnFilters, setColumnFilters] = useState<EquipmentColumnFilters>({});
+  const [cardPage, setCardPage] = useState(() =>
+    getCachedEquipmentListState(organizationId)?.cardPage ?? 1,
+  );
+  const [tablePage, setTablePage] = useState(() =>
+    getCachedEquipmentListState(organizationId)?.tablePage ?? 1,
+  );
+  const [cardPageSize, setCardPageSize] = useState(() =>
+    getCachedEquipmentListState(organizationId)?.cardPageSize ?? DEFAULT_EQUIPMENT_CARD_PAGE_SIZE,
+  );
+  const [tablePageSize, setTablePageSize] = useState(() =>
+    getCachedEquipmentListState(organizationId)?.tablePageSize ?? DEFAULT_EQUIPMENT_TABLE_PAGE_SIZE,
+  );
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(() =>
+    getCachedEquipmentListState(organizationId)?.activeQuickFilter ?? null,
+  );
+  const [columnFilters, setColumnFilters] = useState<EquipmentColumnFilters>(() =>
+    getCachedEquipmentListState(organizationId)?.columnFilters ?? {},
+  );
+  const hydratedOrganizationIdRef = useRef(organizationId ?? null);
+
+  useEffect(() => {
+    if (!organizationId || hydratedOrganizationIdRef.current === organizationId) return;
+
+    hydratedOrganizationIdRef.current = organizationId;
+    const cached = getCachedEquipmentListState(organizationId);
+    setFilters(cached?.filters ?? initialFilters);
+    setSortConfig(cached?.sortConfig ?? initialSort);
+    setCardPage(cached?.cardPage ?? 1);
+    setTablePage(cached?.tablePage ?? 1);
+    setCardPageSize(cached?.cardPageSize ?? DEFAULT_EQUIPMENT_CARD_PAGE_SIZE);
+    setTablePageSize(cached?.tablePageSize ?? DEFAULT_EQUIPMENT_TABLE_PAGE_SIZE);
+    setActiveQuickFilter(cached?.activeQuickFilter ?? null);
+    setColumnFilters(cached?.columnFilters ?? {});
+  }, [organizationId]);
 
   const currentPage = viewMode === 'table' ? tablePage : cardPage;
   const pageSize = viewMode === 'table' ? tablePageSize : cardPageSize;
@@ -114,6 +190,31 @@ export const useEquipmentFiltering = (
   sortConfigRef.current = sortConfig;
   const columnFiltersRef = useRef(columnFilters);
   columnFiltersRef.current = columnFilters;
+
+  useEffect(() => {
+    if (!organizationId || hydratedOrganizationIdRef.current !== organizationId) return;
+
+    equipmentListStateCache.set(organizationId, cloneEquipmentListState({
+      filters,
+      sortConfig,
+      cardPage,
+      tablePage,
+      cardPageSize,
+      tablePageSize,
+      activeQuickFilter,
+      columnFilters,
+    }));
+  }, [
+    organizationId,
+    filters,
+    sortConfig,
+    cardPage,
+    tablePage,
+    cardPageSize,
+    tablePageSize,
+    activeQuickFilter,
+    columnFilters,
+  ]);
 
   // Derive RBAC inputs for the server-side query so team-scoped users only
   // see equipment on their teams (mirrors the app-layer gate in the non-
@@ -249,8 +350,9 @@ export const useEquipmentFiltering = (
   const filteredAndSortedEquipment = paginatedEquipment;
 
   const applyQuickFilter = useCallback((type: string) => {
+    const preservedSearch = filtersRef.current.search;
     if (activeQuickFilter === type) {
-      setFilters(initialFilters);
+      setFilters({ ...initialFilters, search: preservedSearch });
       setColumnFilters({});
       setSortConfig(initialSort);
       setActiveQuickFilter(null);
@@ -258,7 +360,8 @@ export const useEquipmentFiltering = (
       return;
     }
 
-    setFilters(initialFilters);
+    // Quick filters should not erase a search such as "21 trục".
+    setFilters({ ...initialFilters, search: preservedSearch });
     setColumnFilters({});
     setSortConfig(initialSort);
 

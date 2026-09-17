@@ -24,7 +24,7 @@ vi.mock('@/features/teams/hooks/useTeamMembership', () => ({
   useTeamMembership: () => ({ getUserTeamIds: () => [] }),
 }));
 
-import { useEquipmentFiltering } from './useEquipmentFiltering';
+import { clearEquipmentListStateCache, useEquipmentFiltering } from './useEquipmentFiltering';
 import { useEquipmentList, useEquipmentSummaries } from '@/features/equipment/hooks/useEquipment';
 import { useSyncTeamsByOrganization } from '@/services/syncDataService';
 
@@ -47,6 +47,7 @@ const teamFixtures = [
 ];
 
 beforeEach(() => {
+  clearEquipmentListStateCache();
   (useEquipmentList as Mock).mockReturnValue({
     data: { data: [], count: 0 },
     isLoading: false,
@@ -128,6 +129,29 @@ describe('useEquipmentFiltering (server-paginated)', () => {
     expect(lastCall?.[1]).toMatchObject({ status: 'active' });
     // pagination/sort options are passed in the third arg
     expect(lastCall?.[2]).toMatchObject({ page: 1, sortField: 'name', sortDirection: 'asc' });
+  });
+
+  it('preserves the search term when activating a quick filter', () => {
+    const { result } = renderHook(() => useEquipmentFiltering('org-1'), { wrapper });
+
+    act(() => result.current.updateFilter('search', '21 trục'));
+    act(() => result.current.applyQuickFilter('active-only'));
+
+    expect(result.current.filters.search).toBe('21 trục');
+    expect(result.current.filters.status).toBe('active');
+  });
+
+  it('restores list filters after the hook is remounted', () => {
+    const firstMount = renderHook(() => useEquipmentFiltering('org-1'), { wrapper });
+    act(() => {
+      firstMount.result.current.updateFilter('search', '21 trục');
+      firstMount.result.current.updateSort('created_at', 'desc');
+    });
+    firstMount.unmount();
+
+    const secondMount = renderHook(() => useEquipmentFiltering('org-1'), { wrapper });
+    expect(secondMount.result.current.filters.search).toBe('21 trục');
+    expect(secondMount.result.current.sortConfig).toEqual({ field: 'created_at', direction: 'desc' });
   });
 
   it('does not reset pagination when updateFilter is a no-op (e.g. team mirror sync)', () => {
