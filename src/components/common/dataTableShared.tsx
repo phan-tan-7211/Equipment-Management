@@ -358,3 +358,109 @@ export function ResizableFixedDataTable<TData>({
   cardClassName = 'overflow-hidden',
   contentClassName = 'p-0',
   stickyHeader = false,
+  getHeaderProps,
+  getCellClassName,
+  getCellStyle,
+  renderHeaderActions,
+}: ResizableFixedDataTableProps<TData>) {
+  const content = (
+    <Card className={cardClassName}>
+      <CardContent className={contentClassName}>
+        <ResizableTableSurface
+          table={table}
+          tableWidth={tableWidth}
+          scrollClassName={scrollClassName}
+          stickyHeader={stickyHeader}
+          getHeaderProps={getHeaderProps}
+          getCellClassName={getCellClassName}
+          getCellStyle={getCellStyle}
+          renderHeaderActions={renderHeaderActions}
+        />
+      </CardContent>
+    </Card>
+  );
+
+  if (withTooltipProvider) {
+    return <TooltipProvider>{content}</TooltipProvider>;
+  }
+
+  return content;
+}
+
+export function DataTableSortIcon({
+  active,
+  sortOrder,
+}: {
+  active: boolean;
+  sortOrder?: 'asc' | 'desc';
+}) {
+  if (!active) {
+    return <ArrowUpDown className="h-3 w-3 shrink-0 opacity-50" aria-hidden />;
+  }
+
+  return sortOrder === 'asc' ? (
+    <ArrowUp className="h-3 w-3 shrink-0" aria-hidden />
+  ) : (
+    <ArrowDown className="h-3 w-3 shrink-0" aria-hidden />
+  );
+}
+
+type DataTableColumnResizeHandleProps<THeader> = {
+  header: Header<THeader, unknown>;
+  onAutoFit?: () => void;
+  className?: string;
+};
+
+export function DataTableColumnResizeHandle<THeader>({
+  header,
+  onAutoFit,
+  className,
+}: DataTableColumnResizeHandleProps<THeader>) {
+  if (!header.column.getCanResize()) {
+    return null;
+  }
+
+  return (
+    <div
+      data-slot="column-resize-handle"
+      onMouseDown={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        header.getResizeHandler()(event);
+      }}
+      onPointerDown={(event) => {
+        event.stopPropagation();
+      }}
+      onTouchStart={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        header.getResizeHandler()(event);
+      }}
+      onClick={(event) => event.stopPropagation()}
+      onDoubleClick={
+        onAutoFit
+          ? (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onAutoFit();
+            }
+          : undefined
+      }
+      className={cn(
+        'absolute right-0 top-0 h-full w-1.5 cursor-col-resize select-none touch-none',
+        onAutoFit ? 'bg-border/45 hover:bg-border/80' : 'w-1 hover:bg-border/80',
+        header.column.getIsResizing() && 'bg-primary',
+        className,
+      )}
+      aria-hidden
+    />
+  );
+}
+
+export function DataTableEmptyState({ message }: { message: string }) {
+  return (
+    <Card>
+      <CardContent className="py-12 text-center text-muted-foreground">{message}</CardContent>
+    </Card>
+  );
+}
