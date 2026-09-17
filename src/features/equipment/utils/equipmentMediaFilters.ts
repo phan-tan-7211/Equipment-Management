@@ -68,9 +68,15 @@ export function equipmentMediaPathsMatch(
 }
 
 export function isEquipmentDisplayImage(
-  image: Pick<EquipmentImageData, 'file_url'>,
+  image: Pick<EquipmentImageData, 'file_url' | 'description'>,
   currentDisplayImage?: string | null,
 ): boolean {
+  const persistedDisplayRef = image.description?.startsWith('display-image:')
+    ? image.description.slice('display-image:'.length)
+    : null;
+  if (persistedDisplayRef && equipmentMediaPathsMatch(persistedDisplayRef, currentDisplayImage)) {
+    return true;
+  }
   return equipmentMediaPathsMatch(image.file_url, currentDisplayImage);
 }
 

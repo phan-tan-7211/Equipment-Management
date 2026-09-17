@@ -80,6 +80,23 @@ describe('equipmentMediaFilters', () => {
     expect(isEquipmentDisplayImage(sample[0], 'org/eq/c.jpg')).toBe(false);
   });
 
+  it('detects a persisted display marker even when its media URL is private', () => {
+    const persistedDisplay = img({
+      id: 'persisted-display',
+      file_url: 'https://example.com/signed-private-url',
+      description: 'display-image:display-images/org-1/equipment/eq-1/display-set/full.webp',
+      created_at: '2026-07-04T10:00:00.000Z',
+      source_type: 'equipment_display',
+    });
+
+    expect(
+      isEquipmentDisplayImage(
+        persistedDisplay,
+        'display-images/org-1/equipment/eq-1/display-set/full.webp',
+      ),
+    ).toBe(true);
+  });
+
   it('resolves artifact kinds from mime and extension', () => {
     expect(resolveEquipmentMediaArtifactKind('image/jpeg', 'x.jpg')).toBe('image');
     expect(resolveEquipmentMediaArtifactKind('application/pdf', 'x.pdf')).toBe('document');

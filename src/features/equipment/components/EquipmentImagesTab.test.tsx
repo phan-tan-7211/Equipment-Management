@@ -1,9 +1,10 @@
 import React from 'react';
-import { render, screen, waitFor } from '@vitest-harness/utils/test-utils';
+import { fireEvent, render, screen, waitFor } from '@vitest-harness/utils/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import EquipmentImagesTab from './EquipmentImagesTab';
 import * as equipmentImagesServiceModule from '@/features/equipment/services/equipmentImagesService';
 import * as equipmentNotesServiceModule from '@/features/equipment/services/equipmentNotesService';
+import * as displayImageServiceModule from '@/features/equipment/services/equipmentDisplayImageService';
 
 // Mock dependencies
 vi.mock('@/hooks/useAuth', () => ({
@@ -95,6 +96,9 @@ describe('EquipmentImagesTab', () => {
     vi.clearAllMocks();
     
     vi.mocked(equipmentImagesServiceModule.getAllEquipmentImages).mockResolvedValue(mockImages);
+    vi.mocked(displayImageServiceModule.replaceEquipmentDisplayImage).mockResolvedValue(
+      'display-images/org-1/equipment/eq-1/display-set/full.webp',
+    );
   });
 
   describe('Core Rendering', () => {
@@ -177,6 +181,41 @@ describe('EquipmentImagesTab', () => {
   });
 
   describe('Display Image', () => {
+    it('persists an uploaded display image as one reusable media item', async () => {
+      vi.mocked(equipmentNotesServiceModule.createEquipmentNoteWithImages).mockResolvedValue({
+        id: 'note-display-1',
+      });
+
+      render(
+        <EquipmentImagesTab
+          equipmentId="eq-1"
+          organizationId="org-1"
+        />,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/display image|ảnh đại diện/i)).toBeInTheDocument();
+      });
+
+      const file = new File(['display-image'], 'display.jpg', { type: 'image/jpeg' });
+      fireEvent.change(screen.getByLabelText(/display image|ảnh đại diện/i), {
+        target: { files: [file] },
+      });
+
+      await waitFor(() => {
+        expect(equipmentNotesServiceModule.createEquipmentNoteWithImages).toHaveBeenCalledWith(
+          'eq-1',
+          'test uploaded a display image',
+          0,
+          false,
+          [file],
+          'org-1',
+          null,
+          'display-image:display-images/org-1/equipment/eq-1/display-set/full.webp',
+        );
+      });
+    });
+
     it('handles setting display image', async () => {
       vi.mocked(equipmentImagesServiceModule.updateEquipmentDisplayImage).mockResolvedValue(undefined);
 
@@ -227,4 +266,3 @@ describe('EquipmentImagesTab', () => {
     });
   });
 });
-

@@ -11,7 +11,7 @@ import {
   formatFinalAuditCopy,
   getFinalHardcodedAuditCopy,
 } from '@/i18n/finalHardcodedAuditCopy';
-import { equipmentMediaPathsMatch } from '@/features/equipment/utils/equipmentMediaFilters';
+import { isEquipmentDisplayImage } from '@/features/equipment/utils/equipmentMediaFilters';
 
 interface ImageData {
   id: string;
@@ -140,7 +140,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                     <DynamicImageViewport src={image.file_url} alt={image.file_name} fileName={image.file_name} className="aspect-square h-full w-full rounded-lg" showControls={false} />
                   </button>
 
-                  {equipmentMediaPathsMatch(image.file_url, currentDisplayImage) && (
+                  {isEquipmentDisplayImage(image, currentDisplayImage) && (
                     <div className="absolute top-2 left-2">
                       <Badge className="bg-warning text-warning-foreground text-xs"><Star className="h-3 w-3 mr-1" />{copy.display}</Badge>
                     </div>
@@ -148,10 +148,10 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity space-y-1">
                     <Button size="sm" variant="secondary" className="h-8 w-8 p-0" onClick={() => setSelectedImage(image)} aria-label={formatFinalAuditCopy(copy.viewImage, { name: image.file_name })}><Eye className="h-4 w-4" /></Button>
-                    {canSetDisplayImage && !equipmentMediaPathsMatch(image.file_url, currentDisplayImage) && (
+                    {canSetDisplayImage && !isEquipmentDisplayImage(image, currentDisplayImage) && (
                       <Button size="sm" variant="secondary" className="h-8 w-8 p-0" onClick={() => handleSetDisplayImage(image)} disabled={isSettingDisplay === image.id} aria-label={formatFinalAuditCopy(copy.setDisplayImage, { name: image.file_name })}><Star className="h-4 w-4" /></Button>
                     )}
-                    {canSetDisplayImage && equipmentMediaPathsMatch(image.file_url, currentDisplayImage) && (
+                    {canSetDisplayImage && isEquipmentDisplayImage(image, currentDisplayImage) && (
                       <Button size="sm" variant="secondary" className="h-8 w-8 p-0" onClick={handleRemoveDisplayImage} disabled={isSettingDisplay === image.id} aria-label={formatFinalAuditCopy(copy.removeDisplayImage, { name: image.file_name })}><StarOff className="h-4 w-4" /></Button>
                     )}
                     {onDelete && canDelete?.(image) && (

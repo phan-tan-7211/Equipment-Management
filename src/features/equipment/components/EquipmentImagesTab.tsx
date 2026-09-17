@@ -18,6 +18,7 @@ import {
   removeEquipmentDisplayImage,
   replaceEquipmentDisplayImage,
 } from '@/features/equipment/services/equipmentDisplayImageService';
+import { isEquipmentDisplayImage } from '@/features/equipment/utils/equipmentMediaFilters';
 import { validateImageFile } from '@/services/imageUploadService';
 import { equipment } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
@@ -69,7 +70,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   };
 
   const deleteImageMutation = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       imageId,
       sourceType,
       workOrderId,
@@ -77,16 +78,33 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
       imageId: string;
       sourceType: 'equipment_display' | 'equipment_note' | 'work_order_note';
       workOrderId?: string;
-    }) =>
-      sourceType === 'equipment_display'
-        ? removeEquipmentDisplayImage(organizationId, equipmentId)
-        : deleteEquipmentImage({
+    }) => {
+      if (sourceType === 'equipment_display') {
+        if (imageId.startsWith('equipment-display:')) {
+          return removeEquipmentDisplayImage(organizationId, equipmentId);
+        }
+
+        const image = media.images.find((item) => item.id === imageId);
+        if (image && isEquipmentDisplayImage(image, currentDisplayImage)) {
+          await removeEquipmentDisplayImage(organizationId, equipmentId);
+        }
+
+        return deleteEquipmentImage({
+          imageId,
+          sourceType: 'equipment_note',
+          organizationId,
+          equipmentId,
+        });
+      }
+
+      return deleteEquipmentImage({
         imageId,
         sourceType,
         organizationId,
         equipmentId,
         workOrderId,
-        }),
+      });
+    },
     onSuccess: () => {
       invalidateMedia();
       toast.success(t('equipmentMedia.imageDeleted'));
@@ -119,15 +137,27 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   });
 
   const replaceDisplayImageMutation = useMutation({
-    mutationFn: (source: File) => {
+    mutationFn: async (source: File) => {
       if (!permissions.canSetDisplayImage) {
         throw new Error('Display image permission denied');
       }
-      return replaceEquipmentDisplayImage({
+      const canonicalRef = await replaceEquipmentDisplayImage({
         organizationId,
         equipmentId,
         source,
       });
+      const userName = user?.email?.split('@')[0] || 'User';
+      await createEquipmentNoteWithImages(
+        equipmentId,
+        `${userName} uploaded a display image`,
+        0,
+        false,
+        [source],
+        organizationId,
+        null,
+        `display-image:${canonicalRef}`,
+      );
+      return canonicalRef;
     },
     onSuccess: () => {
       invalidateMedia();

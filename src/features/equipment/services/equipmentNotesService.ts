@@ -44,6 +44,7 @@ async function uploadEquipmentNoteImages(
   noteId: string,
   images: File[],
   userId: string,
+  imageDescription?: string,
 ): Promise<EquipmentNoteImage[]> {
   return uploadFilesToNoteImageBucket<EquipmentNoteImage>({
     bucket: 'equipment-note-images',
@@ -62,6 +63,7 @@ async function uploadEquipmentNoteImages(
           file_url: storedPath,
           file_size: file.size,
           mime_type: file.type,
+          description: imageDescription ?? null,
           uploaded_by: userId,
         })
         .select()
@@ -145,6 +147,7 @@ export const createEquipmentNoteWithImages = async (
   images: File[] = [],
   organizationId: string,
   machineHours?: number | null,
+  imageDescription?: string,
 ): Promise<EquipmentNote> => {
   const userId = await requireAuthUserIdFromClaims();
 
@@ -171,7 +174,13 @@ export const createEquipmentNoteWithImages = async (
 
   if (noteError) throw noteError;
 
-  const uploadedImages = await uploadEquipmentNoteImages(equipmentId, note.id, images, userId);
+  const uploadedImages = await uploadEquipmentNoteImages(
+    equipmentId,
+    note.id,
+    images,
+    userId,
+    imageDescription,
+  );
 
   return {
     ...note,

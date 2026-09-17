@@ -10,6 +10,7 @@ import { equipment } from '@/lib/queryKeys';
 import {
   DEFAULT_EQUIPMENT_MEDIA_FILTERS,
   countActiveEquipmentMediaFilters,
+  equipmentMediaPathsMatch,
   filterAndSortEquipmentMedia,
   orderEquipmentMediaForDisplayCarousel,
   type EquipmentMediaFiltersState,
@@ -45,12 +46,18 @@ export function useEquipmentMediaLibrary({
   const images = useMemo(() => query.data ?? [], [query.data]);
 
   const imagesWithDisplay = useMemo(() => {
+    const hasPersistedCurrentDisplay = images.some((image) => {
+      const displayRef = image.description?.startsWith('display-image:')
+        ? image.description.slice('display-image:'.length)
+        : null;
+      return Boolean(displayRef && equipmentMediaPathsMatch(displayRef, currentDisplayImage));
+    });
     const displayImage = createEquipmentDisplayMediaItem(
       equipmentId,
       currentOrganization?.name || 'Equipment',
       currentDisplayImage,
     );
-    return displayImage ? [displayImage, ...images] : images;
+    return displayImage && !hasPersistedCurrentDisplay ? [displayImage, ...images] : images;
   }, [currentDisplayImage, currentOrganization?.name, equipmentId, images]);
 
   const filteredImages = useMemo(
