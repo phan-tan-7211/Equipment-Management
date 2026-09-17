@@ -42,7 +42,8 @@ vi.mock('@/features/equipment/services/equipmentNotesService', () => ({
 
 vi.mock('@/features/equipment/services/equipmentDisplayImageService', () => ({
   replaceEquipmentDisplayImage: vi.fn(),
-  removeEquipmentDisplayImage: vi.fn()
+  removeEquipmentDisplayImage: vi.fn(),
+  removeEquipmentDisplayImageSet: vi.fn()
 }));
 
 vi.mock('@/components/common/ImageGallery', () => ({
@@ -227,4 +228,3 @@ describe('EquipmentImagesTab', () => {
     });
   });
 });
-

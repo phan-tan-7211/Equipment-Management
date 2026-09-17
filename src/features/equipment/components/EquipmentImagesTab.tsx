@@ -16,6 +16,7 @@ import {
 import { createEquipmentNoteWithImages } from '@/features/equipment/services/equipmentNotesService';
 import {
   removeEquipmentDisplayImage,
+  removeEquipmentDisplayImageSet,
   replaceEquipmentDisplayImage,
 } from '@/features/equipment/services/equipmentDisplayImageService';
 import { validateImageFile } from '@/services/imageUploadService';
@@ -79,6 +80,10 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
         if (image.source_type === 'equipment_display') {
           if (isEquipmentDisplayImage(image, currentDisplayImage)) {
             await removeEquipmentDisplayImage(organizationId, equipmentId);
+          } else if (image.description?.startsWith('display-image:')) {
+            await removeEquipmentDisplayImageSet(
+              image.description.slice('display-image:'.length),
+            );
           }
 
           // Display uploads are persisted as equipment-note media so they can
