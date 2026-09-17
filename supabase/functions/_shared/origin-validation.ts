@@ -19,6 +19,7 @@
 const ALLOWED_ORIGINS = [
   "https://equipqr.app",
   "https://preview.equipqr.app",
+  "https://eqr.zinitek.com",
   "http://localhost:5173",
   "http://localhost:8080",
   "http://localhost:3000",
