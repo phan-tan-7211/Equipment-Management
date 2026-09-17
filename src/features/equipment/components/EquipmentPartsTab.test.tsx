@@ -13,6 +13,12 @@ vi.mock('@/features/inventory/hooks/useInventory', () => ({
   useCompatibleInventoryItems: vi.fn(),
 }));
 
+vi.mock('@/features/inventory/components/InventoryItemThumbnail', () => ({
+  InventoryItemThumbnail: ({ item }: { item: { id: string } }) => (
+    <div data-testid={`inventory-thumbnail-${item.id}`} />
+  ),
+}));
+
 vi.mock('@/hooks/use-mobile', () => ({
   useIsMobile: vi.fn(() => false),
 }));
@@ -89,7 +95,7 @@ describe('EquipmentPartsTab', () => {
     } as ReturnType<typeof useInventoryModule.useCompatibleInventoryItems>);
   });
 
-  it('renders header, search, and part cards with stock badges', () => {
+  it('renders header, search, standard inventory thumbnails, and part cards with stock badges', () => {
     render(<EquipmentPartsTab equipmentId="eq-1" organizationId="org-1" />);
 
     expect(screen.getByText('Compatible Parts')).toBeInTheDocument();
@@ -100,6 +106,10 @@ describe('EquipmentPartsTab', () => {
     expect(screen.getByText('Out of Stock')).toBeInTheDocument();
     expect(screen.getByText('Low Stock')).toBeInTheDocument();
     expect(screen.getAllByText('Alternates').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByTestId('inventory-thumbnail-part-1')).toBeInTheDocument();
+    expect(screen.getByTestId('inventory-thumbnail-part-2')).toBeInTheDocument();
+    expect(screen.getByTestId('inventory-thumbnail-part-3')).toBeInTheDocument();
+    expect(screen.getByTestId('inventory-thumbnail-part-4')).toBeInTheDocument();
   });
 
   it('shows loading skeletons when isLoading', () => {
