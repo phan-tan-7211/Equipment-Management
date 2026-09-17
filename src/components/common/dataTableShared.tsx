@@ -1,5 +1,7 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { flexRender, type Cell, type Header, type Table as TanStackTable } from '@tanstack/react-table';
+import { useSortable, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   useState,
   type CSSProperties,
@@ -78,6 +80,7 @@ type ResizableTableSurfaceProps<TData> = {
   getCellClassName: (cell: Cell<TData, unknown>) => string;
   getCellStyle?: (cell: Cell<TData, unknown>) => CSSProperties | undefined;
   renderHeaderActions?: (header: Header<TData, unknown>) => ReactNode;
+  columnDndItems?: string[];
   getRowClassName?: (rowIndex: number) => string | undefined;
   emptyMessage?: string;
   emptyColSpan?: number;
@@ -145,6 +148,7 @@ export function ResizableTableSurface<TData>({
   getCellClassName,
   getCellStyle,
   renderHeaderActions,
+  columnDndItems,
   getRowClassName,
   emptyMessage,
   emptyColSpan,
@@ -156,6 +160,7 @@ export function ResizableTableSurface<TData>({
 
   return (
     <div className={scrollClassName}>
+      <SortableContext items={columnDndItems ?? []} strategy={horizontalListSortingStrategy}>
       <Table
         withWrapper={false}
         className="table-fixed"
@@ -188,6 +193,7 @@ export function ResizableTableSurface<TData>({
                   ? { ...style, zIndex: hasPinnedOffset ? 50 : 40 }
                   : style;
                 const resolvedDraggable = Boolean(onDragStart || draggable);
+                const dndEnabled = Boolean(dataColumnKey && columnDndItems?.includes(dataColumnKey));
                 const resolvedPointerDown: PointerEventHandler<HTMLTableCellElement> | undefined = onPointerDown;
                 const isDragSource = draggedHeaderId === header.id;
                 const isDropTarget = dragOverHeaderId === header.id && draggedHeaderId !== header.id;
@@ -223,16 +229,16 @@ export function ResizableTableSurface<TData>({
                     // Reordering is pointer-driven so it works when the sortable title
                     // button is inside the header. The menu stops propagation at its trigger.
                     draggable={false}
-                    onDragStart={startDragFromCell}
-                    onDragOver={
+                    onDragStart={dndEnabled ? undefined : startDragFromCell}
+                    onDragOver={dndEnabled ? undefined : (
                       onDragOver
                         ? (event) => {
                             setDragOverHeaderId(header.id);
                             onDragOver(event);
                           }
                         : undefined
-                    }
-                    onDrop={
+                    )}
+                    onDrop={dndEnabled ? undefined : (
                       onDrop
                         ? (event) => {
                             setDraggedHeaderId(null);
@@ -240,24 +246,32 @@ export function ResizableTableSurface<TData>({
                             onDrop(event);
                           }
                         : undefined
-                    }
-                    onDragEnd={endDragFromCell}
-                    onPointerDown={resolvedPointerDown}
+                    )}
+                    onDragEnd={dndEnabled ? undefined : endDragFromCell}
+                    onPointerDown={dndEnabled ? undefined : resolvedPointerDown}
                     {...(dataColumnKey ? { 'data-table-column-key': dataColumnKey } : {})}
                   >
                     <div className="group relative min-h-8 min-w-0 pr-6">
-                      <div
-                        className={cn(
-                          'min-h-8 min-w-0',
-                          resolvedDraggable && 'cursor-grab active:cursor-grabbing touch-none',
-                        )}
-                        draggable={false}
-                        {...(dataColumnKey ? { 'data-table-column-drag-surface': dataColumnKey } : {})}
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </div>
+                      {dndEnabled ? (
+                        <DataTableDndHeaderSurface id={dataColumnKey!}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </DataTableDndHeaderSurface>
+                      ) : (
+                        <div
+                          className={cn(
+                            'min-h-8 min-w-0',
+                            resolvedDraggable && 'cursor-grab active:cursor-grabbing touch-none',
+                          )}
+                          draggable={false}
+                          {...(dataColumnKey ? { 'data-table-column-drag-surface': dataColumnKey } : {})}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </div>
+                      )}
                       {renderHeaderActions?.(header)}
                     </div>
                     <DataTableColumnResizeHandle header={header} onAutoFit={onAutoFit} />
@@ -290,6 +304,27 @@ export function ResizableTableSurface<TData>({
           )}
         </TableBody>
       </Table>
+      </SortableContext>
+    </div>
+  );
+}
+
+function DataTableDndHeaderSurface({ id, children }: { id: string; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        'min-h-8 min-w-0 touch-none cursor-grab active:cursor-grabbing',
+        isDragging && 'opacity-45',
+      )}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      data-table-column-drag-surface={id}
+      {...attributes}
+      {...listeners}
+    >
+      {children}
     </div>
   );
 }
@@ -318,6 +353,7 @@ type ResizableFixedDataTableProps<TData> = {
   getCellClassName: (cell: Cell<TData, unknown>) => string;
   getCellStyle?: (cell: Cell<TData, unknown>) => CSSProperties | undefined;
   renderHeaderActions?: (header: Header<TData, unknown>) => ReactNode;
+  columnDndItems?: string[];
 };
 
 export function ResizableFixedDataTable<TData>({
@@ -332,6 +368,7 @@ export function ResizableFixedDataTable<TData>({
   getCellClassName,
   getCellStyle,
   renderHeaderActions,
+  columnDndItems,
 }: ResizableFixedDataTableProps<TData>) {
   const content = (
     <Card className={cardClassName}>
@@ -345,6 +382,7 @@ export function ResizableFixedDataTable<TData>({
           getCellClassName={getCellClassName}
           getCellStyle={getCellStyle}
           renderHeaderActions={renderHeaderActions}
+          columnDndItems={columnDndItems}
         />
       </CardContent>
     </Card>
