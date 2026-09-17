@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/contexts/OrganizationContext';
@@ -53,12 +53,17 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [optionalNote, setOptionalNote] = useState('');
   const [explorerOpen, setExplorerOpen] = useState(false);
+  const [activeDisplayImage, setActiveDisplayImage] = useState(currentDisplayImage);
   const displayImageInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setActiveDisplayImage(currentDisplayImage);
+  }, [currentDisplayImage]);
 
   const media = useEquipmentMediaLibrary({
     equipmentId,
     organizationId,
-    currentDisplayImage,
+    currentDisplayImage: activeDisplayImage,
   });
 
   const invalidateMedia = () => {
@@ -78,7 +83,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
     }) =>
       (async () => {
         if (image.source_type === 'equipment_display') {
-          if (isEquipmentDisplayImage(image, currentDisplayImage)) {
+          if (isEquipmentDisplayImage(image, activeDisplayImage)) {
             await removeEquipmentDisplayImage(organizationId, equipmentId);
           } else if (image.description?.startsWith('display-image:')) {
             await removeEquipmentDisplayImageSet(
@@ -118,13 +123,15 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   });
 
   const setDisplayImageMutation = useMutation({
-    mutationFn: (imageUrl: string) => {
+    mutationFn: async (imageUrl: string) => {
       if (!permissions.canSetDisplayImage) {
         throw new Error('Display image permission denied');
       }
-      return updateEquipmentDisplayImage(organizationId, equipmentId, imageUrl);
+      await updateEquipmentDisplayImage(organizationId, equipmentId, imageUrl);
+      return imageUrl;
     },
-    onSuccess: () => {
+    onSuccess: (imageUrl) => {
+      setActiveDisplayImage(imageUrl || undefined);
       invalidateMedia();
       toast.success(t('equipmentMedia.displayImageUpdated'));
     },
@@ -161,7 +168,8 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
       );
       return canonicalRef;
     },
-    onSuccess: () => {
+    onSuccess: (canonicalRef) => {
+      setActiveDisplayImage(canonicalRef);
       invalidateMedia();
       toast.success(t('equipmentMedia.displayImageUpdated'));
     },
@@ -352,7 +360,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
         }}
         canDelete={canDeleteImage}
         canSetDisplayImage={permissions.canSetDisplayImage}
-        currentDisplayImage={currentDisplayImage}
+        currentDisplayImage={activeDisplayImage}
         title=""
         emptyMessage={
           media.hasActiveFilters
@@ -370,7 +378,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
         filters={media.filters}
         activeFilterCount={media.activeFilterCount}
         isLoading={media.isLoading}
-        currentDisplayImage={currentDisplayImage}
+        currentDisplayImage={activeDisplayImage}
         canSetDisplayImage={permissions.canSetDisplayImage}
         onSearchChange={media.setSearch}
         onSourceChange={media.setSource}
