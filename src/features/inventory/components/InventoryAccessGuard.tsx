@@ -24,7 +24,7 @@ export function InventoryAccessGuard({
 
   if (isLoading) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <div className="flex min-h-[40vh] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-label={t('inventoryListAux.checkingAccess')} />
         </div>
@@ -34,7 +34,7 @@ export function InventoryAccessGuard({
 
   if (!canView) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={resolvedTitle}
           description={t('inventoryListAux.accessHelp')}

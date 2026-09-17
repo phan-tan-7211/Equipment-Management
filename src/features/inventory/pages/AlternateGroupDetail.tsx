@@ -62,7 +62,7 @@ const AlternateGroupDetail: React.FC = () => {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader title={t('alternateGroupDetail.detailTitle')} description={t('alternateGroups.selectOrganization')} />
       </Page>
     );
@@ -70,7 +70,7 @@ const AlternateGroupDetail: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <Skeleton className="h-10 w-10" />
@@ -85,7 +85,7 @@ const AlternateGroupDetail: React.FC = () => {
 
   if (!group) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground mb-4">
@@ -107,7 +107,7 @@ const AlternateGroupDetail: React.FC = () => {
   );
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-6">
         <PageHeader
           density="compact"

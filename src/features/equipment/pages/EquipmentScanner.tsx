@@ -20,6 +20,7 @@ import {
 } from '@/features/equipment/utils/cameraAccessErrors';
 import { useScanFeedback } from '@/hooks/useScanFeedback';
 import { useI18n } from '@/i18n';
+import Page from '@/components/layout/Page';
 
 const BACK_CAMERA_LABEL_PATTERN = /\b(back|rear|environment|world|wide|telephoto)\b/i;
 
@@ -270,13 +271,14 @@ const EquipmentScanner: React.FC = () => {
   })();
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-4 p-4 pb-24 md:pb-6">
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-xl">{t('equipmentScanner.title')}</CardTitle>
-          <p className="text-sm text-muted-foreground">{t('equipmentScanner.description')}</p>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <Page maxWidth="full" padding="workspace">
+      <div className="mx-auto w-full max-w-lg space-y-4 px-4 pb-24 md:pb-6">
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-xl">{t('equipmentScanner.title')}</CardTitle>
+            <p className="text-sm text-muted-foreground">{t('equipmentScanner.description')}</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
           <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
             {liveMessage}
           </div>
@@ -415,8 +417,9 @@ const EquipmentScanner: React.FC = () => {
             )}
           </div>
         </CardContent>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </Page>
   );
 };
 

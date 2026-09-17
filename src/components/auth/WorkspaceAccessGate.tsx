@@ -25,7 +25,7 @@ const WorkspaceAccessGate: React.FC<WorkspaceAccessGateProps> = ({ mode, domain,
   const isError = mode === 'error';
 
   return (
-    <Page maxWidth="3xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <PageHeader
         title={
           isError

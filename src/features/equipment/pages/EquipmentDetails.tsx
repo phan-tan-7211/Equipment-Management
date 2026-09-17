@@ -166,7 +166,7 @@ const EquipmentDetails = () => {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader title={t('equipment.detailsTitle')} description={t('equipment.detailsSelectOrganization')} />
         <Card>
           <CardContent className="text-center py-12">
@@ -181,7 +181,7 @@ const EquipmentDetails = () => {
 
   if (isLoading) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <div className="space-y-6" style={getEquipmentViewTransitionStyle('shell', isTransitionActive)}>
           <PageHeader title={t('equipment.detailsTitle')} description={t('equipment.loadingEquipment')} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -198,7 +198,7 @@ const EquipmentDetails = () => {
 
   if (!equipment || !isRecordOnAccessibleTeam(isOrgAdmin, getUserTeamIds(), equipment.team_id)) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader title={t('equipment.detailsTitle')} description={t('equipment.equipmentNotFound')} />
         <Card>
           <CardContent className="text-center py-12">
@@ -216,7 +216,7 @@ const EquipmentDetails = () => {
   }
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-6" style={getEquipmentViewTransitionStyle('shell', isTransitionActive)}>
         {isMobile ? (
           <>

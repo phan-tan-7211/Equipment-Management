@@ -35,8 +35,9 @@ const Page: React.FC<PageProps> = ({
     md: 'p-content',
     lg: 'p-content-lg',
     responsive: 'p-3 sm:p-4 lg:p-6 xl:p-8',
-    // Data workspaces use the available viewport while keeping a compact gutter.
-    workspace: 'p-3 sm:p-4 lg:p-5 xl:p-6',
+    // Workspace pages own their frame so every dashboard route starts from the
+    // same edge-to-edge geometry. Page-level content adds its own inner gutter.
+    workspace: 'p-px',
   };
 
   const maxWidthClasses = {
@@ -57,9 +58,13 @@ const Page: React.FC<PageProps> = ({
     <div
       className={cn(
         'w-full',
-        paddingClasses[padding],
-        centered && 'mx-auto',
-        maxWidthClasses[maxWidth],
+        padding === 'workspace'
+          ? 'mx-auto max-w-full flex h-full min-h-0 flex-col p-px'
+          : [
+              paddingClasses[padding],
+              centered && 'mx-auto',
+              maxWidthClasses[maxWidth],
+            ],
         className
       )}
     >

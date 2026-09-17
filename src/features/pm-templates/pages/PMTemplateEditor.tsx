@@ -51,7 +51,7 @@ const PMTemplateEditor: React.FC = () => {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <p className="text-muted-foreground">{t('pmTemplates.list.selectOrganization')}</p>
       </Page>
     );
@@ -59,7 +59,7 @@ const PMTemplateEditor: React.FC = () => {
 
   if (!isAdmin || !canCreateCustomTemplates) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <p className="text-muted-foreground">
           {t('pmTemplates.editor.adminLicenseRequired')}
         </p>
@@ -69,7 +69,7 @@ const PMTemplateEditor: React.FC = () => {
 
   if (!isNew && isLoading) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           {t('pmTemplates.editor.loading')}
@@ -80,7 +80,7 @@ const PMTemplateEditor: React.FC = () => {
 
   if (!isNew && !template) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <p className="text-muted-foreground">{t('pmTemplates.view.notFound')}</p>
         <Button variant="outline" className="mt-4" onClick={() => navigate('/dashboard/pm-templates')}>
           {t('pmTemplates.view.back')}
@@ -92,7 +92,7 @@ const PMTemplateEditor: React.FC = () => {
   const pageTitle = isNew ? t('pmTemplates.editor.createTitle') : t('pmTemplates.editor.editTitle', { name: template?.name ?? t('pmTemplates.editor.templateFallback') });
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-6">
         <PageHeader
           density="compact"

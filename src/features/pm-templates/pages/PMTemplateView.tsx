@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import PageHeader from '@/components/layout/PageHeader';
+import Page from '@/components/layout/Page';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { PMTemplateEquipmentAssignmentMenu } from '@/features/pm-templates/components/PMTemplateEquipmentAssignmentMenu';
 import { PMTemplateSectionToc } from '@/features/pm-templates/components/PMTemplateSectionToc';
@@ -130,7 +131,7 @@ const PMTemplateView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 p-content">
+    <Page maxWidth="full" padding="workspace" className="space-y-6">
       {!currentOrganization && (
         <Card className="p-6">
           <div className="space-y-2">
@@ -346,7 +347,7 @@ const PMTemplateView: React.FC = () => {
         </div>
       )}
 
-    </div>
+    </Page>
   );
 };
 

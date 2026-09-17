@@ -113,7 +113,7 @@ const Equipment = () => {
   const handleEquipmentCreated = (equipmentId: string) => { setSelectedTeamId(null); navigate(`/dashboard/equipment/${equipmentId}`); };
 
   return (
-    <Page maxWidth="full" padding="none" className="flex h-full min-h-0 flex-col p-px">
+    <Page maxWidth="full" padding="workspace">
       <EquipmentListTransitionRoot className={cn('flex min-h-0 flex-1 flex-col gap-px overflow-hidden', isMobile && canCreate && 'pb-28')}>
         <div data-equipment-list-chrome="" className="shrink-0">
           <PageHeader

@@ -183,7 +183,7 @@ const Dashboard = () => {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="full" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={t('dashboard.title')}
           description={t('dashboard.selectOrganization')}
@@ -194,7 +194,7 @@ const Dashboard = () => {
 
   if (!isLoading && !hasTeamAccess) {
     return (
-      <Page maxWidth="full" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={t('dashboard.title')}
           description={t('dashboard.welcomeTo', { name: currentOrganization.name })}
@@ -206,7 +206,7 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <Page maxWidth="full" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         {isMobile ? (
           <h1 className="sr-only">{t('dashboard.title')}</h1>
         ) : (
@@ -261,7 +261,7 @@ const Dashboard = () => {
   );
 
   return (
-    <Page maxWidth="full" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex flex-col space-y-4">
           <div className="flex items-start justify-between gap-4">
