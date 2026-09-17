@@ -1,7 +1,7 @@
 import { extractEquipmentDisplayImagePath } from '@/services/imageUploadService';
 import type { EquipmentImageData } from '@/features/equipment/services/equipmentImagesService';
 
-export type EquipmentMediaSourceFilter = 'all' | 'equipment_display' | 'equipment_note' | 'work_order_note';
+export type EquipmentMediaSourceFilter = 'all' | 'equipment_note' | 'work_order_note';
 
 export type EquipmentMediaSortField = 'created_at' | 'source' | 'uploader' | 'file_name';
 
@@ -68,15 +68,9 @@ export function equipmentMediaPathsMatch(
 }
 
 export function isEquipmentDisplayImage(
-  image: Pick<EquipmentImageData, 'file_url' | 'description'>,
+  image: Pick<EquipmentImageData, 'file_url'>,
   currentDisplayImage?: string | null,
 ): boolean {
-  const persistedDisplayRef = image.description?.startsWith('display-image:')
-    ? image.description.slice('display-image:'.length)
-    : null;
-  if (persistedDisplayRef && equipmentMediaPathsMatch(persistedDisplayRef, currentDisplayImage)) {
-    return true;
-  }
   return equipmentMediaPathsMatch(image.file_url, currentDisplayImage);
 }
 

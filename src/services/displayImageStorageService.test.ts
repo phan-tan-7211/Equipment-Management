@@ -247,9 +247,7 @@ describe('displayImageStorageService', () => {
 
     try {
       const uploaded = await uploadDisplayImageSet({
-        entity: EQUIPMENT_INPUT.entity,
-        organizationId: EQUIPMENT_INPUT.organizationId,
-        entityId: EQUIPMENT_INPUT.entityId,
+        ...EQUIPMENT_INPUT,
         source,
       });
 

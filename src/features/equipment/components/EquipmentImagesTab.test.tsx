@@ -31,7 +31,6 @@ vi.mock('@/features/equipment/hooks/useEquipmentNotesPermissions', () => ({
 
 vi.mock('@/features/equipment/services/equipmentImagesService', () => ({
   getAllEquipmentImages: vi.fn(),
-  createEquipmentDisplayMediaItem: vi.fn(() => null),
   deleteEquipmentImage: vi.fn(),
   updateEquipmentDisplayImage: vi.fn()
 }));
@@ -41,9 +40,7 @@ vi.mock('@/features/equipment/services/equipmentNotesService', () => ({
 }));
 
 vi.mock('@/features/equipment/services/equipmentDisplayImageService', () => ({
-  replaceEquipmentDisplayImage: vi.fn(),
-  removeEquipmentDisplayImage: vi.fn(),
-  removeEquipmentDisplayImageSet: vi.fn()
+  replaceEquipmentDisplayImage: vi.fn()
 }));
 
 vi.mock('@/components/common/ImageGallery', () => ({
@@ -228,3 +225,5 @@ describe('EquipmentImagesTab', () => {
     });
   });
 });
+
+

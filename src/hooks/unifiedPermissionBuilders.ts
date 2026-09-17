@@ -212,6 +212,8 @@ export function buildEquipmentNotesPermissions(
     const hasTeamAccess = equipmentTeamId ? isTeamMember(equipmentTeamId) : true;
     const isTeamManager = equipmentTeamId ? canManageTeam(equipmentTeamId) : false;
     const isOrgAdmin = hasRole(['owner', 'admin']);
+    const isSingleUserOrg = currentOrganization?.memberCount === 1;
+
     return {
       canViewNotes: hasTeamAccess || isOrgAdmin,
       canAddPublicNote: hasTeamAccess || isOrgAdmin,
@@ -220,7 +222,7 @@ export function buildEquipmentNotesPermissions(
       canEditAnyNote: isOrgAdmin || isTeamManager,
       canDeleteOwnNote: note => note.author_id === userContext?.userId,
       canDeleteAnyNote: isOrgAdmin || isTeamManager,
-      canUploadImages: hasTeamAccess || isOrgAdmin,
+      canUploadImages: !isSingleUserOrg && (hasTeamAccess || isOrgAdmin),
       canDeleteImages: isOrgAdmin || isTeamManager,
       canSetDisplayImage: isOrgAdmin || isTeamManager,
     };

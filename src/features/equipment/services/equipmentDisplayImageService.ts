@@ -156,16 +156,3 @@ export async function setEquipmentDisplayImageRef(
     previousRef,
   );
 }
-
-export async function removeEquipmentDisplayImage(
-  organizationId: string,
-  equipmentId: string,
-): Promise<void> {
-  await setEquipmentDisplayImageRef(organizationId, equipmentId, '');
-}
-
-export async function removeEquipmentDisplayImageSet(canonicalRef: string): Promise<void> {
-  const parsed = parseDisplayImageRef(canonicalRef);
-  if (!parsed || parsed.entity !== 'equipment') return;
-  await removeDisplayImageSet(parsed.canonicalRef);
-}

@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 interface RpcResult {
   success?: boolean;
   error?: string;
-  storage_path?: string | null;
 }
 
 function parseRpcResult(data: unknown): RpcResult {
@@ -11,12 +10,11 @@ function parseRpcResult(data: unknown): RpcResult {
   return data as RpcResult;
 }
 
-function assertRpcSuccess(data: unknown, fallbackMessage: string): RpcResult {
+function assertRpcSuccess(data: unknown, fallbackMessage: string): void {
   const result = parseRpcResult(data);
   if (!result.success) {
     throw new Error(result.error || fallbackMessage);
   }
-  return result;
 }
 
 export async function updateEquipmentNoteRpc(params: {
@@ -55,14 +53,14 @@ export async function deleteEquipmentNoteImageAuditedRpc(params: {
   organizationId: string;
   equipmentId: string;
   imageId: string;
-}): Promise<string | null> {
+}): Promise<void> {
   const { data, error } = await supabase.rpc('delete_equipment_note_image_audited', {
     p_organization_id: params.organizationId,
     p_equipment_id: params.equipmentId,
     p_image_id: params.imageId,
   });
   if (error) throw error;
-  return assertRpcSuccess(data, 'Failed to delete equipment note image').storage_path ?? null;
+  assertRpcSuccess(data, 'Failed to delete equipment note image');
 }
 
 export async function updateWorkOrderNoteRpc(params: {
@@ -101,12 +99,12 @@ export async function deleteWorkOrderNoteImageAuditedRpc(params: {
   organizationId: string;
   workOrderId: string;
   imageId: string;
-}): Promise<string | null> {
+}): Promise<void> {
   const { data, error } = await supabase.rpc('delete_work_order_note_image_audited', {
     p_organization_id: params.organizationId,
     p_work_order_id: params.workOrderId,
     p_image_id: params.imageId,
   });
   if (error) throw error;
-  return assertRpcSuccess(data, 'Failed to delete work order note image').storage_path ?? null;
+  assertRpcSuccess(data, 'Failed to delete work order note image');
 }

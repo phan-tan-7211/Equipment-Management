@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/contexts/OrganizationContext';
@@ -14,14 +14,9 @@ import {
   type EquipmentImageData,
 } from '@/features/equipment/services/equipmentImagesService';
 import { createEquipmentNoteWithImages } from '@/features/equipment/services/equipmentNotesService';
-import {
-  removeEquipmentDisplayImage,
-  removeEquipmentDisplayImageSet,
-  replaceEquipmentDisplayImage,
-} from '@/features/equipment/services/equipmentDisplayImageService';
+import { replaceEquipmentDisplayImage } from '@/features/equipment/services/equipmentDisplayImageService';
 import { validateImageFile } from '@/services/imageUploadService';
 import { equipment } from '@/lib/queryKeys';
-import { isEquipmentDisplayImage } from '@/features/equipment/utils/equipmentMediaFilters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -53,17 +48,12 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [optionalNote, setOptionalNote] = useState('');
   const [explorerOpen, setExplorerOpen] = useState(false);
-  const [activeDisplayImage, setActiveDisplayImage] = useState(currentDisplayImage);
   const displayImageInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setActiveDisplayImage(currentDisplayImage);
-  }, [currentDisplayImage]);
 
   const media = useEquipmentMediaLibrary({
     equipmentId,
     organizationId,
-    currentDisplayImage: activeDisplayImage,
+    currentDisplayImage,
   });
 
   const invalidateMedia = () => {
@@ -77,41 +67,21 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
 
   const deleteImageMutation = useMutation({
     mutationFn: ({
-      image,
+      imageId,
+      sourceType,
+      workOrderId,
     }: {
-      image: EquipmentImageData;
+      imageId: string;
+      sourceType: 'equipment_note' | 'work_order_note';
+      workOrderId?: string;
     }) =>
-      (async () => {
-        if (image.source_type === 'equipment_display') {
-          if (isEquipmentDisplayImage(image, activeDisplayImage)) {
-            await removeEquipmentDisplayImage(organizationId, equipmentId);
-          } else if (image.description?.startsWith('display-image:')) {
-            await removeEquipmentDisplayImageSet(
-              image.description.slice('display-image:'.length),
-            );
-          }
-
-          // Display uploads are persisted as equipment-note media so they can
-          // remain in the library. Delete that media record as well.
-          if (!image.id.startsWith('equipment-display:')) {
-            await deleteEquipmentImage({
-              imageId: image.id,
-              sourceType: 'equipment_note',
-              organizationId,
-              equipmentId,
-            });
-          }
-          return;
-        }
-
-        return deleteEquipmentImage({
-          imageId: image.id,
-          sourceType: image.source_type,
-          organizationId,
-          equipmentId,
-          workOrderId: image.source_type === 'work_order_note' ? image.source_id : undefined,
-        });
-      })(),
+      deleteEquipmentImage({
+        imageId,
+        sourceType,
+        organizationId,
+        equipmentId,
+        workOrderId,
+      }),
     onSuccess: () => {
       invalidateMedia();
       toast.success(t('equipmentMedia.imageDeleted'));
@@ -123,15 +93,13 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   });
 
   const setDisplayImageMutation = useMutation({
-    mutationFn: async (imageUrl: string) => {
+    mutationFn: (imageUrl: string) => {
       if (!permissions.canSetDisplayImage) {
         throw new Error('Display image permission denied');
       }
-      await updateEquipmentDisplayImage(organizationId, equipmentId, imageUrl);
-      return imageUrl;
+      return updateEquipmentDisplayImage(organizationId, equipmentId, imageUrl);
     },
-    onSuccess: (imageUrl) => {
-      setActiveDisplayImage(imageUrl || undefined);
+    onSuccess: () => {
       invalidateMedia();
       toast.success(t('equipmentMedia.displayImageUpdated'));
     },
@@ -146,30 +114,17 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   });
 
   const replaceDisplayImageMutation = useMutation({
-    mutationFn: async (source: File) => {
+    mutationFn: (source: File) => {
       if (!permissions.canSetDisplayImage) {
         throw new Error('Display image permission denied');
       }
-      const canonicalRef = await replaceEquipmentDisplayImage({
+      return replaceEquipmentDisplayImage({
         organizationId,
         equipmentId,
         source,
       });
-      const userName = user?.email?.split('@')[0] || 'User';
-      await createEquipmentNoteWithImages(
-        equipmentId,
-        `${userName} uploaded a display image`,
-        0,
-        false,
-        [source],
-        organizationId,
-        null,
-        `display-image:${canonicalRef}`,
-      );
-      return canonicalRef;
     },
-    onSuccess: (canonicalRef) => {
-      setActiveDisplayImage(canonicalRef);
+    onSuccess: () => {
       invalidateMedia();
       toast.success(t('equipmentMedia.displayImageUpdated'));
     },
@@ -227,7 +182,6 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   });
 
   const canDeleteImage = (image: EquipmentImageData): boolean => {
-    if (image.source_type === 'equipment_display') return permissions.canSetDisplayImage;
     if (image.uploaded_by === user?.id) return true;
     return permissions.canDeleteImages;
   };
@@ -235,7 +189,11 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   const handleDeleteImage = async (imageId: string) => {
     const image = media.images.find((img) => img.id === imageId);
     if (!image) return;
-    await deleteImageMutation.mutateAsync({ image });
+    await deleteImageMutation.mutateAsync({
+      imageId,
+      sourceType: image.source_type,
+      workOrderId: image.source_type === 'work_order_note' ? image.source_id : undefined,
+    });
   };
 
   if (media.isLoading) {
@@ -360,7 +318,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
         }}
         canDelete={canDeleteImage}
         canSetDisplayImage={permissions.canSetDisplayImage}
-        currentDisplayImage={activeDisplayImage}
+        currentDisplayImage={currentDisplayImage}
         title=""
         emptyMessage={
           media.hasActiveFilters
@@ -378,7 +336,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
         filters={media.filters}
         activeFilterCount={media.activeFilterCount}
         isLoading={media.isLoading}
-        currentDisplayImage={activeDisplayImage}
+        currentDisplayImage={currentDisplayImage}
         canSetDisplayImage={permissions.canSetDisplayImage}
         onSearchChange={media.setSearch}
         onSourceChange={media.setSource}

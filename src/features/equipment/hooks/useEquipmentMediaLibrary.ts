@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import {
   getAllEquipmentImages,
-  createEquipmentDisplayMediaItem,
   type EquipmentImageData,
 } from '@/features/equipment/services/equipmentImagesService';
 import { equipment } from '@/lib/queryKeys';
@@ -44,19 +43,10 @@ export function useEquipmentMediaLibrary({
 
   const images = useMemo(() => query.data ?? [], [query.data]);
 
-  const imagesWithDisplay = useMemo(() => {
-    const hasPersistedCurrentDisplay = images.some(
-      (image) =>
-        image.source_type === 'equipment_display' &&
-        image.description === `display-image:${currentDisplayImage ?? ''}`,
-    );
-    const displayImage = createEquipmentDisplayMediaItem(
-      equipmentId,
-      currentOrganization?.name || 'Equipment',
-      currentDisplayImage,
-    );
-    return displayImage && !hasPersistedCurrentDisplay ? [displayImage, ...images] : images;
-  }, [currentDisplayImage, currentOrganization?.name, equipmentId, images]);
+  // The media library contains persisted note/media records only. The
+  // primary display panel resolves the V2 full variant separately, so adding
+  // a synthetic display card here would duplicate every display upload.
+  const imagesWithDisplay = images;
 
   const filteredImages = useMemo(
     () => filterAndSortEquipmentMedia(imagesWithDisplay, filters),
