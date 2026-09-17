@@ -78,7 +78,7 @@ export function InventoryItemFormDirectLinksSection({
                 className="pl-9"
               />
             </div>
-            <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-2">
+            <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-2 md:h-[clamp(20rem,42dvh,30rem)] md:max-h-[calc(100dvh-22rem)] md:min-h-80">
               {filteredEquipment.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">{t('itemForm.noEquipment')}</p>
               ) : (
