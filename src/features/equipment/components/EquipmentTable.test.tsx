@@ -364,24 +364,42 @@ describe('EquipmentTable', () => {
     expect(headerTexts.some((t) => t.includes('Last Maintenance'))).toBe(false);
   });
 
-  it('uses a dedicated native drag surface so the header gets a ghost preview', () => {
+  it('renders a visible ghost while reordering with a mouse pointer', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     const nameHeader = getHeaderByTitle('Name');
     const manufacturerHeader = getHeaderByTitle('Manufacturer');
     const dragSurface = nameHeader.querySelector('[data-table-column-drag-surface="name"]');
-    expect(dragSurface).toHaveAttribute('draggable', 'true');
+    expect(dragSurface).toHaveAttribute('draggable', 'false');
     expect(nameHeader).toHaveAttribute('draggable', 'false');
-    const dataTransfer = {
-      effectAllowed: '',
-      dropEffect: '',
-      setData: vi.fn(),
-      getData: vi.fn(() => 'name'),
-      setDragImage: vi.fn(),
-    };
+    const originalElementFromPoint = document.elementFromPoint;
+    Object.defineProperty(document, 'elementFromPoint', {
+      configurable: true,
+      value: vi.fn(() => manufacturerHeader),
+    });
 
-    fireEvent.dragStart(dragSurface!, { dataTransfer });
-    fireEvent.dragOver(manufacturerHeader, { dataTransfer });
-    fireEvent.drop(manufacturerHeader, { dataTransfer });
+    try {
+      fireEvent.pointerDown(nameHeader, {
+        button: 0,
+        isPrimary: true,
+        pointerId: 2,
+        pointerType: 'mouse',
+        clientX: 10,
+        clientY: 10,
+      });
+      fireEvent.pointerMove(document, {
+        buttons: 1,
+        pointerId: 2,
+        clientX: 30,
+        clientY: 20,
+      });
+      expect(document.querySelector('[data-equipment-column-drag-preview]')).toHaveTextContent('Name');
+      fireEvent.pointerUp(document, { pointerId: 2, clientX: 30, clientY: 20 });
+    } finally {
+      Object.defineProperty(document, 'elementFromPoint', {
+        configurable: true,
+        value: originalElementFromPoint,
+      });
+    }
 
     const headers = screen.getAllByRole('columnheader');
     const statusIndex = headers.findIndex((header) => header.textContent?.includes('Status'));
@@ -389,7 +407,7 @@ describe('EquipmentTable', () => {
     const manufacturerIndex = headers.findIndex((header) => header.textContent?.includes('Manufacturer'));
     expect(statusIndex).toBe(0);
     expect(nameIndex).toBeGreaterThan(manufacturerIndex);
-    expect(dataTransfer.setDragImage).toHaveBeenCalled();
+    expect(document.querySelector('[data-equipment-column-drag-preview]')).not.toBeInTheDocument();
   });
 
   it('reorders columns with pointer drag without triggering the sort control', () => {
