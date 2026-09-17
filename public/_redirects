@@ -4,4 +4,16 @@
 /us.svg /images/maps/us.svg 301
 /icons/:file.png /images/brand/icons/:file.png 301
 /icons/:file.svg /images/equipment/:file.svg 301
+# Authenticated/client routes must always boot the SPA shell on hard refresh.
+/dashboard /app-shell.html 200
+/dashboard/* /app-shell.html 200
+/auth /app-shell.html 200
+/auth/* /app-shell.html 200
+/invitation /app-shell.html 200
+/invitation/* /app-shell.html 200
+/qr /app-shell.html 200
+/qr/* /app-shell.html 200
+/e /app-shell.html 200
+/e/* /app-shell.html 200
+/debug-* /app-shell.html 200
 /* /app-shell.html 200

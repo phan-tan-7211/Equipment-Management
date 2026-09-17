@@ -22,6 +22,20 @@
       })();
     </script>
 
+    <!-- Mark app routes before the first paint so a stale/static marketing document cannot flash on dashboard F5. -->
+    <script>
+      (() => {
+        const pathname = window.location.pathname;
+        const appRoutePrefixes = ['/dashboard', '/auth', '/invitation', '/qr', '/e', '/debug-'];
+        const isAppRoute = appRoutePrefixes.some((prefix) =>
+          pathname === prefix || pathname.startsWith(prefix + '/')
+        );
+        if (isAppRoute) {
+          document.documentElement.dataset.appRoute = 'true';
+        }
+      })();
+    </script>
+
     <title>ZNTEQR | Equipment Management & Maintenance</title>
     <meta name="description" content="ZNTEQR is a QR-based equipment management and maintenance application for equipment records, work orders, preventive maintenance, teams and inventory." />
     <meta name="author" content="Phan Tan" />
@@ -67,6 +81,64 @@
       #root {
         min-height: 100vh;
       }
+
+      /* Keep a stable branded shell visible while React/auth chunks boot. */
+      #app-boot-loading {
+        display: none;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1.5rem;
+        box-sizing: border-box;
+        background: #f8fafc;
+        color: #0f172a;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      html.dark #app-boot-loading {
+        background: #0a0a0a;
+        color: #fafafa;
+      }
+
+      html[data-app-route] #app-boot-loading {
+        display: flex;
+      }
+
+      /* If a host serves a marketing HTML file for an app URL, hide its body immediately. */
+      html[data-app-route] #root > [data-prerendered-marketing-route] {
+        display: none !important;
+      }
+
+      .app-boot-mark {
+        width: 2.75rem;
+        height: 2.75rem;
+        border: 3px solid rgba(11, 99, 206, 0.2);
+        border-top-color: #0b63ce;
+        border-radius: 9999px;
+        animation: app-boot-spin 0.8s linear infinite;
+      }
+
+      .app-boot-brand {
+        font-size: 1.125rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      .app-boot-label {
+        margin: 0;
+        font-size: 0.875rem;
+        color: #64748b;
+      }
+
+      html.dark .app-boot-label {
+        color: #94a3b8;
+      }
+
+      @keyframes app-boot-spin {
+        to { transform: rotate(360deg); }
+      }
     </style>
 
     <script type="application/ld+json">
@@ -89,6 +161,11 @@
       </div>
     </noscript>
     <div id="root"></div>
+    <div id="app-boot-loading" role="status" aria-live="polite" aria-label="Loading ZNTEQR workspace">
+      <div class="app-boot-mark" aria-hidden="true"></div>
+      <div class="app-boot-brand">ZNTEQR</div>
+      <p class="app-boot-label">Loading workspace…</p>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
