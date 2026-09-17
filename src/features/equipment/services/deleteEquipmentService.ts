@@ -3,6 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { deleteWorkOrder } from '@/features/work-orders/services/deleteWorkOrderService';
 import { requireAuthUserIdFromClaims } from '@/lib/authClaims';
 import { normalizeStoredObjectPath } from '@/services/imageUploadService';
+import {
+  isDisplayImageV2Ref,
+  removeDisplayImageSet,
+} from '@/services/displayImageStorageService';
 
 export interface EquipmentDeletionImpact {
   workOrders: number;
@@ -48,6 +52,21 @@ const checkAdminAccess = async (orgId: string): Promise<void> => {
   if (!member || !['owner', 'admin'].includes(member.role)) {
     throw new Error('Permission denied: You must be an admin or owner to delete equipment');
   }
+};
+
+const getEquipmentDisplayImageRef = async (
+  equipmentId: string,
+  organizationId: string,
+): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from('equipment')
+    .select('image_url')
+    .eq('id', equipmentId)
+    .eq('organization_id', organizationId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data?.image_url ?? null;
 };
 
 // Get equipment note images
@@ -179,6 +198,11 @@ export const deleteEquipmentCascade = async (equipmentId: string, orgId: string)
     // Check admin access first
     await checkAdminAccess(orgId);
 
+    const equipmentDisplayImageRef = await getEquipmentDisplayImageRef(
+      equipmentId,
+      orgId,
+    );
+
     logger.info(`Starting cascade deletion for equipment ${equipmentId}`);
 
     // NOTE: We intentionally keep this explicit cascade rather than relying on
@@ -245,6 +269,18 @@ export const deleteEquipmentCascade = async (equipmentId: string, orgId: string)
       .eq('id', equipmentId);
 
     if (equipmentError) throw equipmentError;
+
+    if (isDisplayImageV2Ref(equipmentDisplayImageRef)) {
+      try {
+        await removeDisplayImageSet(equipmentDisplayImageRef);
+      } catch (cleanupError) {
+        logger.warn('Failed to remove deleted Equipment display image set', {
+          equipmentId,
+          organizationId: orgId,
+          error: cleanupError,
+        });
+      }
+    }
 
     logger.info(`Successfully deleted equipment ${equipmentId} and all related data`);
 

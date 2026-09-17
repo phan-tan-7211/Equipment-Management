@@ -24,14 +24,24 @@ vi.mock('@/features/inventory/services/inventoryService', async (importOriginal)
   };
 });
 
+type InventoryQueryConfig = {
+  queryKey: readonly unknown[];
+  staleTime: number;
+  gcTime: number;
+  placeholderData: PlaceholderDataFn;
+};
+
 type PlaceholderDataFn = (
   previousData: InventoryItem[] | undefined,
   previousQuery: Query | undefined,
 ) => InventoryItem[] | undefined;
 
+function getLastQueryConfig(): InventoryQueryConfig {
+  return useQueryMock.mock.calls.at(-1)?.[0] as InventoryQueryConfig;
+}
+
 function getPlaceholderDataFromLastCall(): PlaceholderDataFn {
-  const config = useQueryMock.mock.calls.at(-1)?.[0] as { placeholderData: PlaceholderDataFn };
-  return config.placeholderData;
+  return getLastQueryConfig().placeholderData;
 }
 
 function makePreviousQuery(orgId: string): Query {
@@ -44,6 +54,15 @@ describe('useInventoryItems placeholderData', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useQueryMock.mockReturnValue({ data: [], isPending: false });
+  });
+
+  it('keeps list rows cached beyond staleTime for repeat navigation', () => {
+    renderHook(() => useInventoryItems('org-1', {}));
+
+    const config = getLastQueryConfig();
+    expect(config.gcTime).toBeGreaterThanOrEqual(config.staleTime);
+    expect(config.gcTime).toBe(30 * 60 * 1000);
+    expect(config.queryKey).toEqual(inventory.list('org-1', {}));
   });
 
   it('retains previous data for same-organization filter changes', () => {

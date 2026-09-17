@@ -35,6 +35,7 @@ async function prepareWorkOrderNoteImageUpload(
   return { userId, orgId };
 }
 
+
 async function uploadWorkOrderNoteImages(
   workOrderId: string,
   noteId: string,
@@ -443,7 +444,10 @@ export const deleteWorkOrderImage = async (
   organizationId: string,
   workOrderId: string,
 ): Promise<void> => {
-  await deleteWorkOrderNoteImageAuditedRpc({ organizationId, workOrderId, imageId });
+  const storagePath = await deleteWorkOrderNoteImageAuditedRpc({ organizationId, workOrderId, imageId });
+  if (storagePath) {
+    await deleteImageFromStorage('work-order-images', storagePath);
+  }
 };
 
 export const updateWorkOrderNote = async (
@@ -521,4 +525,3 @@ export async function updateHistoricalWorkOrderNoteTimestamp(
     };
   }
 }
-

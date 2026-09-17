@@ -6,7 +6,6 @@ import {
   displayUrlForStoredPrivateImage,
   deleteImageFromStorage,
   batchResolveEquipmentNoteImageDisplayUrls,
-  extractEquipmentDisplayImagePath,
 } from '@/services/imageUploadService';
 import type { EquipmentNote, EquipmentNoteImage } from '@/features/equipment/types/equipmentNotes';
 import { noteMachineHoursInsertFields } from '@/services/noteMachineHoursInsert';
@@ -16,6 +15,7 @@ import {
   updateEquipmentNoteRpc,
 } from '@/services/noteMutationRpc';
 import { uploadFilesToNoteImageBucket } from '@/services/noteImageUploadShared';
+import { setEquipmentDisplayImageRef } from '@/features/equipment/services/equipmentDisplayImageService';
 
 async function validateEquipmentNoteImageQuota(
   equipmentId: string,
@@ -44,6 +44,7 @@ async function uploadEquipmentNoteImages(
   noteId: string,
   images: File[],
   userId: string,
+  imageDescription?: string,
 ): Promise<EquipmentNoteImage[]> {
   return uploadFilesToNoteImageBucket<EquipmentNoteImage>({
     bucket: 'equipment-note-images',
@@ -62,6 +63,7 @@ async function uploadEquipmentNoteImages(
           file_url: storedPath,
           file_size: file.size,
           mime_type: file.type,
+          description: imageDescription ?? null,
           uploaded_by: userId,
         })
         .select()
@@ -145,6 +147,7 @@ export const createEquipmentNoteWithImages = async (
   images: File[] = [],
   organizationId: string,
   machineHours?: number | null,
+  imageDescription?: string,
 ): Promise<EquipmentNote> => {
   const userId = await requireAuthUserIdFromClaims();
 
@@ -171,7 +174,13 @@ export const createEquipmentNoteWithImages = async (
 
   if (noteError) throw noteError;
 
-  const uploadedImages = await uploadEquipmentNoteImages(equipmentId, note.id, images, userId);
+  const uploadedImages = await uploadEquipmentNoteImages(
+    equipmentId,
+    note.id,
+    images,
+    userId,
+    imageDescription,
+  );
 
   return {
     ...note,
@@ -230,7 +239,10 @@ export const deleteEquipmentNoteImage = async (
   organizationId: string,
   equipmentId: string,
 ): Promise<void> => {
-  await deleteEquipmentNoteImageAuditedRpc({ organizationId, equipmentId, imageId });
+  const storagePath = await deleteEquipmentNoteImageAuditedRpc({ organizationId, equipmentId, imageId });
+  if (storagePath) {
+    await deleteImageFromStorage('equipment-note-images', storagePath);
+  }
 };
 
 export const updateEquipmentNote = async (
@@ -277,30 +289,4 @@ export const updateEquipmentDisplayImage = async (
   organizationId: string,
   equipmentId: string,
   imageUrl: string
-): Promise<void> => {
-  if (!imageUrl.trim()) {
-    const { error } = await supabase
-      .from('equipment')
-      .update({ image_url: null })
-      .eq('id', equipmentId)
-      .eq('organization_id', organizationId);
-
-    if (error) throw error;
-    return;
-  }
-
-  const canonical = extractEquipmentDisplayImagePath(imageUrl);
-  if (!canonical) {
-    throw new Error(
-      'Could not resolve that image to a durable storage path. Choose an image from work orders or equipment notes again.',
-    );
-  }
-
-  const { error } = await supabase
-    .from('equipment')
-    .update({ image_url: canonical })
-    .eq('id', equipmentId)
-    .eq('organization_id', organizationId);
-
-  if (error) throw error;
-};
+): Promise<void> => setEquipmentDisplayImageRef(organizationId, equipmentId, imageUrl);

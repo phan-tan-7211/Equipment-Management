@@ -67,6 +67,12 @@ public = false
 file_size_limit = "10MB"
 allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 
+# Public immutable Equipment + Inventory display-image variants (V2).
+[storage.buckets.display-images]
+public = true
+file_size_limit = "10MB"
+allowed_mime_types = ["image/webp"]
+
 # Public marketing screenshots (anonymous GET via storage policies + public bucket flag).
 [storage.buckets.landing-page-images]
 public = true

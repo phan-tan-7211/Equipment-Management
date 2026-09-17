@@ -18,6 +18,7 @@ import { createScopedQueryPersister } from '@/lib/queryPersistence';
 import { equipment as equipmentKeys } from '@/lib/queryKeys';
 import { getScanFollowUpEventsByEquipmentId } from '@/features/equipment/services/scanFollowUpEventService';
 import { teamAccessQueryScope, resolveTeamReadScope } from '@/features/teams/utils/teamAccessScope';
+import { resolveListQueryGcTime } from '@/lib/listQueryTiming';
 
 /**
  * Stable references for the empty default arguments used by `useEquipment`.
@@ -81,9 +82,10 @@ export const useEquipmentList = (
   organizationId: string | undefined,
   filters: EquipmentListFilters = {},
   pagination: { page?: number; pageSize?: number; sortField?: string; sortDirection?: 'asc' | 'desc' } = {},
-  options?: { staleTime?: number; enabled?: boolean }
+  options?: { staleTime?: number; gcTime?: number; enabled?: boolean }
 ) => {
   const staleTime = options?.staleTime ?? 5 * 60 * 1000;
+  const gcTime = resolveListQueryGcTime(staleTime, options?.gcTime);
   const enabled = options?.enabled ?? true;
 
   return useQuery<EquipmentListResult>({
@@ -108,6 +110,7 @@ export const useEquipmentList = (
     },
     enabled: enabled && !!organizationId,
     staleTime,
+    gcTime,
     // Keep the previous page visible while a new page request flies — on
     // cellular the user otherwise sees a flash of empty state on every
     // page click, which feels broken even though it isn't.

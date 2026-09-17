@@ -65,7 +65,11 @@ export function EquipmentMediaExplorer({
     filteredImages.find((image) => image.id === selectedId) ?? filteredImages[0] ?? null;
 
   const sourceLabel = (source: EquipmentImageData['source_type']): string =>
-    source === 'equipment_note' ? t('equipmentMedia.equipmentNote') : t('equipmentMedia.workOrder');
+    source === 'equipment_display'
+      ? t('equipmentMedia.displayImage')
+      : source === 'equipment_note'
+        ? t('equipmentMedia.equipmentNote')
+        : t('equipmentMedia.workOrder');
 
   const selectedKind = selected
     ? resolveEquipmentMediaArtifactKind(undefined, selected.file_name)

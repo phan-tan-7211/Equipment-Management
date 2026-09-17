@@ -1,4 +1,5 @@
 import { withResolvedEquipmentImages } from '@/services/imageUploadService';
+import type { DisplayImageVariantName } from '@/services/displayImageVariantService';
 import type { EquipmentWithTeam } from '@/features/equipment/types/equipment';
 
 type RowWithTeamJoin = Record<string, unknown> & {
@@ -16,7 +17,10 @@ export function flattenEquipmentRowsWithTeamName<T extends RowWithTeamJoin>(
 
 export async function flattenAndResolveEquipmentImages<T extends RowWithTeamJoin>(
   rows: T[],
+  options?: { variant?: DisplayImageVariantName },
 ): Promise<EquipmentWithTeam[]> {
   const flattened = flattenEquipmentRowsWithTeamName(rows);
-  return withResolvedEquipmentImages(flattened);
+  return withResolvedEquipmentImages(flattened, {
+    variant: options?.variant ?? 'thumb',
+  });
 }

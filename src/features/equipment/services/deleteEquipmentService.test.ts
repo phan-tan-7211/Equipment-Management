@@ -25,6 +25,11 @@ vi.mock('@/services/imageUploadService', () => ({
   normalizeStoredObjectPath: (url: string) => url,
 }));
 
+vi.mock('@/services/displayImageStorageService', () => ({
+  isDisplayImageV2Ref: vi.fn(() => false),
+  removeDisplayImageSet: vi.fn(),
+}));
+
 vi.mock('@/utils/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));

@@ -65,6 +65,8 @@ import {
   batchResolveWorkOrderImageDisplayUrls,
   displayUrlForStoredPrivateImage,
   displayableImageSrc,
+  getEquipmentDisplayImageUrl,
+  getInventoryItemDisplayImageUrl,
   isZnteqrPrivateStorageUrl,
   isFetchableSignedStorageUrl,
   toAbsoluteSignedStorageUrl,
@@ -440,9 +442,64 @@ describe('imageUploadService', () => {
       expect(mockCreateSignedUrls).toHaveBeenCalledTimes(1);
       expect(mockCreateSignedUrls.mock.calls[0][0]).toEqual(['org/item/a.jpg', 'org/item/b.jpg']);
     });
+ 
+
+    it('resolves V2 inventory refs to the requested public variant without signing', async () => {
+      mockGetPublicUrl.mockImplementation((path: string) => ({
+        data: {
+          publicUrl: `https://example.supabase.co/storage/v1/object/public/display-images/${path}`,
+        },
+      }));
+
+      const canonicalRef =
+        'display-images/org/org-1/inventory/item-1/set-1/full.webp';
+
+      expect(getInventoryItemDisplayImageUrl(canonicalRef, 'preview')).toBe(
+        'https://example.supabase.co/storage/v1/object/public/display-images/org/org-1/inventory/item-1/set-1/preview.webp',
+      );
+
+      await expect(
+        batchResolveInventoryItemImageDisplayUrls([canonicalRef], {
+          variant: 'thumb',
+        }),
+      ).resolves.toEqual([
+        'https://example.supabase.co/storage/v1/object/public/display-images/org/org-1/inventory/item-1/set-1/thumb.webp',
+      ]);
+
+      expect(mockCreateSignedUrl).not.toHaveBeenCalled();
+      expect(mockCreateSignedUrls).not.toHaveBeenCalled();
+    });
   });
 
   describe('batchResolveEquipmentDisplayImageUrls', () => {
+    it('resolves V2 refs to the requested public variant without signing', async () => {
+      mockGetPublicUrl.mockImplementation((path: string) => ({
+        data: {
+          publicUrl: `https://example.supabase.co/storage/v1/object/public/display-images/${path}`,
+        },
+      }));
+
+      const canonicalRef =
+        'display-images/org/org-1/equipment/eq-1/set-1/full.webp';
+
+      expect(getEquipmentDisplayImageUrl(canonicalRef, 'thumb')).toBe(
+        'https://example.supabase.co/storage/v1/object/public/display-images/org/org-1/equipment/eq-1/set-1/thumb.webp',
+      );
+
+      await expect(
+        batchResolveEquipmentDisplayImageUrls([canonicalRef], {
+          equipmentIds: ['eq-1'],
+          variant: 'preview',
+        }),
+      ).resolves.toEqual([
+        'https://example.supabase.co/storage/v1/object/public/display-images/org/org-1/equipment/eq-1/set-1/preview.webp',
+      ]);
+
+      expect(mockCreateSignedUrl).not.toHaveBeenCalled();
+      expect(mockCreateSignedUrls).not.toHaveBeenCalled();
+    });
+
+
     it('signs canonical paths via createSignedUrl on work-order bucket', async () => {
       const out = await batchResolveEquipmentDisplayImageUrls(['u/wo/a.jpg', null, 'u/wo/b.jpg']);
       expect(out[0]).toContain('sign/mock/u/wo/a.jpg');

@@ -3,12 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import {
   getAllEquipmentImages,
+  createEquipmentDisplayMediaItem,
   type EquipmentImageData,
 } from '@/features/equipment/services/equipmentImagesService';
 import { equipment } from '@/lib/queryKeys';
 import {
   DEFAULT_EQUIPMENT_MEDIA_FILTERS,
   countActiveEquipmentMediaFilters,
+  equipmentMediaPathsMatch,
   filterAndSortEquipmentMedia,
   orderEquipmentMediaForDisplayCarousel,
   type EquipmentMediaFiltersState,
@@ -43,14 +45,29 @@ export function useEquipmentMediaLibrary({
 
   const images = useMemo(() => query.data ?? [], [query.data]);
 
+  const imagesWithDisplay = useMemo(() => {
+    const hasPersistedCurrentDisplay = images.some((image) => {
+      const displayRef = image.description?.startsWith('display-image:')
+        ? image.description.slice('display-image:'.length)
+        : null;
+      return Boolean(displayRef && equipmentMediaPathsMatch(displayRef, currentDisplayImage));
+    });
+    const displayImage = createEquipmentDisplayMediaItem(
+      equipmentId,
+      currentOrganization?.name || 'Equipment',
+      currentDisplayImage,
+    );
+    return displayImage && !hasPersistedCurrentDisplay ? [displayImage, ...images] : images;
+  }, [currentDisplayImage, currentOrganization?.name, equipmentId, images]);
+
   const filteredImages = useMemo(
-    () => filterAndSortEquipmentMedia(images, filters),
-    [images, filters],
+    () => filterAndSortEquipmentMedia(imagesWithDisplay, filters),
+    [imagesWithDisplay, filters],
   );
 
   const displayOrderedImages = useMemo(
-    () => orderEquipmentMediaForDisplayCarousel(images, currentDisplayImage),
-    [images, currentDisplayImage],
+    () => orderEquipmentMediaForDisplayCarousel(imagesWithDisplay, currentDisplayImage),
+    [imagesWithDisplay, currentDisplayImage],
   );
 
   const recentThumbnails = useMemo(
@@ -89,7 +106,7 @@ export function useEquipmentMediaLibrary({
   const activeFilterCount = countActiveEquipmentMediaFilters(filters);
 
   return {
-    images,
+    images: imagesWithDisplay,
     filteredImages,
     displayOrderedImages,
     recentThumbnails,

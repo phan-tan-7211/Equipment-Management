@@ -61,6 +61,7 @@
     "test:e2e:demo": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File dev/run-user-regression.ps1 -Suite critical -RunProfile demo",
     "test:db": "supabase test db",
     "db:migration:new": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File dev/db/New-SupabaseMigration.ps1",
+    "migrate:legacy-display-images": "tsx dev/migrate-legacy-display-images.ts",
     "db:rpc-inventory": "node dev/generate-security-definer-rpc-inventory.mjs",
     "verify:rpc-allowlists": "node dev/validate-security-definer-allowlist-sync.mjs",
     "fallow:scan": "npx --yes fallow@2.88.0 dead-code --format json --quiet",

@@ -26,7 +26,7 @@ import { useEquipmentCardTransition } from '@/features/equipment/transitions/use
 import { getEquipmentViewTransitionStyle } from '@/features/equipment/transitions/equipmentViewTransitionNames';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
-import { displayableImageSrc } from '@/services/imageUploadService';
+import { getEquipmentDisplayImageUrl } from '@/services/imageUploadService';
 import { getEquipmentStatusRailClass } from '@/lib/status-colors';
 import { getPreferenceLocalStorage, setPreferenceLocalStorage } from '@/lib/cookieConsent';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -441,13 +441,15 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
     const dataColumns=orderedVisibleColumnKeys.map((columnKey)=>{ const rawMeta=getEquipmentTableColumnMeta(columnKey); if(!rawMeta)throw new Error(`Missing equipment table column meta for ${columnKey}`); const meta={...rawMeta,title:t(COLUMN_KEYS[columnKey])}; const base=createResizableSortableColumnBase(columnKey,DEFAULT_EQUIPMENT_COLUMN_SIZING,meta,{active:sortConfig?.field===meta.sortField,sortOrder:sortConfig?.field===meta.sortField?sortConfig.direction:undefined,onSort:()=>handleSortClick(meta.sortField),hideVisibleTitle:columnKey===STATUS_COLUMN_KEY}); return { ...base, header:()=> <div className="min-w-0">{base.header()}</div>, cell:({row})=>{ const item=row.original; switch(columnKey){
       case 'name': { const active=activeEquipmentId===item.id; return <div className="min-w-0"><button type="button" className="block w-full truncate text-left font-medium hover:text-primary" data-equipment-id={item.id} {...(active?{'data-equipment-transition-active':''}:{})} style={getEquipmentViewTransitionStyle('name',active)} onClick={()=>{void beginTransition({equipmentId:item.id,to:`/dashboard/equipment/${item.id}`});}}>{item.name}</button>{item.management_code ? <span className="mt-0.5 block truncate font-mono text-xs text-muted-foreground">{item.management_code}</span> : null}</div>; }
       case 'status': {
-        const imageSrc = displayableImageSrc(item.image_url);
+        const imageSrc = getEquipmentDisplayImageUrl(item.image_url, 'thumb');
+        const imageHoverSrc =
+          getEquipmentDisplayImageUrl(item.image_url, 'preview') ?? imageSrc;
         const statusRailClass = getEquipmentStatusRailClass(item.status);
         return (
           <div
             className={cn('relative flex min-h-16 h-full w-full items-center justify-center overflow-hidden bg-muted/30', imageSrc && 'cursor-zoom-in')}
             data-equipment-thumbnail
-            data-equipment-image-src={imageSrc || undefined}
+            data-equipment-image-src={imageHoverSrc || undefined}
             data-equipment-image-alt={imageSrc ? item.name : undefined}
             title={getEquipmentTableCellDisplayValue(item, 'status', settings)}
           >

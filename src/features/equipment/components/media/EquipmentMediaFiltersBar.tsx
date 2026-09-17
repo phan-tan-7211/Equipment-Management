@@ -72,6 +72,7 @@ export function EquipmentMediaFiltersBar({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('equipmentMedia.allSources')}</SelectItem>
+                <SelectItem value="equipment_display">{t('equipmentMedia.displayImage')}</SelectItem>
                 <SelectItem value="equipment_note">{t('equipmentMedia.equipmentNotes')}</SelectItem>
                 <SelectItem value="work_order_note">{t('equipmentMedia.workOrders')}</SelectItem>
               </SelectContent>

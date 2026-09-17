@@ -159,4 +159,32 @@ describe('equipmentImagesService getAllEquipmentImages', () => {
     expect(new Set(result.map((r) => r.id))).toEqual(new Set(['img-wo-a', 'img-wo-b']));
     expect(logger.warn).not.toHaveBeenCalled();
   });
+
+  it('keeps persisted display media in the reusable equipment media collection', async () => {
+    vi.mocked(getEquipmentImages).mockResolvedValue([
+      {
+        id: 'persisted-display',
+        file_name: 'display.jpg',
+        file_url: 'https://example.com/signed-private-url',
+        description: 'display-image:display-images/org/org-1/equipment/eq-1/display-set/full.webp',
+        created_at: '2026-07-04T12:00:00.000Z',
+        uploaded_by: 'user-1',
+        equipment_note_id: 'note-display-1',
+        is_private_note: false,
+      },
+    ] as never);
+
+    vi.mocked(supabase.from).mockReturnValue(
+      createThenableWorkOrdersQuery([]) as never,
+    );
+
+    const result = await getAllEquipmentImages('eq-1', 'org-1', 'admin');
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      id: 'persisted-display',
+      source_type: 'equipment_display',
+      description: 'display-image:display-images/org/org-1/equipment/eq-1/display-set/full.webp',
+    });
+  });
 });
