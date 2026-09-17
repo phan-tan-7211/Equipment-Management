@@ -364,18 +364,22 @@ describe('EquipmentTable', () => {
     expect(headerTexts.some((t) => t.includes('Last Maintenance'))).toBe(false);
   });
 
-  it('reorders columns on native drop without changing the pinned status column', () => {
+  it('reorders columns from the dedicated drag surface without changing the pinned status column', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     const nameHeader = getHeaderByTitle('Name');
     const manufacturerHeader = getHeaderByTitle('Manufacturer');
+    const dragSurface = nameHeader.querySelector('[data-table-column-drag-surface="name"]');
+    expect(dragSurface).toHaveAttribute('draggable', 'true');
+    expect(nameHeader).toHaveAttribute('draggable', 'false');
     const dataTransfer = {
       effectAllowed: '',
       dropEffect: '',
       setData: vi.fn(),
       getData: vi.fn(() => 'name'),
+      setDragImage: vi.fn(),
     };
 
-    fireEvent.dragStart(nameHeader, { dataTransfer });
+    fireEvent.dragStart(dragSurface!, { dataTransfer });
     fireEvent.dragOver(manufacturerHeader, { dataTransfer });
     fireEvent.drop(manufacturerHeader, { dataTransfer });
 
