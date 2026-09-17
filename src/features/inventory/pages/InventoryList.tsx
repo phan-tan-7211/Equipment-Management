@@ -368,7 +368,7 @@ const InventoryList = () => {
   );
 
   return (
-    <Page maxWidth="full" padding="none" className="flex min-h-full flex-col p-px">
+    <Page maxWidth="full" padding="workspace">
       <div
         className={cn(
           'flex min-h-0 flex-1 flex-col gap-px',

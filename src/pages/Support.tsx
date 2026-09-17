@@ -132,7 +132,7 @@ export const DashboardSupport: React.FC = () => {
   const { openBugReport } = useBugReport();
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-6">
         <PageHeader
           title={t('support.title')}

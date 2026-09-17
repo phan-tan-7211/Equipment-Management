@@ -55,7 +55,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   useDocumentTitle(title);
 
   return (
-    <div className={cn(densityClasses[density], className)}>
+    <div className={cn(densityClasses[density], 'px-4', className)}>
       {backLink && (
         <div className="flex items-center">
           <Link

@@ -44,7 +44,7 @@ function AuditLog() {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>{t('auditLogControls.noOrganization')}</AlertTitle>
@@ -61,7 +61,7 @@ function AuditLog() {
 
   if (!isAdmin) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <Alert variant="destructive">
           <ShieldAlert className="h-4 w-4" />
           <AlertTitle>{t('auditLogControls.accessDenied')}</AlertTitle>

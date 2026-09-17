@@ -101,7 +101,9 @@ vi.mock('@/features/fleet-map/components/EquipmentPanel', () => ({
 }));
 
 vi.mock('@/components/layout/Page', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div data-testid="page">{children}</div>,
+  default: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <div data-testid="page" className={className}>{children}</div>
+  ),
 }));
 
 vi.mock('@/components/layout/PageHeader', () => ({
@@ -260,6 +262,26 @@ describe('FleetMap page', () => {
     expect(screen.queryByText('Loading map...')).not.toBeInTheDocument();
     expect(mapViewMountSpy).toHaveBeenCalledTimes(1);
     expect(mapViewUnmountSpy).not.toHaveBeenCalled();
+  });
+
+  it('uses a full-height, padding-free frame for the mounted map', () => {
+    mockUseGoogleMapsKey.mockReturnValue({
+      googleMapsKey: 'maps-key',
+      mapId: 'map-id',
+      isLoading: false,
+      error: null,
+      retry: vi.fn(),
+    });
+    mockUseTeamFleetData.mockReturnValue({
+      data: mockTeamFleetData,
+      isLoading: false,
+      error: null,
+    });
+
+    render(<FleetMap />);
+
+    expect(screen.getByTestId('page')).toHaveClass('flex', 'h-full', 'min-h-0', 'flex-col');
+    expect(screen.getByTestId('map-view')).toBeInTheDocument();
   });
 
   it('keeps MapView mounted while switching from equipment to repeated HQ selection', () => {

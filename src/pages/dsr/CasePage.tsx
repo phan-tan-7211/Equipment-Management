@@ -25,13 +25,13 @@ function DSRCasePage() {
 
   if (caseQuery.isLoading) {
     gateContent = (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <p className="text-sm text-muted-foreground">{t('dsr.loadingCase')}</p>
       </Page>
     );
   } else if (caseQuery.isError || !caseQuery.data?.request) {
     gateContent = (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>{t('dsr.caseUnavailable')}</AlertTitle>
@@ -45,7 +45,7 @@ function DSRCasePage() {
     const { request, events } = caseQuery.data;
     const queueRequests = request ? [request] : [];
     gateContent = (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
           <DsrQueueRail requests={queueRequests} selectedRequestId={request.id} />
           <DsrCaseWorkspace

@@ -204,7 +204,7 @@ const WorkspaceOnboarding = () => {
 
   if (isLoading) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader title={t('workspaceOnboarding.title')} description={t('workspaceOnboarding.preparing')} />
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -215,7 +215,7 @@ const WorkspaceOnboarding = () => {
 
   if (!user || !isGoogleUser || !onboardingState || isConsumerDomain) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={t('workspaceOnboarding.title')}
           description={t('workspaceOnboarding.businessOnly')}
@@ -233,7 +233,7 @@ const WorkspaceOnboarding = () => {
   const showConnectButton = !isConnected;
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <PageHeader
         title={t('workspaceOnboarding.title')}
         description={t('workspaceOnboarding.setupFor', { domain: onboardingState.domain })}

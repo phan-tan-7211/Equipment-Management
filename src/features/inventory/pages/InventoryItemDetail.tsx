@@ -254,7 +254,7 @@ const InventoryItemDetail = () => {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader title={t('inventoryDetail.itemTitle')} description={t('inventoryDetail.selectOrganization')} />
       </Page>
     );
@@ -262,7 +262,7 @@ const InventoryItemDetail = () => {
 
   if (itemLoading) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader title={t('inventoryDetail.itemTitle')} />
         <div className="space-y-4">
           <Skeleton className="h-32 w-full" />
@@ -274,7 +274,7 @@ const InventoryItemDetail = () => {
 
   if (!item) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader title={t('inventoryDetail.itemTitle')} description={t('inventoryDetail.itemNotFound')} />
         <Card>
           <CardContent className="py-12 text-center">
@@ -292,7 +292,7 @@ const InventoryItemDetail = () => {
   const stockHealth = getStockHealthPresentation(item);
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-4 md:space-y-6">
         <PageHeader
           density="compact"
@@ -529,4 +529,3 @@ const InventoryItemDetail = () => {
 };
 
 export default InventoryItemDetail;
-

@@ -123,12 +123,20 @@ const GettingStartedOnboarding = () => {
 
   if (statusPending) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2
-          className="h-8 w-8 animate-spin text-muted-foreground"
-          aria-label={t('productOnboarding.loading')}
-        />
-      </div>
+      <Page maxWidth="full" padding="workspace">
+        <div className="mx-auto w-full max-w-2xl">
+          <PageHeader
+            title={t('productOnboarding.welcome')}
+            description={t('productOnboarding.loading')}
+          />
+          <div className="flex min-h-[50vh] items-center justify-center" role="status">
+            <Loader2
+              className="h-8 w-8 animate-spin text-muted-foreground"
+              aria-label={t('productOnboarding.loading')}
+            />
+          </div>
+        </div>
+      </Page>
     );
   }
 
@@ -137,71 +145,73 @@ const GettingStartedOnboarding = () => {
   }
 
   return (
-    <Page maxWidth="2xl" padding="responsive" data-testid="getting-started-onboarding">
-      <PageHeader
-        title={t('productOnboarding.welcome')}
-        description={t('productOnboarding.description')}
-      />
+    <Page maxWidth="full" padding="workspace" data-testid="getting-started-onboarding">
+      <div className="mx-auto w-full max-w-2xl">
+        <PageHeader
+          title={t('productOnboarding.welcome')}
+          description={t('productOnboarding.description')}
+        />
 
-      <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        {STEP_KEYS.map((key, index) => {
-          const stepNumber = index + 1;
-          const isActive = step === stepNumber;
-          const isComplete = step > stepNumber;
-          return (
-            <div
-              key={key}
-              className={cn(
-                'flex items-center gap-2 text-sm',
-                isActive && 'font-medium text-foreground',
-                isComplete && 'text-muted-foreground',
-                !isActive && !isComplete && 'text-muted-foreground/70',
-              )}
-            >
-              <span
+        <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          {STEP_KEYS.map((key, index) => {
+            const stepNumber = index + 1;
+            const isActive = step === stepNumber;
+            const isComplete = step > stepNumber;
+            return (
+              <div
+                key={key}
                 className={cn(
-                  'flex h-7 w-7 items-center justify-center rounded-full border text-xs',
-                  isActive && 'border-primary bg-primary text-primary-foreground',
-                  isComplete && 'border-primary/50 bg-primary/10 text-primary',
+                  'flex items-center gap-2 text-sm',
+                  isActive && 'font-medium text-foreground',
+                  isComplete && 'text-muted-foreground',
+                  !isActive && !isComplete && 'text-muted-foreground/70',
                 )}
               >
-                {stepNumber}
-              </span>
-              <span>{t(`productOnboarding.${key}`)}</span>
-            </div>
-          );
-        })}
+                <span
+                  className={cn(
+                    'flex h-7 w-7 items-center justify-center rounded-full border text-xs',
+                    isActive && 'border-primary bg-primary text-primary-foreground',
+                    isComplete && 'border-primary/50 bg-primary/10 text-primary',
+                  )}
+                >
+                  {stepNumber}
+                </span>
+                <span>{t(`productOnboarding.${key}`)}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {step === 1 && (
+          <CreateFirstTeamStep
+            onTeamCreated={(id) => {
+              setTeamId(id);
+              setStep(2);
+            }}
+          />
+        )}
+
+        {step === 2 && (
+          <CreateFirstEquipmentStep
+            defaultTeamId={teamId}
+            onEquipmentCreated={(id, name) => {
+              setEquipmentId(id);
+              setEquipmentName(name);
+              setStep(3);
+            }}
+            onBack={() => setStep(1)}
+          />
+        )}
+
+        {step === 3 && equipmentId && (
+          <QRCodeOnboardingStep
+            equipmentId={equipmentId}
+            equipmentName={equipmentName}
+            onFinish={handleFinish}
+            isFinishing={completeOnboarding.isPending}
+          />
+        )}
       </div>
-
-      {step === 1 && (
-        <CreateFirstTeamStep
-          onTeamCreated={(id) => {
-            setTeamId(id);
-            setStep(2);
-          }}
-        />
-      )}
-
-      {step === 2 && (
-        <CreateFirstEquipmentStep
-          defaultTeamId={teamId}
-          onEquipmentCreated={(id, name) => {
-            setEquipmentId(id);
-            setEquipmentName(name);
-            setStep(3);
-          }}
-          onBack={() => setStep(1)}
-        />
-      )}
-
-      {step === 3 && equipmentId && (
-        <QRCodeOnboardingStep
-          equipmentId={equipmentId}
-          equipmentName={equipmentName}
-          onFinish={handleFinish}
-          isFinishing={completeOnboarding.isPending}
-        />
-      )}
     </Page>
   );
 };

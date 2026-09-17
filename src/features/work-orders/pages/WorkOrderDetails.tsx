@@ -5,6 +5,7 @@ import { useParams, useSearchParams, Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWorkOrderDetailsData } from '@/features/work-orders/components/hooks/useWorkOrderDetailsData';
 import { useI18n } from '@/i18n';
+import Page from '@/components/layout/Page';
 import { useWorkOrderDetailsActions } from '@/features/work-orders/hooks/useWorkOrderDetailsActions';
 import { useWorkOrderEquipment } from '@/features/work-orders/hooks/useWorkOrderEquipment';
 import { logNavigationEvent } from '@/utils/navigationDebug';
@@ -317,11 +318,13 @@ const WorkOrderDetails = () => {
   if (workOrderLoading || !currentOrganization) {
     logNavigationEvent('LOADING_STATE', { workOrderLoading, hasOrganization: !!currentOrganization });
     return (
-      <div className="space-y-6 p-4" role="status" aria-label={t('workOrderAudit.loadingDetails')}>
-        <span className="sr-only">{t('workOrderAudit.loadingDetails')}...</span>
-        <div className="h-8 bg-muted animate-pulse rounded" aria-hidden="true" />
-        <div className="h-64 bg-muted animate-pulse rounded" aria-hidden="true" />
-      </div>
+      <Page maxWidth="full" padding="workspace" className="min-h-full">
+        <div className="space-y-6 p-4" role="status" aria-label={t('workOrderAudit.loadingDetails')}>
+          <span className="sr-only">{t('workOrderAudit.loadingDetails')}...</span>
+          <div className="h-8 bg-muted animate-pulse rounded" aria-hidden="true" />
+          <div className="h-64 bg-muted animate-pulse rounded" aria-hidden="true" />
+        </div>
+      </Page>
     );
   }
 
@@ -381,7 +384,7 @@ const WorkOrderDetails = () => {
     canViewWorkOrderCosts && (canAddCosts || canEditCosts) && !isWorkOrderLocked;
 
   return (
-    <div className="min-h-screen bg-background texture-grain">
+    <Page maxWidth="full" padding="workspace" className="min-h-full bg-background texture-grain">
       <WorkOrderDetailsMobileHeader
         workOrder={{ title: workOrder.title }}
         showExports={permissionLevels.exportAudience !== 'none'}
@@ -633,7 +636,7 @@ const WorkOrderDetails = () => {
         isUpdating={isUpdatingWorkOrder}
         onSave={handleSavePMManagement}
       />
-    </div>
+    </Page>
   );
 };
 

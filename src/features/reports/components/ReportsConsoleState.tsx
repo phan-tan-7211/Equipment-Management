@@ -18,7 +18,7 @@ export const ReportsConsoleState: React.FC<ReportsConsoleStateProps> = ({ varian
   const isNoOrg = variant === 'no-organization';
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-6">
         <PageHeader
           title={t('reports.consoleTitle')}

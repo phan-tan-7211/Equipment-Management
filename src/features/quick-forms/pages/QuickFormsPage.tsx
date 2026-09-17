@@ -67,7 +67,7 @@ export default function QuickFormsPage() {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader title={t('quickForms.page.title')} description={t('quickForms.page.selectOrganization')} />
       </Page>
     );
@@ -75,7 +75,7 @@ export default function QuickFormsPage() {
 
   if (!isAdmin) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <Alert variant="destructive">
           <ShieldAlert className="h-4 w-4" />
           <AlertTitle>{t('quickForms.page.accessDenied')}</AlertTitle>
@@ -132,7 +132,7 @@ export default function QuickFormsPage() {
   };
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-5">
         <PageHeader
           title={t('quickForms.page.title')}

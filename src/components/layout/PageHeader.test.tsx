@@ -11,6 +11,7 @@ describe('PageHeader', () => {
       const root = container.querySelector('.space-y-1');
       expect(root).toBeInTheDocument();
       expect(root?.className).not.toContain('space-y-2');
+      expect(root).toHaveClass('px-4');
     });
 
     it('renders compact density with stable tighter spacing', () => {

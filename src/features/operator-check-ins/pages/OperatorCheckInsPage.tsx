@@ -263,7 +263,7 @@ export default function OperatorCheckInsPage() {
 
   if (!isAdmin) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <Alert>
           <AlertDescription>{t('operatorCheckinAdmin.adminOnly')}</AlertDescription>
         </Alert>

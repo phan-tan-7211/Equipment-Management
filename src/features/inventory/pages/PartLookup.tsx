@@ -135,7 +135,7 @@ const PartLookup: React.FC = () => {
   
   if (!currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={t('partLookup.title')}
           description={t('partLookup.selectOrganization')}
@@ -145,7 +145,7 @@ const PartLookup: React.FC = () => {
   }
   
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-6">
         <PageHeader
           title={t('partLookup.title')}
@@ -595,4 +595,3 @@ const CompatiblePartRow: React.FC<CompatiblePartRowProps> = ({ part, onViewItem 
 };
 
 export default PartLookup;
-

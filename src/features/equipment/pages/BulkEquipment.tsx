@@ -50,7 +50,7 @@ const BulkEquipment: React.FC = () => {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="full" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={t('equipmentBulk.title')}
           description={t('equipmentBulk.selectOrganization')}
@@ -62,7 +62,7 @@ const BulkEquipment: React.FC = () => {
 
   if (!canCreateEquipment() && !canCreateEquipmentForAnyTeam()) {
     return (
-      <Page maxWidth="full" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={t('equipmentBulk.title')}
           description={t('equipmentBulk.restricted')}
@@ -74,7 +74,7 @@ const BulkEquipment: React.FC = () => {
 
   if (!isOnline) {
     return (
-      <Page maxWidth="full" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={t('equipmentBulk.title')}
           actions={<BulkEditBackButton to="/dashboard/equipment" />}
@@ -90,14 +90,14 @@ const BulkEquipment: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Page maxWidth="full" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <EquipmentLoadingState />
       </Page>
     );
   }
 
   return (
-    <Page maxWidth="full" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-4 pb-4">
         <PageHeader
           title={t('equipmentBulk.title')}

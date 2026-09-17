@@ -55,7 +55,7 @@ const BulkInventory: React.FC = () => {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="full" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={t('inventoryBulk.title')}
           description={t('inventoryBulk.selectOrganization')}
@@ -67,7 +67,7 @@ const BulkInventory: React.FC = () => {
 
   if (!canBulkEdit) {
     return (
-      <Page maxWidth="full" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={t('inventoryBulk.title')}
           description={t('inventoryBulk.restricted')}
@@ -79,7 +79,7 @@ const BulkInventory: React.FC = () => {
 
   if (!isOnline) {
     return (
-      <Page maxWidth="full" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader title={t('inventoryBulk.title')} actions={<BulkEditBackButton to="/dashboard/inventory" />} />
         <BulkEditOfflinePanel
           message={t('inventoryBulk.offline')}
@@ -92,7 +92,7 @@ const BulkInventory: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Page maxWidth="full" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader title={t('inventoryBulk.title')} actions={<BulkEditBackButton to="/dashboard/inventory" />} />
         <div className="space-y-2 animate-pulse">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -104,7 +104,7 @@ const BulkInventory: React.FC = () => {
   }
 
   return (
-    <Page maxWidth="full" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-4 pb-4">
         <PageHeader
           title={t('inventoryBulk.title')}

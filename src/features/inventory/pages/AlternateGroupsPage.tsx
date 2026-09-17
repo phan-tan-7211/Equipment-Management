@@ -198,7 +198,7 @@ const AlternateGroupsPage: React.FC = () => {
 
   if (!currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <PageHeader
           title={t('alternateGroups.title')}
           description={t('alternateGroups.selectOrganization')}
@@ -208,7 +208,7 @@ const AlternateGroupsPage: React.FC = () => {
   }
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-6">
         <PageHeader
           title={t('alternateGroups.title')}
@@ -566,4 +566,3 @@ const AlternateGroupsPage: React.FC = () => {
 };
 
 export default AlternateGroupsPage;
-

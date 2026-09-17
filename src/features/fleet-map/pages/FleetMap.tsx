@@ -150,7 +150,7 @@ const FleetMap: React.FC = () => {
 
     if (errorMessage?.trim()) {
       return (
-        <Page maxWidth="7xl" padding="responsive">
+        <Page maxWidth="full" padding="workspace">
           <div className="space-y-4">
             <PageHeader title={t('fleetMap.title')} description={t('fleetMap.unableLoad')} />
             <FleetMapErrorBoundary error={errorMessage} onRetry={() => window.location.reload()} isRetrying={false} />
@@ -163,7 +163,7 @@ const FleetMap: React.FC = () => {
   // ── Loading state ──
   if (!hasCompletedInitialLoad && isLoading) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <div className="space-y-4">
           <PageHeader
             title={t('fleetMap.title')}
@@ -179,7 +179,7 @@ const FleetMap: React.FC = () => {
   if (!googleMapsKey && !mapsKeyLoading) {
     const errorMessage = mapsKeyError || t('fleetMap.apiKeyUnavailable');
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <div className="space-y-4">
           <PageHeader title={t('fleetMap.title')} description={errorMessage} />
           <FleetMapErrorBoundary error={errorMessage} onRetry={retryMapsKey} isRetrying={mapsKeyLoading} />
@@ -191,7 +191,7 @@ const FleetMap: React.FC = () => {
   // ── Empty state: no location data at all ──
   if (!hasLocationData && !isLoading) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <div className="space-y-4">
           <PageHeader title={t('fleetMap.title')} description={t('fleetMap.noLocationDescription')} />
           <Card>
@@ -218,77 +218,79 @@ const FleetMap: React.FC = () => {
   // Team scope is owned by the global TopBar `useSelectedTeam` — there is no
   // per-page team selector on this toolbar by design.
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
-      {/* Toolbar — left: panel toggle | right: status summary */}
-      <div className="flex items-center px-4 py-2 bg-background border-b shadow-sm z-10 flex-shrink-0">
-        {/* Left controls group */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPanelOpen(!panelOpen)}
-            className="gap-1.5 h-8 bg-background"
-          >
-            {panelOpen ? <PanelLeftClose className="h-3.5 w-3.5" /> : <PanelLeftOpen className="h-3.5 w-3.5" />}
-            <span className="hidden sm:inline">{panelOpen ? t('fleetMap.hidePanel') : t('fleetMap.equipment')}</span>
-          </Button>
+    <Page maxWidth="full" padding="none" className="flex h-full min-h-0 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
+        {/* Toolbar — left: panel toggle | right: status summary */}
+        <div className="flex items-center px-4 py-2 bg-background border-b shadow-sm z-10 flex-shrink-0">
+          {/* Left controls group */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPanelOpen(!panelOpen)}
+              className="gap-1.5 h-8 bg-background"
+            >
+              {panelOpen ? <PanelLeftClose className="h-3.5 w-3.5" /> : <PanelLeftOpen className="h-3.5 w-3.5" />}
+              <span className="hidden sm:inline">{panelOpen ? t('fleetMap.hidePanel') : t('fleetMap.equipment')}</span>
+            </Button>
+          </div>
+
+          <div className="flex-1" />
+
+          {/* Right status group */}
+          <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="w-px h-4 bg-border/40" />
+            <MapPin className="h-3.5 w-3.5" />
+            <span>{t('fleetMap.locatedSummary', { located: equipmentLocations.length, total: totalEquipmentCount })}</span>
+          </div>
         </div>
 
-        <div className="flex-1" />
+        {/* Map + Panel container */}
+        <div className="relative min-h-0 flex-1 overflow-hidden">
+          {/* Equipment Panel (slides over map) */}
+          <EquipmentPanel
+            isOpen={panelOpen}
+            onClose={() => setPanelOpen(false)}
+            locatedEquipment={equipmentLocations}
+            unlocatedEquipment={unlocatedEquipment}
+            totalEquipmentCount={totalEquipmentCount}
+            selectedEquipmentId={focusEquipmentId}
+            onEquipmentSelect={handleEquipmentSelect}
+          />
 
-        {/* Right status group */}
-        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
-          <div className="w-px h-4 bg-border/40" />
-          <MapPin className="h-3.5 w-3.5" />
-          <span>{t('fleetMap.locatedSummary', { located: equipmentLocations.length, total: totalEquipmentCount })}</span>
-        </div>
-      </div>
-
-      {/* Map + Panel container */}
-      <div className="flex-1 relative overflow-hidden">
-        {/* Equipment Panel (slides over map) */}
-        <EquipmentPanel
-          isOpen={panelOpen}
-          onClose={() => setPanelOpen(false)}
-          locatedEquipment={equipmentLocations}
-          unlocatedEquipment={unlocatedEquipment}
-          totalEquipmentCount={totalEquipmentCount}
-          selectedEquipmentId={focusEquipmentId}
-          onEquipmentSelect={handleEquipmentSelect}
-        />
-
-        {/* Full-width Map. We render <MapView> as soon as we have an API key —
-            the new vis.gl <APIProvider> inside MapView handles the script
-            load (with loading=async) and shows its own progressive UI. */}
-        <div className="h-full w-full">
-          {googleMapsKey ? (
-            // The class-based <FleetMapErrorBoundary> catches render-time
-            // crashes inside <MapView> (notably the marker.js TypeError that
-            // surfaces when Google Maps rejects the API key referrer mid-init,
-            // see issue #617) so the rest of the app stays mounted instead of
-            // bubbling to the global "Something went wrong" page.
-            <FleetMapErrorBoundary>
-              <MapView
-                googleMapsKey={googleMapsKey}
-                mapId={googleMapsMapId}
-                equipmentLocations={equipmentLocations}
-                filteredLocations={equipmentLocations}
-                teamHQLocations={teamHQLocations}
-                focusEquipmentId={focusEquipmentId}
-                onMarkerClick={(id) => setFocusEquipmentId(id)}
-              />
-            </FleetMapErrorBoundary>
-          ) : (
-            <div className="h-full w-full bg-muted/50 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="h-8 w-8 text-muted-foreground/50 mx-auto animate-pulse mb-2" />
-                <p className="text-sm text-muted-foreground">{t('fleetMap.loadingMap')}</p>
+          {/* Full-width Map. We render <MapView> as soon as we have an API key —
+              the new vis.gl <APIProvider> inside MapView handles the script
+              load (with loading=async) and shows its own progressive UI. */}
+          <div className="h-full w-full">
+            {googleMapsKey ? (
+              // The class-based <FleetMapErrorBoundary> catches render-time
+              // crashes inside <MapView> (notably the marker.js TypeError that
+              // surfaces when Google Maps rejects the API key referrer mid-init,
+              // see issue #617) so the rest of the app stays mounted instead of
+              // bubbling to the global "Something went wrong" page.
+              <FleetMapErrorBoundary>
+                <MapView
+                  googleMapsKey={googleMapsKey}
+                  mapId={googleMapsMapId}
+                  equipmentLocations={equipmentLocations}
+                  filteredLocations={equipmentLocations}
+                  teamHQLocations={teamHQLocations}
+                  focusEquipmentId={focusEquipmentId}
+                  onMarkerClick={(id) => setFocusEquipmentId(id)}
+                />
+              </FleetMapErrorBoundary>
+            ) : (
+              <div className="h-full w-full bg-muted/50 flex items-center justify-center">
+                <div className="text-center">
+                  <MapPin className="h-8 w-8 text-muted-foreground/50 mx-auto animate-pulse mb-2" />
+                  <p className="text-sm text-muted-foreground">{t('fleetMap.loadingMap')}</p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </Page>
   );
 };
 
