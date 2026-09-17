@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Package, AlertTriangle, MapPin, RefreshCw, SearchX } from 'lucide-react';
 import { useCompatibleInventoryItems } from '@/features/inventory/hooks/useInventory';
+import { InventoryItemThumbnail } from '@/features/inventory/components/InventoryItemThumbnail';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePartsFiltering } from '@/features/equipment/hooks/usePartsFiltering';
 import { DesktopPartsToolbar, MobilePartsToolbar } from './parts-tab';
@@ -39,26 +40,11 @@ const PartCard: React.FC<PartCardProps> = ({ part, onClick, isMobile }) => {
       onClick={onClick}
     >
       <CardContent className={cn('flex gap-4', isMobile ? 'p-3' : 'p-4')}>
-        <div
-          className={cn(
-            'flex-shrink-0 rounded-md bg-muted flex items-center justify-center overflow-hidden relative',
-            isMobile ? 'h-12 w-12' : 'h-16 w-16',
-          )}
-        >
-          {part.image_url ? (
-            <img
-              src={part.image_url}
-              alt={part.name}
-              className="h-full w-full object-cover"
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <Package className={cn('text-muted-foreground', isMobile ? 'h-6 w-6' : 'h-8 w-8')} />
-          )}
+        <div className="relative flex-shrink-0">
+          <InventoryItemThumbnail item={part} size="md" enableHover={!isMobile} />
           {part.hasAlternates && (
             <div
-              className="absolute -top-1 -right-1 h-4 w-4 bg-info rounded-full flex items-center justify-center"
+              className="absolute -top-1 -right-1 z-10 h-4 w-4 bg-info rounded-full flex items-center justify-center"
               title={t('equipmentParts.hasAlternates')}
             >
               <RefreshCw className="h-2.5 w-2.5 text-primary-foreground" />
