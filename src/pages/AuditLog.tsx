@@ -13,6 +13,7 @@ import React, { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { History, Shield, AlertCircle, ShieldAlert } from 'lucide-react';
 import Page from '@/components/layout/Page';
+import PageHeader from '@/components/layout/PageHeader';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useOrganization } from '@/contexts/OrganizationContext';
@@ -73,15 +74,14 @@ function AuditLog() {
   }
 
   return (
-    <Page maxWidth="full" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <OrganizationSubnav />
       <div className="space-y-5">
-        {/* Header */}
-        <div className="flex items-center gap-2">
-          <History className="h-7 w-7 text-primary shrink-0" />
-          <div>
-            <h1 className="text-2xl font-bold leading-tight">{t('auditLogControls.title')}</h1>
-            <p className="text-sm text-muted-foreground">
+        <PageHeader
+          title={t('auditLogControls.title')}
+          icon={<History className="h-5 w-5" />}
+          description={
+            <>
               {t('auditLogControls.introduction')}{' '}
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -94,9 +94,9 @@ function AuditLog() {
                   {t('auditLogControls.regulatoryHelp')}
                 </TooltipContent>
               </Tooltip>
-            </p>
-          </div>
-        </div>
+            </>
+          }
+        />
 
         {/* Customizable dashboard: key metrics, timeline, and events (#1166) */}
         <AuditExplorer organizationId={currentOrganization.id} initialFilters={initialFilters} />

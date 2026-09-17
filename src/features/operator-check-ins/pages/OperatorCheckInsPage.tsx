@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useI18n } from '@/i18n';
 import { ClipboardCheck, FileText, Plus, RotateCcw } from 'lucide-react';
 import Page from '@/components/layout/Page';
+import PageHeader from '@/components/layout/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -271,13 +272,14 @@ export default function OperatorCheckInsPage() {
   }
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">{t('operatorCheckinAdmin.title')}</h1>
-          <p className="text-muted-foreground mt-1">
-            {t('operatorCheckinAdmin.intro')}
-          </p>
+        <div className="space-y-1">
+          <PageHeader
+            title={t('operatorCheckinAdmin.title')}
+            description={t('operatorCheckinAdmin.intro')}
+            icon={<ClipboardCheck className="h-5 w-5" />}
+          />
           <p className="mt-2 text-sm">
             <ExternalLink href={OPERATOR_DAILY_CHECK_INS_DOCS_URL}>
               {t('operatorCheckinAdmin.help')}

@@ -19,6 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import Page from '@/components/layout/Page';
+import PageHeader from '@/components/layout/PageHeader';
 import { useI18n } from '@/i18n';
 
 // Enhanced Template Card Component
@@ -308,14 +309,10 @@ const PMTemplates = () => {
   if (!currentOrganization) {
     return (
       <Page maxWidth="full" padding="workspace">
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold">{t('pmTemplates.list.title')}</h1>
-            <p className="text-muted-foreground">
-              {t('pmTemplates.list.selectOrganization')}
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title={t('pmTemplates.list.title')}
+          description={t('pmTemplates.list.selectOrganization')}
+        />
       </Page>
     );
   }
@@ -323,14 +320,10 @@ const PMTemplates = () => {
   if (!isAdmin) {
     return (
       <Page maxWidth="full" padding="workspace">
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold">{t('pmTemplates.list.title')}</h1>
-            <p className="text-muted-foreground">
-              {t('pmTemplates.list.adminRequired')}
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title={t('pmTemplates.list.title')}
+          description={t('pmTemplates.list.adminRequired')}
+        />
       </Page>
     );
   }
@@ -399,18 +392,11 @@ const PMTemplates = () => {
   return (
     <Page maxWidth="full" padding="workspace">
       <div className={cn('space-y-6', showMobileFab && 'pb-28')}>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">{t('pmTemplates.list.title')}</h1>
-            <p className="text-muted-foreground mt-1">
-              <span className="hidden sm:inline">
-                {t('pmTemplates.list.subtitleDesktop')}
-              </span>
-              <span className="sm:hidden">{t('pmTemplates.list.subtitleMobile')}</span>
-            </p>
-          </div>
-          {isAdmin && (
-            <Button 
+        <PageHeader
+          title={t('pmTemplates.list.title')}
+          description={isMobile ? t('pmTemplates.list.subtitleMobile') : t('pmTemplates.list.subtitleDesktop')}
+          actions={
+            <Button
               onClick={handleCreateTemplate}
               disabled={!canCreateCustomTemplates}
               title={!canCreateCustomTemplates ? t('pmTemplates.list.licenseRequired') : ''}
@@ -420,8 +406,8 @@ const PMTemplates = () => {
               <Plus className="mr-2 h-4 w-4" />
               {t('pmTemplates.list.newTemplate')}
             </Button>
-          )}
-        </div>
+          }
+        />
 
       {showUpgradeMessage && (
         <Alert>

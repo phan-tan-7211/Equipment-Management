@@ -13,7 +13,8 @@ export interface BreadcrumbItem {
 
 interface PageHeaderProps {
   title: string;
-  description?: string;
+  icon?: React.ReactNode;
+  description?: React.ReactNode;
   meta?: React.ReactNode;
   backLink?: {
     label: string;
@@ -36,6 +37,7 @@ const densityClasses = {
 
 const PageHeader: React.FC<PageHeaderProps> = ({
   title,
+  icon,
   description,
   meta,
   backLink,
@@ -96,6 +98,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({
       )}>
         <div className={cn('min-w-0 flex-1', density === 'compact' ? 'space-y-0' : 'space-y-0.5')}>
           <div className="flex flex-wrap items-center gap-2">
+            {icon && (
+              <span className="inline-flex shrink-0 items-center text-primary" aria-hidden="true">
+                {icon}
+              </span>
+            )}
             <h1
               className="text-xl font-semibold leading-7 tracking-tight text-foreground sm:text-2xl sm:leading-8"
               data-route-heading="true"

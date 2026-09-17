@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/i18n';
+import PageHeader from '@/components/layout/PageHeader';
 
 interface RestrictedOrganizationAccessProps {
   currentOrganizationName: string;
@@ -31,12 +32,11 @@ const RestrictedOrganizationAccess: React.FC<RestrictedOrganizationAccessProps> 
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('organizationHub.restrictedTitle')}</h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1">
-          {t('organizationHub.restrictedFor', { name: currentOrganizationName })}
-        </p>
-      </div>
+      <PageHeader
+        title={t('organizationHub.restrictedTitle')}
+        description={t('organizationHub.restrictedFor', { name: currentOrganizationName })}
+        icon={<AlertCircle className="h-5 w-5" />}
+      />
 
       <Card className="max-w-2xl">
         <CardContent className="pt-6">

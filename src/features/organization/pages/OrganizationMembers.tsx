@@ -9,6 +9,7 @@ import UnifiedMembersList from '@/features/organization/components/UnifiedMember
 import RestrictedOrganizationAccess from '@/features/organization/components/RestrictedOrganizationAccess';
 import { WorkspaceMergeRequestsCard } from '@/features/organization/components/WorkspaceMergeRequestsCard';
 import Page from '@/components/layout/Page';
+import PageHeader from '@/components/layout/PageHeader';
 import { Users } from 'lucide-react';
 import { useMemo } from 'react';
 import { useI18n } from '@/i18n';
@@ -36,13 +37,12 @@ const OrganizationMembers = () => {
 
   if (isLoading || !currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
-        <div className="space-y-4 sm:space-y-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('organizationHub.members')}</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">{t('organizationHub.loading')}</p>
-          </div>
-        </div>
+      <Page maxWidth="full" padding="workspace">
+        <PageHeader
+          title={t('organizationHub.members')}
+          description={t('organizationHub.loading')}
+          icon={<Users className="h-5 w-5" />}
+        />
       </Page>
     );
   }
@@ -50,14 +50,13 @@ const OrganizationMembers = () => {
   if (currentUserRole === 'member') {
     if (incomingMergeRequests.length > 0) {
       return (
-        <Page maxWidth="7xl" padding="responsive">
-          <div className="space-y-4 sm:space-y-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('organizationHub.mergeTitle')}</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                {t('organizationHub.mergeDescription', { name: currentOrganization.name })}
-              </p>
-            </div>
+        <Page maxWidth="full" padding="workspace">
+          <div className="space-y-6">
+            <PageHeader
+              title={t('organizationHub.mergeTitle')}
+              description={t('organizationHub.mergeDescription', { name: currentOrganization.name })}
+              icon={<Users className="h-5 w-5" />}
+            />
             {currentOrganizationId && (
               <WorkspaceMergeRequestsCard
                 workspaceOrgId={currentOrganizationId}
@@ -70,15 +69,15 @@ const OrganizationMembers = () => {
     }
 
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <RestrictedOrganizationAccess currentOrganizationName={currentOrganization.name} />
       </Page>
     );
   }
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
-      <div className="space-y-4 sm:space-y-6">
+    <Page maxWidth="full" padding="workspace">
+      <div className="space-y-6">
         <OrganizationSubnav />
 
         {incomingMergeRequests.length > 0 && currentOrganizationId && (
@@ -88,18 +87,12 @@ const OrganizationMembers = () => {
           />
         )}
 
-        <div className="pb-1 sm:pb-4 border-b">
-          <div className="flex items-start gap-3">
-            <div className="rounded-lg border bg-muted/40 p-2.5 shrink-0">
-              <Users className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{t('organizationHub.members')}</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t('organizationHub.membersDescription', { name: currentOrganization.name })}
-              </p>
-            </div>
-          </div>
+        <div className="border-b pb-4">
+          <PageHeader
+            title={t('organizationHub.members')}
+            description={t('organizationHub.membersDescription', { name: currentOrganization.name })}
+            icon={<Users className="h-5 w-5" />}
+          />
         </div>
 
         <UnifiedMembersList

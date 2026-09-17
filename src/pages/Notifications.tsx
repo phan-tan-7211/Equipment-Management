@@ -12,6 +12,8 @@ import NotificationsToolbar from './notifications/NotificationsToolbar';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { useNavigate } from 'react-router-dom';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import Page from '@/components/layout/Page';
+import PageHeader from '@/components/layout/PageHeader';
 import { 
   useRealTimeNotifications, 
   useNotificationSubscription,
@@ -92,45 +94,36 @@ const Notifications: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">{t('notificationPage.title')}</h1>
-          <p className="text-muted-foreground mt-2">
-            {t('notificationPage.historySubtitle')}
-          </p>
-        </div>
+      <Page maxWidth="full" padding="workspace" className="space-y-6">
+        <PageHeader
+          title={t('notificationPage.title')}
+          description={t('notificationPage.historySubtitle')}
+          icon={<Bell className="h-5 w-5" />}
+        />
         <Card>
           <CardContent className="p-6">
             <div className="h-64 bg-muted animate-pulse rounded" />
           </CardContent>
         </Card>
-      </div>
+      </Page>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Bell className="h-8 w-8" />
-            {t('notificationPage.title')}
-            {unreadCount > 0 && (
-              <Badge variant="destructive">{t('notificationPage.unreadCount', { count: unreadCount })}</Badge>
-            )}
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {t('notificationPage.retentionSubtitle')}
-          </p>
-        </div>
-        
-        {unreadCount > 0 && (
+    <Page maxWidth="full" padding="workspace" className="space-y-6">
+      <PageHeader
+        title={t('notificationPage.title')}
+        description={t('notificationPage.retentionSubtitle')}
+        icon={<Bell className="h-5 w-5" />}
+        meta={unreadCount > 0 ? <Badge variant="destructive">{t('notificationPage.unreadCount', { count: unreadCount })}</Badge> : undefined}
+        inlineMetaOnMobile
+        actions={unreadCount > 0 ? (
           <Button onClick={handleMarkAllAsRead} variant="outline">
             <Check className="h-4 w-4 mr-2" />
             {t('notificationPage.markAllRead')}
           </Button>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       {/* Filters */}
       <NotificationsToolbar
@@ -245,7 +238,7 @@ const Notifications: React.FC = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </Page>
   );
 };
 

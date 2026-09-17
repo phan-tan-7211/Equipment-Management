@@ -6,6 +6,7 @@ import OrganizationIntegrationsPanel from '@/features/organization/components/Or
 import { OrganizationSubnav } from '@/features/organization/components/OrganizationSubnav';
 import RestrictedOrganizationAccess from '@/features/organization/components/RestrictedOrganizationAccess';
 import Page from '@/components/layout/Page';
+import PageHeader from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plug } from 'lucide-react';
 import { useI18n } from '@/i18n';
@@ -20,42 +21,35 @@ const OrganizationIntegrations = () => {
 
   if (isLoading || !currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
-        <div className="space-y-4 sm:space-y-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('organizationHub.integrations')}</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">{t('organizationHub.loading')}</p>
-          </div>
-        </div>
+      <Page maxWidth="full" padding="workspace">
+        <PageHeader
+          title={t('organizationHub.integrations')}
+          description={t('organizationHub.loading')}
+          icon={<Plug className="h-5 w-5" />}
+        />
       </Page>
     );
   }
 
   if (currentUserRole === 'member') {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <RestrictedOrganizationAccess currentOrganizationName={currentOrganization.name} />
       </Page>
     );
   }
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
-      <div className="space-y-4 sm:space-y-6">
+    <Page maxWidth="full" padding="workspace">
+      <div className="space-y-6">
         <OrganizationSubnav />
 
-        <div className="pb-1 sm:pb-4 border-b">
-          <div className="flex items-start gap-3">
-            <div className="rounded-lg border bg-muted/40 p-2.5 shrink-0">
-              <Plug className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{t('organizationHub.integrations')}</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t('organizationHub.integrationsDescription', { name: currentOrganization.name })}
-              </p>
-            </div>
-          </div>
+        <div className="border-b pb-4">
+          <PageHeader
+            title={t('organizationHub.integrations')}
+            description={t('organizationHub.integrationsDescription', { name: currentOrganization.name })}
+            icon={<Plug className="h-5 w-5" />}
+          />
         </div>
 
         <Card>

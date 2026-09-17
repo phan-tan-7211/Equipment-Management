@@ -34,6 +34,8 @@ import { TeamViewSwitcher } from '@/features/teams/components/TeamViewSwitcher';
 import { updateTeam } from '@/features/teams/services/teamService';
 import { isTeamView, type TeamView } from '@/features/teams/types/team';
 import { useI18n } from '@/i18n';
+import Page from '@/components/layout/Page';
+import PageHeader from '@/components/layout/PageHeader';
 
 /** Section ordering per dedicated team view (issue #1132). */
 const VIEW_SECTION_ORDER: Record<TeamView, string[]> = {
@@ -128,8 +130,8 @@ const TeamDetails = () => {
 
   if (isLoading || teamLoading || !currentOrganization || !teamId) {
     return (
-      <div className="container mx-auto py-6 px-4 sm:px-6 space-y-6">
-        <div className="h-8 bg-muted animate-pulse rounded" />
+      <Page maxWidth="full" padding="workspace" className="space-y-6">
+        <PageHeader title={t('teamsList.title')} description={t('teamsList.description')} />
         <div className="grid gap-6">
           <Card>
             <CardContent className="p-6">
@@ -137,33 +139,32 @@ const TeamDetails = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </Page>
     );
   }
 
   if (!team || team.organization_id !== currentOrganization.id) {
     return (
-      <div className="container mx-auto py-6 px-4 sm:px-6 space-y-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/dashboard/teams')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t('teamsDetail.back')}
-        </Button>
+      <Page maxWidth="full" padding="workspace" className="space-y-6">
+        <PageHeader
+          title={t('teamsDetail.notFound')}
+          description={t('teamsDetail.notFoundDescription')}
+          icon={<Users className="h-5 w-5" />}
+          actions={
+            <Button variant="outline" onClick={() => navigate('/dashboard/teams')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('teamsDetail.back')}
+            </Button>
+          }
+        />
         <Card>
           <CardContent className="text-center py-12">
-            <h3 className="text-lg font-semibold mb-2">{t('teamsDetail.notFound')}</h3>
-            <p className="text-muted-foreground mb-4">
-              {t('teamsDetail.notFoundDescription')}
-            </p>
             <Button onClick={() => navigate('/dashboard/teams')}>
               {t('teamsDetail.return')}
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </Page>
     );
   }
 
@@ -291,24 +292,21 @@ const TeamDetails = () => {
   );
 
   return (
-    <div className="container mx-auto py-6 px-4 sm:px-6 space-y-6">
-      {/* Header */}
-      <header className="space-y-4">
-        {/* Breadcrumbs + Actions */}
-        <div className="flex items-center justify-between">
-          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground" aria-label={t('teamsDetail.breadcrumb')}>
-            <Link
-              to="/dashboard/teams"
-              className="hover:text-foreground hover:underline underline-offset-4 decoration-muted-foreground/40 transition-colors"
-            >
-              {t('teamsList.title')}
-            </Link>
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
-            <span className="text-foreground font-medium truncate max-w-[20ch] sm:max-w-none" aria-current="page" title={team.name}>
-              {team.name}
-            </span>
-          </nav>
-          
+    <Page maxWidth="full" padding="workspace" className="space-y-6">
+      <PageHeader
+        title={team.name}
+        description={t(team.member_count === 1 ? 'teamsDetail.memberCountSingle' : 'teamsDetail.memberCount', { count: team.member_count })}
+        icon={team.image_url ? (
+          <img
+            src={team.image_url}
+            alt=""
+            className="h-8 w-8 rounded-lg object-cover"
+            loading="eager"
+            decoding="async"
+          />
+        ) : <Users className="h-5 w-5" />}
+        breadcrumbs={[{ label: t('teamsList.title'), href: '/dashboard/teams' }, { label: team.name }]}
+        actions={
           <div className="flex items-center gap-1 sm:gap-2">
             {canEdit && (
               <Button
@@ -342,33 +340,8 @@ const TeamDetails = () => {
               </DropdownMenu>
             )}
           </div>
-        </div>
-        
-        {/* Team title - centered on mobile, left-aligned on desktop */}
-        <div className="text-center sm:text-left">
-          <div className="inline-flex items-center gap-3 mb-1">
-            {team.image_url ? (
-              <img
-                src={team.image_url}
-                alt={team.name}
-                className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl object-cover"
-                loading="eager"
-                decoding="async"
-              />
-            ) : (
-              <div className="p-2 rounded-xl bg-primary/10">
-                <Users className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
-              </div>
-            )}
-            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              {team.name}
-            </h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {t(team.member_count === 1 ? 'teamsDetail.memberCountSingle' : 'teamsDetail.memberCount', { count: team.member_count })}
-          </p>
-        </div>
-      </header>
+        }
+      />
 
       {/* Dedicated team views (issue #1132) */}
       <TeamViewSwitcher
@@ -501,7 +474,7 @@ const TeamDetails = () => {
         isPending={deleteTeam.isPending}
         onConfirm={handleDeleteTeam}
       />
-    </div>
+    </Page>
   );
 };
 

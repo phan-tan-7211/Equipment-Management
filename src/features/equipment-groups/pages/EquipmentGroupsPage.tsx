@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Boxes, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Page from '@/components/layout/Page';
+import PageHeader from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -100,36 +101,39 @@ export default function EquipmentGroupsPage() {
 
   if (orgLoading || !currentOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
-        <p className="text-muted-foreground">{t('equipmentGroups.loadingPage')}</p>
+      <Page maxWidth="full" padding="workspace">
+        <PageHeader
+          title={t('equipmentGroups.title')}
+          description={t('equipmentGroups.loadingPage')}
+          icon={<Boxes className="h-5 w-5" />}
+        />
       </Page>
     );
   }
 
   if (!canManage) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <RestrictedOrganizationAccess currentOrganizationName={currentOrganization.name} />
       </Page>
     );
   }
 
   return (
-    <Page maxWidth="7xl" padding="responsive">
+    <Page maxWidth="full" padding="workspace">
       <div className="space-y-6">
         <OrganizationSubnav />
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="rounded-lg border bg-muted/40 p-2.5"><Boxes className="h-5 w-5 text-muted-foreground" /></div>
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t('equipmentGroups.title')}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t('equipmentGroups.pageDescription')}
-              </p>
-            </div>
-          </div>
-          <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />{t('equipmentGroups.addGroup')}</Button>
-        </div>
+        <PageHeader
+          title={t('equipmentGroups.title')}
+          description={t('equipmentGroups.pageDescription')}
+          icon={<Boxes className="h-5 w-5" />}
+          actions={
+            <Button onClick={openCreate}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t('equipmentGroups.addGroup')}
+            </Button>
+          }
+        />
 
         <div className="grid gap-3 sm:grid-cols-3">
           <Card><CardContent className="p-4"><p className="text-xs uppercase text-muted-foreground">{t('equipmentGroups.groups')}</p><p className="mt-1 text-2xl font-semibold">{groups.length}</p></CardContent></Card>

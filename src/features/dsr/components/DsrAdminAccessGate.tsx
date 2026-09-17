@@ -22,7 +22,7 @@ export function DsrAdminAccessGate({
   const { t } = useI18n();
   if (!hasOrganization) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>{t('dsr.noOrg')}</AlertTitle>
@@ -34,7 +34,7 @@ export function DsrAdminAccessGate({
 
   if (!canManageDsr) {
     return (
-      <Page maxWidth="7xl" padding="responsive">
+      <Page maxWidth="full" padding="workspace">
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>{t('dsr.restricted')}</AlertTitle>
