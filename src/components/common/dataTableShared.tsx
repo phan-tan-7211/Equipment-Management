@@ -191,9 +191,9 @@ export function ResizableTableSurface<TData>({
                 const resolvedPointerDown: PointerEventHandler<HTMLTableCellElement> | undefined =
                   resolvedDraggable && onPointerDown
                     ? (event) => {
-                        // Mouse reordering uses the dedicated drag surface below. Keeping the
-                        // pointer-capture path off for mouse preserves normal sort/menu clicks.
-                        if (event.pointerType === 'mouse') return;
+                        // Column reorder owns the pointer gesture for both mouse and touch.
+                        // The handler itself applies the movement threshold, so a normal click
+                        // still reaches the nested sort/menu controls.
                         onPointerDown(event);
                       }
                     : onPointerDown;
@@ -209,30 +209,11 @@ export function ResizableTableSurface<TData>({
                     }
                   : undefined;
 
-                const startDragFromSurface: DragEventHandler<HTMLDivElement> | undefined = resolvedDraggable
-                  ? (event) => {
-                      event.stopPropagation();
-                      applyHeaderDragPreview(event);
-                      setDraggedHeaderId(header.id);
-                      setDragOverHeaderId(null);
-                      onDragStart?.(event as unknown as ReactDragEvent<HTMLTableCellElement>);
-                    }
-                  : undefined;
-
                 const endDragFromCell: DragEventHandler<HTMLTableCellElement> | undefined = resolvedDraggable
                   ? (event) => {
                       setDraggedHeaderId(null);
                       setDragOverHeaderId(null);
                       onDragEnd?.(event);
-                    }
-                  : undefined;
-
-                const endDragFromSurface: DragEventHandler<HTMLDivElement> | undefined = resolvedDraggable
-                  ? (event) => {
-                      event.stopPropagation();
-                      setDraggedHeaderId(null);
-                      setDragOverHeaderId(null);
-                      onDragEnd?.(event as unknown as ReactDragEvent<HTMLTableCellElement>);
                     }
                   : undefined;
 
@@ -247,8 +228,9 @@ export function ResizableTableSurface<TData>({
                     )}
                     aria-sort={ariaSort ?? 'none'}
                     style={resolvedHeaderStyle}
-                    // Keep the cell itself non-draggable. A draggable <th> competes with
-                    // nested sort buttons and is ignored inconsistently by Chromium.
+                    // Reordering is pointer-driven in the Equipment table. Native HTML5
+                    // drag on table cells is disabled because it competes with nested
+                    // sort/menu controls and can leave the gesture stuck in Chromium.
                     draggable={false}
                     onDragStart={startDragFromCell}
                     onDragOver={
@@ -276,11 +258,9 @@ export function ResizableTableSurface<TData>({
                       <div
                         className={cn(
                           'min-h-8 min-w-0',
-                          resolvedDraggable && 'cursor-grab active:cursor-grabbing',
+                          resolvedDraggable && 'cursor-grab active:cursor-grabbing touch-none',
                         )}
-                        draggable={resolvedDraggable}
-                        onDragStart={startDragFromSurface}
-                        onDragEnd={endDragFromSurface}
+                        draggable={false}
                         {...(dataColumnKey ? { 'data-table-column-drag-surface': dataColumnKey } : {})}
                       >
                         {header.isPlaceholder
