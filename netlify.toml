@@ -33,6 +33,61 @@
   status = 301
 
 [[redirects]]
+  from = "/dashboard"
+  to = "/app-shell.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard/*"
+  to = "/app-shell.html"
+  status = 200
+
+[[redirects]]
+  from = "/auth"
+  to = "/app-shell.html"
+  status = 200
+
+[[redirects]]
+  from = "/auth/*"
+  to = "/app-shell.html"
+  status = 200
+
+[[redirects]]
+  from = "/invitation"
+  to = "/app-shell.html"
+  status = 200
+
+[[redirects]]
+  from = "/invitation/*"
+  to = "/app-shell.html"
+  status = 200
+
+[[redirects]]
+  from = "/qr"
+  to = "/app-shell.html"
+  status = 200
+
+[[redirects]]
+  from = "/qr/*"
+  to = "/app-shell.html"
+  status = 200
+
+[[redirects]]
+  from = "/e"
+  to = "/app-shell.html"
+  status = 200
+
+[[redirects]]
+  from = "/e/*"
+  to = "/app-shell.html"
+  status = 200
+
+[[redirects]]
+  from = "/debug-*"
+  to = "/app-shell.html"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/app-shell.html"
   status = 200

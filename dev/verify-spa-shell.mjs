@@ -20,8 +20,54 @@ function fail(message) {
 }
 
 const CATCH_ALL_REDIRECT_RULE = '/* /app-shell.html 200';
+const APP_SHELL_REDIRECT_RULES = [
+  '/dashboard /app-shell.html 200',
+  '/dashboard/* /app-shell.html 200',
+  '/auth /app-shell.html 200',
+  '/auth/* /app-shell.html 200',
+  '/invitation /app-shell.html 200',
+  '/invitation/* /app-shell.html 200',
+  '/qr /app-shell.html 200',
+  '/qr/* /app-shell.html 200',
+  '/e /app-shell.html 200',
+  '/e/* /app-shell.html 200',
+  '/debug-* /app-shell.html 200',
+];
 
 /** @param {string} content */
+/** @param {string} content */
+export function hasExplicitAppShellRedirects(content) {
+  const activeLines = new Set(
+    content
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith('#')),
+  );
+  return APP_SHELL_REDIRECT_RULES.every((rule) => activeLines.has(rule));
+}
+
+/** @param {string} block @param {string} rule */
+function netlifyBlockHasAppShellRedirect(block, rule) {
+  const [from, to, status] = rule.split(' ');
+  const activeBlock = stripFullLineComments(block);
+  return (
+    activeBlock.includes('from = "' + from + '"') &&
+    activeBlock.includes('to = "' + to + '"') &&
+    activeBlock.includes('status = ' + status)
+  );
+}
+
+/** @param {string} content */
+function assertExplicitNetlifyAppShellRedirects(content) {
+  const blocks = content.split(/\[\[redirects\]\]/).slice(1);
+  const missing = APP_SHELL_REDIRECT_RULES.filter(
+    (rule) => !blocks.some((block) => netlifyBlockHasAppShellRedirect(block, rule)),
+  );
+  if (missing.length > 0) {
+    fail('netlify.toml is missing explicit app-shell rules: ' + missing.join(', '));
+  }
+}
+
 function assertCatchAllRedirectsRule(content, label) {
   const hasRule = content.split(/\r?\n/).some((line) => {
     const trimmed = line.trim();
@@ -107,26 +153,45 @@ export function verifySpaShellRouting() {
     fail('vercel.json must set cleanUrls: true so /app-shell resolves to app-shell.html.');
   }
 
+  const indexPath = path.join(repoRoot, 'index.html');
+  if (!fs.existsSync(indexPath)) {
+    fail('Missing index.html.');
+  }
+  const indexContent = fs.readFileSync(indexPath, 'utf8');
+  if (!indexContent.includes("data-app-route") || !indexContent.includes("app-boot-loading")) {
+    fail('index.html must include the pre-paint app-route guard and branded boot screen.');
+  }
+
   const redirectsPath = path.join(repoRoot, 'public', '_redirects');
   if (!fs.existsSync(redirectsPath)) {
     fail('Missing public/_redirects.');
   }
 
-  assertCatchAllRedirectsRule(fs.readFileSync(redirectsPath, 'utf8'), 'public/_redirects');
+  const redirectsContent = fs.readFileSync(redirectsPath, 'utf8');
+  assertCatchAllRedirectsRule(redirectsContent, 'public/_redirects');
+  if (!hasExplicitAppShellRedirects(redirectsContent)) {
+    fail('public/_redirects is missing explicit app-shell routes for authenticated/client paths.');
+  }
 
   const distRedirectsPath = path.join(repoRoot, 'dist', '_redirects');
   if (!fs.existsSync(distRedirectsPath)) {
     fail('Missing dist/_redirects. Run npm run build first.');
   }
 
-  assertCatchAllRedirectsRule(fs.readFileSync(distRedirectsPath, 'utf8'), 'dist/_redirects');
+  const distRedirectsContent = fs.readFileSync(distRedirectsPath, 'utf8');
+  assertCatchAllRedirectsRule(distRedirectsContent, 'dist/_redirects');
+  if (!hasExplicitAppShellRedirects(distRedirectsContent)) {
+    fail('dist/_redirects is missing explicit app-shell routes for authenticated/client paths.');
+  }
 
   const netlifyPath = path.join(repoRoot, 'netlify.toml');
   if (!fs.existsSync(netlifyPath)) {
     fail('Missing netlify.toml at repo root.');
   }
 
-  assertNetlifyCatchAllRedirect(fs.readFileSync(netlifyPath, 'utf8'));
+  const netlifyContent = fs.readFileSync(netlifyPath, 'utf8');
+  assertNetlifyCatchAllRedirect(netlifyContent);
+  assertExplicitNetlifyAppShellRedirects(netlifyContent);
 
   console.log(
     '[OK] SPA routing contract: dist/app-shell.html; Vercel -> /app-shell (extensionless source, cleanUrls); public/_redirects and dist/_redirects -> /app-shell.html; netlify.toml catch-all -> /app-shell.html.'

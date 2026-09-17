@@ -45,7 +45,7 @@ function marketingPrerenderPlugin(): PluginOption {
  * booting React. Serve the same shell used by Vercel/Netlify for app routes.
  */
 function appRoutePreviewFallbackPlugin(): PluginOption {
-  const appRoutePrefixes = ['/dashboard', '/auth', '/invitation', '/qr', '/debug-'];
+  const appRoutePrefixes = ['/dashboard', '/auth', '/invitation', '/qr', '/e', '/debug-'];
 
   return {
     name: 'equipqr-app-route-preview-fallback',
