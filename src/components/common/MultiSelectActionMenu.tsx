@@ -135,8 +135,12 @@ export function MultiSelectActionMenu({
     // Popover ≥1.1.19 focus-traps by default and blocks nested open otherwise.
     <Popover open={open} onOpenChange={setOpen} modal={false}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent align={align} className="w-80 p-0">
-        <div className="space-y-3 p-4">
+      <PopoverContent
+        align={align}
+        collisionPadding={12}
+        className="flex max-h-[var(--radix-popover-content-available-height)] w-80 flex-col overflow-hidden p-0"
+      >
+        <div className="shrink-0 space-y-3 p-4">
           <div className="space-y-1">
             <p className="text-sm font-medium">{title}</p>
             {description && <p className="text-xs text-muted-foreground">{description}</p>}
@@ -183,7 +187,7 @@ export function MultiSelectActionMenu({
           )}
         </div>
 
-        <div className="max-h-64 overflow-y-auto border-y px-4 py-2">
+        <div className="min-h-0 max-h-96 shrink overflow-y-auto border-y px-4 py-2">
           {isLoading ? (
             <p className="py-6 text-center text-sm text-muted-foreground">{loadingText}</p>
           ) : options.length === 0 ? (
@@ -227,7 +231,7 @@ export function MultiSelectActionMenu({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-2 p-4">
+        <div className="flex shrink-0 items-center justify-between gap-2 p-4">
           <p className="text-xs text-muted-foreground">{selectedIds.length} selected</p>
           <Button
             type="button"
