@@ -1,6 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { Columns3, EyeOff, Filter, Forklift, MoreVertical, Pin, PinOff, QrCode, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -330,6 +342,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
   const [draggedColumnId, setDraggedColumnId] = useState<EquipmentTableColumnKey | null>(null);
   const [dropTargetColumnId, setDropTargetColumnId] = useState<EquipmentTableColumnKey | null>(null);
   const [columnDragPreview, setColumnDragPreview] = useState<ColumnDragPreview | null>(null);
+  const [activeDndColumnId, setActiveDndColumnId] = useState<EquipmentTableColumnKey | null>(null);
   const columnFiltersRef = useRef(columnFilters ?? {});
   columnFiltersRef.current = columnFilters ?? {};
   const getColumnFilterValues = useCallback(
@@ -437,6 +450,33 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
   const handleColumnDragEnd=useCallback(()=>{ columnInteractionRef.current=false; setDraggedColumnId(null); },[]);
   const handleColumnPointerDown=useCallback((event:React.PointerEvent<HTMLTableCellElement>,columnId:EquipmentTableColumnKey)=>{ if(!event.isPrimary||event.button!==0)return; const target=event.target; if(target instanceof Element&&target.closest('[data-slot="column-resize-handle"], [data-table-column-options]'))return; const captureTarget=event.currentTarget; columnPointerDragRef.current={sourceColumnId:columnId,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,targetColumnId:columnId,active:false,captureTarget}; columnInteractionRef.current=true; closeImageHover(); captureTarget.setPointerCapture?.(event.pointerId); },[closeImageHover]);
   useEffect(()=>{ const clearDrag=()=>{ const drag=columnPointerDragRef.current; if(drag?.captureTarget?.hasPointerCapture?.(drag.pointerId))drag.captureTarget.releasePointerCapture?.(drag.pointerId); columnPointerDragRef.current=null; columnInteractionRef.current=false; setDraggedColumnId(null); setDropTargetColumnId(null); setColumnDragPreview(null); }; const handlePointerMove=(event:PointerEvent)=>{ const drag=columnPointerDragRef.current; if(!drag||drag.pointerId!==event.pointerId)return; if(!drag.active){ const distance=Math.hypot(event.clientX-drag.startX,event.clientY-drag.startY); if(distance<COLUMN_DRAG_THRESHOLD_PX)return; drag.active=true; setDraggedColumnId(drag.sourceColumnId); setColumnDragPreview({label:t(COLUMN_KEYS[drag.sourceColumnId]),x:event.clientX+14,y:event.clientY+14}); } event.preventDefault(); if(drag.active)setColumnDragPreview((current)=>current?{...current,x:event.clientX+14,y:event.clientY+14}:current); const targetElement=document.elementFromPoint(event.clientX,event.clientY); const targetHeader=targetElement instanceof Element?targetElement.closest<HTMLElement>('[data-table-column-key]'):null; const targetColumnId=targetHeader?.dataset.tableColumnKey as EquipmentTableColumnKey|undefined; if(targetColumnId&&targetColumnId!==EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY&&orderedVisibleColumnKeys.includes(targetColumnId)){ drag.targetColumnId=targetColumnId; setDropTargetColumnId(targetColumnId); } }; const handlePointerUp=(event:PointerEvent)=>{ const drag=columnPointerDragRef.current; if(!drag||drag.pointerId!==event.pointerId)return; if(drag.active){ event.preventDefault(); event.stopPropagation(); suppressHeaderClickRef.current=true; if(suppressHeaderClickTimerRef.current!==null)window.clearTimeout(suppressHeaderClickTimerRef.current); suppressHeaderClickTimerRef.current=window.setTimeout(()=>{ suppressHeaderClickRef.current=false; suppressHeaderClickTimerRef.current=null; },0); commitColumnReorder(drag.sourceColumnId,drag.targetColumnId); } clearDrag(); }; const handleClickCapture=(event:MouseEvent)=>{ if(!suppressHeaderClickRef.current)return; event.preventDefault(); event.stopPropagation(); suppressHeaderClickRef.current=false; if(suppressHeaderClickTimerRef.current!==null){window.clearTimeout(suppressHeaderClickTimerRef.current);suppressHeaderClickTimerRef.current=null;} }; document.addEventListener('pointermove',handlePointerMove,true); document.addEventListener('pointerup',handlePointerUp,true); document.addEventListener('pointercancel',clearDrag,true); document.addEventListener('click',handleClickCapture,true); return()=>{document.removeEventListener('pointermove',handlePointerMove,true);document.removeEventListener('pointerup',handlePointerUp,true);document.removeEventListener('pointercancel',clearDrag,true);document.removeEventListener('click',handleClickCapture,true);if(suppressHeaderClickTimerRef.current!==null)window.clearTimeout(suppressHeaderClickTimerRef.current);}; },[commitColumnReorder,orderedVisibleColumnKeys,t]);
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: COLUMN_DRAG_THRESHOLD_PX } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const handleDndDragStart = useCallback((event: DragStartEvent) => {
+    const columnId = event.active.id as EquipmentTableColumnKey;
+    if (!orderedVisibleColumnKeys.includes(columnId)) return;
+    columnInteractionRef.current = true;
+    closeImageHover();
+    setActiveDndColumnId(columnId);
+    setDraggedColumnId(columnId);
+  }, [closeImageHover, orderedVisibleColumnKeys]);
+  const clearDndDrag = useCallback(() => {
+    columnInteractionRef.current = false;
+    setActiveDndColumnId(null);
+    setDraggedColumnId(null);
+    setDropTargetColumnId(null);
+    setColumnDragPreview(null);
+  }, []);
+  const handleDndDragEnd = useCallback((event: DragEndEvent) => {
+    const sourceColumnId = event.active.id as EquipmentTableColumnKey;
+    const targetColumnId = event.over?.id as EquipmentTableColumnKey | undefined;
+    if (targetColumnId && sourceColumnId !== targetColumnId && orderedVisibleColumnKeys.includes(targetColumnId)) {
+      commitColumnReorder(sourceColumnId, targetColumnId);
+    }
+    clearDndDrag();
+  }, [clearDndDrag, commitColumnReorder, orderedVisibleColumnKeys]);
   const handleSortClick=useCallback((field:EquipmentTableSortField)=>{ if(!onSortChange)return; const next=sortConfig?.field===field?(sortConfig.direction==='asc'?'desc':'asc'):'asc'; onSortChange(field,next); },[onSortChange,sortConfig]);
   const handleAutoFitColumn=useCallback((columnKey:EquipmentTableColumnKey)=>{ const meta=getEquipmentTableColumnMeta(columnKey); if(!meta)return; applyAutoFitColumnWidth(setColumnSizing,columnKey,equipment.map((row)=>getEquipmentTableCellDisplayValue(row,columnKey,settings)),meta); },[equipment,settings,setColumnSizing]);
   const columns=useMemo<ColumnDef<EquipmentTableRow>[]>(()=>{
@@ -496,8 +536,14 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
   const table=useReactTable({data:equipment,columns,state:{columnSizing},onColumnSizingChange:setColumnSizing,columnResizeMode:'onChange',enableColumnResizing:true,getCoreRowModel:getCoreRowModel()});
   const tableWidth=getResizableTableWidth(table.getTotalSize());
   if(equipment.length===0)return <DataTableEmptyState message={t('equipment.noTableMatches')} />;
-  return <>
-    <ResizableFixedDataTable table={table} tableWidth={tableWidth} withTooltipProvider stickyHeader scrollClassName="min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain [scrollbar-gutter:stable]" cardClassName="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden" contentClassName="flex min-h-0 min-w-0 flex-1 flex-col p-0" getHeaderProps={(header)=>{ const columnId=header.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); const pinnedOffset=pinnedLeftOffsets.get(columnId as EquipmentTableColumnKey); const isPinned=pinnedOffset!==undefined; const isDragged=draggedColumnId===columnId; const isDropTarget=dropTargetColumnId===columnId&&draggedColumnId!==columnId; const reorderable=!isActionsColumn; return {className:cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isActionsColumn&&'w-14 px-2','relative select-none',reorderable&&'cursor-grab active:cursor-grabbing',isDragged&&'opacity-50',isDropTarget&&'ring-2 ring-inset ring-primary',isPinned&&'sticky z-40 isolate bg-card',isPinned&&pinnedOffset===0&&'left-0',isStatusColumn&&'px-2'),style:isPinned?{left:pinnedOffset}:undefined,draggable:false,onDragStart:reorderable?(event)=>handleColumnDragStart(event,columnId as EquipmentTableColumnKey):undefined,onDragOver:reorderable?handleColumnDragOver:undefined,onDrop:reorderable?(event)=>handleColumnDrop(event,columnId as EquipmentTableColumnKey):undefined,onDragEnd:reorderable?handleColumnDragEnd:undefined,onPointerDown:reorderable?(event)=>handleColumnPointerDown(event,columnId as EquipmentTableColumnKey):undefined,dataColumnKey:reorderable?columnId:undefined,ariaSort:meta?.sortable&&sortConfig?.field===meta.sortField?(sortConfig.direction==='asc'?'ascending':'descending'):'none',onAutoFit:isActionsColumn?undefined:()=>handleAutoFitColumn(columnId as EquipmentTableColumnKey)};}} getCellClassName={(cell)=>{ const columnId=cell.column.id; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); const isPinned=pinnedLeftOffsets.has(columnId as EquipmentTableColumnKey); return cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isPinned&&'sticky z-30 isolate bg-card',isPinned&&pinnedLeftOffsets.get(columnId as EquipmentTableColumnKey)===0&&'left-0',isActionsColumn&&'w-14 px-2','overflow-hidden');}} getCellStyle={(cell)=>{ const pinnedOffset=pinnedLeftOffsets.get(cell.column.id as EquipmentTableColumnKey); return pinnedOffset===undefined?undefined:{left:pinnedOffset}; }} renderHeaderActions={(header)=>{ const columnId=header.column.id as EquipmentTableColumnKey; if(columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY)return null; return <EquipmentColumnHeaderMenu columnKey={columnId} visibleColumns={effectiveVisibleColumns} pinned={pinnedLeftOffsets.has(columnId)} onToggleColumn={handleToggleColumn} onTogglePin={handleTogglePin} onHideColumn={handleHideColumn} filterOptions={columnFilterOptions?.[columnId]} selectedFilterValues={getColumnFilterValues(columnId)} onColumnFilterChange={onColumnFilterChange} />;}} />
+  return <DndContext
+    sensors={dndSensors}
+    collisionDetection={closestCenter}
+    onDragStart={handleDndDragStart}
+    onDragEnd={handleDndDragEnd}
+    onDragCancel={clearDndDrag}
+  >
+    <ResizableFixedDataTable table={table} tableWidth={tableWidth} columnDndItems={orderedVisibleColumnKeys} withTooltipProvider stickyHeader scrollClassName="min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain [scrollbar-gutter:stable]" cardClassName="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden" contentClassName="flex min-h-0 min-w-0 flex-1 flex-col p-0" getHeaderProps={(header)=>{ const columnId=header.column.id; const isStatusColumn=columnId===STATUS_COLUMN_KEY; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); const pinnedOffset=pinnedLeftOffsets.get(columnId as EquipmentTableColumnKey); const isPinned=pinnedOffset!==undefined; const isDragged=draggedColumnId===columnId; const isDropTarget=dropTargetColumnId===columnId&&draggedColumnId!==columnId; const reorderable=!isActionsColumn; return {className:cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isActionsColumn&&'w-14 px-2','relative select-none',reorderable&&'cursor-grab active:cursor-grabbing',isDragged&&'opacity-50',isDropTarget&&'ring-2 ring-inset ring-primary',isPinned&&'sticky z-40 isolate bg-card',isPinned&&pinnedOffset===0&&'left-0',isStatusColumn&&'px-2'),style:isPinned?{left:pinnedOffset}:undefined,draggable:false,onDragStart:reorderable?(event)=>handleColumnDragStart(event,columnId as EquipmentTableColumnKey):undefined,onDragOver:reorderable?handleColumnDragOver:undefined,onDrop:reorderable?(event)=>handleColumnDrop(event,columnId as EquipmentTableColumnKey):undefined,onDragEnd:reorderable?handleColumnDragEnd:undefined,onPointerDown:reorderable?(event)=>handleColumnPointerDown(event,columnId as EquipmentTableColumnKey):undefined,dataColumnKey:reorderable?columnId:undefined,ariaSort:meta?.sortable&&sortConfig?.field===meta.sortField?(sortConfig.direction==='asc'?'ascending':'descending'):'none',onAutoFit:isActionsColumn?undefined:()=>handleAutoFitColumn(columnId as EquipmentTableColumnKey)};}} getCellClassName={(cell)=>{ const columnId=cell.column.id; const isActionsColumn=columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY; const meta=isActionsColumn?undefined:getEquipmentTableColumnMeta(columnId as EquipmentTableColumnKey); const isPinned=pinnedLeftOffsets.has(columnId as EquipmentTableColumnKey); return cn(getDataTableAlignClass(meta?.align),meta?.mono&&'font-mono tabular-nums',isPinned&&'sticky z-30 isolate bg-card',isPinned&&pinnedLeftOffsets.get(columnId as EquipmentTableColumnKey)===0&&'left-0',isActionsColumn&&'w-14 px-2','overflow-hidden');}} getCellStyle={(cell)=>{ const pinnedOffset=pinnedLeftOffsets.get(cell.column.id as EquipmentTableColumnKey); return pinnedOffset===undefined?undefined:{left:pinnedOffset}; }} renderHeaderActions={(header)=>{ const columnId=header.column.id as EquipmentTableColumnKey; if(columnId===EQUIPMENT_TABLE_ACTIONS_COLUMN_KEY)return null; return <EquipmentColumnHeaderMenu columnKey={columnId} visibleColumns={effectiveVisibleColumns} pinned={pinnedLeftOffsets.has(columnId)} onToggleColumn={handleToggleColumn} onTogglePin={handleTogglePin} onHideColumn={handleHideColumn} filterOptions={columnFilterOptions?.[columnId]} selectedFilterValues={getColumnFilterValues(columnId)} onColumnFilterChange={onColumnFilterChange} />;}} />
     {columnDragPreview ? (
       <div
         className="pointer-events-none fixed z-[10000] min-w-36 max-w-64 rounded-lg border border-primary/40 bg-card px-3 py-2 text-sm font-medium text-foreground shadow-2xl opacity-95"
@@ -521,6 +567,13 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipment, onShowQRCode
         <img src={imageHover.src} alt="" className="block h-full w-full rounded-md bg-white object-contain dark:bg-card" />
       </div>
     ) : null}
-  </>;
+    <DragOverlay dropAnimation={null}>
+      {activeDndColumnId ? (
+        <div className="min-w-36 max-w-64 rounded-lg border border-primary/40 bg-card px-3 py-2 text-sm font-medium text-foreground shadow-2xl">
+          {t(COLUMN_KEYS[activeDndColumnId])}
+        </div>
+      ) : null}
+    </DragOverlay>
+  </DndContext>;
 };
 export default EquipmentTable;
