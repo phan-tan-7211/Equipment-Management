@@ -6,6 +6,8 @@ import {
   type InventoryEquipmentPickerItem,
 } from '@/features/inventory/components/InventoryEquipmentPickerRow';
 
+// Canonical compatible-equipment picker pattern follows the Equipment-side management dialog.
+// Keep form/detail consumers on this shared component so sizing and selected-state cannot drift.
 export const COMPATIBLE_EQUIPMENT_LIST_CLASS =
   'max-h-48 overflow-y-auto border rounded-md p-2 space-y-2 md:h-[clamp(20rem,42dvh,30rem)] md:max-h-[calc(100dvh-20rem)]';
 
