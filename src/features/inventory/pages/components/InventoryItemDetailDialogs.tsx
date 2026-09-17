@@ -8,8 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SelectedEquipmentBadgeList } from '@/components/common/SelectedEquipmentBadgeList';
-import { InventoryEquipmentPickerRow } from '@/features/inventory/components/InventoryEquipmentPickerRow';
+import { InventoryCompatibleEquipmentPicker } from '@/features/inventory/components/InventoryCompatibleEquipmentPicker';
 import InventoryQRCodeDisplay from '@/features/inventory/components/InventoryQRCodeDisplay';
 import { InventoryItemForm } from '@/features/inventory/components/InventoryItemForm';
 import { InventoryItemAdjustQuantityDialog } from '@/features/inventory/pages/components/InventoryItemAdjustQuantityDialog';
@@ -123,12 +122,6 @@ export function InventoryItemDetailDialogs({
 }: InventoryItemDetailDialogsProps) {
   const { t } = useI18n();
   const outlineSecondaryClass = isMobile ? 'border-2 border-input bg-muted/25 hover:bg-muted/40' : '';
-  const filteredEquipment = allEquipment.filter(
-    (equipment) =>
-      equipment.name.toLowerCase().includes(equipmentDialog.equipmentSearch.toLowerCase()) ||
-      (equipment.manufacturer ?? '').toLowerCase().includes(equipmentDialog.equipmentSearch.toLowerCase()) ||
-      (equipment.model ?? '').toLowerCase().includes(equipmentDialog.equipmentSearch.toLowerCase()),
-  );
 
   return (
     <>
@@ -227,39 +220,16 @@ export function InventoryItemDetailDialogs({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder={t('inventoryDetail.searchEquipment')}
-                value={equipmentDialog.equipmentSearch}
-                onChange={(e) => equipmentDialog.setEquipmentSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <div className="border rounded-md p-2 space-y-2 max-h-96 overflow-y-auto">
-              {filteredEquipment.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  {allEquipment.length === 0
-                    ? t('inventoryDetail.noEquipmentAvailable')
-                    : t('inventoryDetail.noEquipmentFound')}
-                </p>
-              ) : (
-                filteredEquipment.map((equipment) => (
-                  <InventoryEquipmentPickerRow
-                    key={equipment.id}
-                    equipment={equipment}
-                    isSelected={equipmentDialog.selectedEquipmentIds.includes(equipment.id)}
-                    onToggle={equipmentDialog.handleEquipmentToggle}
-                    selectedBadgeLabel={t('inventoryDetail.selected')}
-                  />
-                ))
-              )}
-            </div>
-            <SelectedEquipmentBadgeList
-              selectedEquipmentIds={equipmentDialog.selectedEquipmentIds}
+            <InventoryCompatibleEquipmentPicker
               allEquipment={allEquipment}
-              onRemove={(id) => equipmentDialog.handleEquipmentToggle(id, false)}
-              removeControl="button"
+              searchValue={equipmentDialog.equipmentSearch}
+              onSearchChange={equipmentDialog.setEquipmentSearch}
+              selectedEquipmentIds={equipmentDialog.selectedEquipmentIds}
+              onToggle={equipmentDialog.handleEquipmentToggle}
+              searchPlaceholder={t('inventoryDetail.searchEquipment')}
+              noEquipmentText={t('inventoryDetail.noEquipmentAvailable')}
+              noMatchesText={t('inventoryDetail.noEquipmentFound')}
+              selectedBadgeLabel={t('inventoryDetail.selected')}
             />
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => equipmentDialog.setShowAddEquipmentDialog(false)}>
