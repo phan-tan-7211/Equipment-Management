@@ -45,12 +45,17 @@ export function useEquipmentMediaLibrary({
   const images = useMemo(() => query.data ?? [], [query.data]);
 
   const imagesWithDisplay = useMemo(() => {
+    const hasPersistedCurrentDisplay = images.some(
+      (image) =>
+        image.source_type === 'equipment_display' &&
+        image.description === `display-image:${currentDisplayImage ?? ''}`,
+    );
     const displayImage = createEquipmentDisplayMediaItem(
       equipmentId,
       currentOrganization?.name || 'Equipment',
       currentDisplayImage,
     );
-    return displayImage ? [displayImage, ...images] : images;
+    return displayImage && !hasPersistedCurrentDisplay ? [displayImage, ...images] : images;
   }, [currentDisplayImage, currentOrganization?.name, equipmentId, images]);
 
   const filteredImages = useMemo(

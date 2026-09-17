@@ -119,15 +119,27 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   });
 
   const replaceDisplayImageMutation = useMutation({
-    mutationFn: (source: File) => {
+    mutationFn: async (source: File) => {
       if (!permissions.canSetDisplayImage) {
         throw new Error('Display image permission denied');
       }
-      return replaceEquipmentDisplayImage({
+      const canonicalRef = await replaceEquipmentDisplayImage({
         organizationId,
         equipmentId,
         source,
       });
+      const userName = user?.email?.split('@')[0] || 'User';
+      await createEquipmentNoteWithImages(
+        equipmentId,
+        `${userName} uploaded a display image`,
+        0,
+        false,
+        [source],
+        organizationId,
+        null,
+        `display-image:${canonicalRef}`,
+      );
+      return canonicalRef;
     },
     onSuccess: () => {
       invalidateMedia();
