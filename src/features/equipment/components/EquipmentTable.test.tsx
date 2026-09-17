@@ -364,92 +364,24 @@ describe('EquipmentTable', () => {
     expect(headerTexts.some((t) => t.includes('Last Maintenance'))).toBe(false);
   });
 
-  it('renders a visible ghost while reordering with a mouse pointer', () => {
+  it('exposes a dnd-kit sortable surface for column dragging', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     const nameHeader = getHeaderByTitle('Name');
-    const manufacturerHeader = getHeaderByTitle('Manufacturer');
     const dragSurface = nameHeader.querySelector('[data-table-column-drag-surface="name"]');
-    expect(dragSurface).toHaveAttribute('draggable', 'false');
+    expect(dragSurface).toHaveAttribute('role', 'button');
+    expect(dragSurface).toHaveAttribute('aria-roledescription', 'sortable');
+    expect(dragSurface).toHaveAttribute('tabindex', '0');
     expect(nameHeader).toHaveAttribute('draggable', 'false');
-    const originalElementFromPoint = document.elementFromPoint;
-    Object.defineProperty(document, 'elementFromPoint', {
-      configurable: true,
-      value: vi.fn(() => manufacturerHeader),
-    });
-
-    try {
-      fireEvent.pointerDown(nameHeader, {
-        button: 0,
-        isPrimary: true,
-        pointerId: 2,
-        pointerType: 'mouse',
-        clientX: 10,
-        clientY: 10,
-      });
-      fireEvent.pointerMove(document, {
-        buttons: 1,
-        pointerId: 2,
-        clientX: 30,
-        clientY: 20,
-      });
-      expect(document.querySelector('[data-equipment-column-drag-preview]')).toHaveTextContent('Name');
-      fireEvent.pointerUp(document, { pointerId: 2, clientX: 30, clientY: 20 });
-    } finally {
-      Object.defineProperty(document, 'elementFromPoint', {
-        configurable: true,
-        value: originalElementFromPoint,
-      });
-    }
-
-    const headers = screen.getAllByRole('columnheader');
-    const statusIndex = headers.findIndex((header) => header.textContent?.includes('Status'));
-    const nameIndex = headers.findIndex((header) => header.textContent?.includes('Name'));
-    const manufacturerIndex = headers.findIndex((header) => header.textContent?.includes('Manufacturer'));
-    expect(statusIndex).toBe(0);
-    expect(nameIndex).toBeGreaterThan(manufacturerIndex);
-    expect(document.querySelector('[data-equipment-column-drag-preview]')).not.toBeInTheDocument();
+    const optionsButton = within(nameHeader).getByRole('button', { name: 'Options for Name' });
+    expect(dragSurface).not.toContainElement(optionsButton);
   });
 
-  it('reorders columns with pointer drag without triggering the sort control', () => {
+  it('keeps the legacy pointer handlers disabled when dnd-kit owns the column gesture', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     const nameHeader = getHeaderByTitle('Name');
-    const manufacturerHeader = getHeaderByTitle('Manufacturer');
-    const originalElementFromPoint = document.elementFromPoint;
-
-    Object.defineProperty(document, 'elementFromPoint', {
-      configurable: true,
-      value: vi.fn(() => manufacturerHeader),
-    });
-
-    try {
-      fireEvent.pointerDown(nameHeader, {
-        button: 0,
-        isPrimary: true,
-        pointerId: 1,
-        pointerType: 'touch',
-        clientX: 10,
-        clientY: 10,
-      });
-      fireEvent.pointerMove(document, {
-        buttons: 1,
-        pointerId: 1,
-        clientX: 30,
-        clientY: 10,
-      });
-      fireEvent.pointerUp(document, { pointerId: 1, clientX: 30, clientY: 10 });
-    } finally {
-      Object.defineProperty(document, 'elementFromPoint', {
-        configurable: true,
-        value: originalElementFromPoint,
-      });
-    }
-
-    const headers = screen.getAllByRole('columnheader');
-    const statusIndex = headers.findIndex((header) => header.textContent?.includes('Status'));
-    const nameIndex = headers.findIndex((header) => header.textContent?.includes('Name'));
-    const manufacturerIndex = headers.findIndex((header) => header.textContent?.includes('Manufacturer'));
-    expect(statusIndex).toBe(0);
-    expect(nameIndex).toBeGreaterThan(manufacturerIndex);
+    const dragSurface = nameHeader.querySelector('[data-table-column-drag-surface="name"]');
+    expect(dragSurface).toBeInTheDocument();
+    expect(nameHeader).not.toHaveAttribute('data-column-pointer-drag-active');
     expect(nameHeader).toHaveAttribute('draggable', 'false');
   });
 });
