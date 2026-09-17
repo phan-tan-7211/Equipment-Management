@@ -1,5 +1,5 @@
 import { useI18n } from '@/i18n';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
+import ImageUploadWithNote from '@/components/common/ImageUploadWithNote';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useCreateInventoryItem, useUpdateInventoryItem } from '@/features/inventory/hooks/useInventory';
 import { useEquipmentSummaries } from '@/features/equipment/hooks/useEquipment';
@@ -19,6 +20,7 @@ import {
   useCreateAlternateGroup,
   useAddInventoryItemToGroup,
 } from '@/features/inventory/hooks/useAlternateGroups';
+import { uploadInventoryItemImages } from '@/features/inventory/services/inventoryService';
 import { inventoryItemFormSchema } from '@/features/inventory/schemas/inventorySchema';
 import type { InventoryItem, PartCompatibilityRuleFormData } from '@/features/inventory/types/inventory';
 import type { InventoryItemFormData } from '@/features/inventory/schemas/inventorySchema';
@@ -34,6 +36,8 @@ interface InventoryItemFormProps {
   open: boolean;
   onClose: () => void;
   editingItem?: InventoryItem | null;
+  initialCompatibleEquipmentIds?: string[];
+  onCreated?: (item: InventoryItem) => void | Promise<void>;
 }
 
 const EMPTY_DEFAULTS: InventoryItemFormData = {
@@ -62,11 +66,15 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
   open,
   onClose,
   editingItem,
+  initialCompatibleEquipmentIds = [],
+  onCreated,
 }) => {
   const { currentOrganization } = useOrganization();
   const { toast } = useAppToast();
   const { t } = useI18n();
   const lastInitKeyRef = useRef<string | null>(null);
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
 
   const createMutation = useCreateInventoryItem();
   const updateMutation = useUpdateInventoryItem();
@@ -101,14 +109,16 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
   useEffect(() => {
     if (!open) {
       lastInitKeyRef.current = null;
+      setPendingImages([]);
       return;
     }
 
-    const initKey = editingItem?.id ?? '__new__';
+    const initKey = editingItem?.id ?? `__new__:${initialCompatibleEquipmentIds.join(',')}`;
     if (lastInitKeyRef.current === initKey) {
       return;
     }
     lastInitKeyRef.current = initKey;
+    setPendingImages([]);
 
     if (editingItem) {
       resetEditingLoadState();
@@ -137,10 +147,13 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
       });
     } else {
       markNewItemReady();
-      form.reset(EMPTY_DEFAULTS);
+      form.reset({
+        ...EMPTY_DEFAULTS,
+        compatibleEquipmentIds: [...initialCompatibleEquipmentIds],
+      });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by editingItem id via lastInitKeyRef
-  }, [open, editingItem?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by item and initial compatible-equipment ids
+  }, [open, editingItem?.id, initialCompatibleEquipmentIds.join(',')]);
 
   const onSubmit = async (data: InventoryItemFormData) => {
     if (!currentOrganization) {
@@ -149,6 +162,7 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
 
     try {
       let createdItemId: string | null = null;
+      let createdItem: InventoryItem | null = null;
 
       if (editingItem) {
         await updateMutation.mutateAsync({
@@ -158,11 +172,33 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
         });
         createdItemId = editingItem.id;
       } else {
-        const createdItem = await createMutation.mutateAsync({
+        createdItem = await createMutation.mutateAsync({
           organizationId: currentOrganization.id,
           formData: data,
         });
         createdItemId = createdItem.id;
+
+        if (pendingImages.length > 0) {
+          setIsUploadingImages(true);
+          try {
+            await uploadInventoryItemImages(
+              createdItem.id,
+              currentOrganization.id,
+              pendingImages,
+            );
+          } catch (imageError) {
+            logger.error('Inventory item created but image upload failed:', { error: imageError });
+            toast({
+              title: t('itemForm.itemCreated'),
+              description: t('sharedUi.imagesUploadFailed', {
+                error: imageError instanceof Error ? imageError.message : t('sharedUi.unknownError'),
+              }),
+              variant: 'warning',
+            });
+          } finally {
+            setIsUploadingImages(false);
+          }
+        }
       }
 
       if (createdItemId && data.alternateGroupMode !== 'none' && !editingItem) {
@@ -198,6 +234,9 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
         }
       }
 
+      if (createdItem) {
+        await onCreated?.(createdItem);
+      }
       onClose();
     } catch (error) {
       logger.error('Error submitting inventory item form:', { error, editingItem: !!editingItem });
@@ -219,7 +258,8 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
     createMutation.isPending ||
     updateMutation.isPending ||
     createAlternateGroupMutation.isPending ||
-    addToGroupMutation.isPending;
+    addToGroupMutation.isPending ||
+    isUploadingImages;
   const isEditingDataPending = !!editingItem && !isEditingDataLoaded;
   const isFormDisabled = isMutating || isEditingDataPending || editingDataLoadError;
 
@@ -239,7 +279,17 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-safe-bottom">
-            <InventoryItemFormBasicFields form={form} editingItem={editingItem} />
+            <InventoryItemFormBasicFields form={form} />
+
+            {!editingItem && (
+              <ImageUploadWithNote
+                deferUpload
+                selectedFiles={pendingImages}
+                onSelectedFilesChange={setPendingImages}
+                maxFiles={5}
+                disabled={isFormDisabled}
+              />
+            )}
 
             <FormField
               control={form.control}
