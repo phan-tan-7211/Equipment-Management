@@ -12,17 +12,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { InventoryStorageLocationFields } from '@/features/inventory/components/InventoryStorageLocationFields';
 import type { InventoryItemFormData } from '@/features/inventory/schemas/inventorySchema';
-import type { InventoryItem } from '@/features/inventory/types/inventory';
 import type { InventoryStructuredLocationFields } from '@/features/inventory/utils/inventoryLocationUtils';
 
 type InventoryItemFormBasicFieldsProps = {
   form: UseFormReturn<InventoryItemFormData>;
-  editingItem?: InventoryItem | null;
 };
 
 export function InventoryItemFormBasicFields({
   form,
-  editingItem,
 }: InventoryItemFormBasicFieldsProps) {
   const { t } = useI18n();
   const structuredLocation = form.watch([
@@ -215,14 +212,6 @@ export function InventoryItemFormBasicFields({
           )}
         />
       </div>
-
-      {!editingItem && (
-        <div className="rounded-lg border border-dashed p-3 text-center">
-          <p className="text-sm text-muted-foreground">
-            {t('itemForm.imagesHelp')}
-          </p>
-        </div>
-      )}
     </>
   );
 }

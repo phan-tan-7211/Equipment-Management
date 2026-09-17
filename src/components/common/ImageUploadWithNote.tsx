@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -14,27 +14,47 @@ const sanitizeForDisplay = (text: string): string =>
   text.replace(/[^\w\s.\-()[\]]/g, '_') || 'unnamed';
 
 interface ImageUploadWithNoteProps {
-  onUpload: (files: File[]) => Promise<void>;
+  onUpload?: (files: File[]) => Promise<void>;
   maxFiles?: number;
   acceptedTypes?: string[];
   disabled?: boolean;
+  /**
+   * When true, this component only stages files/previews. The caller owns the
+   * final upload step (for example, after a new inventory item receives its ID).
+   */
+  deferUpload?: boolean;
+  selectedFiles?: File[];
+  onSelectedFilesChange?: (files: File[]) => void;
 }
 
 const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
   onUpload,
   maxFiles = 5,
   acceptedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-  disabled = false
+  disabled = false,
+  deferUpload = false,
+  selectedFiles: controlledSelectedFiles,
+  onSelectedFilesChange,
 }) => {
   const { t } = useI18n();
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const inputId = useId();
+  const [internalSelectedFiles, setInternalSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const { getPreviewUrl, revokePreviewUrl, clearPreviewUrls } = useLocalFilePreviewUrls();
+  const selectedFiles = controlledSelectedFiles ?? internalSelectedFiles;
+
+  const updateSelectedFiles = (next: File[]) => {
+    if (controlledSelectedFiles === undefined) {
+      setInternalSelectedFiles(next);
+    }
+    onSelectedFilesChange?.(next);
+  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     addFiles(files);
+    event.target.value = '';
   };
 
   const addFiles = (files: File[]) => {
@@ -50,24 +70,19 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
       return true;
     });
 
-    setSelectedFiles(prev => {
-      const combined = [...prev, ...validFiles];
-      
-      if (combined.length > maxFiles) {
-        toast.error(t('sharedUi.maxFiles', { count: maxFiles }));
-        return prev;
-      }
-      
-      return combined;
-    });
+    const combined = [...selectedFiles, ...validFiles];
+    if (combined.length > maxFiles) {
+      toast.error(t('sharedUi.maxFiles', { count: maxFiles }));
+      return;
+    }
+
+    updateSelectedFiles(combined);
   };
 
   const removeFile = (index: number) => {
-    setSelectedFiles(prev => {
-      const removed = prev[index];
-      if (removed) revokePreviewUrl(removed);
-      return prev.filter((_, i) => i !== index);
-    });
+    const removed = selectedFiles[index];
+    if (removed) revokePreviewUrl(removed);
+    updateSelectedFiles(selectedFiles.filter((_, i) => i !== index));
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -76,9 +91,7 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
 
   const handleDrop = (e: React.DragEvent) => {
     finishDragDrop(e, setDragActive);
-
-    const files = Array.from(e.dataTransfer.files);
-    addFiles(files);
+    addFiles(Array.from(e.dataTransfer.files));
   };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
@@ -107,15 +120,17 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
     }
 
     setIsUploading(true);
-    
+
     try {
       await onUpload(selectedFiles);
       clearPreviewUrls();
-      setSelectedFiles([]);
+      updateSelectedFiles([]);
       toast.success(t('sharedUi.imagesUploaded'));
     } catch (error) {
       console.error('Upload failed:', error);
-      toast.error(t('sharedUi.imagesUploadFailed', { error: error instanceof Error ? error.message : t('sharedUi.unknownError') }));
+      toast.error(t('sharedUi.imagesUploadFailed', {
+        error: error instanceof Error ? error.message : t('sharedUi.unknownError'),
+      }));
     } finally {
       setIsUploading(false);
     }
@@ -126,17 +141,12 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
       <CardContent standalone className="space-y-4">
         <div
           className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-            dragActive 
-              ? 'border-primary bg-primary/5' 
+            dragActive
+              ? 'border-primary bg-primary/5'
               : 'border-muted-foreground/25 hover:border-muted-foreground/50'
           }`}
           tabIndex={disabled ? -1 : 0}
           aria-disabled={disabled}
-          onClick={(event) => {
-            if (!disabled && !(event.target as HTMLElement).closest('button,input')) {
-              event.currentTarget.focus();
-            }
-          }}
           onPaste={handlePaste}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -147,14 +157,14 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
           <div className="space-y-2">
             <p className="text-sm font-medium">{t('sharedUi.imageDropMultiple')}</p>
             <p className="text-xs text-muted-foreground">
-              {t('sharedUi.imageFormats')}
+              {t('sharedUi.imageFormats')} · Ctrl+V
             </p>
             <Button
               type="button"
               variant="outline"
               size="sm"
               disabled={disabled}
-              onClick={() => document.getElementById('file-input')?.click()}
+              onClick={() => document.getElementById(inputId)?.click()}
               className="mt-2"
             >
               <Upload className="h-4 w-4 mr-2" />
@@ -162,7 +172,7 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
             </Button>
           </div>
           <Input
-            id="file-input"
+            id={inputId}
             type="file"
             multiple
             accept={acceptedTypes.join(',')}
@@ -174,47 +184,50 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
 
         {selectedFiles.length > 0 && (
           <div className="space-y-2">
-            <Label className="text-sm font-medium">{t('sharedUi.selectedImages', { count: selectedFiles.length })}</Label>
+            <Label className="text-sm font-medium">
+              {t('sharedUi.selectedImages', { count: selectedFiles.length })}
+            </Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {selectedFiles.map((file, index) => {
                 const safePreviewUrl = getPreviewUrl(file);
                 const displayName = sanitizeForDisplay(file.name);
                 return (
-                <div key={`${displayName}-${index}`} className="relative group">
-                  <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                    {safePreviewUrl ? (
-                      <img
-                        src={safePreviewUrl}
-                        alt={displayName}
-                        className="w-full h-full object-cover"
-                        onError={() => console.error('Image preview failed')}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
+                  <div key={`${displayName}-${index}`} className="relative group">
+                    <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                      {safePreviewUrl ? (
+                        <img
+                          src={safePreviewUrl}
+                          alt={displayName}
+                          className="w-full h-full object-cover"
+                          onError={() => console.error('Image preview failed')}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeFile(index)}
+                      aria-label={t('sharedUi.removeSelectedImage', { name: displayName })}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">{displayName}</p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => removeFile(index)}
-                    aria-label={t('sharedUi.removeSelectedImage', { name: displayName })}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                  <p className="text-xs text-muted-foreground mt-1 truncate">{displayName}</p>
-                </div>
                 );
               })}
             </div>
           </div>
         )}
 
-        {selectedFiles.length > 0 && (
+        {!deferUpload && selectedFiles.length > 0 && (
           <Button
+            type="button"
             onClick={handleUpload}
             disabled={disabled || isUploading}
             className="w-full"
