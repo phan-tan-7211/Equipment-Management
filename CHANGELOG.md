@@ -11,6 +11,13 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.12] - 2026-09-17
+
+### Fixed
+
+- Stabilized equipment column drag-and-drop so the drag handle and ghost do not block column menu actions.
+
+
 ## [3.34.11] - 2026-09-16
 
 ### Added
