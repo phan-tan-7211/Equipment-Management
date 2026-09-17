@@ -364,6 +364,34 @@ describe('EquipmentTable', () => {
     expect(headerTexts.some((t) => t.includes('Last Maintenance'))).toBe(false);
   });
 
+  it('uses a dedicated native drag surface so the header gets a ghost preview', () => {
+    render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
+    const nameHeader = getHeaderByTitle('Name');
+    const manufacturerHeader = getHeaderByTitle('Manufacturer');
+    const dragSurface = nameHeader.querySelector('[data-table-column-drag-surface="name"]');
+    expect(dragSurface).toHaveAttribute('draggable', 'true');
+    expect(nameHeader).toHaveAttribute('draggable', 'false');
+    const dataTransfer = {
+      effectAllowed: '',
+      dropEffect: '',
+      setData: vi.fn(),
+      getData: vi.fn(() => 'name'),
+      setDragImage: vi.fn(),
+    };
+
+    fireEvent.dragStart(dragSurface!, { dataTransfer });
+    fireEvent.dragOver(manufacturerHeader, { dataTransfer });
+    fireEvent.drop(manufacturerHeader, { dataTransfer });
+
+    const headers = screen.getAllByRole('columnheader');
+    const statusIndex = headers.findIndex((header) => header.textContent?.includes('Status'));
+    const nameIndex = headers.findIndex((header) => header.textContent?.includes('Name'));
+    const manufacturerIndex = headers.findIndex((header) => header.textContent?.includes('Manufacturer'));
+    expect(statusIndex).toBe(0);
+    expect(nameIndex).toBeGreaterThan(manufacturerIndex);
+    expect(dataTransfer.setDragImage).toHaveBeenCalled();
+  });
+
   it('reorders columns with pointer drag without triggering the sort control', () => {
     render(<EquipmentTable equipment={mockEquipment} onShowQRCode={onShowQRCode} />);
     const nameHeader = getHeaderByTitle('Name');
@@ -380,7 +408,7 @@ describe('EquipmentTable', () => {
         button: 0,
         isPrimary: true,
         pointerId: 1,
-        pointerType: 'mouse',
+        pointerType: 'touch',
         clientX: 10,
         clientY: 10,
       });
