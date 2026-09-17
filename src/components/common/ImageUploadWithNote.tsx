@@ -147,11 +147,6 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
           }`}
           tabIndex={disabled ? -1 : 0}
           aria-disabled={disabled}
-          onClick={(event) => {
-            if (!disabled && !(event.target as HTMLElement).closest('button,input')) {
-              event.currentTarget.focus();
-            }
-          }}
           onPaste={handlePaste}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
