@@ -5,12 +5,12 @@ import PageHeader from './PageHeader';
 
 describe('PageHeader', () => {
   describe('density prop', () => {
-    it('renders default density with stable compact spacing', () => {
+    it('uses the compact spacing standard by default', () => {
       const { container } = render(<PageHeader title="Test Page" />);
 
-      const root = container.querySelector('.space-y-2');
+      const root = container.querySelector('.space-y-1');
       expect(root).toBeInTheDocument();
-      expect(root?.className).not.toContain('space-y-4');
+      expect(root?.className).not.toContain('space-y-2');
     });
 
     it('renders compact density with stable tighter spacing', () => {
