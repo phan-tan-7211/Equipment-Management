@@ -139,6 +139,35 @@ type EquipmentSignedImageUrlCacheEntry = {
 const equipmentSignedImageUrlCache = new Map<string, EquipmentSignedImageUrlCacheEntry>();
 const SIGNED_IMAGE_CACHE_SAFETY_SECONDS = 30;
 
+/**
+ * Keep legacy Inventory image URLs stable between list remounts. Inventory
+ * still has imported/private references, so a new signed URL would otherwise
+ * change the <img> src and make every thumbnail fetch again.
+ */
+const inventorySignedImageUrlCache = new Map<string, EquipmentSignedImageUrlCacheEntry>();
+
+function getCachedInventorySignedImageUrl(path: string): string | null {
+  const entry = inventorySignedImageUrlCache.get(path);
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    inventorySignedImageUrlCache.delete(path);
+    return null;
+  }
+  return entry.url;
+}
+
+function cacheInventorySignedImageUrl(
+  path: string,
+  url: string,
+  expiresInSeconds: number,
+): void {
+  const cacheSeconds = Math.max(1, expiresInSeconds - SIGNED_IMAGE_CACHE_SAFETY_SECONDS);
+  inventorySignedImageUrlCache.set(path, {
+    url,
+    expiresAt: Date.now() + cacheSeconds * 1000,
+  });
+}
+
 function equipmentSignedImageCacheKey(
   bucket: StorageBucket | null,
   path: string,
@@ -176,6 +205,7 @@ function cacheEquipmentSignedImageUrl(
 /** Clear the legacy Equipment image URL cache (used by tests and auth reset flows). */
 export function clearEquipmentDisplayImageUrlCache(): void {
   equipmentSignedImageUrlCache.clear();
+  inventorySignedImageUrlCache.clear();
 }
 
 const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -431,6 +461,15 @@ async function batchResolveStoredRefsForPrivateBucket(
     }
 
     const httpFallback = displayableImageSrc(trimmed);
+
+    if (bucket === 'inventory-item-images') {
+      const cachedUrl = getCachedInventorySignedImageUrl(path);
+      if (cachedUrl) {
+        results[idx] = cachedUrl;
+        return;
+      }
+    }
+
     pending.push({ idx, path, httpFallback });
   });
 
@@ -464,6 +503,9 @@ async function batchResolveStoredRefsForPrivateBucket(
           expiresInSeconds: expiresIn,
           logFailures: false,
         });
+      }
+      if (url && bucket === 'inventory-item-images') {
+        cacheInventorySignedImageUrl(path, url, expiresIn);
       }
       results[idx] = url ?? httpFallback;
     }),
@@ -995,3 +1037,4 @@ export async function getCurrentUserName(userId: string): Promise<string> {
     .single();
   return profile?.name || 'Unknown';
 }
+
