@@ -44,6 +44,7 @@ import { useInventoryItemAdjustQuantity } from '@/features/inventory/hooks/useIn
 import { useInventoryItemEquipmentDialog } from '@/features/inventory/hooks/useInventoryItemEquipmentDialog';
 import { useInventoryItemAlternateGroupDialogs } from '@/features/inventory/hooks/useInventoryItemAlternateGroupDialogs';
 import { InventoryItemDetailDialogs } from '@/features/inventory/pages/components/InventoryItemDetailDialogs';
+import { clearInventoryItemThumbnailCache } from '@/features/inventory/services/inventoryListThumbnailService';
 
 const InventoryItemDetail = () => {
   const { t } = useI18n();
@@ -404,6 +405,7 @@ const InventoryItemDetail = () => {
               onDeleteImage={async (img) => {
                 try {
                   await deleteInventoryItemImage(img.id, img.file_url, currentOrganization.id);
+                  clearInventoryItemThumbnailCache(currentOrganization.id, itemId!);
                   appToast.success({ description: t('inventoryDetail.imageRemoved') });
                   refetchImages();
                 } catch (error) {
@@ -413,6 +415,7 @@ const InventoryItemDetail = () => {
               onUploadImages={async (files) => {
                 if (!itemId) return;
                 await uploadInventoryItemImages(itemId, currentOrganization.id, files);
+                clearInventoryItemThumbnailCache(currentOrganization.id, itemId);
                 refetchImages();
               }}
               onDeleteItemRequest={() => setShowDeleteConfirmation(true)}

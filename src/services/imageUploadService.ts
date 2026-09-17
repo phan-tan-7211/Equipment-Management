@@ -126,6 +126,88 @@ export function getInventoryItemDisplayImageUrl(
 /** Default signed URL TTL — within the 5–15 minute compliance window. */
 export const DEFAULT_SIGNED_URL_TTL_SECONDS = 900;
 
+type EquipmentSignedImageUrlCacheEntry = {
+  url: string;
+  expiresAt: number;
+};
+
+/**
+ * Keep legacy Equipment image URLs stable between list refetches. A fresh
+ * signed URL changes the image `src` even when the stored object is unchanged,
+ * which makes the browser fetch the thumbnail again during navigation/filtering.
+ */
+const equipmentSignedImageUrlCache = new Map<string, EquipmentSignedImageUrlCacheEntry>();
+const SIGNED_IMAGE_CACHE_SAFETY_SECONDS = 30;
+
+/**
+ * Keep legacy Inventory image URLs stable between list remounts. Inventory
+ * still has imported/private references, so a new signed URL would otherwise
+ * change the <img> src and make every thumbnail fetch again.
+ */
+const inventorySignedImageUrlCache = new Map<string, EquipmentSignedImageUrlCacheEntry>();
+
+function getCachedInventorySignedImageUrl(path: string): string | null {
+  const entry = inventorySignedImageUrlCache.get(path);
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    inventorySignedImageUrlCache.delete(path);
+    return null;
+  }
+  return entry.url;
+}
+
+function cacheInventorySignedImageUrl(
+  path: string,
+  url: string,
+  expiresInSeconds: number,
+): void {
+  const cacheSeconds = Math.max(1, expiresInSeconds - SIGNED_IMAGE_CACHE_SAFETY_SECONDS);
+  inventorySignedImageUrlCache.set(path, {
+    url,
+    expiresAt: Date.now() + cacheSeconds * 1000,
+  });
+}
+
+function equipmentSignedImageCacheKey(
+  bucket: StorageBucket | null,
+  path: string,
+): string {
+  return JSON.stringify([bucket ?? 'ambiguous', path]);
+}
+
+function getCachedEquipmentSignedImageUrl(
+  bucket: StorageBucket | null,
+  path: string,
+): string | null {
+  const key = equipmentSignedImageCacheKey(bucket, path);
+  const entry = equipmentSignedImageUrlCache.get(key);
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    equipmentSignedImageUrlCache.delete(key);
+    return null;
+  }
+  return entry.url;
+}
+
+function cacheEquipmentSignedImageUrl(
+  bucket: StorageBucket | null,
+  path: string,
+  url: string,
+  expiresInSeconds: number,
+): void {
+  const cacheSeconds = Math.max(1, expiresInSeconds - SIGNED_IMAGE_CACHE_SAFETY_SECONDS);
+  equipmentSignedImageUrlCache.set(equipmentSignedImageCacheKey(bucket, path), {
+    url,
+    expiresAt: Date.now() + cacheSeconds * 1000,
+  });
+}
+
+/** Clear the legacy Equipment image URL cache (used by tests and auth reset flows). */
+export function clearEquipmentDisplayImageUrlCache(): void {
+  equipmentSignedImageUrlCache.clear();
+  inventorySignedImageUrlCache.clear();
+}
+
 const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 export function isPublicStorageBucket(bucket: StorageBucket): boolean {
@@ -379,6 +461,15 @@ async function batchResolveStoredRefsForPrivateBucket(
     }
 
     const httpFallback = displayableImageSrc(trimmed);
+
+    if (bucket === 'inventory-item-images') {
+      const cachedUrl = getCachedInventorySignedImageUrl(path);
+      if (cachedUrl) {
+        results[idx] = cachedUrl;
+        return;
+      }
+    }
+
     pending.push({ idx, path, httpFallback });
   });
 
@@ -412,6 +503,9 @@ async function batchResolveStoredRefsForPrivateBucket(
           expiresInSeconds: expiresIn,
           logFailures: false,
         });
+      }
+      if (url && bucket === 'inventory-item-images') {
+        cacheInventorySignedImageUrl(path, url, expiresIn);
       }
       results[idx] = url ?? httpFallback;
     }),
@@ -664,6 +758,12 @@ export async function batchResolveEquipmentDisplayImageUrls(
       }
     }
 
+    const cachedUrl = getCachedEquipmentSignedImageUrl(bucket, path);
+    if (cachedUrl) {
+      results[idx] = cachedUrl;
+      return;
+    }
+
     pending.push({ idx, path, stored: trimmed, bucket });
   });
 
@@ -681,6 +781,13 @@ export async function batchResolveEquipmentDisplayImageUrls(
   const noteSigned = noteBatch.signed;
   const woSigned = woBatch.signed;
   const batchErroredPaths = new Set([...noteBatch.errored, ...woBatch.errored]);
+
+  noteSigned.forEach((url, path) => {
+    cacheEquipmentSignedImageUrl('equipment-note-images', path, url, expiresIn);
+  });
+  woSigned.forEach((url, path) => {
+    cacheEquipmentSignedImageUrl('work-order-images', path, url, expiresIn);
+  });
 
   const ambiguousPaths = [...new Set(pending.filter(p => p.bucket === null).map(p => p.path))];
   const probed = new Map<string, string>();
@@ -715,6 +822,10 @@ export async function batchResolveEquipmentDisplayImageUrls(
     }
   }
 
+  probed.forEach((url, path) => {
+    cacheEquipmentSignedImageUrl(null, path, url, expiresIn);
+  });
+
   await Promise.all(
     pending.map(async ({ idx, path, bucket }) => {
       let url =
@@ -728,6 +839,9 @@ export async function batchResolveEquipmentDisplayImageUrls(
           expiresInSeconds: expiresIn,
           logFailures: false,
         });
+        if (url) {
+          cacheEquipmentSignedImageUrl(bucket, path, url, expiresIn);
+        }
       }
 
       results[idx] = url;
@@ -923,3 +1037,4 @@ export async function getCurrentUserName(userId: string): Promise<string> {
     .single();
   return profile?.name || 'Unknown';
 }
+

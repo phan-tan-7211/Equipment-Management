@@ -2,12 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Package } from 'lucide-react';
 import type { InventoryItem } from '@/features/inventory/types/inventory';
-import { getPrimaryInventoryItemImageRefs } from '@/features/inventory/services/inventoryListThumbnailService';
+import {
+  getInventoryThumbnailCacheVersion,
+  getPrimaryInventoryItemImageRefs,
+} from '@/features/inventory/services/inventoryListThumbnailService';
 import {
   batchResolveInventoryItemImageDisplayUrls,
   displayableImageSrc,
   getInventoryItemDisplayImageUrl,
 } from '@/services/imageUploadService';
+import { isDisplayImageV2Ref } from '@/services/displayImageStorageService';
 import { cn } from '@/lib/utils';
 
 type InventoryThumbnailItem = Pick<InventoryItem, 'id' | 'organization_id' | 'image_url'>;
@@ -15,6 +19,12 @@ type InventoryThumbnailItem = Pick<InventoryItem, 'id' | 'organization_id' | 'im
 type InventoryThumbnailUrls = {
   src: string | null;
   hoverSrc: string | null;
+};
+
+type ResolvedThumbnailCacheEntry = {
+  urls: InventoryThumbnailUrls;
+  expiresAt: number;
+  version: number;
 };
 
 type PendingThumbnailResolution = {
@@ -29,10 +39,15 @@ type ImageHover = {
   size: number;
 };
 
-const thumbnailResolutionCache = new Map<string, Promise<InventoryThumbnailUrls>>();
+const thumbnailResolutionCache = new Map<
+  string,
+  Promise<InventoryThumbnailUrls> | ResolvedThumbnailCacheEntry
+>();
 const pendingThumbnailResolutions = new Map<string, PendingThumbnailResolution>();
 let thumbnailFlushScheduled = false;
 const IMAGE_HOVER_TRANSITION_MS = 140;
+const LEGACY_THUMBNAIL_CACHE_TTL_MS = 15 * 60 * 1000 - 30 * 1000;
+const V2_THUMBNAIL_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 function thumbnailCacheKey(item: InventoryThumbnailItem): string {
   return `${item.organization_id}:${item.id}:${item.image_url ?? ''}`;
@@ -98,12 +113,29 @@ async function flushPendingThumbnailResolutions(): Promise<void> {
     organizationBatch.forEach((pending, index) => {
       thumbnailResolutionCache.delete(pending.key);
       const src = resolvedUrls[index] ?? displayableImageSrc(storedRefs[index]) ?? null;
-      pending.resolve({
+      const resolved = {
         src,
         // V2 hover previews use the immutable 512px variant. Legacy refs keep
         // the already-resolved thumbnail because they have no parallel set.
         hoverSrc: getInventoryItemDisplayImageUrl(storedRefs[index], 'preview') ?? src,
-      });
+      };
+      if (resolved.src) {
+        thumbnailResolutionCache.set(pending.key, {
+          urls: resolved,
+          expiresAt:
+            Date.now() +
+            (isDisplayImageV2Ref(storedRefs[index])
+              ? V2_THUMBNAIL_CACHE_TTL_MS
+              : LEGACY_THUMBNAIL_CACHE_TTL_MS),
+          version: getInventoryThumbnailCacheVersion(
+            pending.item.organization_id,
+            pending.item.id,
+          ),
+        });
+      } else {
+        thumbnailResolutionCache.delete(pending.key);
+      }
+      pending.resolve(resolved);
     });
   }
 }
@@ -111,7 +143,9 @@ async function flushPendingThumbnailResolutions(): Promise<void> {
 function resolveThumbnailUrl(item: InventoryThumbnailItem): Promise<InventoryThumbnailUrls> {
   const key = thumbnailCacheKey(item);
   const cached = thumbnailResolutionCache.get(key);
-  if (cached) return cached;
+  if (cached) {
+    return cached instanceof Promise ? cached : Promise.resolve(cached.urls);
+  }
 
   const pending = new Promise<InventoryThumbnailUrls>((resolve) => {
     pendingThumbnailResolutions.set(key, { key, item, resolve });
@@ -126,6 +160,23 @@ function resolveThumbnailUrl(item: InventoryThumbnailItem): Promise<InventoryThu
   return pending;
 }
 
+function getResolvedThumbnailUrl(item: InventoryThumbnailItem): InventoryThumbnailUrls | null {
+  const cached = thumbnailResolutionCache.get(thumbnailCacheKey(item));
+  if (!cached || cached instanceof Promise) return null;
+  if (
+    cached.version !==
+    getInventoryThumbnailCacheVersion(item.organization_id, item.id)
+  ) {
+    thumbnailResolutionCache.delete(thumbnailCacheKey(item));
+    return null;
+  }
+  if (cached.expiresAt <= Date.now()) {
+    thumbnailResolutionCache.delete(thumbnailCacheKey(item));
+    return null;
+  }
+  return cached.urls;
+}
+
 export function InventoryItemThumbnail({
   item,
   enableHover = true,
@@ -138,7 +189,13 @@ export function InventoryItemThumbnail({
   const itemId = item.id;
   const organizationId = item.organization_id;
   const legacyImageUrl = item.image_url;
-  const [imageUrls, setImageUrls] = useState<InventoryThumbnailUrls | null>(null);
+  const [imageUrls, setImageUrls] = useState<InventoryThumbnailUrls | null>(() =>
+    getResolvedThumbnailUrl({
+      id: itemId,
+      organization_id: organizationId,
+      image_url: legacyImageUrl,
+    }),
+  );
   const [imageHover, setImageHover] = useState<ImageHover | null>(null);
   const imageSrc = imageUrls?.src ?? null;
   const imageHoverSrc = imageUrls?.hoverSrc ?? imageSrc;
@@ -147,13 +204,21 @@ export function InventoryItemThumbnail({
 
   useEffect(() => {
     let active = true;
-    setImageUrls(null);
-
-    void resolveThumbnailUrl({
+    const thumbnailItem = {
       id: itemId,
       organization_id: organizationId,
       image_url: legacyImageUrl,
-    }).then((resolved) => {
+    };
+    const cached = getResolvedThumbnailUrl(thumbnailItem);
+    if (cached) {
+      setImageUrls(cached);
+      return () => {
+        active = false;
+      };
+    }
+    setImageUrls(null);
+
+    void resolveThumbnailUrl(thumbnailItem).then((resolved) => {
       if (active) setImageUrls(resolved);
     });
 
@@ -223,6 +288,7 @@ export function InventoryItemThumbnail({
             loading="lazy"
             decoding="async"
             onError={() => {
+              clearInventoryItemThumbnailCache(organizationId, itemId);
               setImageUrls(null);
               closeImageHover();
             }}
@@ -257,3 +323,4 @@ export function InventoryItemThumbnail({
     </>
   );
 }
+

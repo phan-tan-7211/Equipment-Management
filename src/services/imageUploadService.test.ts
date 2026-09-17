@@ -59,6 +59,7 @@ import {
   resolveImageDisplayUrl,
   createSignedUrlForPath,
   batchResolveEquipmentDisplayImageUrls,
+  clearEquipmentDisplayImageUrlCache,
   batchResolveEquipmentNoteImageDisplayUrls,
   batchResolveInventoryItemImageDisplayUrls,
   batchResolveTeamImageDisplayUrls,
@@ -75,6 +76,7 @@ import {
 
 describe('imageUploadService', () => {
   beforeEach(() => {
+    clearEquipmentDisplayImageUrlCache();
     vi.mocked(imageCompression).mockReset();
     mockUpload.mockResolvedValue({ data: { path: 'prefix/1.jpg' }, error: null });
     mockCreateSignedUrl.mockImplementation((path: string, expiresIn: number) => ({
@@ -442,6 +444,16 @@ describe('imageUploadService', () => {
       expect(mockCreateSignedUrls).toHaveBeenCalledTimes(1);
       expect(mockCreateSignedUrls.mock.calls[0][0]).toEqual(['org/item/a.jpg', 'org/item/b.jpg']);
     });
+
+    it('reuses a legacy signed URL across repeated thumbnail resolution', async () => {
+      const path = 'org/item/stable.jpg';
+
+      const first = await batchResolveInventoryItemImageDisplayUrls([path]);
+      const second = await batchResolveInventoryItemImageDisplayUrls([path]);
+
+      expect(second).toEqual(first);
+      expect(mockCreateSignedUrls).toHaveBeenCalledTimes(1);
+    });
  
 
     it('resolves V2 inventory refs to the requested public variant without signing', async () => {
@@ -567,6 +579,21 @@ describe('imageUploadService', () => {
       ]);
     });
 
+    it('reuses a signed legacy URL during its TTL instead of signing again', async () => {
+      const ref = 'user1/eq-1/note-1/a.jpg';
+
+      const first = await batchResolveEquipmentDisplayImageUrls([ref], {
+        equipmentIds: ['eq-1'],
+      });
+      const second = await batchResolveEquipmentDisplayImageUrls([ref], {
+        equipmentIds: ['eq-1'],
+      });
+
+      expect(second).toEqual(first);
+      expect(mockCreateSignedUrls).toHaveBeenCalledTimes(1);
+      expect(mockCreateSignedUrl).not.toHaveBeenCalled();
+    });
+
     it('nulls refs whose batch row reports an error instead of probing per path (#1156)', async () => {
       mockFrom.mockImplementation(() => ({
         upload: mockUpload,
@@ -642,3 +669,4 @@ describe('imageUploadService', () => {
     });
   });
 });
+

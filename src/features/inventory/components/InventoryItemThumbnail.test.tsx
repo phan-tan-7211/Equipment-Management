@@ -1,14 +1,21 @@
 import React from 'react';
 import { fireEvent, render, waitFor } from '@vitest-harness/utils/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { InventoryItemThumbnail } from './InventoryItemThumbnail';
-import { getPrimaryInventoryItemImageRefs } from '@/features/inventory/services/inventoryListThumbnailService';
+import {
+  InventoryItemThumbnail,
+} from './InventoryItemThumbnail';
+import {
+  clearInventoryItemThumbnailCache,
+  getPrimaryInventoryItemImageRefs,
+} from '@/features/inventory/services/inventoryListThumbnailService';
 import {
   batchResolveInventoryItemImageDisplayUrls,
   getInventoryItemDisplayImageUrl,
 } from '@/services/imageUploadService';
 
 vi.mock('@/features/inventory/services/inventoryListThumbnailService', () => ({
+  getInventoryThumbnailCacheVersion: vi.fn(() => 0),
+  clearInventoryItemThumbnailCache: vi.fn(),
   getPrimaryInventoryItemImageRefs: vi.fn(),
 }));
 
@@ -29,6 +36,14 @@ const makeItem = (id: string, imageUrl: string | null = null) => ({
 describe('InventoryItemThumbnail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearInventoryItemThumbnailCache('org-1', 'item-primary');
+    clearInventoryItemThumbnailCache('org-1', 'item-fallback');
+    clearInventoryItemThumbnailCache('org-1', 'item-batch-a');
+    clearInventoryItemThumbnailCache('org-1', 'item-batch-b');
+    clearInventoryItemThumbnailCache('org-1', 'item-hover');
+    clearInventoryItemThumbnailCache('org-1', 'item-v2');
+    clearInventoryItemThumbnailCache('org-1', 'item-mobile');
+    clearInventoryItemThumbnailCache('org-1', 'item-remount');
     vi.mocked(getInventoryItemDisplayImageUrl).mockImplementation(
       (storedRef, variant = 'full') =>
         storedRef?.startsWith('display-images/')
@@ -102,6 +117,32 @@ describe('InventoryItemThumbnail', () => {
       ['https://example.com/legacy-fallback.jpg'],
       { variant: 'thumb' },
     );
+  });
+
+  it('reuses a resolved thumbnail immediately after the row remounts', async () => {
+    vi.mocked(getPrimaryInventoryItemImageRefs).mockResolvedValue({
+      'item-remount': 'org-1/item-remount/photo.jpg',
+    });
+    vi.mocked(batchResolveInventoryItemImageDisplayUrls).mockResolvedValue([
+      'https://signed.example.com/remount.jpg',
+    ]);
+
+    const first = render(<InventoryItemThumbnail item={makeItem('item-remount')} />);
+    await waitFor(() => {
+      expect(first.container.querySelector('img')).toHaveAttribute(
+        'src',
+        'https://signed.example.com/remount.jpg',
+      );
+    });
+    first.unmount();
+
+    const second = render(<InventoryItemThumbnail item={makeItem('item-remount')} />);
+    expect(second.container.querySelector('img')).toHaveAttribute(
+      'src',
+      'https://signed.example.com/remount.jpg',
+    );
+    expect(getPrimaryInventoryItemImageRefs).toHaveBeenCalledTimes(1);
+    expect(batchResolveInventoryItemImageDisplayUrls).toHaveBeenCalledTimes(1);
   });
 
   it('batches thumbnails mounted in the same render wave', async () => {
@@ -228,3 +269,4 @@ describe('InventoryItemThumbnail', () => {
     expect(document.body.querySelector('[data-inventory-item-image-hover-preview]')).toBeNull();
   });
 });
+
