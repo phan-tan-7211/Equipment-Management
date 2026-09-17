@@ -38,6 +38,7 @@ import type { InventoryItemFormData } from '@/features/inventory/schemas/invento
 import { useAppToast } from '@/hooks/useAppToast';
 import { inventory as inventoryKeys } from '@/lib/queryKeys';
 import { invalidateEquipmentLinkQueries } from '@/features/inventory/hooks/inventoryEquipmentLinkMutations';
+import { resolveListQueryGcTime } from '@/lib/listQueryTiming';
 
 const DEFAULT_STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
@@ -77,9 +78,11 @@ export const useInventoryItems = (
   filters: InventoryFilters = {},
   options?: {
     staleTime?: number;
+    gcTime?: number;
   }
 ) => {
   const staleTime = options?.staleTime ?? DEFAULT_STALE_TIME;
+  const gcTime = resolveListQueryGcTime(staleTime, options?.gcTime);
 
   return useQuery({
     queryKey: inventoryKeys.list(organizationId ?? '', filters),
@@ -89,6 +92,7 @@ export const useInventoryItems = (
     },
     enabled: !!organizationId,
     staleTime,
+    gcTime,
     // Keep the previous list visible while sort/filter refetches so mobile
     // filter sheets stay mounted and users can keep adjusting options.
     // Do not carry placeholder data across organization switches.
