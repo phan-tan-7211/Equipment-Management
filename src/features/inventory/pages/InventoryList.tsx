@@ -18,7 +18,6 @@ import Page from '@/components/layout/Page';
 import PageHeader from '@/components/layout/PageHeader';
 import type {
   InventoryItem,
-  InventoryFilters,
   InventoryListMetadata,
   InventoryQuickFilterKey,
   InventorySavedView,
@@ -53,12 +52,11 @@ import {
   paginateListItems,
 } from '@/utils/listPagination';
 import {
-  DEFAULT_INVENTORY_DESKTOP_PAGE_SIZE,
-  DEFAULT_INVENTORY_MOBILE_PAGE_SIZE,
   INVENTORY_DESKTOP_PAGE_SIZE_OPTIONS,
   INVENTORY_MOBILE_PAGE_SIZE_OPTIONS,
 } from '@/features/inventory/utils/inventoryListPagination';
 import { useI18n } from '@/i18n';
+import { useInventoryListState } from '@/features/inventory/hooks/useInventoryListState';
 
 const EMPTY_METADATA: InventoryListMetadata = {
   uniqueLocations: [],
@@ -88,17 +86,21 @@ const InventoryList = () => {
   const [showQRCode, setShowQRCode] = useState(false);
   const [selectedQRCodeItem, setSelectedQRCodeItem] = useState<InventoryItem | null>(null);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-  const [filters, setFilters] = useState<InventoryFilters>({
-    search: '',
-    lowStockOnly: false,
-    sortBy: 'name',
-    sortOrder: 'asc',
-  });
-  const [quickFilters, setQuickFilters] = useState<InventoryQuickFilterKey[]>([]);
-  const [desktopPage, setDesktopPage] = useState(1);
-  const [mobilePage, setMobilePage] = useState(1);
-  const [desktopPageSize, setDesktopPageSize] = useState(DEFAULT_INVENTORY_DESKTOP_PAGE_SIZE);
-  const [mobilePageSize, setMobilePageSize] = useState(DEFAULT_INVENTORY_MOBILE_PAGE_SIZE);
+  const {
+    filters,
+    quickFilters,
+    desktopPage,
+    mobilePage,
+    desktopPageSize,
+    mobilePageSize,
+    updateFilters,
+    replaceFilters,
+    updateQuickFilters,
+    setDesktopPage,
+    setMobilePage,
+    setDesktopPageSize,
+    setMobilePageSize,
+  } = useInventoryListState(currentOrganization?.id);
 
   const tablePrefs = useInventoryTablePreferences(currentOrganization?.id);
   const adjustMutation = useAdjustInventoryQuantity();
@@ -113,11 +115,6 @@ const InventoryList = () => {
       initializedFromUrl.current = true;
     }
   }, [searchParams]);
-
-  useEffect(() => {
-    setDesktopPage(1);
-    setMobilePage(1);
-  }, [filters, quickFilters]);
 
   const { data: items = [], isPending: isInventoryPending } = useInventoryItems(
     currentOrganization?.id,
@@ -233,7 +230,7 @@ const InventoryList = () => {
   };
 
   const handleSortChange = (sortBy: InventorySortField) => {
-    setFilters((prev) => ({
+    updateFilters((prev) => ({
       ...prev,
       sortBy,
       sortOrder: prev.sortBy === sortBy && prev.sortOrder === 'asc' ? 'desc' : 'asc',
@@ -257,7 +254,7 @@ const InventoryList = () => {
   };
 
   const handleToggleQuickFilter = (filter: InventoryQuickFilterKey) => {
-    setQuickFilters((prev) =>
+    updateQuickFilters((prev) =>
       prev.includes(filter) ? prev.filter((f) => f !== filter) : [...prev, filter],
     );
   };
@@ -285,8 +282,8 @@ const InventoryList = () => {
 
   const handleApplyView = (view: InventorySavedView) => {
     tablePrefs.applyView(view);
-    setFilters(view.filters);
-    setQuickFilters(view.quickFilters);
+    replaceFilters(view.filters);
+    updateQuickFilters(view.quickFilters);
   };
 
   const handleSaveCurrentView = (name: string) => {
@@ -407,19 +404,19 @@ const InventoryList = () => {
                 activeQuickFilters={quickFilters}
                 counts={quickFilterCounts}
                 onToggle={handleToggleQuickFilter}
-                onClear={() => setQuickFilters([])}
+                onClear={() => updateQuickFilters([])}
               />
             ) : undefined
           }
-          onFilterChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+          onFilterChange={updateFilters}
           onClearFilters={() => {
-            setFilters((prev) => ({
+            updateFilters((prev) => ({
               ...prev,
               search: '',
               lowStockOnly: false,
               location: undefined,
             }));
-            setQuickFilters([]);
+            updateQuickFilters([]);
           }}
         />
 

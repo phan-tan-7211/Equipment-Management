@@ -7,6 +7,7 @@ import type { InventoryItem } from '@/features/inventory/types/inventory';
 import * as useInventoryModule from '@/features/inventory/hooks/useInventory';
 import * as usePermissionsModule from '@/hooks/usePermissions';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { clearInventoryListStateCache } from '@/features/inventory/hooks/useInventoryListState';
 
 /**
  * Page wiring tests (mobile/desktop shells, permissions, navigation).
@@ -150,10 +151,11 @@ function mockMetadata() {
   });
 }
 
-function renderUntilCatalogVisible() {
-  render(<InventoryList />);
+function renderUntilCatalogVisible(expectedItem = 'Healthy Part') {
+  const rendered = render(<InventoryList />);
   // Catalog data is sync-mocked — avoid findBy polling (#1314).
-  expect(screen.getByText('Healthy Part')).toBeInTheDocument();
+  expect(screen.getByText(expectedItem)).toBeInTheDocument();
+  return rendered;
 }
 
 /** Radix DropdownMenu needs userEvent pointer sequencing. */
@@ -166,6 +168,7 @@ async function openMenuItem(trigger: HTMLElement, itemName: RegExp) {
 describe('InventoryList — mobile', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearInventoryListStateCache();
     vi.mocked(usePermissionsModule.usePermissions).mockImplementation(() => ({
       canManageInventory: () => true,
       canManagePartsManagers: () => false,
@@ -205,6 +208,29 @@ describe('InventoryList — mobile', () => {
       expect(screen.queryByText('Healthy Part')).not.toBeInTheDocument();
     });
     expect(screen.getByText('Low Stock Part')).toBeInTheDocument();
+  });
+
+  it('preserves search and filter state when the list remounts', async () => {
+    const firstMount = renderUntilCatalogVisible();
+    fireEvent.change(
+      screen.getByRole('textbox', { name: /search inventory by name, sku, or id/i }),
+      { target: { value: 'Low' } },
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /open filters/i }));
+    fireEvent.click(screen.getByRole('switch', { name: /low stock only/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Low Stock Part')).toBeInTheDocument();
+    });
+    firstMount.unmount();
+
+    renderUntilCatalogVisible('Low Stock Part');
+    expect(
+      screen.getByRole('textbox', { name: /search inventory by name, sku, or id/i }),
+    ).toHaveValue('Low');
+    fireEvent.click(screen.getByRole('button', { name: /open filters/i }));
+    expect(screen.getByRole('switch', { name: /low stock only/i })).toBeChecked();
   });
 
   it('navigates to item detail when a card is activated', () => {
@@ -261,6 +287,7 @@ describe('InventoryList — mobile', () => {
 describe('InventoryList — desktop table', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearInventoryListStateCache();
     vi.mocked(usePermissionsModule.usePermissions).mockImplementation(() => ({
       canManageInventory: () => true,
       canManagePartsManagers: () => false,
