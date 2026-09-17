@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,6 +15,8 @@ export interface MultiSelectActionOption {
   id: string;
   label: string;
   sublabel?: string;
+  /** Optional leading visual such as an equipment thumbnail. */
+  leading?: ReactNode;
   /** Extra text matched by the search box in addition to label/sublabel. */
   searchText?: string;
   /**
@@ -133,8 +135,12 @@ export function MultiSelectActionMenu({
     // Popover ≥1.1.19 focus-traps by default and blocks nested open otherwise.
     <Popover open={open} onOpenChange={setOpen} modal={false}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent align={align} className="w-80 p-0">
-        <div className="space-y-3 p-4">
+      <PopoverContent
+        align={align}
+        collisionPadding={12}
+        className="flex h-[min(42rem,var(--radix-popover-content-available-height))] w-80 flex-col overflow-hidden p-0"
+      >
+        <div className="shrink-0 space-y-3 p-4">
           <div className="space-y-1">
             <p className="text-sm font-medium">{title}</p>
             {description && <p className="text-xs text-muted-foreground">{description}</p>}
@@ -181,7 +187,7 @@ export function MultiSelectActionMenu({
           )}
         </div>
 
-        <div className="max-h-64 overflow-y-auto border-y px-4 py-2">
+        <div className="min-h-0 flex-1 overflow-y-auto border-y px-4 py-2">
           {isLoading ? (
             <p className="py-6 text-center text-sm text-muted-foreground">{loadingText}</p>
           ) : options.length === 0 ? (
@@ -201,6 +207,7 @@ export function MultiSelectActionMenu({
                       disabled={isLocked || isPending}
                       onCheckedChange={(checked) => toggleOption(option.id, checked === true)}
                     />
+                    {option.leading && <div className="shrink-0">{option.leading}</div>}
                     <Label
                       htmlFor={checkboxId}
                       className="min-w-0 flex-1 cursor-pointer space-y-1"
@@ -224,7 +231,7 @@ export function MultiSelectActionMenu({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-2 p-4">
+        <div className="flex shrink-0 items-center justify-between gap-2 p-4">
           <p className="text-xs text-muted-foreground">{selectedIds.length} selected</p>
           <Button
             type="button"
