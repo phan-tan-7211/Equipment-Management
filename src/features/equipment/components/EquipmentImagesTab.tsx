@@ -19,6 +19,7 @@ import {
   replaceEquipmentDisplayImage,
 } from '@/features/equipment/services/equipmentDisplayImageService';
 import { isEquipmentDisplayImage } from '@/features/equipment/utils/equipmentMediaFilters';
+import { persistCurrentEquipmentDisplayImageIfNeeded } from '@/features/equipment/services/equipmentDisplayMediaService';
 import { validateImageFile } from '@/services/imageUploadService';
 import { equipment } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
@@ -116,10 +117,19 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
   });
 
   const setDisplayImageMutation = useMutation({
-    mutationFn: (imageUrl: string) => {
+    mutationFn: async (imageUrl: string) => {
       if (!permissions.canSetDisplayImage) {
         throw new Error('Display image permission denied');
       }
+      const userName = user?.email?.split('@')[0] || 'User';
+      await persistCurrentEquipmentDisplayImageIfNeeded({
+        equipmentId,
+        organizationId,
+        currentDisplayImage,
+        images: media.images,
+        userName,
+        equipmentName: resolvedEquipmentName,
+      });
       return updateEquipmentDisplayImage(organizationId, equipmentId, imageUrl);
     },
     onSuccess: () => {

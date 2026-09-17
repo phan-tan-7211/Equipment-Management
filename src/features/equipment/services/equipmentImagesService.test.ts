@@ -166,7 +166,7 @@ describe('equipmentImagesService getAllEquipmentImages', () => {
         id: 'persisted-display',
         file_name: 'display.jpg',
         file_url: 'https://example.com/signed-private-url',
-        description: 'display-image:display-images/org-1/equipment/eq-1/display-set/full.webp',
+        description: 'display-image:display-images/org/org-1/equipment/eq-1/display-set/full.webp',
         created_at: '2026-07-04T12:00:00.000Z',
         uploaded_by: 'user-1',
         equipment_note_id: 'note-display-1',
@@ -184,7 +184,7 @@ describe('equipmentImagesService getAllEquipmentImages', () => {
     expect(result[0]).toMatchObject({
       id: 'persisted-display',
       source_type: 'equipment_display',
-      description: 'display-image:display-images/org-1/equipment/eq-1/display-set/full.webp',
+      description: 'display-image:display-images/org/org-1/equipment/eq-1/display-set/full.webp',
     });
   });
 });

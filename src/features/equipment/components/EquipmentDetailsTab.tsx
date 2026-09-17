@@ -26,9 +26,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { equipment as equipmentKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 import { EquipmentPrimaryMediaPanel } from "@/features/equipment/components/media/EquipmentPrimaryMediaPanel";
+import { persistCurrentEquipmentDisplayImageIfNeeded } from "@/features/equipment/services/equipmentDisplayMediaService";
 import { getEquipmentViewTransitionStyle } from "@/features/equipment/transitions/equipmentViewTransitionNames";
 import { useEquipmentCardTransitionState } from "@/features/equipment/transitions/useEquipmentCardTransitionState";
 import { useI18n } from '@/i18n';
+import { useAuth } from '@/hooks/useAuth';
 
 type Equipment = Tables<'equipment'>;
 
@@ -49,6 +51,7 @@ const EquipmentDetailsTab: React.FC<EquipmentDetailsTabProps> = ({
   const [showAllBasicInfo, setShowAllBasicInfo] = useState(false);
   const [mediaExplorerOpen, setMediaExplorerOpen] = useState(false);
   const { t } = useI18n();
+  const { user } = useAuth();
   const permissions = useUnifiedPermissions();
   const { currentOrganization } = useOrganization();
   const queryClient = useQueryClient();
@@ -77,8 +80,17 @@ const EquipmentDetailsTab: React.FC<EquipmentDetailsTabProps> = ({
   });
 
   const setDisplayImageMutation = useMutation({
-    mutationFn: (imageUrl: string) => {
+    mutationFn: async (imageUrl: string) => {
       if (!organizationId) throw new Error(t('equipmentDetails.organizationIdRequired'));
+      const userName = user?.email?.split('@')[0] || 'User';
+      await persistCurrentEquipmentDisplayImageIfNeeded({
+        equipmentId: equipment.id,
+        organizationId,
+        currentDisplayImage: equipment.image_url,
+        images: media.images,
+        userName,
+        equipmentName: equipment.name,
+      });
       return updateEquipmentDisplayImage(organizationId, equipment.id, imageUrl);
     },
     onSuccess: () => {

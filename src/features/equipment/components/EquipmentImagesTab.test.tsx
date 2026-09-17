@@ -97,7 +97,7 @@ describe('EquipmentImagesTab', () => {
     
     vi.mocked(equipmentImagesServiceModule.getAllEquipmentImages).mockResolvedValue(mockImages);
     vi.mocked(displayImageServiceModule.replaceEquipmentDisplayImage).mockResolvedValue(
-      'display-images/org-1/equipment/eq-1/display-set/full.webp',
+      'display-images/org/org-1/equipment/eq-1/display-set/full.webp',
     );
   });
 
@@ -211,7 +211,7 @@ describe('EquipmentImagesTab', () => {
           [file],
           'org-1',
           null,
-          'display-image:display-images/org-1/equipment/eq-1/display-set/full.webp',
+          'display-image:display-images/org/org-1/equipment/eq-1/display-set/full.webp',
         );
       });
     });

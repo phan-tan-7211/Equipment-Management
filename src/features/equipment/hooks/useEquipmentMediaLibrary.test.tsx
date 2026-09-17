@@ -26,7 +26,7 @@ describe('useEquipmentMediaLibrary', () => {
         id: 'previous-display-media',
         file_name: 'previous-display.jpg',
         file_url: 'https://example.com/signed-previous-display',
-        description: 'display-image:display-images/org-1/equipment/eq-1/old-set/full.webp',
+        description: 'display-image:display-images/org/org-1/equipment/eq-1/old-set/full.webp',
         created_at: '2026-07-04T10:00:00.000Z',
         uploaded_by: 'user-1',
         source_type: 'equipment_display',
