@@ -368,16 +368,18 @@ const InventoryList = () => {
   );
 
   return (
-    <Page maxWidth="full" padding="workspace">
+    <Page maxWidth="full" padding="none" className="flex min-h-full flex-col p-px">
       <div
         className={cn(
-          'space-y-4 md:space-y-6',
+          'flex min-h-0 flex-1 flex-col gap-px',
           isMobile && canCreate && 'pb-28',
         )}
       >
         <PageHeader
           title={t('inventoryList.title')}
           description={t('inventoryList.description', { organization: currentOrganization.name })}
+          hideDescriptionOnMobile
+          density="compact"
           actions={
             <InventoryListPageActions
               canCreate={canCreate}

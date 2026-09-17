@@ -44,7 +44,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   className,
   hideDescriptionOnMobile = false,
   inlineMetaOnMobile = false,
-  density = 'default',
+  density = 'compact',
   titleStyle,
   descriptionStyle,
 }) => {
@@ -97,7 +97,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         <div className={cn('min-w-0 flex-1', density === 'compact' ? 'space-y-0' : 'space-y-0.5')}>
           <div className="flex flex-wrap items-center gap-2">
             <h1
-              className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+              className="text-xl font-semibold leading-7 tracking-tight text-foreground sm:text-2xl sm:leading-8"
               data-route-heading="true"
               tabIndex={-1}
               style={titleStyle}
@@ -120,7 +120,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           {description && (
             <p
               className={cn(
-                'text-sm text-muted-foreground line-clamp-2',
+                'text-sm leading-5 text-muted-foreground line-clamp-2',
                 hideDescriptionOnMobile && 'hidden md:block',
               )}
               style={descriptionStyle}
