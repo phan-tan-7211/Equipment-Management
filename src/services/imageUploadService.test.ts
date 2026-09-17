@@ -59,6 +59,7 @@ import {
   resolveImageDisplayUrl,
   createSignedUrlForPath,
   batchResolveEquipmentDisplayImageUrls,
+  clearEquipmentDisplayImageUrlCache,
   batchResolveEquipmentNoteImageDisplayUrls,
   batchResolveInventoryItemImageDisplayUrls,
   batchResolveTeamImageDisplayUrls,
@@ -75,6 +76,7 @@ import {
 
 describe('imageUploadService', () => {
   beforeEach(() => {
+    clearEquipmentDisplayImageUrlCache();
     vi.mocked(imageCompression).mockReset();
     mockUpload.mockResolvedValue({ data: { path: 'prefix/1.jpg' }, error: null });
     mockCreateSignedUrl.mockImplementation((path: string, expiresIn: number) => ({
@@ -565,6 +567,21 @@ describe('imageUploadService', () => {
         'equipment-note-images',
         'work-order-images',
       ]);
+    });
+
+    it('reuses a signed legacy URL during its TTL instead of signing again', async () => {
+      const ref = 'user1/eq-1/note-1/a.jpg';
+
+      const first = await batchResolveEquipmentDisplayImageUrls([ref], {
+        equipmentIds: ['eq-1'],
+      });
+      const second = await batchResolveEquipmentDisplayImageUrls([ref], {
+        equipmentIds: ['eq-1'],
+      });
+
+      expect(second).toEqual(first);
+      expect(mockCreateSignedUrls).toHaveBeenCalledTimes(1);
+      expect(mockCreateSignedUrl).not.toHaveBeenCalled();
     });
 
     it('nulls refs whose batch row reports an error instead of probing per path (#1156)', async () => {
