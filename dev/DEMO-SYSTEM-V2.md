@@ -33,7 +33,7 @@ npm run demo:v2:list
 npm run demo:v2:run -- --scenario=executive-overview --base-url=http://localhost:8080
 
 # Run one scenario in production mode (strict preflight + storage-state required)
-$env:DEMO_BASE_URL="https://equipqr.app"
+$env:DEMO_BASE_URL="https://eqr.zinitek.com"
 $env:DEMO_STORAGE_STATE="tmp/demos/auth.json"
 npm run demo:v2:run:prod -- --scenario=executive-overview
 
@@ -99,9 +99,9 @@ Failure does not destroy artifacts. Videos and JSON sidecars are preserved for d
 1. Install Chromium if needed:
    - `npx playwright install chromium`
 2. Save storage once:
-   - `npx playwright codegen https://equipqr.app --save-storage=tmp/demos/auth.json`
+   - `npx playwright codegen https://eqr.zinitek.com --save-storage=tmp/demos/auth.json`
 3. Set environment in PowerShell:
-   - `$env:DEMO_BASE_URL="https://equipqr.app"`
+   - `$env:DEMO_BASE_URL="https://eqr.zinitek.com"`
    - `$env:DEMO_STORAGE_STATE="tmp/demos/auth.json"`
 4. Run production scenario:
    - `npm run demo:v2:run:prod -- --scenario=executive-overview`
