@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const DEMO_CALENDLY_URL = 'https://calendly.com/nicholas-king-columbiacloudworks/30min';
+const DEMO_CALENDLY_URL = 'mailto:phantan7211@gmail.com';
 
 const CTASection = () => {
   const { t } = useI18n();
