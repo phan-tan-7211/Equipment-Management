@@ -11,7 +11,7 @@ Privacy requests go through a dedicated intake at `/privacy-request`. Anyone can
 
 ## 1. Open the privacy request form
 
-Go to https://equipqr.app/privacy-request (linked in the footer under 'Do Not Sell') or open /privacy-request inside the app.
+Go to https://eqr.zinitek.com/privacy-request (linked in the footer under 'Do Not Sell') or open /privacy-request inside the app.
 
 ## 2. Fill in your details
 
