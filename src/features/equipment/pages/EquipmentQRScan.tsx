@@ -36,7 +36,6 @@ import { useI18n } from '@/i18n';
 
 type EquipmentStatus = Database['public']['Enums']['equipment_status'];
 
-const PRODUCTION_URL = 'https://equipqr.app';
 const EquipmentQRQuickActions = lazy(() => import('@/features/equipment/components/qr/EquipmentQRQuickActions'));
 
 type ScanStatus = 'idle' | 'logging' | 'logged' | 'failed';
@@ -315,7 +314,7 @@ const EquipmentQRScan = (): React.JSX.Element => {
       <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col px-4 py-5 sm:py-8">
         <div className="mb-5 flex items-center justify-between">
           <a
-            href={PRODUCTION_URL}
+            href="/"
             className="flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label={t('equipmentQRScan.productionAria')}
           >
