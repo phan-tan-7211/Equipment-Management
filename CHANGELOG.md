@@ -13,6 +13,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [3.34.19] - 2026-09-19
 
+### Fixed
+
+- Moved long-dialog scrolling into an inset content region for the daily checklist editor and standardized dialog scrollbar spacing so scroll thumbs no longer hug or clip rounded modal edges.
+
+## [3.34.19] - 2026-09-19
+
 ### Added
 
 - Built-in operator check-in starters now clone their template name, fields, sections, help text, and checklist items in the admin's active Vietnamese, English, or Korean language; cloned templates remain fixed organization data afterward.
