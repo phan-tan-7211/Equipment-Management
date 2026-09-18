@@ -39,7 +39,7 @@ This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipelin
 
 | Environment | Git trigger | Frontend URL | Supabase API |
 |-------------|-------------|--------------|--------------|
-| **Production** | Push to `main` (auto-promote via Production Release Readiness) | `<https://equipqr.app>` | `https://supabase.equipqr.app` (`wgynakhoppqkrutnslmv`) |
+| **Production** | Push to `main` (auto-promote via Production Release Readiness) | `<https://eqr.zinitek.com>` | `https://supabase.equipqr.app` (`wgynakhoppqkrutnslmv`) |
 | **Integration preview** | Push/merge to git **`preview`** | `<https://preview.equipqr.app>` | **Current live:** production API (`supabase.equipqr.app`). **Approved target:** persistent dataless branch per `docs/ops/preview-persistent-branch.md` |
 | **PR Preview** | Feature PRs / work-branch pushes | Commit-specific `*.vercel.app` | Prod API by default; ephemeral Supabase when `supabase/**` changes |
 
@@ -173,7 +173,7 @@ Technical documentation is deployed as a **second Vercel project** (same GitHub 
 
 | Item | Value |
 |------|--------|
-| Repository | `Columbia-Cloudworks-LLC/ZNTEQR` |
+| Repository | `phan-tan-7211/Equipment-Management` |
 | Vercel project | `equipqr-docs` (`prj_6QicTVywixyyAYc7sxCRDLnqwbM9`) |
 | Root Directory | `docs` |
 | Install Command | `npm ci` |
@@ -207,7 +207,7 @@ Current live preview uses the **same** Supabase project as production, so
 production Auth `site_url` and redirect URIs should include:
 
 - `https://preview.equipqr.app/**`
-- `https://equipqr.app/**`
+- `https://eqr.zinitek.com/**`
 - Local dev URLs (`http://localhost:8080/**`, etc.)
 
 The approved target is different: once the persistent preview branch cutover in
