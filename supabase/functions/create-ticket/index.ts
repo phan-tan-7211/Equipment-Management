@@ -5,7 +5,7 @@
  * 1. Authenticates the user via JWT
  * 2. Validates and sanitizes the request payload (title, description, metadata)
  * 3. Enforces per-user rate limiting (max 3 tickets per hour)
- * 4. Creates a GitHub Issue in Columbia-Cloudworks-LLC/ZNTEQR
+ * 4. Creates a GitHub Issue in phan-tan-7211/Equipment-Management
  * 5. Inserts a record into the tickets table with the GitHub issue number
  *
  * Security:
