@@ -52,22 +52,33 @@ describe('SmartLanding', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     sessionStorage.clear();
+    localStorage.clear();
   });
 
-  it('renders the public landing page when isLoading is true and user is null (issue #671 regression)', () => {
-    // This is the exact branch that previously returned null, causing the 13–60+s black screen.
-    // After the fix, the marketing hero must render regardless of isLoading state.
+  it('renders the public landing page when isLoading is true for a fresh visitor (#671)', async () => {
     vi.mocked(useAuthModule.useAuth).mockReturnValue({
       ...baseAuth,
       user: null,
       isLoading: true,
     });
 
-    const { container } = render(<SmartLanding />);
+    render(<SmartLanding />);
 
-    // The Suspense boundary renders the fallback spinner or the stub — either proves
-    // the component returned non-null content. Root must never be empty.
-    expect(container.firstChild).not.toBeNull();
+    expect(await screen.findByTestId('landing-stub')).toBeTruthy();
+  });
+
+  it('renders loading rather than marketing while a persisted auth session resolves', () => {
+    localStorage.setItem('sb-test-auth-token', '{"access_token":"cached"}');
+    vi.mocked(useAuthModule.useAuth).mockReturnValue({
+      ...baseAuth,
+      user: null,
+      isLoading: true,
+    });
+
+    render(<SmartLanding />);
+
+    expect(screen.getByRole('status')).toBeTruthy();
+    expect(screen.queryByTestId('landing-stub')).toBeNull();
   });
 
   it('renders the public landing page when isLoading is false and user is null', async () => {
