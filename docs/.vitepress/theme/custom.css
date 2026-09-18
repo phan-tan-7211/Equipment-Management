@@ -187,8 +187,8 @@ div[class*="language-"] {
 /* Open App CTA — matches primary button treatment                            */
 /* -------------------------------------------------------------------------- */
 
-.VPNavBarMenuLink[href^="https://equipqr.app"],
-.VPNavScreenMenuLink[href^="https://equipqr.app"] {
+.VPNavBarMenuLink[href^="https://eqr.zinitek.com"],
+.VPNavScreenMenuLink[href^="https://eqr.zinitek.com"] {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
@@ -202,13 +202,13 @@ div[class*="language-"] {
   transition: background-color 0.2s ease;
 }
 
-.VPNavBarMenuLink[href^="https://equipqr.app"]:hover,
-.VPNavScreenMenuLink[href^="https://equipqr.app"]:hover {
+.VPNavBarMenuLink[href^="https://eqr.zinitek.com"]:hover,
+.VPNavScreenMenuLink[href^="https://eqr.zinitek.com"]:hover {
   background: var(--vp-button-brand-hover-bg) !important;
   color: var(--vp-button-brand-hover-text) !important;
 }
 
-.VPNavScreenMenuLink[href^="https://equipqr.app"] {
+.VPNavScreenMenuLink[href^="https://eqr.zinitek.com"] {
   margin: 0.75rem 1.5rem 0;
   width: calc(100% - 3rem);
 }
@@ -257,8 +257,8 @@ div[class*="language-"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .VPNavBarMenuLink[href^="https://equipqr.app"],
-  .VPNavScreenMenuLink[href^="https://equipqr.app"],
+  .VPNavBarMenuLink[href^="https://eqr.zinitek.com"],
+  .VPNavScreenMenuLink[href^="https://eqr.zinitek.com"],
   .VPFeature {
     transition: none;
   }
