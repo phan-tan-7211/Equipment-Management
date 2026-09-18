@@ -343,7 +343,7 @@ After a successful restoration, complete these verification steps:
 curl https://supabase.equipqr.app/functions/v1/healthcheck
 
 # Check the public status page for aggregate service health
-# https://status.equipqr.app
+# https://eqr.zinitek.com/support
 ```
 
 - [ ] **Test critical workflows**:
