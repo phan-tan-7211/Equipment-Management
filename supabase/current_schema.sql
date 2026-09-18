@@ -18,7 +18,7 @@ SET row_security = off;
 -- Storage reference note:
 -- Supabase-managed storage objects are intentionally excluded from this
 -- application schema dump. The Phase 2 bucket and scoped object policies are
--- defined in supabase/migrations/20260916120000_create_display_images_bucket.sql.
+-- defined in supabase/migrations/20260917032700_create_display_images_bucket.sql.
 
 
 CREATE EXTENSION IF NOT EXISTS "pg_cron" WITH SCHEMA "pg_catalog";
