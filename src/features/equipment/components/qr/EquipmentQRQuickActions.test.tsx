@@ -86,58 +86,58 @@ vi.mock('@/components/common/InlineNoteComposer', () => ({
   ),
 }));
 
-vi.mock('@/features/work-orders/components/WorkOrderPMChecklist', async () => {
+vi.mock('@/features/equipment/components/qr/QRWorkOrderPMChecklist', async () => {
   const {
     PM_TEMPLATE_NONE_VALUE,
-    useWorkOrderPMChecklist,
+    useWorkOrderPMChecklistForOrganization,
   } = await import('@/features/work-orders/hooks/useWorkOrderPMChecklist');
   type ChecklistProps = {
+    organizationId: string;
     values: WorkOrderPMChecklistValues;
     setValue: WorkOrderPMChecklistSetValue;
-    selectedEquipment?: { id: string; name: string; default_pm_template_id: string | null } | null;
-    allowTemplateOverride?: boolean;
+    selectedEquipment: { id: string; name: string; default_pm_template_id: string | null };
     autoDefaultFromEquipment?: boolean;
   };
 
-  return {
-    WorkOrderPMChecklist: ({
-      values,
-      setValue,
-      selectedEquipment,
-      allowTemplateOverride,
-      autoDefaultFromEquipment,
-    }: ChecklistProps) => {
-      const { templates, isLoading, handleTemplateChange, selectValue } = useWorkOrderPMChecklist({
+  const MockQRWorkOrderPMChecklist = ({
+    organizationId,
+    values,
+    setValue,
+    selectedEquipment,
+    autoDefaultFromEquipment,
+  }: ChecklistProps) => {
+    const { templates, isLoading, handleTemplateChange, selectValue } =
+      useWorkOrderPMChecklistForOrganization(organizationId, {
         values,
         setValue,
         selectedEquipment,
-        allowTemplateOverride,
         autoDefaultFromEquipment,
       });
 
-      if (isLoading) {
-        return <p>Loading templates...</p>;
-      }
+    if (isLoading) {
+      return <p>Loading templates...</p>;
+    }
 
-      return (
-        <label>
-          PM Template
-          <select
-            aria-label="PM template"
-            value={selectValue}
-            onChange={(event) => handleTemplateChange(event.target.value)}
-          >
-            <option value={PM_TEMPLATE_NONE_VALUE}>None</option>
-            {templates.map((template) => (
-              <option key={template.id} value={template.id}>
-                {template.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      );
-    },
+    return (
+      <label>
+        PM Template
+        <select
+          aria-label="PM template"
+          value={selectValue}
+          onChange={(event) => handleTemplateChange(event.target.value)}
+        >
+          <option value={PM_TEMPLATE_NONE_VALUE}>None</option>
+          {templates.map((template) => (
+            <option key={template.id} value={template.id}>
+              {template.name}
+            </option>
+          ))}
+        </select>
+      </label>
+    );
   };
+
+  return { default: MockQRWorkOrderPMChecklist };
 });
 
 vi.mock('@/features/work-orders/components/WorkOrderCreationPhotoPicker', () => ({

@@ -33,6 +33,7 @@ vi.mock('@/features/pm-templates/hooks/usePMTemplates');
 vi.mock('@/features/organization/hooks/useSimplifiedOrganizationRestrictions');
 vi.mock('@/features/pm-templates/hooks/usePMTemplateCompatibility', () => ({
   useMatchingPMTemplates: vi.fn(),
+  useMatchingPMTemplatesForOrganization: vi.fn(),
 }));
 
 const mockTemplates = [

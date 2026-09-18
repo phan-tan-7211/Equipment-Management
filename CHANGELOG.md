@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.13] - 2026-09-18
+
+### Fixed
+
+- Fixed authenticated equipment QR work-order creation so PM templates load in the scanned organization without crashing outside the dashboard shell.
+
 ## [3.34.12] - 2026-09-17
 
 ### Fixed

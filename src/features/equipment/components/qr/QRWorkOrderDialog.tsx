@@ -34,7 +34,7 @@ import { logger } from '@/utils/logger';
 import { workOrders, workOrderMetrics } from '@/lib/queryKeys';
 import WorkOrderCreationPhotoPicker from '@/features/work-orders/components/WorkOrderCreationPhotoPicker';
 import { toast } from 'sonner';
-import { WorkOrderPMChecklist } from '@/features/work-orders/components/WorkOrderPMChecklist';
+import QRWorkOrderPMChecklist from '@/features/equipment/components/qr/QRWorkOrderPMChecklist';
 import type { WorkOrderPMChecklistSetValue } from '@/features/work-orders/hooks/useWorkOrderPMChecklist';
 import { QRDialogFormError } from '@/features/equipment/components/qr/QRDialogFormError';
 import { useI18n } from '@/i18n';
@@ -218,8 +218,9 @@ const QRWorkOrderDialog: React.FC<QRWorkOrderDialogProps> = ({
             />
           </div>
 
-          <WorkOrderPMChecklist
+          <QRWorkOrderPMChecklist
             key={`qr-pm-${open}-${equipment.id}`}
+            organizationId={equipment.organizationId}
             values={pmValues}
             setValue={setPmValue}
             selectedEquipment={selectedEquipment}

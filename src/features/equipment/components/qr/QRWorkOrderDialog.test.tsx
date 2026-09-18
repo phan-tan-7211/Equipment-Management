@@ -148,6 +148,10 @@ describe('QRWorkOrderDialog', () => {
     );
 
     const combobox = await screen.findByRole('combobox', { name: /pm template/i });
+    await waitFor(() => {
+      expect(mockListPmTemplates).toHaveBeenCalledWith('org-1');
+      expect(mockGetMatchingPmTemplates).toHaveBeenCalledWith('org-1', 'equipment-1');
+    });
     await user.click(combobox);
     await user.click(await screen.findByRole('option', { name: /forklift pm/i }));
     await user.click(screen.getByRole('button', { name: /create work order/i }));
