@@ -76,7 +76,7 @@ jobs:
           Write-Host "Vercel will handle the actual deployment automatically"
           Write-Host ""
           Write-Host "Expected URLs:"
-          Write-Host "  Production: https://equipqr.app"
+          Write-Host "  Production: https://eqr.zinitek.com"
           Write-Host "  PR previews: per-PR Vercel URL; preview.equipqr.app aliases latest Preview deployment"
 
       - name: Deployment notification (Unix)
@@ -92,6 +92,6 @@ jobs:
           echo "Vercel will handle the actual deployment automatically"
           echo ""
           echo "Expected URLs:"
-          echo "  Production: https://equipqr.app"
+          echo "  Production: https://eqr.zinitek.com"
           echo "  PR previews: per-PR Vercel URL; preview.equipqr.app aliases latest Preview deployment"
 
