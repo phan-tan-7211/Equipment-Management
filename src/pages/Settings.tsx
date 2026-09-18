@@ -24,8 +24,7 @@ import { useUser } from '@/contexts/useUser';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useResolvedAvatarUrl } from '@/hooks/useResolvedAvatarUrl';
 import Page from '@/components/layout/Page';
-import PageHeader from '@/components/layout/PageHeader';
-import { AlertTriangle, ExternalLink, Loader2, Settings } from 'lucide-react';
+import { AlertTriangle, ExternalLink, Loader2 } from 'lucide-react';
 import { trimmedAvatarPath, userDisplayInitials } from '@/utils/userDisplayInitials';
 import DeleteAccountDialog from '@/components/settings/DeleteAccountDialog';
 
@@ -72,12 +71,11 @@ const SettingsContent = () => {
   return (
     <div className="space-y-6">
       {/* Page header with user identity */}
-      <div className="space-y-3">
-        <PageHeader
-          title={t('settingsPage.title')}
-          description={t('settingsPage.description')}
-          icon={<Settings className="h-5 w-5" />}
-        />
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('settingsPage.title')}</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t('settingsPage.description')}
+        </p>
         {currentUser && (
           <div className="flex items-center gap-3 mt-3">
             <Avatar className="h-8 w-8">
@@ -264,7 +262,7 @@ const SettingsContent = () => {
 const Settings = () => {
   return (
     <SettingsProvider>
-      <Page maxWidth="full" padding="workspace">
+      <Page maxWidth="7xl" padding="responsive">
         <SettingsContent />
       </Page>
     </SettingsProvider>
