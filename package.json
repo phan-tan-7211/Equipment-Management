@@ -1,7 +1,7 @@
 {
   "name": "znteqr",
   "private": true,
-  "version": "3.34.14",
+  "version": "3.34.15",
   "type": "module",
   "engines": {
     "node": "24.x"
