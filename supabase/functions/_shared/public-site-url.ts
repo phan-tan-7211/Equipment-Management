@@ -5,7 +5,7 @@
  * fallback for existing deployed secrets until they are migrated.
  */
 
-export const DEFAULT_PUBLIC_SITE_URL = "https://equipqr.app";
+export const DEFAULT_PUBLIC_SITE_URL = "https://eqr.zinitek.com";
 
 const RETIRED_PUBLIC_SITE_URLS: Record<string, string> = {
   "https://preview.supabase.app": "https://preview.equipqr.app",
