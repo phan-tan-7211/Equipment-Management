@@ -176,6 +176,41 @@ describe('useEquipmentForm', () => {
     expect(onCreated).not.toHaveBeenCalled();
   });
 
+  it('passes pending creation media to the offline-aware service before clearing the form', async () => {
+    const createEquipmentFull = vi.fn().mockResolvedValue({ data: null, queuedOffline: true });
+    const { OfflineAwareWorkOrderService } = await import('@/services/offlineAwareService');
+    vi.mocked(OfflineAwareWorkOrderService).mockImplementationOnce(function OfflineAwareWorkOrderServiceMock() {
+      return {
+        createEquipmentFull,
+        updateEquipment: vi.fn(),
+      } as unknown as InstanceType<typeof OfflineAwareWorkOrderService>;
+    });
+
+    const files = [
+      new File(['first'], 'first.jpg', { type: 'image/jpeg' }),
+      new File(['display'], 'display.jpg', { type: 'image/jpeg' }),
+    ];
+    const pendingMediaRef = { current: { files, displayIndex: 1 } };
+    const client = new QueryClient();
+    const { result } = renderHook(() =>
+      useEquipmentForm(undefined, vi.fn(), pendingMediaRef),
+    { wrapper: createWrapper(client) });
+
+    await act(async () => {
+      await result.current.onSubmit(baseValues);
+    });
+
+    expect(createEquipmentFull).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Eq Name' }),
+      {
+        files,
+        displayIndex: 1,
+        noteContent: 'test uploaded 2 images at creation',
+      },
+    );
+    expect(pendingMediaRef.current).toEqual({ files: [], displayIndex: 0 });
+  });
+
   it('updates equipment successfully', async () => {
     const client = new QueryClient();
     const onSuccess = vi.fn();

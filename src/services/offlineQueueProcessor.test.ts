@@ -42,6 +42,9 @@ const {
   mockEquipmentUpdate,
   mockUpdateWorkingHours,
   mockCreateEquipmentNote,
+  mockReplaceEquipmentDisplayImage,
+  mockLoadQueueItemImageFiles,
+  mockCleanupQueueItemBlobs,
   mockCreateWorkOrderNote,
   mockDeletePM,
 } = vi.hoisted(() => ({
@@ -50,6 +53,9 @@ const {
   mockEquipmentUpdate: vi.fn(),
   mockUpdateWorkingHours: vi.fn(),
   mockCreateEquipmentNote: vi.fn(),
+  mockReplaceEquipmentDisplayImage: vi.fn(),
+  mockLoadQueueItemImageFiles: vi.fn(),
+  mockCleanupQueueItemBlobs: vi.fn(),
   mockCreateWorkOrderNote: vi.fn(),
   mockDeletePM: vi.fn(),
 }));
@@ -64,6 +70,10 @@ vi.mock('@/features/equipment/services/EquipmentService', () => ({
 
 vi.mock('@/features/equipment/services/equipmentWorkingHoursService', () => ({
   updateEquipmentWorkingHours: (...args: unknown[]) => mockUpdateWorkingHours(...args),
+}));
+
+vi.mock('@/features/equipment/services/equipmentDisplayImageService', () => ({
+  replaceEquipmentDisplayImage: (...args: unknown[]) => mockReplaceEquipmentDisplayImage(...args),
 }));
 
 vi.mock('@/features/equipment/services/equipmentNotesService', () => ({
@@ -85,8 +95,8 @@ vi.mock('@/features/pm-templates/services/preventativeMaintenanceService', async
 });
 
 vi.mock('@/services/offlineQueueProcessorImages', () => ({
-  loadQueueItemImageFiles: vi.fn(async () => []),
-  cleanupQueueItemBlobs: vi.fn(async () => undefined),
+  loadQueueItemImageFiles: (...args: unknown[]) => mockLoadQueueItemImageFiles(...args),
+  cleanupQueueItemBlobs: (...args: unknown[]) => mockCleanupQueueItemBlobs(...args),
 }));
 
 vi.mock('sonner', () => ({
@@ -172,6 +182,8 @@ describe('OfflineQueueProcessor', () => {
     // Defaults: valid session + valid user
     mockGetSession.mockResolvedValue({ data: { session: { access_token: 'tok' } } });
     mockSupabaseAuth.mockResolvedValue({ data: { claims: { sub: USER_ID } }, error: null });
+    mockLoadQueueItemImageFiles.mockResolvedValue([]);
+    mockCleanupQueueItemBlobs.mockResolvedValue(undefined);
   });
 
   // ── Basic processing ───────────────────────────────────────────────────
@@ -478,6 +490,103 @@ describe('OfflineQueueProcessor', () => {
 
     expect(result.succeeded).toBe(1);
     expect(mockEquipmentCreate).toHaveBeenCalledWith(ORG_ID, payload);
+  });
+
+  it('syncs queued Equipment creation media and cleans blob refs after success', async () => {
+    const displayFile = new File(['display'], 'display.jpg', { type: 'image/jpeg' });
+    const imageRefs = [{
+      blobKey: 'blob-display',
+      fileName: displayFile.name,
+      mimeType: displayFile.type,
+      sizeBytes: displayFile.size,
+    }];
+    const payload = {
+      ...makeEquipmentCreatePayload(),
+      imageRefs,
+      displayImageIndex: 0,
+      creationPhotoNote: 'operator uploaded a display image',
+    };
+    const item = createPendingItem({
+      type: 'equipment_create_full',
+      payload,
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([item]));
+
+    mockEquipmentCreate.mockResolvedValueOnce({ success: true, data: { id: 'eq-media' } });
+    mockLoadQueueItemImageFiles.mockResolvedValueOnce([displayFile]);
+    mockReplaceEquipmentDisplayImage.mockResolvedValueOnce('display-images/org-456/equipment/eq-media/set/full.webp');
+    mockCreateEquipmentNote.mockResolvedValueOnce({ id: 'note-1', images: [{ id: 'image-1' }] });
+
+    const result = await processor.processAll();
+
+    expect(result.succeeded).toBe(1);
+    expect(mockEquipmentCreate).toHaveBeenCalledWith(ORG_ID, makeEquipmentCreatePayload());
+    expect(mockLoadQueueItemImageFiles).toHaveBeenCalledWith(USER_ID, ORG_ID, imageRefs);
+    expect(mockReplaceEquipmentDisplayImage).toHaveBeenCalledWith({
+      organizationId: ORG_ID,
+      equipmentId: 'eq-media',
+      source: displayFile,
+    });
+    expect(mockCreateEquipmentNote).toHaveBeenCalledWith(
+      'eq-media',
+      'operator uploaded a display image',
+      0,
+      false,
+      [displayFile],
+      ORG_ID,
+    );
+    expect(mockCleanupQueueItemBlobs).toHaveBeenCalledWith(
+      USER_ID,
+      ORG_ID,
+      expect.objectContaining({ type: 'equipment_create_full' }),
+    );
+    expect(queueService.getCount()).toBe(0);
+  });
+
+  it('keeps a synced Equipment and blob refs queued when creation media upload fails', async () => {
+    const displayFile = new File(['display'], 'display.jpg', { type: 'image/jpeg' });
+    const imageRefs = [{
+      blobKey: 'blob-retry',
+      fileName: displayFile.name,
+      mimeType: displayFile.type,
+      sizeBytes: displayFile.size,
+    }];
+    const item = createPendingItem({
+      type: 'equipment_create_full',
+      payload: {
+        ...makeEquipmentCreatePayload({ serial_number: 'SN-MEDIA-RETRY' }),
+        imageRefs,
+        displayImageIndex: 0,
+      },
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([item]));
+
+    mockEquipmentCreate.mockResolvedValueOnce({ success: true, data: { id: 'eq-retry' } });
+    mockLoadQueueItemImageFiles.mockResolvedValue([displayFile]);
+    mockReplaceEquipmentDisplayImage.mockRejectedValueOnce(new Error('display upload failed'));
+
+    const firstResult = await processor.processAll();
+    const queuedAfterFailure = queueService.getAll()[0];
+
+    expect(firstResult.succeeded).toBe(0);
+    expect(firstResult.failed).toBe(0);
+    expect(firstResult.remaining).toBe(1);
+    expect(mockEquipmentCreate).toHaveBeenCalledTimes(1);
+    expect(queuedAfterFailure.syncedEquipmentId).toBe('eq-retry');
+    expect(queuedAfterFailure.status).toBe('pending');
+    expect(queuedAfterFailure.retryCount).toBe(1);
+    expect(mockCleanupQueueItemBlobs).not.toHaveBeenCalled();
+
+    mockReplaceEquipmentDisplayImage.mockResolvedValueOnce('display-images/org-456/equipment/eq-retry/set/full.webp');
+    mockCreateEquipmentNote.mockResolvedValueOnce({ id: 'note-retry', images: [{ id: 'image-retry' }] });
+
+    const secondResult = await processor.processAll();
+
+    expect(secondResult.succeeded).toBe(1);
+    expect(mockEquipmentCreate).toHaveBeenCalledTimes(1);
+    expect(mockReplaceEquipmentDisplayImage).toHaveBeenCalledTimes(2);
+    expect(mockCleanupQueueItemBlobs).toHaveBeenCalledTimes(1);
+    expect(queueService.getCount()).toBe(0);
   });
 
   it('does not re-create equipment when the queue item already synced (idempotent replay)', async () => {

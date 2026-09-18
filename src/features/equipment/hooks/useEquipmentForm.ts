@@ -13,7 +13,10 @@ import {
   EquipmentRecord,
 } from '@/features/equipment/types/equipment';
 import { createValidationContext } from '@/utils/validationHelpers';
-import { OfflineAwareWorkOrderService } from '@/services/offlineAwareService';
+import {
+  OfflineAwareWorkOrderService,
+  type OfflineEquipmentCreateMedia,
+} from '@/services/offlineAwareService';
 import { useOfflineQueueOptional } from '@/contexts/OfflineQueueContext';
 import { toast } from 'sonner';
 import { useAppToast } from '@/hooks/useAppToast';
@@ -110,7 +113,21 @@ export const useEquipmentForm = (
 
       const service = new OfflineAwareWorkOrderService(currentOrganization.id, user.id);
       const createData = toEquipmentCreateData(data);
-      const result = await service.createEquipmentFull(createData);
+      const pending = mediaRef.current;
+      const media: OfflineEquipmentCreateMedia | undefined = pending.files.length > 0
+        ? {
+            files: pending.files,
+            displayIndex: pending.displayIndex,
+            noteContent:
+              pending.files.length === 1
+                ? (user.email?.split('@')[0] || 'User') + ' uploaded a display image'
+                : (user.email?.split('@')[0] || 'User') +
+                  ' uploaded ' +
+                  pending.files.length +
+                  ' images at creation',
+          }
+        : undefined;
+      const result = await service.createEquipmentFull(createData, media);
 
       if (result.queuedOffline) {
         return { id: 'offline', queuedOffline: true as const };
@@ -140,7 +157,6 @@ export const useEquipmentForm = (
       }
 
       let mediaUploadFailed = false;
-      const pending = mediaRef.current;
       if (pending.files.length > 0) {
         try {
           const displayFile =

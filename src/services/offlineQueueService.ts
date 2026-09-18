@@ -4,8 +4,9 @@
  * Persists failed work order mutations to localStorage so they can be
  * retried when the device comes back online.
  *
- * Scope: work order create, update, and status-change operations.
- * Images / binary data are explicitly excluded (see containsBinaryData guard).
+ * Scope: work order create, update, and status-change operations plus equipment
+ * creation media metadata. Binary data stays in offlineBlobStore; queue JSON
+ * only contains safe blob references (see containsBinaryData guard).
  *
  * @see https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/536
  */
@@ -164,7 +165,14 @@ export interface OfflineQueueEquipmentCreateItem extends OfflineQueueItemBase {
 
 export interface OfflineQueueEquipmentCreateFullItem extends OfflineQueueItemBase {
   type: 'equipment_create_full';
-  payload: EquipmentCreateData;
+  /** Full equipment data plus optional creation media stored as blob refs. */
+  payload: EquipmentCreateData & {
+    imageRefs?: OfflineQueueImageRef[];
+    displayImageIndex?: number;
+    creationPhotoNote?: string;
+    /** Set after the server row and all creation media have synced. */
+    creationImagesSynced?: boolean;
+  };
 }
 
 export interface OfflineQueueEquipmentUpdateItem extends OfflineQueueItemBase {

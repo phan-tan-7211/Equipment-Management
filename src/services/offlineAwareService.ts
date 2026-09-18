@@ -58,6 +58,13 @@ export interface OfflineAwareResult<T> {
   queueItemId?: string;
 }
 
+/** Creation media that must survive an offline Equipment create. */
+export interface OfflineEquipmentCreateMedia {
+  files: File[];
+  displayIndex: number;
+  noteContent?: string;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 export class OfflineAwareWorkOrderService {
@@ -316,14 +323,15 @@ export class OfflineAwareWorkOrderService {
 
   async createEquipmentFull(
     data: EquipmentCreateData,
+    media?: OfflineEquipmentCreateMedia,
   ): Promise<OfflineAwareResult<{ id: string; [key: string]: unknown }>> {
-    if (!navigator.onLine) return this.queueEquipmentCreateFull(data);
+    if (!navigator.onLine) return this.queueEquipmentCreateFull(data, media);
     try {
       const result = await EquipmentService.create(this.orgId, data);
       if (!result.success || !result.data) throw new Error(result.error || 'Failed to create equipment');
       return { data: result.data, queuedOffline: false };
     } catch (error) {
-      if (isNetworkError(error)) return this.queueEquipmentCreateFull(data);
+      if (isNetworkError(error)) return this.queueEquipmentCreateFull(data, media);
       throw error;
     }
   }
@@ -467,13 +475,26 @@ export class OfflineAwareWorkOrderService {
     }
   }
 
-  private queueEquipmentCreateFull(
+  private async queueEquipmentCreateFull(
     data: EquipmentCreateData,
-  ): OfflineAwareResult<{ id: string; [key: string]: unknown }> {
+    media?: OfflineEquipmentCreateMedia,
+  ): Promise<OfflineAwareResult<{ id: string; [key: string]: unknown }>> {
     try {
+      const imageRefs: OfflineQueueImageRef[] | undefined = media?.files.length
+        ? await stageQueueImageRefs(this.userId, this.orgId, media.files)
+        : undefined;
+      const displayImageIndex = imageRefs?.length
+        ? Math.min(Math.max(media?.displayIndex ?? 0, 0), imageRefs.length - 1)
+        : undefined;
+
       const item = this.queueService.enqueue({
         type: 'equipment_create_full',
-        payload: data,
+        payload: {
+          ...data,
+          ...(imageRefs?.length ? { imageRefs } : {}),
+          ...(displayImageIndex !== undefined ? { displayImageIndex } : {}),
+          ...(media?.noteContent ? { creationPhotoNote: media.noteContent } : {}),
+        },
         organizationId: this.orgId,
         userId: this.userId,
       });

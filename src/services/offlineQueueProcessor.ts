@@ -41,6 +41,7 @@ import type {
 } from './offlineQueueService';
 import { OfflineQueueService } from './offlineQueueService';
 import { EquipmentService } from '@/features/equipment/services/EquipmentService';
+import { replaceEquipmentDisplayImage } from '@/features/equipment/services/equipmentDisplayImageService';
 import { updateEquipmentWorkingHours } from '@/features/equipment/services/equipmentWorkingHoursService';
 import { createEquipmentNoteWithImages } from '@/features/equipment/services/equipmentNotesService';
 import { createWorkOrderNoteWithImages } from '@/features/work-orders/services/workOrderNotesService';
@@ -375,18 +376,60 @@ function createHandlerMap(): Record<OfflineQueueItem['type'], QueueItemHandler<n
   }) as QueueItemHandler<never>,
 
   equipment_create_full: (async (item: OfflineQueueEquipmentCreateFullItem, replay, queueService) => {
+    const {
+      imageRefs,
+      displayImageIndex,
+      creationPhotoNote,
+      creationImagesSynced,
+      ...equipmentPayload
+    } = item.payload;
     const existingId = getSyncedEquipmentId(item);
-    if (existingId) {
-      replay.registerEquipment(item.id, existingId, queueService);
-      return { success: true };
+    let serverId = existingId;
+
+    if (!serverId) {
+      const result = await EquipmentService.create(item.organizationId, equipmentPayload);
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Sync failed: equipment create (full)');
+      }
+      serverId = String(result.data.id);
+      persistSyncedEquipmentId(item, serverId, queueService);
     }
-    const result = await EquipmentService.create(item.organizationId, item.payload);
-    if (!result.success || !result.data) {
-      throw new Error(result.error || 'Sync failed: equipment create (full)');
-    }
-    const serverId = String(result.data.id);
-    persistSyncedEquipmentId(item, serverId, queueService);
+
     replay.registerEquipment(item.id, serverId, queueService);
+
+    if (imageRefs?.length && !creationImagesSynced) {
+      const images = await loadQueueItemImageFiles(
+        item.userId,
+        item.organizationId,
+        imageRefs,
+      );
+      const displayFile = images[displayImageIndex ?? 0] ?? images[0];
+      if (!displayFile) {
+        throw new Error('Sync failed: queued Equipment display image is missing');
+      }
+
+      await replaceEquipmentDisplayImage({
+        organizationId: item.organizationId,
+        equipmentId: serverId,
+        source: displayFile,
+      });
+
+      const note = await createEquipmentNoteWithImages(
+        serverId,
+        creationPhotoNote ?? 'Photos attached when this equipment was created.',
+        0,
+        false,
+        images,
+        item.organizationId,
+      );
+      if (!note.images || note.images.length < images.length) {
+        throw new Error('Sync failed: queued Equipment creation images were not fully uploaded');
+      }
+
+      queueService.updatePayload(item.id, { creationImagesSynced: true });
+      item.payload.creationImagesSynced = true;
+    }
+
     return { success: true };
   }) as QueueItemHandler<never>,
 

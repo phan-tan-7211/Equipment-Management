@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { PMChecklistItem } from '@/features/pm-templates/services/preventativeMaintenanceService';
+import type { EquipmentCreateData } from '@/features/equipment/services/EquipmentService';
 import { OfflineAwareWorkOrderService } from './offlineAwareService';
 import { OfflineQueueService } from './offlineQueueService';
 
@@ -272,6 +273,46 @@ describe('OfflineAwareWorkOrderService', () => {
 
       expect(result.queuedOffline).toBe(false);
       expect(result.data).toBeTruthy();
+    });
+  });
+
+  describe('createEquipmentFull', () => {
+    it('stages creation media in blob refs before queueing while offline', async () => {
+      Object.defineProperty(navigator, 'onLine', { value: false, configurable: true, writable: true });
+
+      const data = {
+        name: 'Offline Loader',
+        manufacturer: 'Cat',
+        model: 'D6',
+        serial_number: 'OFFLINE-001',
+      } as EquipmentCreateData;
+      const file = jpegFile('loader.jpg');
+      const svc = new OfflineAwareWorkOrderService(ORG_ID, USER_ID);
+
+      const result = await svc.createEquipmentFull(data, {
+        files: [file],
+        displayIndex: 0,
+        noteContent: 'operator uploaded a display image',
+      });
+
+      expect(result.queuedOffline).toBe(true);
+      expect(result.queueItemId).toBeDefined();
+      const item = queueReader.getAll()[0];
+      expect(item.type).toBe('equipment_create_full');
+      expect(item.payload).toMatchObject({
+        ...data,
+        imageRefs: [{
+          blobKey: 'blob-0',
+          fileName: 'loader.jpg',
+          mimeType: 'image/jpeg',
+          sizeBytes: file.size,
+        }],
+        displayImageIndex: 0,
+        creationPhotoNote: 'operator uploaded a display image',
+      });
+      expect(item.payload).not.toHaveProperty('files');
+
+      Object.defineProperty(navigator, 'onLine', { value: true, configurable: true, writable: true });
     });
   });
 
