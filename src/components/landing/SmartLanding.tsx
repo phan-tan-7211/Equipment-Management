@@ -42,13 +42,13 @@ const LandingLoading = ({ label }: { label: string }) => (
 /**
  * Smart landing page that conditionally renders based on authentication state.
  *
- * - For unauthenticated visitors: Displays the public marketing landing page immediately,
- *   with no dependency on auth resolution. The hero must never be gated on isLoading —
- *   when supabase-js retries a stale token refresh, that loop can take 13–60+s and
- *   would produce a fully black viewport for all visitors. See issue #671.
- * - For authenticated users: Honors `pendingRedirect` (e.g. QR scan after Google OAuth)
- *   when present; otherwise redirects to the dashboard once auth resolves. A brief
- *   flash of the hero while the redirect effect fires is the accepted trade-off.
+ * - Fresh unauthenticated visitors: display the public marketing landing immediately,
+ *   with no dependency on auth resolution (issue #671).
+ * - Returning browsers with a persisted Supabase auth session: show a neutral loading
+ *   state while auth resolves so prerendered marketing content never flashes before
+ *   redirecting back into the app.
+ * - Authenticated users: honor `pendingRedirect` (e.g. QR scan after Google OAuth)
+ *   when present; otherwise redirect to the dashboard once auth resolves.
  *
  * Workspace onboarding is voluntary — users connect their Google Workspace from
  * Organization Settings rather than being prompted on first login.
@@ -88,8 +88,7 @@ const SmartLanding = () => {
   }
 
   // Public marketing page — renders immediately for true fresh visitors:
-  //   • isLoading=true, user=null  (fresh visitor, auth still initialising)
-  //   • isLoading=true, user=set   (session found but refresh in progress — brief hero flash)
+  //   • isLoading=true, user=null, no persisted auth hint
   //   • isLoading=false, user=null (unauthenticated visitor)
   return (
     <>
