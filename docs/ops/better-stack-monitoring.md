@@ -8,7 +8,7 @@ Better Stack provides two uptime monitors and a public status page for ZNTEQR:
 
 | Component | Purpose |
 |---|---|
-| **Web Availability Monitor** | Proves the production SPA at `https://equipqr.app/` responds with HTTP 200 |
+| **Web Availability Monitor** | Proves the production SPA at `https://eqr.zinitek.com/` responds with HTTP 200 |
 | **Deep Health Monitor** | Proves the Supabase backend and database are reachable via the healthcheck edge function |
 | **Public Status Page** | Customer-facing uptime dashboard at `https://status.equipqr.app` |
 
@@ -19,7 +19,7 @@ Better Stack provides two uptime monitors and a public status page for ZNTEQR:
 | Field | Value |
 |---|---|
 | Monitor name | `ZNTEQR Web` |
-| Target URL | `https://equipqr.app/` |
+| Target URL | `https://eqr.zinitek.com/` |
 | Check type | HTTP(S) keyword / status code |
 | Expected status | 200 |
 | Check interval | 3 minutes |
