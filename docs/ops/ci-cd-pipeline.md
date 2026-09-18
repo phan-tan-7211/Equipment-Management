@@ -173,7 +173,7 @@ Technical documentation is deployed as a **second Vercel project** (same GitHub 
 
 | Item | Value |
 |------|--------|
-| Repository | `Columbia-Cloudworks-LLC/ZNTEQR` |
+| Repository | `phan-tan-7211/Equipment-Management` |
 | Vercel project | `equipqr-docs` (`prj_6QicTVywixyyAYc7sxCRDLnqwbM9`) |
 | Root Directory | `docs` |
 | Install Command | `npm ci` |
