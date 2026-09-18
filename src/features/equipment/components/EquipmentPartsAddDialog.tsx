@@ -90,7 +90,7 @@ const EquipmentPartsAddDialog: React.FC<EquipmentPartsAddDialogProps> = ({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent size="lg" className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
+        <DialogContent size="xl" className="max-h-[calc(100dvh-2rem)]">
           <DialogHeader>
             <DialogTitle>{t('equipmentParts.addPart')}</DialogTitle>
             <DialogDescription>
@@ -115,7 +115,7 @@ const EquipmentPartsAddDialog: React.FC<EquipmentPartsAddDialogProps> = ({
             </Button>
           </div>
 
-          <div className="space-y-3">
+          <div className="min-w-0 space-y-3">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -125,7 +125,7 @@ const EquipmentPartsAddDialog: React.FC<EquipmentPartsAddDialogProps> = ({
                 className="pl-9"
               />
             </div>
-            <div className="max-h-72 space-y-1 overflow-y-auto rounded-md border p-2 md:h-[clamp(20rem,44dvh,32rem)] md:max-h-[calc(100dvh-19rem)]">
+            <div className="min-w-0 max-h-72 space-y-1 overflow-x-hidden overflow-y-auto rounded-md border p-2 md:h-[clamp(20rem,44dvh,32rem)] md:max-h-[calc(100dvh-19rem)]">
               {inventoryLoading ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   {t('equipmentParts.loadingInventory')}
