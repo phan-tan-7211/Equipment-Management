@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useI18n } from '@/i18n';
 import {
   Popover,
   PopoverContent,
@@ -68,6 +69,10 @@ export function MultiSelectActionMenu({
   align = 'end',
   idPrefix,
 }: MultiSelectActionMenuProps) {
+  const { t } = useI18n();
+  const resolvedSearchPlaceholder = searchPlaceholder === 'Search...' ? t('multiSelect.search') : searchPlaceholder;
+  const resolvedLoadingText = loadingText === 'Loading…' ? t('multiSelect.loading') : loadingText;
+  const resolvedNoMatchText = noMatchText === 'No matches for your search.' ? t('multiSelect.noMatches') : noMatchText;
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -148,8 +153,8 @@ export function MultiSelectActionMenu({
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder={searchPlaceholder}
-            aria-label={searchPlaceholder}
+            placeholder={resolvedSearchPlaceholder}
+            aria-label={resolvedSearchPlaceholder}
           />
           {!isLoading && filteredOptions.length > 0 && (
             <div className="flex flex-wrap gap-1">
@@ -161,7 +166,7 @@ export function MultiSelectActionMenu({
                 disabled={isPending || selectableFilteredIds.length === 0}
                 onClick={selectAll}
               >
-                Select all
+                {t('multiSelect.selectAll')}
               </Button>
               <Button
                 type="button"
@@ -171,7 +176,7 @@ export function MultiSelectActionMenu({
                 disabled={isPending || selectedIds.length === 0}
                 onClick={selectNone}
               >
-                Select none
+                {t('multiSelect.selectNone')}
               </Button>
               <Button
                 type="button"
@@ -181,7 +186,7 @@ export function MultiSelectActionMenu({
                 disabled={isPending || selectableFilteredIds.length === 0}
                 onClick={selectInverse}
               >
-                Inverse
+                {t('multiSelect.inverse')}
               </Button>
             </div>
           )}
@@ -189,11 +194,11 @@ export function MultiSelectActionMenu({
 
         <div className="min-h-0 flex-1 overflow-y-auto border-y px-4 py-2">
           {isLoading ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">{loadingText}</p>
+            <p className="py-6 text-center text-sm text-muted-foreground">{resolvedLoadingText}</p>
           ) : options.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">{emptyText}</p>
           ) : filteredOptions.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">{noMatchText}</p>
+            <p className="py-6 text-center text-sm text-muted-foreground">{resolvedNoMatchText}</p>
           ) : (
             <ul className="space-y-2">
               {filteredOptions.map((option) => {
@@ -232,7 +237,7 @@ export function MultiSelectActionMenu({
         </div>
 
         <div className="flex shrink-0 items-center justify-between gap-2 p-4">
-          <p className="text-xs text-muted-foreground">{selectedIds.length} selected</p>
+          <p className="text-xs text-muted-foreground">{t('multiSelect.selectedCount', { count: selectedIds.length })}</p>
           <Button
             type="button"
             size="sm"
