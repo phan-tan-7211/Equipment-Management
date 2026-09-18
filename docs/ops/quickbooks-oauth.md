@@ -21,7 +21,7 @@ Configure these secrets in Supabase Dashboard → Edge Functions → Secrets:
 |-------------|-------------|
 | `INTUIT_CLIENT_ID` | Your Intuit app's Client ID |
 | `INTUIT_CLIENT_SECRET` | Your Intuit app's Client Secret |
-| `PUBLIC_SITE_URL` | Public app origin for OAuth success redirects (`https://equipqr.app` prod, `https://preview.equipqr.app` preview) |
+| `PUBLIC_SITE_URL` | Public app origin for OAuth success redirects (`https://eqr.zinitek.com` prod, `https://preview.equipqr.app` preview) |
 | `QBO_USE_SANDBOX` | Set to `true` on **local dev and preview** so Edge Functions call the sandbox QBO API. Omit on production. |
 
 ### Environment matrix (sandbox vs production)
