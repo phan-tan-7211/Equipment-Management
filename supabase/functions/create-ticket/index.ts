@@ -31,9 +31,9 @@ import { MissingSecretError, requireSecret } from "../_shared/require-secret.ts"
 
 const FUNCTION_NAME = "create-ticket";
 
-const GITHUB_REPO_OWNER = "Columbia-Cloudworks-LLC";
-const GITHUB_REPO_NAME = "ZNTEQR";
-const GITHUB_ASSIGNEE = "viralarchitect";
+const GITHUB_REPO_OWNER = "phan-tan-7211";
+const GITHUB_REPO_NAME = "Equipment-Management";
+const GITHUB_ASSIGNEE = "phan-tan-7211";
 const GITHUB_LABEL = "user-reported";
 
 const MIN_TITLE_LENGTH = 5;
