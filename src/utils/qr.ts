@@ -41,6 +41,8 @@ export function quickFormQRPath(token: string): string {
 
 /** Origins accepted when decoding printed stickers against a different dev host. */
 const ZNTEQR_QR_ORIGINS = new Set([
+  'https://eqr.zinitek.com',
+  // Legacy origins remain accepted so already-printed QR stickers keep working.
   'https://equipqr.app',
   'https://www.equipqr.app',
   'https://preview.equipqr.app',
