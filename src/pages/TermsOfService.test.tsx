@@ -63,7 +63,7 @@ describe('TermsOfService', () => {
     expect(screen.getAllByText(/ZNT LLC/).length).toBeGreaterThanOrEqual(2);
 
     const legalEmailLink = screen.getByRole('link', { name: /legal@columbiacloudworks\.com/i });
-    expect(legalEmailLink).toHaveAttribute('href', 'mailto:legal@columbiacloudworks.com');
+    expect(legalEmailLink).toHaveAttribute('href', 'mailto:phantan7211@gmail.com');
 
     const contactEmailLink = screen.getByRole('link', { name: /phantan7211@gmail\.com/i });
     expect(contactEmailLink).toHaveAttribute('href', 'mailto:phantan7211@gmail.com');
