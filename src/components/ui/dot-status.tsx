@@ -17,8 +17,9 @@ const dotColorClass = (status: string): string => {
     case 'active':
       return 'bg-success';
     case 'maintenance':
-    case 'out_of_service':
       return 'bg-warning';
+    case 'out_of_service':
+      return 'bg-destructive';
     case 'inactive':
       return 'bg-muted-foreground';
     default:
@@ -40,6 +41,7 @@ export const DotStatus: React.FC<DotStatusProps> = ({ status, showLabel = false,
   return (
     <span
       className={cn('inline-flex items-center gap-2', className)}
+      data-equipment-status={status.toLowerCase()}
       title={showLabel ? undefined : label}
     >
       <span

@@ -6,6 +6,8 @@ const en = {
     loading: 'Loading',
     user: 'User',
     settings: 'Settings',
+    switchToLightMode: 'Switch to light mode',
+    switchToDarkMode: 'Switch to dark mode',
   },
   languages: {
     vi: 'Vietnamese',

@@ -6,6 +6,8 @@ const ko = {
     loading: '불러오는 중',
     user: '사용자',
     settings: '설정',
+    switchToLightMode: '라이트 모드로 전환',
+    switchToDarkMode: '다크 모드로 전환',
   },
   languages: {
     vi: '베트남어',

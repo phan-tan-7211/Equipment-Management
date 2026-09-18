@@ -11,6 +11,10 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+### Added
+
+- **Control-room appearance** — The dashboard now offers readable light and XPG-inspired dark themes with clearer equipment status colors.
+
 ## [3.33.0] - 2026-09-13
 
 ### Changed

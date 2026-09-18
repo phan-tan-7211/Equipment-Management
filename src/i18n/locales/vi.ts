@@ -6,6 +6,8 @@ const vi = {
     loading: 'Đang tải',
     user: 'Người dùng',
     settings: 'Cài đặt',
+    switchToLightMode: 'Chuyển sang giao diện sáng',
+    switchToDarkMode: 'Chuyển sang giao diện tối',
   },
   languages: {
     vi: 'Tiếng Việt',
