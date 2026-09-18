@@ -46,9 +46,9 @@ but onto a **new** persistent dataless branch rather than reviving `olsdirk`.
 |-------|--------------------------|------------|
 | Git integration branch | `preview` | `main` |
 | Frontend | `preview.equipqr.app` (Vercel alias on `preview` pushes) | `equipqr.app` |
-| Supabase | Persistent branch `olsdirkvvfegvclbpgrg` | Project `ymxkzronkhwxzcdcbnwq` / API `supabase.equipqr.app` |
-| Ephemeral DB branches | Per-PR on prod project (`ymxkzronkhwxzcdcbnwq`) when `supabase/**` changes | — |
-| 1Password edge items | `edge-env-preview-secrets` → `olsdirk` | `edge-env-prod-secrets` → `ymxkzronkhwxzcdcbnwq` |
+| Supabase | Persistent branch `olsdirkvvfegvclbpgrg` | Project `wgynakhoppqkrutnslmv` / API `supabase.equipqr.app` |
+| Ephemeral DB branches | Per-PR on prod project (`wgynakhoppqkrutnslmv`) when `supabase/**` changes | — |
+| 1Password edge items | `edge-env-preview-secrets` → `olsdirk` | `edge-env-prod-secrets` → `wgynakhoppqkrutnslmv` |
 | 1Password app items | `app-env-preview-public` → Vercel preview env | `app-env-prod-public` → Vercel production env |
 
 ### Cost drivers (quantified)
@@ -136,10 +136,10 @@ Maintainer decision: **solo developer, one feature at a time, no persistent git 
 | Persistent git `preview` **integration** branch | **Retired** | No feat → preview → main train |
 | `preview.equipqr.app` | **Keep on Vercel Preview** | Vercel UI: custom domain bound to git branch **`preview`** (optional QA hostname) |
 | Decommission `olsdirk`? | **Yes, after cutover** | Duplicate Supabase project; ~$10/mo + duplicate secret ops |
-| Production Supabase | **`ymxkzronkhwxzcdcbnwq` / `supabase.equipqr.app`** | Single backend for production and PR previews that need live backend |
+| Production Supabase | **`wgynakhoppqkrutnslmv` / `supabase.equipqr.app`** | Single backend for production and PR previews that need live backend |
 | `configure-supabase-auth.yml` | **Remove** | Tied to `preview` branch + olsdirk; obsolete under main-centric flow |
 | `secrets-fanout.yml` (olsdirk apply) | **Remove / simplify** | Single prod edge secret surface via `edge-env-prod-secrets` |
-| Schema export (`schema.sql`) | **Repoint to production** pooler | Export from `ymxkzronkhwxzcdcbnwq` |
+| Schema export (`schema.sql`) | **Repoint to production** pooler | Export from `wgynakhoppqkrutnslmv` |
 | Integration E2E (GW/QB) | **Local stack** (primary) | Ephemeral branch URLs impractical for OAuth; optional per-PR Vercel URL for UI-only QA |
 
 ### Solo workflow (target)
@@ -167,7 +167,7 @@ All vendor OAuth callbacks use **`https://supabase.equipqr.app/functions/v1/...`
 
 | Item | Target |
 |------|--------|
-| `edge-env-prod-secrets` | **Only** Supabase edge secret source (`ymxkzronkhwxzcdcbnwq`) |
+| `edge-env-prod-secrets` | **Only** Supabase edge secret source (`wgynakhoppqkrutnslmv`) |
 | `edge-env-preview-secrets` | **Retire** after olsdirk decommission |
 | `app-env-prod-public` | Vercel **production** env |
 | `app-env-preview-public` | Vercel **preview** env (PR deployments) — `VITE_SUPABASE_URL` = `https://supabase.equipqr.app` |
@@ -210,7 +210,7 @@ Inventory, cost model, architecture proposal. **Stop here for maintainer sign-of
 3. ✅ Update docs, OAuth redirect maps, smoke/export workflows, `config.toml` comments.
 4. ✅ Validate GW + QB on `preview.equipqr.app` (2026-06-15); edge callbacks accept preview origin via `isAllowedOrigin`.
 5. ✅ Remove `configure-supabase-auth.yml`; simplify `secrets-fanout.yml`; prod Auth allowlist includes `https://preview.equipqr.app/**`.
-6. ✅ Repoint `PREVIEW_DATABASE_URL` GitHub secret → production pooler (`ymxkzronkhwxzcdcbnwq`).
+6. ✅ Repoint `PREVIEW_DATABASE_URL` GitHub secret → production pooler (`wgynakhoppqkrutnslmv`).
 7. ✅ Vendor console cleanup (remove **olsdirk** redirect URIs).
 8. ✅ Decommission Supabase branch `olsdirkvvfegvclbpgrg`; remove `[remotes.staging]` from `config.toml`.
 9. ✅ Retire GitHub Environment fan-out (empty `secrets-map.yml`; repo-level `OP_SERVICE_ACCOUNT_TOKEN` only).

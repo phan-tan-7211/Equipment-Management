@@ -45,7 +45,7 @@ $SUPABASE_TOKEN_FIELD = 'SUPABASE_ACCESS_TOKEN'
 
 $EDGE_ITEM_CONFIG = @{
     'edge-env-prod-secrets'    = @{
-        AllowedProjectRef = 'ymxkzronkhwxzcdcbnwq'
+        AllowedProjectRef = 'wgynakhoppqkrutnslmv'
         RequiredVars      = @(
             'RESEND_API_KEY',
             'HCAPTCHA_SECRET_KEY',

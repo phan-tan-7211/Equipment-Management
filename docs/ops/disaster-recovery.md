@@ -23,7 +23,7 @@ ZNTEQR™ uses Supabase as its backend platform, which provides robust backup an
 
 | Environment | Project Ref | Purpose |
 |-------------|-------------|---------|
-| **Production** | `ymxkzronkhwxzcdcbnwq` | Live production database (also serves cloud preview via `supabase.equipqr.app`) |
+| **Production** | `wgynakhoppqkrutnslmv` | Live production database (also serves cloud preview via `supabase.equipqr.app`) |
 | **Legacy preview branch** | `olsdirkvvfegvclbpgrg` | **Retiring (#1033)** — decommission after cutover validation |
 
 ### Recovery Time Objective (RTO)
@@ -63,7 +63,7 @@ Set these environment variables before running recovery commands:
 ```bash
 # For Production
 export SUPABASE_ACCESS_TOKEN="your-access-token"
-export PROJECT_REF="ymxkzronkhwxzcdcbnwq"
+export PROJECT_REF="wgynakhoppqkrutnslmv"
 
 # For Staging (if recovering staging environment)
 # export PROJECT_REF="olsdirkvvfegvclbpgrg"
@@ -281,7 +281,7 @@ For daily backup restoration, use the Supabase Dashboard:
 ```powershell
 # Step 1: Set environment variables
 $env:SUPABASE_ACCESS_TOKEN = "your-access-token"
-$env:PROJECT_REF = "ymxkzronkhwxzcdcbnwq"
+$env:PROJECT_REF = "wgynakhoppqkrutnslmv"
 
 # Step 2: Calculate timestamp (5 minutes before the incident)
 $targetTime = [DateTime]::Parse("2026-01-13T14:25:00Z").ToUniversalTime()
@@ -438,7 +438,7 @@ After each test, update this section with:
 ```bash
 # Set environment
 export SUPABASE_ACCESS_TOKEN="your-token"
-export PROJECT_REF="ymxkzronkhwxzcdcbnwq"
+export PROJECT_REF="wgynakhoppqkrutnslmv"
 
 # List backups
 curl -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \

@@ -183,7 +183,7 @@ When blocked, post:
 
 1. **Blocked on:** (e.g. "1Password vault write", "Supabase production migrate", "Google OAuth consent")
 2. **Already tried:** (e.g. "inline op item edit — stdin pipe failure; detached script works")
-3. **Request:** (e.g. "Please authorize Supabase MCP for project ymxkzronkhwxzcdcbnwq" or "Please click Connect Google Workspace on preview integrations page")
+3. **Request:** (e.g. "Please authorize Supabase MCP for project wgynakhoppqkrutnslmv" or "Please click Connect Google Workspace on preview integrations page")
 4. **Verify after:** (e.g. "I'll confirm `google_workspace_credentials` row count = 1")
 
 ---

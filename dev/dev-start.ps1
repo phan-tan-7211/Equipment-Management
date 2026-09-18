@@ -531,7 +531,7 @@ if ($statusExit -eq 0) {
     try {
         $r = Invoke-WebRequest -Uri "http://127.0.0.1:$SUPABASE_API_PORT/rest/v1/" -Method HEAD -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
         if ($r.StatusCode -lt 500) {
-            $googleEnabled = docker inspect supabase_auth_ymxkzronkhwxzcdcbnwq --format '{{range .Config.Env}}{{println .}}{{end}}' 2>$null |
+            $googleEnabled = docker inspect supabase_auth_wgynakhoppqkrutnslmv --format '{{range .Config.Env}}{{println .}}{{end}}' 2>$null |
                 Select-String 'GOTRUE_EXTERNAL_GOOGLE_ENABLED=true'
             if (-not $googleEnabled) {
                 Write-Host "        WARNING: Supabase is up but Google sign-in is disabled in the auth container."

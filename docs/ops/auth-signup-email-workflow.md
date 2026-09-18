@@ -9,7 +9,7 @@ This runbook documents the production email signup path after the Resend SMTP cu
 | Component | Production value |
 | --- | --- |
 | App URL | `https://equipqr.app` |
-| Supabase project | `ymxkzronkhwxzcdcbnwq` |
+| Supabase project | `wgynakhoppqkrutnslmv` |
 | Supabase Auth URL | `https://supabase.equipqr.app/auth/v1` |
 | Supabase Auth email sender | `ZNTEQR <noreply@equipqr.app>` |
 | SMTP provider | Resend |

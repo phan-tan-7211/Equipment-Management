@@ -1,6 +1,6 @@
 # Postgres Collation Version Maintenance
 
-Operational runbook for Supabase Postgres **collation version mismatch** warnings on production project `ymxkzronkhwxzcdcbnwq`.
+Operational runbook for Supabase Postgres **collation version mismatch** warnings on production project `wgynakhoppqkrutnslmv`.
 
 Related issue: [#1141](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/1141)
 
@@ -82,7 +82,7 @@ Production logs may also warn on `template1`. That database is Supabase-managed.
 ERROR: must be owner of database template1
 ```
 
-Open a Supabase support ticket with project ref `ymxkzronkhwxzcdcbnwq` asking Supabase to refresh the `template1` collation version from `153.120` to `153.121`, or to perform the platform-owned equivalent. Track that vendor-owned residual in [#1143](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/1143).
+Open a Supabase support ticket with project ref `wgynakhoppqkrutnslmv` asking Supabase to refresh the `template1` collation version from `153.120` to `153.121`, or to perform the platform-owned equivalent. Track that vendor-owned residual in [#1143](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/1143).
 
 ## Separate code fix (issue #1141)
 

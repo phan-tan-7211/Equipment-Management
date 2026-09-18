@@ -237,7 +237,7 @@ Keep these database passwords on the `supabase-write` item in sync with **Supaba
 
 | 1Password field | Supabase project | Typical use |
 |-----------------|------------------|-------------|
-| `prod_db_password` | Production (`ymxkzronkhwxzcdcbnwq`) | **Production Release Readiness** maps this to `SUPABASE_DB_PASSWORD` for `supabase link` / `db push` after merge to `main`. |
+| `prod_db_password` | Production (`wgynakhoppqkrutnslmv`) | **Production Release Readiness** maps this to `SUPABASE_DB_PASSWORD` for `supabase link` / `db push` after merge to `main`. |
 | `preview_db_password` | Reserved for the persistent preview branch target | Populate only when the cutover in `docs/ops/preview-persistent-branch.md` is implemented. Do not reuse retired branch `olsdirkvvfegvclbpgrg`. |
 
 Release PRs (`preview` → `main`) run **Schema Drift Check** as a **hard gate** that blocks merge when any of the following conditions exist:
@@ -837,7 +837,7 @@ ZNTEQR™ is designed to work with Supabase for backend functionality:
 ZNTEQR uses Supabase branching for **ephemeral PR validation** and, today, a
 single production project for cloud runtime:
 
-- **Production:** `ymxkzronkhwxzcdcbnwq` — API `https://supabase.equipqr.app`
+- **Production:** `wgynakhoppqkrutnslmv` — API `https://supabase.equipqr.app`
 - **Current live preview app:** still uses the production project above
 - **Approved target preview backend:** a new persistent dataless branch for
   `preview.equipqr.app` (not yet cut over; see

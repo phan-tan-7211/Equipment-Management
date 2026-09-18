@@ -59,7 +59,7 @@ if (-not $PROJECT_REF -and $env:VITE_SUPABASE_URL) {
     }
 }
 if (-not $PROJECT_REF) {
-    $PROJECT_REF = "ymxkzronkhwxzcdcbnwq"
+    $PROJECT_REF = "wgynakhoppqkrutnslmv"
 }
 Write-Host "  1. Go to https://supabase.com/dashboard/project/${PROJECT_REF}/settings/functions"
 Write-Host "  2. Scroll to 'Secrets' section"

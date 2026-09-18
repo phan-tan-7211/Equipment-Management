@@ -50,7 +50,7 @@ PRs that touch only application code (`src/**`), CI, docs, or other non-Supabase
 The policy lives in the Supabase Dashboard, not in `supabase/config.toml`:
 
 ```text
-https://supabase.com/dashboard/project/ymxkzronkhwxzcdcbnwq → Settings → Integrations → GitHub Integration
+https://supabase.com/dashboard/project/wgynakhoppqkrutnslmv → Settings → Integrations → GitHub Integration
 Automatic branching: ON
 Supabase changes only: ON   ← triggers on any supabase/** change
 Branch limit: 50            ← hard cap (auto-rejects new branches above this)
@@ -73,7 +73,7 @@ Live pricing (<https://supabase.com/pricing>, validated 2026-05-03):
 > out explicitly in the GitHub Integration panel as of 2026-05-03). The Pro
 > plan's Spend Cap covers most metered usage but Supabase has carved out
 > branching compute as a separate line item. Glance at
-> <https://supabase.com/dashboard/project/ymxkzronkhwxzcdcbnwq/settings/billing>
+> <https://supabase.com/dashboard/project/wgynakhoppqkrutnslmv/settings/billing>
 > → Usage → **Branching** weekly for the first month after enablement to catch
 > runaway branches before they accumulate.
 
@@ -89,7 +89,7 @@ Live pricing (<https://supabase.com/pricing>, validated 2026-05-03):
    - **Seed** → optional; only runs if a seed file is registered (we do not seed by default to avoid leaking production data shape).
    - **Deploy** → ships any changed Edge Functions to the branch.
 3. **PR open** → branch URL + anon key visible at
-   <https://supabase.com/dashboard/project/ymxkzronkhwxzcdcbnwq/branches>.
+   <https://supabase.com/dashboard/project/wgynakhoppqkrutnslmv/branches>.
 4. **PR closed/merged** → Supabase auto-deletes the branch.
 
 ## How to access a branch
@@ -124,7 +124,7 @@ To exercise the branch from a Vite preview:
 
 If the auto-delete on PR close fails (e.g. PR was force-closed during a deployment workflow run):
 
-1. Open <https://supabase.com/dashboard/project/ymxkzronkhwxzcdcbnwq/branches>.
+1. Open <https://supabase.com/dashboard/project/wgynakhoppqkrutnslmv/branches>.
 2. Find the stuck branch.
 3. Click the three-dot menu → **Delete branch**.
 4. Confirm. The branch is destroyed within a minute.
@@ -133,7 +133,7 @@ If the auto-delete on PR close fails (e.g. PR was force-closed during a deployme
 
 If branching causes unexpected behavior (e.g. CI workflows break because of branch-creation timing), the rollback is dashboard-only:
 
-1. Open <https://supabase.com/dashboard/project/ymxkzronkhwxzcdcbnwq> →
+1. Open <https://supabase.com/dashboard/project/wgynakhoppqkrutnslmv> →
    **Branches** → **Settings**.
 2. Click **Disable branching**.
 3. No code change needed — the comment block in `supabase/config.toml` and this doc are dormant without branching enabled.

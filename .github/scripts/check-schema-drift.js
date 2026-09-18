@@ -43,7 +43,7 @@ import {
   formatOrphanRemoteRepair,
 } from './schema-drift-lib.js';
 
-const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || 'ymxkzronkhwxzcdcbnwq';
+const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || 'wgynakhoppqkrutnslmv';
 const MGMT_API = `https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`;
 const MIGRATIONS_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

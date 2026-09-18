@@ -179,7 +179,7 @@ describe('cloud-agent seed-quick-login helpers', () => {
     expect(() =>
       assertBranchSafeTarget({
         projectRef: PARENT_PROJECT_REF,
-        apiUrl: 'https://ymxkzronkhwxzcdcbnwq.supabase.co',
+        apiUrl: 'https://wgynakhoppqkrutnslmv.supabase.co',
       }),
     ).toThrow(/parent\/production/);
 

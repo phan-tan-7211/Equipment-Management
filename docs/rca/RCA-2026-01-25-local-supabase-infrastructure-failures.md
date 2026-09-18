@@ -79,7 +79,7 @@ After restarting the PostgREST container, its Docker IP address changed. Kong ha
 
 ### Resolution
 ```bash
-docker restart supabase_kong_ymxkzronkhwxzcdcbnwq
+docker restart supabase_kong_wgynakhoppqkrutnslmv
 ```
 
 ### Contributing Factors

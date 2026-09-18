@@ -60,7 +60,7 @@ Link your local environment to the production project:
 npx supabase login
 
 # Link to your production project (project ID from config.toml)
-npx supabase link --project-ref ymxkzronkhwxzcdcbnwq
+npx supabase link --project-ref wgynakhoppqkrutnslmv
 ```
 
 This syncs your local `supabase/config.toml` with the remote project configuration.

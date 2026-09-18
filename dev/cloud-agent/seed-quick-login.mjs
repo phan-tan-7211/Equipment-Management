@@ -24,7 +24,7 @@ const REPO_ROOT = path.resolve(
   '../..',
 );
 
-export const PARENT_PROJECT_REF = 'ymxkzronkhwxzcdcbnwq';
+export const PARENT_PROJECT_REF = 'wgynakhoppqkrutnslmv';
 
 /**
  * Same password contract as DevQuickLogin.tsx / local supabase seeds.

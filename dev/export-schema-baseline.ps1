@@ -117,7 +117,7 @@ function Invoke-SupabaseJsonQuery {
 if (-not $SkipLink) {
     $prodPassword = Get-OpProdPassword
     Invoke-NpxSupabase -Arguments @(
-        'supabase', 'link', '--project-ref', 'ymxkzronkhwxzcdcbnwq',
+        'supabase', 'link', '--project-ref', 'wgynakhoppqkrutnslmv',
         '--password', $prodPassword, '--yes'
     ) | Out-Null
 }
@@ -143,7 +143,7 @@ $schemaPath = Join-Path $repoRoot 'supabase/rls-policies.sql'
 $lines = New-Object System.Collections.Generic.List[string]
 
 $lines.Add('-- ZNTEQR RLS reference baseline (read-only documentation artifact)')
-$lines.Add('-- Source: production Supabase project ymxkzronkhwxzcdcbnwq')
+$lines.Add('-- Source: production Supabase project wgynakhoppqkrutnslmv')
 $lines.Add("-- Generated (UTC): $generatedAt")
 $lines.Add('-- Regenerate: .\dev\export-schema-baseline.ps1')
 $lines.Add('-- Do NOT apply this file directly; use supabase/migrations for changes.')

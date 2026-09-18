@@ -214,7 +214,7 @@ Do **not** add Picker values to Supabase Edge Function secrets.
 1. Open Supabase Dashboard
 2. Use the branch dropdown in the top navigation
 3. Select the new persistent preview branch created for `preview.equipqr.app`
-   (not production `ymxkzronkhwxzcdcbnwq`, and not retired
+   (not production `wgynakhoppqkrutnslmv`, and not retired
    `olsdirkvvfegvclbpgrg`)
 
 ### Step 2: Get Preview Branch Credentials

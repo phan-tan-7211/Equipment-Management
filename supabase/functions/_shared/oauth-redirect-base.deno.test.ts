@@ -40,7 +40,7 @@ Deno.test("resolveOAuthRedirectBaseUrl normalizes stale preview Supabase app hos
 
 Deno.test("resolveOAuthRedirectBaseUrl maps production project URL to custom Supabase hostname", () => {
   assertEquals(
-    resolveOAuthRedirectBaseUrl(undefined, "https://ymxkzronkhwxzcdcbnwq.supabase.co"),
+    resolveOAuthRedirectBaseUrl(undefined, "https://wgynakhoppqkrutnslmv.supabase.co"),
     "https://supabase.equipqr.app",
   );
 });

@@ -17,7 +17,7 @@ const RETIRED_OAUTH_REDIRECT_BASE_URLS: Record<string, string> = {
  * vendor consoles and Vercel `VITE_SUPABASE_URL` use the custom API domain.
  */
 const CANONICAL_OAUTH_REDIRECT_BASE_BY_SUPABASE_URL: Record<string, string> = {
-  "https://ymxkzronkhwxzcdcbnwq.supabase.co": "https://supabase.equipqr.app",
+  "https://wgynakhoppqkrutnslmv.supabase.co": "https://supabase.equipqr.app",
   "https://olsdirkvvfegvclbpgrg.supabase.co": "https://supabase.equipqr.app",
 };
 
