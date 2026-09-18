@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AlertCircle, ArrowRight, Clock, Forklift, MapPin } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -56,6 +56,7 @@ function getStatusClasses(status: EquipmentStatus): string {
 
 const EquipmentQRScan = (): React.JSX.Element => {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const { equipmentId } = useParams<{ equipmentId: string }>();
   const [searchParams] = useSearchParams();
   const orgIdFromUrl = searchParams.get('org') ?? undefined;
@@ -106,8 +107,8 @@ const EquipmentQRScan = (): React.JSX.Element => {
 
     const orgParam = orgIdFromUrl ? `&org=${orgIdFromUrl}` : '';
     sessionStorage.setItem('pendingRedirect', `/qr/equipment/${equipmentId}?qr=true${orgParam}`);
-    window.location.replace('/auth?tab=signin');
-  }, [authLoading, equipmentId, user, orgIdFromUrl]);
+    navigate('/auth?tab=signin', { replace: true });
+  }, [authLoading, equipmentId, user, orgIdFromUrl, navigate]);
 
   useEffect(() => {
     if (authLoading || !user || !equipmentId) return;
@@ -246,8 +247,8 @@ const EquipmentQRScan = (): React.JSX.Element => {
         logger.error('Failed to record dashboard_opened scan follow-up event', error);
       }
     }
-    window.location.assign(`/dashboard/equipment/${payload.equipment.id}`);
-  }, [payload, scanId]);
+    navigate(`/dashboard/equipment/${payload.equipment.id}`);
+  }, [payload, scanId, navigate]);
 
   if (authLoading || isLoading) {
     return <QrPageLoadingShell />;
@@ -284,12 +285,12 @@ const EquipmentQRScan = (): React.JSX.Element => {
             {canOpenCachedEquipment ? (
               <Button
                 className="w-full"
-                onClick={() => window.location.assign(`/dashboard/equipment/${equipmentId}`)}
+                onClick={() => navigate(`/dashboard/equipment/${equipmentId}`)}
               >
                 {t('equipmentQRScan.openCached')}
               </Button>
             ) : null}
-            <Button className="w-full" variant={canOpenCachedEquipment ? 'outline' : 'default'} onClick={() => window.location.assign('/dashboard')}>
+            <Button className="w-full" variant={canOpenCachedEquipment ? 'outline' : 'default'} onClick={() => navigate('/dashboard')}>
               {t('equipmentQRScan.goDashboard')}
             </Button>
           </CardContent>
@@ -314,8 +315,8 @@ const EquipmentQRScan = (): React.JSX.Element => {
     <div className="min-h-screen bg-background text-foreground">
       <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col px-4 py-5 sm:py-8">
         <div className="mb-5 flex items-center justify-between">
-          <a
-            href="/"
+          <Link
+            to="/dashboard"
             className="flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label={t('equipmentQRScan.productionAria')}
           >
@@ -324,7 +325,7 @@ const EquipmentQRScan = (): React.JSX.Element => {
               <p className="text-sm font-semibold">ZNTEQR</p>
               <p className="text-xs text-muted-foreground">{t('equipmentQRScan.scannedEquipment')}</p>
             </div>
-          </a>
+          </Link>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
             <Badge variant="outline" className={getStatusClasses(equipment.status)}>
