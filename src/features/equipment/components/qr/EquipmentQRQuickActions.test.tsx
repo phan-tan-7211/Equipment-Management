@@ -99,45 +99,45 @@ vi.mock('@/features/equipment/components/qr/QRWorkOrderPMChecklist', async () =>
     autoDefaultFromEquipment?: boolean;
   };
 
-  return {
-    default: ({
-      organizationId,
-      values,
-      setValue,
-      selectedEquipment,
-      autoDefaultFromEquipment,
-    }: ChecklistProps) => {
-      const { templates, isLoading, handleTemplateChange, selectValue } =
-        useWorkOrderPMChecklistForOrganization(organizationId, {
-          values,
-          setValue,
-          selectedEquipment,
-          autoDefaultFromEquipment,
-        });
+  const MockQRWorkOrderPMChecklist = ({
+    organizationId,
+    values,
+    setValue,
+    selectedEquipment,
+    autoDefaultFromEquipment,
+  }: ChecklistProps) => {
+    const { templates, isLoading, handleTemplateChange, selectValue } =
+      useWorkOrderPMChecklistForOrganization(organizationId, {
+        values,
+        setValue,
+        selectedEquipment,
+        autoDefaultFromEquipment,
+      });
 
-      if (isLoading) {
-        return <p>Loading templates...</p>;
-      }
+    if (isLoading) {
+      return <p>Loading templates...</p>;
+    }
 
-      return (
-        <label>
-          PM Template
-          <select
-            aria-label="PM template"
-            value={selectValue}
-            onChange={(event) => handleTemplateChange(event.target.value)}
-          >
-            <option value={PM_TEMPLATE_NONE_VALUE}>None</option>
-            {templates.map((template) => (
-              <option key={template.id} value={template.id}>
-                {template.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      );
-    },
+    return (
+      <label>
+        PM Template
+        <select
+          aria-label="PM template"
+          value={selectValue}
+          onChange={(event) => handleTemplateChange(event.target.value)}
+        >
+          <option value={PM_TEMPLATE_NONE_VALUE}>None</option>
+          {templates.map((template) => (
+            <option key={template.id} value={template.id}>
+              {template.name}
+            </option>
+          ))}
+        </select>
+      </label>
+    );
   };
+
+  return { default: MockQRWorkOrderPMChecklist };
 });
 
 vi.mock('@/features/work-orders/components/WorkOrderCreationPhotoPicker', () => ({
