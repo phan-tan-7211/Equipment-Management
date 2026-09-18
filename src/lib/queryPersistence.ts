@@ -17,9 +17,12 @@
  *    `'admin'` / `'audit'` namespace are excluded by construction.
  *  - The persister has a max age of 24h; anything older than that is
  *    discarded on hydration.
- *  - `buster` includes the app version so a new deploy invalidates all
- *    persisted state automatically (no risk of replaying queries against a
- *    schema-incompatible build).
+ *  - The buster remains tied to the release app version. The repository's
+ *    release gate changes that version only for release-relevant changes, so
+ *    ordinary deploys keep compatible offline data. We intentionally do not
+ *    replace it with a deploy/commit hash: a schema version bump is safer
+ *    than silently hydrating an incompatible payload, and this task cannot
+ *    prove that every release-level payload change is backward-compatible.
  */
 
 import { get, set, del } from 'idb-keyval';
@@ -39,7 +42,7 @@ const APP_VERSION = typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : 'dev
  * needs offline access, add its first key segment here AND verify the
  * cached payload does not include sensitive cross-tenant data.
  */
-const PERSISTABLE_KEY_PREFIXES: ReadonlySet<string> = new Set([
+export const PERSISTABLE_KEY_PREFIXES: ReadonlySet<string> = new Set([
   'equipment',
   'equipment-status-counts',
   'equipment-notes-with-images',
@@ -63,6 +66,24 @@ const PERSISTABLE_KEY_PREFIXES: ReadonlySet<string> = new Set([
   'team-stats',
   'teams',
   'team-fleet',
+  // Inventory list, detail, image metadata, transactions, compatibility,
+  // alternate-part, and field-editor reads. Role/access queries stay out of
+  // persistence so a stale grant cannot be mistaken for current authorization.
+  'inventory',
+  'inventory-item',
+  'inventory-item-images',
+  'inventory-item-alternates',
+  'inventory-recent-adjustments',
+  'inventory-transactions',
+  'compatible-inventory-items',
+  'compatible-equipment',
+  'compatibility-rules',
+  'equipment-match-count',
+  'inventory-group-membership-counts',
+  'alternate-groups',
+  'alternate-group',
+  'part-alternates',
+  'make-model-parts',
 ]);
 
 /**
@@ -80,7 +101,7 @@ const FORBIDDEN_KEY_SEGMENTS: ReadonlySet<string> = new Set([
   'tickets',
 ]);
 
-function isPersistableQuery(query: Query): boolean {
+export function isPersistableQuery(query: Query): boolean {
   const key = query.queryKey;
   if (!Array.isArray(key) || key.length === 0) return false;
 
@@ -114,6 +135,8 @@ type ScopedQueryPersister = ReturnType<typeof experimental_createQueryPersister<
 
 let cachedPersisterKey: string | null = null;
 let cachedPersister: ScopedQueryPersister | null = null;
+
+export const OFFLINE_CACHE_BUSTER = APP_VERSION;
 
 /**
  * Announce the active scope. Called from `OrganizationContext` once both the
@@ -184,9 +207,9 @@ export function createScopedQueryPersister() {
     },
     prefix,
     maxAge: 24 * 60 * 60 * 1000, // 24h
-    // App version is part of the buster — a new deploy invalidates
-    // everything regardless of maxAge.
-    buster: APP_VERSION,
+    // The release app version is the explicit schema/payload compatibility
+    // boundary; maxAge still removes entries after 24h.
+    buster: OFFLINE_CACHE_BUSTER,
     // The filter runs on write; it accepts the live Query and decides
     // whether to persist its cache entry.
     filters: { predicate: isPersistableQuery },

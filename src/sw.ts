@@ -237,9 +237,13 @@ registerRoute(
 const DISPLAY_IMAGE_V2_PUBLIC_PATH =
   /^\/storage\/v1\/object\/public\/display-images\/org\/[A-Za-z0-9][A-Za-z0-9._~-]*\/(?:equipment|inventory)\/[A-Za-z0-9][A-Za-z0-9._~-]*\/[A-Za-z0-9][A-Za-z0-9._~-]*\/(?:thumb|preview|full)\.webp$/;
 
+const DISPLAY_IMAGE_CACHE_MAX_AGE_SECONDS = 365 * 24 * 60 * 60;
+const CUSTOM_SUPABASE_HOST = 'supabase.equipqr.app';
+
 function isSupabaseStorageHost(url: URL): boolean {
   return (
     url.hostname.endsWith('.supabase.co') ||
+    url.hostname === CUSTOM_SUPABASE_HOST ||
     url.hostname === 'localhost' ||
     url.hostname === '127.0.0.1' ||
     url.hostname === '[::1]'
@@ -256,7 +260,7 @@ registerRoute(
     plugins: [
       new ExpirationPlugin({
         maxEntries: 1000,
-        maxAgeSeconds: 90 * 24 * 60 * 60,
+        maxAgeSeconds: DISPLAY_IMAGE_CACHE_MAX_AGE_SECONDS,
         purgeOnQuotaError: true,
       }),
     ],
@@ -269,7 +273,7 @@ registerRoute(
 // is handled by TanStack Query persistence (src/lib/queryPersistence.ts).
 registerRoute(
   ({ url }) =>
-    url.hostname.endsWith('.supabase.co') &&
+    isSupabaseStorageHost(url) &&
     (url.pathname.startsWith('/rest/') ||
       url.pathname.startsWith('/auth/') ||
       url.pathname.startsWith('/functions/') ||
