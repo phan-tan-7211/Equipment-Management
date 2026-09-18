@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, ArrowRight } from 'lucide-react';
 import { PricingCollageBackground } from '@/components/landing/pricing-collage/PricingCollageBackground';
 
-const DEMO_CALENDLY_URL = 'https://calendly.com/nicholas-king-columbiacloudworks/30min';
+const DEMO_CALENDLY_URL = 'mailto:phantan7211@gmail.com';
 const CONTACT_EMAIL = 'mailto:phantan7211@gmail.com';
 
 const PricingSection = () => {
