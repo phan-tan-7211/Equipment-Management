@@ -7,7 +7,7 @@ This document describes the in-app bug reporting feature that allows authenticat
 Users can access the bug reporting form from the **Support** page in the dashboard. Submitting a report:
 
 1. Captures anonymized session diagnostics (app version, browser, errors, performance)
-2. Creates a GitHub Issue in `phan-tan-7211/Equipment-Management`, assigned to `viralarchitect` with the `user-reported` label
+2. Creates a GitHub Issue in `phan-tan-7211/Equipment-Management`, assigned to `phan-tan-7211` with the `user-reported` label
 3. Inserts a record in the `tickets` Supabase table, linking the GitHub issue number
 4. Shows a success confirmation to the user
 
