@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.21] - 2026-09-19
+
+### Fixed
+
+- Localized the remaining shared multi-select actions and operator checklist add-field buttons so Vietnamese, English, and Korean UI no longer mix languages in daily check-in administration.
+
 ## [3.34.20] - 2026-09-19
 
 ### Fixed

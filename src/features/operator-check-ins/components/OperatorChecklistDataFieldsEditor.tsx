@@ -104,15 +104,15 @@ export function OperatorChecklistDataFieldsEditor({
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => addField('operator_input')}>
             <User className="mr-2 h-4 w-4" />
-            Add operator field
+            {t('operatorCheckinDetail.addOperatorField')}
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={() => addField('client_context')}>
             <MapPin className="mr-2 h-4 w-4" />
-            Add client field
+            {t('operatorCheckinDetail.addClientField')}
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={() => addField('equipment_snapshot')}>
             <Wrench className="mr-2 h-4 w-4" />
-            Add equipment field
+            {t('operatorCheckinDetail.addEquipmentField')}
           </Button>
         </div>
 
