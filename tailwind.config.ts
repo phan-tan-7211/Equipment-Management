@@ -108,6 +108,7 @@ export default {
 				equipment: {
 					operational: 'hsl(var(--equipment-operational))',
 					maintenance: 'hsl(var(--equipment-maintenance))',
+					inactive: 'hsl(var(--equipment-inactive))',
 					repair: 'hsl(var(--equipment-repair))',
 					retired: 'hsl(var(--equipment-retired))',
 				},
