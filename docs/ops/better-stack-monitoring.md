@@ -10,7 +10,7 @@ Better Stack provides two uptime monitors and a public status page for ZNTEQR:
 |---|---|
 | **Web Availability Monitor** | Proves the production SPA at `https://eqr.zinitek.com/` responds with HTTP 200 |
 | **Deep Health Monitor** | Proves the Supabase backend and database are reachable via the healthcheck edge function |
-| **Public Status Page** | Customer-facing uptime dashboard at `https://status.equipqr.app` |
+| **Public Status Page** | Customer-facing uptime dashboard at `https://eqr.zinitek.com/support` |
 
 ## Monitors
 
@@ -61,7 +61,7 @@ When the database check fails or times out, the endpoint returns HTTP 503 with `
 | Field | Value |
 |---|---|
 | Status page title | ZNTEQR Status |
-| Status page URL | `https://status.equipqr.app` |
+| Status page URL | `https://eqr.zinitek.com/support` |
 | Better Stack subdomain | `equipqr.betteruptime.com` |
 | Components shown | ZNTEQR Web, ZNTEQR API Health |
 | History / uptime chart | Enabled (90-day history) |
@@ -80,7 +80,7 @@ When the database check fails or times out, the endpoint returns HTTP 503 with `
      - **Value:** `statuspage.betteruptime.com`
      - **TTL:** Auto / 300
 3. Wait for DNS propagation (typically < 5 minutes on Vercel).
-4. Verify: `https://status.equipqr.app` should load the Better Stack status page.
+4. Verify: `https://eqr.zinitek.com/support` should load the Better Stack status page.
 
 | DNS Record | Type | Name | Value |
 |---|---|---|---|
