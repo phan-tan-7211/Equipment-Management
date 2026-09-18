@@ -9,7 +9,7 @@ personas: ["all"]
 **Last reviewed:** 2026-05-01
 ## 1. Open status.equipqr.app
 
-Go to [status.equipqr.app](https://status.equipqr.app) in any browser. You do not need to be signed in.
+Go to [status.equipqr.app](https://eqr.zinitek.com/support) in any browser. You do not need to be signed in.
 
 ## 2. Check the current indicator
 
