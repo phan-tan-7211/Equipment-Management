@@ -11,7 +11,7 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
-## [3.34.19] - 2026-09-19
+## [3.34.20] - 2026-09-19
 
 ### Fixed
 
