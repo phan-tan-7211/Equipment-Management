@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/i18n';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ import { UNASSIGNED_TEAM_ID } from '@/contexts/selected-team-context';
 
 const FleetMap: React.FC = () => {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const {
     googleMapsKey,
     mapId: googleMapsMapId,
@@ -203,7 +205,7 @@ const FleetMap: React.FC = () => {
               <p className="text-sm text-muted-foreground max-w-md mb-4">
                 {t('fleetMap.emptyHint')}
               </p>
-              <Button variant="outline" onClick={() => window.location.href = '/dashboard/equipment'}>
+              <Button variant="outline" onClick={() => navigate('/dashboard/equipment')}>
                 <Forklift className="h-4 w-4 mr-2" />
                 {t('fleetMap.manageEquipment')}
               </Button>
