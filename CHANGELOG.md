@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.14] - 2026-09-19
+
+### Fixed
+
+- Kept the scanned-equipment ZNTEQR brand link on the current app origin instead of sending local or custom-domain users to the legacy production site.
+
 ## [3.34.13] - 2026-09-18
 
 ### Fixed
