@@ -51,7 +51,7 @@ echo ""
 echo "Option B - Using Supabase Dashboard:"
 echo ""
 # Extract project ref from SUPABASE_URL or use default
-PROJECT_REF="${SUPABASE_PROJECT_REF:-ymxkzronkhwxzcdcbnwq}"
+PROJECT_REF="${SUPABASE_PROJECT_REF:-wgynakhoppqkrutnslmv}"
 if [ -n "$VITE_SUPABASE_URL" ]; then
     # Extract project ref from URL (e.g., https://xxxxx.supabase.co -> xxxxx)
     PROJECT_REF=$(echo "$VITE_SUPABASE_URL" | sed -n 's|https://\([^.]*\)\.supabase\.co.*|\1|p')

@@ -16,7 +16,7 @@ if (-not $env:OP_SERVICE_ACCOUNT_TOKEN) {
 
 $token = (op read 'op://ZNTEQR Agents/supabase-write/SUPABASE_ACCESS_TOKEN').Trim()
 $headers = @{ Authorization = "Bearer $token"; 'Content-Type' = 'application/json' }
-$prodAuth = Invoke-RestMethod -Uri 'https://api.supabase.com/v1/projects/ymxkzronkhwxzcdcbnwq/config/auth' -Headers $headers -Method Get
+$prodAuth = Invoke-RestMethod -Uri 'https://api.supabase.com/v1/projects/wgynakhoppqkrutnslmv/config/auth' -Headers $headers -Method Get
 
 $authClientId = $prodAuth.external_google_client_id.Trim()
 $authSecret = $prodAuth.external_google_secret.Trim()

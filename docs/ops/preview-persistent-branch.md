@@ -7,7 +7,7 @@
 
 **Status:** Approved target; implementation remains queued.  
 **Current live state:** `preview.equipqr.app` still points at production
-Supabase (`ymxkzronkhwxzcdcbnwq` / `https://supabase.equipqr.app`) until the
+Supabase (`wgynakhoppqkrutnslmv` / `https://supabase.equipqr.app`) until the
 cutover checklist below is executed.  
 **Related docs:** [preview-architecture-migration](./preview-architecture-migration.md),
 [supabase-branching](./supabase-branching.md),
@@ -32,7 +32,7 @@ Important constraints locked by Product:
 
 - This is a **persistent Supabase Database Branch**, not an ephemeral PR branch.
 - This is **not** a second paid Supabase project.
-- Production remains `ymxkzronkhwxzcdcbnwq` / `https://supabase.equipqr.app`.
+- Production remains `wgynakhoppqkrutnslmv` / `https://supabase.equipqr.app`.
 - The branch must be created with **`with_data: false`**.
 - Production rows, including 3-A Equipment shop data, must never be cloned or
   seeded into the preview branch.
@@ -106,8 +106,8 @@ Implementation waits on the Product Owner queue. When the cutover starts, use
 this checklist:
 
 1. Create a **new persistent Supabase Database Branch** from
-   `ymxkzronkhwxzcdcbnwq` with **`with_data: false`**.
-2. Verify the new branch ref is **not** `ymxkzronkhwxzcdcbnwq` and **not**
+   `wgynakhoppqkrutnslmv` with **`with_data: false`**.
+2. Verify the new branch ref is **not** `wgynakhoppqkrutnslmv` and **not**
    `olsdirkvvfegvclbpgrg`.
 3. Restore `edge-env-preview-secrets` onto the new branch and confirm
    `PUBLIC_SITE_URL=https://preview.equipqr.app`.
@@ -126,7 +126,7 @@ this checklist:
    includes `https://preview.equipqr.app/*`; no new preview hostname means no
    Maps referrer change is expected for this cutover.
 10. Verify the active preview backend ref is no longer
-    `ymxkzronkhwxzcdcbnwq` anywhere the ops runbook checks it.
+    `wgynakhoppqkrutnslmv` anywhere the ops runbook checks it.
 
 ---
 

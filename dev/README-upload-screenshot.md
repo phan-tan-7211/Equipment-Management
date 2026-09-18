@@ -75,7 +75,7 @@ When JSON mode is enabled, the script outputs a single JSON object with the foll
 ```json
 {
   "success": true,
-  "publicUrl": "https://ymxkzronkhwxzcdcbnwq.supabase.co/storage/v1/object/public/landing-page-images/features/qr-code/hero.png",
+  "publicUrl": "https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/landing-page-images/features/qr-code/hero.png",
   "storagePath": "features/qr-code/hero.png",
   "bucket": "landing-page-images",
   "fileSize": 471859
@@ -101,10 +101,10 @@ When JSON mode is enabled, the script outputs a single JSON object with the foll
 ✅ Upload successful!
 
 📎 Public URL:
-   https://ymxkzronkhwxzcdcbnwq.supabase.co/storage/v1/object/public/landing-page-images/features/qr-code-integration/hero.png
+   https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/landing-page-images/features/qr-code-integration/hero.png
 
 📝 Markdown reference:
-   ![Screenshot](https://ymxkzronkhwxzcdcbnwq.supabase.co/storage/v1/object/public/landing-page-images/features/qr-code-integration/hero.png)
+   ![Screenshot](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/landing-page-images/features/qr-code-integration/hero.png)
 ```
 
 ## Integration with Manual Screenshot Workflows
@@ -129,7 +129,7 @@ This script does not capture screenshots by itself. Use it after taking a screen
 ### "Invalid Supabase URL format"
 - URL must start with `https://` and be a valid Supabase project URL
 - Examples:
-  - Standard: `https://ymxkzronkhwxzcdcbnwq.supabase.co`
+  - Standard: `https://wgynakhoppqkrutnslmv.supabase.co`
   - Custom domain: `https://supabase.equipqr.app`
 
 ### File size limits

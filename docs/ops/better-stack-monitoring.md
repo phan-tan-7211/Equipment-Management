@@ -30,7 +30,7 @@ Better Stack provides two uptime monitors and a public status page for ZNTEQR:
 | Field | Value |
 |---|---|
 | Monitor name | `ZNTEQR API Health` |
-| Target URL | `https://ymxkzronkhwxzcdcbnwq.supabase.co/functions/v1/healthcheck` |
+| Target URL | `https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/healthcheck` |
 | Check type | HTTP(S) keyword |
 | Expected status | 200 |
 | Expected keyword | `"ok":true` |

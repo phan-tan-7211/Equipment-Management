@@ -39,7 +39,7 @@ This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipelin
 
 | Environment | Git trigger | Frontend URL | Supabase API |
 |-------------|-------------|--------------|--------------|
-| **Production** | Push to `main` (auto-promote via Production Release Readiness) | `<https://equipqr.app>` | `https://supabase.equipqr.app` (`ymxkzronkhwxzcdcbnwq`) |
+| **Production** | Push to `main` (auto-promote via Production Release Readiness) | `<https://equipqr.app>` | `https://supabase.equipqr.app` (`wgynakhoppqkrutnslmv`) |
 | **Integration preview** | Push/merge to git **`preview`** | `<https://preview.equipqr.app>` | **Current live:** production API (`supabase.equipqr.app`). **Approved target:** persistent dataless branch per `docs/ops/preview-persistent-branch.md` |
 | **PR Preview** | Feature PRs / work-branch pushes | Commit-specific `*.vercel.app` | Prod API by default; ephemeral Supabase when `supabase/**` changes |
 
@@ -127,7 +127,7 @@ This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipelin
 
 **Required Secret:** `PREVIEW_DATABASE_URL` (GitHub secret name unchanged; value should point at production pooler after #1033 cutover)
 - Format: `postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres`
-- Obtain from: Supabase Dashboard → Production Project (`ymxkzronkhwxzcdcbnwq`) → Settings → Database → Connection string (URI)
+- Obtain from: Supabase Dashboard → Production Project (`wgynakhoppqkrutnslmv`) → Settings → Database → Connection string (URI)
 
 ---
 
@@ -195,7 +195,7 @@ Local preview: from repo root, `npm run docs:dev` or `npm run docs:preview` afte
 **Configuration File:** `supabase/config.toml`
 
 **Projects:**
-- **Production:** `ymxkzronkhwxzcdcbnwq` — API `https://supabase.equipqr.app`
+- **Production:** `wgynakhoppqkrutnslmv` — API `https://supabase.equipqr.app`
 - **Current live preview app:** still uses the production project above
 - **Approved target preview backend:** a new persistent dataless branch for `preview.equipqr.app` (not yet cut over; see `preview-persistent-branch.md`)
 - **Ephemeral PR branches:** Created automatically when `supabase/**` changes on a PR (schema validation only)
@@ -315,7 +315,7 @@ See [Deployment Guide - Self-Hosted Runner Setup](./deployment.md#self-hosted-ru
    - **Today:** `VITE_SUPABASE_URL=https://supabase.equipqr.app`
    - **After the approved cutover:** the persistent preview branch URL from `preview-persistent-branch.md`
 3. Confirm Supabase Auth redirect URIs include `https://preview.equipqr.app/**` on the backend currently serving preview:
-   - **Today:** production project `ymxkzronkhwxzcdcbnwq`
+   - **Today:** production project `wgynakhoppqkrutnslmv`
    - **After the approved cutover:** the persistent preview branch Auth config
 
 ### CI failing on self-hosted runner

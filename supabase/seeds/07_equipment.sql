@@ -2,7 +2,7 @@
 -- ZNTEQR Seed Data - Equipment
 -- =====================================================
 -- Production-faithful equipment fixture (~150 rows across 6 orgs).
--- Mirrors real prod patterns observed in project ymxkzronkhwxzcdcbnwq:
+-- Mirrors real prod patterns observed in project wgynakhoppqkrutnslmv:
 --   * `location` text uses 4 patterns: "City, ST" / yard label / casing-variant / "Unknown"
 --   * `assigned_location_*` is sparse (~5-10% of equipment), street is NEVER set,
 --     country is the literal string 'United States', coords have 6+ decimals

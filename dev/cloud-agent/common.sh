@@ -2,7 +2,7 @@
 # Shared helpers for Cursor Cloud Agent ephemeral Supabase branch lifecycle.
 # shellcheck shell=bash
 
-PARENT_PROJECT_REF="${CLOUD_AGENT_SUPABASE_PARENT_REF:-ymxkzronkhwxzcdcbnwq}"
+PARENT_PROJECT_REF="${CLOUD_AGENT_SUPABASE_PARENT_REF:-wgynakhoppqkrutnslmv}"
 STATE_DIR="${CLOUD_AGENT_STATE_DIR:-${REPO_ROOT}/tmp/cloud-agent}"
 STATE_FILE="${CLOUD_AGENT_STATE_FILE:-${STATE_DIR}/ephemeral-stack.json}"
 ENV_BACKUP_FILE="${CLOUD_AGENT_ENV_BACKUP:-${STATE_DIR}/.env.pre-ephemeral}"
