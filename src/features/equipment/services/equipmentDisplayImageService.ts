@@ -124,12 +124,26 @@ export async function replaceEquipmentDisplayImage(
   );
   const uploaded = await uploadEquipmentDisplayImage(input);
 
-  await commitEquipmentDisplayImageRef(
-    input.organizationId,
-    input.equipmentId,
-    uploaded.canonicalRef,
-    previousRef,
-  );
+  try {
+    await commitEquipmentDisplayImageRef(
+      input.organizationId,
+      input.equipmentId,
+      uploaded.canonicalRef,
+      previousRef,
+    );
+  } catch (error) {
+    try {
+      await removeDisplayImageSet(uploaded.canonicalRef);
+    } catch (cleanupError) {
+      logger.warn('Failed to remove the replacement Equipment display image set', {
+        organizationId: input.organizationId,
+        equipmentId: input.equipmentId,
+        replacementRef: uploaded.canonicalRef,
+        error: cleanupError,
+      });
+    }
+    throw error;
+  }
 
   return uploaded.canonicalRef;
 }

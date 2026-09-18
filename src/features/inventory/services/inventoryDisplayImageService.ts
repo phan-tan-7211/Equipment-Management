@@ -1,6 +1,4 @@
-import { logger } from '@/utils/logger';
 import {
-  createCanonicalDisplayImageRef,
   createDisplayImageSetId,
   parseDisplayImageRef,
   removeDisplayImageSet,
@@ -25,35 +23,17 @@ export async function uploadInventoryDisplayImage(
   input: UploadInventoryDisplayImageInput,
 ): Promise<UploadedDisplayImageSet> {
   const imageSetId = input.imageSetId ?? createDisplayImageSetId();
-  const canonicalRef = createCanonicalDisplayImageRef({
-    organizationId: input.organizationId,
+
+  // The shared uploader cleans only the variants it confirmed as newly
+  // uploaded. Keeping that transaction boundary in one place also makes
+  // retry-safe, caller-supplied imageSetIds safe for every entity.
+  return uploadDisplayImageSet({
     entity: 'inventory',
+    organizationId: input.organizationId,
     entityId: input.inventoryItemId,
     imageSetId,
+    source: input.source,
   });
-
-  try {
-    return await uploadDisplayImageSet({
-      entity: 'inventory',
-      organizationId: input.organizationId,
-      entityId: input.inventoryItemId,
-      imageSetId,
-      source: input.source,
-    });
-  } catch (error) {
-    // The shared uploader may have written one or two variants before a later
-    // variant failed. Removing the whole deterministic set is idempotent and
-    // prevents a partial upload from becoming an orphan.
-    try {
-      await removeDisplayImageSet(canonicalRef);
-    } catch (cleanupError) {
-      logger.warn('Failed to remove incomplete Inventory display image set', {
-        canonicalRef,
-        error: cleanupError,
-      });
-    }
-    throw error;
-  }
 }
 
 /**

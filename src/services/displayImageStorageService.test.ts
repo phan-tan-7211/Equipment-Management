@@ -284,6 +284,74 @@ describe('displayImageStorageService', () => {
     }
   });
 
+  it('cleans confirmed variants when the next upload fails', async () => {
+    vi.mocked(imageCompression).mockImplementation(async () =>
+      new Blob(['webp'], { type: 'image/webp' }),
+    );
+    const source = {
+      size: 1,
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+      name: 'source.jpg',
+      type: 'image/jpeg',
+      lastModified: 123,
+    } as File;
+    mockUpload
+      .mockResolvedValueOnce({ data: { path: 'thumb.webp' }, error: null })
+      .mockResolvedValueOnce({
+        data: null,
+        error: new Error('preview unavailable'),
+      });
+
+    await expect(
+      uploadDisplayImageSet({
+        ...EQUIPMENT_INPUT,
+        source,
+      }),
+    ).rejects.toMatchObject({
+      name: 'DisplayImageUploadError',
+      variant: 'preview',
+    });
+
+    expect(mockRemove).toHaveBeenCalledWith([
+      'org/org-123/equipment/equipment-456/set-789/thumb.webp',
+    ]);
+  });
+
+  it('cleans the full partial set when the final variant fails', async () => {
+    vi.mocked(imageCompression).mockImplementation(async () =>
+      new Blob(['webp'], { type: 'image/webp' }),
+    );
+    const source = {
+      size: 1,
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+      name: 'source.jpg',
+      type: 'image/jpeg',
+      lastModified: 123,
+    } as File;
+    mockUpload
+      .mockResolvedValueOnce({ data: { path: 'thumb.webp' }, error: null })
+      .mockResolvedValueOnce({ data: { path: 'preview.webp' }, error: null })
+      .mockResolvedValueOnce({
+        data: null,
+        error: new Error('full unavailable'),
+      });
+
+    await expect(
+      uploadDisplayImageSet({
+        ...EQUIPMENT_INPUT,
+        source,
+      }),
+    ).rejects.toMatchObject({
+      name: 'DisplayImageUploadError',
+      variant: 'full',
+    });
+
+    expect(mockRemove).toHaveBeenCalledWith([
+      'org/org-123/equipment/equipment-456/set-789/thumb.webp',
+      'org/org-123/equipment/equipment-456/set-789/preview.webp',
+    ]);
+  });
+
   it('removes all variants for a valid V2 display image reference', async () => {
     const canonicalRef = createCanonicalDisplayImageRef(EQUIPMENT_INPUT);
 

@@ -192,6 +192,27 @@ export function createDisplayImageSetId(): string {
   return randomUUID.call(globalThis.crypto);
 }
 
+/**
+ * Remove only objects that this upload has confirmed as newly created.
+ *
+ * Do not call removeDisplayImageSet here: a caller may provide a retry image
+ * set id, and deleting every sibling variant could remove an older set that
+ * already existed before this attempt. Cleanup is deliberately best-effort so
+ * the original upload error remains the error observed by the caller.
+ */
+async function removeUploadedDisplayImageObjects(
+  objectPaths: string[],
+): Promise<void> {
+  if (objectPaths.length === 0) return;
+
+  try {
+    await supabase.storage.from(DISPLAY_IMAGE_BUCKET).remove(objectPaths);
+  } catch {
+    // Orphan cleanup is retried by the storage audit; never mask the primary
+    // variant upload failure with a cleanup failure.
+  }
+}
+
 export async function uploadDisplayImageSet(
   input: DisplayImageSetUploadInput,
 ): Promise<UploadedDisplayImageSet> {
@@ -205,21 +226,34 @@ export async function uploadDisplayImageSet(
   const canonicalRef = createCanonicalDisplayImageRef(canonicalInput);
   const variants = await createDisplayImageVariants(input.source);
   const objectPaths = {} as Record<DisplayImageVariantName, string>;
+  const uploadedObjectPaths: string[] = [];
 
-  for (const variant of DISPLAY_IMAGE_VARIANT_NAMES) {
-    const objectPath = createDisplayImagePath({
-      ...canonicalInput,
-      variant,
-    });
-    const { error } = await supabase.storage
-      .from(DISPLAY_IMAGE_BUCKET)
-      .upload(objectPath, variants[variant], DISPLAY_IMAGE_UPLOAD_OPTIONS);
+  try {
+    for (const variant of DISPLAY_IMAGE_VARIANT_NAMES) {
+      const objectPath = createDisplayImagePath({
+        ...canonicalInput,
+        variant,
+      });
 
-    if (error) {
-      throw new DisplayImageUploadError(variant, error);
+      try {
+        const { error } = await supabase.storage
+          .from(DISPLAY_IMAGE_BUCKET)
+          .upload(objectPath, variants[variant], DISPLAY_IMAGE_UPLOAD_OPTIONS);
+
+        if (error) {
+          throw new DisplayImageUploadError(variant, error);
+        }
+      } catch (error) {
+        if (error instanceof DisplayImageUploadError) throw error;
+        throw new DisplayImageUploadError(variant, error);
+      }
+
+      objectPaths[variant] = objectPath;
+      uploadedObjectPaths.push(objectPath);
     }
-
-    objectPaths[variant] = objectPath;
+  } catch (error) {
+    await removeUploadedDisplayImageObjects(uploadedObjectPaths);
+    throw error;
   }
 
   return {

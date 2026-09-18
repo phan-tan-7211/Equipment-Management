@@ -61,7 +61,7 @@ function parsedRef(canonicalRef: string, imageSetId: string) {
   };
 }
 
-function makeChain() {
+function makeChain(updateError: Error | null = null) {
   const chain: Record<string, any> = {};
   chain.select = vi.fn(() => chain);
   chain.update = vi.fn(() => chain);
@@ -72,7 +72,7 @@ function makeChain() {
   chain.then = (
     resolve: (value: unknown) => unknown,
     reject?: (reason: unknown) => unknown,
-  ) => Promise.resolve({ data: null, error: null }).then(resolve, reject);
+  ) => Promise.resolve({ data: null, error: updateError }).then(resolve, reject);
   return chain;
 }
 
@@ -159,6 +159,42 @@ describe('equipmentDisplayImageService', () => {
     ).rejects.toThrow('storage unavailable');
 
     expect(update).not.toHaveBeenCalled();
+  });
+
+  it('cleans the replacement set when the DB commit fails and leaves the old set', async () => {
+    const dbError = new Error('equipment update failed');
+    mockFrom.mockImplementation(() => makeChain(dbError));
+
+    await expect(
+      replaceEquipmentDisplayImage({
+        organizationId: 'org-1',
+        equipmentId: 'eq-1',
+        source: {} as File,
+      }),
+    ).rejects.toBe(dbError);
+
+    expect(mockRemoveDisplayImageSet).toHaveBeenCalledWith(NEW_REF);
+    expect(mockRemoveDisplayImageSet).not.toHaveBeenCalledWith(OLD_REF);
+  });
+
+  it('does not fail a replacement when old-set cleanup fails after commit', async () => {
+    mockRemoveDisplayImageSet.mockImplementation(async (ref: string) => {
+      if (ref === OLD_REF) throw new Error('old cleanup failed');
+      return true;
+    });
+
+    await expect(
+      replaceEquipmentDisplayImage({
+        organizationId: 'org-1',
+        equipmentId: 'eq-1',
+        source: {} as File,
+      }),
+    ).resolves.toBe(NEW_REF);
+
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
+      'Failed to remove the previous Equipment display image set',
+      expect.objectContaining({ previousRef: OLD_REF }),
+    );
   });
 
   it('normalizes legacy selection and clears the image through the scoped DB update', async () => {

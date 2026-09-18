@@ -13,13 +13,6 @@ const {
 }));
 
 vi.mock('@/services/displayImageStorageService', () => ({
-  createCanonicalDisplayImageRef: (input: {
-    organizationId: string;
-    entity: string;
-    entityId: string;
-    imageSetId: string;
-  }) =>
-    `display-images/org/${input.organizationId}/${input.entity}/${input.entityId}/${input.imageSetId}/full.webp`,
   createDisplayImageSetId: vi.fn(() => 'generated-set'),
   parseDisplayImageRef: mockParseDisplayImageRef,
   removeDisplayImageSet: mockRemoveDisplayImageSet,
@@ -90,7 +83,7 @@ describe('inventoryDisplayImageService', () => {
     expect(mockRemoveDisplayImageSet).not.toHaveBeenCalled();
   });
 
-  it('removes a partial set when a variant upload fails', async () => {
+  it('delegates partial-upload cleanup to the shared uploader', async () => {
     mockUploadDisplayImageSet.mockRejectedValueOnce(new Error('preview failed'));
 
     await expect(
@@ -102,7 +95,7 @@ describe('inventoryDisplayImageService', () => {
       }),
     ).rejects.toThrow('preview failed');
 
-    expect(mockRemoveDisplayImageSet).toHaveBeenCalledWith(CANONICAL_REF);
+    expect(mockRemoveDisplayImageSet).not.toHaveBeenCalled();
   });
 
   it('removes only a matching Inventory set', async () => {
