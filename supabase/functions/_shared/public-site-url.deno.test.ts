@@ -11,7 +11,7 @@ Deno.test({
     const prevProduction = Deno.env.get("PRODUCTION_URL");
     try {
       Deno.env.set("PUBLIC_SITE_URL", "https://preview.equipqr.app");
-      Deno.env.set("PRODUCTION_URL", "https://equipqr.app");
+      Deno.env.set("PRODUCTION_URL", "https://eqr.zinitek.com");
       assertEquals(resolvePublicSiteUrl(), "https://preview.equipqr.app");
     } finally {
       if (prevPublic === undefined) {
@@ -40,7 +40,7 @@ Deno.test({
       assertEquals(resolvePublicSiteUrl(), "https://preview.equipqr.app");
 
       Deno.env.delete("PRODUCTION_URL");
-      assertEquals(resolvePublicSiteUrl(), "https://equipqr.app");
+      assertEquals(resolvePublicSiteUrl(), "https://eqr.zinitek.com");
     } finally {
       if (prevPublic === undefined) {
         Deno.env.delete("PUBLIC_SITE_URL");
@@ -64,7 +64,7 @@ Deno.test({
     const prevProduction = Deno.env.get("PRODUCTION_URL");
     try {
       Deno.env.set("PUBLIC_SITE_URL", "https://preview.supabase.app");
-      Deno.env.set("PRODUCTION_URL", "https://equipqr.app");
+      Deno.env.set("PRODUCTION_URL", "https://eqr.zinitek.com");
       assertEquals(resolvePublicSiteUrl(), "https://preview.equipqr.app");
 
       Deno.env.delete("PUBLIC_SITE_URL");
