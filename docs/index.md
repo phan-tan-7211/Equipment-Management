@@ -61,7 +61,7 @@ Signed-in users can **report issues and track tickets** on the ZNTEQR app suppor
 
 **[equipqr.app/dashboard/support](https://eqr.zinitek.com/dashboard/support)**
 
-For service availability, check **[status.equipqr.app](https://status.equipqr.app)**.
+For service availability, check **[status.equipqr.app](https://eqr.zinitek.com/support)**.
 
 ## Reference guides
 
