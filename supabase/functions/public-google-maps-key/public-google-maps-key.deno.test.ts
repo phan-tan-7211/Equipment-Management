@@ -33,7 +33,7 @@ import { __testables } from "./index.ts";
 
 const FAKE_CORRELATION_ID = "00000000-0000-4000-8000-000000000001";
 const PREVIEW_ORIGIN = "https://preview.equipqr.app";
-const PRODUCTION_ORIGIN = "https://equipqr.app";
+const PRODUCTION_ORIGIN = "https://eqr.zinitek.com";
 const JSON_HEADERS = { "Content-Type": "application/json" } as const;
 
 function buildRequest(options?: {
