@@ -23,8 +23,12 @@ root.render(
 );
 
 // Keep the static boot screen visible until React has replaced any stale
-// prerendered marketing body on an app-route hard load.
-if (document.documentElement.dataset.appRoute === 'true') {
+// prerendered marketing body on an app-route hard load or a returning-auth
+// root load that will likely redirect into the dashboard.
+if (
+  document.documentElement.dataset.appRoute === 'true' ||
+  document.documentElement.dataset.authBoot === 'true'
+) {
   const bootScreen = document.getElementById('app-boot-loading');
   const clearBootScreen = () => {
     const staleMarketingBody = appRoot.querySelector('[data-prerendered-marketing-route]');
@@ -36,6 +40,7 @@ if (document.documentElement.dataset.appRoute === 'true') {
     // body. Remove that body only once the app has actually mounted.
     staleMarketingBody?.remove();
     document.documentElement.removeAttribute('data-app-route');
+    document.documentElement.removeAttribute('data-auth-boot');
     bootScreen?.remove();
     return true;
   };
