@@ -64,7 +64,7 @@ export const DashboardRouteLayout = () => {
                   <SelectedTeamProvider>
                     <SidebarProvider>
                       <BugReportProvider>
-                        <div className="flex min-h-screen w-full">
+                        <div className="flex min-h-screen w-full" data-dashboard-shell="control-room">
                           <IdleSessionTimeoutGuard />
                           <Suspense
                             fallback={
@@ -75,7 +75,7 @@ export const DashboardRouteLayout = () => {
                           >
                             <AppSidebar />
                           </Suspense>
-                          <SidebarInset className="flex-1 min-w-0">
+                          <SidebarInset className="flex-1 min-w-0" data-dashboard-workspace="">
                             <Suspense
                               fallback={
                                 <div className="h-14 sm:h-16 border-b">

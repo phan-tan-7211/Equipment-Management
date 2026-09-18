@@ -30,7 +30,7 @@ const EquipmentToolbar: React.FC<EquipmentToolbarProps> = ({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2">
+      <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-card/90 px-3 py-2 shadow-card backdrop-blur-sm">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <ToolbarSearchInput value={filters.search} onChange={(value) => onFilterChange('search', value)} placeholder={t('equipment.searchPlaceholder')} ariaLabel={t('equipment.searchAria')} />
           <Separator orientation="vertical" className="h-5" />

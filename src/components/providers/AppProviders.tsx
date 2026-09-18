@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
+import { ThemeProvider, useTheme } from 'next-themes';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { MFAProvider } from '@/contexts/MFAContext';
 import { UserProvider } from '@/contexts/UserContext';
@@ -18,14 +18,18 @@ import { TooltipProvider } from '@/components/ui/tooltip';
  * (#1081). Mounted above modals via the shared z-toast token so feedback
  * stays visible while dialogs are open.
  */
-const AppSonnerToaster: React.FC = () => (
-  <SonnerToaster
-    theme="dark"
-    position="bottom-right"
-    closeButton
-    style={{ zIndex: 'var(--z-toast)' } as React.CSSProperties}
-  />
-);
+const AppSonnerToaster: React.FC = () => {
+  const { resolvedTheme } = useTheme();
+
+  return (
+    <SonnerToaster
+      theme={resolvedTheme === 'light' ? 'light' : 'dark'}
+      position="bottom-right"
+      closeButton
+      style={{ zIndex: 'var(--z-toast)' } as React.CSSProperties}
+    />
+  );
+};
 
 /** TanStack Query retries should stop on hard auth/RBAC failures (not only numeric 401/403 strings). */
 function isNonRetryableQueryError(error: unknown): boolean {
@@ -79,7 +83,13 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   if (isQrEntry) {
     return (
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" forcedTheme="dark">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          storageKey="znteqr-theme"
+          disableTransitionOnChange
+        >
           <CookieConsentProvider>
             <TooltipProvider>
               <AuthProvider>
@@ -97,7 +107,13 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" forcedTheme="dark">
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        storageKey="znteqr-theme"
+        disableTransitionOnChange
+      >
         <CookieConsentProvider>
           <TooltipProvider>
             <AuthProvider>

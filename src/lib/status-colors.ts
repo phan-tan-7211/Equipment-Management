@@ -23,28 +23,32 @@ const WORK_ORDER_STATUS_BORDER: Record<string, string> = {
 };
 
 const EQUIPMENT_STATUS_BORDER: Record<string, string> = {
+  active: 'border-l-equipment-operational',
+  operational: 'border-l-equipment-operational',
   maintenance: 'border-l-equipment-maintenance',
   repair: 'border-l-equipment-repair',
   broken: 'border-l-equipment-repair',
   out_of_service: 'border-l-equipment-repair',
   retired: 'border-l-equipment-retired',
-  inactive: 'border-l-equipment-retired',
+  inactive: 'border-l-equipment-inactive',
 };
 
 const EQUIPMENT_STATUS_RAIL: Record<string, string> = {
+  active: 'bg-equipment-operational',
+  operational: 'bg-equipment-operational',
   maintenance: 'bg-equipment-maintenance',
   repair: 'bg-equipment-repair',
   broken: 'bg-equipment-repair',
   out_of_service: 'bg-equipment-repair',
   retired: 'bg-equipment-retired',
-  inactive: 'bg-equipment-retired',
+  inactive: 'bg-equipment-inactive',
 };
 
-/** Semantic card rail legend entries for equipment list filter UI (active = no rail). */
+/** Semantic card rail legend entries for equipment list filter UI. */
 export const EQUIPMENT_STATUS_RAIL_LEGEND = [
-  { status: 'active', railClass: '' },
+  { status: 'active', railClass: 'bg-equipment-operational' },
   { status: 'maintenance', railClass: 'bg-equipment-maintenance' },
-  { status: 'inactive', railClass: 'bg-equipment-retired' },
+  { status: 'inactive', railClass: 'bg-equipment-inactive' },
   { status: 'out_of_service', railClass: 'bg-equipment-repair' },
 ] as const;
 
@@ -79,14 +83,11 @@ export const getWorkOrderStatusBorderWithOverdue = (
 };
 
 export const getEquipmentStatusBorderClass = (status: string): string => {
-  const key = status?.toLowerCase() ?? '';
-  if (key === 'active' || key === 'operational') return '';
   return lookupBorderClass(status, EQUIPMENT_STATUS_BORDER);
 };
 
 export const getEquipmentStatusRailClass = (status: string): string => {
   const key = status?.toLowerCase() ?? '';
-  if (key === 'active' || key === 'operational') return '';
   return EQUIPMENT_STATUS_RAIL[key] ?? 'bg-muted';
 };
 
@@ -96,7 +97,7 @@ const EQUIPMENT_STATUS_TINT: Record<string, string> = {
   broken: 'bg-equipment-repair/[0.03]',
   out_of_service: 'bg-equipment-repair/[0.03]',
   retired: 'bg-equipment-retired/[0.03]',
-  inactive: 'bg-equipment-retired/[0.03]',
+  inactive: 'bg-equipment-inactive/[0.03]',
 };
 
 export const getEquipmentStatusBackgroundTint = (status: string): string => {

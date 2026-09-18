@@ -26,6 +26,7 @@ vi.mock('next-themes', () => ({
   ThemeProvider: vi.fn(({ children }: { children: React.ReactNode }) => (
     <div data-testid="theme-provider">{children}</div>
   )),
+  useTheme: () => ({ resolvedTheme: 'dark', setTheme: vi.fn() }),
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -180,7 +181,9 @@ describe('AppProviders', () => {
       expect(ThemeProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           attribute: 'class',
-          forcedTheme: 'dark',
+          defaultTheme: 'system',
+          enableSystem: true,
+          storageKey: 'znteqr-theme',
         }),
         undefined,
       );
