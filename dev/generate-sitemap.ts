@@ -16,7 +16,7 @@ import {
   type MarketingRoute,
 } from '../src/lib/marketingRoutes';
 
-const BASE_URL = 'https://equipqr.app';
+const BASE_URL = 'https://eqr.zinitek.com';
 const PINNED_FALLBACK_DATE = '2026-01-01';
 
 function getReproducibleLastmod() {
