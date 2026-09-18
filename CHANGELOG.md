@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.17] - 2026-09-19
+
+### Changed
+
+- Updated active repository and production-site references to `phan-tan-7211/Equipment-Management` and `eqr.zinitek.com`, while preserving historical issue references and legacy printed QR compatibility.
+
 ## [3.34.16] - 2026-09-19
 
 ### Added
