@@ -8,6 +8,7 @@
 export const DEFAULT_PUBLIC_SITE_URL = "https://eqr.zinitek.com";
 
 const RETIRED_PUBLIC_SITE_URLS: Record<string, string> = {
+  "https://equipqr.app": "https://eqr.zinitek.com",
   "https://preview.supabase.app": "https://preview.equipqr.app",
 };
 
