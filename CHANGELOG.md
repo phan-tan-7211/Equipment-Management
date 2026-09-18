@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.22] - 2026-09-19
+
+### Fixed
+
+- Localized bundled ZNTEQR PM template names, descriptions, and section labels across the template catalog, detail view, assignment menu, and PDF section headings for Vietnamese and Korean while keeping organization-authored templates unchanged.
+
 ## [3.34.21] - 2026-09-19
 
 ### Fixed
