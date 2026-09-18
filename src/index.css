@@ -353,6 +353,17 @@
     background: transparent;
   }
 
+  /* Dialog chrome: keep outer scrollbars visually away from rounded borders.
+     Nested scroll regions can still use the normal scrollbar rules. */
+  [data-znteqr-dialog-content="true"]::-webkit-scrollbar-track {
+    margin-block: 10px;
+  }
+
+  [data-znteqr-dialog-content="true"]::-webkit-scrollbar-thumb {
+    border-left-width: 3px;
+    border-right-width: 3px;
+  }
+
   body {
     @apply bg-background text-foreground font-body;
     font-feature-settings: 'liga' 1, 'kern' 1;
