@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Loader2, AlertCircle, ArrowRight, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ interface QRRedirectHandlerProps {
 
 export const QRRedirectHandler: React.FC<QRRedirectHandlerProps> = ({ equipmentId, inventoryItemId, workOrderId }) => {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [shouldNavigate, setShouldNavigate] = React.useState(false);
   const [navigationTarget, setNavigationTarget] = React.useState<string | null>(null);
   const { triggerFeedback } = useScanFeedback();
@@ -120,7 +121,7 @@ export const QRRedirectHandler: React.FC<QRRedirectHandlerProps> = ({ equipmentI
               
               <Button 
                 variant="outline" 
-                onClick={() => window.location.href = '/dashboard'}
+                onClick={() => navigate('/dashboard')}
                 className="w-full"
               >
                 {t('authRoutes.cancel')}
@@ -162,7 +163,7 @@ export const QRRedirectHandler: React.FC<QRRedirectHandlerProps> = ({ equipmentI
               </Button>
               
               <Button 
-                onClick={() => window.location.href = '/dashboard'}
+                onClick={() => navigate('/dashboard')}
                 className="w-full"
               >
                 {t('authRoutes.dashboard')}
