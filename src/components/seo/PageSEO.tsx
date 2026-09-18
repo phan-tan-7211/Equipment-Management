@@ -19,7 +19,7 @@ interface PageSEONoindexProps {
 
 type PageSEOProps = PageSEOIndexedProps | PageSEONoindexProps;
 
-const BASE_URL = 'https://equipqr.app';
+const BASE_URL = 'https://eqr.zinitek.com';
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 
 const MANAGED_ATTR = 'data-znteqr-page-seo';
