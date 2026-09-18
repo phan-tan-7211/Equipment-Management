@@ -6,7 +6,7 @@
  *
  * Uses navigator.onLine via online/offline listeners (works without OfflineQueueProvider).
  *
- * @see https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/536
+ * @see https://github.com/phan-tan-7211/Equipment-Management/issues/536
  */
 
 import React from 'react';
