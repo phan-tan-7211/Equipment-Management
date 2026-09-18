@@ -281,7 +281,7 @@ After setting secrets, verify they're working:
 - **`SUPABASE_URL`**: Must be the persistent preview branch URL
   (`https://<persistent-preview-branch-ref>.supabase.co`), **not** the
   production URL
-- **`PUBLIC_SITE_URL`**: For preview branch, this should be `https://preview.equipqr.app` (the preview deployment URL), NOT `https://equipqr.app`
+- **`PUBLIC_SITE_URL`**: For preview branch, this should be `https://preview.equipqr.app` (the preview deployment URL), NOT `https://eqr.zinitek.com`
 
 ### 🔄 Secrets Are Not Synced
 
@@ -312,7 +312,7 @@ Secrets are **not automatically synced** between branches. If you add a new secr
 ### Email Invitations Use Wrong URL
 
 1. Verify `PUBLIC_SITE_URL` (or legacy `PRODUCTION_URL`) is set correctly for the branch:
-   - Production branch: `https://equipqr.app`
+   - Production branch: `https://eqr.zinitek.com`
    - Preview branch: `https://preview.equipqr.app`
 
 ## Google Maps API key — HTTP referrer allowlist
@@ -334,7 +334,7 @@ In the ZNTEQR UI: the Fleet Map renders the in-app `MapsAuthFailureCard` diagnos
 Set the same allowlist on every Google Cloud API key referenced as `GOOGLE_MAPS_BROWSER_KEY` (Production Supabase project AND each branch project):
 
 - `http://localhost:8080/*` (local dev)
-- `https://equipqr.app/*` (Production)
+- `https://eqr.zinitek.com/*` (Production)
 - `https://*.equipqr.app/*` (covers `preview.equipqr.app` and any future custom subdomain alias)
 - `https://preview.equipqr.app/*` (explicit Preview entry — keep alongside the wildcard for clarity)
 
