@@ -63,6 +63,7 @@ function makeStorage(): MigrationStorage & {
       contentType: 'image/jpeg',
     })),
     upload: vi.fn(async () => 'uploaded' as const),
+    remove: vi.fn(async () => undefined),
     stat: vi.fn(async () => ({ exists: true })),
   };
 }
@@ -191,6 +192,69 @@ describe('legacy display-image migration core', () => {
     });
     expect(report.resumeCursor).toBe('start-cursor');
     expect(database.updateCanonicalRef).toHaveBeenCalledTimes(1);
+  });
+
+  it('cleans newly uploaded variants when the guarded DB update fails', async () => {
+    const candidate = makeCandidate();
+    const database = makeDatabase([candidate]);
+    database.updateCanonicalRef.mockResolvedValueOnce(false);
+    const storage = makeStorage();
+
+    const report = await runLegacyDisplayImageMigration(
+      {
+        database,
+        storage,
+        convertToVariants: async () => makeVariants(),
+      },
+      {
+        mode: 'apply',
+        limit: 1,
+        cursor: null,
+        entity: 'inventory',
+      },
+    );
+
+    expect(report.failed).toBe(1);
+    expect(report.migrated).toBe(0);
+    expect(storage.remove).toHaveBeenCalledWith(
+      'display-images',
+      expect.arrayContaining([
+        expect.stringContaining('/thumb.webp'),
+        expect.stringContaining('/preview.webp'),
+        expect.stringContaining('/full.webp'),
+      ]),
+    );
+    expect(storage.remove.mock.calls[0]?.[1]).toHaveLength(3);
+  });
+
+  it('does not remove pre-existing retry objects when a later upload fails', async () => {
+    const candidate = makeCandidate();
+    const database = makeDatabase([candidate]);
+    const storage = makeStorage();
+    storage.upload
+      .mockResolvedValueOnce('already-exists')
+      .mockResolvedValueOnce('uploaded')
+      .mockRejectedValueOnce(new Error('full upload failed'));
+
+    const report = await runLegacyDisplayImageMigration(
+      {
+        database,
+        storage,
+        convertToVariants: async () => makeVariants(),
+      },
+      {
+        mode: 'apply',
+        limit: 1,
+        cursor: null,
+        entity: 'inventory',
+      },
+    );
+
+    expect(report.failed).toBe(1);
+    expect(storage.remove).toHaveBeenCalledWith(
+      'display-images',
+      [expect.stringContaining('/preview.webp')],
+    );
   });
 
   it('recognizes V2 refs and parses safe legacy bucket paths', () => {

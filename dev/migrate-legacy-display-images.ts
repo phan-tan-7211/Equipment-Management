@@ -559,6 +559,13 @@ class SupabaseMigrationStorage implements MigrationStorage {
     throw new Error('V2 upload failed: ' + error.message);
   }
 
+  async remove(bucket: 'display-images', paths: string[]): Promise<void> {
+    if (paths.length === 0) return;
+
+    const { error } = await this.client.storage.from(bucket).remove(paths);
+    if (error) throw new Error('V2 cleanup failed: ' + error.message);
+  }
+
   async stat(
     bucket: 'display-images',
     objectPath: string,
