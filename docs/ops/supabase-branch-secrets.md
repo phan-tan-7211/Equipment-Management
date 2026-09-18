@@ -93,7 +93,7 @@ OAuth callback URIs are derived from `SUPABASE_URL` — do **not** set `QB_OAUTH
 
 | Secret Name | Required For | Example Value | Notes |
 |------------|--------------|---------------|-------|
-| `GITHUB_PAT` | `create-ticket` | `github_pat_...` | GitHub Personal Access Token (fine-grained) with **Issues: Read and write** permission scoped to `Columbia-Cloudworks-LLC/ZNTEQR`. Generate at: [GitHub Settings > Fine-grained tokens](https://github.com/settings/tokens?type=beta) |
+| `GITHUB_PAT` | `create-ticket` | `github_pat_...` | GitHub Personal Access Token (fine-grained) with **Issues: Read and write** permission scoped to `phan-tan-7211/Equipment-Management`. Generate at: [GitHub Settings > Fine-grained tokens](https://github.com/settings/tokens?type=beta) |
 | `GITHUB_WEBHOOK_SECRET` | `github-issue-webhook` | Random hex string | Shared secret for HMAC-SHA256 webhook signature verification. Must match the secret configured in GitHub repo Settings > Webhooks. Generate with: `openssl rand -hex 32` |
 
 ## Edge Functions and Their Required Secrets
@@ -281,7 +281,7 @@ After setting secrets, verify they're working:
 - **`SUPABASE_URL`**: Must be the persistent preview branch URL
   (`https://<persistent-preview-branch-ref>.supabase.co`), **not** the
   production URL
-- **`PUBLIC_SITE_URL`**: For preview branch, this should be `https://preview.equipqr.app` (the preview deployment URL), NOT `https://equipqr.app`
+- **`PUBLIC_SITE_URL`**: For preview branch, this should be `https://preview.equipqr.app` (the preview deployment URL), NOT `https://eqr.zinitek.com`
 
 ### 🔄 Secrets Are Not Synced
 
@@ -312,7 +312,7 @@ Secrets are **not automatically synced** between branches. If you add a new secr
 ### Email Invitations Use Wrong URL
 
 1. Verify `PUBLIC_SITE_URL` (or legacy `PRODUCTION_URL`) is set correctly for the branch:
-   - Production branch: `https://equipqr.app`
+   - Production branch: `https://eqr.zinitek.com`
    - Preview branch: `https://preview.equipqr.app`
 
 ## Google Maps API key — HTTP referrer allowlist
@@ -327,14 +327,14 @@ In the browser DevTools console:
 - `Your site URL to be authorized: https://<that-domain>/dashboard/fleet-map`
 - Followed by `TypeError: Cannot read properties of undefined (reading 'get')` originating in `marker.js` — the downstream crash that occurs because Google Maps half-initializes before rejecting the key.
 
-In the ZNTEQR UI: the Fleet Map renders the in-app `MapsAuthFailureCard` diagnostic (after [issue #617 follow-up](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/617)) listing the exact URL to authorize.
+In the ZNTEQR UI: the Fleet Map renders the in-app `MapsAuthFailureCard` diagnostic (after [issue #617 follow-up](https://github.com/phan-tan-7211/Equipment-Management/issues/617)) listing the exact URL to authorize.
 
 ### Required allowlist entries
 
 Set the same allowlist on every Google Cloud API key referenced as `GOOGLE_MAPS_BROWSER_KEY` (Production Supabase project AND each branch project):
 
 - `http://localhost:8080/*` (local dev)
-- `https://equipqr.app/*` (Production)
+- `https://eqr.zinitek.com/*` (Production)
 - `https://*.equipqr.app/*` (covers `preview.equipqr.app` and any future custom subdomain alias)
 - `https://preview.equipqr.app/*` (explicit Preview entry — keep alongside the wildcard for clarity)
 

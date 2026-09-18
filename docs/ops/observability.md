@@ -1,6 +1,6 @@
 # Observability — Audit Log Routing
 
-> Operational reference for where Google Workspace and Google Cloud audit logs live, how to enable them, and how to query them. Created in response to [issue #629](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/629), which surfaced a recurring confusion about Workspace-tier vs. project-tier audit logging.
+> Operational reference for where Google Workspace and Google Cloud audit logs live, how to enable them, and how to query them. Created in response to [issue #629](https://github.com/phan-tan-7211/Equipment-Management/issues/629), which surfaced a recurring confusion about Workspace-tier vs. project-tier audit logging.
 
 ## Summary
 
@@ -10,7 +10,7 @@
 | Google Cloud Data Access (project services) | Project | Cloud-native services on `equipqr-prod`, **only when enabled** via project `auditConfigs` | `gcloud logging read --project=equipqr-prod` against `projects/equipqr-prod/logs/cloudaudit.googleapis.com%2Fdata_access` |
 | **Google Workspace audit logs** (Admin, Login, OAuth Token, SAML, Groups) | **Org** (only when Workspace data sharing is enabled) | `columbiacloudworks.com` Workspace tenant | `gcloud logging read --organization=476784721717` against `organizations/476784721717/logs/cloudaudit.googleapis.com%2F{activity,data_access}` |
 
-The single most common confusion (the one that produced [#629](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/629)) is between the second and third rows. The remediation is documented below.
+The single most common confusion (the one that produced [#629](https://github.com/phan-tan-7211/Equipment-Management/issues/629)) is between the second and third rows. The remediation is documented below.
 
 ## Where Google Workspace OAuth audit logs live (corrected architecture)
 
@@ -95,6 +95,6 @@ If the projected `_Default` ingestion exceeds, say, 25 GiB/month (half the free 
 
 - [`docs/ops/deployment.md`](deployment.md) — Workspace OAuth setup and shared client policy.
 - [`docs/ops/better-stack-monitoring.md`](better-stack-monitoring.md) — uptime monitoring (separate observability surface).
-- [`.env.example` (repository)](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/.env.example) — Workspace OAuth env vars (`VITE_GOOGLE_WORKSPACE_CLIENT_ID`, `GOOGLE_WORKSPACE_CLIENT_ID`, `GOOGLE_WORKSPACE_CLIENT_SECRET`).
-- [Issue #629](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/629) — original ticket and redirect comment.
-- [Issue #601](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/601) — the customer report that surfaced the original observability gap.
+- [`.env.example` (repository)](https://github.com/phan-tan-7211/Equipment-Management/blob/main/.env.example) — Workspace OAuth env vars (`VITE_GOOGLE_WORKSPACE_CLIENT_ID`, `GOOGLE_WORKSPACE_CLIENT_ID`, `GOOGLE_WORKSPACE_CLIENT_SECRET`).
+- [Issue #629](https://github.com/phan-tan-7211/Equipment-Management/issues/629) — original ticket and redirect comment.
+- [Issue #601](https://github.com/phan-tan-7211/Equipment-Management/issues/601) — the customer report that surfaced the original observability gap.

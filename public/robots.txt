@@ -44,4 +44,4 @@ Disallow: /tickets
 Disallow: /dsr
 
 # Sitemap location
-Sitemap: https://equipqr.app/sitemap.xml
+Sitemap: https://eqr.zinitek.com/sitemap.xml

@@ -27,16 +27,16 @@ const MINIMAL_DIST_TEMPLATE = `<!DOCTYPE html>
     <meta charset="UTF-8" />
     <title>ZNTEQR | Placeholder</title>
     <meta name="description" content="Placeholder description." />
-    <link rel="canonical" href="https://equipqr.app" />
+    <link rel="canonical" href="https://eqr.zinitek.com" />
     <meta property="og:title" content="OG Old" />
     <meta property="og:description" content="OG Desc Old" />
-    <meta property="og:url" content="https://equipqr.app" />
+    <meta property="og:url" content="https://eqr.zinitek.com" />
     <meta property="og:image:alt" content="Old alt" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@equipqr" />
     <meta name="twitter:title" content="Tw Old" />
     <meta name="twitter:description" content="Tw Desc Old" />
-    <meta name="twitter:image" content="https://equipqr.app/og-image.png" />
+    <meta name="twitter:image" content="https://eqr.zinitek.com/og-image.png" />
   </head>
   <body>
     <div id="root"></div>
@@ -54,7 +54,7 @@ describe('prerenderMarketingHtmlTemplate', () => {
       '<title>Work Order Management Software for Heavy Equipment Repair | ZNTEQR</title>'
     );
     expect(html).toContain(
-      '<link rel="canonical" href="https://equipqr.app/features/work-order-management" />'
+      '<link rel="canonical" href="https://eqr.zinitek.com/features/work-order-management" />'
     );
     expect(html).toContain(
       'Create, assign, and complete repair-shop work orders with PM templates, parts, photos, and statuses built for field crews.'
@@ -75,7 +75,7 @@ describe('prerenderMarketingHtmlTemplate', () => {
     const html = prerenderMarketingHtmlTemplate(MINIMAL_DIST_TEMPLATE, route);
 
     expect(html).toContain('<title>Releases · ZNTEQR</title>');
-    expect(html).toContain('<link rel="canonical" href="https://equipqr.app/releases" />');
+    expect(html).toContain('<link rel="canonical" href="https://eqr.zinitek.com/releases" />');
     expect(html).toContain('Customer-facing changes in each published ZNTEQR release.');
     expect(html).not.toContain('Releases · ZNTEQR | ZNTEQR');
   });
@@ -88,7 +88,7 @@ describe('prerenderMarketingHtmlTemplate', () => {
     expect(html).toContain(
       '<title>ZNTEQR | Free Work Order Software for Heavy Equipment Repair Shops</title>'
     );
-    expect(html).toContain('<link rel="canonical" href="https://equipqr.app/" />');
+    expect(html).toContain('<link rel="canonical" href="https://eqr.zinitek.com/" />');
     expect(html).toContain(
       '<meta property="og:title" content="ZNTEQR | Free Work Order Software for Heavy Equipment Repair Shops" />'
     );

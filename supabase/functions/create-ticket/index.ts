@@ -5,7 +5,7 @@
  * 1. Authenticates the user via JWT
  * 2. Validates and sanitizes the request payload (title, description, metadata)
  * 3. Enforces per-user rate limiting (max 3 tickets per hour)
- * 4. Creates a GitHub Issue in Columbia-Cloudworks-LLC/ZNTEQR
+ * 4. Creates a GitHub Issue in phan-tan-7211/Equipment-Management
  * 5. Inserts a record into the tickets table with the GitHub issue number
  *
  * Security:
@@ -31,9 +31,9 @@ import { MissingSecretError, requireSecret } from "../_shared/require-secret.ts"
 
 const FUNCTION_NAME = "create-ticket";
 
-const GITHUB_REPO_OWNER = "Columbia-Cloudworks-LLC";
-const GITHUB_REPO_NAME = "ZNTEQR";
-const GITHUB_ASSIGNEE = "viralarchitect";
+const GITHUB_REPO_OWNER = "phan-tan-7211";
+const GITHUB_REPO_NAME = "Equipment-Management";
+const GITHUB_ASSIGNEE = "phan-tan-7211";
 const GITHUB_LABEL = "user-reported";
 
 const MIN_TITLE_LENGTH = 5;

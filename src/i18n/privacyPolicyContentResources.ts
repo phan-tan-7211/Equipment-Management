@@ -9,7 +9,7 @@ const viSections: readonly PrivacyPolicyLocalizedSection[] = [
     title: '1. Giới thiệu',
     paragraphs: [
       'ZNTEQR™ (chúng tôi) do ZNT LLC phát triển và vận hành, cam kết bảo vệ quyền riêng tư của mọi cá nhân và tổ chức sử dụng nền tảng quản lý thiết bị đội xe. Chính sách này giải thích chúng tôi thu thập thông tin gì, vì sao thu thập, nhà cung cấp nào xử lý, cách bảo vệ và các quyền của bạn.',
-      'Chính sách áp dụng cho ứng dụng web ZNTEQR tại equipqr.app, gồm trải nghiệm quét mã QR, API và các chức năng ứng dụng di động hoặc PWA liên quan. Việc sử dụng dịch vụ cũng chịu sự điều chỉnh của Điều khoản dịch vụ.',
+      'Chính sách áp dụng cho ứng dụng web ZNTEQR tại eqr.zinitek.com, gồm trải nghiệm quét mã QR, API và các chức năng ứng dụng di động hoặc PWA liên quan. Việc sử dụng dịch vụ cũng chịu sự điều chỉnh của Điều khoản dịch vụ.',
     ],
   },
   {
@@ -116,7 +116,7 @@ const viSections: readonly PrivacyPolicyLocalizedSection[] = [
       'Phần này áp dụng cho cư dân California và bổ sung các công bố theo CCPA/CPRA.',
       'Trong 12 tháng trước, chúng tôi có thể thu thập các nhóm thông tin như định danh, dữ liệu thương mại, hoạt động internet, dữ liệu địa lý chính xác khi được bật, thông tin nghề nghiệp và dữ liệu suy luận cần cho vận hành dịch vụ.',
       'Thông tin nhạy cảm gồm tọa độ GPS chỉ khi quản trị viên bật thu thập vị trí và thông tin đăng nhập do Supabase Auth quản lý. Chúng tôi không bán thông tin cá nhân và không chia sẻ cho quảng cáo hành vi theo ngữ cảnh chéo.',
-      'Bạn có thể gửi yêu cầu qua equipqr.app/privacy-request hoặc privacy@equipqr.app. Người dùng đã xác thực cũng có thể gửi từ cài đặt tài khoản. Chúng tôi xác minh danh tính trước khi xử lý và thường phản hồi trong 45 ngày; trường hợp cần thiết có thể gia hạn thêm 45 ngày.',
+      'Bạn có thể gửi yêu cầu qua eqr.zinitek.com/privacy-request hoặc phantan7211@gmail.com. Người dùng đã xác thực cũng có thể gửi từ cài đặt tài khoản. Chúng tôi xác minh danh tính trước khi xử lý và thường phản hồi trong 45 ngày; trường hợp cần thiết có thể gia hạn thêm 45 ngày.',
     ],
   },
   {
@@ -143,7 +143,7 @@ const viSections: readonly PrivacyPolicyLocalizedSection[] = [
     title: '14. Liên hệ',
     paragraphs: [
       'Nếu có câu hỏi, muốn thực hiện quyền dữ liệu hoặc lo ngại về hoạt động xử lý dữ liệu, hãy liên hệ chúng tôi.',
-      'Email: phantan7211@gmail.com · Website: equipqr.app · Công ty: ZNT LLC. Vui lòng liên hệ để nhận thông tin địa chỉ doanh nghiệp. Chúng tôi hướng tới việc phản hồi yêu cầu liên quan đến quyền riêng tư trong 45 ngày.',
+      'Email: phantan7211@gmail.com · Website: eqr.zinitek.com · Công ty: ZNT LLC. Vui lòng liên hệ để nhận thông tin địa chỉ doanh nghiệp. Chúng tôi hướng tới việc phản hồi yêu cầu liên quan đến quyền riêng tư trong 45 ngày.',
     ],
   },
 ];
@@ -153,7 +153,7 @@ const koSections: readonly PrivacyPolicyLocalizedSection[] = [
     title: '1. 소개',
     paragraphs: [
       'ZNTEQR™(이하 “당사”)는 ZNT LLC가 개발하고 운영하며, 차량·장비 관리 플랫폼을 이용하는 개인과 조직의 개인정보를 보호하기 위해 노력합니다. 이 정책은 수집 정보, 수집 목적, 처리 업체, 보호 방법 및 사용자의 권리를 설명합니다.',
-      '이 정책은 QR 스캔, API 및 관련 모바일/PWA 기능을 포함한 equipqr.app의 ZNTEQR 웹 애플리케이션에 적용됩니다. 서비스 이용에는 서비스 약관도 적용됩니다.',
+      '이 정책은 QR 스캔, API 및 관련 모바일/PWA 기능을 포함한 eqr.zinitek.com의 ZNTEQR 웹 애플리케이션에 적용됩니다. 서비스 이용에는 서비스 약관도 적용됩니다.',
     ],
   },
   {
@@ -256,7 +256,7 @@ const koSections: readonly PrivacyPolicyLocalizedSection[] = [
       '이 절은 캘리포니아 거주자에게 적용되며 CCPA/CPRA가 요구하는 내용을 보충합니다.',
       '지난 12개월 동안 식별자, 상업 정보, 인터넷 활동, 관리자가 켠 경우의 정확한 위치 정보, 직업 정보 및 서비스 운영에 필요한 추론 정보를 수집할 수 있습니다.',
       '민감한 정보에는 관리자가 켠 경우의 GPS 좌표와 Supabase Auth가 관리하는 로그인 정보가 포함됩니다. 개인정보를 판매하거나 교차 맥락 행동 광고를 위해 공유하지 않습니다.',
-      'equipqr.app/privacy-request 또는 privacy@equipqr.app으로 요청할 수 있습니다. 인증된 사용자는 계정 설정에서도 요청할 수 있습니다. 신원을 확인한 후 처리하며 일반적으로 45일 이내 답변하고 필요한 경우 45일을 추가할 수 있습니다.',
+      'eqr.zinitek.com/privacy-request 또는 phantan7211@gmail.com으로 요청할 수 있습니다. 인증된 사용자는 계정 설정에서도 요청할 수 있습니다. 신원을 확인한 후 처리하며 일반적으로 45일 이내 답변하고 필요한 경우 45일을 추가할 수 있습니다.',
     ],
   },
   {
@@ -283,7 +283,7 @@ const koSections: readonly PrivacyPolicyLocalizedSection[] = [
     title: '14. 문의하기',
     paragraphs: [
       '이 정책에 대한 질문, 데이터 권리 행사 또는 데이터 처리에 대한 우려가 있으면 문의해 주세요.',
-      '이메일: phantan7211@gmail.com · 웹사이트: equipqr.app · 회사: ZNT LLC. 사업장 주소는 문의해 주세요. 개인정보 관련 문의에는 45일 이내 답변하도록 노력합니다.',
+      '이메일: phantan7211@gmail.com · 웹사이트: eqr.zinitek.com · 회사: ZNT LLC. 사업장 주소는 문의해 주세요. 개인정보 관련 문의에는 45일 이내 답변하도록 노력합니다.',
     ],
   },
 ];

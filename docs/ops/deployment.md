@@ -8,7 +8,7 @@ ZNTEQR™ is designed as a modern single-page application (SPA) that can be depl
 
 ### Public documentation site (`equipqr.info`)
 
-Developer and operator documentation is published from this repository’s [`docs/`](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/tree/main/docs) directory as a **standalone VitePress** static site. It is deployed as a **separate Vercel project** with **Root Directory** set to `docs` (build: `npm run docs:build`, output: `.vitepress/dist`). Production hostname: **`https://equipqr.info`**. The product app remains on **`https://equipqr.app`**.
+Developer and operator documentation is published from this repository’s [`docs/`](https://github.com/phan-tan-7211/Equipment-Management/tree/main/docs) directory as a **standalone VitePress** static site. It is deployed as a **separate Vercel project** with **Root Directory** set to `docs` (build: `npm run docs:build`, output: `.vitepress/dist`). Production hostname: **`https://eqr.zinitek.com`**. The product app remains on **`https://eqr.zinitek.com`**.
 
 **Operational wiring (ZNT Vercel team):**
 
@@ -28,7 +28,7 @@ Keep **`equipqr.info` off the SPA project (`equipqr`)** — only the docs projec
 
 **Design tokens (app ↔ docs):** The product Mission Control palette lives in [`src/index.css`](../../src/index.css). The VitePress theme under [`docs/.vitepress/theme/`](../.vitepress/theme/) mirrors those HSL values into `znteqr-tokens.css` and maps them to VitePress `--vp-*` variables in `custom.css` (default appearance is dark). When you change primary, background, border, or semantic status colors in the app, update the matching `--eqr-*` values in `znteqr-tokens.css` in the same change (or immediately after) so equipqr.info stays visually continuous with equipqr.app. There is not yet a shared compiled token package — the mirror is intentional and documented.
 
-**Local footer testing:** Run `.\dev\dev-start.bat` to start the product app and docs site together. In local Vite dev mode, the app footer’s Documentation link defaults to `http://localhost:5174`; production builds default to `https://equipqr.info`. Set `VITE_DOCUMENTATION_URL` when you need to test a different docs preview URL, such as `http://localhost:4173` after running `npm run docs:build` and then `npm run docs:preview`.
+**Local footer testing:** Run `.\dev\dev-start.bat` to start the product app and docs site together. In local Vite dev mode, the app footer’s Documentation link defaults to `http://localhost:5174`; production builds default to `https://eqr.zinitek.com`. Set `VITE_DOCUMENTATION_URL` when you need to test a different docs preview URL, such as `http://localhost:4173` after running `npm run docs:build` and then `npm run docs:preview`.
 
 **Related domains:** During domain migration, **`equipqr.support`** / **`www.equipqr.support`** on the SPA project may temporarily redirect to **`equipqr.app`** instead of **`equipqr.info`** because Vercel only allows same-project redirect targets; revisit in the dashboard if those URLs should land on the public docs site again.
 
@@ -297,7 +297,7 @@ Policy: use one shared Google OAuth Web client for both Workspace callback and P
    - Restrict to HTTP referrers (for example localhost dev URL, preview.equipqr.app, equipqr.app)
    - Restrict API usage to Google Drive API
 4. Reuse the existing **Google Workspace Web application** OAuth client ID for browser token flow:
-   - Add Authorized JavaScript origins: localhost dev URL, `https://preview.equipqr.app`, `https://equipqr.app`
+   - Add Authorized JavaScript origins: localhost dev URL, `https://preview.equipqr.app`, `https://eqr.zinitek.com`
    - Keep Authorized redirect URIs for Workspace callback, including `/functions/v1/google-workspace-oauth-callback`
 5. Set the browser key as `VITE_GOOGLE_PICKER_API_KEY` in Vercel/local `.env`.
 6. Copy the project number from Project Settings and set it as `VITE_GOOGLE_PICKER_APP_ID`.

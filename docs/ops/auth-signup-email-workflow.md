@@ -8,7 +8,7 @@ This runbook documents the production email signup path after the Resend SMTP cu
 
 | Component | Production value |
 | --- | --- |
-| App URL | `https://equipqr.app` |
+| App URL | `https://eqr.zinitek.com` |
 | Supabase project | `wgynakhoppqkrutnslmv` |
 | Supabase Auth URL | `https://supabase.equipqr.app/auth/v1` |
 | Supabase Auth email sender | `ZNTEQR <noreply@equipqr.app>` |
@@ -47,12 +47,12 @@ flowchart TD
 
 ## Numbered Flow
 
-1. A user visits `https://equipqr.app` and opens the signup tab.
+1. A user visits `https://eqr.zinitek.com` and opens the signup tab.
 2. `SignUpForm` validates required fields, password complexity, terms acceptance, and the hCaptcha token when the site key is enabled.
 3. `SignUpForm` calls `signUpWithEmail()` in `src/services/authSignupService.ts`.
 4. `signUpWithEmail()` calls `supabase.auth.signUp()` with:
    - the submitted email and password,
-   - redirect URL `https://equipqr.app/`,
+   - redirect URL `https://eqr.zinitek.com/`,
    - user metadata including name, organization name, and legal acceptance intent.
 5. Supabase Auth receives `POST /auth/v1/signup`.
 6. Supabase creates an unconfirmed `auth.users` row.

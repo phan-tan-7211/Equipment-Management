@@ -178,4 +178,4 @@ If you're having trouble uploading images:
 
 ## Support
 
-Field walkthroughs live in the Help Center. Start with [Add notes and photos](/support/technician-field-work/add-notes-and-photos). Signed-in users can open tickets at [equipqr.app/dashboard/support](https://equipqr.app/dashboard/support).
+Field walkthroughs live in the Help Center. Start with [Add notes and photos](/support/technician-field-work/add-notes-and-photos). Signed-in users can open tickets at [equipqr.app/dashboard/support](https://eqr.zinitek.com/dashboard/support).

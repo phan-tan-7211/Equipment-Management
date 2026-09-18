@@ -57,7 +57,7 @@ export function evaluatePreflight(input) {
           'Set it to a saved auth state file, for example:',
           '$env:DEMO_STORAGE_STATE="tmp/demos/auth.json"',
           'Create it with:',
-          'npx playwright codegen https://equipqr.app --save-storage=tmp/demos/auth.json'
+          'npx playwright codegen https://eqr.zinitek.com --save-storage=tmp/demos/auth.json'
         ].join('\n')
       );
     } else if (!input.storageStateExists) {
@@ -65,7 +65,7 @@ export function evaluatePreflight(input) {
         [
           `DEMO_STORAGE_STATE points to a missing file: ${input.storageStatePath}`,
           'Recreate it with:',
-          'npx playwright codegen https://equipqr.app --save-storage=tmp/demos/auth.json'
+          'npx playwright codegen https://eqr.zinitek.com --save-storage=tmp/demos/auth.json'
         ].join('\n')
       );
     }

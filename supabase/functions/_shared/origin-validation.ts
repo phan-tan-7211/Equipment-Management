@@ -17,7 +17,7 @@
  * Local dev servers are included for development convenience.
  */
 const ALLOWED_ORIGINS = [
-  "https://equipqr.app",
+  "https://eqr.zinitek.com",
   "https://preview.equipqr.app",
   "https://eqr.zinitek.com",
   "http://localhost:5173",
@@ -63,7 +63,7 @@ export function isAllowedOrigin(origin: string): boolean {
 }
 
 /** The default production origin used as a safe fallback. */
-export const PRODUCTION_ORIGIN = "https://equipqr.app";
+export const PRODUCTION_ORIGIN = "https://eqr.zinitek.com";
 
 /**
  * Returns the request's Origin header if it matches an allowed origin,

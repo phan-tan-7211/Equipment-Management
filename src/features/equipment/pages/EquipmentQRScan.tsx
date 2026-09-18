@@ -36,7 +36,7 @@ import { useI18n } from '@/i18n';
 
 type EquipmentStatus = Database['public']['Enums']['equipment_status'];
 
-const PRODUCTION_URL = 'https://equipqr.app';
+const PRODUCTION_URL = 'https://eqr.zinitek.com';
 const EquipmentQRQuickActions = lazy(() => import('@/features/equipment/components/qr/EquipmentQRQuickActions'));
 
 type ScanStatus = 'idle' | 'logging' | 'logged' | 'failed';

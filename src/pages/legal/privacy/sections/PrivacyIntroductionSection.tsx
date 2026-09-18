@@ -7,7 +7,7 @@ export function PrivacyIntroductionSection() {
     <LegalPolicySection title="1. Introduction">
       <p>
         ZNTEQR™ (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;), developed and operated by{' '}
-        <ExternalLink href="https://columbiacloudworks.com" className="hover:text-foreground">
+        <ExternalLink href="https://eqr.zinitek.com" className="hover:text-foreground">
           ZNT LLC
         </ExternalLink>
         , is committed to protecting the privacy of every person and organization that uses our fleet
@@ -17,8 +17,8 @@ export function PrivacyIntroductionSection() {
       </p>
       <p>
         This policy applies to all users of the ZNTEQR web application located at{' '}
-        <ExternalLink href="https://equipqr.app" className="hover:text-foreground">
-          equipqr.app
+        <ExternalLink href="https://eqr.zinitek.com" className="hover:text-foreground">
+          eqr.zinitek.com
         </ExternalLink>
         , including the QR-code scanning experience, all API endpoints, and any associated mobile or
         progressive web app functionality.

@@ -109,11 +109,11 @@ Deno.test({
   name: "isValidRedirectUrl allows relative paths and production host",
   permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
 }, () => {
-  withEnv({ PUBLIC_SITE_URL: "https://equipqr.app", PRODUCTION_URL: undefined }, () => {
-    const productionUrl = "https://equipqr.app";
+  withEnv({ PUBLIC_SITE_URL: "https://eqr.zinitek.com", PRODUCTION_URL: undefined }, () => {
+    const productionUrl = "https://eqr.zinitek.com";
     assertEquals(isValidRedirectUrl(null, productionUrl), true);
     assertEquals(isValidRedirectUrl("/dashboard/organization", productionUrl), true);
-    assertEquals(isValidRedirectUrl("https://equipqr.app/settings", productionUrl), true);
+    assertEquals(isValidRedirectUrl("https://eqr.zinitek.com/settings", productionUrl), true);
     assertEquals(isValidRedirectUrl("https://evil.example.com/", productionUrl), false);
   });
 });
@@ -135,8 +135,8 @@ Deno.test({
   permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
 }, () => {
   withEnv({ PUBLIC_SITE_URL: "http://localhost:8080", PRODUCTION_URL: undefined }, () => {
-    assertEquals(isValidRedirectUrl("http://localhost:8080/dashboard", "https://equipqr.app"), true);
-    assertEquals(isValidRedirectUrl("http://127.0.0.1:8080/dashboard", "https://equipqr.app"), true);
+    assertEquals(isValidRedirectUrl("http://localhost:8080/dashboard", "https://eqr.zinitek.com"), true);
+    assertEquals(isValidRedirectUrl("http://127.0.0.1:8080/dashboard", "https://eqr.zinitek.com"), true);
   });
 });
 
@@ -144,9 +144,9 @@ Deno.test({
   name: "isValidRedirectUrl allows preview.equipqr.app when PUBLIC_SITE_URL is production",
   permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
 }, () => {
-  withEnv({ PUBLIC_SITE_URL: "https://equipqr.app", PRODUCTION_URL: undefined }, () => {
+  withEnv({ PUBLIC_SITE_URL: "https://eqr.zinitek.com", PRODUCTION_URL: undefined }, () => {
     assertEquals(
-      isValidRedirectUrl("https://preview.equipqr.app/dashboard/organization", "https://equipqr.app"),
+      isValidRedirectUrl("https://preview.equipqr.app/dashboard/organization", "https://eqr.zinitek.com"),
       true,
     );
   });
@@ -156,9 +156,9 @@ Deno.test({
   name: "buildSuccessRedirectUrl returns preview origin when shared prod edge uses production PUBLIC_SITE_URL",
   permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
 }, () => {
-  withEnv({ PUBLIC_SITE_URL: "https://equipqr.app", PRODUCTION_URL: undefined }, () => {
+  withEnv({ PUBLIC_SITE_URL: "https://eqr.zinitek.com", PRODUCTION_URL: undefined }, () => {
     const url = buildSuccessRedirectUrl({
-      productionUrl: "https://equipqr.app",
+      productionUrl: "https://eqr.zinitek.com",
       originUrl: "https://preview.equipqr.app",
       redirectUrl: "/dashboard/organization/integrations",
       realmId: "realm-preview-1",
@@ -174,36 +174,36 @@ Deno.test({
   name: "buildSuccessRedirectUrl uses default org path when redirect is invalid",
   permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
 }, () => {
-  withEnv({ PUBLIC_SITE_URL: "https://equipqr.app", PRODUCTION_URL: undefined }, () => {
+  withEnv({ PUBLIC_SITE_URL: "https://eqr.zinitek.com", PRODUCTION_URL: undefined }, () => {
     const url = buildSuccessRedirectUrl({
-      productionUrl: "https://equipqr.app",
+      productionUrl: "https://eqr.zinitek.com",
       originUrl: null,
       redirectUrl: "https://evil.example.com/path",
       realmId: "realm-1",
     });
     assertEquals(
       url,
-      "https://equipqr.app/dashboard/organization?qb_connected=true&realm_id=realm-1",
+      "https://eqr.zinitek.com/dashboard/organization?qb_connected=true&realm_id=realm-1",
     );
   });
 });
 
 Deno.test("buildAccessDeniedRedirectUrl encodes error parameters", () => {
   const url = buildAccessDeniedRedirectUrl(
-    "https://equipqr.app",
+    "https://eqr.zinitek.com",
     "access_denied",
     "User denied consent",
   );
   assertEquals(
     url,
-    "https://equipqr.app/dashboard/organization?qb_error=access_denied&qb_error_description=User%20denied%20consent",
+    "https://eqr.zinitek.com/dashboard/organization?qb_error=access_denied&qb_error_description=User%20denied%20consent",
   );
 });
 
 Deno.test("buildOAuthErrorRedirectUrl encodes oauth failure message", () => {
-  const url = buildOAuthErrorRedirectUrl("https://equipqr.app", "Token exchange failed");
+  const url = buildOAuthErrorRedirectUrl("https://eqr.zinitek.com", "Token exchange failed");
   assertEquals(
     url,
-    "https://equipqr.app/dashboard/organization?qb_error=oauth_failed&qb_error_description=Token%20exchange%20failed",
+    "https://eqr.zinitek.com/dashboard/organization?qb_error=oauth_failed&qb_error_description=Token%20exchange%20failed",
   );
 });

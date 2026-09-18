@@ -39,7 +39,7 @@ This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipelin
 
 | Environment | Git trigger | Frontend URL | Supabase API |
 |-------------|-------------|--------------|--------------|
-| **Production** | Push to `main` (auto-promote via Production Release Readiness) | `<https://equipqr.app>` | `https://supabase.equipqr.app` (`wgynakhoppqkrutnslmv`) |
+| **Production** | Push to `main` (auto-promote via Production Release Readiness) | `<https://eqr.zinitek.com>` | `https://supabase.equipqr.app` (`wgynakhoppqkrutnslmv`) |
 | **Integration preview** | Push/merge to git **`preview`** | `<https://preview.equipqr.app>` | **Current live:** production API (`supabase.equipqr.app`). **Approved target:** persistent dataless branch per `docs/ops/preview-persistent-branch.md` |
 | **PR Preview** | Feature PRs / work-branch pushes | Commit-specific `*.vercel.app` | Prod API by default; ephemeral Supabase when `supabase/**` changes |
 
@@ -173,14 +173,14 @@ Technical documentation is deployed as a **second Vercel project** (same GitHub 
 
 | Item | Value |
 |------|--------|
-| Repository | `Columbia-Cloudworks-LLC/ZNTEQR` |
+| Repository | `phan-tan-7211/Equipment-Management` |
 | Vercel project | `equipqr-docs` (`prj_6QicTVywixyyAYc7sxCRDLnqwbM9`) |
 | Root Directory | `docs` |
 | Install Command | `npm ci` |
 | Build Command | `npm run docs:build` |
 | Output Directory | `.vitepress/dist` |
 | Config | [`docs/vercel.json`](../vercel.json) |
-| Production hostname | `https://equipqr.info` (apex). `www.equipqr.info` should redirect to apex. |
+| Production hostname | `https://eqr.zinitek.com` (apex). `www.equipqr.info` should redirect to apex. |
 
 **Deployment cadence:** Git-connected Production builds run when **`main`** receives commits that touch **`docs/`** (scoped Root Directory). Non-`main` branches are skipped via `ignoreCommand` in [`docs/vercel.json`](../vercel.json). App-only merges do **not** redeploy the docs bundle unless `docs/` changes — intentional for static documentation.
 
@@ -207,7 +207,7 @@ Current live preview uses the **same** Supabase project as production, so
 production Auth `site_url` and redirect URIs should include:
 
 - `https://preview.equipqr.app/**`
-- `https://equipqr.app/**`
+- `https://eqr.zinitek.com/**`
 - Local dev URLs (`http://localhost:8080/**`, etc.)
 
 The approved target is different: once the persistent preview branch cutover in

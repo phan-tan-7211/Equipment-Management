@@ -63,13 +63,13 @@ describe('TermsOfService', () => {
     expect(screen.getAllByText(/ZNT LLC/).length).toBeGreaterThanOrEqual(2);
 
     const legalEmailLink = screen.getByRole('link', { name: /legal@columbiacloudworks\.com/i });
-    expect(legalEmailLink).toHaveAttribute('href', 'mailto:legal@columbiacloudworks.com');
+    expect(legalEmailLink).toHaveAttribute('href', 'mailto:phantan7211@gmail.com');
 
     const contactEmailLink = screen.getByRole('link', { name: /phantan7211@gmail\.com/i });
     expect(contactEmailLink).toHaveAttribute('href', 'mailto:phantan7211@gmail.com');
 
     const productionAppLink = screen.getByRole('link', { name: /equipqr\.app/i });
-    expect(productionAppLink).toHaveAttribute('href', 'https://equipqr.app');
+    expect(productionAppLink).toHaveAttribute('href', 'https://eqr.zinitek.com');
     expect(productionAppLink).toHaveAttribute('target', '_blank');
     expect(productionAppLink).toHaveAttribute('rel', 'noopener noreferrer');
   });

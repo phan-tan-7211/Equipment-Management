@@ -25,7 +25,7 @@ This runbook covers the operational procedures for handling CCPA/CPRA Data Subje
 
 ## Intake
 
-1. Consumer submits via `/privacy-request` form or emails `privacy@equipqr.app`.
+1. Consumer submits via `/privacy-request` form or emails `phantan7211@gmail.com`.
 2. The `submit-privacy-request` edge function validates input, verifies hCaptcha, checks rate limits, and inserts into `dsr_requests`.
 3. An `intake_received` event is automatically logged in `dsr_request_events`.
 4. The request starts in `received` (unauthenticated) or `verifying` (authenticated) status.

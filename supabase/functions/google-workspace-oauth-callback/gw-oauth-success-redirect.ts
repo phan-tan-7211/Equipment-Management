@@ -17,7 +17,7 @@ export function resolveFallbackProductionUrl(): string {
   const rawProductionUrl = resolvePublicSiteUrl();
   return isTrustedDomain(rawProductionUrl)
     ? rawProductionUrl
-    : "https://equipqr.app";
+    : "https://eqr.zinitek.com";
 }
 
 function resolveCallbackTargetUrl(

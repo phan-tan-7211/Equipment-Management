@@ -84,13 +84,13 @@ export function PrivacyCaliforniaSection() {
         <li>
           <strong>Web form:</strong>{' '}
           <Link to="/privacy-request" className="underline">
-            equipqr.app/privacy-request
+            eqr.zinitek.com/privacy-request
           </Link>
         </li>
         <li>
           <strong>Email:</strong>{' '}
-          <ExternalLink href="mailto:privacy@equipqr.app" className="hover:text-foreground">
-            privacy@equipqr.app
+          <ExternalLink href="mailto:phantan7211@gmail.com" className="hover:text-foreground">
+            phantan7211@gmail.com
           </ExternalLink>
         </li>
       </ul>

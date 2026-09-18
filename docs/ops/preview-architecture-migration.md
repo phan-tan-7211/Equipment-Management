@@ -4,7 +4,7 @@
 
 This document records the #1033 migration away from a persistent Supabase preview branch (`olsdirk`), then the #1282 restoration of git `preview` as the integration train.
 
-Related: [GitHub #1033](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/1033) (Linear COL-310); [GitHub #1282](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/1282).
+Related: [GitHub #1033](https://github.com/phan-tan-7211/Equipment-Management/issues/1033) (Linear COL-310); [GitHub #1282](https://github.com/phan-tan-7211/Equipment-Management/issues/1282).
 
 ---
 
@@ -161,7 +161,7 @@ All vendor OAuth callbacks use **`https://supabase.equipqr.app/functions/v1/...`
 - **Local dev:** Development/sandbox keys via `edge-env-local-dev` + `QBO_USE_SANDBOX=true`.
 - **PR preview UI:** Same prod Supabase API; integrations tested locally before merge.
 
-`PUBLIC_SITE_URL` on production edge: `https://equipqr.app`. Per-PR previews rely on `window.location.origin` at runtime for return URLs where applicable.
+`PUBLIC_SITE_URL` on production edge: `https://eqr.zinitek.com`. Per-PR previews rely on `window.location.origin` at runtime for return URLs where applicable.
 
 ### Secrets model (target)
 
