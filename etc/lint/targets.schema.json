@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://equipqr.app/schemas/lint-targets.json",
+  "$id": "https://eqr.zinitek.com/schemas/lint-targets.json",
   "title": "ZNTEQR lint catalog",
   "type": "object",
   "additionalProperties": false,
