@@ -14,7 +14,7 @@ hero:
       link: /support/
     - theme: alt
       text: Open App
-      link: https://equipqr.app
+      link: https://eqr.zinitek.com
 
 features:
   - title: Start Here
@@ -59,7 +59,7 @@ features:
 
 Signed-in users can **report issues and track tickets** on the ZNTEQR app support page:
 
-**[equipqr.app/dashboard/support](https://equipqr.app/dashboard/support)**
+**[equipqr.app/dashboard/support](https://eqr.zinitek.com/dashboard/support)**
 
 For service availability, check **[status.equipqr.app](https://status.equipqr.app)**.
 
