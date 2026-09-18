@@ -123,8 +123,8 @@ For technical details on CI/CD workflows including version tagging, see [`docs/o
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Columbia-Cloudworks-LLC/ZNTEQR.git
-   cd ZNTEQR
+   git clone https://github.com/phan-tan-7211/Equipment-Management.git
+   cd Equipment-Management
    ```
 
 2. **Install dependencies**:
