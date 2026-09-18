@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/accordion';
 
 const CONTACT_EMAIL = 'mailto:phantan7211@gmail.com';
-const GITHUB_REPO_URL = 'https://github.com/Columbia-Cloudworks-LLC/ZNTEQR';
+const GITHUB_REPO_URL = 'https://github.com/phan-tan-7211/Equipment-Management';
 const ZNTEQR_APP_URL = 'https://equipqr.app';
 const COLUMBIA_CLOUDWORKS_URL = 'https://columbiacloudworks.com';
 
