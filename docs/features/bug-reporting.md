@@ -177,7 +177,7 @@ openssl rand -hex 32
 
 #### How to Configure the Webhook
 
-1. Go to [GitHub repo Settings > Webhooks](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/settings/hooks)
+1. Go to [GitHub repo Settings > Webhooks](https://github.com/phan-tan-7211/Equipment-Management/settings/hooks)
 2. Click **Add webhook**
 3. Set:
    - **Payload URL:** `https://<supabase-url>/functions/v1/github-issue-webhook`
@@ -194,7 +194,7 @@ openssl rand -hex 32
 | **Preview branch** | Supabase Dashboard > Edge Functions > Secrets | Both secrets |
 | **Production** | Supabase Dashboard > Edge Functions > Secrets | Both secrets |
 
-For complete secrets documentation, see [Supabase Branch Secrets](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/supabase-branch-secrets.md).
+For complete secrets documentation, see [Supabase Branch Secrets](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/supabase-branch-secrets.md).
 
 ## Troubleshooting
 
