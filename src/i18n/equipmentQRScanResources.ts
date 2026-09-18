@@ -8,7 +8,7 @@ export const equipmentQRScanResources = {
       notFound: 'Equipment not found',
       openCached: 'Open Cached Equipment',
       goDashboard: 'Go to Dashboard',
-      productionAria: 'Open ZNTEQR production site',
+      productionAria: 'Open ZNTEQR home',
       scannedEquipment: 'Scanned equipment',
       location: 'Location',
       noLocation: 'No location set',
