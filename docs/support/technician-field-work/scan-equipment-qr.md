@@ -20,7 +20,7 @@ Hold the phone about a hand's width from the QR code. iOS and Android automatica
 
 ## 2. Tap the notification banner
 
-The camera shows a link like `https://equipqr.app/qr/equipment/<id>`. Tap it to open the equipment record.
+The camera shows a link like `https://eqr.zinitek.com/qr/equipment/<id>`. Tap it to open the equipment record.
 
 ## 3. Sign in if prompted
 
