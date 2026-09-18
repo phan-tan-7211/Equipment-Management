@@ -33,7 +33,7 @@ Register these exact URIs in Intuit and Google Cloud consoles:
 
 1. Set `PUBLIC_SITE_URL`:
    - Preview: `https://preview.equipqr.app`
-   - Production: `https://equipqr.app`
+   - Production: `https://eqr.zinitek.com`
 2. **Remove** if present:
    - `QB_OAUTH_REDIRECT_BASE_URL`
    - `GW_OAUTH_REDIRECT_BASE_URL`
