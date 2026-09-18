@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo } from 'react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,6 +11,33 @@ import {
 } from '@/utils/redirectValidation';
 
 const Landing = lazy(() => import('@/pages/Landing'));
+
+function hasPersistedAuthSessionHint(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return Object.keys(window.localStorage).some((key) => {
+      if (!key.startsWith('sb-') || !key.endsWith('-auth-token')) {
+        return false;
+      }
+      const value = window.localStorage.getItem(key);
+      return Boolean(value && value !== 'null' && value !== 'undefined');
+    });
+  } catch {
+    return false;
+  }
+}
+
+const LandingLoading = ({ label }: { label: string }) => (
+  <div
+    className="flex min-h-[50vh] items-center justify-center bg-background"
+    role="status"
+    aria-label={label}
+  >
+    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+  </div>
+);
+
 
 /**
  * Smart landing page that conditionally renders based on authentication state.
@@ -30,6 +57,7 @@ const SmartLanding = () => {
   const { user, isLoading } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
+  const persistedAuthSessionHint = useMemo(hasPersistedAuthSessionHint, []);
 
   useEffect(() => {
     // Guard on !isLoading so we don't redirect prematurely while auth is resolving.
@@ -50,7 +78,16 @@ const SmartLanding = () => {
     return null;
   }
 
-  // Public marketing page — renders unconditionally for all other cases:
+  // A persisted Supabase session means this browser is very likely returning
+  // to the authenticated app. Keep the neutral loading state visible while
+  // auth resolves instead of briefly hydrating the prerendered marketing page.
+  // A stale/expired token is safe: AuthProvider resolves it and the public
+  // landing page appears afterward if the session is no longer valid.
+  if (isLoading && (user || persistedAuthSessionHint)) {
+    return <LandingLoading label={t('publicChrome.landing.loading')} />;
+  }
+
+  // Public marketing page — renders immediately for true fresh visitors:
   //   • isLoading=true, user=null  (fresh visitor, auth still initialising)
   //   • isLoading=true, user=set   (session found but refresh in progress — brief hero flash)
   //   • isLoading=false, user=null (unauthenticated visitor)
@@ -61,17 +98,7 @@ const SmartLanding = () => {
         description={t('publicChrome.landing.seoDescription')}
         path="/"
       />
-      <Suspense
-        fallback={
-          <div
-            className="flex min-h-[50vh] items-center justify-center bg-background"
-            role="status"
-            aria-label={t('publicChrome.landing.loading')}
-          >
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        }
-      >
+      <Suspense fallback={<LandingLoading label={t('publicChrome.landing.loading')} />}>
         <Landing />
       </Suspense>
     </>
