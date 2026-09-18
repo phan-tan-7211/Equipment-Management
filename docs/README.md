@@ -33,8 +33,8 @@ included in the public VitePress build.
 **Product shortcuts while using ZNTEQR:**
 
 - **Help Center (guides):** `https://equipqr.info/support/`
-- **Support & tickets (signed in):** `https://equipqr.app/dashboard/support`
-- **Public support contact page:** `https://equipqr.app/support`
+- **Support & tickets (signed in):** `https://eqr.zinitek.com/dashboard/support`
+- **Public support contact page:** `https://eqr.zinitek.com/support`
 
 Use **`https://equipqr.info/support/`** as the canonical URL to share, bookmark, or index for documentation.
 
@@ -58,13 +58,13 @@ Operational runbooks for deployment and maintenance live under `docs/ops/` in th
 They are **not** published on **`https://equipqr.info`** (see [Public vs internal content](#public-vs-internal-content)).
 Browse them on GitHub or in your local checkout:
 
-- **[CI/CD Pipeline](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/ci-cd-pipeline.md)** - Complete CI/CD pipeline documentation including GitHub Actions, Vercel, and Supabase integrations
-- **[Deployment](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/deployment.md)** - Complete deployment guide including build, hosting, runners, and versioning
-- **[Migrations](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/migrations.md)** - Database migration guide with critical rules
-- **[Migration Rules Quick Reference](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/migration-rules-quick-reference.md)** - Quick reference for migration best practices
-- **[Local Supabase Development](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/local-supabase-development.md)** - Complete guide for local Supabase setup, edge function development, and migration synchronization
+- **[CI/CD Pipeline](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/ci-cd-pipeline.md)** - Complete CI/CD pipeline documentation including GitHub Actions, Vercel, and Supabase integrations
+- **[Deployment](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/deployment.md)** - Complete deployment guide including build, hosting, runners, and versioning
+- **[Migrations](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/migrations.md)** - Database migration guide with critical rules
+- **[Migration Rules Quick Reference](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/migration-rules-quick-reference.md)** - Quick reference for migration best practices
+- **[Local Supabase Development](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/local-supabase-development.md)** - Complete guide for local Supabase setup, edge function development, and migration synchronization
 - **[QuickBooks OAuth](./ops/quickbooks-oauth.md).** Intuit OAuth, vault secrets, and sandbox wiring. Unpublished on equipqr.info.
-- **[Disaster Recovery](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/disaster-recovery.md)** - Database backup and point-in-time recovery procedures
+- **[Disaster Recovery](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/disaster-recovery.md)** - Database backup and point-in-time recovery procedures
 
 ## Quick navigation
 
@@ -78,25 +78,25 @@ Browse them on GitHub or in your local checkout:
 6. Check [Troubleshooting](./getting-started/troubleshooting.md) if you encounter issues
 
 ### For System Administrators
-1. **READ FIRST**: [Migrations](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/migrations.md) - ⚠️ **CRITICAL** migration rules
-2. Review [Deployment](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/deployment.md) - Multi-platform deployment
+1. **READ FIRST**: [Migrations](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/migrations.md) - ⚠️ **CRITICAL** migration rules
+2. Review [Deployment](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/deployment.md) - Multi-platform deployment
 3. Understand [Architecture](./technical/architecture.md) - System design
 4. Monitor [Workflows](./guides/workflows.md) - User processes
 
 ### For End Users
 
 1. Start at **`https://equipqr.info/support/`** for published guides and how-tos.
-2. To report issues while signed in, use **`https://equipqr.app/dashboard/support`**.
+2. To report issues while signed in, use **`https://eqr.zinitek.com/dashboard/support`**.
 3. For field technicians, print the [Image Upload Quick Reference](./how-to/image-upload/quick-reference-card.md).
 4. For RBAC questions, see [Permissions](./guides/permissions.md).
 
 ### For DevOps Engineers
-1. **READ FIRST**: [Migrations](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/migrations.md) - ⚠️ **CRITICAL** migration rules
-2. Study [CI/CD Pipeline](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/ci-cd-pipeline.md) - Complete pipeline documentation
-3. Study [Deployment](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/deployment.md) - Complete deployment guide
-4. Review [Disaster Recovery](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/disaster-recovery.md) - Backup and PITR procedures
+1. **READ FIRST**: [Migrations](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/migrations.md) - ⚠️ **CRITICAL** migration rules
+2. Study [CI/CD Pipeline](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/ci-cd-pipeline.md) - Complete pipeline documentation
+3. Study [Deployment](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/deployment.md) - Complete deployment guide
+4. Review [Disaster Recovery](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/disaster-recovery.md) - Backup and PITR procedures
 5. Review [Architecture](./technical/architecture.md) - System architecture
-6. Reference [Migration Rules Quick Reference](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/migration-rules-quick-reference.md) - Quick reference
+6. Reference [Migration Rules Quick Reference](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/migration-rules-quick-reference.md) - Quick reference
 
 ## Additional resources
 
@@ -125,7 +125,7 @@ Browse them on GitHub or in your local checkout:
 
 #### Database & Data Management
 - [Architecture - Database Schema](./technical/architecture.md#database-schema)
-- [Migrations](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/migrations.md) - Migration strategies
+- [Migrations](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/migrations.md) - Migration strategies
 - [API Reference](./technical/api-reference.md) - Data access patterns
 
 #### Development Workflow
@@ -134,11 +134,11 @@ Browse them on GitHub or in your local checkout:
 - [Architecture - Component Patterns](./technical/architecture.md#component-design-patterns)
 
 #### Deployment & DevOps
-- [CI/CD Pipeline](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/ci-cd-pipeline.md) - GitHub Actions, Vercel, Supabase integrations
-- [Deployment Guide](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/deployment.md) - Platform-specific deployment
-- [Migrations](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/migrations.md) - Database migrations
-- [Local Supabase Development](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/local-supabase-development.md) - Local development setup and edge function workflow
-- [Disaster Recovery](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/blob/main/docs/ops/disaster-recovery.md) - Database backup and PITR restoration
+- [CI/CD Pipeline](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/ci-cd-pipeline.md) - GitHub Actions, Vercel, Supabase integrations
+- [Deployment Guide](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/deployment.md) - Platform-specific deployment
+- [Migrations](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/migrations.md) - Database migrations
+- [Local Supabase Development](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/local-supabase-development.md) - Local development setup and edge function workflow
+- [Disaster Recovery](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/disaster-recovery.md) - Database backup and PITR restoration
 - [Architecture - Performance](./technical/architecture.md#performance-architecture)
 
 #### Business Logic & Features
