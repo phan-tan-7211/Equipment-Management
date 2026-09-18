@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.17] - 2026-09-19
+
+### Fixed
+
+- Prevented prerendered marketing text from flashing during authenticated navigation by keeping internal transitions in React Router and showing a branded loading state while persisted auth sessions resolve.
+
 ## [3.34.16] - 2026-09-19
 
 ### Added

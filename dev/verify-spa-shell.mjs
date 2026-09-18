@@ -160,8 +160,12 @@ export function verifySpaShellRouting() {
     fail('Missing index.html.');
   }
   const indexContent = fs.readFileSync(indexPath, 'utf8');
-  if (!indexContent.includes("data-app-route") || !indexContent.includes("app-boot-loading")) {
-    fail('index.html must include the pre-paint app-route guard and branded boot screen.');
+  if (
+    !indexContent.includes("data-app-route") ||
+    !indexContent.includes("data-auth-boot") ||
+    !indexContent.includes("app-boot-loading")
+  ) {
+    fail('index.html must include app-route + returning-auth pre-paint guards and the branded boot screen.');
   }
 
   const redirectsPath = path.join(repoRoot, 'public', '_redirects');

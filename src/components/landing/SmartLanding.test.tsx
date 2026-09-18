@@ -28,6 +28,7 @@ describe('SmartLanding', () => {
     mockNavigate.mockClear();
     mockUseAuth.mockReset();
     sessionStorage.clear();
+    localStorage.clear();
   });
 
   it('redirects authenticated users to dashboard', async () => {
@@ -73,17 +74,29 @@ describe('SmartLanding', () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('renders the landing page while auth is loading (issue #671 regression guard)', () => {
-    // Previously returned null while isLoading=true, causing a 13–60+s black screen.
-    // The marketing hero must render unconditionally regardless of auth state.
+  it('renders the landing page while auth is loading for a true fresh visitor (#671)', async () => {
     mockUseAuth.mockReturnValue({
       user: null,
       isLoading: true,
     });
 
-    const { container } = render(<SmartLanding />);
+    render(<SmartLanding />);
 
-    expect(container.firstChild).not.toBeNull();
+    expect(await screen.findByTestId('landing-page')).toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('shows loading instead of marketing content while a persisted auth session resolves', () => {
+    localStorage.setItem('sb-test-auth-token', '{"access_token":"cached"}');
+    mockUseAuth.mockReturnValue({
+      user: null,
+      isLoading: true,
+    });
+
+    render(<SmartLanding />);
+
+    expect(screen.getByRole('status', { name: /loading page/i })).toBeInTheDocument();
+    expect(screen.queryByTestId('landing-page')).not.toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 });
