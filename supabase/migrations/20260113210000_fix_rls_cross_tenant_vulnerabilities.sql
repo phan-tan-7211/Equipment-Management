@@ -1,5 +1,5 @@
 -- Migration: Fix RLS Cross-Tenant Vulnerabilities
--- Issue: https://github.com/Columbia-Cloudworks-LLC/EquipQR/issues/497
+-- Issue: https://github.com/phan-tan-7211/Equipment-Management/issues/497
 -- Description: Adds organization membership checks to all user-ownership policies
 -- to prevent former employees from modifying/deleting records from organizations
 -- they've left.
