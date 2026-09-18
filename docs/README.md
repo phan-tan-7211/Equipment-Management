@@ -25,18 +25,18 @@ Technical documentation for developers and system architects:
 ### Support and public documentation
 
 Published ZNTEQR documentation—including technician how-tos, reference guides,
-permissions, and workflows from this `docs/` tree—is hosted at **`https://equipqr.info`**
+permissions, and workflows from this `docs/` tree—is hosted at **`https://eqr.zinitek.com`**
 (searchable, SEO-friendly, and offline-friendly when cached). **Operations runbooks**
 under `docs/ops/` are maintained in this repository for maintainers and are **not**
 included in the public VitePress build.
 
 **Product shortcuts while using ZNTEQR:**
 
-- **Help Center (guides):** `https://equipqr.info/support/`
+- **Help Center (guides):** `https://eqr.zinitek.com/support/`
 - **Support & tickets (signed in):** `https://eqr.zinitek.com/dashboard/support`
 - **Public support contact page:** `https://eqr.zinitek.com/support`
 
-Use **`https://equipqr.info/support/`** as the canonical URL to share, bookmark, or index for documentation.
+Use **`https://eqr.zinitek.com/support/`** as the canonical URL to share, bookmark, or index for documentation.
 
 - **[Image Upload Quick Reference](./how-to/image-upload/quick-reference-card.md)** —
   printable cheat sheet for technicians in the field.
@@ -55,7 +55,7 @@ full lifecycle and permission map:
 ### Operations (repository only)
 
 Operational runbooks for deployment and maintenance live under `docs/ops/` in this repo.
-They are **not** published on **`https://equipqr.info`** (see [Public vs internal content](#public-vs-internal-content)).
+They are **not** published on **`https://eqr.zinitek.com`** (see [Public vs internal content](#public-vs-internal-content)).
 Browse them on GitHub or in your local checkout:
 
 - **[CI/CD Pipeline](https://github.com/phan-tan-7211/Equipment-Management/blob/main/docs/ops/ci-cd-pipeline.md)** - Complete CI/CD pipeline documentation including GitHub Actions, Vercel, and Supabase integrations
@@ -85,7 +85,7 @@ Browse them on GitHub or in your local checkout:
 
 ### For End Users
 
-1. Start at **`https://equipqr.info/support/`** for published guides and how-tos.
+1. Start at **`https://eqr.zinitek.com/support/`** for published guides and how-tos.
 2. To report issues while signed in, use **`https://eqr.zinitek.com/dashboard/support`**.
 3. For field technicians, print the [Image Upload Quick Reference](./how-to/image-upload/quick-reference-card.md).
 4. For RBAC questions, see [Permissions](./guides/permissions.md).
@@ -169,7 +169,7 @@ Use this when authoring or reviewing documentation:
 
 | Surface | Audience | Content |
 |--------|----------|---------|
-| **`https://equipqr.info`** | Customers, technicians, partners, general public | Help Center (`/support/`), guides, how-tos, PM templates, and integrations **without** live infrastructure identifiers or privileged command sequences. |
+| **`https://eqr.zinitek.com`** | Customers, technicians, partners, general public | Help Center (`/support/`), guides, how-tos, PM templates, and integrations **without** live infrastructure identifiers or privileged command sequences. |
 | **Repository `docs/ops/`** | Maintainers, security-reviewed operators | CI/CD, migrations, disaster recovery, observability, cloud admin posture, and similar runbooks. Excluded from the public VitePress build. |
 | **`equipqr.app/dashboard/support`** | Signed-in users | Report issues and track tickets only; guides live on equipqr.info. |
 
