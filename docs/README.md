@@ -33,8 +33,8 @@ included in the public VitePress build.
 **Product shortcuts while using ZNTEQR:**
 
 - **Help Center (guides):** `https://equipqr.info/support/`
-- **Support & tickets (signed in):** `https://equipqr.app/dashboard/support`
-- **Public support contact page:** `https://equipqr.app/support`
+- **Support & tickets (signed in):** `https://eqr.zinitek.com/dashboard/support`
+- **Public support contact page:** `https://eqr.zinitek.com/support`
 
 Use **`https://equipqr.info/support/`** as the canonical URL to share, bookmark, or index for documentation.
 
@@ -86,7 +86,7 @@ Browse them on GitHub or in your local checkout:
 ### For End Users
 
 1. Start at **`https://equipqr.info/support/`** for published guides and how-tos.
-2. To report issues while signed in, use **`https://equipqr.app/dashboard/support`**.
+2. To report issues while signed in, use **`https://eqr.zinitek.com/dashboard/support`**.
 3. For field technicians, print the [Image Upload Quick Reference](./how-to/image-upload/quick-reference-card.md).
 4. For RBAC questions, see [Permissions](./guides/permissions.md).
 
