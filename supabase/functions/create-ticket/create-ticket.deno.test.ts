@@ -76,7 +76,7 @@ Deno.test("sanitizeMetadata whitelists known fields", () => {
   const metadata = sanitizeMetadata({
     appVersion: "3.8.1",
     userAgent: "Mozilla/5.0",
-    currentUrl: "https://equipqr.app/dashboard?token=secret",
+    currentUrl: "https://eqr.zinitek.com/dashboard?token=secret",
     featureFlags: { billingEnabled: true, quickbooksEnabled: false, unknown: true },
     recentErrors: ["Error one", "Error two"],
     performanceMetrics: { pageLoadTime: 1200, memoryUsage: 64 },
