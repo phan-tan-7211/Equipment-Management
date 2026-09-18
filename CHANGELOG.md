@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.20] - 2026-09-19
+
+### Fixed
+
+- Moved long-dialog scrolling into an inset content region for the daily checklist editor and standardized dialog scrollbar spacing so scroll thumbs no longer hug or clip rounded modal edges.
+
 ## [3.34.19] - 2026-09-19
 
 ### Added

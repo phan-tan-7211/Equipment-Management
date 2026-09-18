@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogScrollBody,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -101,12 +102,12 @@ export function OperatorChecklistTemplateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="flex max-h-[90dvh] max-w-4xl flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>{isEdit ? t('operatorCheckinDetail.editChecklist') : t('operatorCheckinDetail.newChecklist')}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <DialogScrollBody className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">{t('operatorCheckinDetail.templateDetails')}</CardTitle>
@@ -139,9 +140,9 @@ export function OperatorChecklistTemplateDialog({
           />
 
           <OperatorChecklistItemsEditor key={editorSessionKey} items={items} onChange={setItems} />
-        </div>
+        </DialogScrollBody>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('operatorCheckinDetail.cancel')}
           </Button>
