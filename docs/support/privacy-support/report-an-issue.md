@@ -9,7 +9,7 @@ personas: ["all"]
 **Last reviewed:** 2026-05-01
 
 ::: tip In the ZNTEQR app
-This workflow runs on the signed-in support page: [https://equipqr.app/dashboard/support](https://equipqr.app/dashboard/support).
+This workflow runs on the signed-in support page: [https://eqr.zinitek.com/dashboard/support](https://eqr.zinitek.com/dashboard/support).
 :::
 
 The Report an Issue button on this page creates a ticket that the ZNTEQR team sees immediately. Anonymized session diagnostics are attached automatically so we can reproduce most problems without you pasting logs.
