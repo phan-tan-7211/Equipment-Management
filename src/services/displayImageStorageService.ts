@@ -4,6 +4,7 @@ import {
   DISPLAY_IMAGE_VARIANT_NAMES,
   type DisplayImageVariantName,
 } from '@/services/displayImageVariantService';
+import { logger } from '@/utils/logger';
 
 export const DISPLAY_IMAGE_BUCKET = 'display-images' as const;
 
@@ -206,10 +207,21 @@ async function removeUploadedDisplayImageObjects(
   if (objectPaths.length === 0) return;
 
   try {
-    await supabase.storage.from(DISPLAY_IMAGE_BUCKET).remove(objectPaths);
-  } catch {
-    // Orphan cleanup is retried by the storage audit; never mask the primary
-    // variant upload failure with a cleanup failure.
+    const { error } = await supabase.storage
+      .from(DISPLAY_IMAGE_BUCKET)
+      .remove(objectPaths);
+
+    if (error) {
+      logger.warn('Failed to clean partial display image upload', {
+        objectPaths,
+        error,
+      });
+    }
+  } catch (error) {
+    logger.warn('Failed to clean partial display image upload', {
+      objectPaths,
+      error,
+    });
   }
 }
 

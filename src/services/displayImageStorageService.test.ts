@@ -5,6 +5,7 @@ const {
   mockCreateSignedUrls,
   mockFrom,
   mockGetPublicUrl,
+  mockLoggerWarn,
   mockRemove,
   mockUpload,
 } = vi.hoisted(() => ({
@@ -12,6 +13,7 @@ const {
   mockCreateSignedUrls: vi.fn(),
   mockFrom: vi.fn(),
   mockGetPublicUrl: vi.fn(),
+  mockLoggerWarn: vi.fn(),
   mockRemove: vi.fn(),
   mockUpload: vi.fn(),
 }));
@@ -28,6 +30,12 @@ vi.mock('browser-image-compression', () => ({
   default: vi.fn(),
 }));
 
+vi.mock('@/utils/logger', () => ({
+  logger: {
+    warn: mockLoggerWarn,
+  },
+}));
+
 import imageCompression from 'browser-image-compression';
 
 import {
@@ -37,7 +45,6 @@ import {
   getDisplayImageObjectPath,
   removeDisplayImageSet,
   uploadDisplayImageSet,
-  getDisplayImagePublicUrl,
   getDisplayImagePublicUrls,
   isDisplayImageV2Ref,
   parseCanonicalDisplayImageRef,
@@ -72,6 +79,7 @@ describe('displayImageStorageService', () => {
     mockCreateSignedUrl.mockReset();
     mockCreateSignedUrls.mockReset();
     mockGetPublicUrl.mockReset();
+    mockLoggerWarn.mockReset();
     mockRemove.mockReset();
     mockUpload.mockReset();
     mockFrom.mockReset();
@@ -350,6 +358,48 @@ describe('displayImageStorageService', () => {
       'org/org-123/equipment/equipment-456/set-789/thumb.webp',
       'org/org-123/equipment/equipment-456/set-789/preview.webp',
     ]);
+  });
+
+  it('records a returned cleanup error without replacing the upload error', async () => {
+    vi.mocked(imageCompression).mockImplementation(async () =>
+      new Blob(['webp'], { type: 'image/webp' }),
+    );
+    const source = {
+      size: 1,
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+      name: 'source.jpg',
+      type: 'image/jpeg',
+      lastModified: 123,
+    } as File;
+    const uploadError = new Error('preview unavailable');
+    const cleanupError = new Error('cleanup failed');
+    mockUpload
+      .mockResolvedValueOnce({ data: { path: 'thumb.webp' }, error: null })
+      .mockResolvedValueOnce({ data: null, error: uploadError });
+    mockRemove.mockResolvedValueOnce({ data: null, error: cleanupError });
+
+    await expect(
+      uploadDisplayImageSet({
+        ...EQUIPMENT_INPUT,
+        source,
+      }),
+    ).rejects.toMatchObject({
+      name: 'DisplayImageUploadError',
+      variant: 'preview',
+      cause: uploadError,
+    });
+
+    const uploadedPaths = [
+      'org/org-123/equipment/equipment-456/set-789/thumb.webp',
+    ];
+    expect(mockRemove).toHaveBeenCalledWith(uploadedPaths);
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
+      'Failed to clean partial display image upload',
+      {
+        objectPaths: uploadedPaths,
+        error: cleanupError,
+      },
+    );
   });
 
   it('removes all variants for a valid V2 display image reference', async () => {
