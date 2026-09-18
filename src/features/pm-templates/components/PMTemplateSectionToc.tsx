@@ -7,6 +7,7 @@ import { ListTree } from 'lucide-react';
 
 export interface PMTemplateSectionTocEntry {
   name: string;
+  label?: string;
   count: number;
 }
 
@@ -145,7 +146,7 @@ export const PMTemplateSectionToc: React.FC<PMTemplateSectionTocProps> = ({
                         activeSection === section.name && 'bg-muted font-medium'
                       )}
                     >
-                      {section.name} ({section.count})
+                      {section.label ?? section.name} ({section.count})
                     </button>
                   </li>
                 ))}
