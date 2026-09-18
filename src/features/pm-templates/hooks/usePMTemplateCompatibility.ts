@@ -24,6 +24,8 @@ const pmTemplateCompatibilityKeys = {
   all: ['pm-template-compatibility'] as const,
   rules: (templateId: string) => [...pmTemplateCompatibilityKeys.all, 'rules', templateId] as const,
   matching: (equipmentId: string) => [...pmTemplateCompatibilityKeys.all, 'matching', equipmentId] as const,
+  matchingForOrganization: (organizationId: string, equipmentId: string) =>
+    [...pmTemplateCompatibilityKeys.all, 'matching', organizationId, equipmentId] as const,
   matchCount: (rulesKey: string) => [...pmTemplateCompatibilityKeys.all, 'match-count', rulesKey] as const,
 };
 
@@ -146,6 +148,24 @@ export const useMatchingPMTemplates = (
     }
   );
 };
+
+/** Explicit organization scope for authenticated QR flows outside OrganizationContext. */
+export const useMatchingPMTemplatesForOrganization = (
+  organizationId: string | undefined,
+  equipmentId: string | undefined,
+  options?: Pick<QueryTimingOptions, 'staleTime' | 'enabled'>
+) => useMatchingTemplatesQuery(
+  organizationId,
+  equipmentId,
+  pmTemplateCompatibilityKeys.matchingForOrganization(
+    organizationId || '',
+    equipmentId || '',
+  ),
+  {
+    ...options,
+    gcTime: DEFAULT_MATCHING_GC_TIME,
+  }
+);
 
 /**
  * Hook to count equipment matching a set of rules.
