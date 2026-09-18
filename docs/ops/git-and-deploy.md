@@ -21,7 +21,7 @@ Open day-to-day PRs with `--base preview`. Production ships via **`preview` → 
 
 | URL | Meaning |
 |-----|---------|
-| **<https://equipqr.app>** | Production (after Production Release Readiness + `vercel promote`) |
+| **<https://eqr.zinitek.com>** | Production (after Production Release Readiness + `vercel promote`) |
 | **`https://<project>-<hash>-columbia-cloudworks-llc.vercel.app`** | Commit-specific Vercel Preview URL for every work-branch / PR deploy |
 | **<https://preview.equipqr.app>** | Stable hostname for the **integration** git branch **`preview`** — Vercel Preview deploys on merges/pushes to that branch (branch-bound custom domain). Not fast-forwarded from `main`. |
 
