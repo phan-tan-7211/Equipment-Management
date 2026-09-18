@@ -21,6 +21,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import Page from '@/components/layout/Page';
 import PageHeader from '@/components/layout/PageHeader';
 import { useI18n } from '@/i18n';
+import { localizeBundledPmTemplateMeta } from '@/features/pm-templates/utils/bundledPmTemplateI18n';
 
 // Enhanced Template Card Component
 interface TemplateCardProps {
@@ -63,7 +64,8 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
   const canClone = canCreateCustomTemplates;
 
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const localizedMeta = localizeBundledPmTemplateMeta(template, language);
   const handleView = () => navigate(`/dashboard/pm-templates/${template.id}`);
 
   const sectionCount = sections.length;
@@ -94,11 +96,11 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
             handleView();
           }
         }}
-        aria-label={t('pmTemplates.list.openTemplate', { name: template.name })}
+        aria-label={t('pmTemplates.list.openTemplate', { name: localizedMeta.name })}
       >
         <div className="space-y-2">
           <CardTitle className="min-w-0 text-base leading-tight line-clamp-2 break-words">
-            {template.name}
+            {localizedMeta.name}
           </CardTitle>
           {showTemplateBadges && (
             <div className="flex flex-wrap items-center gap-1">
@@ -118,9 +120,9 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           )}
         </div>
 
-        {template.description && (
+        {localizedMeta.description && (
           <p className="text-sm text-muted-foreground line-clamp-2 mt-1.5">
-            {template.description}
+            {localizedMeta.description}
           </p>
         )}
 
@@ -131,7 +133,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
         <div className="flex flex-col gap-2">
           <PMTemplateEquipmentAssignmentMenu
             templateId={template.id}
-            templateName={template.name}
+            templateName={localizedMeta.name}
             fullWidthTrigger
           />
           <p className="text-xs text-muted-foreground text-center px-1">
@@ -160,7 +162,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                 size="sm"
                 onClick={() => onEdit(template.id)}
                 className="flex-1"
-                aria-label={t('pmTemplates.list.editTemplate', { name: template.name })}
+                aria-label={t('pmTemplates.list.editTemplate', { name: localizedMeta.name })}
               >
                 <Edit className="mr-1 h-3 w-3" />
                 {t('pmTemplates.list.edit')}
