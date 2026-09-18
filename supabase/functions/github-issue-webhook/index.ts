@@ -199,7 +199,7 @@ async function handleIssueCommentEvent(
   // Determine if the commenter is a team member (assignee or known team user)
   const assigneeLogins = issueAssignees.map((a) => a.login.toLowerCase());
   const isFromTeam = assigneeLogins.includes(comment.user.login.toLowerCase())
-    || comment.user.login.toLowerCase() === "viralarchitect";
+    || comment.user.login.toLowerCase() === "phan-tan-7211";
 
   const sanitizedBody = sanitizeCommentBody(comment.body);
 
