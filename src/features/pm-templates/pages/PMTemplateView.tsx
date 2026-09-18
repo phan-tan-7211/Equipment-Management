@@ -28,6 +28,7 @@ import {
   useBulkSetPMTemplateRules 
 } from '@/features/pm-templates/hooks/usePMTemplateCompatibility';
 import type { PMTemplateCompatibilityRuleFormData } from '@/features/pm-templates/types/pmTemplateCompatibility';
+import { localizeBundledPmSectionName, localizeBundledPmTemplateMeta } from '@/features/pm-templates/utils/bundledPmTemplateI18n';
 
 const groupBySection = (items: PMChecklistItem[]) => {
   const groups = groupChecklistItemsBySection(items);
@@ -88,6 +89,12 @@ const PMTemplateView: React.FC = () => {
   }, [template?.template_data]);
 
   const totalItems = useMemo(() => template?.template_data?.length || 0, [template]);
+  const localizedMeta = template
+    ? localizeBundledPmTemplateMeta(template, language)
+    : { name: t('pmTemplates.view.template'), description: null };
+  const shouldLocalizeBundledSections = Boolean(template && template.organization_id === null && template.is_protected);
+  const sectionLabel = (name: string) =>
+    shouldLocalizeBundledSections ? localizeBundledPmSectionName(name, language) : name;
 
   const handleBack = () => navigate('/dashboard/pm-templates');
   const handleClone = async () => {
@@ -118,9 +125,9 @@ const PMTemplateView: React.FC = () => {
   const onDownloadPDF = async () => {
     if (!template) return;
     await generateTemplatePreviewPDF({
-      name: template.name,
-      description: template.description || undefined,
-      sections,
+      name: localizedMeta.name,
+      description: localizedMeta.description || undefined,
+      sections: sections.map((section) => ({ ...section, name: sectionLabel(section.name) })),
       createdAt: template.created_at,
       updatedAt: template.updated_at,
       options: { 
@@ -151,12 +158,12 @@ const PMTemplateView: React.FC = () => {
       {(!currentOrganization || !isAdmin) && null}
       <PageHeader
         density="compact"
-        title={template?.name || t('pmTemplates.view.template')}
-        description={template?.description || undefined}
+        title={template ? localizedMeta.name : t('pmTemplates.view.template')}
+        description={template ? localizedMeta.description || undefined : undefined}
         breadcrumbs={[
           { label: t('dashboard.title'), href: '/dashboard' },
           { label: t('pmTemplates.list.title'), href: '/dashboard/pm-templates' },
-          { label: template?.name || t('pmTemplates.view.view') }
+          { label: template ? localizedMeta.name : t('pmTemplates.view.view') }
         ]}
         actions={
           <div className="flex gap-2">
@@ -199,7 +206,7 @@ const PMTemplateView: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-3">
             <PMTemplateSectionToc
-              sections={sections.map((s) => ({ name: s.name, count: s.items.length }))}
+              sections={sections.map((s) => ({ name: s.name, label: sectionLabel(s.name), count: s.items.length }))}
               onSectionClick={handleTocSectionClick}
               showExpandCollapse
               onExpandAll={expandAll}
@@ -270,7 +277,7 @@ const PMTemplateView: React.FC = () => {
                   <div className="flex gap-2 sm:ml-auto">
                     <PMTemplateEquipmentAssignmentMenu
                       templateId={template.id}
-                      templateName={template.name}
+                      templateName={localizedMeta.name}
                     />
                     <Button variant="outline" onClick={handleClone} disabled={!canCreateCustomTemplates} title={!canCreateCustomTemplates ? t('pmTemplates.view.licenseRequired') : ''}>
                       <Copy className="mr-2 h-4 w-4" />
@@ -317,7 +324,7 @@ const PMTemplateView: React.FC = () => {
                 <AccordionItem key={section.name} value={section.name} id={`section-${encodeURIComponent(section.name)}`}>
                   <AccordionTrigger>
                     <div className="flex items-center justify-between w-full">
-                      <div className="font-medium">{section.name}</div>
+                      <div className="font-medium">{sectionLabel(section.name)}</div>
                       <div className="text-sm text-muted-foreground">{t('pmTemplates.view.itemCount', { count: section.items.length })}</div>
                     </div>
                   </AccordionTrigger>
