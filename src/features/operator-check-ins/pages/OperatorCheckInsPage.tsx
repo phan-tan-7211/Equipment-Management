@@ -82,7 +82,7 @@ function OperatorChecklistTemplateSummaryHeader({
 }
 
 export default function OperatorCheckInsPage() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const queryClient = useQueryClient();
   const { success: showSuccessToast, error: showErrorToast } = useAppToast();
   const { currentOrganization } = useOrganization();
@@ -142,7 +142,7 @@ export default function OperatorCheckInsPage() {
     if (!starter || !orgId) return;
     setCloningStarterId(starterId);
     try {
-      const materialized = materializeOperatorChecklistStarter(starter);
+      const materialized = materializeOperatorChecklistStarter(starter, language);
       await createTemplateMutation.mutateAsync({
         organizationId: orgId,
         name: materialized.name,
@@ -150,7 +150,7 @@ export default function OperatorCheckInsPage() {
         templateData: materialized.templateData,
       });
       showSuccessToast({
-        description: t('operatorCheckinAdmin.cloneSuccess', { name: starter.name }),
+        description: t('operatorCheckinAdmin.cloneSuccess', { name: materialized.name }),
       });
     } catch {
       showErrorToast({ description: t('operatorCheckinAdmin.cloneError') });
