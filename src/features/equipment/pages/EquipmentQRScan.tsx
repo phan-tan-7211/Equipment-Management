@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ZNTEQRIcon from '@/components/ui/ZNTEQRIcon';
+import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
 import { useAuth } from '@/hooks/useAuth';
 import { useSimpleOrganizationSafe } from '@/hooks/useSimpleOrganization';
 import { useSession } from '@/hooks/useSession';
@@ -324,9 +325,12 @@ const EquipmentQRScan = (): React.JSX.Element => {
               <p className="text-xs text-muted-foreground">{t('equipmentQRScan.scannedEquipment')}</p>
             </div>
           </a>
-          <Badge variant="outline" className={getStatusClasses(equipment.status)}>
-            {statusLabel}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <Badge variant="outline" className={getStatusClasses(equipment.status)}>
+              {statusLabel}
+            </Badge>
+          </div>
         </div>
 
         <Card className="overflow-hidden">

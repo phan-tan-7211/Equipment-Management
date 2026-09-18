@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.16] - 2026-09-19
+
+### Added
+
+- Added the existing Vietnamese/English/Korean language switcher to the authenticated equipment QR result page.
+
 ## [3.34.15] - 2026-09-19
 
 ### Fixed
