@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import {
   usePMTemplates,
   usePMTemplatesForOrganization,
-  type PMTemplateSummary,
 } from '@/features/pm-templates/hooks/usePMTemplates';
+import type { PMTemplateSummary } from '@/features/pm-templates/services/pmChecklistTemplatesService';
 import {
   useMatchingPMTemplates,
   useMatchingPMTemplatesForOrganization,
