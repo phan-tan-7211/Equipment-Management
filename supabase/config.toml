@@ -20,7 +20,7 @@ additional_redirect_urls = [
   "http://localhost:8080/**",
   "http://127.0.0.1:5173/**",
   "http://127.0.0.1:8080/**",
-  "https://equipqr.app/**",
+  "https://eqr.zinitek.com/**",
   "https://preview.equipqr.app/**",
   # Vercel preview deployments for this project only.
   # The slug must match the Vercel project name ("equip-qr").
