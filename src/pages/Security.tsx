@@ -68,7 +68,7 @@ export default function Security() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            {t('marketingTrust.security.disclosureText')}{' '}<a className="text-primary underline" href="mailto:security@equipqr.app">security@equipqr.app</a>.
+            {t('marketingTrust.security.disclosureText')}{' '}<a className="text-primary underline" href="mailto:phantan7211@gmail.com">phantan7211@gmail.com</a>.
           </CardContent>
         </Card>
       </div>
