@@ -125,6 +125,20 @@ const DialogDescription = React.forwardRef<
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
+const DialogScrollBody = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pr-2",
+      className
+    )}
+    {...props}
+  />
+)
+DialogScrollBody.displayName = "DialogScrollBody"
+
 export {
   Dialog,
   DialogPortal,
@@ -136,5 +150,6 @@ export {
   DialogFooter,
   DialogTitle,
   DialogDescription,
+  DialogScrollBody,
 }
 
