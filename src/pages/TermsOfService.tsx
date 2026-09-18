@@ -112,8 +112,8 @@ export default function TermsOfService() {
           {paragraph(`${section('governingLaw')}.p1`)}
           <p>
             {t(`${section('governingLaw')}.noticesPrefix`)}{' '}
-            <a href="mailto:legal@columbiacloudworks.com" className="underline">
-              legal@columbiacloudworks.com
+            <a href="mailto:phantan7211@gmail.com" className="underline">
+              phantan7211@gmail.com
             </a>{' '}
             {t(`${section('governingLaw')}.noticesSuffix`)}
           </p>
