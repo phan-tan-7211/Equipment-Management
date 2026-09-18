@@ -244,7 +244,7 @@ export default defineConfig({
       { text: "PM Templates", link: "/pm-templates/" },
       {
         text: "Open App",
-        link: "https://equipqr.app",
+        link: "https://eqr.zinitek.com",
         target: "_blank",
         rel: "noopener noreferrer",
       },
