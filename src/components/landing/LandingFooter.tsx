@@ -12,7 +12,7 @@ import {
 const CONTACT_EMAIL = 'mailto:phantan7211@gmail.com';
 const GITHUB_REPO_URL = 'https://github.com/phan-tan-7211/Equipment-Management';
 const ZNTEQR_APP_URL = 'https://eqr.zinitek.com';
-const COLUMBIA_CLOUDWORKS_URL = 'https://columbiacloudworks.com';
+const PROJECT_HOME_URL = 'https://eqr.zinitek.com';
 
 interface FooterLinkItem {
   href: string;
@@ -52,7 +52,7 @@ const footerSections: FooterSection[] = [
     links: [
       { href: '#about', labelKey: 'about', type: 'hash' },
       {
-        href: COLUMBIA_CLOUDWORKS_URL,
+        href: PROJECT_HOME_URL,
         label: 'ZNT',
         type: 'external',
       },
@@ -72,7 +72,7 @@ const footerSections: FooterSection[] = [
     titleKey: 'connect',
     links: [
       {
-        href: 'https://calendly.com/nicholas-king-columbiacloudworks/30min',
+        href: CONTACT_EMAIL,
         labelKey: 'demo',
         type: 'external',
       },
@@ -176,7 +176,7 @@ const LandingFooter = () => {
         <div className="mt-8 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-muted-foreground">
           <span>© {currentYear} ZNTEQR™</span>
           <ExternalLink
-            href={COLUMBIA_CLOUDWORKS_URL}
+            href={PROJECT_HOME_URL}
             className={`flex items-center gap-1.5 ${footerLinkDecorationClassName}`}
             showIcon={false}
           >
