@@ -1,7 +1,19 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { usePMTemplates } from '@/features/pm-templates/hooks/usePMTemplates';
-import { useMatchingPMTemplates } from '@/features/pm-templates/hooks/usePMTemplateCompatibility';
+import {
+  usePMTemplates,
+  usePMTemplatesForOrganization,
+  type PMTemplateSummary,
+} from '@/features/pm-templates/hooks/usePMTemplates';
+import {
+  useMatchingPMTemplates,
+  useMatchingPMTemplatesForOrganization,
+} from '@/features/pm-templates/hooks/usePMTemplateCompatibility';
+import type { MatchingPMTemplateResult } from '@/features/pm-templates/types/pmTemplateCompatibility';
 import { useSimplifiedOrganizationRestrictions } from '@/features/organization/hooks/useSimplifiedOrganizationRestrictions';
+import {
+  getSimplifiedOrganizationRestrictions,
+  type SimplifiedOrganizationRestrictions,
+} from '@/utils/simplifiedOrganizationRestrictions';
 import type { WorkOrderFormData } from '@/features/work-orders/hooks/useWorkOrderForm';
 
 export const PM_TEMPLATE_NONE_VALUE = '__none__';
@@ -27,23 +39,28 @@ interface UseWorkOrderPMChecklistProps {
   autoDefaultFromEquipment?: boolean;
 }
 
-export const useWorkOrderPMChecklist = ({
+interface WorkOrderPMChecklistControllerProps extends UseWorkOrderPMChecklistProps {
+  allTemplates: PMTemplateSummary[];
+  matchingTemplates: MatchingPMTemplateResult[];
+  isLoadingTemplates: boolean;
+  isLoadingMatching: boolean;
+  restrictions: SimplifiedOrganizationRestrictions;
+}
+
+function useWorkOrderPMChecklistController({
   values,
   setValue,
   selectedEquipment,
   allowTemplateOverride = false,
   autoDefaultFromEquipment = false,
-}: UseWorkOrderPMChecklistProps) => {
-  const { data: allTemplates = [], isLoading: isLoadingTemplates } = usePMTemplates();
-  const { restrictions } = useSimplifiedOrganizationRestrictions();
+  allTemplates,
+  matchingTemplates,
+  isLoadingTemplates,
+  isLoadingMatching,
+  restrictions,
+}: WorkOrderPMChecklistControllerProps) {
   const lastEquipmentIdRef = useRef<string | null>(null);
   const userSelectedTemplateRef = useRef(false);
-
-  const { data: matchingTemplates = [], isLoading: isLoadingMatching } = useMatchingPMTemplates(
-    selectedEquipment?.id,
-    { enabled: !!selectedEquipment?.id },
-  );
-
   const isLoading = isLoadingTemplates || isLoadingMatching;
 
   const hasAssignedTemplate = Boolean(selectedEquipment?.default_pm_template_id);
@@ -147,4 +164,46 @@ export const useWorkOrderPMChecklist = ({
     selectValue,
     allowTemplateOverride,
   };
+}
+
+export const useWorkOrderPMChecklist = (props: UseWorkOrderPMChecklistProps) => {
+  const { data: allTemplates = [], isLoading: isLoadingTemplates } = usePMTemplates();
+  const { restrictions } = useSimplifiedOrganizationRestrictions();
+  const { data: matchingTemplates = [], isLoading: isLoadingMatching } = useMatchingPMTemplates(
+    props.selectedEquipment?.id,
+    { enabled: !!props.selectedEquipment?.id },
+  );
+
+  return useWorkOrderPMChecklistController({
+    ...props,
+    allTemplates,
+    matchingTemplates,
+    isLoadingTemplates,
+    isLoadingMatching,
+    restrictions,
+  });
+};
+
+export const useWorkOrderPMChecklistForOrganization = (
+  organizationId: string | undefined,
+  props: UseWorkOrderPMChecklistProps,
+) => {
+  const { data: allTemplates = [], isLoading: isLoadingTemplates } =
+    usePMTemplatesForOrganization(organizationId);
+  const { data: matchingTemplates = [], isLoading: isLoadingMatching } =
+    useMatchingPMTemplatesForOrganization(
+      organizationId,
+      props.selectedEquipment?.id,
+      { enabled: Boolean(organizationId && props.selectedEquipment?.id) },
+    );
+  const restrictions = getSimplifiedOrganizationRestrictions();
+
+  return useWorkOrderPMChecklistController({
+    ...props,
+    allTemplates,
+    matchingTemplates,
+    isLoadingTemplates,
+    isLoadingMatching,
+    restrictions,
+  });
 };
