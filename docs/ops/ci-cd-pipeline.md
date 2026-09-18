@@ -180,7 +180,7 @@ Technical documentation is deployed as a **second Vercel project** (same GitHub 
 | Build Command | `npm run docs:build` |
 | Output Directory | `.vitepress/dist` |
 | Config | [`docs/vercel.json`](../vercel.json) |
-| Production hostname | `https://equipqr.info` (apex). `www.equipqr.info` should redirect to apex. |
+| Production hostname | `https://eqr.zinitek.com` (apex). `www.equipqr.info` should redirect to apex. |
 
 **Deployment cadence:** Git-connected Production builds run when **`main`** receives commits that touch **`docs/`** (scoped Root Directory). Non-`main` branches are skipped via `ignoreCommand` in [`docs/vercel.json`](../vercel.json). App-only merges do **not** redeploy the docs bundle unless `docs/` changes — intentional for static documentation.
 
