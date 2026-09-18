@@ -9,7 +9,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$repo = 'Columbia-Cloudworks-LLC/ZNTEQR'
+$repo = 'phan-tan-7211/Equipment-Management'
 $manifestPath = Join-Path $PSScriptRoot '..\.github\secrets-map.yml'
 $vaultUuid = 'tgo2m6qbct5otqeqirjocn3joa'
 
