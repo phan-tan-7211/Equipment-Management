@@ -161,7 +161,7 @@ All vendor OAuth callbacks use **`https://supabase.equipqr.app/functions/v1/...`
 - **Local dev:** Development/sandbox keys via `edge-env-local-dev` + `QBO_USE_SANDBOX=true`.
 - **PR preview UI:** Same prod Supabase API; integrations tested locally before merge.
 
-`PUBLIC_SITE_URL` on production edge: `https://equipqr.app`. Per-PR previews rely on `window.location.origin` at runtime for return URLs where applicable.
+`PUBLIC_SITE_URL` on production edge: `https://eqr.zinitek.com`. Per-PR previews rely on `window.location.origin` at runtime for return URLs where applicable.
 
 ### Secrets model (target)
 
