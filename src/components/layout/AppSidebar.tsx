@@ -138,7 +138,7 @@ const AppSidebar = () => {
             hoverBackgroundClass,
             isActive && hasCustomBranding ? activeBackgroundClass : '',
             isActive && hasCustomBranding ? 'font-medium' : '',
-            isActive && !hasCustomBranding ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground border-l-2 border-l-sidebar-primary rounded-l-none' : ''
+            isActive && !hasCustomBranding ? 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground border-l-2 border-l-sidebar-primary rounded-l-sm shadow-[inset_0_0_0_1px_hsl(var(--sidebar-primary)/0.08)]' : ''
           )}
         >
           <Link to={item.url} onClick={handleNavClick}>
@@ -165,6 +165,7 @@ const AppSidebar = () => {
     <Sidebar variant="inset">
       <div
         className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+        data-control-sidebar={hasCustomBranding ? undefined : ''}
         style={sidebarStyle}
       >
         <SidebarHeader className="p-3 sm:p-4">

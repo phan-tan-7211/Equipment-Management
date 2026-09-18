@@ -23,8 +23,13 @@ describe('equipment status rail classes', () => {
     expect(getEquipmentStatusBackgroundTint('maintenance')).toContain('equipment-maintenance');
   });
 
-  it('returns retired rail for inactive status', () => {
-    expect(getEquipmentStatusBorderClass('inactive')).toContain('border-l-equipment-retired');
-    expect(getEquipmentStatusRailClass('inactive')).toBe('bg-equipment-retired');
+  it('returns the neutral inactive rail for inactive status', () => {
+    expect(getEquipmentStatusBorderClass('inactive')).toContain('border-l-equipment-inactive');
+    expect(getEquipmentStatusRailClass('inactive')).toBe('bg-equipment-inactive');
+  });
+
+  it('keeps retired equipment on the destructive red rail', () => {
+    expect(getEquipmentStatusBorderClass('retired')).toContain('border-l-equipment-retired');
+    expect(getEquipmentStatusRailClass('retired')).toBe('bg-equipment-retired');
   });
 });

@@ -1,30 +1,271 @@
-/* ZNTEQR brand theme override
-   Primary brand blue: #155EEF / rgb(21, 94, 239)
-   Loaded after index.css so existing components inherit the new brand color
-   without changing semantic status colors (success/warning/destructive). */
+/* ZNTEQR control-room theme
+   Structure follows the existing shadcn/TailAdmin-style shell while the
+   color system takes its cues from XPG's navy, electric blue, and cyan UI.
+   Light mode stays intentionally restrained for office use; dark mode is the
+   default and carries the richer control-room treatment. */
 
 @layer base {
   :root {
-    --primary: 220 87% 51%;
+    color-scheme: light;
+
+    --background: 220 33% 98%;
+    --foreground: 224 35% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 35% 13%;
+    --card-elevated: 220 33% 96%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 35% 13%;
+
+    --primary: 216 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --ring: 220 87% 51%;
+    --secondary: 218 32% 94%;
+    --secondary-foreground: 224 35% 18%;
 
-    --brand: 220 87% 51%;
+    --muted: 218 30% 95%;
+    --muted-foreground: 218 14% 42%;
+
+    --accent: 211 80% 94%;
+    --accent-foreground: 216 100% 36%;
+
+    --success: 168 100% 25%;
+    --success-foreground: 0 0% 100%;
+    --info: 202 100% 37%;
+    --info-foreground: 0 0% 100%;
+    --warning: 34 100% 34%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 350 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --status-open: 202 100% 37%;
+    --status-open-foreground: 0 0% 100%;
+    --status-assigned: 216 100% 50%;
+    --status-assigned-foreground: 0 0% 100%;
+    --status-in-progress: 34 100% 34%;
+    --status-in-progress-foreground: 0 0% 100%;
+    --status-completed: 168 100% 25%;
+    --status-completed-foreground: 0 0% 100%;
+    --status-cancelled: 217 12% 46%;
+    --status-cancelled-foreground: 0 0% 100%;
+    --status-overdue: 350 72% 48%;
+    --status-overdue-foreground: 0 0% 100%;
+
+    --equipment-operational: 168 100% 25%;
+    --equipment-maintenance: 34 100% 34%;
+    --equipment-inactive: 217 12% 46%;
+    --equipment-repair: 350 72% 48%;
+    --equipment-retired: 350 72% 48%;
+
+    --priority-low: 202 100% 37%;
+    --priority-medium: 34 100% 34%;
+    --priority-high: 20 92% 43%;
+    --priority-critical: 350 72% 48%;
+
+    --border: 216 24% 86%;
+    --input: 216 24% 82%;
+    --ring: 216 100% 50%;
+
+    --chart-1: 216 100% 50%;
+    --chart-2: 168 100% 31%;
+    --chart-3: 34 100% 42%;
+    --chart-4: 16 100% 50%;
+    --chart-5: 190 100% 38%;
+
+    --radius: 0.625rem;
+
+    --brand: 216 100% 50%;
     --brand-foreground: 0 0% 100%;
 
-    --sidebar-primary: 220 87% 51%;
+    --sidebar-background: 222 42% 96%;
+    --sidebar-foreground: 224 35% 18%;
+    --sidebar-primary: 216 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-ring: 220 87% 51%;
+    --sidebar-accent: 211 80% 92%;
+    --sidebar-accent-foreground: 216 100% 34%;
+    --sidebar-border: 216 24% 84%;
+    --sidebar-ring: 216 100% 50%;
 
-    /* Keep charts varied, but remove the old purple brand accent. */
-    --chart-5: 220 87% 51%;
+    --scrollbar-thumb: 216 16% 66%;
+    --scrollbar-thumb-hover: 216 18% 50%;
 
-    /* Brand shadows follow ZNTEQR blue. */
-    --shadow-primary: 0 4px 14px -3px hsl(220 87% 51% / 0.34);
-    --shadow-primary-lg: 0 10px 25px -5px hsl(220 87% 51% / 0.4);
+    --shadow-sm: 0 1px 2px rgb(23 37 61 / 0.06);
+    --shadow: 0 1px 3px rgb(23 37 61 / 0.08), 0 1px 2px rgb(23 37 61 / 0.05);
+    --shadow-md: 0 8px 20px -12px rgb(23 37 61 / 0.24);
+    --shadow-lg: 0 16px 34px -18px rgb(23 37 61 / 0.28);
+    --shadow-xl: 0 24px 48px -22px rgb(23 37 61 / 0.32);
+    --shadow-elevation-1: var(--shadow);
+    --shadow-elevation-2: var(--shadow-md);
+    --shadow-elevation-3: var(--shadow-lg);
+    --shadow-elevation-4: var(--shadow-xl);
+    --shadow-primary: 0 10px 24px -14px hsl(216 100% 50% / 0.55);
+    --shadow-primary-lg: 0 18px 38px -18px hsl(216 100% 50% / 0.58);
+    --shadow-success: 0 10px 24px -14px hsl(168 100% 25% / 0.48);
+    --shadow-warning: 0 10px 24px -14px hsl(34 100% 34% / 0.48);
+    --shadow-destructive: 0 10px 24px -14px hsl(350 72% 48% / 0.5);
+    --shadow-card: var(--shadow-elevation-1);
+    --shadow-card-hover: var(--shadow-elevation-2);
+    --shadow-card-active: var(--shadow-elevation-3);
 
-    /* Construction/brand accent no longer uses purple. */
-    --construction-stripe-2: hsl(220 87% 51%);
+    --construction-stripe-2: hsl(216 100% 50%);
   }
+
+  .dark {
+    color-scheme: dark;
+
+    /* XPG source palette: #1a1a2e, #16213e, #0f3460, #0066ff,
+       #00d4ff, #ff6b35, #00b894, and #e94560. */
+    --background: 240 28% 14%;
+    --foreground: 216 33% 97%;
+
+    --card: 225 47% 16%;
+    --card-foreground: 216 33% 97%;
+    --card-elevated: 218 63% 22%;
+
+    --popover: 225 47% 16%;
+    --popover-foreground: 216 33% 97%;
+
+    --primary: 216 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 222 38% 22%;
+    --secondary-foreground: 216 33% 97%;
+
+    --muted: 222 38% 22%;
+    --muted-foreground: 215 20% 69%;
+
+    --accent: 211 73% 22%;
+    --accent-foreground: 190 100% 50%;
+
+    --success: 168 100% 36%;
+    --success-foreground: 225 47% 9%;
+    --info: 190 100% 50%;
+    --info-foreground: 225 47% 9%;
+    --warning: 42 100% 67%;
+    --warning-foreground: 225 47% 9%;
+    --destructive: 350 78% 59%;
+    --destructive-foreground: 225 47% 9%;
+
+    --status-open: 190 100% 50%;
+    --status-open-foreground: 225 47% 9%;
+    --status-assigned: 216 100% 63%;
+    --status-assigned-foreground: 225 47% 9%;
+    --status-in-progress: 42 100% 67%;
+    --status-in-progress-foreground: 225 47% 9%;
+    --status-completed: 168 100% 36%;
+    --status-completed-foreground: 225 47% 9%;
+    --status-cancelled: 215 16% 65%;
+    --status-cancelled-foreground: 225 47% 9%;
+    --status-overdue: 350 78% 64%;
+    --status-overdue-foreground: 225 47% 9%;
+
+    --equipment-operational: 145 80% 65%;
+    --equipment-maintenance: 42 100% 67%;
+    --equipment-inactive: 215 16% 65%;
+    --equipment-repair: 350 78% 64%;
+    --equipment-retired: 350 78% 64%;
+
+    --priority-low: 190 100% 50%;
+    --priority-medium: 42 100% 67%;
+    --priority-high: 16 100% 60%;
+    --priority-critical: 350 78% 64%;
+
+    --border: 217 39% 31%;
+    --input: 217 39% 34%;
+    --ring: 190 100% 50%;
+
+    --chart-1: 190 100% 50%;
+    --chart-2: 168 100% 36%;
+    --chart-3: 42 100% 67%;
+    --chart-4: 16 100% 60%;
+    --chart-5: 216 100% 63%;
+
+    --brand: 216 100% 50%;
+    --brand-foreground: 0 0% 100%;
+
+    --sidebar-background: 229 43% 12%;
+    --sidebar-foreground: 216 33% 97%;
+    --sidebar-primary: 190 100% 50%;
+    --sidebar-primary-foreground: 225 47% 9%;
+    --sidebar-accent: 211 73% 22%;
+    --sidebar-accent-foreground: 190 100% 50%;
+    --sidebar-border: 217 39% 28%;
+    --sidebar-ring: 190 100% 50%;
+
+    --scrollbar-thumb: 217 30% 38%;
+    --scrollbar-thumb-hover: 211 62% 48%;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.28);
+    --shadow: 0 8px 20px -14px rgb(0 0 0 / 0.72), 0 1px 2px rgb(0 0 0 / 0.35);
+    --shadow-md: 0 14px 30px -18px rgb(0 0 0 / 0.78), 0 0 0 1px hsl(190 100% 50% / 0.025);
+    --shadow-lg: 0 22px 44px -22px rgb(0 0 0 / 0.82), 0 0 30px -24px hsl(190 100% 50% / 0.34);
+    --shadow-xl: 0 30px 64px -26px rgb(0 0 0 / 0.88), 0 0 42px -28px hsl(216 100% 50% / 0.38);
+    --shadow-elevation-1: var(--shadow);
+    --shadow-elevation-2: var(--shadow-md);
+    --shadow-elevation-3: var(--shadow-lg);
+    --shadow-elevation-4: var(--shadow-xl);
+    --shadow-primary: 0 14px 32px -16px hsl(216 100% 50% / 0.72);
+    --shadow-primary-lg: 0 22px 44px -18px hsl(216 100% 50% / 0.78);
+    --shadow-success: 0 14px 32px -18px hsl(168 100% 36% / 0.62);
+    --shadow-warning: 0 14px 32px -18px hsl(42 100% 67% / 0.52);
+    --shadow-destructive: 0 14px 32px -18px hsl(350 78% 59% / 0.58);
+
+    --construction-stripe-2: hsl(190 100% 50%);
+  }
+}
+
+/* These selectors intentionally sit outside a Tailwind layer so the shell's
+   ambient treatment wins over its utility background without `!important`. */
+[data-dashboard-shell="control-room"] {
+  background: hsl(var(--sidebar-background));
+}
+
+[data-control-sidebar] {
+  background:
+    radial-gradient(circle at 0 0, hsl(var(--sidebar-primary) / 0.1), transparent 18rem),
+    linear-gradient(180deg, hsl(var(--sidebar-background)), hsl(var(--sidebar-background) / 0.96));
+}
+
+[data-dashboard-workspace] {
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(circle at 100% 0, hsl(var(--info) / 0.07), transparent 28rem),
+    radial-gradient(circle at 45% 115%, hsl(var(--primary) / 0.045), transparent 32rem);
+}
+
+[data-control-topbar] {
+  border-color: hsl(var(--border) / 0.72);
+  background: hsl(var(--background) / 0.82);
+  box-shadow: 0 1px 0 hsl(var(--border) / 0.35);
+  backdrop-filter: blur(18px) saturate(135%);
+}
+
+.dark [data-control-sidebar] {
+  box-shadow: inset -1px 0 hsl(var(--sidebar-primary) / 0.08);
+}
+
+.dark [data-dashboard-workspace] {
+  background-image:
+    radial-gradient(circle at 100% 0, hsl(var(--info) / 0.095), transparent 30rem),
+    radial-gradient(circle at 42% 115%, hsl(var(--primary) / 0.075), transparent 34rem);
+}
+
+/* The compact Equipment table keeps its status column dense while exposing
+   the same at-a-glance rail language as the card view. */
+[data-dashboard-workspace] td:has([data-equipment-status="active"]) {
+  border-left: 4px solid hsl(var(--equipment-operational));
+}
+
+[data-dashboard-workspace] td:has([data-equipment-status="maintenance"]) {
+  border-left: 4px solid hsl(var(--equipment-maintenance));
+}
+
+[data-dashboard-workspace] td:has([data-equipment-status="inactive"]) {
+  border-left: 4px solid hsl(var(--equipment-inactive));
+}
+
+[data-dashboard-workspace] td:has([data-equipment-status="out_of_service"]),
+[data-dashboard-workspace] td:has([data-equipment-status="retired"]) {
+  border-left: 4px solid hsl(var(--equipment-retired));
 }

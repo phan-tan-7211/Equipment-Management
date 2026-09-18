@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import ContextBreadcrumb from './ContextBreadcrumb';
 import UserProfileMenu from './UserProfileMenu';
 import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
+import ThemeToggle from '@/components/layout/ThemeToggle';
 import { useI18n } from '@/i18n';
 
 const TopBar: React.FC = () => {
@@ -15,7 +16,8 @@ const TopBar: React.FC = () => {
 
   return (
     <header
-      className="flex h-10 shrink-0 items-center gap-2 border-b transition-none sm:border-b-0"
+      className="sticky top-0 z-sticky flex h-10 shrink-0 items-center gap-2 border-b transition-none"
+      data-control-topbar=""
     >
       <div className="flex items-center gap-2 px-3 sm:px-4 w-full text-foreground">
         {/* Mobile: brand logo doubles as the sidebar trigger. */}
@@ -41,6 +43,7 @@ const TopBar: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
+          <ThemeToggle />
           <LanguageSwitcher />
           <UserProfileMenu />
         </div>

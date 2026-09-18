@@ -61,7 +61,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({ activeWidgets }) =
   return (
     <div
       data-testid="dashboard-grid"
-      className="grid grid-cols-12 gap-4"
+      className="grid grid-cols-12 gap-4 xl:gap-5"
     >
       {activeWidgets.map((widgetId) => {
         const widget = getWidget(widgetId);
