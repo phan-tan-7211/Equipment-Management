@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.15] - 2026-09-19
+
+### Fixed
+
+- Aligned two Supabase migration filenames with the versions already recorded in production migration history, clearing schema-drift checks without replaying production DDL.
+
 ## [3.34.14] - 2026-09-19
 
 ### Fixed
