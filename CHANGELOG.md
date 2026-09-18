@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.34.18] - 2026-09-19
+
+### Fixed
+
+- Standardized dialogs, alert dialogs, and sheets to stay within the viewport without accidental horizontal scrollbars; widened the equipment parts picker for long inventory names.
+
 ## [3.34.17] - 2026-09-19
 
 ### Fixed
