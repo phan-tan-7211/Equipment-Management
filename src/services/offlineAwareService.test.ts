@@ -6,12 +6,20 @@ import { OfflineQueueService } from './offlineQueueService';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const { mockCreate, mockSupabaseFrom, mockCreatePM, mockUpdatePM, mockDeletePM } = vi.hoisted(() => ({
+const {
+  mockCreate,
+  mockSupabaseFrom,
+  mockCreatePM,
+  mockUpdatePM,
+  mockDeletePM,
+  mockDeleteOfflineImageRefs,
+} = vi.hoisted(() => ({
   mockCreate: vi.fn(),
   mockSupabaseFrom: vi.fn(),
   mockCreatePM: vi.fn(),
   mockUpdatePM: vi.fn(),
   mockDeletePM: vi.fn(),
+  mockDeleteOfflineImageRefs: vi.fn(),
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
@@ -52,6 +60,10 @@ vi.mock('./offlineQueueImageRefs', () => ({
       sizeBytes: file.size,
     })),
   ),
+}));
+
+vi.mock('./offlineBlobStore', () => ({
+  deleteOfflineImageRefs: mockDeleteOfflineImageRefs,
 }));
 
 const USER_ID = 'user-123';
@@ -313,6 +325,39 @@ describe('OfflineAwareWorkOrderService', () => {
       expect(item.payload).not.toHaveProperty('files');
 
       Object.defineProperty(navigator, 'onLine', { value: true, configurable: true, writable: true });
+    });
+
+    it('cleans staged creation media when queue enqueue fails', async () => {
+      Object.defineProperty(navigator, 'onLine', { value: false, configurable: true, writable: true });
+
+      const enqueueError = new Error('queue write failed');
+      const enqueueSpy = vi.spyOn(OfflineQueueService.prototype, 'enqueue').mockImplementationOnce(() => {
+        throw enqueueError;
+      });
+      const svc = new OfflineAwareWorkOrderService(ORG_ID, USER_ID);
+
+      try {
+        await expect(
+          svc.createEquipmentFull(
+            {
+              name: 'Offline Loader',
+              manufacturer: 'Cat',
+              model: 'D6',
+              serial_number: 'OFFLINE-ENQUEUE-FAIL',
+            } as EquipmentCreateData,
+            { files: [jpegFile('loader.jpg')], displayIndex: 0 },
+          ),
+        ).rejects.toMatchObject({
+          message: 'Cannot save offline — please try again when connected.',
+          cause: enqueueError,
+        });
+
+        expect(mockDeleteOfflineImageRefs).toHaveBeenCalledWith(USER_ID, ORG_ID, ['blob-0']);
+        expect(queueReader.getCount()).toBe(0);
+      } finally {
+        enqueueSpy.mockRestore();
+        Object.defineProperty(navigator, 'onLine', { value: true, configurable: true, writable: true });
+      }
     });
   });
 

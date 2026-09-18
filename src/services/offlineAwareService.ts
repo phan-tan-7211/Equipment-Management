@@ -39,6 +39,7 @@ import type { UpdateWorkingHoursData } from '@/features/equipment/services/equip
 import { OfflineQueueService, OfflineQueuePayloadError } from './offlineQueueService';
 import type { WorkOrderServerSnapshot, OfflineQueueImageRef } from './offlineQueueService';
 import { stageQueueImageRefs } from './offlineQueueImageRefs';
+import { deleteOfflineImageRefs } from './offlineBlobStore';
 import type {
   PMChecklistItem,
   PreventativeMaintenance,
@@ -479,8 +480,10 @@ export class OfflineAwareWorkOrderService {
     data: EquipmentCreateData,
     media?: OfflineEquipmentCreateMedia,
   ): Promise<OfflineAwareResult<{ id: string; [key: string]: unknown }>> {
+    let imageRefs: OfflineQueueImageRef[] | undefined;
+
     try {
-      const imageRefs: OfflineQueueImageRef[] | undefined = media?.files.length
+      imageRefs = media?.files.length
         ? await stageQueueImageRefs(this.userId, this.orgId, media.files)
         : undefined;
       const displayImageIndex = imageRefs?.length
@@ -501,6 +504,20 @@ export class OfflineAwareWorkOrderService {
       logger.info('Equipment create (full) queued offline', { queueItemId: item.id });
       return { data: null, queuedOffline: true, queueItemId: item.id };
     } catch (err) {
+      if (imageRefs?.length) {
+        try {
+          await deleteOfflineImageRefs(
+            this.userId,
+            this.orgId,
+            imageRefs.map(ref => ref.blobKey),
+          );
+        } catch (cleanupError) {
+          logger.warn('Failed to clean staged offline equipment creation images', {
+            imageRefs,
+            error: cleanupError,
+          });
+        }
+      }
       if (err instanceof OfflineQueuePayloadError) throw err;
       logger.error('Failed to enqueue offline equipment create', err);
       throw Object.assign(new Error('Cannot save offline — please try again when connected.'), { cause: err });
