@@ -86,34 +86,34 @@ vi.mock('@/components/common/InlineNoteComposer', () => ({
   ),
 }));
 
-vi.mock('@/features/work-orders/components/WorkOrderPMChecklist', async () => {
+vi.mock('@/features/equipment/components/qr/QRWorkOrderPMChecklist', async () => {
   const {
     PM_TEMPLATE_NONE_VALUE,
-    useWorkOrderPMChecklist,
+    useWorkOrderPMChecklistForOrganization,
   } = await import('@/features/work-orders/hooks/useWorkOrderPMChecklist');
   type ChecklistProps = {
+    organizationId: string;
     values: WorkOrderPMChecklistValues;
     setValue: WorkOrderPMChecklistSetValue;
-    selectedEquipment?: { id: string; name: string; default_pm_template_id: string | null } | null;
-    allowTemplateOverride?: boolean;
+    selectedEquipment: { id: string; name: string; default_pm_template_id: string | null };
     autoDefaultFromEquipment?: boolean;
   };
 
   return {
-    WorkOrderPMChecklist: ({
+    default: ({
+      organizationId,
       values,
       setValue,
       selectedEquipment,
-      allowTemplateOverride,
       autoDefaultFromEquipment,
     }: ChecklistProps) => {
-      const { templates, isLoading, handleTemplateChange, selectValue } = useWorkOrderPMChecklist({
-        values,
-        setValue,
-        selectedEquipment,
-        allowTemplateOverride,
-        autoDefaultFromEquipment,
-      });
+      const { templates, isLoading, handleTemplateChange, selectValue } =
+        useWorkOrderPMChecklistForOrganization(organizationId, {
+          values,
+          setValue,
+          selectedEquipment,
+          autoDefaultFromEquipment,
+        });
 
       if (isLoading) {
         return <p>Loading templates...</p>;
