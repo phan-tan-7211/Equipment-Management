@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   Circle as CircleIcon,
-  Extend,
+  ArrowUpRight,
   Minus,
   MousePointer2,
   Scissors,
@@ -864,7 +864,7 @@ export default function InventorSketchOverlay({
               ['rect', Square, 'facilityMap.toolRectangle'],
               ['circle', CircleIcon, 'facilityMap.toolCircle'],
               ['trim', Scissors, 'facilityMap.sketchTrim'],
-              ['extend', Extend, 'facilityMap.sketchExtend'],
+              ['extend', ArrowUpRight, 'facilityMap.sketchExtend'],
             ] as const).map(([id, Icon, label]) => (
               <button
                 key={id}
