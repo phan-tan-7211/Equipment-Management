@@ -654,12 +654,15 @@ export default function FacilityFloorPlan() {
   const zoneById = useMemo(() => new Map(ZONES.map((zone) => [zone.id, zone])), []);
 
   const setSingleSelection = useCallback((id: string, additive = false) => {
-    setSelectedMarkerId(id);
     setSelectedObjectIds((current) => {
-      if (!additive) return new Set([id]);
+      if (!additive) {
+        setSelectedMarkerId(id);
+        return new Set([id]);
+      }
       const next = new Set(current);
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      setSelectedMarkerId(next.has(id) ? id : ([...next][0] ?? ''));
       return next;
     });
   }, []);
@@ -1148,16 +1151,18 @@ export default function FacilityFloorPlan() {
     if (selectionBox) {
       const hits = collectObjectsInSelection(selectionBox);
       setSelectedObjectIds((current) => {
-        if (!selectionShiftRef.current) return hits;
+        if (!selectionShiftRef.current) {
+          setSelectedMarkerId([...hits][0] ?? '');
+          return hits;
+        }
         const next = new Set(current);
         hits.forEach((id) => {
           if (next.has(id)) next.delete(id);
           else next.add(id);
         });
+        setSelectedMarkerId([...next][0] ?? '');
         return next;
       });
-      const first = [...hits][0];
-      if (first) setSelectedMarkerId(first);
     } else if (draftAnnotation) {
       const dx = Math.abs(draftAnnotation.x2 - draftAnnotation.x1);
       const dy = Math.abs(draftAnnotation.y2 - draftAnnotation.y1);
