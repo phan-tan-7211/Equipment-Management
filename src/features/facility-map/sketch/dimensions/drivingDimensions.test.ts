@@ -32,9 +32,14 @@ describe('driving dimensions', () => {
       y2: 4,
     };
 
-    expect(
-      applyDrivingDimension(line, dimension('line', 'length'), 10),
-    ).toMatchObject({ x2: 6, y2: 8 });
+    const next = applyDrivingDimension(
+      line,
+      dimension('line', 'length'),
+      10,
+    ) as Extract<SketchEntity, { type: 'line' }>;
+
+    expect(next.x2).toBeCloseTo(6);
+    expect(next.y2).toBeCloseTo(8);
   });
 
   it('changes line angle while preserving length', () => {

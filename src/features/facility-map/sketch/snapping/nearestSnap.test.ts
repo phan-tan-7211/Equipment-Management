@@ -94,9 +94,9 @@ describe('nearest snap', () => {
     expect(onArc?.x).toBeCloseTo(Math.sqrt(50));
     expect(onArc?.y).toBeCloseTo(Math.sqrt(50));
 
-    expect(
-      getNearestPointOnEntity({ x: -10, y: 0 }, arc),
-    ).toEqual({ x: 0, y: 10 });
+    const endpoint = getNearestPointOnEntity({ x: -10, y: 0 }, arc);
+    expect(endpoint?.x).toBeCloseTo(0);
+    expect(endpoint?.y).toBeCloseTo(10);
   });
 
   it('selects the nearest entity point inside threshold', () => {

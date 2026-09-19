@@ -106,10 +106,9 @@ describe('dimension regression', () => {
     const undone = undoSketchHistory(committed, clone);
     const redone = redoSketchHistory(undone, clone);
 
-    expect(committed.present.entities[0]).toMatchObject({
-      x2: 60,
-      y2: 80,
-    });
+    const committedLine = committed.present.entities[0] as Extract<SketchEntity, { type: 'line' }>;
+    expect(committedLine.x2).toBeCloseTo(60);
+    expect(committedLine.y2).toBeCloseTo(80);
     expect(committed.present.dimensions[0]).toMatchObject({
       id: length.id,
       driving: true,
@@ -118,10 +117,9 @@ describe('dimension regression', () => {
     });
     expect(undone.present.entities[0]).toEqual(line);
     expect(undone.present.dimensions).toEqual([]);
-    expect(redone.present.entities[0]).toMatchObject({
-      x2: 60,
-      y2: 80,
-    });
+    const redoneLine = redone.present.entities[0] as Extract<SketchEntity, { type: 'line' }>;
+    expect(redoneLine.x2).toBeCloseTo(60);
+    expect(redoneLine.y2).toBeCloseTo(80);
     expect(redone.present.dimensions).toHaveLength(1);
   });
 

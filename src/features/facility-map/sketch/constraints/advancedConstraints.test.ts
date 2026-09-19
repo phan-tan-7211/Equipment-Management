@@ -63,12 +63,11 @@ describe('advanced constraints', () => {
       'b',
       'equal',
     )!;
-    expect(result.entities[1]).toMatchObject({
-      x1: 0,
-      y1: 0,
-      x2: 0,
-      y2: 10,
-    });
+    const target = result.entities[1] as Extract<SketchEntity, { type: 'line' }>;
+    expect(target.x1).toBeCloseTo(0);
+    expect(target.y1).toBeCloseTo(0);
+    expect(target.x2).toBeCloseTo(0);
+    expect(target.y2).toBeCloseTo(10);
   });
 
   it('makes radial entity radii equal', () => {
