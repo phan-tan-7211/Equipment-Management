@@ -8,6 +8,7 @@ import {
   RotateCcw,
   Save,
   Search,
+  Trash2,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
@@ -19,10 +20,37 @@ type EquipmentRow = {
   status: string | null;
 };
 
-type Pin = {
+type EquipmentPin = {
   equipmentId: string;
   x: number;
   y: number;
+};
+
+type LayerId = 'fire' | 'tornado' | 'flood' | 'emergency' | 'utility';
+type ZoneType =
+  | 'production'
+  | 'storage'
+  | 'utility'
+  | 'restricted'
+  | 'hazard'
+  | 'emergency'
+  | 'office'
+  | 'custom';
+
+type OverlayPin = {
+  id: string;
+  layer: LayerId;
+  x: number;
+  y: number;
+};
+
+type Zone = {
+  id: string;
+  type: ZoneType;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 };
 
 type FloorPlanState = {
@@ -30,10 +58,32 @@ type FloorPlanState = {
   building: string;
   floor: string;
   imageDataUrl: string;
-  pins: Pin[];
+  pins: EquipmentPin[];
+  overlayPins: OverlayPin[];
+  zones: Zone[];
 };
 
-const STORAGE_KEY = 'znteqr:facility-floor-plan:dryrun:v1';
+const STORAGE_KEY = 'znteqr:facility-floor-plan:dryrun:v2';
+
+const LAYERS: Array<{ id: 'assets' | LayerId; label: string; color: string; emoji: string }> = [
+  { id: 'assets', label: 'Assets', color: '#10b981', emoji: '🔧' },
+  { id: 'fire', label: 'Fire', color: '#ef4444', emoji: '🔥' },
+  { id: 'tornado', label: 'Tornado', color: '#f59e0b', emoji: '🌪️' },
+  { id: 'flood', label: 'Flood', color: '#3b82f6', emoji: '💧' },
+  { id: 'emergency', label: 'Exits', color: '#22d3ee', emoji: '🚪' },
+  { id: 'utility', label: 'Utility', color: '#a78bfa', emoji: '⚡' },
+];
+
+const ZONES: Array<{ id: ZoneType; label: string; color: string; emoji: string }> = [
+  { id: 'production', label: 'Production', color: '#3b82f6', emoji: '🏭' },
+  { id: 'storage', label: 'Storage', color: '#8b5cf6', emoji: '📦' },
+  { id: 'utility', label: 'Utility', color: '#06b6d4', emoji: '⚡' },
+  { id: 'restricted', label: 'Restricted', color: '#ef4444', emoji: '⛔' },
+  { id: 'hazard', label: 'Hazard', color: '#f97316', emoji: '☢️' },
+  { id: 'emergency', label: 'Emergency', color: '#22c55e', emoji: '🚨' },
+  { id: 'office', label: 'Office', color: '#64748b', emoji: '🏢' },
+  { id: 'custom', label: 'Custom', color: '#a855f7', emoji: '📎' },
+];
 
 const statusColor = (status?: string | null) => {
   switch ((status ?? '').toLowerCase()) {
@@ -57,25 +107,44 @@ const EMPTY_PLAN: FloorPlanState = {
   floor: 'Floor 1',
   imageDataUrl: '',
   pins: [],
+  overlayPins: [],
+  zones: [],
 };
+
+const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
+  ...EMPTY_PLAN,
+  ...value,
+  pins: value.pins ?? [],
+  overlayPins: value.overlayPins ?? [],
+  zones: value.zones ?? [],
+});
+
+const makeId = (prefix: string) =>
+  `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 export default function FacilityFloorPlan() {
   const [plan, setPlan] = useState<FloorPlanState>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? (JSON.parse(raw) as FloorPlanState) : EMPTY_PLAN;
+      return raw ? ensurePlanShape(JSON.parse(raw) as Partial<FloorPlanState>) : EMPTY_PLAN;
     } catch {
       return EMPTY_PLAN;
     }
   });
   const [equipment, setEquipment] = useState<EquipmentRow[]>([]);
   const [query, setQuery] = useState('');
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>('');
-  const [selectedPinId, setSelectedPinId] = useState<string>('');
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState('');
+  const [selectedMarkerId, setSelectedMarkerId] = useState('');
+  const [activeLayer, setActiveLayer] = useState<'all' | 'assets' | LayerId>('all');
+  const [placeLayer, setPlaceLayer] = useState<LayerId | null>(null);
+  const [zoneTool, setZoneTool] = useState<ZoneType | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
-  const [draggingPinId, setDraggingPinId] = useState<string>('');
+  const [draggingEquipmentId, setDraggingEquipmentId] = useState('');
+  const [draggingOverlayId, setDraggingOverlayId] = useState('');
+  const [zoneStart, setZoneStart] = useState<{ x: number; y: number } | null>(null);
+  const [draftZone, setDraftZone] = useState<Zone | null>(null);
   const pointerStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const canvasRef = useRef<HTMLDivElement | null>(null);
 
@@ -94,15 +163,22 @@ export default function FacilityFloorPlan() {
         }
         setEquipment((data ?? []) as EquipmentRow[]);
       });
-
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const savePlan = useCallback((next = plan) => {
+  const savePlan = useCallback((next: FloorPlanState) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  }, [plan]);
+  }, []);
+
+  const updatePlan = useCallback((updater: (current: FloorPlanState) => FloorPlanState) => {
+    setPlan((current) => {
+      const next = updater(current);
+      savePlan(next);
+      return next;
+    });
+  }, [savePlan]);
 
   const filteredEquipment = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -122,6 +198,9 @@ export default function FacilityFloorPlan() {
     [filteredEquipment, plan.pins],
   );
 
+  const layerById = useMemo(() => new Map(LAYERS.map((layer) => [layer.id, layer])), []);
+  const zoneById = useMemo(() => new Map(ZONES.map((zone) => [zone.id, zone])), []);
+
   const toPercent = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -134,31 +213,64 @@ export default function FacilityFloorPlan() {
     };
   }, [pan.x, pan.y, zoom]);
 
-  const placeSelected = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (!selectedEquipmentId || draggingPinId || isPanning) return;
+  const placeAt = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (draggingEquipmentId || draggingOverlayId || isPanning || zoneStart) return;
     const point = toPercent(event.clientX, event.clientY);
     if (!point) return;
 
-    setPlan((current) => {
-      const next = {
+    if (selectedEquipmentId) {
+      updatePlan((current) => ({
         ...current,
         pins: [
           ...current.pins.filter((pin) => pin.equipmentId !== selectedEquipmentId),
           { equipmentId: selectedEquipmentId, ...point },
         ],
-      };
-      savePlan(next);
-      return next;
-    });
-    setSelectedPinId(selectedEquipmentId);
-    setSelectedEquipmentId('');
-  }, [draggingPinId, isPanning, savePlan, selectedEquipmentId, toPercent]);
+      }));
+      setSelectedMarkerId(`asset:${selectedEquipmentId}`);
+      setSelectedEquipmentId('');
+      return;
+    }
 
-  const startPan = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.button !== 1 && !event.shiftKey) return;
+    if (placeLayer) {
+      const id = makeId(placeLayer);
+      updatePlan((current) => ({
+        ...current,
+        overlayPins: [...current.overlayPins, { id, layer: placeLayer, ...point }],
+      }));
+      setSelectedMarkerId(`overlay:${id}`);
+    }
+  }, [
+    draggingEquipmentId,
+    draggingOverlayId,
+    isPanning,
+    placeLayer,
+    selectedEquipmentId,
+    toPercent,
+    updatePlan,
+    zoneStart,
+  ]);
+
+  const startPointer = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button === 1 || event.shiftKey) {
+      event.preventDefault();
+      pointerStart.current = { x: event.clientX, y: event.clientY, panX: pan.x, panY: pan.y };
+      setIsPanning(true);
+      return;
+    }
+
+    if (!zoneTool || event.button !== 0) return;
+    const point = toPercent(event.clientX, event.clientY);
+    if (!point) return;
     event.preventDefault();
-    pointerStart.current = { x: event.clientX, y: event.clientY, panX: pan.x, panY: pan.y };
-    setIsPanning(true);
+    setZoneStart(point);
+    setDraftZone({
+      id: 'draft',
+      type: zoneTool,
+      x: point.x,
+      y: point.y,
+      w: 0,
+      h: 0,
+    });
   };
 
   const onPointerMove = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -171,25 +283,58 @@ export default function FacilityFloorPlan() {
       return;
     }
 
-    if (!draggingPinId) return;
     const point = toPercent(event.clientX, event.clientY);
     if (!point) return;
-    setPlan((current) => ({
-      ...current,
-      pins: current.pins.map((pin) =>
-        pin.equipmentId === draggingPinId ? { ...pin, ...point } : pin,
-      ),
-    }));
+
+    if (zoneStart && zoneTool) {
+      setDraftZone({
+        id: 'draft',
+        type: zoneTool,
+        x: Math.min(zoneStart.x, point.x),
+        y: Math.min(zoneStart.y, point.y),
+        w: Math.abs(point.x - zoneStart.x),
+        h: Math.abs(point.y - zoneStart.y),
+      });
+      return;
+    }
+
+    if (draggingEquipmentId) {
+      setPlan((current) => ({
+        ...current,
+        pins: current.pins.map((pin) =>
+          pin.equipmentId === draggingEquipmentId ? { ...pin, ...point } : pin,
+        ),
+      }));
+      return;
+    }
+
+    if (draggingOverlayId) {
+      setPlan((current) => ({
+        ...current,
+        overlayPins: current.overlayPins.map((pin) =>
+          pin.id === draggingOverlayId ? { ...pin, ...point } : pin,
+        ),
+      }));
+    }
   };
 
   const endPointerInteraction = () => {
-    if (draggingPinId) {
+    if (draftZone && draftZone.w > 0.5 && draftZone.h > 0.5) {
+      updatePlan((current) => ({
+        ...current,
+        zones: [...current.zones, { ...draftZone, id: makeId('zone') }],
+      }));
+    } else if (draggingEquipmentId || draggingOverlayId) {
       setPlan((current) => {
         savePlan(current);
         return current;
       });
     }
-    setDraggingPinId('');
+
+    setZoneStart(null);
+    setDraftZone(null);
+    setDraggingEquipmentId('');
+    setDraggingOverlayId('');
     setIsPanning(false);
   };
 
@@ -199,11 +344,7 @@ export default function FacilityFloorPlan() {
     reader.onload = () => {
       const imageDataUrl = typeof reader.result === 'string' ? reader.result : '';
       if (!imageDataUrl) return;
-      setPlan((current) => {
-        const next = { ...current, imageDataUrl };
-        savePlan(next);
-        return next;
-      });
+      updatePlan((current) => ({ ...current, imageDataUrl }));
       setZoom(1);
       setPan({ x: 0, y: 0 });
     };
@@ -215,15 +356,45 @@ export default function FacilityFloorPlan() {
     setPan({ x: 0, y: 0 });
   };
 
-  const removeSelectedPin = () => {
-    if (!selectedPinId) return;
-    setPlan((current) => {
-      const next = { ...current, pins: current.pins.filter((pin) => pin.equipmentId !== selectedPinId) };
-      savePlan(next);
-      return next;
-    });
-    setSelectedPinId('');
+  const deleteSelected = () => {
+    if (!selectedMarkerId) return;
+    if (selectedMarkerId.startsWith('asset:')) {
+      const id = selectedMarkerId.slice('asset:'.length);
+      updatePlan((current) => ({
+        ...current,
+        pins: current.pins.filter((pin) => pin.equipmentId !== id),
+      }));
+    } else if (selectedMarkerId.startsWith('overlay:')) {
+      const id = selectedMarkerId.slice('overlay:'.length);
+      updatePlan((current) => ({
+        ...current,
+        overlayPins: current.overlayPins.filter((pin) => pin.id !== id),
+      }));
+    } else if (selectedMarkerId.startsWith('zone:')) {
+      const id = selectedMarkerId.slice('zone:'.length);
+      updatePlan((current) => ({
+        ...current,
+        zones: current.zones.filter((zone) => zone.id !== id),
+      }));
+    }
+    setSelectedMarkerId('');
   };
+
+  const visibleAssetPins = activeLayer === 'all' || activeLayer === 'assets';
+  const visibleOverlayPins =
+    activeLayer === 'all'
+      ? plan.overlayPins
+      : activeLayer === 'assets'
+        ? []
+        : plan.overlayPins.filter((pin) => pin.layer === activeLayer);
+
+  const placementHint = selectedEquipmentId
+    ? 'Click the plan to place the selected equipment'
+    : placeLayer
+      ? `Click the plan to place ${layerById.get(placeLayer)?.label ?? placeLayer} markers`
+      : zoneTool
+        ? `Drag on the plan to draw a ${zoneById.get(zoneTool)?.label ?? zoneTool} zone`
+        : '';
 
   return (
     <div className="flex min-h-full flex-col bg-background">
@@ -235,7 +406,7 @@ export default function FacilityFloorPlan() {
               <h1 className="text-lg font-semibold">Facility Floor Plan</h1>
             </div>
             <p className="text-xs text-muted-foreground">
-              Trier OS floor-plan workflow adapted for ZNTEQR: upload blueprint, place equipment, drag pins, save layout.
+              Trier-style multi-layer floor plan for assets, safety, utilities and operational zones.
             </p>
           </div>
 
@@ -253,33 +424,55 @@ export default function FacilityFloorPlan() {
           <button
             type="button"
             className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-accent"
-            onClick={() => savePlan()}
+            onClick={() => savePlan(plan)}
           >
             <Save className="h-4 w-4" />
             Save
           </button>
         </div>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => setActiveLayer('all')}
+            className={`rounded-full border px-3 py-1.5 text-xs ${activeLayer === 'all' ? 'bg-foreground text-background' : 'bg-background'}`}
+          >
+            All
+          </button>
+          {LAYERS.map((layer) => (
+            <button
+              key={layer.id}
+              type="button"
+              onClick={() => setActiveLayer(layer.id)}
+              className={`rounded-full border px-3 py-1.5 text-xs ${activeLayer === layer.id ? 'ring-2 ring-ring' : ''}`}
+              style={{ borderColor: layer.color, color: layer.color }}
+            >
+              {layer.emoji} {layer.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="border-r bg-card p-3">
           <div className="mb-3 grid grid-cols-2 gap-2">
             <input
               value={plan.building}
               onChange={(event) => setPlan((current) => ({ ...current, building: event.target.value }))}
-              onBlur={() => savePlan()}
+              onBlur={() => savePlan(plan)}
               className="rounded-md border bg-background px-2 py-2 text-xs"
               aria-label="Building"
             />
             <input
               value={plan.floor}
               onChange={(event) => setPlan((current) => ({ ...current, floor: event.target.value }))}
-              onBlur={() => savePlan()}
+              onBlur={() => savePlan(plan)}
               className="rounded-md border bg-background px-2 py-2 text-xs"
               aria-label="Floor"
             />
           </div>
 
+          <div className="mb-2 text-xs font-semibold">Place equipment</div>
           <div className="relative mb-3">
             <Search className="pointer-events-none absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <input
@@ -290,17 +483,16 @@ export default function FacilityFloorPlan() {
             />
           </div>
 
-          <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-            <span>Unplaced equipment</span>
-            <span>{unplacedEquipment.length}</span>
-          </div>
-
-          <div className="max-h-[55vh] space-y-1 overflow-auto pr-1">
+          <div className="max-h-48 space-y-1 overflow-auto pr-1">
             {unplacedEquipment.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setSelectedEquipmentId(item.id)}
+                onClick={() => {
+                  setSelectedEquipmentId(item.id);
+                  setPlaceLayer(null);
+                  setZoneTool(null);
+                }}
                 className={`w-full rounded-md border px-3 py-2 text-left transition hover:bg-accent ${
                   selectedEquipmentId === item.id ? 'border-primary bg-primary/10' : ''
                 }`}
@@ -312,37 +504,83 @@ export default function FacilityFloorPlan() {
                   />
                   <span className="truncate text-sm font-medium">{item.name || item.id}</span>
                 </div>
-                <div className="mt-1 truncate text-[11px] text-muted-foreground">{item.id}</div>
               </button>
             ))}
           </div>
 
-          {selectedEquipmentId && (
+          <div className="mt-4 border-t pt-3">
+            <div className="mb-2 text-xs font-semibold">Safety / utility markers</div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {LAYERS.filter((layer) => layer.id !== 'assets').map((layer) => (
+                <button
+                  key={layer.id}
+                  type="button"
+                  onClick={() => {
+                    setPlaceLayer(layer.id as LayerId);
+                    setSelectedEquipmentId('');
+                    setZoneTool(null);
+                  }}
+                  className={`rounded-md border px-2 py-2 text-xs ${
+                    placeLayer === layer.id ? 'ring-2 ring-ring' : ''
+                  }`}
+                  style={{ borderColor: layer.color, color: layer.color }}
+                >
+                  {layer.emoji} {layer.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4 border-t pt-3">
+            <div className="mb-2 text-xs font-semibold">Draw zones</div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {ZONES.map((zone) => (
+                <button
+                  key={zone.id}
+                  type="button"
+                  onClick={() => {
+                    setZoneTool(zone.id);
+                    setSelectedEquipmentId('');
+                    setPlaceLayer(null);
+                  }}
+                  className={`rounded-md border px-2 py-2 text-xs ${
+                    zoneTool === zone.id ? 'ring-2 ring-ring' : ''
+                  }`}
+                  style={{ borderColor: zone.color, color: zone.color }}
+                >
+                  {zone.emoji} {zone.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {placementHint && (
             <div className="mt-3 rounded-md border border-primary/40 bg-primary/5 p-2 text-xs">
               <MapPin className="mr-1 inline h-3.5 w-3.5" />
-              Click the blueprint to place the selected equipment.
+              {placementHint}
             </div>
           )}
 
-          {selectedPinId && (
+          {selectedMarkerId && (
             <button
               type="button"
-              className="mt-3 w-full rounded-md border border-destructive/40 px-3 py-2 text-xs text-destructive hover:bg-destructive/10"
-              onClick={removeSelectedPin}
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-destructive/40 px-3 py-2 text-xs text-destructive hover:bg-destructive/10"
+              onClick={deleteSelected}
             >
-              Remove selected pin
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete selected item
             </button>
           )}
         </aside>
 
-        <section className="relative min-h-[620px] overflow-hidden bg-slate-950">
-          <div className="absolute left-3 top-3 z-20 flex items-center gap-2">
+        <section className="relative min-h-[640px] overflow-hidden bg-slate-950">
+          <div className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2">
             <div className="rounded-md border border-white/10 bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
               {plan.building} · {plan.floor}
             </div>
             <div className="rounded-md border border-white/10 bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
               <Layers3 className="mr-1 inline h-3.5 w-3.5" />
-              {plan.pins.length} assets placed
+              {plan.pins.length} assets · {plan.overlayPins.length} markers · {plan.zones.length} zones
             </div>
           </div>
 
@@ -367,10 +605,14 @@ export default function FacilityFloorPlan() {
           <div
             ref={canvasRef}
             className={`absolute inset-0 select-none ${
-              selectedEquipmentId ? 'cursor-crosshair' : isPanning ? 'cursor-grabbing' : 'cursor-default'
+              selectedEquipmentId || placeLayer || zoneTool
+                ? 'cursor-crosshair'
+                : isPanning
+                  ? 'cursor-grabbing'
+                  : 'cursor-default'
             }`}
-            onClick={placeSelected}
-            onMouseDown={startPan}
+            onClick={placeAt}
+            onMouseDown={startPointer}
             onMouseMove={onPointerMove}
             onMouseUp={endPointerInteraction}
             onMouseLeave={endPointerInteraction}
@@ -392,43 +634,130 @@ export default function FacilityFloorPlan() {
                     <ImagePlus className="mx-auto mb-3 h-10 w-10" />
                     <div className="font-medium text-white">Upload a plant blueprint or floor-plan image</div>
                     <div className="mt-2 text-xs">
-                      Then choose equipment on the left and click its physical position on the plan.
+                      Then place assets, safety markers, utility markers and colored operational zones.
                     </div>
                   </div>
                 </div>
               )}
 
-              {plan.pins.map((pin) => {
+              {plan.zones.map((zone) => {
+                const meta = zoneById.get(zone.type);
+                const selected = selectedMarkerId === `zone:${zone.id}`;
+                return (
+                  <button
+                    key={zone.id}
+                    type="button"
+                    className={`absolute rounded-md border-2 text-left ${
+                      selected ? 'ring-2 ring-white' : ''
+                    }`}
+                    style={{
+                      left: `${zone.x}%`,
+                      top: `${zone.y}%`,
+                      width: `${zone.w}%`,
+                      height: `${zone.h}%`,
+                      borderColor: meta?.color,
+                      backgroundColor: `${meta?.color ?? '#64748b'}22`,
+                    }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setSelectedMarkerId(`zone:${zone.id}`);
+                    }}
+                    title={meta?.label}
+                  >
+                    <span
+                      className="absolute left-1 top-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
+                      style={{ backgroundColor: meta?.color }}
+                    >
+                      {meta?.emoji} {meta?.label}
+                    </span>
+                  </button>
+                );
+              })}
+
+              {draftZone && (() => {
+                const meta = zoneById.get(draftZone.type);
+                return (
+                  <div
+                    className="pointer-events-none absolute rounded-md border-2 border-dashed"
+                    style={{
+                      left: `${draftZone.x}%`,
+                      top: `${draftZone.y}%`,
+                      width: `${draftZone.w}%`,
+                      height: `${draftZone.h}%`,
+                      borderColor: meta?.color,
+                      backgroundColor: `${meta?.color ?? '#64748b'}1f`,
+                    }}
+                  />
+                );
+              })()}
+
+              {visibleAssetPins && plan.pins.map((pin) => {
                 const item = equipmentById.get(pin.equipmentId);
-                const selected = selectedPinId === pin.equipmentId;
+                const selected = selectedMarkerId === `asset:${pin.equipmentId}`;
                 return (
                   <button
                     key={pin.equipmentId}
                     type="button"
-                    className="group absolute -translate-x-1/2 -translate-y-full"
+                    className="group absolute -translate-x-1/2 -translate-y-1/2"
                     style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
                     onClick={(event) => {
                       event.stopPropagation();
-                      setSelectedPinId(pin.equipmentId);
+                      setSelectedMarkerId(`asset:${pin.equipmentId}`);
                     }}
                     onMouseDown={(event) => {
                       event.stopPropagation();
-                      setDraggingPinId(pin.equipmentId);
-                      setSelectedPinId(pin.equipmentId);
+                      setDraggingEquipmentId(pin.equipmentId);
+                      setSelectedMarkerId(`asset:${pin.equipmentId}`);
                     }}
                     title={item?.name ?? pin.equipmentId}
                   >
-                    <div
-                      className={`relative flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-slate-950 shadow-xl transition ${
-                        selected ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950' : ''
-                      }`}
-                      style={{ backgroundColor: statusColor(item?.status) }}
-                    >
-                      <MapPin className="h-5 w-5 text-slate-950" />
+                    <div style={{ transform: `scale(${1 / zoom})`, transformOrigin: 'center' }}>
+                      <div
+                        className={`flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-slate-950 shadow-xl ${
+                          selected ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950' : ''
+                        }`}
+                        style={{ backgroundColor: statusColor(item?.status) }}
+                      >
+                        <MapPin className="h-5 w-5 text-slate-950" />
+                      </div>
+                      <div className="pointer-events-none absolute left-1/2 top-10 hidden -translate-x-1/2 whitespace-nowrap rounded bg-black/85 px-2 py-1 text-[10px] text-white shadow group-hover:block">
+                        {item?.name ?? pin.equipmentId}
+                        {item?.status ? ` · ${item.status}` : ''}
+                      </div>
                     </div>
-                    <div className="pointer-events-none absolute left-1/2 top-10 hidden -translate-x-1/2 whitespace-nowrap rounded bg-black/85 px-2 py-1 text-[10px] text-white shadow group-hover:block">
-                      {item?.name ?? pin.equipmentId}
-                      {item?.status ? ` · ${item.status}` : ''}
+                  </button>
+                );
+              })}
+
+              {visibleOverlayPins.map((pin) => {
+                const meta = layerById.get(pin.layer);
+                const selected = selectedMarkerId === `overlay:${pin.id}`;
+                return (
+                  <button
+                    key={pin.id}
+                    type="button"
+                    className="absolute -translate-x-1/2 -translate-y-1/2"
+                    style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setSelectedMarkerId(`overlay:${pin.id}`);
+                    }}
+                    onMouseDown={(event) => {
+                      event.stopPropagation();
+                      setDraggingOverlayId(pin.id);
+                      setSelectedMarkerId(`overlay:${pin.id}`);
+                    }}
+                    title={meta?.label}
+                  >
+                    <div style={{ transform: `scale(${1 / zoom})`, transformOrigin: 'center' }}>
+                      <div
+                        className={`flex h-9 min-w-9 items-center justify-center rounded-full border-[3px] border-slate-950 px-2 text-base shadow-xl ${
+                          selected ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950' : ''
+                        }`}
+                        style={{ backgroundColor: meta?.color }}
+                      >
+                        {meta?.emoji}
+                      </div>
                     </div>
                   </button>
                 );
