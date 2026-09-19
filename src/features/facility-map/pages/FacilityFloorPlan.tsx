@@ -438,6 +438,7 @@ export default function FacilityFloorPlan() {
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
   const [draggingAnnotationId, setDraggingAnnotationId] = useState('');
   const [annotationGrip, setAnnotationGrip] = useState<AnnotationGrip>(null);
+  const [groupDragging, setGroupDragging] = useState(false);
   const [editMode, setEditMode] = useState(true);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [planManagerOpen, setPlanManagerOpen] = useState(false);
@@ -475,6 +476,7 @@ export default function FacilityFloorPlan() {
   const annotationStartRef = useRef<{ x: number; y: number } | null>(null);
   const annotationDragRef = useRef<{ startX: number; startY: number; snapshot: Annotation } | null>(null);
   const selectionShiftRef = useRef(false);
+  const groupDragRef = useRef<{ startX: number; startY: number; snapshot: FloorPlanState } | null>(null);
   const zoneInteractionRef = useRef<{ startX: number; startY: number; zone: Zone } | null>(null);
   const touchRef = useRef<{
     distance: number;
@@ -734,26 +736,46 @@ export default function FacilityFloorPlan() {
     return Math.round(value / gridSize) * gridSize;
   }, [gridSize, snapToGrid]);
 
-  const toPercent = useCallback((clientX: number, clientY: number) => {
+  const toPercentRaw = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas || effectiveScale <= 0) return null;
     const rect = canvas.getBoundingClientRect();
     const localX = (clientX - rect.left - fitTransform.x - pan.x) / effectiveScale;
     const localY = (clientY - rect.top - fitTransform.y - pan.y) / effectiveScale;
     return {
-      x: Math.max(0, Math.min(100, snapValue((localX / plan.canvasWidth) * 100))),
-      y: Math.max(0, Math.min(100, snapValue((localY / plan.canvasHeight) * 100))),
+      x: Math.max(0, Math.min(100, (localX / plan.canvasWidth) * 100)),
+      y: Math.max(0, Math.min(100, (localY / plan.canvasHeight) * 100)),
     };
-  }, [
-    effectiveScale,
-    fitTransform.x,
-    fitTransform.y,
-    pan.x,
-    pan.y,
-    plan.canvasHeight,
-    plan.canvasWidth,
-    snapValue,
-  ]);
+  }, [effectiveScale, fitTransform.x, fitTransform.y, pan.x, pan.y, plan.canvasHeight, plan.canvasWidth]);
+
+  const toPercent = useCallback((clientX: number, clientY: number) => {
+    const point = toPercentRaw(clientX, clientY);
+    if (!point) return null;
+    return { x: snapValue(point.x), y: snapValue(point.y) };
+  }, [snapValue, toPercentRaw]);
+
+  const beginGroupDrag = useCallback((event: React.MouseEvent, objectId: string) => {
+    if (drawTool !== 'select' || selectedObjectIds.size < 2 || !selectedObjectIds.has(objectId)) return false;
+    const point = toPercentRaw(event.clientX, event.clientY);
+    if (!point) return false;
+    dragStartPlanRef.current = clonePlan(plan);
+    groupDragRef.current = { startX: point.x, startY: point.y, snapshot: clonePlan(plan) };
+    setGroupDragging(true);
+    return true;
+  }, [drawTool, plan, selectedObjectIds, toPercentRaw]);
+
+  const beginAnnotationDrag = useCallback((event: React.MouseEvent<SVGElement>, annotation: Annotation) => {
+    if (!editMode || drawTool !== 'select') return;
+    event.stopPropagation();
+    const objectId = `annotation:${annotation.id}`;
+    if (beginGroupDrag(event, objectId)) return;
+    const point = toPercentRaw(event.clientX, event.clientY);
+    if (!point) return;
+    setSingleSelection(objectId, event.shiftKey);
+    dragStartPlanRef.current = clonePlan(plan);
+    annotationDragRef.current = { startX: point.x, startY: point.y, snapshot: { ...annotation } };
+    setDraggingAnnotationId(annotation.id);
+  }, [beginGroupDrag, drawTool, editMode, plan, setSingleSelection, toPercentRaw]);
 
   const placeAt = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!editMode || draggingEquipmentId || draggingOverlayId || isPanning || zoneStart) return;
@@ -794,7 +816,7 @@ export default function FacilityFloorPlan() {
   ]);
 
   const startPointer = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.button === 1 || event.shiftKey || (editMode && drawTool === 'pan')) {
+    if (event.button === 1 || (editMode && drawTool === 'pan')) {
       event.preventDefault();
       pointerStart.current = { x: event.clientX, y: event.clientY, panX: pan.x, panY: pan.y };
       setIsPanning(true);
@@ -802,8 +824,26 @@ export default function FacilityFloorPlan() {
     }
 
     if (!editMode || event.button !== 0) return;
+    const rawPoint = toPercentRaw(event.clientX, event.clientY);
     const point = toPercent(event.clientX, event.clientY);
-    if (!point) return;
+    if (!rawPoint || !point) return;
+
+    if (drawTool === 'select' && !selectedEquipmentId && !placeLayer && !zoneTool) {
+      event.preventDefault();
+      selectionShiftRef.current = event.shiftKey;
+      setSelectionBox({
+        startX: rawPoint.x,
+        startY: rawPoint.y,
+        endX: rawPoint.x,
+        endY: rawPoint.y,
+        crossing: false,
+      });
+      if (!event.shiftKey) {
+        setSelectedObjectIds(new Set());
+        setSelectedMarkerId('');
+      }
+      return;
+    }
 
     if (['line', 'arrow', 'rect', 'circle', 'ruler'].includes(drawTool)) {
       event.preventDefault();
@@ -815,27 +855,35 @@ export default function FacilityFloorPlan() {
         y1: point.y,
         x2: point.x,
         y2: point.y,
+        color: annotationColor,
+        lineWidth: annotationLineWidth,
+        textSize: annotationTextSize,
       });
       return;
     }
 
     if (drawTool === 'text') {
       event.preventDefault();
+      const id = makeId('text');
       commitPlan((current) => ({
         ...current,
         annotations: [
           ...current.annotations,
           {
-            id: makeId('text'),
+            id,
             type: 'text',
             x1: point.x,
             y1: point.y,
             x2: point.x,
             y2: point.y,
             text: annotationText || t('facilityMap.defaultNote'),
+            color: annotationColor,
+            lineWidth: annotationLineWidth,
+            textSize: annotationTextSize,
           },
         ],
       }));
+      setSingleSelection(`annotation:${id}`);
       return;
     }
 
@@ -862,8 +910,80 @@ export default function FacilityFloorPlan() {
       return;
     }
 
+    const rawPoint = toPercentRaw(event.clientX, event.clientY);
     const point = toPercent(event.clientX, event.clientY);
-    if (!point) return;
+    if (!rawPoint || !point) return;
+
+    if (selectionBox && editMode && drawTool === 'select') {
+      setSelectionBox((current) => current ? {
+        ...current,
+        endX: rawPoint.x,
+        endY: rawPoint.y,
+        crossing: rawPoint.x < current.startX,
+      } : current);
+      return;
+    }
+
+    if (groupDragging && groupDragRef.current && editMode) {
+      const drag = groupDragRef.current;
+      const dx = rawPoint.x - drag.startX;
+      const dy = rawPoint.y - drag.startY;
+      const snapshot = drag.snapshot;
+      setPlan({
+        ...snapshot,
+        pins: snapshot.pins.map((pin) =>
+          selectedObjectIds.has(`asset:${pin.equipmentId}`) ? { ...pin, x: pin.x + dx, y: pin.y + dy } : pin,
+        ),
+        overlayPins: snapshot.overlayPins.map((pin) =>
+          selectedObjectIds.has(`overlay:${pin.id}`) ? { ...pin, x: pin.x + dx, y: pin.y + dy } : pin,
+        ),
+        zones: snapshot.zones.map((zone) =>
+          selectedObjectIds.has(`zone:${zone.id}`) ? { ...zone, x: zone.x + dx, y: zone.y + dy } : zone,
+        ),
+        annotations: snapshot.annotations.map((annotation) =>
+          selectedObjectIds.has(`annotation:${annotation.id}`)
+            ? { ...annotation, x1: annotation.x1 + dx, y1: annotation.y1 + dy, x2: annotation.x2 + dx, y2: annotation.y2 + dy }
+            : annotation,
+        ),
+      });
+      return;
+    }
+
+    if (annotationGrip && annotationDragRef.current && editMode) {
+      const original = annotationDragRef.current.snapshot;
+      setPlan((current) => ({
+        ...current,
+        annotations: current.annotations.map((annotation) => {
+          if (annotation.id !== annotationGrip.id) return annotation;
+          if (annotationGrip.handle === 'start') return { ...annotation, x1: point.x, y1: point.y };
+          if (annotationGrip.handle === 'end') return { ...annotation, x2: point.x, y2: point.y };
+          const left = Math.min(original.x1, original.x2);
+          const right = Math.max(original.x1, original.x2);
+          const top = Math.min(original.y1, original.y2);
+          const bottom = Math.max(original.y1, original.y2);
+          if (annotationGrip.handle === 'nw') return { ...annotation, x1: point.x, y1: point.y, x2: right, y2: bottom };
+          if (annotationGrip.handle === 'ne') return { ...annotation, x1: left, y1: point.y, x2: point.x, y2: bottom };
+          if (annotationGrip.handle === 'se') return { ...annotation, x1: left, y1: top, x2: point.x, y2: point.y };
+          return { ...annotation, x1: point.x, y1: top, x2: right, y2: point.y };
+        }),
+      }));
+      return;
+    }
+
+    if (draggingAnnotationId && annotationDragRef.current && editMode) {
+      const original = annotationDragRef.current.snapshot;
+      const dx = rawPoint.x - annotationDragRef.current.startX;
+      const dy = rawPoint.y - annotationDragRef.current.startY;
+      setPlan((current) => ({
+        ...current,
+        annotations: current.annotations.map((annotation) =>
+          annotation.id === draggingAnnotationId
+            ? { ...annotation, x1: original.x1 + dx, y1: original.y1 + dy, x2: original.x2 + dx, y2: original.y2 + dy }
+            : annotation,
+        ),
+      }));
+      return;
+    }
 
     if (draftAnnotation && annotationStartRef.current && editMode) {
       setDraftAnnotation((current) => current ? { ...current, x2: point.x, y2: point.y } : current);
@@ -962,21 +1082,36 @@ export default function FacilityFloorPlan() {
   };
 
   const endPointerInteraction = () => {
-    if (draftAnnotation) {
+    if (selectionBox) {
+      const hits = collectObjectsInSelection(selectionBox);
+      setSelectedObjectIds((current) => {
+        if (!selectionShiftRef.current) return hits;
+        const next = new Set(current);
+        hits.forEach((id) => {
+          if (next.has(id)) next.delete(id);
+          else next.add(id);
+        });
+        return next;
+      });
+      const first = [...hits][0];
+      if (first) setSelectedMarkerId(first);
+    } else if (draftAnnotation) {
       const dx = Math.abs(draftAnnotation.x2 - draftAnnotation.x1);
       const dy = Math.abs(draftAnnotation.y2 - draftAnnotation.y1);
       if (dx > 0.3 || dy > 0.3) {
+        const id = makeId('annotation');
         commitPlan((current) => ({
           ...current,
-          annotations: [...current.annotations, { ...draftAnnotation, id: makeId('annotation') }],
+          annotations: [...current.annotations, { ...draftAnnotation, id }],
         }));
+        setSingleSelection(`annotation:${id}`);
       }
     } else if (draftZone && draftZone.w > 0.5 && draftZone.h > 0.5) {
       commitPlan((current) => ({
         ...current,
         zones: [...current.zones, { ...draftZone, id: makeId('zone') }],
       }));
-    } else if ((draggingEquipmentId || draggingOverlayId || draggingZoneId || resizingZoneId) && dragStartPlanRef.current) {
+    } else if ((groupDragging || draggingAnnotationId || annotationGrip || draggingEquipmentId || draggingOverlayId || draggingZoneId || resizingZoneId) && dragStartPlanRef.current) {
       const before = dragStartPlanRef.current;
       setUndoStack((stack) => [...stack.slice(-29), clonePlan(before)]);
       setRedoStack([]);
@@ -988,6 +1123,13 @@ export default function FacilityFloorPlan() {
 
     dragStartPlanRef.current = null;
     annotationStartRef.current = null;
+    annotationDragRef.current = null;
+    groupDragRef.current = null;
+    selectionShiftRef.current = false;
+    setSelectionBox(null);
+    setGroupDragging(false);
+    setDraggingAnnotationId('');
+    setAnnotationGrip(null);
     setDraftAnnotation(null);
     setZoneStart(null);
     setDraftZone(null);
@@ -1245,33 +1387,12 @@ export default function FacilityFloorPlan() {
   };
 
   const deleteSelected = () => {
-    if (!selectedMarkerId || !editMode) return;
-    if (selectedMarkerId.startsWith('asset:')) {
-      const id = selectedMarkerId.slice('asset:'.length);
-      commitPlan((current) => ({
-        ...current,
-        pins: current.pins.filter((pin) => pin.equipmentId !== id),
-      }));
-    } else if (selectedMarkerId.startsWith('overlay:')) {
-      const id = selectedMarkerId.slice('overlay:'.length);
-      commitPlan((current) => ({
-        ...current,
-        overlayPins: current.overlayPins.filter((pin) => pin.id !== id),
-      }));
-    } else if (selectedMarkerId.startsWith('zone:')) {
-      const id = selectedMarkerId.slice('zone:'.length);
-      commitPlan((current) => ({
-        ...current,
-        zones: current.zones.filter((zone) => zone.id !== id),
-      }));
-    } else if (selectedMarkerId.startsWith('annotation:')) {
-      const id = selectedMarkerId.slice('annotation:'.length);
-      commitPlan((current) => ({
-        ...current,
-        annotations: current.annotations.filter((annotation) => annotation.id !== id),
-      }));
+    if (!editMode) return;
+    if (selectedObjectIds.size) {
+      deleteObjectsByIds(selectedObjectIds);
+      return;
     }
-    setSelectedMarkerId('');
+    if (selectedMarkerId) deleteObjectsByIds(new Set([selectedMarkerId]));
   };
 
   const switchMode = (nextEditMode: boolean) => {
@@ -1353,6 +1474,8 @@ export default function FacilityFloorPlan() {
       if (event.key === 'Escape') {
         setSelectedEquipmentId('');
         setSelectedMarkerId('');
+        setSelectedObjectIds(new Set());
+        setSelectionBox(null);
         setPlaceLayer(null);
         setZoneTool(null);
         setDrawTool('select');
@@ -1375,7 +1498,7 @@ export default function FacilityFloorPlan() {
         fitView();
         return;
       }
-      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedMarkerId && editMode) {
+      if ((event.key === 'Delete' || event.key === 'Backspace') && (selectedMarkerId || selectedObjectIds.size) && editMode) {
         event.preventDefault();
         deleteSelected();
       }
