@@ -46,6 +46,9 @@ import {
   findMidpointSnap,
 } from '@/features/facility-map/sketch/snapping/midpointSnap';
 import {
+  findCircleCenterSnap,
+} from '@/features/facility-map/sketch/snapping/circleCenterSnap';
+import {
   angleDeg,
   arcPoint,
   clampPositive,
@@ -246,12 +249,20 @@ export default function InventorSketchOverlay({
     const threshold = cssPixelsToSketchUnits(10, rect.width, canvasWidth);
     const endpoint = findEndpointSnap(point, store.entities, threshold);
     const midpoint = findMidpointSnap(point, store.entities, threshold);
+    const circleCenter = findCircleCenterSnap(
+      point,
+      store.entities,
+      threshold,
+    );
+    const candidates = [endpoint, midpoint, circleCenter].filter(
+      (candidate): candidate is NonNullable<typeof candidate> =>
+        candidate !== null,
+    );
 
-    if (!endpoint) return midpoint?.point ?? point;
-    if (!midpoint) return endpoint.point;
-    return midpoint.distance < endpoint.distance
-      ? midpoint.point
-      : endpoint.point;
+    if (!candidates.length) return point;
+    return candidates.reduce((best, candidate) =>
+      candidate.distance < best.distance ? candidate : best,
+    ).point;
   }, [canvasWidth, store.entities]);
 
   const inferLineEnd = useCallback((start: Point, raw: Point) => {
