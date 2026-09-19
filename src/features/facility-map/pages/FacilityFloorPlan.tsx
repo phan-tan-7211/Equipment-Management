@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Building2,
   ImagePlus,
@@ -12,13 +12,21 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 type EquipmentRow = {
   id: string;
   name: string | null;
   status: string | null;
 };
+
+const DEMO_EQUIPMENT: EquipmentRow[] = [
+  { id: 'CEV-CNC-001', name: 'CNC Machine 01', status: 'Active' },
+  { id: 'CEV-CNC-002', name: 'CNC Machine 02', status: 'Active' },
+  { id: 'CEV-PRS-003', name: 'Press Machine 03', status: 'Maintenance' },
+  { id: 'CEV-CMP-002', name: 'Air Compressor 02', status: 'Active' },
+  { id: 'CEV-INJ-004', name: 'Injection Machine 04', status: 'Inactive' },
+  { id: 'CEV-OLD-009', name: 'Legacy Tester 09', status: 'Retired' },
+];
 
 type EquipmentPin = {
   equipmentId: string;
@@ -106,9 +114,24 @@ const EMPTY_PLAN: FloorPlanState = {
   building: 'Main Building',
   floor: 'Floor 1',
   imageDataUrl: '',
-  pins: [],
-  overlayPins: [],
-  zones: [],
+  pins: [
+    { equipmentId: 'CEV-CNC-001', x: 24, y: 29 },
+    { equipmentId: 'CEV-CNC-002', x: 39, y: 31 },
+    { equipmentId: 'CEV-PRS-003', x: 67, y: 32 },
+    { equipmentId: 'CEV-CMP-002', x: 20, y: 71 },
+    { equipmentId: 'CEV-INJ-004', x: 76, y: 70 },
+  ],
+  overlayPins: [
+    { id: 'fire-demo-1', layer: 'fire', x: 51, y: 22 },
+    { id: 'exit-demo-1', layer: 'emergency', x: 88, y: 52 },
+    { id: 'utility-demo-1', layer: 'utility', x: 36, y: 78 },
+  ],
+  zones: [
+    { id: 'zone-prod', type: 'production', x: 11, y: 14, w: 36, h: 29 },
+    { id: 'zone-storage', type: 'storage', x: 57, y: 14, w: 31, h: 29 },
+    { id: 'zone-utility', type: 'utility', x: 11, y: 58, w: 28, h: 25 },
+    { id: 'zone-hazard', type: 'hazard', x: 56, y: 57, w: 33, h: 26 },
+  ],
 };
 
 const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
@@ -122,6 +145,49 @@ const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
 const makeId = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+function DemoBlueprint() {
+  return (
+    <svg
+      viewBox="0 0 1200 760"
+      className="h-full w-full"
+      preserveAspectRatio="xMidYMid meet"
+      aria-label="Demo factory floor plan"
+    >
+      <rect width="1200" height="760" fill="#f8fafc" />
+      <g stroke="#94a3b8" strokeWidth="2" fill="none">
+        <rect x="85" y="75" width="1030" height="610" />
+        <path d="M85 365H1115M530 75V365M650 365V685" />
+        <rect x="115" y="115" width="365" height="205" />
+        <rect x="575" y="115" width="490" height="205" />
+        <rect x="115" y="410" width="260" height="220" />
+        <rect x="435" y="410" width="630" height="220" />
+      </g>
+      <g fill="#cbd5e1" stroke="#64748b" strokeWidth="1.5">
+        <rect x="160" y="165" width="105" height="62" rx="6" />
+        <rect x="315" y="165" width="105" height="62" rx="6" />
+        <rect x="625" y="165" width="130" height="66" rx="6" />
+        <rect x="810" y="165" width="130" height="66" rx="6" />
+        <rect x="155" y="470" width="165" height="84" rx="6" />
+        <rect x="505" y="470" width="150" height="84" rx="6" />
+        <rect x="710" y="470" width="150" height="84" rx="6" />
+        <rect x="900" y="470" width="115" height="84" rx="6" />
+      </g>
+      <g fill="#334155" fontFamily="system-ui, sans-serif" fontWeight="700">
+        <text x="120" y="105" fontSize="20">LINE A · MACHINING</text>
+        <text x="575" y="105" fontSize="20">LINE B · PRESS / ASSEMBLY</text>
+        <text x="120" y="400" fontSize="20">UTILITY</text>
+        <text x="440" y="400" fontSize="20">WAREHOUSE / QA</text>
+      </g>
+      <g fill="#64748b" fontFamily="system-ui, sans-serif" fontSize="14">
+        <text x="160" y="270">CNC / Milling</text>
+        <text x="625" y="270">Press / Assembly</text>
+        <text x="155" y="590">Compressor / Utility</text>
+        <text x="505" y="590">Storage / Inspection</text>
+      </g>
+    </svg>
+  );
+}
+
 export default function FacilityFloorPlan() {
   const [plan, setPlan] = useState<FloorPlanState>(() => {
     try {
@@ -131,7 +197,7 @@ export default function FacilityFloorPlan() {
       return EMPTY_PLAN;
     }
   });
-  const [equipment, setEquipment] = useState<EquipmentRow[]>([]);
+  const [equipment] = useState<EquipmentRow[]>(DEMO_EQUIPMENT);
   const [query, setQuery] = useState('');
   const [selectedEquipmentId, setSelectedEquipmentId] = useState('');
   const [selectedMarkerId, setSelectedMarkerId] = useState('');
@@ -147,26 +213,6 @@ export default function FacilityFloorPlan() {
   const [draftZone, setDraftZone] = useState<Zone | null>(null);
   const pointerStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const canvasRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void supabase
-      .from('equipment')
-      .select('id,name,status')
-      .order('name', { ascending: true })
-      .limit(500)
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error) {
-          console.warn('[FacilityFloorPlan] equipment query failed', error);
-          return;
-        }
-        setEquipment((data ?? []) as EquipmentRow[]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const savePlan = useCallback((next: FloorPlanState) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -406,7 +452,7 @@ export default function FacilityFloorPlan() {
               <h1 className="text-lg font-semibold">Facility Floor Plan</h1>
             </div>
             <p className="text-xs text-muted-foreground">
-              Trier-style multi-layer floor plan for assets, safety, utilities and operational zones.
+              UI prototype only — Trier-style multi-layer floor plan. No Supabase/backend connection yet.
             </p>
           </div>
 
@@ -629,15 +675,7 @@ export default function FacilityFloorPlan() {
                   className="h-full w-full object-contain"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.13),transparent_50%)]">
-                  <div className="max-w-md rounded-xl border border-dashed border-white/20 bg-black/20 p-8 text-center text-white/70">
-                    <ImagePlus className="mx-auto mb-3 h-10 w-10" />
-                    <div className="font-medium text-white">Upload a plant blueprint or floor-plan image</div>
-                    <div className="mt-2 text-xs">
-                      Then place assets, safety markers, utility markers and colored operational zones.
-                    </div>
-                  </div>
-                </div>
+                <DemoBlueprint />
               )}
 
               {plan.zones.map((zone) => {
