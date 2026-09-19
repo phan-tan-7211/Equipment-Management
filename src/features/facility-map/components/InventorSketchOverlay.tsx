@@ -71,6 +71,9 @@ import {
 } from '@/features/facility-map/sketch/commands/rectangleCommand';
 import {
   createCircleEntity,
+  getCircleDynamicRadius,
+  resolveCircleRadius,
+  resolveCirclePreviewPoint,
   startCircleDraft,
   updateCircleDraft,
   type CircleDraft,
@@ -301,7 +304,7 @@ export default function InventorSketchOverlay({
       if (!dynamicLocks.a) setDynamicA(getRectangleDynamicWidth(draft.start, next, store));
       if (!dynamicLocks.b) setDynamicB(getRectangleDynamicHeight(draft.start, next, store));
     } else if (draft.type === 'circle') {
-      if (!dynamicLocks.a) setDynamicA(modelUnitsToDisplay(distance(draft.start, next), store).toFixed(unitPrecision(store.displayUnit)));
+      if (!dynamicLocks.a) setDynamicA(getCircleDynamicRadius(draft.start, next, store));
     }
   };
 
@@ -371,7 +374,7 @@ export default function InventorSketchOverlay({
       }));
     } else {
       const fallbackRadius = distance(draft.start, currentPoint);
-      const radius = clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackRadius);
+      const radius = resolveCircleRadius(dynamicA, fallbackRadius, store);
       const circle = createCircleEntity({
         draft,
         radius,
@@ -708,9 +711,15 @@ export default function InventorSketchOverlay({
         current: { x: draft.start.x + signX * width, y: draft.start.y + signY * height },
       };
     }
-    const fallbackRadius = distance(draft.start, draft.current);
-    const radius = dynamicLocks.a ? clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackRadius) : fallbackRadius;
-    return { ...draft, current: { x: draft.start.x + radius, y: draft.start.y } };
+    return {
+      ...draft,
+      current: resolveCirclePreviewPoint({
+        draft,
+        radiusInput: dynamicA,
+        lockRadius: dynamicLocks.a,
+        document: store,
+      }),
+    };
   }, [draft, dynamicA, dynamicB, dynamicLocks, store.displayUnit, store.mmPerUnit]);
 
   const dimensionColor = '#0ea5e9';
