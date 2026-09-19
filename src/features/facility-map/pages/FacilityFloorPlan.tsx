@@ -45,6 +45,7 @@ import {
   saveSketchDocument,
   type SketchDocument,
 } from '@/features/facility-map/sketch';
+import { SketchPrintLayer } from '@/features/facility-map/sketch/rendering/SketchPrintLayer';
 
 type EquipmentRow = {
   id: string;
@@ -478,6 +479,7 @@ export default function FacilityFloorPlan() {
   const [sketchMode, setSketchMode] = useState(false);
   const [sketchVisible, setSketchVisible] = useState(true);
   const [sketchSessionKey, setSketchSessionKey] = useState(0);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const sketchSessionSnapshotRef = useRef<SketchDocument | null>(null);
   const sketchLatestDocumentRef = useRef<SketchDocument | null>(null);
   const [drawingPresets, setDrawingPresets] = useState<Record<AnnotationTool, DrawingPreset>>(() => readDrawingPresets());
@@ -539,6 +541,14 @@ export default function FacilityFloorPlan() {
     stagePageY: number;
     scale: number;
   } | null>(null);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const sync = () => setIsMobileViewport(media.matches);
+    sync();
+    media.addEventListener?.('change', sync);
+    return () => media.removeEventListener?.('change', sync);
+  }, []);
 
   const recalculateFit = useCallback(() => {
     if (viewportTransitionRef.current) return;
@@ -1765,10 +1775,13 @@ export default function FacilityFloorPlan() {
             <button
               type="button"
               onClick={() => {
+                if (isMobileViewport) return;
                 if (sketchMode) finishSketch();
                 else enterSketch();
               }}
-              className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+              disabled={isMobileViewport}
+              title={isMobileViewport ? 'Sketch editing is read-only on mobile.' : undefined}
+              className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50 ${
                 sketchMode ? 'border-sky-400 bg-sky-500/15 text-sky-300' : 'hover:bg-accent'
               }`}
             >
@@ -2406,6 +2419,7 @@ export default function FacilityFloorPlan() {
               );
             })}
           </svg>
+          <SketchPrintLayer document={plan.sketchDocument} />
           {plan.zones.map((zone) => (
                 <div
                   key={zone.id}
@@ -2735,7 +2749,7 @@ export default function FacilityFloorPlan() {
               )}
 
               <InventorSketchOverlay
-                enabled={editMode && sketchMode}
+                enabled={editMode && sketchMode && !isMobileViewport}
                 visible={sketchVisible || sketchMode}
                 storageKey={sketchStorageKey}
                 sessionKey={sketchSessionKey}
@@ -3061,7 +3075,7 @@ export default function FacilityFloorPlan() {
                 const meta = zoneById.get(draftZone.type);
                 return (
                   <div
-                    className="pointer-events-none absolute rounded-md border-2 border-dashed"
+                    className="pointer-events-none absolute z-[20] rounded-md border-2 border-dashed"
                     style={{
                       left: `${draftZone.x}%`,
                       top: `${draftZone.y}%`,
@@ -3082,7 +3096,7 @@ export default function FacilityFloorPlan() {
                   <button
                     key={pin.equipmentId}
                     type="button"
-                    className={`group absolute -translate-x-1/2 -translate-y-1/2 ${emergencyMode ? 'opacity-20' : ''}`}
+                    className={`group absolute z-[30] -translate-x-1/2 -translate-y-1/2 ${emergencyMode ? 'opacity-20' : ''}`}
                     style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
                     onClick={(event) => {
                       event.stopPropagation();
@@ -3128,7 +3142,7 @@ export default function FacilityFloorPlan() {
                   <button
                     key={pin.id}
                     type="button"
-                    className="absolute -translate-x-1/2 -translate-y-1/2"
+                    className="absolute z-[30] -translate-x-1/2 -translate-y-1/2"
                     style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
                     onClick={(event) => {
                       event.stopPropagation();
@@ -3325,6 +3339,9 @@ export default function FacilityFloorPlan() {
                           zones: entry.snapshot.zones.length,
                         })}
                       </div>
+                      <div className="mt-1 text-[10px] text-muted-foreground">
+                        Sketch: {entry.snapshot.sketchDocument?.entities.length ?? 0} entities
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -3353,10 +3370,12 @@ export default function FacilityFloorPlan() {
                   <div className="rounded bg-muted p-2">
                     <div className="font-medium">{t('facilityMap.currentVersion')}</div>
                     <div>{plan.pins.length} / {plan.overlayPins.length} / {plan.zones.length}</div>
+                    <div>Sketch: {plan.sketchDocument?.entities.length ?? 0}</div>
                   </div>
                   <div className="rounded bg-muted p-2">
                     <div className="font-medium">{t('facilityMap.savedVersion')}</div>
                     <div>{compareSnapshot.pins.length} / {compareSnapshot.overlayPins.length} / {compareSnapshot.zones.length}</div>
+                    <div>Sketch: {compareSnapshot.sketchDocument?.entities.length ?? 0}</div>
                   </div>
                 </div>
               </div>

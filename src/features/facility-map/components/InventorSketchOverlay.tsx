@@ -151,6 +151,7 @@ import {
   dimensionParameterDimension,
   recalculateParametricDocument,
 } from '@/features/facility-map/sketch/parametric/parameterBinding';
+import { calibrateMmPerUnitFromFloorWidth } from '@/features/facility-map/sketch/integration/calibration';
 import {
   commitLineDraft,
   getLineDynamicAngle,
@@ -1114,7 +1115,7 @@ export default function InventorSketchOverlay({
   if (!visible) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[18]">
+    <div className="pointer-events-none absolute inset-0 z-[10]" data-facility-layer="sketch">
       <svg
         ref={svgRef}
         className={`absolute inset-0 h-full w-full ${enabled ? 'pointer-events-auto' : 'pointer-events-none'}`}
@@ -1563,6 +1564,31 @@ export default function InventorSketchOverlay({
                 <option value="m">m</option>
               </select>
             </label>
+
+            <button
+              type="button"
+              onClick={() => {
+                const currentWidthMm = store.mmPerUnit * canvasWidth;
+                const raw = window.prompt(
+                  'Known floor width (mm)',
+                  currentWidthMm.toFixed(0),
+                );
+                if (raw == null) return;
+                const knownWidthMm = Number(raw);
+                const nextMmPerUnit = calibrateMmPerUnitFromFloorWidth(
+                  knownWidthMm,
+                  canvasWidth,
+                  store.mmPerUnit,
+                );
+                setStore((current) => ({
+                  ...current,
+                  mmPerUnit: nextMmPerUnit,
+                }));
+              }}
+              className="mb-2 w-full rounded-md border border-cyan-400/20 px-2 py-1.5 text-[10px] text-cyan-200 hover:bg-cyan-500/10"
+            >
+              Calibrate from floor width
+            </button>
 
             {(tool === 'line' || tool === 'polyline' || tool === 'arc' || tool === 'rect' || tool === 'circle') && (
               <>
