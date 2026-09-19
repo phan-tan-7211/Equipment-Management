@@ -124,8 +124,14 @@ export default function InventorSketchOverlay({
   t,
   onExit,
 }: Props) {
-  const [tool, setTool] = useState<SketchTool>('select');
-  const [store, setStore] = useState<SketchStore>(() => readStore(storageKey));
+  const sketchHistory = useSketchDocumentHistory(storageKey);
+  const store = sketchHistory.document;
+  const setStore = sketchHistory.commit;
+  const [commandState, setCommandState] = useState(() => createSketchCommandState());
+  const tool = commandState.tool;
+  const setTool = useCallback((nextTool: SketchTool) => {
+    setCommandState((current) => selectSketchTool(current, nextTool));
+  }, []);
   const [presets, setPresets] = useState<ToolPresetMap>(() => readPresets());
   const [selectedId, setSelectedId] = useState('');
   const [draft, setDraft] = useState<Draft>(null);
@@ -139,16 +145,10 @@ export default function InventorSketchOverlay({
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
-    const next = readStore(storageKey);
-    setStore(next);
     setSelectedId('');
     setDraft(null);
-    setTool('select');
+    setCommandState(createSketchCommandState());
   }, [storageKey]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORE_PREFIX}${storageKey}`, JSON.stringify(store));
-  }, [storageKey, store]);
 
   useEffect(() => {
     localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
@@ -159,7 +159,7 @@ export default function InventorSketchOverlay({
       setDraft(null);
       setSelectedId('');
       setDraggingId('');
-      setTool('select');
+      setCommandState(createSketchCommandState());
     }
   }, [enabled]);
 
@@ -171,8 +171,21 @@ export default function InventorSketchOverlay({
       if (event.key === 'Escape') {
         setDraft(null);
         setSelectedId('');
-        setTool('select');
+        sketchHistory.cancelTransaction();
+        setCommandState(cancelSketchCommand());
         setMessage('');
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) sketchHistory.redo();
+        else sketchHistory.undo();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
+        event.preventDefault();
+        sketchHistory.redo();
+        return;
       }
       if ((event.key === 'Delete' || event.key === 'Backspace') && selectedId) {
         event.preventDefault();
@@ -185,7 +198,7 @@ export default function InventorSketchOverlay({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [enabled, selectedId]);
+  }, [enabled, selectedId, sketchHistory]);
 
   const currentStyle = useMemo(() => {
     if (tool === 'rect' || tool === 'circle') return presets[tool];
