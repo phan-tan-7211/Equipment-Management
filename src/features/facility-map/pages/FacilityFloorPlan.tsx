@@ -429,6 +429,8 @@ export default function FacilityFloorPlan() {
   const [newPlanName, setNewPlanName] = useState('');
   const [newPlanBuilding, setNewPlanBuilding] = useState('Main Building');
   const [newPlanFloor, setNewPlanFloor] = useState('Floor 1');
+  const [newPlanImageData, setNewPlanImageData] = useState('');
+  const [newPlanCanvasSize, setNewPlanCanvasSize] = useState({ width: 1200, height: 760 });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -597,6 +599,16 @@ export default function FacilityFloorPlan() {
       `${a.building} ${a.floor}`.localeCompare(`${b.building} ${b.floor}`),
     );
   }, [plan, planLibraryVersion]);
+
+  const plansByBuilding = useMemo(() => {
+    const groups = new Map<string, FloorPlanState[]>();
+    allPlans.forEach((item) => {
+      const current = groups.get(item.building) ?? [];
+      current.push(item);
+      groups.set(item.building, current);
+    });
+    return [...groups.entries()];
+  }, [allPlans]);
 
   const planHistory = useMemo(
     () => readHistory().filter((entry) => entry.key === planKey(plan.building, plan.floor)),
@@ -953,17 +965,51 @@ export default function FacilityFloorPlan() {
     fitView();
   };
 
+  const handleNewPlanImage = (file?: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      if (!dataUrl) return;
+      const image = new Image();
+      image.onload = () => {
+        setNewPlanImageData(dataUrl);
+        setNewPlanCanvasSize({
+          width: Math.max(1, image.naturalWidth || 1200),
+          height: Math.max(1, image.naturalHeight || 760),
+        });
+      };
+      image.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const createPlan = (duplicateCurrent: boolean) => {
     const building = newPlanBuilding.trim() || 'Main Building';
     const floor = newPlanFloor.trim() || 'Floor 1';
     const name = newPlanName.trim() || `${building} - ${floor}`;
     const next = duplicateCurrent
-      ? { ...clonePlan(plan), name, building, floor }
+      ? {
+          ...clonePlan(plan),
+          name,
+          building,
+          floor,
+          ...(newPlanImageData
+            ? {
+                imageDataUrl: newPlanImageData,
+                canvasWidth: newPlanCanvasSize.width,
+                canvasHeight: newPlanCanvasSize.height,
+              }
+            : {}),
+        }
       : {
           ...clonePlan(EMPTY_PLAN),
           name,
           building,
           floor,
+          imageDataUrl: newPlanImageData,
+          canvasWidth: newPlanCanvasSize.width,
+          canvasHeight: newPlanCanvasSize.height,
           pins: [],
           overlayPins: [],
           zones: [],
@@ -976,6 +1022,8 @@ export default function FacilityFloorPlan() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     setPlanLibraryVersion((value) => value + 1);
     setNewPlanName('');
+    setNewPlanImageData('');
+    setNewPlanCanvasSize({ width: 1200, height: 760 });
     setPlanManagerOpen(false);
     fitView();
   };
@@ -1237,15 +1285,15 @@ export default function FacilityFloorPlan() {
 
   const visibleAssetPins =
     !hiddenLayers.has('assets') && (activeLayer === 'all' || activeLayer === 'assets');
-  const visibleOverlayPins =
-    (activeLayer === 'all'
+  const visibleOverlayPins = emergencyMode
+    ? plan.overlayPins.filter((pin) => pin.layer === 'fire' || pin.layer === 'emergency')
+    : activeLayer === 'all'
       ? plan.overlayPins.filter((pin) => !hiddenLayers.has(pin.layer))
       : activeLayer === 'assets'
         ? []
         : hiddenLayers.has(activeLayer)
           ? []
-          : plan.overlayPins.filter((pin) => pin.layer === activeLayer))
-      .filter((pin) => !emergencyMode || pin.layer === 'fire' || pin.layer === 'emergency');
+          : plan.overlayPins.filter((pin) => pin.layer === activeLayer);
 
   const placementHint = selectedEquipmentId
     ? t('facilityMap.clickPlaceEquipment')
@@ -1729,6 +1777,19 @@ export default function FacilityFloorPlan() {
               {t('facilityMap.editMode')}
             </button>
           )}
+          {compareSnapshot && (
+            <div className="absolute right-3 top-14 z-30 rounded-md border border-violet-400/40 bg-violet-500/20 px-3 py-2 text-xs text-violet-100 backdrop-blur">
+              <GitCompare className="mr-1 inline h-3.5 w-3.5" />
+              {t('facilityMap.comparingVersion')}
+            </div>
+          )}
+
+          {emergencyMode && (
+            <div className="absolute left-1/2 top-14 z-30 -translate-x-1/2 rounded-full border border-red-400/50 bg-red-600/90 px-5 py-2 text-xs font-bold tracking-[0.2em] text-white shadow-2xl">
+              {t('facilityMap.emergencyModeActive')}
+            </div>
+          )}
+
           <div className="absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 items-center gap-1 rounded-lg border border-white/10 bg-black/65 p-1 backdrop-blur md:flex">
             {DEMO_FLOORS.map((floor) => (
               <button
@@ -2374,7 +2435,7 @@ export default function FacilityFloorPlan() {
               </button>
             </div>
 
-            <div className="mb-5 grid gap-2 rounded-xl border bg-muted/20 p-3 md:grid-cols-4">
+            <div className="mb-5 grid gap-2 rounded-xl border bg-muted/20 p-3 md:grid-cols-5">
               <input
                 value={newPlanName}
                 onChange={(event) => setNewPlanName(event.target.value)}
@@ -2393,6 +2454,16 @@ export default function FacilityFloorPlan() {
                 placeholder={t('facilityMap.floor')}
                 className="rounded-md border bg-background px-3 py-2 text-sm"
               />
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border bg-background px-3 py-2 text-xs hover:bg-accent">
+                <ImagePlus className="h-3.5 w-3.5" />
+                {newPlanImageData ? t('facilityMap.blueprintReady') : t('facilityMap.blueprint')}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(event) => handleNewPlanImage(event.target.files?.[0])}
+                />
+              </label>
               <div className="flex gap-2">
                 <button type="button" onClick={() => createPlan(false)} className="flex-1 rounded-md bg-primary px-3 py-2 text-xs text-primary-foreground">
                   <Plus className="mr-1 inline h-3.5 w-3.5" />{t('facilityMap.addPlan')}
@@ -2403,41 +2474,52 @@ export default function FacilityFloorPlan() {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {allPlans.map((item) => (
-                <button
-                  key={planKey(item.building, item.floor)}
-                  type="button"
-                  onClick={() => openPlanFromLibrary(item)}
-                  className={`rounded-xl border p-3 text-left transition hover:bg-accent ${
-                    planKey(item.building, item.floor) === planKey(plan.building, plan.floor) ? 'ring-2 ring-primary' : ''
-                  }`}
-                >
-                  <div className="mb-2 aspect-[16/9] overflow-hidden rounded-md border bg-slate-100">
-                    <div className="relative h-full w-full">
-                      <DemoBlueprint t={t} />
-                      {item.zones.slice(0, 6).map((zone) => (
-                        <span
-                          key={zone.id}
-                          className="absolute rounded-sm border"
-                          style={{
-                            left: `${zone.x}%`,
-                            top: `${zone.y}%`,
-                            width: `${zone.w}%`,
-                            height: `${zone.h}%`,
-                            borderColor: zone.customColor ?? zoneById.get(zone.type)?.color,
-                            backgroundColor: `${zone.customColor ?? zoneById.get(zone.type)?.color ?? '#64748b'}22`,
-                          }}
-                        />
-                      ))}
-                    </div>
+            <div className="space-y-5">
+              {plansByBuilding.map(([building, items]) => (
+                <div key={building}>
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                    <Building2 className="h-4 w-4" />
+                    {building}
+                    <span className="text-xs font-normal text-muted-foreground">({items.length})</span>
                   </div>
-                  <div className="font-medium">{item.name || `${item.building} - ${item.floor}`}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">{item.building} · {item.floor}</div>
-                  <div className="mt-2 text-[11px] text-muted-foreground">
-                    {t('facilityMap.itemsSummary', { assets: item.pins.length, markers: item.overlayPins.length, zones: item.zones.length })}
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {items.map((item) => (
+                      <button
+                        key={planKey(item.building, item.floor)}
+                        type="button"
+                        onClick={() => openPlanFromLibrary(item)}
+                        className={`rounded-xl border p-3 text-left transition hover:bg-accent ${
+                          planKey(item.building, item.floor) === planKey(plan.building, plan.floor) ? 'ring-2 ring-primary' : ''
+                        }`}
+                      >
+                        <div className="mb-2 aspect-[16/9] overflow-hidden rounded-md border bg-slate-100">
+                          <div className="relative h-full w-full">
+                            <DemoBlueprint t={t} />
+                            {item.zones.slice(0, 6).map((zone) => (
+                              <span
+                                key={zone.id}
+                                className="absolute rounded-sm border"
+                                style={{
+                                  left: `${zone.x}%`,
+                                  top: `${zone.y}%`,
+                                  width: `${zone.w}%`,
+                                  height: `${zone.h}%`,
+                                  borderColor: zone.customColor ?? zoneById.get(zone.type)?.color,
+                                  backgroundColor: `${zone.customColor ?? zoneById.get(zone.type)?.color ?? '#64748b'}22`,
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="font-medium">{item.name || `${item.building} - ${item.floor}`}</div>
+                        <div className="mt-1 text-xs text-muted-foreground">{item.floor}</div>
+                        <div className="mt-2 text-[11px] text-muted-foreground">
+                          {t('facilityMap.itemsSummary', { assets: item.pins.length, markers: item.overlayPins.length, zones: item.zones.length })}
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                </button>
+                </div>
               ))}
             </div>
 
@@ -2570,6 +2652,19 @@ export default function FacilityFloorPlan() {
               style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
             >
               {layerById.get(pin.layer)?.emoji}
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 grid grid-cols-4 gap-3 text-xs">
+          {[
+            ['#22c55e', t('facilityMap.statusActive')],
+            ['#eab308', t('facilityMap.statusMaintenance')],
+            ['#94a3b8', t('facilityMap.statusInactive')],
+            ['#ef4444', t('facilityMap.statusRetired')],
+          ].map(([color, label]) => (
+            <div key={String(label)} className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-full" style={{ backgroundColor: String(color) }} />
+              <span>{label}</span>
             </div>
           ))}
         </div>
