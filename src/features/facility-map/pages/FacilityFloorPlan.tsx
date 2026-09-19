@@ -111,6 +111,9 @@ type FloorPlanState = {
 };
 
 const STORAGE_KEY = 'znteqr:facility-floor-plan:dryrun:v3';
+const PLAN_CACHE_KEY = 'znteqr:facility-floor-plan:dryrun:plans:v1';
+
+const planKey = (building: string, floor: string) => `${building}::${floor}`;
 
 const LAYERS: Array<{ id: 'assets' | LayerId; labelKey: string; color: string; emoji: string }> = [
   { id: 'assets', labelKey: 'facilityMap.assets', color: '#10b981', emoji: '🔧' },
@@ -165,6 +168,15 @@ const annotationToolTranslationKey = (type: Annotation['type']) => {
     default:
       return 'facilityMap.annotation';
   }
+};
+
+const buildingTranslationKey = (building: string) =>
+  building === 'Warehouse Building' ? 'facilityMap.warehouseBuilding' : 'facilityMap.mainBuilding';
+
+const floorTranslationKey = (floor: string) => {
+  if (floor === 'Floor 2') return 'facilityMap.floor2';
+  if (floor === 'Roof') return 'facilityMap.roof';
+  return 'facilityMap.floor1';
 };
 
 const statusTranslationKey = (status?: string | null) => {
@@ -344,6 +356,12 @@ export default function FacilityFloorPlan() {
   const { t } = useI18n();
   const [plan, setPlan] = useState<FloorPlanState>(() => {
     try {
+      const cacheRaw = localStorage.getItem(PLAN_CACHE_KEY);
+      if (cacheRaw) {
+        const cache = JSON.parse(cacheRaw) as Record<string, Partial<FloorPlanState>>;
+        const cached = cache[planKey('Main Building', 'Floor 1')];
+        if (cached) return ensurePlanShape(cached);
+      }
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? ensurePlanShape(JSON.parse(raw) as Partial<FloorPlanState>) : EMPTY_PLAN;
     } catch {
@@ -395,6 +413,17 @@ export default function FacilityFloorPlan() {
 
   const savePlan = useCallback((next: FloorPlanState) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    try {
+      const raw = localStorage.getItem(PLAN_CACHE_KEY);
+      const cache = raw ? JSON.parse(raw) as Record<string, FloorPlanState> : {};
+      cache[planKey(next.building, next.floor)] = clonePlan(next);
+      localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+      localStorage.setItem(
+        PLAN_CACHE_KEY,
+        JSON.stringify({ [planKey(next.building, next.floor)]: clonePlan(next) }),
+      );
+    }
   }, []);
 
   const commitPlan = useCallback((updater: (current: FloorPlanState) => FloorPlanState) => {
@@ -666,7 +695,12 @@ export default function FacilityFloorPlan() {
           y = Math.max(0, y);
           w = Math.min(100 - x, w);
           h = Math.min(100 - y, h);
-          return { ...zone, x: snapValue(x), y: snapValue(y), w: snapValue(w), h: snapValue(h) };
+
+          const snappedX = Math.max(0, Math.min(97, snapValue(x)));
+          const snappedY = Math.max(0, Math.min(97, snapValue(y)));
+          const snappedW = Math.max(3, Math.min(100 - snappedX, snapValue(w)));
+          const snappedH = Math.max(3, Math.min(100 - snappedY, snapValue(h)));
+          return { ...zone, x: snappedX, y: snappedY, w: snappedW, h: snappedH };
         }),
       }));
       return;
@@ -750,7 +784,16 @@ export default function FacilityFloorPlan() {
   };
 
   const switchDemoLocation = (building: string, floor: string) => {
-    const next = demoLayoutFor(building, floor);
+    savePlan(plan);
+    let next = demoLayoutFor(building, floor);
+    try {
+      const raw = localStorage.getItem(PLAN_CACHE_KEY);
+      const cache = raw ? JSON.parse(raw) as Record<string, Partial<FloorPlanState>> : {};
+      const cached = cache[planKey(building, floor)];
+      if (cached) next = ensurePlanShape(cached);
+    } catch {
+      // Fall back to deterministic demo content for the requested floor.
+    }
     setUndoStack((stack) => [...stack.slice(-29), clonePlan(plan)]);
     setRedoStack([]);
     setPlan(next);
@@ -1099,7 +1142,7 @@ export default function FacilityFloorPlan() {
                 aria-label={t('facilityMap.building')}
               >
                 {DEMO_BUILDINGS.map((building) => (
-                  <option key={building} value={building}>{building}</option>
+                  <option key={building} value={building}>{t(buildingTranslationKey(building))}</option>
                 ))}
               </select>
               <select
@@ -1109,7 +1152,7 @@ export default function FacilityFloorPlan() {
                 aria-label={t('facilityMap.floor')}
               >
                 {DEMO_FLOORS.map((floor) => (
-                  <option key={floor} value={floor}>{floor}</option>
+                  <option key={floor} value={floor}>{t(floorTranslationKey(floor))}</option>
                 ))}
               </select>
             </div>
@@ -1346,14 +1389,14 @@ export default function FacilityFloorPlan() {
                   plan.floor === floor ? 'bg-white text-slate-950' : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                {floor}
+                {t(floorTranslationKey(floor))}
               </button>
             ))}
           </div>
 
           <div className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2">
             <div className="rounded-md border border-white/10 bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
-              {plan.building} · {plan.floor}
+              {t(buildingTranslationKey(plan.building))} · {t(floorTranslationKey(plan.floor))}
             </div>
             <div className="rounded-md border border-white/10 bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
               <Layers3 className="mr-1 inline h-3.5 w-3.5" />
@@ -1674,7 +1717,7 @@ export default function FacilityFloorPlan() {
                     strokeWidth: annotationSelected ? 0.42 : isDraft ? 0.35 : 0.28,
                     vectorEffect: 'non-scaling-stroke' as const,
                     opacity: isDraft ? 0.7 : 1,
-                    pointerEvents: ((drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'stroke' : 'none') as const,
+                    pointerEvents: ((drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'stroke' : 'none') as React.CSSProperties['pointerEvents'],
                     onClick: (event: React.MouseEvent<SVGElement>) => {
                       if (isDraft) return;
                       event.stopPropagation();
