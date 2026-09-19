@@ -727,6 +727,30 @@ export default function FacilityFloorPlan() {
         ? bounds.x2 >= left && bounds.x1 <= right && bounds.y2 >= top && bounds.y1 <= bottom
         : bounds.x1 >= left && bounds.x2 <= right && bounds.y1 >= top && bounds.y2 <= bottom;
 
+    const pointInside = (x: number, y: number) => x >= left && x <= right && y >= top && y <= bottom;
+    const orientation = (ax: number, ay: number, bx: number, by: number, cx: number, cy: number) =>
+      Math.sign((by - ay) * (cx - bx) - (bx - ax) * (cy - by));
+    const segmentsIntersect = (
+      ax: number, ay: number, bx: number, by: number,
+      cx: number, cy: number, dx: number, dy: number,
+    ) => {
+      const o1 = orientation(ax, ay, bx, by, cx, cy);
+      const o2 = orientation(ax, ay, bx, by, dx, dy);
+      const o3 = orientation(cx, cy, dx, dy, ax, ay);
+      const o4 = orientation(cx, cy, dx, dy, bx, by);
+      return o1 !== o2 && o3 !== o4;
+    };
+    const segmentHitsRect = (x1: number, y1: number, x2: number, y2: number) => {
+      if (!box.crossing) return pointInside(x1, y1) && pointInside(x2, y2);
+      if (pointInside(x1, y1) || pointInside(x2, y2)) return true;
+      return (
+        segmentsIntersect(x1, y1, x2, y2, left, top, right, top) ||
+        segmentsIntersect(x1, y1, x2, y2, right, top, right, bottom) ||
+        segmentsIntersect(x1, y1, x2, y2, right, bottom, left, bottom) ||
+        segmentsIntersect(x1, y1, x2, y2, left, bottom, left, top)
+      );
+    };
+
     const ids = new Set<string>();
     if (!hiddenLayers.has('assets')) {
       plan.pins.forEach((pin) => {
@@ -740,7 +764,11 @@ export default function FacilityFloorPlan() {
       if (hit({ x1: zone.x, y1: zone.y, x2: zone.x + zone.w, y2: zone.y + zone.h })) ids.add(`zone:${zone.id}`);
     });
     plan.annotations.forEach((annotation) => {
-      if (hit(annotationBounds(annotation))) ids.add(`annotation:${annotation.id}`);
+      const selected =
+        annotation.type === 'line' || annotation.type === 'arrow' || annotation.type === 'ruler'
+          ? segmentHitsRect(annotation.x1, annotation.y1, annotation.x2, annotation.y2)
+          : hit(annotationBounds(annotation));
+      if (selected) ids.add(`annotation:${annotation.id}`);
     });
     return ids;
   }, [annotationBounds, hiddenLayers, plan.annotations, plan.overlayPins, plan.pins, plan.zones]);
@@ -820,7 +848,7 @@ export default function FacilityFloorPlan() {
           { equipmentId: selectedEquipmentId, ...point },
         ],
       }));
-      setSelectedMarkerId(`asset:${selectedEquipmentId}`);
+      setSingleSelection(`asset:${selectedEquipmentId}`);
       setSelectedEquipmentId('');
       return;
     }
@@ -831,7 +859,7 @@ export default function FacilityFloorPlan() {
         ...current,
         overlayPins: [...current.overlayPins, { id, layer: placeLayer, ...point }],
       }));
-      setSelectedMarkerId(`overlay:${id}`);
+      setSingleSelection(`overlay:${id}`);
     }
   }, [
     commitPlan,
@@ -2147,7 +2175,7 @@ export default function FacilityFloorPlan() {
                     x2={annotation.x2}
                     y2={annotation.y2}
                     stroke={color}
-                    strokeWidth="0.35"
+                    strokeWidth={annotation.lineWidth ?? 0.35}
                     strokeDasharray={annotation.type === 'ruler' ? '1 0.7' : undefined}
                     vectorEffect="non-scaling-stroke"
                   />
@@ -2163,7 +2191,7 @@ export default function FacilityFloorPlan() {
                     height={Math.abs(annotation.y2 - annotation.y1)}
                     fill={`${color}18`}
                     stroke={color}
-                    strokeWidth="0.35"
+                    strokeWidth={annotation.lineWidth ?? 0.35}
                     vectorEffect="non-scaling-stroke"
                   />
                 );
@@ -2178,7 +2206,7 @@ export default function FacilityFloorPlan() {
                     ry={Math.abs(annotation.y2 - annotation.y1) / 2}
                     fill={`${color}18`}
                     stroke={color}
-                    strokeWidth="0.35"
+                    strokeWidth={annotation.lineWidth ?? 0.35}
                     vectorEffect="non-scaling-stroke"
                   />
                 );
@@ -2189,7 +2217,7 @@ export default function FacilityFloorPlan() {
                   x={annotation.x1}
                   y={annotation.y1}
                   fill={color}
-                  fontSize="2.5"
+                  fontSize={annotation.textSize ?? 2.5}
                   fontWeight="700"
                 >
                   {annotation.text}
@@ -2233,7 +2261,23 @@ export default function FacilityFloorPlan() {
             </div>
           </div>
 
-          {editMode && (selectedZone || selectedOverlay || selectedAnnotation) && (
+          {editMode && selectedObjectIds.size > 1 && (
+            <div className="absolute right-3 top-3 z-30 w-72 rounded-xl border border-sky-400/30 bg-slate-950/92 p-4 text-white shadow-2xl backdrop-blur">
+              <div className="mb-2 text-sm font-semibold">{t('facilityMap.selectionSet')}</div>
+              <div className="text-xs text-slate-300">{t('facilityMap.selectedCount', { count: selectedObjectIds.size })}</div>
+              <p className="mt-2 text-[11px] text-slate-400">{t('facilityMap.selectionMoveHint')}</p>
+              <button
+                type="button"
+                onClick={() => deleteObjectsByIds(selectedObjectIds)}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md border border-red-400/30 px-3 py-2 text-xs text-red-300 hover:bg-red-500/10"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t('facilityMap.deleteSelected')}
+              </button>
+            </div>
+          )}
+
+          {editMode && selectedObjectIds.size <= 1 && (selectedZone || selectedOverlay || selectedAnnotation) && (
             <div className="absolute right-3 top-3 z-30 w-72 max-h-[calc(100%_-_6rem)] overflow-auto rounded-xl border border-white/10 bg-slate-950/92 p-4 text-white shadow-2xl backdrop-blur">
               <div className="mb-3 text-sm font-semibold">{t('facilityMap.properties')}</div>
 
@@ -2374,7 +2418,7 @@ export default function FacilityFloorPlan() {
             </div>
           )}
 
-          {selectedEquipment && (
+          {selectedObjectIds.size <= 1 && selectedEquipment && (
             <div className="absolute right-3 top-3 z-30 w-72 rounded-xl border border-white/10 bg-slate-950/90 p-4 text-white shadow-2xl backdrop-blur">
               <div className="mb-3 flex items-start gap-3">
                 <div
@@ -2493,6 +2537,7 @@ export default function FacilityFloorPlan() {
               )}
 
               {selectionBox && (
+                <>
                 <div
                   className={`pointer-events-none absolute border ${
                     selectionBox.crossing
@@ -2506,6 +2551,18 @@ export default function FacilityFloorPlan() {
                     height: `${Math.abs(selectionBox.endY - selectionBox.startY)}%`,
                   }}
                 />
+                <div
+                  className={`pointer-events-none absolute rounded px-1.5 py-0.5 text-[9px] font-semibold text-white ${
+                    selectionBox.crossing ? 'bg-emerald-600' : 'bg-sky-600'
+                  }`}
+                  style={{
+                    left: `${selectionBox.endX}%`,
+                    top: `${selectionBox.endY}%`,
+                  }}
+                >
+                  {selectionBox.crossing ? t('facilityMap.crossingSelection') : t('facilityMap.windowSelection')}
+                </div>
+                </>
               )}
 
               <svg
