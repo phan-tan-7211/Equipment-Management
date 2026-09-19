@@ -1985,7 +1985,7 @@ export default function FacilityFloorPlan() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                   <label className="flex items-center justify-between gap-2 text-[11px]">
-                    <span>{t('facilityMap.currentDrawingPreset.color')}</span>
+                    <span>{t('facilityMap.annotationColor')}</span>
                     <input
                       type="color"
                       value={currentDrawingPreset.color}
@@ -2436,7 +2436,7 @@ export default function FacilityFloorPlan() {
                     />
                   )}
                   <label className="flex items-center justify-between text-xs text-slate-300">
-                    <span>{t('facilityMap.currentDrawingPreset.color')}</span>
+                    <span>{t('facilityMap.annotationColor')}</span>
                     <input
                       type="color"
                       value={selectedAnnotation.color ?? '#f43f5e'}
