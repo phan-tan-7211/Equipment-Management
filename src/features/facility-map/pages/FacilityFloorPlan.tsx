@@ -104,6 +104,8 @@ type FloorPlanState = {
   building: string;
   floor: string;
   imageDataUrl: string;
+  canvasWidth: number;
+  canvasHeight: number;
   pins: EquipmentPin[];
   overlayPins: OverlayPin[];
   zones: Zone[];
@@ -200,6 +202,8 @@ const EMPTY_PLAN: FloorPlanState = {
   building: 'Main Building',
   floor: 'Floor 1',
   imageDataUrl: '',
+  canvasWidth: 1200,
+  canvasHeight: 760,
   pins: [
     { equipmentId: 'CEV-CNC-001', x: 24, y: 29 },
     { equipmentId: 'CEV-CNC-002', x: 39, y: 31 },
@@ -301,6 +305,8 @@ const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
   overlayPins: value.overlayPins ?? [],
   zones: value.zones ?? [],
   annotations: value.annotations ?? [],
+  canvasWidth: value.canvasWidth ?? 1200,
+  canvasHeight: value.canvasHeight ?? 760,
 });
 
 const clonePlan = (plan: FloorPlanState): FloorPlanState =>
@@ -314,7 +320,7 @@ function DemoBlueprint({ t }: { t: (key: string) => string }) {
     <svg
       viewBox="0 0 1200 760"
       className="h-full w-full"
-      preserveAspectRatio="xMidYMid meet"
+      preserveAspectRatio="none"
       aria-label={t('facilityMap.demoPlanAria')}
     >
       <rect width="1200" height="760" fill="#f8fafc" />
@@ -383,6 +389,7 @@ export default function FacilityFloorPlan() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [fitTransform, setFitTransform] = useState({ scale: 1, x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [showLegend, setShowLegend] = useState(true);
   const [showGrid, setShowGrid] = useState(false);
@@ -412,6 +419,41 @@ export default function FacilityFloorPlan() {
     centerY: number;
   } | null>(null);
   const canvasRef = useRef<HTMLDivElement | null>(null);
+
+  const recalculateFit = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    const horizontalPadding = 32;
+    const verticalPadding = 32;
+    const availableWidth = Math.max(1, rect.width - horizontalPadding * 2);
+    const availableHeight = Math.max(1, rect.height - verticalPadding * 2);
+    const scale = Math.min(
+      availableWidth / Math.max(1, plan.canvasWidth),
+      availableHeight / Math.max(1, plan.canvasHeight),
+    );
+
+    const renderedWidth = plan.canvasWidth * scale;
+    const renderedHeight = plan.canvasHeight * scale;
+    setFitTransform({
+      scale,
+      x: (rect.width - renderedWidth) / 2,
+      y: (rect.height - renderedHeight) / 2,
+    });
+  }, [plan.canvasHeight, plan.canvasWidth]);
+
+  useEffect(() => {
+    recalculateFit();
+    const canvas = canvasRef.current;
+    if (!canvas || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => recalculateFit());
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, [recalculateFit]);
+
+  const effectiveScale = fitTransform.scale * zoom;
 
   const savePlan = useCallback((next: FloorPlanState) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -512,15 +554,24 @@ export default function FacilityFloorPlan() {
 
   const toPercent = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
-    if (!canvas) return null;
+    if (!canvas || effectiveScale <= 0) return null;
     const rect = canvas.getBoundingClientRect();
-    const localX = (clientX - rect.left - pan.x) / zoom;
-    const localY = (clientY - rect.top - pan.y) / zoom;
+    const localX = (clientX - rect.left - fitTransform.x - pan.x) / effectiveScale;
+    const localY = (clientY - rect.top - fitTransform.y - pan.y) / effectiveScale;
     return {
-      x: Math.max(0, Math.min(100, snapValue((localX / rect.width) * 100))),
-      y: Math.max(0, Math.min(100, snapValue((localY / rect.height) * 100))),
+      x: Math.max(0, Math.min(100, snapValue((localX / plan.canvasWidth) * 100))),
+      y: Math.max(0, Math.min(100, snapValue((localY / plan.canvasHeight) * 100))),
     };
-  }, [pan.x, pan.y, snapValue, zoom]);
+  }, [
+    effectiveScale,
+    fitTransform.x,
+    fitTransform.y,
+    pan.x,
+    pan.y,
+    plan.canvasHeight,
+    plan.canvasWidth,
+    snapValue,
+  ]);
 
   const placeAt = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!editMode || draggingEquipmentId || draggingOverlayId || isPanning || zoneStart) return;
@@ -773,9 +824,24 @@ export default function FacilityFloorPlan() {
     reader.onload = () => {
       const imageDataUrl = typeof reader.result === 'string' ? reader.result : '';
       if (!imageDataUrl) return;
-      commitPlan((current) => ({ ...current, imageDataUrl }));
-      setZoom(1);
-      setPan({ x: 0, y: 0 });
+
+      const image = new Image();
+      image.onload = () => {
+        commitPlan((current) => ({
+          ...current,
+          imageDataUrl,
+          canvasWidth: Math.max(1, image.naturalWidth || current.canvasWidth),
+          canvasHeight: Math.max(1, image.naturalHeight || current.canvasHeight),
+        }));
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+      };
+      image.onerror = () => {
+        commitPlan((current) => ({ ...current, imageDataUrl }));
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+      };
+      image.src = imageDataUrl;
     };
     reader.readAsDataURL(file);
   };
@@ -783,6 +849,7 @@ export default function FacilityFloorPlan() {
   const fitView = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
+    requestAnimationFrame(recalculateFit);
   };
 
   const switchDemoLocation = (building: string, floor: string) => {
@@ -815,14 +882,17 @@ export default function FacilityFloorPlan() {
     const rect = canvas.getBoundingClientRect();
     const pointerX = event.clientX - rect.left;
     const pointerY = event.clientY - rect.top;
-    const worldX = (pointerX - pan.x) / zoom;
-    const worldY = (pointerY - pan.y) / zoom;
+    const currentScale = effectiveScale;
+    if (currentScale <= 0) return;
+    const worldX = (pointerX - fitTransform.x - pan.x) / currentScale;
+    const worldY = (pointerY - fitTransform.y - pan.y) / currentScale;
     const factor = event.deltaY < 0 ? 1.12 : 0.89;
     const nextZoom = Math.max(0.5, Math.min(3, zoom * factor));
+    const nextScale = fitTransform.scale * nextZoom;
     setZoom(nextZoom);
     setPan({
-      x: pointerX - worldX * nextZoom,
-      y: pointerY - worldY * nextZoom,
+      x: pointerX - fitTransform.x - worldX * nextScale,
+      y: pointerY - fitTransform.y - worldY * nextScale,
     });
   };
 
@@ -865,12 +935,15 @@ export default function FacilityFloorPlan() {
       const startCenterY = touchRef.current.centerY - rect.top;
       const currentCenterX = centerX - rect.left;
       const currentCenterY = centerY - rect.top;
-      const worldX = (startCenterX - touchRef.current.panX) / touchRef.current.zoom;
-      const worldY = (startCenterY - touchRef.current.panY) / touchRef.current.zoom;
+      const startScale = fitTransform.scale * touchRef.current.zoom;
+      const nextScale = fitTransform.scale * nextZoom;
+      if (startScale <= 0) return;
+      const worldX = (startCenterX - fitTransform.x - touchRef.current.panX) / startScale;
+      const worldY = (startCenterY - fitTransform.y - touchRef.current.panY) / startScale;
       setZoom(nextZoom);
       setPan({
-        x: currentCenterX - worldX * nextZoom,
-        y: currentCenterY - worldY * nextZoom,
+        x: currentCenterX - fitTransform.x - worldX * nextScale,
+        y: currentCenterY - fitTransform.y - worldY * nextScale,
       });
       return;
     }
@@ -932,6 +1005,15 @@ export default function FacilityFloorPlan() {
   };
 
   useEffect(() => {
+    const main = document.getElementById('main-content');
+    const previousOverflow = main?.style.overflow;
+    if (main) main.style.overflow = 'hidden';
+    return () => {
+      if (main) main.style.overflow = previousOverflow ?? '';
+    };
+  }, []);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target?.matches('input, textarea, select, [contenteditable="true"]')) return;
@@ -989,8 +1071,8 @@ export default function FacilityFloorPlan() {
         : '';
 
   return (
-    <div className={`flex min-h-full flex-col bg-background ${isFullscreen ? 'fixed inset-0 z-[100] h-screen' : ''}`}>
-      <div className="border-b bg-card px-4 py-3 md:px-6">
+    <div className={`flex h-full min-h-0 flex-col overflow-hidden bg-background ${isFullscreen ? 'fixed inset-0 z-[100] h-svh' : ''}`}>
+      <div className="shrink-0 border-b bg-card px-4 py-3 md:px-6">
         <div className="flex flex-wrap items-center gap-3">
           <div className="mr-auto">
             <div className="flex items-center gap-2">
@@ -1141,9 +1223,9 @@ export default function FacilityFloorPlan() {
         </div>
       </div>
 
-      <div className={`grid min-h-0 flex-1 grid-cols-1 ${editMode ? 'lg:grid-cols-[300px_minmax(0,1fr)]' : 'lg:grid-cols-1'}`}>
+      <div className={`grid min-h-0 flex-1 overflow-hidden grid-cols-1 ${editMode ? 'lg:grid-cols-[300px_minmax(0,1fr)]' : 'lg:grid-cols-1'}`}>
         {editMode && (
-          <aside className="border-r bg-card p-3">
+          <aside className="min-h-0 overflow-y-auto overscroll-contain border-r bg-card p-3">
             <div className="mb-2 text-xs font-semibold">{t('facilityMap.location')}</div>
             <div className="mb-4 grid grid-cols-2 gap-2">
               <select
@@ -1389,7 +1471,7 @@ export default function FacilityFloorPlan() {
           </aside>
         )}
 
-        <section className="relative min-h-[640px] overflow-hidden bg-slate-950">
+        <section className="relative h-full min-h-0 min-w-0 overflow-hidden bg-slate-950">
           <div className="absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 items-center gap-1 rounded-lg border border-white/10 bg-black/65 p-1 backdrop-blur md:flex">
             {DEMO_FLOORS.map((floor) => (
               <button
@@ -1683,15 +1765,19 @@ export default function FacilityFloorPlan() {
             style={{ touchAction: 'none' }}
           >
             <div
-              className="absolute inset-0 origin-top-left"
-              style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
+              className="absolute origin-top-left"
+              style={{
+                width: `${plan.canvasWidth}px`,
+                height: `${plan.canvasHeight}px`,
+                transform: `translate(${fitTransform.x + pan.x}px, ${fitTransform.y + pan.y}px) scale(${effectiveScale})`,
+              }}
             >
               {plan.imageDataUrl ? (
                 <img
                   src={plan.imageDataUrl}
                   alt={plan.name}
                   draggable={false}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full object-fill"
                 />
               ) : (
                 <DemoBlueprint t={t} />
@@ -1946,7 +2032,7 @@ export default function FacilityFloorPlan() {
                     }}
                     title={item?.name ?? pin.equipmentId}
                   >
-                    <div style={{ transform: `scale(${1 / zoom})`, transformOrigin: 'center' }}>
+                    <div style={{ transform: `scale(${1 / Math.max(effectiveScale, 0.0001)})`, transformOrigin: 'center' }}>
                       <div
                         className={`flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-slate-950 shadow-xl ${
                           selected ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950' : ''
@@ -1986,7 +2072,7 @@ export default function FacilityFloorPlan() {
                     }}
                     title={meta ? t(meta.labelKey) : undefined}
                   >
-                    <div style={{ transform: `scale(${1 / zoom})`, transformOrigin: 'center' }}>
+                    <div style={{ transform: `scale(${1 / Math.max(effectiveScale, 0.0001)})`, transformOrigin: 'center' }}>
                       <div
                         className={`flex h-9 min-w-9 items-center justify-center rounded-full border-[3px] border-slate-950 px-2 text-base shadow-xl ${
                           selected ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950' : ''
