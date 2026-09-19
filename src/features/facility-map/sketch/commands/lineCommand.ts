@@ -88,13 +88,18 @@ export const getLineDynamicLength = (
   modelUnitsToDisplay(distance(start, current), document)
     .toFixed(unitPrecision(document.displayUnit));
 
+export const getLineDynamicAngle = (
+  start: SketchPoint,
+  current: SketchPoint,
+): string => angleDeg(start, current).toFixed(1);
+
 export const getLineDynamicValues = (
   start: SketchPoint,
   current: SketchPoint,
   document: LineDocumentUnits,
 ): { length: string; angle: string } => ({
   length: getLineDynamicLength(start, current, document),
-  angle: angleDeg(start, current).toFixed(1),
+  angle: getLineDynamicAngle(start, current),
 });
 
 export const resolveLinePreviewEnd = (

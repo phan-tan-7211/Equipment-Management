@@ -51,8 +51,8 @@ import {
 } from '@/features/facility-map/sketch/core/geometry';
 import {
   commitLineDraft,
+  getLineDynamicAngle,
   getLineDynamicLength,
-  getLineDynamicValues,
   resolveLinePreviewEnd,
   startLineDraft,
   updateLineDraft,
@@ -278,9 +278,8 @@ export default function InventorSketchOverlay({
   const updateDynamicFromPointer = (next: Point) => {
     if (!draft) return;
     if (draft.type === 'line') {
-      const values = getLineDynamicValues(draft.start, next, store);
       if (!dynamicLocks.a) setDynamicA(getLineDynamicLength(draft.start, next, store));
-      if (!dynamicLocks.b) setDynamicB(values.angle);
+      if (!dynamicLocks.b) setDynamicB(getLineDynamicAngle(draft.start, next));
     } else if (draft.type === 'rect') {
       if (!dynamicLocks.a) setDynamicA(modelUnitsToDisplay(Math.abs(next.x - draft.start.x), store).toFixed(unitPrecision(store.displayUnit)));
       if (!dynamicLocks.b) setDynamicB(modelUnitsToDisplay(Math.abs(next.y - draft.start.y), store).toFixed(unitPrecision(store.displayUnit)));

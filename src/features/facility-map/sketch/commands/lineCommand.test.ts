@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   commitLineDraft,
   createLineEntity,
+  getLineDynamicAngle,
   getLineDynamicLength,
   getLineDynamicValues,
   resolveLinePreviewEnd,
@@ -57,6 +58,12 @@ describe('line command', () => {
         { displayUnit: 'm', mmPerUnit: 10 },
       ),
     ).toBe('5.000');
+  });
+
+  it('formats dynamic line angle from the current pointer direction', () => {
+    expect(getLineDynamicAngle({ x: 0, y: 0 }, { x: 10, y: 0 })).toBe('0.0');
+    expect(getLineDynamicAngle({ x: 0, y: 0 }, { x: 0, y: 10 })).toBe('90.0');
+    expect(getLineDynamicAngle({ x: 0, y: 0 }, { x: -10, y: 0 })).toBe('180.0');
   });
 
   it('reports dynamic length and angle from the current pointer', () => {
