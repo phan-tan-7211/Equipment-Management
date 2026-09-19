@@ -356,14 +356,16 @@ export default function FacilityFloorPlan() {
   const { t } = useI18n();
   const [plan, setPlan] = useState<FloorPlanState>(() => {
     try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return ensurePlanShape(JSON.parse(raw) as Partial<FloorPlanState>);
+
       const cacheRaw = localStorage.getItem(PLAN_CACHE_KEY);
       if (cacheRaw) {
         const cache = JSON.parse(cacheRaw) as Record<string, Partial<FloorPlanState>>;
         const cached = cache[planKey('Main Building', 'Floor 1')];
         if (cached) return ensurePlanShape(cached);
       }
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? ensurePlanShape(JSON.parse(raw) as Partial<FloorPlanState>) : EMPTY_PLAN;
+      return EMPTY_PLAN;
     } catch {
       return EMPTY_PLAN;
     }
@@ -856,10 +858,19 @@ export default function FacilityFloorPlan() {
       const nextZoom = Math.max(0.5, Math.min(3, touchRef.current.zoom * (Math.hypot(dx, dy) / touchRef.current.distance)));
       const centerX = (a.clientX + b.clientX) / 2;
       const centerY = (a.clientY + b.clientY) / 2;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const startCenterX = touchRef.current.centerX - rect.left;
+      const startCenterY = touchRef.current.centerY - rect.top;
+      const currentCenterX = centerX - rect.left;
+      const currentCenterY = centerY - rect.top;
+      const worldX = (startCenterX - touchRef.current.panX) / touchRef.current.zoom;
+      const worldY = (startCenterY - touchRef.current.panY) / touchRef.current.zoom;
       setZoom(nextZoom);
       setPan({
-        x: touchRef.current.panX + (centerX - touchRef.current.centerX),
-        y: touchRef.current.panY + (centerY - touchRef.current.centerY),
+        x: currentCenterX - worldX * nextZoom,
+        y: currentCenterY - worldY * nextZoom,
       });
       return;
     }
@@ -1410,7 +1421,7 @@ export default function FacilityFloorPlan() {
           </div>
 
           {showLegend && (
-            <div className="absolute bottom-20 right-3 z-25 w-56 rounded-xl border border-white/10 bg-slate-950/85 p-3 text-white shadow-xl backdrop-blur">
+            <div className="absolute bottom-20 right-3 z-[25] w-56 rounded-xl border border-white/10 bg-slate-950/85 p-3 text-white shadow-xl backdrop-blur">
               <div className="mb-2 text-xs font-semibold">{t('facilityMap.legend')}</div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px]">
                 {[
@@ -1701,7 +1712,7 @@ export default function FacilityFloorPlan() {
                 className="absolute inset-0 h-full w-full"
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
-                style={{ pointerEvents: drawTool === 'erase' || drawTool === 'select' ? 'auto' : 'none' }}
+                style={{ pointerEvents: 'none' }}
               >
                 <defs>
                   <marker id="facility-arrow-head" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
