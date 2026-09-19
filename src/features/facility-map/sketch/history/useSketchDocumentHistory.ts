@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { cloneSketchDocument } from '../core/document';
+import { cloneSketchDocument, touchSketchDocument } from '../core/document';
 import type { SketchDocument } from '../core/types';
 import {
   beginSketchHistoryTransaction,
@@ -48,7 +48,7 @@ export function useSketchDocumentHistory(storageKey: string) {
 
   const commit = useCallback((updater: DocumentUpdater) => {
     setHistory((current) => {
-      const next = resolveUpdater(current.present, updater);
+      const next = touchSketchDocument(resolveUpdater(current.present, updater));
       return commitSketchHistory(current, next, cloneSketchDocument);
     });
   }, []);
@@ -68,7 +68,10 @@ export function useSketchDocumentHistory(storageKey: string) {
 
   const commitTransaction = useCallback(() => {
     setHistory((current) =>
-      commitSketchHistoryTransaction(current, cloneSketchDocument),
+      commitSketchHistoryTransaction(
+        { ...current, present: touchSketchDocument(current.present) },
+        cloneSketchDocument,
+      ),
     );
   }, []);
 
