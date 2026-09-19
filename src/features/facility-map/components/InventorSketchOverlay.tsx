@@ -131,6 +131,10 @@ import {
   type ModifyPreview,
 } from '@/features/facility-map/sketch/modify/trimExtend';
 import {
+  breakLineAtPoint,
+  createOffsetEntity,
+} from '@/features/facility-map/sketch/modify/breakOffset';
+import {
   commitLineDraft,
   getLineDynamicAngle,
   getLineDynamicLength,
@@ -797,6 +801,63 @@ export default function InventorSketchOverlay({
     if (!point) return;
     event.stopPropagation();
 
+    if (tool === 'break') {
+      if (entity.type !== 'line') {
+        setMessage('Break supports Line only.');
+        return;
+      }
+      const nextEntities = breakLineAtPoint(
+        store.entities,
+        entity,
+        point,
+        () => createSketchId('sketch-line'),
+      );
+      if (!nextEntities) {
+        setMessage('Choose a point inside the line, not an endpoint.');
+        return;
+      }
+      setStore((current) => ({
+        ...current,
+        entities: nextEntities,
+      }));
+      setMessage('Break applied.');
+      return;
+    }
+
+    if (tool === 'offset') {
+      const rawDistance = window.prompt(
+        `Offset distance (${store.displayUnit})`,
+        '10',
+      );
+      if (rawDistance == null) return;
+      const displayDistance = Number(rawDistance);
+      if (!Number.isFinite(displayDistance) || displayDistance <= 0) {
+        setMessage('Offset distance must be greater than 0.');
+        return;
+      }
+      const modelDistance = displayToModelUnits(
+        displayDistance,
+        store,
+      );
+      const offset = createOffsetEntity(
+        entity,
+        modelDistance,
+        point,
+        createSketchId(`sketch-${entity.type}`),
+      );
+      if (!offset) {
+        setMessage('Offset supports Line and Polyline only.');
+        return;
+      }
+      setStore((current) => ({
+        ...current,
+        entities: [...current.entities, offset],
+      }));
+      setSelectedIds([offset.id]);
+      setMessage('Offset applied.');
+      return;
+    }
+
     if (tool === 'trim' || tool === 'extend') {
       const mode = effectiveModifyMode(tool, event.shiftKey);
       const nextEntities =
@@ -1043,7 +1104,18 @@ export default function InventorSketchOverlay({
             strokeWidth: selected ? entity.lineWidth + 0.8 : entity.lineWidth,
             vectorEffect: 'non-scaling-stroke' as const,
             fill: 'none',
-            style: { cursor: enabled && tool === 'select' ? 'move' : enabled && (tool === 'trim' || tool === 'extend') ? 'crosshair' : 'default' },
+            style: {
+              cursor:
+                enabled && tool === 'select'
+                  ? 'move'
+                  : enabled &&
+                      (tool === 'trim' ||
+                        tool === 'extend' ||
+                        tool === 'break' ||
+                        tool === 'offset')
+                    ? 'crosshair'
+                    : 'default',
+            },
             pointerEvents: enabled ? ('all' as const) : ('none' as const),
             onMouseDown: (event: React.MouseEvent<SVGElement>) => handleEntityMouseDown(event, entity),
             onMouseMove: (event: React.MouseEvent<SVGElement>) => {
@@ -1371,6 +1443,8 @@ export default function InventorSketchOverlay({
               ['circle', CircleIcon, 'facilityMap.toolCircle'],
               ['trim', Scissors, 'facilityMap.sketchTrim'],
               ['extend', ArrowUpRight, 'facilityMap.sketchExtend'],
+              ['break', Scissors, 'Break'],
+              ['offset', Minus, 'Offset'],
             ] as const).map(([id, Icon, label]) => (
               <button
                 key={id}
@@ -1750,7 +1824,11 @@ export default function InventorSketchOverlay({
             <div className="mt-3 rounded-md bg-white/5 p-2 text-[10px] text-slate-400">
               {tool === 'trim' || tool === 'extend'
                 ? t('facilityMap.sketchTrimExtendHint')
-                : t('facilityMap.sketchDimensionHint')}
+                : tool === 'break'
+                  ? 'Click a line to split it at the clicked position.'
+                  : tool === 'offset'
+                    ? 'Click a line/polyline, then enter offset distance.'
+                    : t('facilityMap.sketchDimensionHint')}
             </div>
             {message && <div className="mt-2 text-[10px] text-amber-300">{message}</div>}
           </div>
