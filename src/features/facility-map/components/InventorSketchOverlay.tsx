@@ -59,12 +59,18 @@ import {
   updateLineDraft,
   type LineDraft,
 } from '@/features/facility-map/sketch/commands/lineCommand';
+import {
+  createRectangleEntity,
+  startRectangleDraft,
+  updateRectangleDraft,
+  type RectangleDraft,
+} from '@/features/facility-map/sketch/commands/rectangleCommand';
 
 type ToolPresetMap = Record<'line' | 'rect' | 'circle', SketchStyle>;
 
 type Draft =
   | LineDraft
-  | { type: 'rect'; start: Point; current: Point }
+  | RectangleDraft
   | { type: 'circle'; start: Point; current: Point }
   | null;
 
@@ -342,22 +348,16 @@ export default function InventorSketchOverlay({
       const fallbackH = Math.abs(currentPoint.y - draft.start.y);
       const width = clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackW);
       const height = clampPositive(displayToModelUnits(Number(dynamicB), store), fallbackH);
-      const signX = currentPoint.x >= draft.start.x ? 1 : -1;
-      const signY = currentPoint.y >= draft.start.y ? 1 : -1;
+      const rect = createRectangleEntity({
+        draft,
+        current: currentPoint,
+        width,
+        height,
+        style,
+      });
       setStore((current) => ({
         ...current,
-        entities: [
-          ...current.entities,
-          {
-            id: createSketchId('sketch-rect'),
-            type: 'rect',
-            x: signX > 0 ? draft.start.x : draft.start.x - width,
-            y: signY > 0 ? draft.start.y : draft.start.y - height,
-            w: width,
-            h: height,
-            ...style,
-          },
-        ],
+        entities: [...current.entities, rect],
       }));
     } else {
       const fallbackRadius = distance(draft.start, currentPoint);
@@ -578,10 +578,22 @@ export default function InventorSketchOverlay({
       return;
     }
 
-    if (tool === 'rect' || tool === 'circle') {
+    if (tool === 'rect') {
       event.stopPropagation();
       if (!draft) {
-        setDraft({ type: tool, start: point, current: point });
+        setDraft(startRectangleDraft(point));
+        setCommandState((current) => beginSketchInteraction(current, 'creating'));
+        resetDynamic();
+        return;
+      }
+      commitDraft(point);
+      return;
+    }
+
+    if (tool === 'circle') {
+      event.stopPropagation();
+      if (!draft) {
+        setDraft({ type: 'circle', start: point, current: point });
         setCommandState((current) => beginSketchInteraction(current, 'creating'));
         resetDynamic();
         return;
@@ -618,7 +630,9 @@ export default function InventorSketchOverlay({
       setDraft(
         draft.type === 'line'
           ? updateLineDraft(draft, next)
-          : ({ ...draft, current: next } as Draft),
+          : draft.type === 'rect'
+            ? updateRectangleDraft(draft, next)
+            : ({ ...draft, current: next } as Draft),
       );
       updateDynamicFromPointer(next);
     }
