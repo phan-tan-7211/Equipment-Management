@@ -52,6 +52,9 @@ import {
   findArcCenterSnap,
 } from '@/features/facility-map/sketch/snapping/arcCenterSnap';
 import {
+  findLineLineIntersectionSnap,
+} from '@/features/facility-map/sketch/snapping/lineIntersectionSnap';
+import {
   angleDeg,
   arcPoint,
   clampPositive,
@@ -262,7 +265,18 @@ export default function InventorSketchOverlay({
       store.entities,
       threshold,
     );
-    const candidates = [endpoint, midpoint, circleCenter, arcCenter].filter(
+    const lineIntersection = findLineLineIntersectionSnap(
+      point,
+      store.entities,
+      threshold,
+    );
+    const candidates = [
+      endpoint,
+      midpoint,
+      circleCenter,
+      arcCenter,
+      lineIntersection,
+    ].filter(
       (candidate): candidate is NonNullable<typeof candidate> =>
         candidate !== null,
     );
