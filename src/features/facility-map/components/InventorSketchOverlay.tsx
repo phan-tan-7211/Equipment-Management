@@ -93,8 +93,12 @@ import {
   updateArcDraft,
   type ArcDraft,
 } from '@/features/facility-map/sketch/commands/arcCommand';
-
-type ToolPresetMap = Record<'line' | 'rect' | 'circle', SketchStyle>;
+import {
+  parseToolPresets,
+  TOOL_PRESET_STORAGE_KEY,
+  updateToolPreset,
+  type ToolPresetMap,
+} from '@/features/facility-map/sketch/persistence/toolPresets';
 
 type Draft =
   | LineDraft
@@ -116,29 +120,6 @@ type Props = {
   canvasHeight: number;
   t: (key: string, params?: Record<string, unknown>) => string;
   onExit: () => void;
-};
-
-const PRESET_KEY = 'znteqr:facility-sketch:presets:v1';
-
-const DEFAULT_PRESETS: ToolPresetMap = {
-  line: { color: '#2563eb', lineWidth: 1.5 },
-  rect: { color: '#7c3aed', lineWidth: 1.5 },
-  circle: { color: '#0891b2', lineWidth: 1.5 },
-};
-
-const readPresets = (): ToolPresetMap => {
-  try {
-    const raw = localStorage.getItem(PRESET_KEY);
-    if (!raw) return DEFAULT_PRESETS;
-    const parsed = JSON.parse(raw) as Partial<ToolPresetMap>;
-    return {
-      line: { ...DEFAULT_PRESETS.line, ...(parsed.line ?? {}) },
-      rect: { ...DEFAULT_PRESETS.rect, ...(parsed.rect ?? {}) },
-      circle: { ...DEFAULT_PRESETS.circle, ...(parsed.circle ?? {}) },
-    };
-  } catch {
-    return DEFAULT_PRESETS;
-  }
 };
 
 const entitySnapPoints = (entity: SketchEntity): Point[] => {
@@ -181,7 +162,9 @@ export default function InventorSketchOverlay({
   const setTool = useCallback((nextTool: SketchTool) => {
     setCommandState((current) => selectSketchTool(current, nextTool));
   }, []);
-  const [presets, setPresets] = useState<ToolPresetMap>(() => readPresets());
+  const [presets, setPresets] = useState<ToolPresetMap>(() =>
+    parseToolPresets(localStorage.getItem(TOOL_PRESET_STORAGE_KEY)),
+  );
   const [selectedId, setSelectedId] = useState('');
   const [draft, setDraft] = useState<Draft>(null);
   const [pointer, setPointer] = useState<Point>({ x: 0, y: 0 });
@@ -200,7 +183,7 @@ export default function InventorSketchOverlay({
   }, [storageKey]);
 
   useEffect(() => {
-    localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
+    localStorage.setItem(TOOL_PRESET_STORAGE_KEY, JSON.stringify(presets));
   }, [presets]);
 
   useEffect(() => {
@@ -250,7 +233,15 @@ export default function InventorSketchOverlay({
   }, [enabled, selectedId, sketchHistory]);
 
   const currentStyle = useMemo(() => {
-    if (tool === 'rect' || tool === 'circle') return presets[tool];
+    if (
+      tool === 'line' ||
+      tool === 'polyline' ||
+      tool === 'rect' ||
+      tool === 'circle' ||
+      tool === 'arc'
+    ) {
+      return presets[tool];
+    }
     return presets.line;
   }, [presets, tool]);
 
@@ -299,14 +290,16 @@ export default function InventorSketchOverlay({
   }, [endpointSnap]);
 
   const updatePreset = (patch: Partial<SketchStyle>) => {
-    if (tool !== 'line' && tool !== 'polyline' && tool !== 'arc' && tool !== 'rect' && tool !== 'circle') return;
-    setPresets((current) => ({
-      ...current,
-      [tool === 'polyline' || tool === 'arc' ? 'line' : tool]: {
-        ...current[tool === 'polyline' || tool === 'arc' ? 'line' : tool],
-        ...patch,
-      },
-    }));
+    if (
+      tool !== 'line' &&
+      tool !== 'polyline' &&
+      tool !== 'arc' &&
+      tool !== 'rect' &&
+      tool !== 'circle'
+    ) {
+      return;
+    }
+    setPresets((current) => updateToolPreset(current, tool, patch));
   };
 
   const resetDynamic = () => {
@@ -375,7 +368,7 @@ export default function InventorSketchOverlay({
   const commitPolyline = (polylineDraft: PolylineDraft) => {
     const entity = createPolylineEntity({
       draft: polylineDraft,
-      style: presets.line,
+      style: presets.polyline,
     });
     if (!entity) return false;
 
@@ -407,12 +400,12 @@ export default function InventorSketchOverlay({
 
     window.addEventListener('keydown', onPolylineKeyDown);
     return () => window.removeEventListener('keydown', onPolylineKeyDown);
-  }, [draft, enabled, presets.line, setStore]);
+  }, [draft, enabled, presets.polyline, setStore]);
 
   const commitArc = (arcDraft: ArcDraft) => {
     const entity = createArcEntity({
       draft: arcDraft,
-      style: presets.line,
+      style: presets.arc,
     });
     if (!entity) return false;
 
@@ -1015,8 +1008,8 @@ export default function InventorSketchOverlay({
               ...draftPreview.points,
               draftPreview.current,
             ].map((point) => `${point.x},${point.y}`).join(' ')}
-            stroke={presets.line.color}
-            strokeWidth={presets.line.lineWidth}
+            stroke={presets.polyline.color}
+            strokeWidth={presets.polyline.lineWidth}
             strokeDasharray="6 4"
             fill="none"
             vectorEffect="non-scaling-stroke"
@@ -1028,8 +1021,8 @@ export default function InventorSketchOverlay({
             y1={draftPreview.center.y}
             x2={draftPreview.current.x}
             y2={draftPreview.current.y}
-            stroke={presets.line.color}
-            strokeWidth={presets.line.lineWidth}
+            stroke={presets.arc.color}
+            strokeWidth={presets.arc.lineWidth}
             strokeDasharray="6 4"
             vectorEffect="non-scaling-stroke"
           />
@@ -1048,8 +1041,8 @@ export default function InventorSketchOverlay({
           return (
             <path
               d={`M ${startPoint.x} ${startPoint.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endPoint.x} ${endPoint.y}`}
-              stroke={presets.line.color}
-              strokeWidth={presets.line.lineWidth}
+              stroke={presets.arc.color}
+              strokeWidth={presets.arc.lineWidth}
               strokeDasharray="6 4"
               fill="none"
               vectorEffect="non-scaling-stroke"
