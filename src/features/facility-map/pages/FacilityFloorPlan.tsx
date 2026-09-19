@@ -12,6 +12,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
+import { useI18n } from '@/i18n';
 
 type EquipmentRow = {
   id: string;
@@ -73,24 +74,24 @@ type FloorPlanState = {
 
 const STORAGE_KEY = 'znteqr:facility-floor-plan:dryrun:v2';
 
-const LAYERS: Array<{ id: 'assets' | LayerId; label: string; color: string; emoji: string }> = [
-  { id: 'assets', label: 'Assets', color: '#10b981', emoji: '🔧' },
-  { id: 'fire', label: 'Fire', color: '#ef4444', emoji: '🔥' },
-  { id: 'tornado', label: 'Tornado', color: '#f59e0b', emoji: '🌪️' },
-  { id: 'flood', label: 'Flood', color: '#3b82f6', emoji: '💧' },
-  { id: 'emergency', label: 'Exits', color: '#22d3ee', emoji: '🚪' },
-  { id: 'utility', label: 'Utility', color: '#a78bfa', emoji: '⚡' },
+const LAYERS: Array<{ id: 'assets' | LayerId; labelKey: string; color: string; emoji: string }> = [
+  { id: 'assets', labelKey: 'facilityMap.assets', color: '#10b981', emoji: '🔧' },
+  { id: 'fire', labelKey: 'facilityMap.fire', color: '#ef4444', emoji: '🔥' },
+  { id: 'tornado', labelKey: 'facilityMap.tornado', color: '#f59e0b', emoji: '🌪️' },
+  { id: 'flood', labelKey: 'facilityMap.flood', color: '#3b82f6', emoji: '💧' },
+  { id: 'emergency', labelKey: 'facilityMap.exits', color: '#22d3ee', emoji: '🚪' },
+  { id: 'utility', labelKey: 'facilityMap.utility', color: '#a78bfa', emoji: '⚡' },
 ];
 
-const ZONES: Array<{ id: ZoneType; label: string; color: string; emoji: string }> = [
-  { id: 'production', label: 'Production', color: '#3b82f6', emoji: '🏭' },
-  { id: 'storage', label: 'Storage', color: '#8b5cf6', emoji: '📦' },
-  { id: 'utility', label: 'Utility', color: '#06b6d4', emoji: '⚡' },
-  { id: 'restricted', label: 'Restricted', color: '#ef4444', emoji: '⛔' },
-  { id: 'hazard', label: 'Hazard', color: '#f97316', emoji: '☢️' },
-  { id: 'emergency', label: 'Emergency', color: '#22c55e', emoji: '🚨' },
-  { id: 'office', label: 'Office', color: '#64748b', emoji: '🏢' },
-  { id: 'custom', label: 'Custom', color: '#a855f7', emoji: '📎' },
+const ZONES: Array<{ id: ZoneType; labelKey: string; color: string; emoji: string }> = [
+  { id: 'production', labelKey: 'facilityMap.production', color: '#3b82f6', emoji: '🏭' },
+  { id: 'storage', labelKey: 'facilityMap.storage', color: '#8b5cf6', emoji: '📦' },
+  { id: 'utility', labelKey: 'facilityMap.utility', color: '#06b6d4', emoji: '⚡' },
+  { id: 'restricted', labelKey: 'facilityMap.restricted', color: '#ef4444', emoji: '⛔' },
+  { id: 'hazard', labelKey: 'facilityMap.hazard', color: '#f97316', emoji: '☢️' },
+  { id: 'emergency', labelKey: 'facilityMap.emergency', color: '#22c55e', emoji: '🚨' },
+  { id: 'office', labelKey: 'facilityMap.office', color: '#64748b', emoji: '🏢' },
+  { id: 'custom', labelKey: 'facilityMap.custom', color: '#a855f7', emoji: '📎' },
 ];
 
 const statusColor = (status?: string | null) => {
@@ -145,13 +146,13 @@ const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
 const makeId = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-function DemoBlueprint() {
+function DemoBlueprint({ t }: { t: (key: string) => string }) {
   return (
     <svg
       viewBox="0 0 1200 760"
       className="h-full w-full"
       preserveAspectRatio="xMidYMid meet"
-      aria-label="Demo factory floor plan"
+      aria-label={t('facilityMap.demoPlanAria')}
     >
       <rect width="1200" height="760" fill="#f8fafc" />
       <g stroke="#94a3b8" strokeWidth="2" fill="none">
@@ -173,22 +174,23 @@ function DemoBlueprint() {
         <rect x="900" y="470" width="115" height="84" rx="6" />
       </g>
       <g fill="#334155" fontFamily="system-ui, sans-serif" fontWeight="700">
-        <text x="120" y="105" fontSize="20">LINE A · MACHINING</text>
-        <text x="575" y="105" fontSize="20">LINE B · PRESS / ASSEMBLY</text>
+        <text x="120" y="105" fontSize="20">{t('facilityMap.lineMachining')}</text>
+        <text x="575" y="105" fontSize="20">{t('facilityMap.linePressAssembly')}</text>
         <text x="120" y="400" fontSize="20">UTILITY</text>
-        <text x="440" y="400" fontSize="20">WAREHOUSE / QA</text>
+        <text x="440" y="400" fontSize="20">{t('facilityMap.warehouseQa')}</text>
       </g>
       <g fill="#64748b" fontFamily="system-ui, sans-serif" fontSize="14">
-        <text x="160" y="270">CNC / Milling</text>
-        <text x="625" y="270">Press / Assembly</text>
-        <text x="155" y="590">Compressor / Utility</text>
-        <text x="505" y="590">Storage / Inspection</text>
+        <text x="160" y="270">{t('facilityMap.cncMilling')}</text>
+        <text x="625" y="270">{t('facilityMap.pressAssembly')}</text>
+        <text x="155" y="590">{t('facilityMap.compressorUtility')}</text>
+        <text x="505" y="590">{t('facilityMap.storageInspection')}</text>
       </g>
     </svg>
   );
 }
 
 export default function FacilityFloorPlan() {
+  const { t } = useI18n();
   const [plan, setPlan] = useState<FloorPlanState>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -435,11 +437,11 @@ export default function FacilityFloorPlan() {
         : plan.overlayPins.filter((pin) => pin.layer === activeLayer);
 
   const placementHint = selectedEquipmentId
-    ? 'Click the plan to place the selected equipment'
+    ? t('facilityMap.clickPlaceEquipment')
     : placeLayer
-      ? `Click the plan to place ${layerById.get(placeLayer)?.label ?? placeLayer} markers`
+      ? t('facilityMap.clickPlaceMarker', { name: t(layerById.get(placeLayer)?.labelKey ?? 'facilityMap.utility') })
       : zoneTool
-        ? `Drag on the plan to draw a ${zoneById.get(zoneTool)?.label ?? zoneTool} zone`
+        ? t('facilityMap.dragDrawZone', { name: t(zoneById.get(zoneTool)?.labelKey ?? 'facilityMap.custom') })
         : '';
 
   return (
@@ -449,16 +451,16 @@ export default function FacilityFloorPlan() {
           <div className="mr-auto">
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-primary" />
-              <h1 className="text-lg font-semibold">Facility Floor Plan</h1>
+              <h1 className="text-lg font-semibold">{t('facilityMap.title')}</h1>
             </div>
             <p className="text-xs text-muted-foreground">
-              UI prototype only — Trier-style multi-layer floor plan. No Supabase/backend connection yet.
+              {t('facilityMap.subtitle')}
             </p>
           </div>
 
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-accent">
             <ImagePlus className="h-4 w-4" />
-            Upload plan
+            {t('facilityMap.uploadPlan')}
             <input
               className="hidden"
               type="file"
@@ -473,7 +475,7 @@ export default function FacilityFloorPlan() {
             onClick={() => savePlan(plan)}
           >
             <Save className="h-4 w-4" />
-            Save
+            {t('facilityMap.save')}
           </button>
         </div>
 
@@ -493,7 +495,7 @@ export default function FacilityFloorPlan() {
               className={`rounded-full border px-3 py-1.5 text-xs ${activeLayer === layer.id ? 'ring-2 ring-ring' : ''}`}
               style={{ borderColor: layer.color, color: layer.color }}
             >
-              {layer.emoji} {layer.label}
+              {layer.emoji} {t(layer.labelKey)}
             </button>
           ))}
         </div>
@@ -518,13 +520,13 @@ export default function FacilityFloorPlan() {
             />
           </div>
 
-          <div className="mb-2 text-xs font-semibold">Place equipment</div>
+          <div className="mb-2 text-xs font-semibold">{t('facilityMap.placeEquipment')}</div>
           <div className="relative mb-3">
             <Search className="pointer-events-none absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search equipment..."
+              placeholder={t('facilityMap.searchEquipment')}
               className="w-full rounded-md border bg-background py-2 pl-8 pr-2 text-sm"
             />
           </div>
@@ -555,7 +557,7 @@ export default function FacilityFloorPlan() {
           </div>
 
           <div className="mt-4 border-t pt-3">
-            <div className="mb-2 text-xs font-semibold">Safety / utility markers</div>
+            <div className="mb-2 text-xs font-semibold">{t('facilityMap.safetyUtilityMarkers')}</div>
             <div className="grid grid-cols-2 gap-1.5">
               {LAYERS.filter((layer) => layer.id !== 'assets').map((layer) => (
                 <button
@@ -578,7 +580,7 @@ export default function FacilityFloorPlan() {
           </div>
 
           <div className="mt-4 border-t pt-3">
-            <div className="mb-2 text-xs font-semibold">Draw zones</div>
+            <div className="mb-2 text-xs font-semibold">{t('facilityMap.drawZones')}</div>
             <div className="grid grid-cols-2 gap-1.5">
               {ZONES.map((zone) => (
                 <button
@@ -594,7 +596,7 @@ export default function FacilityFloorPlan() {
                   }`}
                   style={{ borderColor: zone.color, color: zone.color }}
                 >
-                  {zone.emoji} {zone.label}
+                  {zone.emoji} {t(zone.labelKey)}
                 </button>
               ))}
             </div>
@@ -614,7 +616,7 @@ export default function FacilityFloorPlan() {
               onClick={deleteSelected}
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Delete selected item
+              {t('facilityMap.deleteSelected')}
             </button>
           )}
         </aside>
@@ -626,25 +628,25 @@ export default function FacilityFloorPlan() {
             </div>
             <div className="rounded-md border border-white/10 bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
               <Layers3 className="mr-1 inline h-3.5 w-3.5" />
-              {plan.pins.length} assets · {plan.overlayPins.length} markers · {plan.zones.length} zones
+              {t('facilityMap.itemsSummary', { assets: plan.pins.length, markers: plan.overlayPins.length, zones: plan.zones.length })}
             </div>
           </div>
 
           <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-lg border border-white/10 bg-black/70 p-1.5 text-white backdrop-blur">
-            <button type="button" className="rounded p-2 hover:bg-white/10" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))} title="Zoom out">
+            <button type="button" className="rounded p-2 hover:bg-white/10" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))} title={t('facilityMap.zoomOut')}>
               <ZoomOut className="h-4 w-4" />
             </button>
             <span className="min-w-14 text-center text-xs">{Math.round(zoom * 100)}%</span>
-            <button type="button" className="rounded p-2 hover:bg-white/10" onClick={() => setZoom((z) => Math.min(3, z + 0.1))} title="Zoom in">
+            <button type="button" className="rounded p-2 hover:bg-white/10" onClick={() => setZoom((z) => Math.min(3, z + 0.1))} title={t('facilityMap.zoomIn')}>
               <ZoomIn className="h-4 w-4" />
             </button>
-            <button type="button" className="rounded p-2 hover:bg-white/10" onClick={resetView} title="Reset view">
+            <button type="button" className="rounded p-2 hover:bg-white/10" onClick={resetView} title={t('facilityMap.resetView')}>
               <RotateCcw className="h-4 w-4" />
             </button>
             <span className="mx-1 h-5 w-px bg-white/15" />
             <span className="flex items-center gap-1 px-2 text-[11px] text-white/70">
               <Move className="h-3.5 w-3.5" />
-              Shift + drag to pan
+              {t('facilityMap.shiftDragPan')}
             </span>
           </div>
 
@@ -675,7 +677,7 @@ export default function FacilityFloorPlan() {
                   className="h-full w-full object-contain"
                 />
               ) : (
-                <DemoBlueprint />
+                <DemoBlueprint t={t} />
               )}
 
               {plan.zones.map((zone) => {
@@ -700,13 +702,13 @@ export default function FacilityFloorPlan() {
                       event.stopPropagation();
                       setSelectedMarkerId(`zone:${zone.id}`);
                     }}
-                    title={meta?.label}
+                    title={meta ? t(meta.labelKey) : undefined}
                   >
                     <span
                       className="absolute left-1 top-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
                       style={{ backgroundColor: meta?.color }}
                     >
-                      {meta?.emoji} {meta?.label}
+                      {meta?.emoji} {meta ? t(meta.labelKey) : ''}
                     </span>
                   </button>
                 );
@@ -785,7 +787,7 @@ export default function FacilityFloorPlan() {
                       setDraggingOverlayId(pin.id);
                       setSelectedMarkerId(`overlay:${pin.id}`);
                     }}
-                    title={meta?.label}
+                    title={meta ? t(meta.labelKey) : undefined}
                   >
                     <div style={{ transform: `scale(${1 / zoom})`, transformOrigin: 'center' }}>
                       <div
