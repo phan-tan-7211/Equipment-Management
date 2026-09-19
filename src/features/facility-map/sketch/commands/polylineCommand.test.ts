@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   appendPolylinePoint,
   createPolylineEntity,
+  finishPolylineDraft,
   startPolylineDraft,
   updatePolylineDraft,
 } from '@/features/facility-map/sketch/commands/polylineCommand';
@@ -40,6 +41,29 @@ describe('polyline command', () => {
     ]);
     expect(updated.current).toEqual({ x: 5, y: 6 });
     expect(draft.points).toEqual([{ x: 1, y: 2 }]);
+  });
+
+  it('finishes after two or more committed vertices', () => {
+    const draft = appendPolylinePoint(
+      startPolylineDraft({ x: 0, y: 0 }),
+      { x: 10, y: 5 },
+    );
+
+    expect(finishPolylineDraft(draft)).toEqual(draft);
+    expect(finishPolylineDraft(startPolylineDraft({ x: 0, y: 0 }))).toBeNull();
+  });
+
+  it('drops duplicate terminal vertices produced by a double-click finish', () => {
+    const first = appendPolylinePoint(
+      startPolylineDraft({ x: 0, y: 0 }),
+      { x: 10, y: 5 },
+    );
+    const duplicated = appendPolylinePoint(first, { x: 10, y: 5 });
+
+    expect(finishPolylineDraft(duplicated)?.points).toEqual([
+      { x: 0, y: 0 },
+      { x: 10, y: 5 },
+    ]);
   });
 
   it('does not create an entity until at least two vertices exist', () => {

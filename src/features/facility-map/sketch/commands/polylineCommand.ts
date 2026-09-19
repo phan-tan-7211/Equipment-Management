@@ -34,6 +34,29 @@ export const appendPolylinePoint = (
   current: { ...point },
 });
 
+export const finishPolylineDraft = (
+  draft: PolylineDraft,
+): PolylineDraft | null => {
+  if (draft.points.length < 2) return null;
+
+  const points = draft.points.map((point) => ({ ...point }));
+  while (
+    points.length > 2 &&
+    points[points.length - 1].x === points[points.length - 2].x &&
+    points[points.length - 1].y === points[points.length - 2].y
+  ) {
+    points.pop();
+  }
+
+  if (points.length < 2) return null;
+
+  return {
+    ...draft,
+    points,
+    current: { ...points[points.length - 1] },
+  };
+};
+
 export type CreatePolylineEntityInput = {
   draft: PolylineDraft;
   style: SketchStyle;
