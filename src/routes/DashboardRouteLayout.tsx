@@ -93,17 +93,21 @@ export const DashboardRouteLayout = () => {
                             <main
                               id="main-content"
                               tabIndex={-1}
-                              className="flex-1 min-h-0 min-w-0 overflow-auto pb-16 md:pb-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                              className={`flex-1 min-h-0 min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                                isFacilityMap ? 'overflow-hidden p-0' : 'overflow-auto pb-16 md:pb-0'
+                              }`}
                             >
                               <Suspense fallback={<PageSkeleton />}>
                                 <Routes>{dashboardRouteElements}</Routes>
                               </Suspense>
                             </main>
-                            <LegalFooter />
+                            {!isFacilityMap && <LegalFooter />}
                           </SidebarInset>
-                          <Suspense fallback={null}>
-                            <BottomNav />
-                          </Suspense>
+                          {!isFacilityMap && (
+                            <Suspense fallback={null}>
+                              <BottomNav />
+                            </Suspense>
+                          )}
                         </div>
                       </BugReportProvider>
                     </SidebarProvider>
