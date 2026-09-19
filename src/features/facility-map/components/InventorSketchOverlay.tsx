@@ -185,7 +185,6 @@ export default function InventorSketchOverlay({
     parseToolPresets(localStorage.getItem(TOOL_PRESET_STORAGE_KEY)),
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const selectedId = selectedIds[0] ?? '';
   const [activeSnap, setActiveSnap] = useState<SnapCandidate | null>(null);
   const [selectionBox, setSelectionBox] = useState<{ start: Point; current: Point } | null>(null);
   const [draft, setDraft] = useState<Draft>(null);
