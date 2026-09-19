@@ -420,8 +420,14 @@ export default function FacilityFloorPlan() {
     centerY: number;
   } | null>(null);
   const canvasRef = useRef<HTMLDivElement | null>(null);
+  const viewportTransitionRef = useRef<{
+    stagePageX: number;
+    stagePageY: number;
+    scale: number;
+  } | null>(null);
 
   const recalculateFit = useCallback(() => {
+    if (viewportTransitionRef.current) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -996,6 +1002,18 @@ export default function FacilityFloorPlan() {
   };
 
   const switchMode = (nextEditMode: boolean) => {
+    if (nextEditMode === editMode) return;
+
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const rect = canvas.getBoundingClientRect();
+      viewportTransitionRef.current = {
+        stagePageX: rect.left + fitTransform.x + pan.x,
+        stagePageY: rect.top + fitTransform.y + pan.y,
+        scale: effectiveScale,
+      };
+    }
+
     setEditMode(nextEditMode);
     if (!nextEditMode) setMobilePanelOpen(false);
     setSelectedEquipmentId('');
@@ -1004,6 +1022,46 @@ export default function FacilityFloorPlan() {
     setZoneStart(null);
     setDraftZone(null);
     setDrawTool('select');
+
+    // Wait until the sidebar/grid layout has fully changed, then rebuild the
+    // base fit transform while preserving the exact on-screen drawing camera.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const snapshot = viewportTransitionRef.current;
+        const nextCanvas = canvasRef.current;
+        if (!snapshot || !nextCanvas) {
+          viewportTransitionRef.current = null;
+          recalculateFit();
+          return;
+        }
+
+        const rect = nextCanvas.getBoundingClientRect();
+        const horizontalPadding = 32;
+        const verticalPadding = 32;
+        const availableWidth = Math.max(1, rect.width - horizontalPadding * 2);
+        const availableHeight = Math.max(1, rect.height - verticalPadding * 2);
+        const nextFitScale = Math.min(
+          availableWidth / Math.max(1, plan.canvasWidth),
+          availableHeight / Math.max(1, plan.canvasHeight),
+        );
+        const renderedWidth = plan.canvasWidth * nextFitScale;
+        const renderedHeight = plan.canvasHeight * nextFitScale;
+        const nextFit = {
+          scale: nextFitScale,
+          x: (rect.width - renderedWidth) / 2,
+          y: (rect.height - renderedHeight) / 2,
+        };
+
+        const nextZoom = Math.max(0.25, Math.min(6, snapshot.scale / Math.max(nextFit.scale, 0.0001)));
+        setFitTransform(nextFit);
+        setZoom(nextZoom);
+        setPan({
+          x: snapshot.stagePageX - rect.left - nextFit.x,
+          y: snapshot.stagePageY - rect.top - nextFit.y,
+        });
+        viewportTransitionRef.current = null;
+      });
+    });
   };
 
   useEffect(() => {
