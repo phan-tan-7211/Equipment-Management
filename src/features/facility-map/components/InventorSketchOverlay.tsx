@@ -58,6 +58,9 @@ import {
   findPolylineIntersectionSnap,
 } from '@/features/facility-map/sketch/snapping/polylineIntersectionSnap';
 import {
+  findNearestSnap,
+} from '@/features/facility-map/sketch/snapping/nearestSnap';
+import {
   angleDeg,
   arcPoint,
   clampPositive,
@@ -278,6 +281,11 @@ export default function InventorSketchOverlay({
       store.entities,
       threshold,
     );
+    const nearest = findNearestSnap(
+      point,
+      store.entities,
+      threshold,
+    );
     const candidates = [
       endpoint,
       midpoint,
@@ -285,6 +293,7 @@ export default function InventorSketchOverlay({
       arcCenter,
       lineIntersection,
       polylineIntersection,
+      nearest,
     ].filter(
       (candidate): candidate is NonNullable<typeof candidate> =>
         candidate !== null,
