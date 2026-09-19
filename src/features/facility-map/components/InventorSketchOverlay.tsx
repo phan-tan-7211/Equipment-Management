@@ -86,6 +86,13 @@ import {
   updatePolylineDraft,
   type PolylineDraft,
 } from '@/features/facility-map/sketch/commands/polylineCommand';
+import {
+  createArcEntity,
+  setArcStartPoint,
+  startArcDraft,
+  updateArcDraft,
+  type ArcDraft,
+} from '@/features/facility-map/sketch/commands/arcCommand';
 
 type ToolPresetMap = Record<'line' | 'rect' | 'circle', SketchStyle>;
 
@@ -94,6 +101,7 @@ type Draft =
   | RectangleDraft
   | CircleDraft
   | PolylineDraft
+  | ArcDraft
   | null;
 
 type DynamicLocks = {
@@ -291,11 +299,11 @@ export default function InventorSketchOverlay({
   }, [endpointSnap]);
 
   const updatePreset = (patch: Partial<SketchStyle>) => {
-    if (tool !== 'line' && tool !== 'polyline' && tool !== 'rect' && tool !== 'circle') return;
+    if (tool !== 'line' && tool !== 'polyline' && tool !== 'arc' && tool !== 'rect' && tool !== 'circle') return;
     setPresets((current) => ({
       ...current,
-      [tool === 'polyline' ? 'line' : tool]: {
-        ...current[tool === 'polyline' ? 'line' : tool],
+      [tool === 'polyline' || tool === 'arc' ? 'line' : tool]: {
+        ...current[tool === 'polyline' || tool === 'arc' ? 'line' : tool],
         ...patch,
       },
     }));
@@ -401,8 +409,23 @@ export default function InventorSketchOverlay({
     return () => window.removeEventListener('keydown', onPolylineKeyDown);
   }, [draft, enabled, presets.line, setStore]);
 
+  const commitArc = (arcDraft: ArcDraft) => {
+    const entity = createArcEntity({
+      draft: arcDraft,
+      style: presets.line,
+    });
+    if (!entity) return false;
+
+    setStore((current) => ({
+      ...current,
+      entities: [...current.entities, entity],
+    }));
+    finishCreateInteraction();
+    return true;
+  };
+
   const commitDraft = (currentPoint: Point) => {
-    if (!draft || draft.type === 'line' || draft.type === 'polyline') return;
+    if (!draft || draft.type === 'line' || draft.type === 'polyline' || draft.type === 'arc') return;
     const style = draft.type === 'rect' ? presets.rect : presets.circle;
 
     if (draft.type === 'rect') {
@@ -656,6 +679,24 @@ export default function InventorSketchOverlay({
       return;
     }
 
+    if (tool === 'arc') {
+      event.stopPropagation();
+      if (!draft) {
+        setDraft(startArcDraft(point));
+        setCommandState((current) => beginSketchInteraction(current, 'creating'));
+        resetDynamic();
+        return;
+      }
+      if (draft.type === 'arc') {
+        if (!draft.start) {
+          setDraft(setArcStartPoint(draft, point));
+          return;
+        }
+        commitArc(updateArcDraft(draft, point));
+      }
+      return;
+    }
+
     if (tool === 'rect') {
       event.stopPropagation();
       if (!draft) {
@@ -712,7 +753,9 @@ export default function InventorSketchOverlay({
             ? updateRectangleDraft(draft, next)
             : draft.type === 'circle'
               ? updateCircleDraft(draft, next)
-              : updatePolylineDraft(draft, next),
+              : draft.type === 'polyline'
+                ? updatePolylineDraft(draft, next)
+                : updateArcDraft(draft, next),
       );
       updateDynamicFromPointer(next);
     }
@@ -776,7 +819,7 @@ export default function InventorSketchOverlay({
         current: { x: draft.start.x + signX * width, y: draft.start.y + signY * height },
       };
     }
-    if (draft.type === 'polyline') {
+    if (draft.type === 'polyline' || draft.type === 'arc') {
       return draft;
     }
     return {
@@ -979,6 +1022,40 @@ export default function InventorSketchOverlay({
             vectorEffect="non-scaling-stroke"
           />
         )}
+        {draftPreview?.type === 'arc' && !draftPreview.start && (
+          <line
+            x1={draftPreview.center.x}
+            y1={draftPreview.center.y}
+            x2={draftPreview.current.x}
+            y2={draftPreview.current.y}
+            stroke={presets.line.color}
+            strokeWidth={presets.line.lineWidth}
+            strokeDasharray="6 4"
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
+        {draftPreview?.type === 'arc' && draftPreview.start && (() => {
+          const radius = distance(draftPreview.center, draftPreview.start);
+          const startAngle = angleDeg(draftPreview.center, draftPreview.start);
+          const endAngle = angleDeg(draftPreview.center, draftPreview.current);
+          const startPoint = draftPreview.start;
+          const endPoint = {
+            x: draftPreview.center.x + Math.cos(degToRad(endAngle)) * radius,
+            y: draftPreview.center.y + Math.sin(degToRad(endAngle)) * radius,
+          };
+          const delta = ((endAngle - startAngle) % 360 + 360) % 360;
+          const largeArcFlag = delta > 180 ? 1 : 0;
+          return (
+            <path
+              d={`M ${startPoint.x} ${startPoint.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endPoint.x} ${endPoint.y}`}
+              stroke={presets.line.color}
+              strokeWidth={presets.line.lineWidth}
+              strokeDasharray="6 4"
+              fill="none"
+              vectorEffect="non-scaling-stroke"
+            />
+          );
+        })()}
         {draftPreview?.type === 'circle' && (
           <circle
             cx={draftPreview.start.x}
@@ -992,7 +1069,7 @@ export default function InventorSketchOverlay({
           />
         )}
 
-        {enabled && draft && draft.type !== 'polyline' && (
+        {enabled && draft && draft.type !== 'polyline' && draft.type !== 'arc' && (
           <foreignObject x={Math.min(pointer.x + 12, canvasWidth - 230)} y={Math.min(pointer.y + 12, canvasHeight - 92)} width="220" height="88" style={{ pointerEvents: 'all' }}>
             <div
               xmlns="http://www.w3.org/1999/xhtml"
@@ -1069,6 +1146,7 @@ export default function InventorSketchOverlay({
               ['select', MousePointer2, 'facilityMap.toolSelect'],
               ['line', Minus, 'facilityMap.toolLine'],
               ['polyline', Minus, 'Polyline'],
+              ['arc', CircleIcon, 'Arc'],
               ['rect', Square, 'facilityMap.toolRectangle'],
               ['circle', CircleIcon, 'facilityMap.toolCircle'],
               ['trim', Scissors, 'facilityMap.sketchTrim'],
@@ -1085,7 +1163,7 @@ export default function InventorSketchOverlay({
                   setMessage('');
                 }}
                 className={`rounded-md p-2 ${tool === id ? 'bg-sky-500 text-white' : 'hover:bg-white/10'}`}
-                title={label === 'Polyline' ? label : t(label)}
+                title={label === 'Polyline' || label === 'Arc' ? label : t(label)}
               >
                 <Icon className="h-4 w-4" />
               </button>
@@ -1145,7 +1223,7 @@ export default function InventorSketchOverlay({
               </select>
             </label>
 
-            {(tool === 'line' || tool === 'polyline' || tool === 'rect' || tool === 'circle') && (
+            {(tool === 'line' || tool === 'polyline' || tool === 'arc' || tool === 'rect' || tool === 'circle') && (
               <>
                 <label className="mb-2 flex items-center justify-between gap-2 text-[11px]">
                   <span>{t('facilityMap.annotationColor')}</span>
