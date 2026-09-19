@@ -121,9 +121,15 @@ import {
   clampPositive,
   degToRad,
   distance,
-  rectEdges,
-  segmentIntersection,
 } from '@/features/facility-map/sketch/core/geometry';
+import {
+  commitExtend,
+  commitTrim,
+  effectiveModifyMode,
+  getExtendPreview,
+  getTrimPreview,
+  type ModifyPreview,
+} from '@/features/facility-map/sketch/modify/trimExtend';
 import {
   commitLineDraft,
   getLineDynamicAngle,
@@ -226,6 +232,7 @@ export default function InventorSketchOverlay({
   const [dynamicB, setDynamicB] = useState('');
   const [dynamicLocks, setDynamicLocks] = useState<DynamicLocks>({ a: false, b: false });
   const [message, setMessage] = useState('');
+  const [modifyPreview, setModifyPreview] = useState<ModifyPreview | null>(null);
   const [draggingId, setDraggingId] = useState('');
   const [activeGrip, setActiveGrip] = useState<BasicGrip | null>(null);
   const dragRef = useRef<{ start: Point; entities: SketchEntity[] } | null>(null);
@@ -626,121 +633,6 @@ export default function InventorSketchOverlay({
     finishCreateInteraction();
   };
 
-  const trimLine = (target: LineEntity, click: Point) => {
-    const a = { x: target.x1, y: target.y1 };
-    const b = { x: target.x2, y: target.y2 };
-    const otherSegments: Array<[Point, Point]> = [];
-    store.entities.forEach((entity) => {
-      if (entity.id === target.id) return;
-      if (entity.type === 'line') otherSegments.push([{ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 }]);
-      if (entity.type === 'rect') otherSegments.push(...rectEdges(entity));
-      if (entity.type === 'polyline') {
-        for (let index = 0; index < entity.points.length - 1; index += 1) {
-          otherSegments.push([entity.points[index], entity.points[index + 1]]);
-        }
-        if (entity.closed && entity.points.length > 2) {
-          otherSegments.push([entity.points[entity.points.length - 1], entity.points[0]]);
-        }
-      }
-    });
-    const intersections = otherSegments
-      .map(([c, d]) => segmentIntersection(a, b, c, d, false))
-      .filter(Boolean)
-      .map((result) => result!)
-      .filter((result) => result.t > 1e-4 && result.t < 1 - 1e-4)
-      .sort((x, y) => x.t - y.t);
-
-    if (!intersections.length) {
-      setMessage(t('facilityMap.sketchNoTrimBoundary'));
-      return;
-    }
-
-    const lengthSquared = Math.max((target.x2 - target.x1) ** 2 + (target.y2 - target.y1) ** 2, 1e-9);
-    const clickT = ((click.x - target.x1) * (target.x2 - target.x1) + (click.y - target.y1) * (target.y2 - target.y1)) / lengthSquared;
-    const params = [0, ...intersections.map((item) => item.t), 1];
-    let interval = 0;
-    for (let i = 0; i < params.length - 1; i += 1) {
-      if (clickT >= params[i] && clickT <= params[i + 1]) {
-        interval = i;
-        break;
-      }
-    }
-    const leftT = params[interval];
-    const rightT = params[interval + 1];
-    const at = (tValue: number) => ({ x: a.x + (b.x - a.x) * tValue, y: a.y + (b.y - a.y) * tValue });
-
-    setStore((current) => {
-      const without = current.entities.filter((entity) => entity.id !== target.id);
-      if (leftT <= 1e-6) {
-        const start = at(rightT);
-        return { ...current, entities: [...without, { ...target, x1: start.x, y1: start.y }] };
-      }
-      if (rightT >= 1 - 1e-6) {
-        const end = at(leftT);
-        return { ...current, entities: [...without, { ...target, x2: end.x, y2: end.y }] };
-      }
-      const leftEnd = at(leftT);
-      const rightStart = at(rightT);
-      return {
-        ...current,
-        entities: [
-          ...without,
-          { ...target, id: createSketchId('sketch-line'), x2: leftEnd.x, y2: leftEnd.y },
-          { ...target, id: createSketchId('sketch-line'), x1: rightStart.x, y1: rightStart.y },
-        ],
-      };
-    });
-    setMessage(t('facilityMap.sketchTrimApplied'));
-  };
-
-  const extendLine = (target: LineEntity, click: Point) => {
-    const a = { x: target.x1, y: target.y1 };
-    const b = { x: target.x2, y: target.y2 };
-    const clickToStart = distance(click, a);
-    const clickToEnd = distance(click, b);
-    const extendStart = clickToStart < clickToEnd;
-
-    const otherSegments: Array<[Point, Point]> = [];
-    store.entities.forEach((entity) => {
-      if (entity.id === target.id) return;
-      if (entity.type === 'line') otherSegments.push([{ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 }]);
-      if (entity.type === 'rect') otherSegments.push(...rectEdges(entity));
-      if (entity.type === 'polyline') {
-        for (let index = 0; index < entity.points.length - 1; index += 1) {
-          otherSegments.push([entity.points[index], entity.points[index + 1]]);
-        }
-        if (entity.closed && entity.points.length > 2) {
-          otherSegments.push([entity.points[entity.points.length - 1], entity.points[0]]);
-        }
-      }
-    });
-
-    const candidates = otherSegments
-      .map(([c, d]) => segmentIntersection(a, b, c, d, true))
-      .filter(Boolean)
-      .map((result) => result!)
-      .filter((result) => (extendStart ? result.t < -1e-4 : result.t > 1 + 1e-4))
-      .sort((x, y) => (extendStart ? y.t - x.t : x.t - y.t));
-
-    const best = candidates[0];
-    if (!best) {
-      setMessage(t('facilityMap.sketchNoExtendBoundary'));
-      return;
-    }
-
-    setStore((current) => ({
-      ...current,
-      entities: current.entities.map((entity) =>
-        entity.id === target.id
-          ? extendStart
-            ? { ...target, x1: best.point.x, y1: best.point.y }
-            : { ...target, x2: best.point.x, y2: best.point.y }
-          : entity,
-      ),
-    }));
-    setMessage(t('facilityMap.sketchExtendApplied'));
-  };
-
   const handleCanvasMouseDown = (event: React.MouseEvent<SVGSVGElement>) => {
     if (!enabled || event.button !== 0) return;
     const raw = pointFromEvent(event);
@@ -884,18 +776,58 @@ export default function InventorSketchOverlay({
     }
   };
 
+  const resolveModifyPreview = (
+    entity: SketchEntity,
+    point: Point,
+    shiftKey: boolean,
+  ) => {
+    if (tool !== 'trim' && tool !== 'extend') return null;
+    const mode = effectiveModifyMode(tool, shiftKey);
+    if (mode === 'trim') {
+      return getTrimPreview(store.entities, entity, point);
+    }
+    return entity.type === 'line'
+      ? getExtendPreview(store.entities, entity, point)
+      : null;
+  };
+
   const handleEntityMouseDown = (event: React.MouseEvent<SVGElement>, entity: SketchEntity) => {
     if (!enabled) return;
     const point = pointFromEvent(event);
     if (!point) return;
     event.stopPropagation();
 
-    if (tool === 'trim' && entity.type === 'line') {
-      trimLine(entity, point);
-      return;
-    }
-    if (tool === 'extend' && entity.type === 'line') {
-      extendLine(entity, point);
+    if (tool === 'trim' || tool === 'extend') {
+      const mode = effectiveModifyMode(tool, event.shiftKey);
+      const nextEntities =
+        mode === 'trim'
+          ? commitTrim(
+              store.entities,
+              entity,
+              point,
+              () => createSketchId('sketch-line'),
+            )
+          : entity.type === 'line'
+            ? commitExtend(store.entities, entity, point)
+            : null;
+      if (!nextEntities) {
+        setMessage(
+          mode === 'trim'
+            ? t('facilityMap.sketchNoTrimBoundary')
+            : t('facilityMap.sketchNoExtendBoundary'),
+        );
+        return;
+      }
+      setStore((current) => ({
+        ...current,
+        entities: nextEntities,
+      }));
+      setModifyPreview(null);
+      setMessage(
+        mode === 'trim'
+          ? t('facilityMap.sketchTrimApplied')
+          : t('facilityMap.sketchExtendApplied'),
+      );
       return;
     }
     if (tool !== 'select') return;
@@ -1114,6 +1046,19 @@ export default function InventorSketchOverlay({
             style: { cursor: enabled && tool === 'select' ? 'move' : enabled && (tool === 'trim' || tool === 'extend') ? 'crosshair' : 'default' },
             pointerEvents: enabled ? ('all' as const) : ('none' as const),
             onMouseDown: (event: React.MouseEvent<SVGElement>) => handleEntityMouseDown(event, entity),
+            onMouseMove: (event: React.MouseEvent<SVGElement>) => {
+              if (tool !== 'trim' && tool !== 'extend') return;
+              const point = pointFromEvent(event);
+              if (!point) return;
+              setModifyPreview(
+                resolveModifyPreview(entity, point, event.shiftKey),
+              );
+            },
+            onMouseLeave: () => {
+              if (tool === 'trim' || tool === 'extend') {
+                setModifyPreview(null);
+              }
+            },
             onMouseUp: handleEntityMouseUp,
           };
 
@@ -1326,6 +1271,20 @@ export default function InventorSketchOverlay({
           );
         })()}
 
+        {enabled && modifyPreview && (
+          <line
+            x1={modifyPreview.from.x}
+            y1={modifyPreview.from.y}
+            x2={modifyPreview.to.x}
+            y2={modifyPreview.to.y}
+            stroke={modifyPreview.mode === 'trim' ? '#ef4444' : '#22c55e'}
+            strokeWidth={3}
+            strokeDasharray="6 4"
+            vectorEffect="non-scaling-stroke"
+            pointerEvents="none"
+          />
+        )}
+
         {enabled && activeSnap && (
           <SnapIndicator candidate={activeSnap} />
         )}
@@ -1421,6 +1380,7 @@ export default function InventorSketchOverlay({
                   setTool(id);
                   setDraft(null);
                   resetDynamic();
+                  setModifyPreview(null);
                   setMessage('');
                 }}
                 className={`rounded-md p-2 ${tool === id ? 'bg-sky-500 text-white' : 'hover:bg-white/10'}`}
