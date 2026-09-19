@@ -5,3 +5,5 @@ export * from './core/document';
 export * from './commands/stateMachine';
 export * from './history/history';
 export * from './persistence/storage';
+
+export * from './history/useSketchDocumentHistory';
