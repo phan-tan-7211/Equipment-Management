@@ -64,6 +64,10 @@ import {
   findGridSnap,
 } from '@/features/facility-map/sketch/snapping/gridSnap';
 import {
+  applyHorizontalInference,
+  isHorizontalInferenceCandidate,
+} from '@/features/facility-map/sketch/snapping/horizontalInference';
+import {
   angleDeg,
   arcPoint,
   clampPositive,
@@ -312,11 +316,13 @@ export default function InventorSketchOverlay({
 
   const inferLineEnd = useCallback((start: Point, raw: Point) => {
     const snapped = endpointSnap(raw);
+    if (isHorizontalInferenceCandidate(start, snapped)) {
+      return applyHorizontalInference(start, snapped);
+    }
+
     const dx = snapped.x - start.x;
     const dy = snapped.y - start.y;
     const angle = Math.abs((Math.atan2(dy, dx) * 180) / Math.PI);
-    const normalized = Math.min(angle, Math.abs(180 - angle));
-    if (normalized < 4) return { x: snapped.x, y: start.y };
     if (Math.abs(90 - angle) < 4) return { x: start.x, y: snapped.y };
     return snapped;
   }, [endpointSnap]);
