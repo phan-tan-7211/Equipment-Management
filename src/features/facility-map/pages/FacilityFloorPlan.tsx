@@ -71,6 +71,7 @@ type OverlayPin = {
   layer: LayerId;
   x: number;
   y: number;
+  label?: string;
 };
 
 type Zone = {
@@ -80,6 +81,8 @@ type Zone = {
   y: number;
   w: number;
   h: number;
+  customLabel?: string;
+  customColor?: string;
 };
 
 type DrawTool = 'select' | 'pan' | 'line' | 'arrow' | 'rect' | 'circle' | 'text' | 'ruler' | 'erase';
@@ -340,6 +343,10 @@ export default function FacilityFloorPlan() {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [showLegend, setShowLegend] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
+  const [snapToGrid, setSnapToGrid] = useState(false);
+  const [gridSize, setGridSize] = useState(5);
+  const [hiddenLayers, setHiddenLayers] = useState<Set<'assets' | LayerId>>(new Set());
   const [draggingZoneId, setDraggingZoneId] = useState('');
   const [resizingZoneId, setResizingZoneId] = useState('');
   const [draggingEquipmentId, setDraggingEquipmentId] = useState('');
@@ -413,6 +420,16 @@ export default function FacilityFloorPlan() {
     return equipmentById.get(selectedMarkerId.slice('asset:'.length)) ?? null;
   }, [equipmentById, selectedMarkerId]);
 
+  const selectedZone = useMemo(() => {
+    if (!selectedMarkerId.startsWith('zone:')) return null;
+    return plan.zones.find((zone) => zone.id === selectedMarkerId.slice('zone:'.length)) ?? null;
+  }, [plan.zones, selectedMarkerId]);
+
+  const selectedOverlay = useMemo(() => {
+    if (!selectedMarkerId.startsWith('overlay:')) return null;
+    return plan.overlayPins.find((pin) => pin.id === selectedMarkerId.slice('overlay:'.length)) ?? null;
+  }, [plan.overlayPins, selectedMarkerId]);
+
   const unplacedEquipment = useMemo(
     () => filteredEquipment.filter((item) => !plan.pins.some((pin) => pin.equipmentId === item.id)),
     [filteredEquipment, plan.pins],
@@ -421,6 +438,11 @@ export default function FacilityFloorPlan() {
   const layerById = useMemo(() => new Map(LAYERS.map((layer) => [layer.id, layer])), []);
   const zoneById = useMemo(() => new Map(ZONES.map((zone) => [zone.id, zone])), []);
 
+  const snapValue = useCallback((value: number) => {
+    if (!snapToGrid) return value;
+    return Math.round(value / gridSize) * gridSize;
+  }, [gridSize, snapToGrid]);
+
   const toPercent = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -428,10 +450,10 @@ export default function FacilityFloorPlan() {
     const localX = (clientX - rect.left - pan.x) / zoom;
     const localY = (clientY - rect.top - pan.y) / zoom;
     return {
-      x: Math.max(0, Math.min(100, (localX / rect.width) * 100)),
-      y: Math.max(0, Math.min(100, (localY / rect.height) * 100)),
+      x: Math.max(0, Math.min(100, snapValue((localX / rect.width) * 100))),
+      y: Math.max(0, Math.min(100, snapValue((localY / rect.height) * 100))),
     };
-  }, [pan.x, pan.y, zoom]);
+  }, [pan.x, pan.y, snapValue, zoom]);
 
   const placeAt = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!editMode || draggingEquipmentId || draggingOverlayId || isPanning || zoneStart) return;
@@ -778,13 +800,16 @@ export default function FacilityFloorPlan() {
     return () => window.removeEventListener('keydown', onKeyDown);
   });
 
-  const visibleAssetPins = activeLayer === 'all' || activeLayer === 'assets';
+  const visibleAssetPins =
+    !hiddenLayers.has('assets') && (activeLayer === 'all' || activeLayer === 'assets');
   const visibleOverlayPins =
     activeLayer === 'all'
-      ? plan.overlayPins
+      ? plan.overlayPins.filter((pin) => !hiddenLayers.has(pin.layer))
       : activeLayer === 'assets'
         ? []
-        : plan.overlayPins.filter((pin) => pin.layer === activeLayer);
+        : hiddenLayers.has(activeLayer)
+          ? []
+          : plan.overlayPins.filter((pin) => pin.layer === activeLayer);
 
   const placementHint = selectedEquipmentId
     ? t('facilityMap.clickPlaceEquipment')
@@ -848,7 +873,8 @@ export default function FacilityFloorPlan() {
           </button>
 
           {editMode && (
-            <div className="flex items-center gap-1 rounded-md border bg-background p-1">
+            <div className="max-w-[70vw] overflow-x-auto rounded-md border bg-background p-1">
+              <div className="flex min-w-max items-center gap-1">
               {([
                 ['select', MousePointer2, 'facilityMap.toolSelect'],
                 ['pan', Move, 'facilityMap.toolPan'],
@@ -875,6 +901,7 @@ export default function FacilityFloorPlan() {
                   <Icon className="h-4 w-4" />
                 </button>
               ))}
+              </div>
             </div>
           )}
 
@@ -909,6 +936,20 @@ export default function FacilityFloorPlan() {
           >
             <ListFilter className="h-3.5 w-3.5" />
             {t('facilityMap.legend')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowGrid((value) => !value)}
+            className={`rounded-full border px-3 py-1.5 text-xs ${showGrid ? 'bg-foreground text-background' : 'bg-background'}`}
+          >
+            {t('facilityMap.grid')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSnapToGrid((value) => !value)}
+            className={`rounded-full border px-3 py-1.5 text-xs ${snapToGrid ? 'bg-foreground text-background' : 'bg-background'}`}
+          >
+            {t('facilityMap.snap')}
           </button>
           <button
             type="button"
@@ -1019,6 +1060,46 @@ export default function FacilityFloorPlan() {
             </div>
 
             <div className="mt-4 border-t pt-3">
+              <div className="mb-2 text-xs font-semibold">{t('facilityMap.layerVisibility')}</div>
+              <div className="space-y-1.5">
+                {LAYERS.map((layer) => (
+                  <label key={layer.id} className="flex items-center justify-between rounded-md border px-2 py-1.5 text-xs">
+                    <span className="flex items-center gap-2">
+                      <span>{layer.emoji}</span>
+                      <span>{t(layer.labelKey)}</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={!hiddenLayers.has(layer.id)}
+                      onChange={() => {
+                        setHiddenLayers((current) => {
+                          const next = new Set(current);
+                          if (next.has(layer.id)) next.delete(layer.id);
+                          else next.add(layer.id);
+                          return next;
+                        });
+                      }}
+                    />
+                  </label>
+                ))}
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <label className="flex flex-1 items-center justify-between rounded-md border px-2 py-1.5 text-xs">
+                  <span>{t('facilityMap.gridSize')}</span>
+                  <select
+                    value={gridSize}
+                    onChange={(event) => setGridSize(Number(event.target.value))}
+                    className="bg-transparent"
+                  >
+                    <option value={2}>2%</option>
+                    <option value={5}>5%</option>
+                    <option value={10}>10%</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div className="mt-4 border-t pt-3">
               <div className="mb-2 text-xs font-semibold">{t('facilityMap.drawingTools')}</div>
               <div className="rounded-md border bg-muted/30 p-2 text-[11px] text-muted-foreground">
                 {t('facilityMap.drawingHint')}
@@ -1061,6 +1142,68 @@ export default function FacilityFloorPlan() {
               <div className="mt-3 rounded-md border border-primary/40 bg-primary/5 p-2 text-xs">
                 <MapPin className="mr-1 inline h-3.5 w-3.5" />
                 {placementHint}
+              </div>
+            )}
+
+            {selectedZone && (
+              <div className="mt-3 rounded-md border p-2">
+                <div className="mb-2 text-xs font-semibold">{t('facilityMap.zoneEditor')}</div>
+                <input
+                  value={selectedZone.customLabel ?? ''}
+                  onChange={(event) => commitPlan((current) => ({
+                    ...current,
+                    zones: current.zones.map((zone) =>
+                      zone.id === selectedZone.id ? { ...zone, customLabel: event.target.value } : zone,
+                    ),
+                  }))}
+                  placeholder={t('facilityMap.zoneName')}
+                  className="mb-2 w-full rounded-md border bg-background px-2 py-1.5 text-xs"
+                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={selectedZone.customColor ?? zoneById.get(selectedZone.type)?.color ?? '#64748b'}
+                    onChange={(event) => commitPlan((current) => ({
+                      ...current,
+                      zones: current.zones.map((zone) =>
+                        zone.id === selectedZone.id ? { ...zone, customColor: event.target.value } : zone,
+                      ),
+                    }))}
+                    className="h-8 w-10 rounded border bg-background"
+                    aria-label={t('facilityMap.zoneColor')}
+                  />
+                  <select
+                    value={selectedZone.type}
+                    onChange={(event) => commitPlan((current) => ({
+                      ...current,
+                      zones: current.zones.map((zone) =>
+                        zone.id === selectedZone.id ? { ...zone, type: event.target.value as ZoneType } : zone,
+                      ),
+                    }))}
+                    className="flex-1 rounded-md border bg-background px-2 py-1.5 text-xs"
+                  >
+                    {ZONES.map((zone) => (
+                      <option key={zone.id} value={zone.id}>{t(zone.labelKey)}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {selectedOverlay && (
+              <div className="mt-3 rounded-md border p-2">
+                <div className="mb-2 text-xs font-semibold">{t('facilityMap.markerEditor')}</div>
+                <input
+                  value={selectedOverlay.label ?? ''}
+                  onChange={(event) => commitPlan((current) => ({
+                    ...current,
+                    overlayPins: current.overlayPins.map((pin) =>
+                      pin.id === selectedOverlay.id ? { ...pin, label: event.target.value } : pin,
+                    ),
+                  }))}
+                  placeholder={t('facilityMap.markerLabel')}
+                  className="w-full rounded-md border bg-background px-2 py-1.5 text-xs"
+                />
               </div>
             )}
 
@@ -1131,8 +1274,8 @@ export default function FacilityFloorPlan() {
                     top: `${zone.y}%`,
                     width: `${zone.w}%`,
                     height: `${zone.h}%`,
-                    backgroundColor: `${zoneById.get(zone.type)?.color ?? '#64748b'}35`,
-                    border: `1px solid ${zoneById.get(zone.type)?.color ?? '#64748b'}`,
+                    backgroundColor: `${zone.customColor ?? zoneById.get(zone.type)?.color ?? '#64748b'}35`,
+                    border: `1px solid ${zone.customColor ?? zoneById.get(zone.type)?.color ?? '#64748b'}`,
                   }}
                 />
               ))}
@@ -1255,6 +1398,17 @@ export default function FacilityFloorPlan() {
                 />
               ) : (
                 <DemoBlueprint t={t} />
+              )}
+
+              {showGrid && (
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(to right, rgba(15,23,42,0.16) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,23,42,0.16) 1px, transparent 1px)',
+                    backgroundSize: `${gridSize}% ${gridSize}%`,
+                  }}
+                />
               )}
 
               <svg
@@ -1383,8 +1537,8 @@ export default function FacilityFloorPlan() {
                       top: `${zone.y}%`,
                       width: `${zone.w}%`,
                       height: `${zone.h}%`,
-                      borderColor: meta?.color,
-                      backgroundColor: `${meta?.color ?? '#64748b'}22`,
+                      borderColor: zone.customColor ?? meta?.color,
+                      backgroundColor: `${zone.customColor ?? meta?.color ?? '#64748b'}22`,
                     }}
                     onClick={(event) => {
                       event.stopPropagation();
@@ -1404,9 +1558,9 @@ export default function FacilityFloorPlan() {
                   >
                     <span
                       className="absolute left-1 top-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
-                      style={{ backgroundColor: meta?.color }}
+                      style={{ backgroundColor: zone.customColor ?? meta?.color }}
                     >
-                      {meta?.emoji} {meta ? t(meta.labelKey) : ''}
+                      {meta?.emoji} {zone.customLabel || (meta ? t(meta.labelKey) : '')}
                     </span>
                     {editMode && selected && drawTool === 'select' && (
                       <span
@@ -1514,6 +1668,11 @@ export default function FacilityFloorPlan() {
                       >
                         {meta?.emoji}
                       </div>
+                      {pin.label && (
+                        <div className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-[10px] text-white">
+                          {pin.label}
+                        </div>
+                      )}
                     </div>
                   </button>
                 );
