@@ -110,6 +110,17 @@ export type SketchConstraint = {
   conflict?: boolean;
 };
 
+export type SketchParameterDimension = 'scalar' | 'length';
+
+export type SketchParameter = {
+  id: SketchId;
+  name: string;
+  expression: string;
+  value?: number;
+  dimension?: SketchParameterDimension;
+  error?: string;
+};
+
 export type SketchDocument = {
   schemaVersion: 1;
   id: SketchId;
@@ -123,6 +134,7 @@ export type SketchDocument = {
   entities: SketchEntity[];
   dimensions: SketchDimension[];
   constraints: SketchConstraint[];
+  parameters: SketchParameter[];
   createdAt: number;
   updatedAt: number;
 };

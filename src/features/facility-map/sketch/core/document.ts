@@ -5,6 +5,7 @@ import type {
   SketchDimension,
   SketchDocument,
   SketchEntity,
+  SketchParameter,
   SketchUnit,
 } from './types';
 
@@ -18,6 +19,7 @@ export type CreateSketchDocumentInput = {
   entities?: SketchEntity[];
   dimensions?: SketchDimension[];
   constraints?: SketchConstraint[];
+  parameters?: SketchParameter[];
   createdAt?: number;
   updatedAt?: number;
 };
@@ -33,6 +35,7 @@ export function createSketchDocument(input: CreateSketchDocumentInput = {}): Ske
     entities: input.entities ? structuredClone(input.entities) : [],
     dimensions: input.dimensions ? structuredClone(input.dimensions) : [],
     constraints: input.constraints ? structuredClone(input.constraints) : [],
+    parameters: input.parameters ? structuredClone(input.parameters) : [],
     createdAt: input.createdAt ?? now,
     updatedAt: input.updatedAt ?? now,
   };

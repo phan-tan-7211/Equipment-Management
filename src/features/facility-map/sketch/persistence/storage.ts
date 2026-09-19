@@ -5,6 +5,7 @@ import type {
   SketchDimension,
   SketchDocument,
   SketchEntity,
+  SketchParameter,
   SketchUnit,
 } from '../core/types';
 
@@ -15,6 +16,7 @@ type LegacySketchStore = {
   entities?: SketchEntity[];
   dimensions?: SketchDimension[];
   constraints?: SketchConstraint[];
+  parameters?: SketchParameter[];
   displayUnit?: SketchUnit;
 };
 
@@ -37,6 +39,7 @@ export function deserializeSketchDocument(
       entities: Array.isArray(parsed.entities) ? parsed.entities : [],
       dimensions: Array.isArray(parsed.dimensions) ? parsed.dimensions : [],
       constraints: Array.isArray(parsed.constraints) ? parsed.constraints : [],
+      parameters: Array.isArray(parsed.parameters) ? parsed.parameters : [],
       createdAt: Number(parsed.createdAt) || Date.now(),
       updatedAt: Number(parsed.updatedAt) || Date.now(),
     });
@@ -51,6 +54,7 @@ export function deserializeSketchDocument(
     entities: Array.isArray(parsed.entities) ? parsed.entities : [],
     dimensions: Array.isArray(parsed.dimensions) ? parsed.dimensions : [],
     constraints: Array.isArray(parsed.constraints) ? parsed.constraints : [],
+    parameters: Array.isArray(parsed.parameters) ? parsed.parameters : [],
   });
 }
 

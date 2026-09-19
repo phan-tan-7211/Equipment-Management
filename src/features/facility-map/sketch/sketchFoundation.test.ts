@@ -96,6 +96,7 @@ describe('sketch foundation', () => {
     expect(restored).toEqual(document);
     expect(restored.dimensions).toEqual([]);
     expect(restored.constraints).toEqual([]);
+    expect(restored.parameters).toEqual([]);
     expect(restored.entities.map((entity) => entity.type)).toEqual([
       'line',
       'polyline',
@@ -122,6 +123,7 @@ describe('sketch foundation', () => {
     expect(restored.entities).toEqual(entities);
     expect(restored.dimensions).toEqual([]);
     expect(restored.constraints).toEqual([]);
+    expect(restored.parameters).toEqual([]);
   });
 
   it('converts display units to model space and back consistently', () => {
