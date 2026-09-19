@@ -1357,11 +1357,17 @@ export default function FacilityFloorPlan() {
                   <select
                     value={gridSize}
                     onChange={(event) => setGridSize(Number(event.target.value))}
-                    className="bg-transparent"
+                    className="min-w-[88px] rounded-md border border-border bg-background px-2 py-1 text-right text-xs text-foreground shadow-sm outline-none focus:ring-2 focus:ring-ring"
                   >
-                    <option value={2}>2%</option>
-                    <option value={5}>5%</option>
-                    <option value={10}>10%</option>
+                    {[0.5, 1, 2, 2.5, 5, 10, 12.5, 20, 25].map((size) => (
+                      <option
+                        key={size}
+                        value={size}
+                        className="bg-background text-foreground"
+                      >
+                        {size}%
+                      </option>
+                    ))}
                   </select>
                 </label>
               </div>
