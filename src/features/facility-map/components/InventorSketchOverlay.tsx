@@ -18,13 +18,9 @@ import {
   cancelSketchCommand,
   createSketchCommandState,
   createSketchId,
-  displayToModelUnits,
   endSketchInteraction,
-  formatSketchDistance,
-  modelUnitsToDisplay,
   normalizeMmPerUnit,
   selectSketchTool,
-  unitPrecision,
   useSketchDocumentHistory,
   type ArcEntity,
   type CircleEntity,
@@ -576,76 +572,6 @@ export default function InventorSketchOverlay({
     }
 
     finishCreateInteraction();
-  };
-
-  const editLineLength = (entity: LineEntity) => {
-    const currentValue = modelUnitsToDisplay(distance({ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 }), store);
-    const raw = window.prompt(t('facilityMap.sketchEnterLength'), currentValue.toFixed(unitPrecision(store.displayUnit)));
-    if (raw == null) return;
-    const nextValue = Number(raw);
-    if (!Number.isFinite(nextValue) || nextValue <= 0) return;
-    const angle = Math.atan2(entity.y2 - entity.y1, entity.x2 - entity.x1);
-    const units = displayToModelUnits(nextValue, store);
-    setStore((current) => ({
-      ...current,
-      entities: current.entities.map((item) =>
-        item.id === entity.id
-          ? { ...entity, x2: entity.x1 + Math.cos(angle) * units, y2: entity.y1 + Math.sin(angle) * units }
-          : item,
-      ),
-    }));
-  };
-
-  const editLineAngle = (entity: LineEntity) => {
-    const current = angleDeg({ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 });
-    const raw = window.prompt(t('facilityMap.sketchEnterAngle'), current.toFixed(1));
-    if (raw == null) return;
-    const next = Number(raw);
-    if (!Number.isFinite(next)) return;
-    const lengthUnits = distance({ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 });
-    const radians = degToRad(next);
-    setStore((currentStore) => ({
-      ...currentStore,
-      entities: currentStore.entities.map((item) =>
-        item.id === entity.id
-          ? { ...entity, x2: entity.x1 + Math.cos(radians) * lengthUnits, y2: entity.y1 + Math.sin(radians) * lengthUnits }
-          : item,
-      ),
-    }));
-  };
-
-  const editRectDimension = (entity: RectEntity, axis: 'w' | 'h') => {
-    const currentValue = modelUnitsToDisplay(axis === 'w' ? entity.w : entity.h, store);
-    const raw = window.prompt(
-      axis === 'w' ? t('facilityMap.sketchEnterWidth') : t('facilityMap.sketchEnterHeight'),
-      currentValue.toFixed(unitPrecision(store.displayUnit)),
-    );
-    if (raw == null) return;
-    const nextValue = Number(raw);
-    if (!Number.isFinite(nextValue) || nextValue <= 0) return;
-    const units = displayToModelUnits(nextValue, store);
-    setStore((current) => ({
-      ...current,
-      entities: current.entities.map((item) =>
-        item.id === entity.id ? { ...entity, [axis]: units } : item,
-      ),
-    }));
-  };
-
-  const editCircleRadius = (entity: CircleEntity) => {
-    const raw = window.prompt(
-      t('facilityMap.sketchEnterRadius'),
-      modelUnitsToDisplay(entity.r, store).toFixed(unitPrecision(store.displayUnit)),
-    );
-    if (raw == null) return;
-    const nextValue = Number(raw);
-    if (!Number.isFinite(nextValue) || nextValue <= 0) return;
-    setStore((current) => ({
-      ...current,
-      entities: current.entities.map((item) =>
-        item.id === entity.id ? { ...entity, r: displayToModelUnits(nextValue, store) } : item,
-      ),
-    }));
   };
 
   const trimLine = (target: LineEntity, click: Point) => {
