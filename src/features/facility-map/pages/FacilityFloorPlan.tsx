@@ -121,6 +121,15 @@ type AnnotationGrip = {
   handle: 'start' | 'end' | 'nw' | 'ne' | 'se' | 'sw';
 } | null;
 
+type AnnotationTool = Annotation['type'];
+type DrawingPreset = {
+  color: string;
+  lineWidth: number;
+  textSize: number;
+  arrowSize: number;
+  text: string;
+};
+
 type FloorPlanState = {
   name: string;
   building: string;
@@ -137,6 +146,7 @@ type FloorPlanState = {
 const STORAGE_KEY = 'znteqr:facility-floor-plan:dryrun:v3';
 const PLAN_CACHE_KEY = 'znteqr:facility-floor-plan:dryrun:plans:v1';
 const HISTORY_KEY = 'znteqr:facility-floor-plan:dryrun:history:v1';
+const DRAWING_PRESET_KEY = 'znteqr:facility-floor-plan:drawing-presets:v1';
 
 const planKey = (building: string, floor: string) => `${building}::${floor}`;
 
@@ -162,6 +172,29 @@ const readHistory = (): PlanHistoryEntry[] => {
     return raw ? JSON.parse(raw) as PlanHistoryEntry[] : [];
   } catch {
     return [];
+  }
+};
+
+const DEFAULT_DRAWING_PRESETS: Record<AnnotationTool, DrawingPreset> = {
+  line: { color: '#f43f5e', lineWidth: 0.28, textSize: 2.5, arrowSize: 6, text: 'NOTE' },
+  arrow: { color: '#f43f5e', lineWidth: 0.28, textSize: 2.5, arrowSize: 6, text: 'NOTE' },
+  rect: { color: '#f43f5e', lineWidth: 0.28, textSize: 2.5, arrowSize: 6, text: 'NOTE' },
+  circle: { color: '#f43f5e', lineWidth: 0.28, textSize: 2.5, arrowSize: 6, text: 'NOTE' },
+  text: { color: '#f43f5e', lineWidth: 0.28, textSize: 2.5, arrowSize: 6, text: 'NOTE' },
+  ruler: { color: '#22d3ee', lineWidth: 0.28, textSize: 2.2, arrowSize: 6, text: 'NOTE' },
+};
+
+const readDrawingPresets = (): Record<AnnotationTool, DrawingPreset> => {
+  try {
+    const raw = localStorage.getItem(DRAWING_PRESET_KEY);
+    if (!raw) return DEFAULT_DRAWING_PRESETS;
+    const parsed = JSON.parse(raw) as Partial<Record<AnnotationTool, Partial<DrawingPreset>>>;
+    return (Object.keys(DEFAULT_DRAWING_PRESETS) as AnnotationTool[]).reduce((acc, tool) => {
+      acc[tool] = { ...DEFAULT_DRAWING_PRESETS[tool], ...(parsed[tool] ?? {}) };
+      return acc;
+    }, {} as Record<AnnotationTool, DrawingPreset>);
+  } catch {
+    return DEFAULT_DRAWING_PRESETS;
   }
 };
 
@@ -431,11 +464,7 @@ export default function FacilityFloorPlan() {
   const [placeLayer, setPlaceLayer] = useState<LayerId | null>(null);
   const [zoneTool, setZoneTool] = useState<ZoneType | null>(null);
   const [drawTool, setDrawTool] = useState<DrawTool>('select');
-  const [annotationText, setAnnotationText] = useState('NOTE');
-  const [annotationColor, setAnnotationColor] = useState('#f43f5e');
-  const [annotationLineWidth, setAnnotationLineWidth] = useState(0.28);
-  const [annotationTextSize, setAnnotationTextSize] = useState(2.5);
-  const [annotationArrowSize, setAnnotationArrowSize] = useState(6);
+  const [drawingPresets, setDrawingPresets] = useState<Record<AnnotationTool, DrawingPreset>>(() => readDrawingPresets());
   const [selectedObjectIds, setSelectedObjectIds] = useState<Set<string>>(new Set());
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
   const [draggingAnnotationId, setDraggingAnnotationId] = useState('');
@@ -652,6 +681,23 @@ export default function FacilityFloorPlan() {
 
   const layerById = useMemo(() => new Map(LAYERS.map((layer) => [layer.id, layer])), []);
   const zoneById = useMemo(() => new Map(ZONES.map((zone) => [zone.id, zone])), []);
+
+  const currentDrawingTool: AnnotationTool =
+    drawTool === 'line' || drawTool === 'arrow' || drawTool === 'rect' || drawTool === 'circle' || drawTool === 'text' || drawTool === 'ruler'
+      ? drawTool
+      : 'line';
+  const currentDrawingPreset = drawingPresets[currentDrawingTool];
+
+  const updateCurrentDrawingPreset = useCallback((patch: Partial<DrawingPreset>) => {
+    setDrawingPresets((current) => {
+      const next = {
+        ...current,
+        [currentDrawingTool]: { ...current[currentDrawingTool], ...patch },
+      };
+      localStorage.setItem(DRAWING_PRESET_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, [currentDrawingTool]);
 
   const setSingleSelection = useCallback((id: string, additive = false) => {
     setSelectedObjectIds((current) => {
@@ -918,10 +964,10 @@ export default function FacilityFloorPlan() {
         y1: point.y,
         x2: point.x,
         y2: point.y,
-        color: annotationColor,
-        lineWidth: annotationLineWidth,
-        textSize: annotationTextSize,
-        arrowSize: annotationArrowSize,
+        color: currentDrawingPreset.color,
+        lineWidth: currentDrawingPreset.lineWidth,
+        textSize: currentDrawingPreset.textSize,
+        arrowSize: currentDrawingPreset.arrowSize,
       });
       return;
     }
@@ -940,11 +986,11 @@ export default function FacilityFloorPlan() {
             y1: point.y,
             x2: point.x,
             y2: point.y,
-            text: annotationText || t('facilityMap.defaultNote'),
-            color: annotationColor,
-            lineWidth: annotationLineWidth,
-            textSize: annotationTextSize,
-            arrowSize: annotationArrowSize,
+            text: currentDrawingPreset.text || t('facilityMap.defaultNote'),
+            color: currentDrawingPreset.color,
+            lineWidth: currentDrawingPreset.lineWidth,
+            textSize: currentDrawingPreset.textSize,
+            arrowSize: currentDrawingPreset.arrowSize,
           },
         ],
       }));
@@ -1933,12 +1979,16 @@ export default function FacilityFloorPlan() {
                 {t('facilityMap.drawingHint')}
               </div>
               {['line', 'arrow', 'rect', 'circle', 'text', 'ruler'].includes(drawTool) && (
-                <div className="mt-2 grid grid-cols-2 gap-2 rounded-md border p-2">
+                <div className="mt-2 rounded-md border p-2">
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t('facilityMap.currentProperties')}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
                   <label className="flex items-center justify-between gap-2 text-[11px]">
-                    <span>{t('facilityMap.annotationColor')}</span>
+                    <span>{t('facilityMap.currentDrawingPreset.color')}</span>
                     <input
                       type="color"
-                      value={annotationColor}
+                      value={currentDrawingPreset.color}
                       onChange={(event) => setAnnotationColor(event.target.value)}
                       className="h-7 w-10 rounded border bg-background"
                     />
@@ -1946,7 +1996,7 @@ export default function FacilityFloorPlan() {
                   <label className="flex items-center justify-between gap-2 text-[11px]">
                     <span>{t('facilityMap.lineWeight')}</span>
                     <select
-                      value={annotationLineWidth}
+                      value={currentDrawingPreset.lineWidth}
                       onChange={(event) => setAnnotationLineWidth(Number(event.target.value))}
                       className="rounded border bg-background px-1.5 py-1 text-xs text-foreground"
                     >
@@ -1959,7 +2009,7 @@ export default function FacilityFloorPlan() {
                     <label className="col-span-2 flex items-center justify-between gap-2 text-[11px]">
                       <span>{t('facilityMap.arrowSize')}</span>
                       <select
-                        value={annotationArrowSize}
+                        value={currentDrawingPreset.arrowSize}
                         onChange={(event) => setAnnotationArrowSize(Number(event.target.value))}
                         className="rounded border bg-background px-1.5 py-1 text-xs text-foreground"
                       >
@@ -1973,7 +2023,7 @@ export default function FacilityFloorPlan() {
                     <label className="col-span-2 flex items-center justify-between gap-2 text-[11px]">
                       <span>{t('facilityMap.textSize')}</span>
                       <select
-                        value={annotationTextSize}
+                        value={currentDrawingPreset.textSize}
                         onChange={(event) => setAnnotationTextSize(Number(event.target.value))}
                         className="rounded border bg-background px-1.5 py-1 text-xs text-foreground"
                       >
@@ -1987,7 +2037,7 @@ export default function FacilityFloorPlan() {
               )}
               {drawTool === 'text' && (
                 <input
-                  value={annotationText}
+                  value={currentDrawingPreset.text}
                   onChange={(event) => setAnnotationText(event.target.value)}
                   className="mt-2 w-full rounded-md border bg-background px-2 py-2 text-xs"
                   placeholder={t('facilityMap.textPlaceholder')}
@@ -2386,7 +2436,7 @@ export default function FacilityFloorPlan() {
                     />
                   )}
                   <label className="flex items-center justify-between text-xs text-slate-300">
-                    <span>{t('facilityMap.annotationColor')}</span>
+                    <span>{t('facilityMap.currentDrawingPreset.color')}</span>
                     <input
                       type="color"
                       value={selectedAnnotation.color ?? '#f43f5e'}
@@ -2616,11 +2666,11 @@ export default function FacilityFloorPlan() {
                 {[...plan.annotations, ...(draftAnnotation ? [draftAnnotation] : [])].map((annotation) => {
                   const isDraft = annotation.id === 'draft-annotation';
                   const objectId = `annotation:${annotation.id}`;
-                  const annotationColorValue = annotation.color ?? (annotation.type === 'ruler' ? '#22d3ee' : '#f43f5e');
+                  const currentDrawingPreset.colorValue = annotation.color ?? (annotation.type === 'ruler' ? '#22d3ee' : '#f43f5e');
                   const annotationSelected = selectedObjectIds.has(objectId) || selectedMarkerId === objectId;
                   const baseWidth = annotation.lineWidth ?? 0.28;
                   const common = {
-                    stroke: annotationColorValue,
+                    stroke: currentDrawingPreset.colorValue,
                     strokeWidth: annotationSelected ? baseWidth + 0.12 : baseWidth,
                     vectorEffect: 'non-scaling-stroke' as const,
                     opacity: isDraft ? 0.7 : 1,
@@ -2657,7 +2707,7 @@ export default function FacilityFloorPlan() {
                             >
                               <path
                                 d={`M0,0 L${annotation.arrowSize ?? 6},${(annotation.arrowSize ?? 6) / 2} L0,${annotation.arrowSize ?? 6} z`}
-                                fill={annotationColorValue}
+                                fill={currentDrawingPreset.colorValue}
                               />
                             </marker>
                           </defs>
@@ -2675,7 +2725,7 @@ export default function FacilityFloorPlan() {
                           <text
                             x={(annotation.x1 + annotation.x2) / 2}
                             y={(annotation.y1 + annotation.y2) / 2 - 1}
-                            fill={annotationColorValue}
+                            fill={currentDrawingPreset.colorValue}
                             fontSize={annotation.textSize ?? 2.2}
                             textAnchor="middle"
                             pointerEvents="none"
@@ -2695,7 +2745,7 @@ export default function FacilityFloorPlan() {
                         y={Math.min(annotation.y1, annotation.y2)}
                         width={Math.abs(annotation.x2 - annotation.x1)}
                         height={Math.abs(annotation.y2 - annotation.y1)}
-                        fill={`${annotationColorValue}18`}
+                        fill={`${currentDrawingPreset.colorValue}18`}
                         {...common}
                         pointerEvents={(drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'all' : 'none'}
                       />
@@ -2712,7 +2762,7 @@ export default function FacilityFloorPlan() {
                         cy={(annotation.y1 + annotation.y2) / 2}
                         rx={rx}
                         ry={ry}
-                        fill={`${annotationColorValue}18`}
+                        fill={`${currentDrawingPreset.colorValue}18`}
                         {...common}
                         pointerEvents={(drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'all' : 'none'}
                       />
@@ -2724,7 +2774,7 @@ export default function FacilityFloorPlan() {
                       key={annotation.id}
                       x={annotation.x1}
                       y={annotation.y1}
-                      fill={annotationColorValue}
+                      fill={currentDrawingPreset.colorValue}
                       fontSize={annotation.textSize ?? 2.5}
                       fontWeight="700"
                       stroke={annotationSelected ? '#ffffff' : 'none'}
