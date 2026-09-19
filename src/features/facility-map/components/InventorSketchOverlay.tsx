@@ -11,6 +11,7 @@ import {
   Trash2,
   Undo2,
   Redo2,
+  X,
 } from 'lucide-react';
 
 import {
@@ -26,6 +27,7 @@ import {
   unitPrecision,
   useSketchDocumentHistory,
   type LineEntity,
+  type SketchDocument,
   type SketchEntity,
   type SketchPoint as Point,
   type SketchStyle,
@@ -213,24 +215,38 @@ type DynamicLocks = {
   b: boolean;
 };
 
-type Props = {
+export type InventorSketchOverlayProps = {
   enabled: boolean;
+  visible?: boolean;
   storageKey: string;
+  sessionKey?: number | string;
+  initialDocument?: SketchDocument;
   canvasWidth: number;
   canvasHeight: number;
   t: (key: string, params?: Record<string, unknown>) => string;
-  onExit: () => void;
+  onDocumentChange?: (document: SketchDocument) => void;
+  onFinish: (document: SketchDocument) => void;
+  onCancel: () => void;
 };
 
 export default function InventorSketchOverlay({
   enabled,
+  visible = true,
   storageKey,
+  sessionKey,
+  initialDocument,
   canvasWidth,
   canvasHeight,
   t,
-  onExit,
-}: Props) {
-  const sketchHistory = useSketchDocumentHistory(storageKey);
+  onDocumentChange,
+  onFinish,
+  onCancel,
+}: InventorSketchOverlayProps) {
+  const sketchHistory = useSketchDocumentHistory(storageKey, {
+    initialDocument,
+    sessionKey,
+    onChange: onDocumentChange,
+  });
   const store = sketchHistory.document;
   const setStore = sketchHistory.commit;
   const [commandState, setCommandState] = useState(() => createSketchCommandState());
@@ -1095,6 +1111,8 @@ export default function InventorSketchOverlay({
     }).filter((dimension) => !dimension.hidden);
   }, [store.dimensions, store.entities]);
 
+  if (!visible) return null;
+
   return (
     <div className="pointer-events-none absolute inset-0 z-[18]">
       <svg
@@ -1505,7 +1523,15 @@ export default function InventorSketchOverlay({
             <span className="mx-1 h-5 w-px bg-white/15" />
             <button
               type="button"
-              onClick={onExit}
+              onClick={() => onCancel()}
+              className="inline-flex items-center gap-1 rounded-md border border-red-400/30 px-3 py-2 text-xs font-semibold text-red-300 hover:bg-red-500/10"
+            >
+              <X className="h-4 w-4" />
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => onFinish(store)}
               className="inline-flex items-center gap-1 rounded-md bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-950"
             >
               <Check className="h-4 w-4" />

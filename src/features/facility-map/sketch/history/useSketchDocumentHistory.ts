@@ -25,10 +25,26 @@ const resolveUpdater = (
     ? (updater as (value: SketchDocument) => SketchDocument)(current)
     : updater;
 
-export function useSketchDocumentHistory(storageKey: string) {
+type SketchDocumentHistoryOptions = {
+  initialDocument?: SketchDocument;
+  sessionKey?: number | string;
+  onChange?: (document: SketchDocument) => void;
+};
+
+export function useSketchDocumentHistory(
+  storageKey: string,
+  options: SketchDocumentHistoryOptions = {},
+) {
+  const { initialDocument, sessionKey, onChange } = options;
+  const resolveInitialDocument = useCallback(
+    () => initialDocument
+      ? cloneSketchDocument(initialDocument)
+      : loadSketchDocument(storageKey),
+    [initialDocument, storageKey],
+  );
   const [history, setHistory] = useState(() =>
     createSketchHistory(
-      loadSketchDocument(storageKey),
+      resolveInitialDocument(),
       cloneSketchDocument,
     ),
   );
@@ -36,15 +52,16 @@ export function useSketchDocumentHistory(storageKey: string) {
   useEffect(() => {
     setHistory(
       createSketchHistory(
-        loadSketchDocument(storageKey),
+        resolveInitialDocument(),
         cloneSketchDocument,
       ),
     );
-  }, [storageKey]);
+  }, [resolveInitialDocument, sessionKey]);
 
   useEffect(() => {
     saveSketchDocument(storageKey, history.present);
-  }, [history.present, storageKey]);
+    onChange?.(cloneSketchDocument(history.present));
+  }, [history.present, onChange, storageKey]);
 
   const commit = useCallback((updater: DocumentUpdater) => {
     setHistory((current) => {

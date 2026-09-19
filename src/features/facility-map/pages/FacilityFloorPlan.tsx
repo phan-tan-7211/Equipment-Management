@@ -39,6 +39,12 @@ import {
 } from 'lucide-react';
 import { useI18n } from '@/i18n';
 import InventorSketchOverlay from '@/features/facility-map/components/InventorSketchOverlay';
+import {
+  cloneSketchDocument,
+  loadSketchDocument,
+  saveSketchDocument,
+  type SketchDocument,
+} from '@/features/facility-map/sketch';
 
 type EquipmentRow = {
   id: string;
@@ -142,6 +148,7 @@ type FloorPlanState = {
   overlayPins: OverlayPin[];
   zones: Zone[];
   annotations: Annotation[];
+  sketchDocument?: SketchDocument;
 };
 
 const STORAGE_KEY = 'znteqr:facility-floor-plan:dryrun:v3';
@@ -387,6 +394,9 @@ const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
   overlayPins: value.overlayPins ?? [],
   zones: value.zones ?? [],
   annotations: value.annotations ?? [],
+  sketchDocument: value.sketchDocument
+    ? cloneSketchDocument(value.sketchDocument)
+    : undefined,
   canvasWidth: value.canvasWidth ?? 1200,
   canvasHeight: value.canvasHeight ?? 760,
 });
@@ -466,6 +476,10 @@ export default function FacilityFloorPlan() {
   const [zoneTool, setZoneTool] = useState<ZoneType | null>(null);
   const [drawTool, setDrawTool] = useState<DrawTool>('select');
   const [sketchMode, setSketchMode] = useState(false);
+  const [sketchVisible, setSketchVisible] = useState(true);
+  const [sketchSessionKey, setSketchSessionKey] = useState(0);
+  const sketchSessionSnapshotRef = useRef<SketchDocument | null>(null);
+  const sketchLatestDocumentRef = useRef<SketchDocument | null>(null);
   const [drawingPresets, setDrawingPresets] = useState<Record<AnnotationTool, DrawingPreset>>(() => readDrawingPresets());
   const [selectedObjectIds, setSelectedObjectIds] = useState<Set<string>>(new Set());
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
@@ -1372,6 +1386,7 @@ export default function FacilityFloorPlan() {
           overlayPins: [],
           zones: [],
           annotations: [],
+          sketchDocument: undefined,
         };
     const cache = readPlanCache();
     cache[planKey(building, floor)] = clonePlan(next);
@@ -1510,6 +1525,58 @@ export default function FacilityFloorPlan() {
     if (selectedMarkerId) deleteObjectsByIds(new Set([selectedMarkerId]));
   };
 
+  const sketchStorageKey = planKey(plan.building, plan.floor);
+
+  const enterSketch = () => {
+    const initial = plan.sketchDocument
+      ? cloneSketchDocument(plan.sketchDocument)
+      : loadSketchDocument(sketchStorageKey);
+    sketchSessionSnapshotRef.current = cloneSketchDocument(initial);
+    sketchLatestDocumentRef.current = cloneSketchDocument(initial);
+    saveSketchDocument(sketchStorageKey, initial);
+    setSketchSessionKey((value) => value + 1);
+    setSketchVisible(true);
+    setSketchMode(true);
+    setDrawTool('select');
+    setPlaceLayer(null);
+    setZoneTool(null);
+    setSelectedEquipmentId('');
+    setSelectedObjectIds(new Set());
+    setSelectedMarkerId('');
+  };
+
+  const finishSketch = (document?: SketchDocument) => {
+    const nextDocument = document
+      ? cloneSketchDocument(document)
+      : sketchLatestDocumentRef.current
+        ? cloneSketchDocument(sketchLatestDocumentRef.current)
+        : null;
+    if (!nextDocument) {
+      setSketchMode(false);
+      return;
+    }
+
+    saveSketchDocument(sketchStorageKey, nextDocument);
+    commitPlan((current) => ({
+      ...current,
+      sketchDocument: cloneSketchDocument(nextDocument),
+    }));
+    sketchSessionSnapshotRef.current = null;
+    sketchLatestDocumentRef.current = cloneSketchDocument(nextDocument);
+    setSketchMode(false);
+  };
+
+  const cancelSketch = () => {
+    const snapshot = sketchSessionSnapshotRef.current;
+    if (snapshot) {
+      saveSketchDocument(sketchStorageKey, snapshot);
+      sketchLatestDocumentRef.current = cloneSketchDocument(snapshot);
+    }
+    sketchSessionSnapshotRef.current = null;
+    setSketchSessionKey((value) => value + 1);
+    setSketchMode(false);
+  };
+
   const switchMode = (nextEditMode: boolean) => {
     if (nextEditMode === editMode) return;
 
@@ -1526,7 +1593,7 @@ export default function FacilityFloorPlan() {
     setEditMode(nextEditMode);
     if (!nextEditMode) {
       setMobilePanelOpen(false);
-      setSketchMode(false);
+      if (sketchMode) cancelSketch();
     }
     setSelectedEquipmentId('');
     setPlaceLayer(null);
@@ -1698,18 +1765,8 @@ export default function FacilityFloorPlan() {
             <button
               type="button"
               onClick={() => {
-                setSketchMode((value) => {
-                  const next = !value;
-                  if (next) {
-                    setDrawTool('select');
-                    setPlaceLayer(null);
-                    setZoneTool(null);
-                    setSelectedEquipmentId('');
-                    setSelectedObjectIds(new Set());
-                    setSelectedMarkerId('');
-                  }
-                  return next;
-                });
+                if (sketchMode) finishSketch();
+                else enterSketch();
               }}
               className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
                 sketchMode ? 'border-sky-400 bg-sky-500/15 text-sky-300' : 'hover:bg-accent'
@@ -1719,6 +1776,18 @@ export default function FacilityFloorPlan() {
               {sketchMode ? t('facilityMap.finishSketch') : t('facilityMap.enterSketch')}
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => setSketchVisible((value) => !value)}
+            className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+              sketchVisible ? 'border-cyan-400/40 text-cyan-300' : 'text-muted-foreground'
+            }`}
+            title="Show/hide sketch layer"
+          >
+            <Eye className="h-4 w-4" />
+            Sketch
+          </button>
 
           {editMode && !sketchMode && (
             <div className="max-w-[70vw] overflow-x-auto rounded-md border bg-background p-1">
@@ -2667,11 +2736,18 @@ export default function FacilityFloorPlan() {
 
               <InventorSketchOverlay
                 enabled={editMode && sketchMode}
-                storageKey={planKey(plan.building, plan.floor)}
+                visible={sketchVisible || sketchMode}
+                storageKey={sketchStorageKey}
+                sessionKey={sketchSessionKey}
+                initialDocument={plan.sketchDocument}
                 canvasWidth={plan.canvasWidth}
                 canvasHeight={plan.canvasHeight}
                 t={t}
-                onExit={() => setSketchMode(false)}
+                onDocumentChange={(document) => {
+                  sketchLatestDocumentRef.current = cloneSketchDocument(document);
+                }}
+                onFinish={finishSketch}
+                onCancel={cancelSketch}
               />
 
               {selectionBox && (
