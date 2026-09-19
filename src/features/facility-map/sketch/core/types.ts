@@ -66,6 +66,24 @@ export type SketchEntity =
   | CircleEntity
   | ArcEntity;
 
+export type SketchDimensionKind =
+  | 'length'
+  | 'horizontal'
+  | 'vertical'
+  | 'radius'
+  | 'diameter'
+  | 'angle';
+
+export type SketchDimension = {
+  id: SketchId;
+  kind: SketchDimensionKind;
+  entityId: SketchId;
+  driving?: boolean;
+  reference?: boolean;
+  value?: number;
+  labelOffset?: SketchPoint;
+};
+
 export type SketchDocument = {
   schemaVersion: 1;
   id: SketchId;
@@ -77,6 +95,7 @@ export type SketchDocument = {
    */
   mmPerUnit: number;
   entities: SketchEntity[];
+  dimensions: SketchDimension[];
   createdAt: number;
   updatedAt: number;
 };

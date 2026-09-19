@@ -69,6 +69,8 @@ import {
   type SnapCandidate,
 } from '@/features/facility-map/sketch/snapping/snapPriority';
 import { SnapIndicator } from '@/features/facility-map/sketch/rendering/SnapIndicator';
+import { DimensionRenderer } from '@/features/facility-map/sketch/rendering/DimensionRenderer';
+import { getSketchViewDimensions } from '@/features/facility-map/sketch/dimensions/viewDimensions';
 import {
   toggleSelection,
 } from '@/features/facility-map/sketch/selection/selectionState';
@@ -194,6 +196,7 @@ export default function InventorSketchOverlay({
     parseToolPresets(localStorage.getItem(TOOL_PRESET_STORAGE_KEY)),
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedDimensionId, setSelectedDimensionId] = useState('');
   const [activeSnap, setActiveSnap] = useState<SnapCandidate | null>(null);
   const [selectionBox, setSelectionBox] = useState<{ start: Point; current: Point } | null>(null);
   const [draft, setDraft] = useState<Draft>(null);
@@ -210,6 +213,7 @@ export default function InventorSketchOverlay({
 
   useEffect(() => {
     setSelectedIds([]);
+    setSelectedDimensionId('');
     setSelectionBox(null);
     setDraft(null);
     setCommandState(createSketchCommandState());
@@ -223,6 +227,7 @@ export default function InventorSketchOverlay({
     if (!enabled) {
       setDraft(null);
       setSelectedIds([]);
+      setSelectedDimensionId('');
       setSelectionBox(null);
       setDraggingId('');
       setActiveGrip(null);
@@ -239,6 +244,7 @@ export default function InventorSketchOverlay({
       if (event.key === 'Escape') {
         setDraft(null);
         setSelectedIds([]);
+        setSelectedDimensionId('');
         setSelectionBox(null);
         setActiveGrip(null);
         gripRef.current = null;
@@ -1018,7 +1024,10 @@ export default function InventorSketchOverlay({
     };
   }, [draft, dynamicA, dynamicB, dynamicLocks, store.displayUnit, store.mmPerUnit]);
 
-  const dimensionColor = '#0ea5e9';
+  const viewDimensions = useMemo(
+    () => getSketchViewDimensions(store.entities),
+    [store.entities],
+  );
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[18]">
@@ -1056,92 +1065,40 @@ export default function InventorSketchOverlay({
           };
 
           if (entity.type === 'line') {
-            const midX = (entity.x1 + entity.x2) / 2;
-            const midY = (entity.y1 + entity.y2) / 2;
-            const lineLength = distance({ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 });
-            const angle = angleDeg({ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 });
             return (
-              <g key={entity.id}>
-                <line x1={entity.x1} y1={entity.y1} x2={entity.x2} y2={entity.y2} {...common} />
-                <text
-                  x={midX}
-                  y={midY - 8}
-                  textAnchor="middle"
-                  fill={dimensionColor}
-                  fontSize="14"
-                  fontWeight="600"
-                  vectorEffect="non-scaling-stroke"
-                  pointerEvents={enabled ? 'auto' : 'none'}
-                  style={{ cursor: 'pointer', paintOrder: 'stroke', stroke: 'white', strokeWidth: 3 }}
-                  onDoubleClick={(event) => { event.stopPropagation(); editLineLength(entity); }}
-                >
-                  {formatSketchDistance(lineLength, store)}
-                </text>
-                <text
-                  x={entity.x1 + 12}
-                  y={entity.y1 - 10}
-                  fill={dimensionColor}
-                  fontSize="12"
-                  pointerEvents={enabled ? 'auto' : 'none'}
-                  style={{ cursor: 'pointer', paintOrder: 'stroke', stroke: 'white', strokeWidth: 3 }}
-                  onDoubleClick={(event) => { event.stopPropagation(); editLineAngle(entity); }}
-                >
-                  ∠ {angle.toFixed(1)}°
-                </text>
-              </g>
+              <line
+                key={entity.id}
+                x1={entity.x1}
+                y1={entity.y1}
+                x2={entity.x2}
+                y2={entity.y2}
+                {...common}
+              />
             );
           }
 
           if (entity.type === 'rect') {
             return (
-              <g key={entity.id}>
-                <rect x={entity.x} y={entity.y} width={entity.w} height={entity.h} {...common} />
-                <text
-                  x={entity.x + entity.w / 2}
-                  y={entity.y - 8}
-                  textAnchor="middle"
-                  fill={dimensionColor}
-                  fontSize="14"
-                  fontWeight="600"
-                  pointerEvents={enabled ? 'auto' : 'none'}
-                  style={{ cursor: 'pointer', paintOrder: 'stroke', stroke: 'white', strokeWidth: 3 }}
-                  onDoubleClick={(event) => { event.stopPropagation(); editRectDimension(entity, 'w'); }}
-                >
-                  {formatSketchDistance(entity.w, store)}
-                </text>
-                <text
-                  x={entity.x + entity.w + 8}
-                  y={entity.y + entity.h / 2}
-                  fill={dimensionColor}
-                  fontSize="14"
-                  fontWeight="600"
-                  pointerEvents={enabled ? 'auto' : 'none'}
-                  style={{ cursor: 'pointer', paintOrder: 'stroke', stroke: 'white', strokeWidth: 3 }}
-                  onDoubleClick={(event) => { event.stopPropagation(); editRectDimension(entity, 'h'); }}
-                >
-                  {formatSketchDistance(entity.h, store)}
-                </text>
-              </g>
+              <rect
+                key={entity.id}
+                x={entity.x}
+                y={entity.y}
+                width={entity.w}
+                height={entity.h}
+                {...common}
+              />
             );
           }
 
           if (entity.type === 'circle') {
             return (
-              <g key={entity.id}>
-                <circle cx={entity.cx} cy={entity.cy} r={entity.r} {...common} />
-                <text
-                  x={entity.cx + entity.r + 8}
-                  y={entity.cy}
-                  fill={dimensionColor}
-                  fontSize="14"
-                  fontWeight="600"
-                  pointerEvents={enabled ? 'auto' : 'none'}
-                  style={{ cursor: 'pointer', paintOrder: 'stroke', stroke: 'white', strokeWidth: 3 }}
-                  onDoubleClick={(event) => { event.stopPropagation(); editCircleRadius(entity); }}
-                >
-                  R {formatSketchDistance(entity.r, store)}
-                </text>
-              </g>
+              <circle
+                key={entity.id}
+                cx={entity.cx}
+                cy={entity.cy}
+                r={entity.r}
+                {...common}
+              />
             );
           }
 
@@ -1172,6 +1129,17 @@ export default function InventorSketchOverlay({
             />
           );
         })}
+
+        <DimensionRenderer
+          dimensions={viewDimensions}
+          document={store}
+          enabled={enabled}
+          selectedId={selectedDimensionId}
+          onSelect={(dimensionId) => {
+            setSelectedDimensionId(dimensionId);
+            setSelectedIds([]);
+          }}
+        />
 
         {draftPreview?.type === 'line' && (
           <line

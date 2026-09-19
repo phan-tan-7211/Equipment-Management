@@ -1,12 +1,18 @@
 import { createSketchDocument } from '../core/document';
 import { normalizeMmPerUnit } from '../core/units';
-import type { SketchDocument, SketchEntity, SketchUnit } from '../core/types';
+import type {
+  SketchDimension,
+  SketchDocument,
+  SketchEntity,
+  SketchUnit,
+} from '../core/types';
 
 export const SKETCH_STORAGE_PREFIX = 'znteqr:facility-sketch:v1:';
 
 type LegacySketchStore = {
   mmPerUnit?: number;
   entities?: SketchEntity[];
+  dimensions?: SketchDimension[];
   displayUnit?: SketchUnit;
 };
 
@@ -27,6 +33,7 @@ export function deserializeSketchDocument(
       displayUnit: parsed.displayUnit === 'm' ? 'm' : 'mm',
       mmPerUnit: normalizeMmPerUnit(Number(parsed.mmPerUnit), 10),
       entities: Array.isArray(parsed.entities) ? parsed.entities : [],
+      dimensions: Array.isArray(parsed.dimensions) ? parsed.dimensions : [],
       createdAt: Number(parsed.createdAt) || Date.now(),
       updatedAt: Number(parsed.updatedAt) || Date.now(),
     });
@@ -39,6 +46,7 @@ export function deserializeSketchDocument(
     displayUnit: parsed.displayUnit === 'm' ? 'm' : 'mm',
     mmPerUnit: normalizeMmPerUnit(Number(parsed.mmPerUnit), 10),
     entities: Array.isArray(parsed.entities) ? parsed.entities : [],
+    dimensions: Array.isArray(parsed.dimensions) ? parsed.dimensions : [],
   });
 }
 

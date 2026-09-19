@@ -1,6 +1,11 @@
 import { createSketchId } from './id';
 import { normalizeMmPerUnit } from './units';
-import type { SketchDocument, SketchEntity, SketchUnit } from './types';
+import type {
+  SketchDimension,
+  SketchDocument,
+  SketchEntity,
+  SketchUnit,
+} from './types';
 
 export const SKETCH_SCHEMA_VERSION = 1 as const;
 
@@ -10,6 +15,7 @@ export type CreateSketchDocumentInput = {
   displayUnit?: SketchUnit;
   mmPerUnit?: number;
   entities?: SketchEntity[];
+  dimensions?: SketchDimension[];
   createdAt?: number;
   updatedAt?: number;
 };
@@ -23,6 +29,7 @@ export function createSketchDocument(input: CreateSketchDocumentInput = {}): Ske
     displayUnit: input.displayUnit ?? 'mm',
     mmPerUnit: normalizeMmPerUnit(input.mmPerUnit ?? 10),
     entities: input.entities ? structuredClone(input.entities) : [],
+    dimensions: input.dimensions ? structuredClone(input.dimensions) : [],
     createdAt: input.createdAt ?? now,
     updatedAt: input.updatedAt ?? now,
   };
