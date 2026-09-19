@@ -473,6 +473,14 @@ export default function InventorSketchOverlay({
       if (entity.id === target.id) return;
       if (entity.type === 'line') otherSegments.push([{ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 }]);
       if (entity.type === 'rect') otherSegments.push(...rectEdges(entity));
+      if (entity.type === 'polyline') {
+        for (let index = 0; index < entity.points.length - 1; index += 1) {
+          otherSegments.push([entity.points[index], entity.points[index + 1]]);
+        }
+        if (entity.closed && entity.points.length > 2) {
+          otherSegments.push([entity.points[entity.points.length - 1], entity.points[0]]);
+        }
+      }
     });
     const intersections = otherSegments
       .map(([c, d]) => segmentIntersection(a, b, c, d, false))
@@ -536,6 +544,14 @@ export default function InventorSketchOverlay({
       if (entity.id === target.id) return;
       if (entity.type === 'line') otherSegments.push([{ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 }]);
       if (entity.type === 'rect') otherSegments.push(...rectEdges(entity));
+      if (entity.type === 'polyline') {
+        for (let index = 0; index < entity.points.length - 1; index += 1) {
+          otherSegments.push([entity.points[index], entity.points[index + 1]]);
+        }
+        if (entity.closed && entity.points.length > 2) {
+          otherSegments.push([entity.points[entity.points.length - 1], entity.points[0]]);
+        }
+      }
     });
 
     const candidates = otherSegments
@@ -674,7 +690,7 @@ export default function InventorSketchOverlay({
     const fallbackRadius = distance(draft.start, draft.current);
     const radius = dynamicLocks.a ? clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackRadius) : fallbackRadius;
     return { ...draft, current: { x: draft.start.x + radius, y: draft.start.y } };
-  }, [draft, dynamicA, dynamicB, dynamicLocks, store.mmPerUnit]);
+  }, [draft, dynamicA, dynamicB, dynamicLocks, store.displayUnit, store.mmPerUnit]);
 
   const dimensionColor = '#0ea5e9';
 
@@ -773,22 +789,51 @@ export default function InventorSketchOverlay({
             );
           }
 
+          if (entity.type === 'circle') {
+            return (
+              <g key={entity.id}>
+                <circle cx={entity.cx} cy={entity.cy} r={entity.r} {...common} />
+                <text
+                  x={entity.cx + entity.r + 8}
+                  y={entity.cy}
+                  fill={dimensionColor}
+                  fontSize="14"
+                  fontWeight="600"
+                  pointerEvents={enabled ? 'auto' : 'none'}
+                  style={{ cursor: 'pointer', paintOrder: 'stroke', stroke: 'white', strokeWidth: 3 }}
+                  onDoubleClick={(event) => { event.stopPropagation(); editCircleRadius(entity); }}
+                >
+                  R {formatSketchDistance(entity.r, store)}
+                </text>
+              </g>
+            );
+          }
+
+          if (entity.type === 'polyline') {
+            return (
+              <polyline
+                key={entity.id}
+                points={entity.points.map((point) => `${point.x},${point.y}`).join(' ')}
+                {...common}
+                fill="none"
+              />
+            );
+          }
+
+          const start = arcPoint(entity, entity.startAngleDeg);
+          const end = arcPoint(entity, entity.endAngleDeg);
+          const rawDelta = entity.clockwise
+            ? entity.startAngleDeg - entity.endAngleDeg
+            : entity.endAngleDeg - entity.startAngleDeg;
+          const normalizedDelta = ((rawDelta % 360) + 360) % 360;
+          const largeArcFlag = normalizedDelta > 180 ? 1 : 0;
+          const sweepFlag = entity.clockwise ? 0 : 1;
           return (
-            <g key={entity.id}>
-              <circle cx={entity.cx} cy={entity.cy} r={entity.r} {...common} />
-              <text
-                x={entity.cx + entity.r + 8}
-                y={entity.cy}
-                fill={dimensionColor}
-                fontSize="14"
-                fontWeight="600"
-                pointerEvents={enabled ? 'auto' : 'none'}
-                style={{ cursor: 'pointer', paintOrder: 'stroke', stroke: 'white', strokeWidth: 3 }}
-                onDoubleClick={(event) => { event.stopPropagation(); editCircleRadius(entity); }}
-              >
-                R {formatSketchDistance(entity.r, store)}
-              </text>
-            </g>
+            <path
+              key={entity.id}
+              d={`M ${start.x} ${start.y} A ${entity.r} ${entity.r} 0 ${largeArcFlag} ${sweepFlag} ${end.x} ${end.y}`}
+              {...common}
+            />
           );
         })}
 
@@ -925,6 +970,25 @@ export default function InventorSketchOverlay({
                 <Icon className="h-4 w-4" />
               </button>
             ))}
+            <span className="mx-1 h-5 w-px bg-white/15" />
+            <button
+              type="button"
+              onClick={sketchHistory.undo}
+              disabled={!sketchHistory.canUndo}
+              className="rounded-md p-2 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
+              title={t('facilityMap.undo')}
+            >
+              <Undo2 className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={sketchHistory.redo}
+              disabled={!sketchHistory.canRedo}
+              className="rounded-md p-2 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
+              title={t('facilityMap.redo')}
+            >
+              <Redo2 className="h-4 w-4" />
+            </button>
             <span className="mx-1 h-5 w-px bg-white/15" />
             <button
               type="button"
