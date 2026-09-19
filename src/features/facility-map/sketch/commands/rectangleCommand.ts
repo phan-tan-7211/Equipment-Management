@@ -43,6 +43,14 @@ export const getRectangleDynamicWidth = (
   modelUnitsToDisplay(Math.abs(current.x - start.x), document)
     .toFixed(unitPrecision(document.displayUnit));
 
+export const getRectangleDynamicHeight = (
+  start: SketchPoint,
+  current: SketchPoint,
+  document: RectangleDocumentUnits,
+): string =>
+  modelUnitsToDisplay(Math.abs(current.y - start.y), document)
+    .toFixed(unitPrecision(document.displayUnit));
+
 export const resolveRectangleWidth = (
   widthInput: string,
   fallbackWidth: number,
@@ -51,6 +59,16 @@ export const resolveRectangleWidth = (
   clampPositive(
     displayToModelUnits(Number(widthInput), document),
     fallbackWidth,
+  );
+
+export const resolveRectangleHeight = (
+  heightInput: string,
+  fallbackHeight: number,
+  document: RectangleDocumentUnits,
+): number =>
+  clampPositive(
+    displayToModelUnits(Number(heightInput), document),
+    fallbackHeight,
   );
 
 export type CreateRectangleEntityInput = {

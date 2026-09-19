@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createRectangleEntity,
+  getRectangleDynamicHeight,
   getRectangleDynamicWidth,
+  resolveRectangleHeight,
   resolveRectangleWidth,
   startRectangleDraft,
   updateRectangleDraft,
@@ -54,6 +56,32 @@ describe('rectangle command', () => {
     expect(resolveRectangleWidth('120', 7, document)).toBe(12);
     expect(resolveRectangleWidth('invalid', 7, document)).toBe(7);
     expect(resolveRectangleWidth('0', 7, document)).toBe(7);
+  });
+
+  it('formats dynamic rectangle height in the active display unit', () => {
+    expect(
+      getRectangleDynamicHeight(
+        { x: 0, y: 0 },
+        { x: 20, y: 5 },
+        { displayUnit: 'mm', mmPerUnit: 10 },
+      ),
+    ).toBe('50');
+
+    expect(
+      getRectangleDynamicHeight(
+        { x: 0, y: 0 },
+        { x: 20, y: 500 },
+        { displayUnit: 'm', mmPerUnit: 10 },
+      ),
+    ).toBe('5.000');
+  });
+
+  it('resolves rectangle height input to model units with pointer fallback', () => {
+    const document = { displayUnit: 'mm' as const, mmPerUnit: 10 };
+
+    expect(resolveRectangleHeight('120', 7, document)).toBe(12);
+    expect(resolveRectangleHeight('invalid', 7, document)).toBe(7);
+    expect(resolveRectangleHeight('0', 7, document)).toBe(7);
   });
 
   it('creates a rectangle in the positive drag direction', () => {

@@ -61,7 +61,9 @@ import {
 } from '@/features/facility-map/sketch/commands/lineCommand';
 import {
   createRectangleEntity,
+  getRectangleDynamicHeight,
   getRectangleDynamicWidth,
+  resolveRectangleHeight,
   resolveRectangleWidth,
   startRectangleDraft,
   updateRectangleDraft,
@@ -291,7 +293,7 @@ export default function InventorSketchOverlay({
       if (!dynamicLocks.b) setDynamicB(getLineDynamicAngle(draft.start, next));
     } else if (draft.type === 'rect') {
       if (!dynamicLocks.a) setDynamicA(getRectangleDynamicWidth(draft.start, next, store));
-      if (!dynamicLocks.b) setDynamicB(modelUnitsToDisplay(Math.abs(next.y - draft.start.y), store).toFixed(unitPrecision(store.displayUnit)));
+      if (!dynamicLocks.b) setDynamicB(getRectangleDynamicHeight(draft.start, next, store));
     } else if (draft.type === 'circle') {
       if (!dynamicLocks.a) setDynamicA(modelUnitsToDisplay(distance(draft.start, next), store).toFixed(unitPrecision(store.displayUnit)));
     }
@@ -349,7 +351,7 @@ export default function InventorSketchOverlay({
       const fallbackW = Math.abs(currentPoint.x - draft.start.x);
       const fallbackH = Math.abs(currentPoint.y - draft.start.y);
       const width = resolveRectangleWidth(dynamicA, fallbackW, store);
-      const height = clampPositive(displayToModelUnits(Number(dynamicB), store), fallbackH);
+      const height = resolveRectangleHeight(dynamicB, fallbackH, store);
       const rect = createRectangleEntity({
         draft,
         current: currentPoint,
@@ -690,7 +692,7 @@ export default function InventorSketchOverlay({
       const fallbackW = Math.abs(draft.current.x - draft.start.x);
       const fallbackH = Math.abs(draft.current.y - draft.start.y);
       const width = dynamicLocks.a ? resolveRectangleWidth(dynamicA, fallbackW, store) : fallbackW;
-      const height = dynamicLocks.b ? clampPositive(displayToModelUnits(Number(dynamicB), store), fallbackH) : fallbackH;
+      const height = dynamicLocks.b ? resolveRectangleHeight(dynamicB, fallbackH, store) : fallbackH;
       const signX = draft.current.x >= draft.start.x ? 1 : -1;
       const signY = draft.current.y >= draft.start.y ? 1 : -1;
       return {
