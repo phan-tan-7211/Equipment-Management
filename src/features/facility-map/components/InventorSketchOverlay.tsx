@@ -8,44 +8,33 @@ import {
   Scissors,
   Square,
   Trash2,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 
-type Point = { x: number; y: number };
-type SketchTool = 'select' | 'line' | 'rect' | 'circle' | 'trim' | 'extend';
-type SketchStyle = { color: string; lineWidth: number };
-
-type LineEntity = SketchStyle & {
-  id: string;
-  type: 'line';
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-};
-
-type RectEntity = SketchStyle & {
-  id: string;
-  type: 'rect';
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-};
-
-type CircleEntity = SketchStyle & {
-  id: string;
-  type: 'circle';
-  cx: number;
-  cy: number;
-  r: number;
-};
-
-type SketchEntity = LineEntity | RectEntity | CircleEntity;
-
-type SketchStore = {
-  mmPerUnit: number;
-  entities: SketchEntity[];
-};
+import {
+  beginSketchInteraction,
+  cancelSketchCommand,
+  createSketchCommandState,
+  createSketchId,
+  displayToModelUnits,
+  endSketchInteraction,
+  formatSketchDistance,
+  modelUnitsToDisplay,
+  normalizeMmPerUnit,
+  selectSketchTool,
+  unitPrecision,
+  useSketchDocumentHistory,
+  type ArcEntity,
+  type CircleEntity,
+  type LineEntity,
+  type PolylineEntity,
+  type RectEntity,
+  type SketchEntity,
+  type SketchPoint as Point,
+  type SketchStyle,
+  type SketchTool,
+} from '@/features/facility-map/sketch';
 
 type ToolPresetMap = Record<'line' | 'rect' | 'circle', SketchStyle>;
 
@@ -69,7 +58,6 @@ type Props = {
   onExit: () => void;
 };
 
-const STORE_PREFIX = 'znteqr:facility-sketch:v1:';
 const PRESET_KEY = 'znteqr:facility-sketch:presets:v1';
 
 const DEFAULT_PRESETS: ToolPresetMap = {
@@ -77,9 +65,6 @@ const DEFAULT_PRESETS: ToolPresetMap = {
   rect: { color: '#7c3aed', lineWidth: 1.5 },
   circle: { color: '#0891b2', lineWidth: 1.5 },
 };
-
-const makeId = (prefix: string) =>
-  `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, b.y - a.y);
 const angleDeg = (a: Point, b: Point) => (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
@@ -99,20 +84,6 @@ const readPresets = (): ToolPresetMap => {
     };
   } catch {
     return DEFAULT_PRESETS;
-  }
-};
-
-const readStore = (key: string): SketchStore => {
-  try {
-    const raw = localStorage.getItem(`${STORE_PREFIX}${key}`);
-    if (!raw) return { mmPerUnit: 10, entities: [] };
-    const parsed = JSON.parse(raw) as Partial<SketchStore>;
-    return {
-      mmPerUnit: clampPositive(Number(parsed.mmPerUnit), 10),
-      entities: Array.isArray(parsed.entities) ? parsed.entities : [],
-    };
-  } catch {
-    return { mmPerUnit: 10, entities: [] };
   }
 };
 
