@@ -91,6 +91,7 @@ import {
   applyParallelConstraint,
   applyPerpendicularConstraint,
 } from '@/features/facility-map/sketch/constraints/advancedConstraints';
+import { solveSketchConstraints } from '@/features/facility-map/sketch/constraints/constraintSolver';
 import {
   toggleSelection,
 } from '@/features/facility-map/sketch/selection/selectionState';
@@ -1060,6 +1061,11 @@ export default function InventorSketchOverlay({
     setSelectedDimensionId(dimension.id);
   };
 
+  const constraintSolve = useMemo(
+    () => solveSketchConstraints(store.entities, store.constraints),
+    [store.constraints, store.entities],
+  );
+
   const viewDimensions = useMemo(() => {
     const persistedById = new Map(
       store.dimensions.map((dimension) => [dimension.id, dimension]),
@@ -1178,7 +1184,7 @@ export default function InventorSketchOverlay({
         })}
 
         <ConstraintGlyphRenderer
-          constraints={store.constraints}
+          constraints={constraintSolve.constraints}
           entities={store.entities}
         />
 
@@ -1773,6 +1779,13 @@ export default function InventorSketchOverlay({
                 {t('facilityMap.deleteSelected')}
               </button>
             )}
+
+            <div className="mt-3 rounded-md border border-violet-400/20 bg-violet-500/5 p-2 text-[10px] text-violet-200">
+              Constraints: {constraintSolve.status}
+              {constraintSolve.status !== 'conflict' && (
+                <> · {constraintSolve.converged ? 'converged' : 'iteration limit'}</>
+              )}
+            </div>
 
             <div className="mt-3 rounded-md bg-white/5 p-2 text-[10px] text-slate-400">
               {tool === 'trim' || tool === 'extend'
