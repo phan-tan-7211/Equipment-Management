@@ -134,6 +134,7 @@ import {
   breakLineAtPoint,
   createOffsetEntity,
 } from '@/features/facility-map/sketch/modify/breakOffset';
+import { mirrorSelectedEntities } from '@/features/facility-map/sketch/modify/mirror';
 import {
   commitLineDraft,
   getLineDynamicAngle,
@@ -1717,6 +1718,37 @@ export default function InventorSketchOverlay({
                     Concentric
                   </button>
                 </div>
+              );
+            })()}
+
+            {tool === 'select' && selectedIds.length >= 2 && (() => {
+              const axis = store.entities.find(
+                (entity): entity is LineEntity =>
+                  entity.id === selectedIds[0] && entity.type === 'line',
+              );
+              if (!axis) return null;
+              return (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const mirrored = mirrorSelectedEntities(
+                      store.entities,
+                      axis.id,
+                      selectedIds.slice(1),
+                      (entity) => createSketchId(`sketch-${entity.type}`),
+                    );
+                    if (!mirrored || !mirrored.copies.length) return;
+                    setStore((current) => ({
+                      ...current,
+                      entities: [...current.entities, ...mirrored.copies],
+                    }));
+                    setSelectedIds(mirrored.ids);
+                    setMessage('Mirror applied across first selected line.');
+                  }}
+                  className="mt-3 w-full rounded-md border border-cyan-400/30 px-3 py-2 text-xs text-cyan-300 hover:bg-cyan-500/10"
+                >
+                  Mirror across first line
+                </button>
               );
             })()}
 
