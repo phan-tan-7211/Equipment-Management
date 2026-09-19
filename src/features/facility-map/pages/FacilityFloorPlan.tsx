@@ -94,7 +94,10 @@ type Annotation = {
   x2: number;
   y2: number;
   text?: string;
+  color?: string;
 };
+
+type ZoneResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 
 type FloorPlanState = {
   name: string;
@@ -349,6 +352,7 @@ export default function FacilityFloorPlan() {
   const [hiddenLayers, setHiddenLayers] = useState<Set<'assets' | LayerId>>(new Set());
   const [draggingZoneId, setDraggingZoneId] = useState('');
   const [resizingZoneId, setResizingZoneId] = useState('');
+  const [zoneResizeHandle, setZoneResizeHandle] = useState<ZoneResizeHandle | null>(null);
   const [draggingEquipmentId, setDraggingEquipmentId] = useState('');
   const [draggingOverlayId, setDraggingOverlayId] = useState('');
   const [zoneStart, setZoneStart] = useState<{ x: number; y: number } | null>(null);
@@ -360,6 +364,14 @@ export default function FacilityFloorPlan() {
   const dragStartPlanRef = useRef<FloorPlanState | null>(null);
   const annotationStartRef = useRef<{ x: number; y: number } | null>(null);
   const zoneInteractionRef = useRef<{ startX: number; startY: number; zone: Zone } | null>(null);
+  const touchRef = useRef<{
+    distance: number;
+    zoom: number;
+    panX: number;
+    panY: number;
+    centerX: number;
+    centerY: number;
+  } | null>(null);
   const canvasRef = useRef<HTMLDivElement | null>(null);
 
   const savePlan = useCallback((next: FloorPlanState) => {
@@ -429,6 +441,11 @@ export default function FacilityFloorPlan() {
     if (!selectedMarkerId.startsWith('overlay:')) return null;
     return plan.overlayPins.find((pin) => pin.id === selectedMarkerId.slice('overlay:'.length)) ?? null;
   }, [plan.overlayPins, selectedMarkerId]);
+
+  const selectedAnnotation = useMemo(() => {
+    if (!selectedMarkerId.startsWith('annotation:')) return null;
+    return plan.annotations.find((annotation) => annotation.id === selectedMarkerId.slice('annotation:'.length)) ?? null;
+  }, [plan.annotations, selectedMarkerId]);
 
   const unplacedEquipment = useMemo(
     () => filteredEquipment.filter((item) => !plan.pins.some((pin) => pin.equipmentId === item.id)),
@@ -601,21 +618,37 @@ export default function FacilityFloorPlan() {
       return;
     }
 
-    if (resizingZoneId && zoneInteractionRef.current && editMode) {
+    if (resizingZoneId && zoneInteractionRef.current && zoneResizeHandle && editMode) {
       const start = zoneInteractionRef.current;
       const dx = point.x - start.startX;
       const dy = point.y - start.startY;
       setPlan((current) => ({
         ...current,
-        zones: current.zones.map((zone) =>
-          zone.id === resizingZoneId
-            ? {
-                ...zone,
-                w: Math.max(3, Math.min(100 - zone.x, start.zone.w + dx)),
-                h: Math.max(3, Math.min(100 - zone.y, start.zone.h + dy)),
-              }
-            : zone,
-        ),
+        zones: current.zones.map((zone) => {
+          if (zone.id !== resizingZoneId) return zone;
+          const original = start.zone;
+          let x = original.x;
+          let y = original.y;
+          let w = original.w;
+          let h = original.h;
+
+          if (zoneResizeHandle.includes('e')) w = Math.max(3, original.w + dx);
+          if (zoneResizeHandle.includes('s')) h = Math.max(3, original.h + dy);
+          if (zoneResizeHandle.includes('w')) {
+            x = Math.min(original.x + original.w - 3, original.x + dx);
+            w = Math.max(3, original.w - (x - original.x));
+          }
+          if (zoneResizeHandle.includes('n')) {
+            y = Math.min(original.y + original.h - 3, original.y + dy);
+            h = Math.max(3, original.h - (y - original.y));
+          }
+
+          x = Math.max(0, x);
+          y = Math.max(0, y);
+          w = Math.min(100 - x, w);
+          h = Math.min(100 - y, h);
+          return { ...zone, x: snapValue(x), y: snapValue(y), w: snapValue(w), h: snapValue(h) };
+        }),
       }));
       return;
     }
@@ -674,6 +707,7 @@ export default function FacilityFloorPlan() {
     setDraggingOverlayId('');
     setDraggingZoneId('');
     setResizingZoneId('');
+    setZoneResizeHandle(null);
     zoneInteractionRef.current = null;
     setIsPanning(false);
   };
@@ -728,6 +762,62 @@ export default function FacilityFloorPlan() {
     });
   };
 
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length === 2) {
+      const [a, b] = [event.touches[0], event.touches[1]];
+      const dx = b.clientX - a.clientX;
+      const dy = b.clientY - a.clientY;
+      touchRef.current = {
+        distance: Math.hypot(dx, dy),
+        zoom,
+        panX: pan.x,
+        panY: pan.y,
+        centerX: (a.clientX + b.clientX) / 2,
+        centerY: (a.clientY + b.clientY) / 2,
+      };
+      return;
+    }
+
+    if (event.touches.length === 1 && (!editMode || drawTool === 'pan')) {
+      const touch = event.touches[0];
+      pointerStart.current = { x: touch.clientX, y: touch.clientY, panX: pan.x, panY: pan.y };
+      setIsPanning(true);
+    }
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length === 2 && touchRef.current) {
+      event.preventDefault();
+      const [a, b] = [event.touches[0], event.touches[1]];
+      const dx = b.clientX - a.clientX;
+      const dy = b.clientY - a.clientY;
+      const nextZoom = Math.max(0.5, Math.min(3, touchRef.current.zoom * (Math.hypot(dx, dy) / touchRef.current.distance)));
+      const centerX = (a.clientX + b.clientX) / 2;
+      const centerY = (a.clientY + b.clientY) / 2;
+      setZoom(nextZoom);
+      setPan({
+        x: touchRef.current.panX + (centerX - touchRef.current.centerX),
+        y: touchRef.current.panY + (centerY - touchRef.current.centerY),
+      });
+      return;
+    }
+
+    if (event.touches.length === 1 && isPanning) {
+      event.preventDefault();
+      const touch = event.touches[0];
+      const start = pointerStart.current;
+      setPan({
+        x: start.panX + (touch.clientX - start.x),
+        y: start.panY + (touch.clientY - start.y),
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchRef.current = null;
+    setIsPanning(false);
+  };
+
   const deleteSelected = () => {
     if (!selectedMarkerId || !editMode) return;
     if (selectedMarkerId.startsWith('asset:')) {
@@ -747,6 +837,12 @@ export default function FacilityFloorPlan() {
       commitPlan((current) => ({
         ...current,
         zones: current.zones.filter((zone) => zone.id !== id),
+      }));
+    } else if (selectedMarkerId.startsWith('annotation:')) {
+      const id = selectedMarkerId.slice('annotation:'.length);
+      commitPlan((current) => ({
+        ...current,
+        annotations: current.annotations.filter((annotation) => annotation.id !== id),
       }));
     }
     setSelectedMarkerId('');
@@ -1221,6 +1317,21 @@ export default function FacilityFloorPlan() {
         )}
 
         <section className="relative min-h-[640px] overflow-hidden bg-slate-950">
+          <div className="absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 items-center gap-1 rounded-lg border border-white/10 bg-black/65 p-1 backdrop-blur md:flex">
+            {DEMO_FLOORS.map((floor) => (
+              <button
+                key={floor}
+                type="button"
+                onClick={() => switchDemoLocation(plan.building, floor)}
+                className={`rounded-md px-3 py-1.5 text-[11px] transition ${
+                  plan.floor === floor ? 'bg-white text-slate-950' : 'text-white/70 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {floor}
+              </button>
+            ))}
+          </div>
+
           <div className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2">
             <div className="rounded-md border border-white/10 bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
               {plan.building} · {plan.floor}
@@ -1300,6 +1411,115 @@ export default function FacilityFloorPlan() {
               {t('facilityMap.miniMap')}
             </div>
           </div>
+
+          {editMode && (selectedZone || selectedOverlay || selectedAnnotation) && (
+            <div className="absolute right-3 top-3 z-30 w-72 max-h-[calc(100%-6rem)] overflow-auto rounded-xl border border-white/10 bg-slate-950/92 p-4 text-white shadow-2xl backdrop-blur">
+              <div className="mb-3 text-sm font-semibold">{t('facilityMap.properties')}</div>
+
+              {selectedZone && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="mb-1 block text-[11px] text-slate-400">{t('facilityMap.zoneName')}</label>
+                    <input
+                      value={selectedZone.customLabel ?? ''}
+                      onChange={(event) => commitPlan((current) => ({
+                        ...current,
+                        zones: current.zones.map((zone) => zone.id === selectedZone.id ? { ...zone, customLabel: event.target.value } : zone),
+                      }))}
+                      className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-2 text-xs"
+                      placeholder={t('facilityMap.zoneName')}
+                    />
+                  </div>
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <select
+                      value={selectedZone.type}
+                      onChange={(event) => commitPlan((current) => ({
+                        ...current,
+                        zones: current.zones.map((zone) => zone.id === selectedZone.id ? { ...zone, type: event.target.value as ZoneType } : zone),
+                      }))}
+                      className="rounded-md border border-white/10 bg-slate-900 px-2 py-2 text-xs"
+                    >
+                      {ZONES.map((zone) => <option key={zone.id} value={zone.id}>{t(zone.labelKey)}</option>)}
+                    </select>
+                    <input
+                      type="color"
+                      value={selectedZone.customColor ?? zoneById.get(selectedZone.type)?.color ?? '#64748b'}
+                      onChange={(event) => commitPlan((current) => ({
+                        ...current,
+                        zones: current.zones.map((zone) => zone.id === selectedZone.id ? { ...zone, customColor: event.target.value } : zone),
+                      }))}
+                      className="h-9 w-11 rounded-md border border-white/10 bg-transparent"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 gap-1 text-[10px] text-slate-400">
+                    <div className="rounded bg-white/5 p-2">X<br/><span className="text-white">{selectedZone.x.toFixed(1)}</span></div>
+                    <div className="rounded bg-white/5 p-2">Y<br/><span className="text-white">{selectedZone.y.toFixed(1)}</span></div>
+                    <div className="rounded bg-white/5 p-2">W<br/><span className="text-white">{selectedZone.w.toFixed(1)}</span></div>
+                    <div className="rounded bg-white/5 p-2">H<br/><span className="text-white">{selectedZone.h.toFixed(1)}</span></div>
+                  </div>
+                </div>
+              )}
+
+              {selectedOverlay && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">{layerById.get(selectedOverlay.layer)?.emoji}</span>
+                    <span className="text-xs">{t(layerById.get(selectedOverlay.layer)?.labelKey ?? 'facilityMap.utility')}</span>
+                  </div>
+                  <input
+                    value={selectedOverlay.label ?? ''}
+                    onChange={(event) => commitPlan((current) => ({
+                      ...current,
+                      overlayPins: current.overlayPins.map((pin) => pin.id === selectedOverlay.id ? { ...pin, label: event.target.value } : pin),
+                    }))}
+                    placeholder={t('facilityMap.markerLabel')}
+                    className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-2 text-xs"
+                  />
+                  <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400">
+                    <div className="rounded bg-white/5 p-2">X<br/><span className="text-white">{selectedOverlay.x.toFixed(1)}%</span></div>
+                    <div className="rounded bg-white/5 p-2">Y<br/><span className="text-white">{selectedOverlay.y.toFixed(1)}%</span></div>
+                  </div>
+                </div>
+              )}
+
+              {selectedAnnotation && (
+                <div className="space-y-3">
+                  <div className="text-xs text-slate-300">{t('facilityMap.annotation')} · {t(`facilityMap.tool${selectedAnnotation.type.charAt(0).toUpperCase() + selectedAnnotation.type.slice(1)}`)}</div>
+                  {selectedAnnotation.type === 'text' && (
+                    <input
+                      value={selectedAnnotation.text ?? ''}
+                      onChange={(event) => commitPlan((current) => ({
+                        ...current,
+                        annotations: current.annotations.map((annotation) => annotation.id === selectedAnnotation.id ? { ...annotation, text: event.target.value } : annotation),
+                      }))}
+                      className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-2 text-xs"
+                    />
+                  )}
+                  <label className="flex items-center justify-between text-xs text-slate-300">
+                    <span>{t('facilityMap.annotationColor')}</span>
+                    <input
+                      type="color"
+                      value={selectedAnnotation.color ?? '#f43f5e'}
+                      onChange={(event) => commitPlan((current) => ({
+                        ...current,
+                        annotations: current.annotations.map((annotation) => annotation.id === selectedAnnotation.id ? { ...annotation, color: event.target.value } : annotation),
+                      }))}
+                      className="h-8 w-10 rounded border border-white/10 bg-transparent"
+                    />
+                  </label>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={deleteSelected}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md border border-red-400/30 px-3 py-2 text-xs text-red-300 hover:bg-red-500/10"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t('facilityMap.deleteSelected')}
+              </button>
+            </div>
+          )}
 
           {selectedEquipment && (
             <div className="absolute right-3 top-3 z-30 w-72 rounded-xl border border-white/10 bg-slate-950/90 p-4 text-white shadow-2xl backdrop-blur">
@@ -1384,6 +1604,10 @@ export default function FacilityFloorPlan() {
             onMouseUp={endPointerInteraction}
             onMouseLeave={endPointerInteraction}
             onWheel={handleWheel}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{ touchAction: 'none' }}
           >
             <div
               className="absolute inset-0 origin-top-left"
@@ -1415,7 +1639,7 @@ export default function FacilityFloorPlan() {
                 className="absolute inset-0 h-full w-full"
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
-                style={{ pointerEvents: drawTool === 'erase' ? 'auto' : 'none' }}
+                style={{ pointerEvents: drawTool === 'erase' || drawTool === 'select' ? 'auto' : 'none' }}
               >
                 <defs>
                   <marker id="facility-arrow-head" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
@@ -1424,19 +1648,26 @@ export default function FacilityFloorPlan() {
                 </defs>
                 {[...plan.annotations, ...(draftAnnotation ? [draftAnnotation] : [])].map((annotation) => {
                   const isDraft = annotation.id === 'draft-annotation';
+                  const annotationColor = annotation.color ?? (annotation.type === 'ruler' ? '#22d3ee' : '#f43f5e');
+                  const annotationSelected = selectedMarkerId === `annotation:${annotation.id}`;
                   const common = {
-                    stroke: annotation.type === 'ruler' ? '#22d3ee' : '#f43f5e',
-                    strokeWidth: isDraft ? 0.35 : 0.28,
+                    stroke: annotationColor,
+                    strokeWidth: annotationSelected ? 0.42 : isDraft ? 0.35 : 0.28,
                     vectorEffect: 'non-scaling-stroke' as const,
                     opacity: isDraft ? 0.7 : 1,
-                    pointerEvents: drawTool === 'erase' && !isDraft ? 'stroke' : 'none',
+                    pointerEvents: ((drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'stroke' : 'none') as const,
                     onClick: (event: React.MouseEvent<SVGElement>) => {
-                      if (drawTool !== 'erase' || isDraft) return;
+                      if (isDraft) return;
                       event.stopPropagation();
-                      commitPlan((current) => ({
-                        ...current,
-                        annotations: current.annotations.filter((item) => item.id !== annotation.id),
-                      }));
+                      if (drawTool === 'erase') {
+                        commitPlan((current) => ({
+                          ...current,
+                          annotations: current.annotations.filter((item) => item.id !== annotation.id),
+                        }));
+                        setSelectedMarkerId('');
+                        return;
+                      }
+                      if (drawTool === 'select') setSelectedMarkerId(`annotation:${annotation.id}`);
                     },
                   };
 
@@ -1457,7 +1688,7 @@ export default function FacilityFloorPlan() {
                           <text
                             x={(annotation.x1 + annotation.x2) / 2}
                             y={(annotation.y1 + annotation.y2) / 2 - 1}
-                            fill="#0e7490"
+                            fill={annotationColor}
                             fontSize="2.2"
                             textAnchor="middle"
                           >
@@ -1476,7 +1707,7 @@ export default function FacilityFloorPlan() {
                         y={Math.min(annotation.y1, annotation.y2)}
                         width={Math.abs(annotation.x2 - annotation.x1)}
                         height={Math.abs(annotation.y2 - annotation.y1)}
-                        fill="#f43f5e18"
+                        fill={`${annotationColor}18`}
                         {...common}
                       />
                     );
@@ -1503,17 +1734,24 @@ export default function FacilityFloorPlan() {
                       key={annotation.id}
                       x={annotation.x1}
                       y={annotation.y1}
-                      fill="#be123c"
+                      fill={annotationColor}
                       fontSize="2.5"
                       fontWeight="700"
-                      style={{ pointerEvents: drawTool === 'erase' ? 'auto' : 'none', cursor: 'pointer' }}
+                      stroke={annotationSelected ? '#ffffff' : 'none'}
+                      strokeWidth={annotationSelected ? 0.08 : 0}
+                      style={{ pointerEvents: (drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'auto' : 'none', cursor: 'pointer' }}
                       onClick={(event) => {
-                        if (drawTool !== 'erase' || isDraft) return;
+                        if (isDraft) return;
                         event.stopPropagation();
-                        commitPlan((current) => ({
-                          ...current,
-                          annotations: current.annotations.filter((item) => item.id !== annotation.id),
-                        }));
+                        if (drawTool === 'erase') {
+                          commitPlan((current) => ({
+                            ...current,
+                            annotations: current.annotations.filter((item) => item.id !== annotation.id),
+                          }));
+                          setSelectedMarkerId('');
+                          return;
+                        }
+                        if (drawTool === 'select') setSelectedMarkerId(`annotation:${annotation.id}`);
                       }}
                     >
                       {annotation.text}
@@ -1563,18 +1801,34 @@ export default function FacilityFloorPlan() {
                       {meta?.emoji} {zone.customLabel || (meta ? t(meta.labelKey) : '')}
                     </span>
                     {editMode && selected && drawTool === 'select' && (
-                      <span
-                        className="absolute bottom-[-5px] right-[-5px] h-3 w-3 cursor-nwse-resize rounded-sm border border-white bg-slate-950"
-                        onMouseDown={(event) => {
-                          event.stopPropagation();
-                          dragStartPlanRef.current = clonePlan(plan);
-                          const point = toPercent(event.clientX, event.clientY);
-                          if (!point) return;
-                          zoneInteractionRef.current = { startX: point.x, startY: point.y, zone: { ...zone } };
-                          setResizingZoneId(zone.id);
-                        }}
-                        title={t('facilityMap.resizeZone')}
-                      />
+                      <>
+                        {([
+                          ['nw', '-5px', '-5px', 'nwse-resize'],
+                          ['n', '50%', '-5px', 'ns-resize'],
+                          ['ne', 'calc(100% - 5px)', '-5px', 'nesw-resize'],
+                          ['e', 'calc(100% - 5px)', '50%', 'ew-resize'],
+                          ['se', 'calc(100% - 5px)', 'calc(100% - 5px)', 'nwse-resize'],
+                          ['s', '50%', 'calc(100% - 5px)', 'ns-resize'],
+                          ['sw', '-5px', 'calc(100% - 5px)', 'nesw-resize'],
+                          ['w', '-5px', '50%', 'ew-resize'],
+                        ] as const).map(([handle, left, top, cursor]) => (
+                          <span
+                            key={handle}
+                            className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-sm border border-white bg-slate-950 shadow"
+                            style={{ left, top, cursor }}
+                            onMouseDown={(event) => {
+                              event.stopPropagation();
+                              dragStartPlanRef.current = clonePlan(plan);
+                              const point = toPercent(event.clientX, event.clientY);
+                              if (!point) return;
+                              zoneInteractionRef.current = { startX: point.x, startY: point.y, zone: { ...zone } };
+                              setZoneResizeHandle(handle);
+                              setResizingZoneId(zone.id);
+                            }}
+                            title={t('facilityMap.resizeZone')}
+                          />
+                        ))}
+                      </>
                     )}
                   </button>
                 );
