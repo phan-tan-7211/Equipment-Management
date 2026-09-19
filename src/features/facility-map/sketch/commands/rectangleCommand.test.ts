@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createRectangleEntity,
+  getRectangleDynamicWidth,
+  resolveRectangleWidth,
   startRectangleDraft,
   updateRectangleDraft,
 } from '@/features/facility-map/sketch/commands/rectangleCommand';
@@ -26,6 +28,32 @@ describe('rectangle command', () => {
     expect(updated.start).toEqual({ x: 2, y: 3 });
     expect(updated.current).toEqual({ x: 9, y: 11 });
     expect(draft.current).toEqual({ x: 2, y: 3 });
+  });
+
+  it('formats dynamic rectangle width in the active display unit', () => {
+    expect(
+      getRectangleDynamicWidth(
+        { x: 0, y: 0 },
+        { x: 5, y: 20 },
+        { displayUnit: 'mm', mmPerUnit: 10 },
+      ),
+    ).toBe('50');
+
+    expect(
+      getRectangleDynamicWidth(
+        { x: 0, y: 0 },
+        { x: 500, y: 20 },
+        { displayUnit: 'm', mmPerUnit: 10 },
+      ),
+    ).toBe('5.000');
+  });
+
+  it('resolves rectangle width input to model units with pointer fallback', () => {
+    const document = { displayUnit: 'mm' as const, mmPerUnit: 10 };
+
+    expect(resolveRectangleWidth('120', 7, document)).toBe(12);
+    expect(resolveRectangleWidth('invalid', 7, document)).toBe(7);
+    expect(resolveRectangleWidth('0', 7, document)).toBe(7);
   });
 
   it('creates a rectangle in the positive drag direction', () => {

@@ -1,9 +1,19 @@
 import { createSketchId } from '../core/id';
+import { clampPositive } from '../core/geometry';
+import {
+  displayToModelUnits,
+  modelUnitsToDisplay,
+  unitPrecision,
+} from '../core/units';
 import type {
   RectEntity,
+  SketchDocument,
   SketchPoint,
   SketchStyle,
 } from '../core/types';
+
+type RectangleDocumentUnits = Pick<SketchDocument, 'mmPerUnit' | 'displayUnit'>;
+
 
 export type RectangleDraft = {
   type: 'rect';
@@ -24,6 +34,24 @@ export const updateRectangleDraft = (
   ...draft,
   current: { ...current },
 });
+
+export const getRectangleDynamicWidth = (
+  start: SketchPoint,
+  current: SketchPoint,
+  document: RectangleDocumentUnits,
+): string =>
+  modelUnitsToDisplay(Math.abs(current.x - start.x), document)
+    .toFixed(unitPrecision(document.displayUnit));
+
+export const resolveRectangleWidth = (
+  widthInput: string,
+  fallbackWidth: number,
+  document: RectangleDocumentUnits,
+): number =>
+  clampPositive(
+    displayToModelUnits(Number(widthInput), document),
+    fallbackWidth,
+  );
 
 export type CreateRectangleEntityInput = {
   draft: RectangleDraft;
