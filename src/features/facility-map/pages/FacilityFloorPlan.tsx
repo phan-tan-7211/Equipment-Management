@@ -1849,7 +1849,69 @@ export default function FacilityFloorPlan() {
 
           <div className="absolute bottom-20 left-3 z-20 h-28 w-44 overflow-hidden rounded-lg border border-white/10 bg-white shadow-xl">
             <div className="absolute inset-0 bg-slate-100">
-              {plan.zones.map((zone) => (
+              <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {plan.annotations.map((annotation) => {
+              const color = annotation.color ?? (annotation.type === 'ruler' ? '#22d3ee' : '#f43f5e');
+              if (annotation.type === 'line' || annotation.type === 'arrow' || annotation.type === 'ruler') {
+                return (
+                  <line
+                    key={annotation.id}
+                    x1={annotation.x1}
+                    y1={annotation.y1}
+                    x2={annotation.x2}
+                    y2={annotation.y2}
+                    stroke={color}
+                    strokeWidth="0.35"
+                    strokeDasharray={annotation.type === 'ruler' ? '1 0.7' : undefined}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                );
+              }
+              if (annotation.type === 'rect') {
+                return (
+                  <rect
+                    key={annotation.id}
+                    x={Math.min(annotation.x1, annotation.x2)}
+                    y={Math.min(annotation.y1, annotation.y2)}
+                    width={Math.abs(annotation.x2 - annotation.x1)}
+                    height={Math.abs(annotation.y2 - annotation.y1)}
+                    fill={`${color}18`}
+                    stroke={color}
+                    strokeWidth="0.35"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                );
+              }
+              if (annotation.type === 'circle') {
+                return (
+                  <ellipse
+                    key={annotation.id}
+                    cx={(annotation.x1 + annotation.x2) / 2}
+                    cy={(annotation.y1 + annotation.y2) / 2}
+                    rx={Math.abs(annotation.x2 - annotation.x1) / 2}
+                    ry={Math.abs(annotation.y2 - annotation.y1) / 2}
+                    fill={`${color}18`}
+                    stroke={color}
+                    strokeWidth="0.35"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                );
+              }
+              return (
+                <text
+                  key={annotation.id}
+                  x={annotation.x1}
+                  y={annotation.y1}
+                  fill={color}
+                  fontSize="2.5"
+                  fontWeight="700"
+                >
+                  {annotation.text}
+                </text>
+              );
+            })}
+          </svg>
+          {plan.zones.map((zone) => (
                 <div
                   key={zone.id}
                   className="absolute rounded-[2px]"
@@ -2494,7 +2556,11 @@ export default function FacilityFloorPlan() {
                       >
                         <div className="mb-2 aspect-[16/9] overflow-hidden rounded-md border bg-slate-100">
                           <div className="relative h-full w-full">
-                            <DemoBlueprint t={t} />
+                            {item.imageDataUrl ? (
+                              <img src={item.imageDataUrl} alt={item.name} className="h-full w-full object-fill" />
+                            ) : (
+                              <DemoBlueprint t={t} />
+                            )}
                             {item.zones.slice(0, 6).map((zone) => (
                               <span
                                 key={zone.id}
