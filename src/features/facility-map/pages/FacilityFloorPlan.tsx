@@ -669,8 +669,22 @@ export default function FacilityFloorPlan() {
       else next.add(layerId);
       return next;
     });
-    if (!visible && placeLayer === layerId) setPlaceLayer(null);
-  }, [placeLayer]);
+    if (!visible) {
+      if (placeLayer === layerId) setPlaceLayer(null);
+      setSelectedObjectIds((current) => {
+        const next = new Set(current);
+        if (layerId === 'assets') {
+          [...next].forEach((id) => {
+            if (id.startsWith('asset:')) next.delete(id);
+          });
+        } else {
+          const ids = new Set(plan.overlayPins.filter((pin) => pin.layer === layerId).map((pin) => `overlay:${pin.id}`));
+          ids.forEach((id) => next.delete(id));
+        }
+        return next;
+      });
+    }
+  }, [placeLayer, plan.overlayPins]);
 
   const selectAllLayers = useCallback(() => {
     setHiddenLayers(new Set());
@@ -1863,6 +1877,45 @@ export default function FacilityFloorPlan() {
               <div className="rounded-md border bg-muted/30 p-2 text-[11px] text-muted-foreground">
                 {t('facilityMap.drawingHint')}
               </div>
+              {['line', 'arrow', 'rect', 'circle', 'text', 'ruler'].includes(drawTool) && (
+                <div className="mt-2 grid grid-cols-2 gap-2 rounded-md border p-2">
+                  <label className="flex items-center justify-between gap-2 text-[11px]">
+                    <span>{t('facilityMap.annotationColor')}</span>
+                    <input
+                      type="color"
+                      value={annotationColor}
+                      onChange={(event) => setAnnotationColor(event.target.value)}
+                      className="h-7 w-10 rounded border bg-background"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-2 text-[11px]">
+                    <span>{t('facilityMap.lineWeight')}</span>
+                    <select
+                      value={annotationLineWidth}
+                      onChange={(event) => setAnnotationLineWidth(Number(event.target.value))}
+                      className="rounded border bg-background px-1.5 py-1 text-xs text-foreground"
+                    >
+                      {[0.15, 0.2, 0.28, 0.35, 0.5, 0.75, 1].map((width) => (
+                        <option key={width} value={width}>{width}</option>
+                      ))}
+                    </select>
+                  </label>
+                  {drawTool === 'text' && (
+                    <label className="col-span-2 flex items-center justify-between gap-2 text-[11px]">
+                      <span>{t('facilityMap.textSize')}</span>
+                      <select
+                        value={annotationTextSize}
+                        onChange={(event) => setAnnotationTextSize(Number(event.target.value))}
+                        className="rounded border bg-background px-1.5 py-1 text-xs text-foreground"
+                      >
+                        {[1.5, 2, 2.5, 3, 4, 5, 6, 8].map((size) => (
+                          <option key={size} value={size}>{size}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </div>
+              )}
               {drawTool === 'text' && (
                 <input
                   value={annotationText}
@@ -2025,6 +2078,11 @@ export default function FacilityFloorPlan() {
               <Layers3 className="mr-1 inline h-3.5 w-3.5" />
               {t('facilityMap.itemsSummary', { assets: plan.pins.length, markers: plan.overlayPins.length, zones: plan.zones.length })}
             </div>
+            {selectedObjectIds.size > 1 && (
+              <div className="rounded-md border border-sky-400/40 bg-sky-500/15 px-3 py-2 text-xs text-sky-100 backdrop-blur">
+                {t('facilityMap.selectedCount', { count: selectedObjectIds.size })}
+              </div>
+            )}
             <div className={`rounded-md border px-3 py-2 text-xs backdrop-blur ${
               editMode ? 'border-amber-400/30 bg-amber-500/15 text-amber-200' : 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200'
             }`}>
@@ -2254,6 +2312,38 @@ export default function FacilityFloorPlan() {
                       className="h-8 w-10 rounded border border-white/10 bg-transparent"
                     />
                   </label>
+                  <label className="flex items-center justify-between gap-2 text-xs text-slate-300">
+                    <span>{t('facilityMap.lineWeight')}</span>
+                    <select
+                      value={selectedAnnotation.lineWidth ?? 0.28}
+                      onChange={(event) => commitPlan((current) => ({
+                        ...current,
+                        annotations: current.annotations.map((annotation) => annotation.id === selectedAnnotation.id ? { ...annotation, lineWidth: Number(event.target.value) } : annotation),
+                      }))}
+                      className="rounded border border-white/10 bg-slate-900 px-2 py-1 text-xs"
+                    >
+                      {[0.15, 0.2, 0.28, 0.35, 0.5, 0.75, 1].map((width) => (
+                        <option key={width} value={width}>{width}</option>
+                      ))}
+                    </select>
+                  </label>
+                  {selectedAnnotation.type === 'text' && (
+                    <label className="flex items-center justify-between gap-2 text-xs text-slate-300">
+                      <span>{t('facilityMap.textSize')}</span>
+                      <select
+                        value={selectedAnnotation.textSize ?? 2.5}
+                        onChange={(event) => commitPlan((current) => ({
+                          ...current,
+                          annotations: current.annotations.map((annotation) => annotation.id === selectedAnnotation.id ? { ...annotation, textSize: Number(event.target.value) } : annotation),
+                        }))}
+                        className="rounded border border-white/10 bg-slate-900 px-2 py-1 text-xs"
+                      >
+                        {[1.5, 2, 2.5, 3, 4, 5, 6, 8].map((size) => (
+                          <option key={size} value={size}>{size}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                 </div>
               )}
 
@@ -2382,6 +2472,22 @@ export default function FacilityFloorPlan() {
                     backgroundImage:
                       'linear-gradient(to right, rgba(15,23,42,0.16) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,23,42,0.16) 1px, transparent 1px)',
                     backgroundSize: `${gridSize}% ${gridSize}%`,
+                  }}
+                />
+              )}
+
+              {selectionBox && (
+                <div
+                  className={`pointer-events-none absolute border ${
+                    selectionBox.crossing
+                      ? 'border-emerald-400 bg-emerald-400/15 border-dashed'
+                      : 'border-sky-400 bg-sky-400/15'
+                  }`}
+                  style={{
+                    left: `${Math.min(selectionBox.startX, selectionBox.endX)}%`,
+                    top: `${Math.min(selectionBox.startY, selectionBox.endY)}%`,
+                    width: `${Math.abs(selectionBox.endX - selectionBox.startX)}%`,
+                    height: `${Math.abs(selectionBox.endY - selectionBox.startY)}%`,
                   }}
                 />
               )}
@@ -2522,7 +2628,8 @@ export default function FacilityFloorPlan() {
 
               {plan.zones.map((zone) => {
                 const meta = zoneById.get(zone.type);
-                const selected = selectedMarkerId === `zone:${zone.id}`;
+                const objectId = `zone:${zone.id}`;
+                const selected = selectedObjectIds.has(objectId) || selectedMarkerId === objectId;
                 return (
                   <button
                     key={zone.id}
@@ -2541,17 +2648,22 @@ export default function FacilityFloorPlan() {
                     }}
                     onClick={(event) => {
                       event.stopPropagation();
-                      setSelectedMarkerId(`zone:${zone.id}`);
+                      if (drawTool === 'erase') {
+                        deleteObjectsByIds(new Set([objectId]));
+                        return;
+                      }
+                      setSingleSelection(objectId, event.shiftKey);
                     }}
                     onMouseDown={(event) => {
                       event.stopPropagation();
                       if (!editMode || drawTool !== 'select') return;
+                      if (beginGroupDrag(event, objectId)) return;
+                      setSingleSelection(objectId, event.shiftKey);
                       dragStartPlanRef.current = clonePlan(plan);
                       zoneInteractionRef.current = { startX: zone.x, startY: zone.y, zone: { ...zone } };
                       const point = toPercent(event.clientX, event.clientY);
                       if (point) zoneInteractionRef.current = { startX: point.x, startY: point.y, zone: { ...zone } };
                       setDraggingZoneId(zone.id);
-                      setSelectedMarkerId(`zone:${zone.id}`);
                     }}
                     title={meta ? t(meta.labelKey) : undefined}
                   >
@@ -2614,7 +2726,8 @@ export default function FacilityFloorPlan() {
 
               {visibleAssetPins && plan.pins.map((pin) => {
                 const item = equipmentById.get(pin.equipmentId);
-                const selected = selectedMarkerId === `asset:${pin.equipmentId}`;
+                const objectId = `asset:${pin.equipmentId}`;
+                const selected = selectedObjectIds.has(objectId) || selectedMarkerId === objectId;
                 return (
                   <button
                     key={pin.equipmentId}
@@ -2623,14 +2736,19 @@ export default function FacilityFloorPlan() {
                     style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
                     onClick={(event) => {
                       event.stopPropagation();
-                      setSelectedMarkerId(`asset:${pin.equipmentId}`);
+                      if (drawTool === 'erase') {
+                        deleteObjectsByIds(new Set([objectId]));
+                        return;
+                      }
+                      setSingleSelection(objectId, event.shiftKey);
                     }}
                     onMouseDown={(event) => {
                       event.stopPropagation();
-                      if (!editMode) return;
+                      if (!editMode || drawTool !== 'select') return;
+                      if (beginGroupDrag(event, objectId)) return;
+                      setSingleSelection(objectId, event.shiftKey);
                       dragStartPlanRef.current = clonePlan(plan);
                       setDraggingEquipmentId(pin.equipmentId);
-                      setSelectedMarkerId(`asset:${pin.equipmentId}`);
                     }}
                     title={item?.name ?? pin.equipmentId}
                   >
@@ -2654,7 +2772,8 @@ export default function FacilityFloorPlan() {
 
               {visibleOverlayPins.map((pin) => {
                 const meta = layerById.get(pin.layer);
-                const selected = selectedMarkerId === `overlay:${pin.id}`;
+                const objectId = `overlay:${pin.id}`;
+                const selected = selectedObjectIds.has(objectId) || selectedMarkerId === objectId;
                 return (
                   <button
                     key={pin.id}
@@ -2663,14 +2782,19 @@ export default function FacilityFloorPlan() {
                     style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
                     onClick={(event) => {
                       event.stopPropagation();
-                      setSelectedMarkerId(`overlay:${pin.id}`);
+                      if (drawTool === 'erase') {
+                        deleteObjectsByIds(new Set([objectId]));
+                        return;
+                      }
+                      setSingleSelection(objectId, event.shiftKey);
                     }}
                     onMouseDown={(event) => {
                       event.stopPropagation();
-                      if (!editMode) return;
+                      if (!editMode || drawTool !== 'select') return;
+                      if (beginGroupDrag(event, objectId)) return;
+                      setSingleSelection(objectId, event.shiftKey);
                       dragStartPlanRef.current = clonePlan(plan);
                       setDraggingOverlayId(pin.id);
-                      setSelectedMarkerId(`overlay:${pin.id}`);
                     }}
                     title={meta ? t(meta.labelKey) : undefined}
                   >
