@@ -34,6 +34,7 @@ import {
   DSRCasePage,
   OperatorCheckInsPage,
   QuickFormsPage,
+  FacilityFloorPlan,
 } from '@/routes/lazyDashboardPages';
 import { InventoryAccessGuard } from '@/features/inventory/components/InventoryAccessGuard';
 
@@ -49,6 +50,7 @@ export const dashboardRouteElements = (
     <Route path="/teams" element={<Teams />} />
     <Route path="/teams/:teamId" element={<TeamDetails />} />
     <Route path="/fleet-map" element={<FleetMap />} />
+    <Route path="/facility-map" element={<FacilityFloorPlan />} />
     <Route path="/organization" element={<Organization />} />
     <Route path="/organization/settings" element={<Organization />} />
     <Route path="/organization/members" element={<OrganizationMembers />} />
