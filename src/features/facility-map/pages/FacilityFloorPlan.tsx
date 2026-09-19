@@ -38,6 +38,7 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { useI18n } from '@/i18n';
+import InventorSketchOverlay from '@/features/facility-map/components/InventorSketchOverlay';
 
 type EquipmentRow = {
   id: string;
@@ -464,6 +465,7 @@ export default function FacilityFloorPlan() {
   const [placeLayer, setPlaceLayer] = useState<LayerId | null>(null);
   const [zoneTool, setZoneTool] = useState<ZoneType | null>(null);
   const [drawTool, setDrawTool] = useState<DrawTool>('select');
+  const [sketchMode, setSketchMode] = useState(false);
   const [drawingPresets, setDrawingPresets] = useState<Record<AnnotationTool, DrawingPreset>>(() => readDrawingPresets());
   const [selectedObjectIds, setSelectedObjectIds] = useState<Set<string>>(new Set());
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
@@ -932,7 +934,7 @@ export default function FacilityFloorPlan() {
       return;
     }
 
-    if (!editMode || event.button !== 0) return;
+    if (!editMode || sketchMode || event.button !== 0) return;
     const rawPoint = toPercentRaw(event.clientX, event.clientY);
     const point = toPercent(event.clientX, event.clientY);
     if (!rawPoint || !point) return;
@@ -1522,7 +1524,10 @@ export default function FacilityFloorPlan() {
     }
 
     setEditMode(nextEditMode);
-    if (!nextEditMode) setMobilePanelOpen(false);
+    if (!nextEditMode) {
+      setMobilePanelOpen(false);
+      setSketchMode(false);
+    }
     setSelectedEquipmentId('');
     setPlaceLayer(null);
     setZoneTool(null);
@@ -1690,6 +1695,32 @@ export default function FacilityFloorPlan() {
           </button>
 
           {editMode && (
+            <button
+              type="button"
+              onClick={() => {
+                setSketchMode((value) => {
+                  const next = !value;
+                  if (next) {
+                    setDrawTool('select');
+                    setPlaceLayer(null);
+                    setZoneTool(null);
+                    setSelectedEquipmentId('');
+                    setSelectedObjectIds(new Set());
+                    setSelectedMarkerId('');
+                  }
+                  return next;
+                });
+              }}
+              className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+                sketchMode ? 'border-sky-400 bg-sky-500/15 text-sky-300' : 'hover:bg-accent'
+              }`}
+            >
+              <Ruler className="h-4 w-4" />
+              {sketchMode ? t('facilityMap.finishSketch') : t('facilityMap.enterSketch')}
+            </button>
+          )}
+
+          {editMode && !sketchMode && (
             <div className="max-w-[70vw] overflow-x-auto rounded-md border bg-background p-1">
               <div className="flex min-w-max items-center gap-1">
               {([
@@ -1973,6 +2004,7 @@ export default function FacilityFloorPlan() {
               </div>
             </div>
 
+            {!sketchMode && (
             <div className="mt-4 border-t pt-3">
               <div className="mb-2 text-xs font-semibold">{t('facilityMap.drawingTools')}</div>
               <div className="rounded-md border bg-muted/30 p-2 text-[11px] text-muted-foreground">
@@ -2045,6 +2077,10 @@ export default function FacilityFloorPlan() {
               )}
             </div>
 
+            </div>
+            )}
+
+            {!sketchMode && (
             <div className="mt-4 border-t pt-3">
               <div className="mb-2 text-xs font-semibold">{t('facilityMap.drawZones')}</div>
               <div className="grid grid-cols-2 gap-1.5">
@@ -2068,8 +2104,9 @@ export default function FacilityFloorPlan() {
                 ))}
               </div>
             </div>
+            )}
 
-            {placementHint && (
+            {placementHint && !sketchMode && (
               <div className="mt-3 rounded-md border border-primary/40 bg-primary/5 p-2 text-xs">
                 <MapPin className="mr-1 inline h-3.5 w-3.5" />
                 {placementHint}
@@ -2581,7 +2618,7 @@ export default function FacilityFloorPlan() {
           <div
             ref={canvasRef}
             className={`absolute inset-0 select-none ${
-              editMode && (selectedEquipmentId || placeLayer || zoneTool || !['select', 'pan'].includes(drawTool))
+              editMode && !sketchMode && (selectedEquipmentId || placeLayer || zoneTool || !['select', 'pan'].includes(drawTool))
                 ? 'cursor-crosshair'
                 : isPanning
                   ? 'cursor-grabbing'
@@ -2628,6 +2665,15 @@ export default function FacilityFloorPlan() {
                 />
               )}
 
+              <InventorSketchOverlay
+                enabled={editMode && sketchMode}
+                storageKey={planKey(plan.building, plan.floor)}
+                canvasWidth={plan.canvasWidth}
+                canvasHeight={plan.canvasHeight}
+                t={t}
+                onExit={() => setSketchMode(false)}
+              />
+
               {selectionBox && (
                 <>
                 <div
@@ -2666,11 +2712,11 @@ export default function FacilityFloorPlan() {
                 {[...plan.annotations, ...(draftAnnotation ? [draftAnnotation] : [])].map((annotation) => {
                   const isDraft = annotation.id === 'draft-annotation';
                   const objectId = `annotation:${annotation.id}`;
-                  const currentDrawingPreset.colorValue = annotation.color ?? (annotation.type === 'ruler' ? '#22d3ee' : '#f43f5e');
+                  const annotationColorValue = annotation.color ?? (annotation.type === 'ruler' ? '#22d3ee' : '#f43f5e');
                   const annotationSelected = selectedObjectIds.has(objectId) || selectedMarkerId === objectId;
                   const baseWidth = annotation.lineWidth ?? 0.28;
                   const common = {
-                    stroke: currentDrawingPreset.colorValue,
+                    stroke: annotationColorValue,
                     strokeWidth: annotationSelected ? baseWidth + 0.12 : baseWidth,
                     vectorEffect: 'non-scaling-stroke' as const,
                     opacity: isDraft ? 0.7 : 1,
@@ -2707,7 +2753,7 @@ export default function FacilityFloorPlan() {
                             >
                               <path
                                 d={`M0,0 L${annotation.arrowSize ?? 6},${(annotation.arrowSize ?? 6) / 2} L0,${annotation.arrowSize ?? 6} z`}
-                                fill={currentDrawingPreset.colorValue}
+                                fill={annotationColorValue}
                               />
                             </marker>
                           </defs>
@@ -2725,7 +2771,7 @@ export default function FacilityFloorPlan() {
                           <text
                             x={(annotation.x1 + annotation.x2) / 2}
                             y={(annotation.y1 + annotation.y2) / 2 - 1}
-                            fill={currentDrawingPreset.colorValue}
+                            fill={annotationColorValue}
                             fontSize={annotation.textSize ?? 2.2}
                             textAnchor="middle"
                             pointerEvents="none"
@@ -2745,7 +2791,7 @@ export default function FacilityFloorPlan() {
                         y={Math.min(annotation.y1, annotation.y2)}
                         width={Math.abs(annotation.x2 - annotation.x1)}
                         height={Math.abs(annotation.y2 - annotation.y1)}
-                        fill={`${currentDrawingPreset.colorValue}18`}
+                        fill={`${annotationColorValue}18`}
                         {...common}
                         pointerEvents={(drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'all' : 'none'}
                       />
@@ -2762,7 +2808,7 @@ export default function FacilityFloorPlan() {
                         cy={(annotation.y1 + annotation.y2) / 2}
                         rx={rx}
                         ry={ry}
-                        fill={`${currentDrawingPreset.colorValue}18`}
+                        fill={`${annotationColorValue}18`}
                         {...common}
                         pointerEvents={(drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'all' : 'none'}
                       />
@@ -2774,7 +2820,7 @@ export default function FacilityFloorPlan() {
                       key={annotation.id}
                       x={annotation.x1}
                       y={annotation.y1}
-                      fill={currentDrawingPreset.colorValue}
+                      fill={annotationColorValue}
                       fontSize={annotation.textSize ?? 2.5}
                       fontWeight="700"
                       stroke={annotationSelected ? '#ffffff' : 'none'}
