@@ -1,11 +1,15 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowRight,
   Building2,
+  Circle,
   Eye,
   Focus,
   ImagePlus,
   Layers3,
   MapPin,
+  Minus,
+  MousePointer2,
   Maximize2,
   Minimize2,
   Move,
@@ -14,8 +18,12 @@ import {
   RotateCcw,
   Save,
   Search,
+  Square,
   Trash2,
+  Type,
   Undo2,
+  Ruler,
+  Eraser,
   Wrench,
   ZoomIn,
   ZoomOut,
@@ -73,6 +81,17 @@ type Zone = {
   h: number;
 };
 
+type DrawTool = 'select' | 'pan' | 'line' | 'arrow' | 'rect' | 'circle' | 'text' | 'ruler' | 'erase';
+type Annotation = {
+  id: string;
+  type: Exclude<DrawTool, 'select' | 'pan' | 'erase'>;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  text?: string;
+};
+
 type FloorPlanState = {
   name: string;
   building: string;
@@ -81,6 +100,7 @@ type FloorPlanState = {
   pins: EquipmentPin[];
   overlayPins: OverlayPin[];
   zones: Zone[];
+  annotations: Annotation[];
 };
 
 const STORAGE_KEY = 'znteqr:facility-floor-plan:dryrun:v3';
@@ -160,6 +180,10 @@ const EMPTY_PLAN: FloorPlanState = {
     { id: 'zone-utility', type: 'utility', x: 11, y: 58, w: 28, h: 25 },
     { id: 'zone-hazard', type: 'hazard', x: 56, y: 57, w: 33, h: 26 },
   ],
+  annotations: [
+    { id: 'route-demo', type: 'arrow', x1: 18, y1: 50, x2: 46, y2: 50 },
+    { id: 'note-demo', type: 'text', x1: 71, y1: 50, x2: 71, y2: 50, text: 'QA HOLD' },
+  ],
 };
 
 const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
@@ -168,6 +192,7 @@ const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
   pins: value.pins ?? [],
   overlayPins: value.overlayPins ?? [],
   zones: value.zones ?? [],
+  annotations: value.annotations ?? [],
 });
 
 const clonePlan = (plan: FloorPlanState): FloorPlanState =>
@@ -236,6 +261,8 @@ export default function FacilityFloorPlan() {
   const [activeLayer, setActiveLayer] = useState<'all' | 'assets' | LayerId>('all');
   const [placeLayer, setPlaceLayer] = useState<LayerId | null>(null);
   const [zoneTool, setZoneTool] = useState<ZoneType | null>(null);
+  const [drawTool, setDrawTool] = useState<DrawTool>('select');
+  const [annotationText, setAnnotationText] = useState('NOTE');
   const [editMode, setEditMode] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -245,10 +272,12 @@ export default function FacilityFloorPlan() {
   const [draggingOverlayId, setDraggingOverlayId] = useState('');
   const [zoneStart, setZoneStart] = useState<{ x: number; y: number } | null>(null);
   const [draftZone, setDraftZone] = useState<Zone | null>(null);
+  const [draftAnnotation, setDraftAnnotation] = useState<Annotation | null>(null);
   const [undoStack, setUndoStack] = useState<FloorPlanState[]>([]);
   const [redoStack, setRedoStack] = useState<FloorPlanState[]>([]);
   const pointerStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const dragStartPlanRef = useRef<FloorPlanState | null>(null);
+  const annotationStartRef = useRef<{ x: number; y: number } | null>(null);
   const canvasRef = useRef<HTMLDivElement | null>(null);
 
   const savePlan = useCallback((next: FloorPlanState) => {
@@ -368,16 +397,52 @@ export default function FacilityFloorPlan() {
   ]);
 
   const startPointer = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.button === 1 || event.shiftKey) {
+    if (event.button === 1 || event.shiftKey || (editMode && drawTool === 'pan')) {
       event.preventDefault();
       pointerStart.current = { x: event.clientX, y: event.clientY, panX: pan.x, panY: pan.y };
       setIsPanning(true);
       return;
     }
 
-    if (!editMode || !zoneTool || event.button !== 0) return;
+    if (!editMode || event.button !== 0) return;
     const point = toPercent(event.clientX, event.clientY);
     if (!point) return;
+
+    if (['line', 'arrow', 'rect', 'circle', 'ruler'].includes(drawTool)) {
+      event.preventDefault();
+      annotationStartRef.current = point;
+      setDraftAnnotation({
+        id: 'draft-annotation',
+        type: drawTool as Annotation['type'],
+        x1: point.x,
+        y1: point.y,
+        x2: point.x,
+        y2: point.y,
+      });
+      return;
+    }
+
+    if (drawTool === 'text') {
+      event.preventDefault();
+      commitPlan((current) => ({
+        ...current,
+        annotations: [
+          ...current.annotations,
+          {
+            id: makeId('text'),
+            type: 'text',
+            x1: point.x,
+            y1: point.y,
+            x2: point.x,
+            y2: point.y,
+            text: annotationText || t('facilityMap.defaultNote'),
+          },
+        ],
+      }));
+      return;
+    }
+
+    if (!zoneTool) return;
     event.preventDefault();
     setZoneStart(point);
     setDraftZone({
@@ -402,6 +467,11 @@ export default function FacilityFloorPlan() {
 
     const point = toPercent(event.clientX, event.clientY);
     if (!point) return;
+
+    if (draftAnnotation && annotationStartRef.current && editMode) {
+      setDraftAnnotation((current) => current ? { ...current, x2: point.x, y2: point.y } : current);
+      return;
+    }
 
     if (zoneStart && zoneTool && editMode) {
       setDraftZone({
@@ -436,7 +506,16 @@ export default function FacilityFloorPlan() {
   };
 
   const endPointerInteraction = () => {
-    if (draftZone && draftZone.w > 0.5 && draftZone.h > 0.5) {
+    if (draftAnnotation) {
+      const dx = Math.abs(draftAnnotation.x2 - draftAnnotation.x1);
+      const dy = Math.abs(draftAnnotation.y2 - draftAnnotation.y1);
+      if (dx > 0.3 || dy > 0.3) {
+        commitPlan((current) => ({
+          ...current,
+          annotations: [...current.annotations, { ...draftAnnotation, id: makeId('annotation') }],
+        }));
+      }
+    } else if (draftZone && draftZone.w > 0.5 && draftZone.h > 0.5) {
       commitPlan((current) => ({
         ...current,
         zones: [...current.zones, { ...draftZone, id: makeId('zone') }],
@@ -452,6 +531,8 @@ export default function FacilityFloorPlan() {
     }
 
     dragStartPlanRef.current = null;
+    annotationStartRef.current = null;
+    setDraftAnnotation(null);
     setZoneStart(null);
     setDraftZone(null);
     setDraggingEquipmentId('');
@@ -508,7 +589,46 @@ export default function FacilityFloorPlan() {
     setZoneTool(null);
     setZoneStart(null);
     setDraftZone(null);
+    setDrawTool('select');
   };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.matches('input, textarea, select, [contenteditable="true"]')) return;
+      if (event.key === 'Escape') {
+        setSelectedEquipmentId('');
+        setSelectedMarkerId('');
+        setPlaceLayer(null);
+        setZoneTool(null);
+        setDrawTool('select');
+        setDraftZone(null);
+        setDraftAnnotation(null);
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) redo(); else undo();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
+        event.preventDefault();
+        redo();
+        return;
+      }
+      if (event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        fitView();
+        return;
+      }
+      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedMarkerId && editMode) {
+        event.preventDefault();
+        deleteSelected();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
 
   const visibleAssetPins = activeLayer === 'all' || activeLayer === 'assets';
   const visibleOverlayPins =
@@ -578,6 +698,37 @@ export default function FacilityFloorPlan() {
           >
             <Redo2 className="h-4 w-4" />
           </button>
+
+          {editMode && (
+            <div className="flex items-center gap-1 rounded-md border bg-background p-1">
+              {([
+                ['select', MousePointer2, 'facilityMap.toolSelect'],
+                ['pan', Move, 'facilityMap.toolPan'],
+                ['line', Minus, 'facilityMap.toolLine'],
+                ['arrow', ArrowRight, 'facilityMap.toolArrow'],
+                ['rect', Square, 'facilityMap.toolRectangle'],
+                ['circle', Circle, 'facilityMap.toolCircle'],
+                ['text', Type, 'facilityMap.toolText'],
+                ['ruler', Ruler, 'facilityMap.toolRuler'],
+                ['erase', Eraser, 'facilityMap.toolErase'],
+              ] as const).map(([tool, Icon, key]) => (
+                <button
+                  key={tool}
+                  type="button"
+                  onClick={() => {
+                    setDrawTool(tool);
+                    setPlaceLayer(null);
+                    setZoneTool(null);
+                    setSelectedEquipmentId('');
+                  }}
+                  className={`rounded p-1.5 ${drawTool === tool ? 'bg-foreground text-background' : 'hover:bg-accent'}`}
+                  title={t(key)}
+                >
+                  <Icon className="h-4 w-4" />
+                </button>
+              ))}
+            </div>
+          )}
 
           {editMode && (
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-accent">
@@ -711,6 +862,21 @@ export default function FacilityFloorPlan() {
             </div>
 
             <div className="mt-4 border-t pt-3">
+              <div className="mb-2 text-xs font-semibold">{t('facilityMap.drawingTools')}</div>
+              <div className="rounded-md border bg-muted/30 p-2 text-[11px] text-muted-foreground">
+                {t('facilityMap.drawingHint')}
+              </div>
+              {drawTool === 'text' && (
+                <input
+                  value={annotationText}
+                  onChange={(event) => setAnnotationText(event.target.value)}
+                  className="mt-2 w-full rounded-md border bg-background px-2 py-2 text-xs"
+                  placeholder={t('facilityMap.textPlaceholder')}
+                />
+              )}
+            </div>
+
+            <div className="mt-4 border-t pt-3">
               <div className="mb-2 text-xs font-semibold">{t('facilityMap.drawZones')}</div>
               <div className="grid grid-cols-2 gap-1.5">
                 {ZONES.map((zone) => (
@@ -840,7 +1006,7 @@ export default function FacilityFloorPlan() {
           <div
             ref={canvasRef}
             className={`absolute inset-0 select-none ${
-              editMode && (selectedEquipmentId || placeLayer || zoneTool)
+              editMode && (selectedEquipmentId || placeLayer || zoneTool || !['select', 'pan'].includes(drawTool))
                 ? 'cursor-crosshair'
                 : isPanning
                   ? 'cursor-grabbing'
@@ -866,6 +1032,117 @@ export default function FacilityFloorPlan() {
               ) : (
                 <DemoBlueprint t={t} />
               )}
+
+              <svg
+                className="absolute inset-0 h-full w-full"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                style={{ pointerEvents: drawTool === 'erase' ? 'auto' : 'none' }}
+              >
+                <defs>
+                  <marker id="facility-arrow-head" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <path d="M0,0 L6,3 L0,6 z" fill="#f43f5e" />
+                  </marker>
+                </defs>
+                {[...plan.annotations, ...(draftAnnotation ? [draftAnnotation] : [])].map((annotation) => {
+                  const isDraft = annotation.id === 'draft-annotation';
+                  const common = {
+                    stroke: annotation.type === 'ruler' ? '#22d3ee' : '#f43f5e',
+                    strokeWidth: isDraft ? 0.35 : 0.28,
+                    vectorEffect: 'non-scaling-stroke' as const,
+                    opacity: isDraft ? 0.7 : 1,
+                    style: { pointerEvents: drawTool === 'erase' && !isDraft ? 'stroke' : 'none', cursor: 'pointer' },
+                    onClick: (event: React.MouseEvent<SVGElement>) => {
+                      if (drawTool !== 'erase' || isDraft) return;
+                      event.stopPropagation();
+                      commitPlan((current) => ({
+                        ...current,
+                        annotations: current.annotations.filter((item) => item.id !== annotation.id),
+                      }));
+                    },
+                  };
+
+                  if (annotation.type === 'line' || annotation.type === 'arrow' || annotation.type === 'ruler') {
+                    const distance = Math.hypot(annotation.x2 - annotation.x1, annotation.y2 - annotation.y1);
+                    return (
+                      <g key={annotation.id}>
+                        <line
+                          x1={annotation.x1}
+                          y1={annotation.y1}
+                          x2={annotation.x2}
+                          y2={annotation.y2}
+                          {...common}
+                          markerEnd={annotation.type === 'arrow' ? 'url(#facility-arrow-head)' : undefined}
+                          strokeDasharray={annotation.type === 'ruler' ? '1 0.7' : undefined}
+                        />
+                        {annotation.type === 'ruler' && (
+                          <text
+                            x={(annotation.x1 + annotation.x2) / 2}
+                            y={(annotation.y1 + annotation.y2) / 2 - 1}
+                            fill="#0e7490"
+                            fontSize="2.2"
+                            textAnchor="middle"
+                          >
+                            {distance.toFixed(1)}%
+                          </text>
+                        )}
+                      </g>
+                    );
+                  }
+
+                  if (annotation.type === 'rect') {
+                    return (
+                      <rect
+                        key={annotation.id}
+                        x={Math.min(annotation.x1, annotation.x2)}
+                        y={Math.min(annotation.y1, annotation.y2)}
+                        width={Math.abs(annotation.x2 - annotation.x1)}
+                        height={Math.abs(annotation.y2 - annotation.y1)}
+                        fill="#f43f5e18"
+                        {...common}
+                      />
+                    );
+                  }
+
+                  if (annotation.type === 'circle') {
+                    const rx = Math.abs(annotation.x2 - annotation.x1) / 2;
+                    const ry = Math.abs(annotation.y2 - annotation.y1) / 2;
+                    return (
+                      <ellipse
+                        key={annotation.id}
+                        cx={(annotation.x1 + annotation.x2) / 2}
+                        cy={(annotation.y1 + annotation.y2) / 2}
+                        rx={rx}
+                        ry={ry}
+                        fill="#f43f5e18"
+                        {...common}
+                      />
+                    );
+                  }
+
+                  return (
+                    <text
+                      key={annotation.id}
+                      x={annotation.x1}
+                      y={annotation.y1}
+                      fill="#be123c"
+                      fontSize="2.5"
+                      fontWeight="700"
+                      style={{ pointerEvents: drawTool === 'erase' ? 'auto' : 'none', cursor: 'pointer' }}
+                      onClick={(event) => {
+                        if (drawTool !== 'erase' || isDraft) return;
+                        event.stopPropagation();
+                        commitPlan((current) => ({
+                          ...current,
+                          annotations: current.annotations.filter((item) => item.id !== annotation.id),
+                        }));
+                      }}
+                    >
+                      {annotation.text}
+                    </text>
+                  );
+                })}
+              </svg>
 
               {plan.zones.map((zone) => {
                 const meta = zoneById.get(zone.type);
