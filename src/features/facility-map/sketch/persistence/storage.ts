@@ -1,6 +1,7 @@
 import { createSketchDocument } from '../core/document';
 import { normalizeMmPerUnit } from '../core/units';
 import type {
+  SketchConstraint,
   SketchDimension,
   SketchDocument,
   SketchEntity,
@@ -13,6 +14,7 @@ type LegacySketchStore = {
   mmPerUnit?: number;
   entities?: SketchEntity[];
   dimensions?: SketchDimension[];
+  constraints?: SketchConstraint[];
   displayUnit?: SketchUnit;
 };
 
@@ -34,6 +36,7 @@ export function deserializeSketchDocument(
       mmPerUnit: normalizeMmPerUnit(Number(parsed.mmPerUnit), 10),
       entities: Array.isArray(parsed.entities) ? parsed.entities : [],
       dimensions: Array.isArray(parsed.dimensions) ? parsed.dimensions : [],
+      constraints: Array.isArray(parsed.constraints) ? parsed.constraints : [],
       createdAt: Number(parsed.createdAt) || Date.now(),
       updatedAt: Number(parsed.updatedAt) || Date.now(),
     });
@@ -47,6 +50,7 @@ export function deserializeSketchDocument(
     mmPerUnit: normalizeMmPerUnit(Number(parsed.mmPerUnit), 10),
     entities: Array.isArray(parsed.entities) ? parsed.entities : [],
     dimensions: Array.isArray(parsed.dimensions) ? parsed.dimensions : [],
+    constraints: Array.isArray(parsed.constraints) ? parsed.constraints : [],
   });
 }
 

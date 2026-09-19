@@ -85,6 +85,31 @@ export type SketchDimension = {
   hidden?: boolean;
 };
 
+export type SketchConstraintKind =
+  | 'coincident'
+  | 'horizontal'
+  | 'vertical'
+  | 'parallel'
+  | 'perpendicular'
+  | 'equal'
+  | 'fix'
+  | 'midpoint'
+  | 'concentric';
+
+export type SketchConstraintPointRef = {
+  entityId: SketchId;
+  point: 'start' | 'end' | 'center' | `vertex:${number}`;
+};
+
+export type SketchConstraint = {
+  id: SketchId;
+  kind: SketchConstraintKind;
+  entityIds: SketchId[];
+  pointRefs?: SketchConstraintPointRef[];
+  enabled?: boolean;
+  conflict?: boolean;
+};
+
 export type SketchDocument = {
   schemaVersion: 1;
   id: SketchId;
@@ -97,6 +122,7 @@ export type SketchDocument = {
   mmPerUnit: number;
   entities: SketchEntity[];
   dimensions: SketchDimension[];
+  constraints: SketchConstraint[];
   createdAt: number;
   updatedAt: number;
 };

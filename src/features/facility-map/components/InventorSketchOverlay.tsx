@@ -65,6 +65,7 @@ import {
 } from '@/features/facility-map/sketch/snapping/snapPriority';
 import { SnapIndicator } from '@/features/facility-map/sketch/rendering/SnapIndicator';
 import { DimensionRenderer } from '@/features/facility-map/sketch/rendering/DimensionRenderer';
+import { ConstraintGlyphRenderer } from '@/features/facility-map/sketch/rendering/ConstraintGlyphRenderer';
 import {
   getSketchViewDimensions,
   type ViewDimension,
@@ -77,6 +78,11 @@ import {
   hideDimension,
   setDimensionReference,
 } from '@/features/facility-map/sketch/dimensions/dimensionState';
+import {
+  applyCoincidentConstraint,
+  applyHorizontalConstraint,
+  applyVerticalConstraint,
+} from '@/features/facility-map/sketch/constraints/basicConstraints';
 import {
   toggleSelection,
 } from '@/features/facility-map/sketch/selection/selectionState';
@@ -1163,6 +1169,11 @@ export default function InventorSketchOverlay({
           );
         })}
 
+        <ConstraintGlyphRenderer
+          constraints={store.constraints}
+          entities={store.entities}
+        />
+
         <DimensionRenderer
           dimensions={viewDimensions}
           document={store}
@@ -1484,6 +1495,87 @@ export default function InventorSketchOverlay({
                 </label>
               </>
             )}
+
+            {tool === 'select' && selectedIds.length === 1 && (() => {
+              const selected = store.entities.find(
+                (entity) => entity.id === selectedIds[0],
+              );
+              if (!selected || selected.type !== 'line') return null;
+              const applySingleConstraint = (
+                kind: 'horizontal' | 'vertical',
+              ) => {
+                const id = createSketchId(`constraint-${kind}`);
+                const result = kind === 'horizontal'
+                  ? applyHorizontalConstraint(store.entities, selected.id, id)
+                  : applyVerticalConstraint(store.entities, selected.id, id);
+                if (!result) return;
+                setStore((current) => ({
+                  ...current,
+                  entities: result.entities,
+                  constraints: [
+                    ...current.constraints.filter(
+                      (constraint) =>
+                        !(
+                          constraint.kind === kind &&
+                          constraint.entityIds.length === 1 &&
+                          constraint.entityIds[0] === selected.id
+                        ),
+                    ),
+                    result.constraint,
+                  ],
+                }));
+              };
+              return (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => applySingleConstraint('horizontal')}
+                    className="rounded-md border border-violet-400/30 px-2 py-2 text-xs text-violet-300 hover:bg-violet-500/10"
+                  >
+                    Horizontal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applySingleConstraint('vertical')}
+                    className="rounded-md border border-violet-400/30 px-2 py-2 text-xs text-violet-300 hover:bg-violet-500/10"
+                  >
+                    Vertical
+                  </button>
+                </div>
+              );
+            })()}
+
+            {tool === 'select' && selectedIds.length === 2 && (() => {
+              const lines = selectedIds
+                .map((id) => store.entities.find((entity) => entity.id === id))
+                .filter(
+                  (entity): entity is LineEntity =>
+                    Boolean(entity && entity.type === 'line'),
+                );
+              if (lines.length !== 2) return null;
+              return (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const result = applyCoincidentConstraint(
+                      store.entities,
+                      lines[0].id,
+                      lines[1].id,
+                      createSketchId('constraint-coincident'),
+                    );
+                    if (!result) return;
+                    setStore((current) => ({
+                      ...current,
+                      entities: result.entities,
+                      constraints: [...current.constraints, result.constraint],
+                    }));
+                  }}
+                  className="mt-3 w-full rounded-md border border-violet-400/30 px-3 py-2 text-xs text-violet-300 hover:bg-violet-500/10"
+                >
+                  Coincident
+                </button>
+              );
+            })()}
 
             {selectedDimensionId && (() => {
               const persisted = store.dimensions.find(
