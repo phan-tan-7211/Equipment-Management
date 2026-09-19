@@ -69,13 +69,19 @@ import {
   updateRectangleDraft,
   type RectangleDraft,
 } from '@/features/facility-map/sketch/commands/rectangleCommand';
+import {
+  createCircleEntity,
+  startCircleDraft,
+  updateCircleDraft,
+  type CircleDraft,
+} from '@/features/facility-map/sketch/commands/circleCommand';
 
 type ToolPresetMap = Record<'line' | 'rect' | 'circle', SketchStyle>;
 
 type Draft =
   | LineDraft
   | RectangleDraft
-  | { type: 'circle'; start: Point; current: Point }
+  | CircleDraft
   | null;
 
 type DynamicLocks = {
@@ -366,12 +372,14 @@ export default function InventorSketchOverlay({
     } else {
       const fallbackRadius = distance(draft.start, currentPoint);
       const radius = clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackRadius);
+      const circle = createCircleEntity({
+        draft,
+        radius,
+        style,
+      });
       setStore((current) => ({
         ...current,
-        entities: [
-          ...current.entities,
-          { id: createSketchId('sketch-circle'), type: 'circle', cx: draft.start.x, cy: draft.start.y, r: radius, ...style },
-        ],
+        entities: [...current.entities, circle],
       }));
     }
 
@@ -597,7 +605,7 @@ export default function InventorSketchOverlay({
     if (tool === 'circle') {
       event.stopPropagation();
       if (!draft) {
-        setDraft({ type: 'circle', start: point, current: point });
+        setDraft(startCircleDraft(point));
         setCommandState((current) => beginSketchInteraction(current, 'creating'));
         resetDynamic();
         return;
@@ -636,7 +644,7 @@ export default function InventorSketchOverlay({
           ? updateLineDraft(draft, next)
           : draft.type === 'rect'
             ? updateRectangleDraft(draft, next)
-            : ({ ...draft, current: next } as Draft),
+            : updateCircleDraft(draft, next),
       );
       updateDynamicFromPointer(next);
     }
