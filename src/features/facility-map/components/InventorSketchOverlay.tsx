@@ -49,6 +49,9 @@ import {
   findCircleCenterSnap,
 } from '@/features/facility-map/sketch/snapping/circleCenterSnap';
 import {
+  findArcCenterSnap,
+} from '@/features/facility-map/sketch/snapping/arcCenterSnap';
+import {
   angleDeg,
   arcPoint,
   clampPositive,
@@ -254,7 +257,12 @@ export default function InventorSketchOverlay({
       store.entities,
       threshold,
     );
-    const candidates = [endpoint, midpoint, circleCenter].filter(
+    const arcCenter = findArcCenterSnap(
+      point,
+      store.entities,
+      threshold,
+    );
+    const candidates = [endpoint, midpoint, circleCenter, arcCenter].filter(
       (candidate): candidate is NonNullable<typeof candidate> =>
         candidate !== null,
     );
