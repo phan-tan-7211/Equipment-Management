@@ -74,6 +74,46 @@ export const ConstraintGlyphRenderer = ({
           ];
         }
 
+        if (
+          constraint.kind === 'parallel' ||
+          constraint.kind === 'perpendicular' ||
+          constraint.kind === 'equal' ||
+          constraint.kind === 'fix' ||
+          constraint.kind === 'midpoint' ||
+          constraint.kind === 'concentric'
+        ) {
+          const entity = byId.get(constraint.entityIds[0]);
+          if (!entity) return [];
+          const anchor =
+            entity.type === 'line'
+              ? lineMidpoint(entity)
+              : entity.type === 'circle' || entity.type === 'arc'
+                ? { x: entity.cx, y: entity.cy }
+                : entity.type === 'rect'
+                  ? { x: entity.x + entity.w / 2, y: entity.y + entity.h / 2 }
+                  : entity.points[0] ?? { x: 0, y: 0 };
+          const label =
+            constraint.kind === 'parallel' ? '∥'
+              : constraint.kind === 'perpendicular' ? '⟂'
+                : constraint.kind === 'equal' ? '='
+                  : constraint.kind === 'fix' ? 'F'
+                    : constraint.kind === 'midpoint' ? 'M'
+                      : 'C';
+          return [
+            <text
+              key={constraint.id}
+              x={anchor.x + 8}
+              y={anchor.y - 8}
+              fill={constraint.conflict ? '#ef4444' : '#8b5cf6'}
+              fontSize="11"
+              fontWeight="700"
+              vectorEffect="non-scaling-stroke"
+            >
+              {label}
+            </text>,
+          ];
+        }
+
         return [];
       })}
     </g>

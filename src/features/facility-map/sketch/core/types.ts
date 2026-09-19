@@ -98,7 +98,7 @@ export type SketchConstraintKind =
 
 export type SketchConstraintPointRef = {
   entityId: SketchId;
-  point: 'start' | 'end' | 'center' | `vertex:${number}`;
+  point: 'start' | 'end' | 'center' | 'midpoint' | `vertex:${number}`;
 };
 
 export type SketchConstraint = {

@@ -84,6 +84,14 @@ import {
   applyVerticalConstraint,
 } from '@/features/facility-map/sketch/constraints/basicConstraints';
 import {
+  applyConcentricConstraint,
+  applyEqualConstraint,
+  applyFixConstraint,
+  applyMidpointConstraint,
+  applyParallelConstraint,
+  applyPerpendicularConstraint,
+} from '@/features/facility-map/sketch/constraints/advancedConstraints';
+import {
   toggleSelection,
 } from '@/features/facility-map/sketch/selection/selectionState';
 import {
@@ -1525,6 +1533,27 @@ export default function InventorSketchOverlay({
                   ],
                 }));
               };
+              const addFix = () => {
+                const result = applyFixConstraint(
+                  store.entities,
+                  selected.id,
+                  createSketchId('constraint-fix'),
+                );
+                if (!result) return;
+                setStore((current) => ({
+                  ...current,
+                  constraints: [
+                    ...current.constraints.filter(
+                      (constraint) =>
+                        !(
+                          constraint.kind === 'fix' &&
+                          constraint.entityIds[0] === selected.id
+                        ),
+                    ),
+                    result.constraint,
+                  ],
+                }));
+              };
               return (
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <button
@@ -1541,6 +1570,13 @@ export default function InventorSketchOverlay({
                   >
                     Vertical
                   </button>
+                  <button
+                    type="button"
+                    onClick={addFix}
+                    className="col-span-2 rounded-md border border-violet-400/30 px-2 py-2 text-xs text-violet-300 hover:bg-violet-500/10"
+                  >
+                    Fix
+                  </button>
                 </div>
               );
             })()}
@@ -1553,27 +1589,94 @@ export default function InventorSketchOverlay({
                     Boolean(entity && entity.type === 'line'),
                 );
               if (lines.length !== 2) return null;
+              const applyPair = (
+                kind: 'coincident' | 'parallel' | 'perpendicular' | 'equal' | 'midpoint',
+              ) => {
+                const id = createSketchId(`constraint-${kind}`);
+                const result =
+                  kind === 'coincident'
+                    ? applyCoincidentConstraint(store.entities, lines[0].id, lines[1].id, id)
+                    : kind === 'parallel'
+                      ? applyParallelConstraint(store.entities, lines[0].id, lines[1].id, id)
+                      : kind === 'perpendicular'
+                        ? applyPerpendicularConstraint(store.entities, lines[0].id, lines[1].id, id)
+                        : kind === 'equal'
+                          ? applyEqualConstraint(store.entities, lines[0].id, lines[1].id, id)
+                          : applyMidpointConstraint(store.entities, lines[0].id, lines[1].id, id);
+                if (!result) return;
+                setStore((current) => ({
+                  ...current,
+                  entities: result.entities,
+                  constraints: [...current.constraints, result.constraint],
+                }));
+              };
               return (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const result = applyCoincidentConstraint(
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {(['coincident', 'parallel', 'perpendicular', 'equal', 'midpoint'] as const).map((kind) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      onClick={() => applyPair(kind)}
+                      className="rounded-md border border-violet-400/30 px-2 py-2 text-xs capitalize text-violet-300 hover:bg-violet-500/10"
+                    >
+                      {kind}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {tool === 'select' && selectedIds.length === 2 && (() => {
+              const pair = selectedIds
+                .map((id) => store.entities.find((entity) => entity.id === id))
+                .filter(Boolean) as SketchEntity[];
+              if (
+                pair.length !== 2 ||
+                !(
+                  (pair[0].type === 'circle' || pair[0].type === 'arc') &&
+                  (pair[1].type === 'circle' || pair[1].type === 'arc')
+                )
+              ) {
+                return null;
+              }
+              const applyRadial = (kind: 'equal' | 'concentric') => {
+                const result = kind === 'equal'
+                  ? applyEqualConstraint(
                       store.entities,
-                      lines[0].id,
-                      lines[1].id,
-                      createSketchId('constraint-coincident'),
+                      pair[0].id,
+                      pair[1].id,
+                      createSketchId('constraint-equal'),
+                    )
+                  : applyConcentricConstraint(
+                      store.entities,
+                      pair[0].id,
+                      pair[1].id,
+                      createSketchId('constraint-concentric'),
                     );
-                    if (!result) return;
-                    setStore((current) => ({
-                      ...current,
-                      entities: result.entities,
-                      constraints: [...current.constraints, result.constraint],
-                    }));
-                  }}
-                  className="mt-3 w-full rounded-md border border-violet-400/30 px-3 py-2 text-xs text-violet-300 hover:bg-violet-500/10"
-                >
-                  Coincident
-                </button>
+                if (!result) return;
+                setStore((current) => ({
+                  ...current,
+                  entities: result.entities,
+                  constraints: [...current.constraints, result.constraint],
+                }));
+              };
+              return (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => applyRadial('equal')}
+                    className="rounded-md border border-violet-400/30 px-2 py-2 text-xs text-violet-300 hover:bg-violet-500/10"
+                  >
+                    Equal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyRadial('concentric')}
+                    className="rounded-md border border-violet-400/30 px-2 py-2 text-xs text-violet-300 hover:bg-violet-500/10"
+                  >
+                    Concentric
+                  </button>
+                </div>
               );
             })()}
 
