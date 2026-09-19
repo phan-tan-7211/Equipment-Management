@@ -35,6 +35,10 @@ import {
   type SketchStyle,
   type SketchTool,
 } from '@/features/facility-map/sketch';
+import {
+  clientPointToSketchPoint,
+  cssPixelsToSketchUnits,
+} from '@/features/facility-map/sketch/core/coordinates';
 
 type ToolPresetMap = Record<'line' | 'rect' | 'circle', SketchStyle>;
 
@@ -268,19 +272,20 @@ export default function InventorSketchOverlay({
   const pointFromEvent = useCallback((event: React.MouseEvent<SVGSVGElement | SVGElement>) => {
     const svg = svgRef.current;
     if (!svg) return null;
-    const rect = svg.getBoundingClientRect();
-    if (!rect.width || !rect.height) return null;
-    return {
-      x: ((event.clientX - rect.left) / rect.width) * canvasWidth,
-      y: ((event.clientY - rect.top) / rect.height) * canvasHeight,
-    };
+    return clientPointToSketchPoint(
+      event.clientX,
+      event.clientY,
+      svg.getBoundingClientRect(),
+      canvasWidth,
+      canvasHeight,
+    );
   }, [canvasHeight, canvasWidth]);
 
   const endpointSnap = useCallback((point: Point) => {
     const svg = svgRef.current;
     if (!svg) return point;
     const rect = svg.getBoundingClientRect();
-    const threshold = (10 / Math.max(rect.width, 1)) * canvasWidth;
+    const threshold = cssPixelsToSketchUnits(10, rect.width, canvasWidth);
     let best: Point | null = null;
     let bestDistance = Number.POSITIVE_INFINITY;
 
