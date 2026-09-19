@@ -2148,6 +2148,7 @@ export default function FacilityFloorPlan() {
                     </label>
                   )}
                 </div>
+                </div>
               )}
               {drawTool === 'text' && (
                 <input
