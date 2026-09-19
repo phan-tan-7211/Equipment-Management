@@ -43,6 +43,9 @@ import {
   findEndpointSnap,
 } from '@/features/facility-map/sketch/snapping/endpointSnap';
 import {
+  findMidpointSnap,
+} from '@/features/facility-map/sketch/snapping/midpointSnap';
+import {
   angleDeg,
   arcPoint,
   clampPositive,
@@ -241,7 +244,14 @@ export default function InventorSketchOverlay({
     if (!svg) return point;
     const rect = svg.getBoundingClientRect();
     const threshold = cssPixelsToSketchUnits(10, rect.width, canvasWidth);
-    return findEndpointSnap(point, store.entities, threshold)?.point ?? point;
+    const endpoint = findEndpointSnap(point, store.entities, threshold);
+    const midpoint = findMidpointSnap(point, store.entities, threshold);
+
+    if (!endpoint) return midpoint?.point ?? point;
+    if (!midpoint) return endpoint.point;
+    return midpoint.distance < endpoint.distance
+      ? midpoint.point
+      : endpoint.point;
   }, [canvasWidth, store.entities]);
 
   const inferLineEnd = useCallback((start: Point, raw: Point) => {
