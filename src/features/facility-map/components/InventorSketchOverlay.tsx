@@ -61,6 +61,9 @@ import {
   findNearestSnap,
 } from '@/features/facility-map/sketch/snapping/nearestSnap';
 import {
+  findGridSnap,
+} from '@/features/facility-map/sketch/snapping/gridSnap';
+import {
   angleDeg,
   arcPoint,
   clampPositive,
@@ -286,6 +289,7 @@ export default function InventorSketchOverlay({
       store.entities,
       threshold,
     );
+    const grid = findGridSnap(point, threshold);
     const candidates = [
       endpoint,
       midpoint,
@@ -294,6 +298,7 @@ export default function InventorSketchOverlay({
       lineIntersection,
       polylineIntersection,
       nearest,
+      grid,
     ].filter(
       (candidate): candidate is NonNullable<typeof candidate> =>
         candidate !== null,
