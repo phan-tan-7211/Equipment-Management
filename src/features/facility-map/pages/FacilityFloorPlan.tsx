@@ -1836,13 +1836,14 @@ export default function FacilityFloorPlan() {
                 <button
                   key={item.id}
                   type="button"
+                  disabled={hiddenLayers.has('assets')}
                   onClick={() => {
                     setSelectedEquipmentId(item.id);
                     setPlaceLayer(null);
                     setZoneTool(null);
                     setDrawTool('select');
                   }}
-                  className={`w-full rounded-md border px-3 py-2 text-left transition hover:bg-accent ${
+                  className={`w-full rounded-md border px-3 py-2 text-left transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40 ${
                     selectedEquipmentId === item.id ? 'border-primary bg-primary/10' : ''
                   }`}
                 >
@@ -1864,14 +1865,14 @@ export default function FacilityFloorPlan() {
                   <button
                     key={layer.id}
                     type="button"
+                    disabled={hiddenLayers.has(layer.id)}
                     onClick={() => {
-                      setLayerVisible(layer.id as LayerId, true);
                       setPlaceLayer(layer.id as LayerId);
                       setSelectedEquipmentId('');
                       setZoneTool(null);
                       setDrawTool('select');
                     }}
-                    className={`rounded-md border px-2 py-2 text-xs ${
+                    className={`rounded-md border px-2 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-35 ${
                       placeLayer === layer.id ? 'ring-2 ring-ring' : ''
                     }`}
                     style={{ borderColor: layer.color, color: layer.color }}
@@ -1880,6 +1881,7 @@ export default function FacilityFloorPlan() {
                   </button>
                 ))}
               </div>
+              <div className="mt-2 text-[10px] text-muted-foreground">{t('facilityMap.layerEditHint')}</div>
             </div>
 
             <div className="mt-4 border-t pt-3">
