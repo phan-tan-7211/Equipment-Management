@@ -5,8 +5,10 @@ import {
   getBasicEntityGrips,
 } from '@/features/facility-map/sketch/selection/basicGrips';
 import type {
+  ArcEntity,
   CircleEntity,
   LineEntity,
+  PolylineEntity,
   RectEntity,
 } from '@/features/facility-map/sketch/core/types';
 
@@ -88,7 +90,89 @@ describe('basic grips', () => {
 
     const radiusGrip = getBasicEntityGrips(circle)[1];
     expect(
-      applyBasicGripDrag(circle, radiusGrip, { x: 3, y: 4 }),
-    ).toMatchObject({ cx: 0, cy: 0, r: 5 });
+      applyBasicGripDrag(circle, radiusGrip, { x: 6, y: 8 }),
+    ).toMatchObject({ cx: 0, cy: 0, r: 10 });
+  });
+
+  it('exposes every polyline vertex and moves only the dragged vertex', () => {
+    const polyline: PolylineEntity = {
+      ...style,
+      id: 'polyline',
+      type: 'polyline',
+      points: [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+      ],
+    };
+
+    const grips = getBasicEntityGrips(polyline);
+    expect(grips.map((grip) => grip.id)).toEqual([
+      'polyline-vertex:0',
+      'polyline-vertex:1',
+      'polyline-vertex:2',
+    ]);
+
+    expect(
+      applyBasicGripDrag(polyline, grips[1], { x: 7, y: 4 }),
+    ).toMatchObject({
+      points: [
+        { x: 0, y: 0 },
+        { x: 7, y: 4 },
+        { x: 10, y: 10 },
+      ],
+    });
+  });
+
+  it('exposes arc center/start/end grips and moves the center', () => {
+    const arc: ArcEntity = {
+      ...style,
+      id: 'arc',
+      type: 'arc',
+      cx: 10,
+      cy: 20,
+      r: 10,
+      startAngleDeg: 0,
+      endAngleDeg: 90,
+    };
+
+    const grips = getBasicEntityGrips(arc);
+    expect(grips.map((grip) => grip.id)).toEqual([
+      'arc-center',
+      'arc-start',
+      'arc-end',
+    ]);
+
+    expect(
+      applyBasicGripDrag(arc, grips[0], { x: 30, y: 40 }),
+    ).toMatchObject({
+      cx: 30,
+      cy: 40,
+      r: 10,
+      startAngleDeg: 0,
+      endAngleDeg: 90,
+    });
+  });
+
+  it('updates arc radius and the dragged endpoint angle', () => {
+    const arc: ArcEntity = {
+      ...style,
+      id: 'arc',
+      type: 'arc',
+      cx: 0,
+      cy: 0,
+      r: 10,
+      startAngleDeg: 0,
+      endAngleDeg: 90,
+    };
+
+    const endGrip = getBasicEntityGrips(arc)[2];
+    expect(
+      applyBasicGripDrag(arc, endGrip, { x: -20, y: 0 }),
+    ).toMatchObject({
+      r: 20,
+      startAngleDeg: 0,
+      endAngleDeg: 180,
+    });
   });
 });

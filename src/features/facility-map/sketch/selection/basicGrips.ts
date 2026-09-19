@@ -1,7 +1,13 @@
-import { distance } from '../core/geometry';
+import {
+  angleDeg,
+  arcPoint,
+  distance,
+} from '../core/geometry';
 import type {
+  ArcEntity,
   CircleEntity,
   LineEntity,
+  PolylineEntity,
   RectEntity,
   SketchEntity,
   SketchPoint,
@@ -15,7 +21,11 @@ export type BasicGripId =
   | 'rect-bottom-right'
   | 'rect-bottom-left'
   | 'circle-center'
-  | 'circle-radius';
+  | 'circle-radius'
+  | `polyline-vertex:${number}`
+  | 'arc-center'
+  | 'arc-start'
+  | 'arc-end';
 
 export type BasicGrip = {
   id: BasicGripId;
@@ -53,7 +63,18 @@ export const getBasicEntityGrips = (
     ];
   }
 
-  return [];
+  if (entity.type === 'polyline') {
+    return entity.points.map((point, index) => ({
+      id: `polyline-vertex:${index}`,
+      point: { ...point },
+    }));
+  }
+
+  return [
+    { id: 'arc-center', point: { x: entity.cx, y: entity.cy } },
+    { id: 'arc-start', point: arcPoint(entity, entity.startAngleDeg) },
+    { id: 'arc-end', point: arcPoint(entity, entity.endAngleDeg) },
+  ];
 };
 
 const resizeRectFromCorner = (
@@ -87,6 +108,58 @@ const resizeRectFromCorner = (
     w: maxX - minX,
     h: maxY - minY,
   };
+};
+
+const polylineVertexIndex = (gripId: BasicGripId): number | null => {
+  if (!gripId.startsWith('polyline-vertex:')) return null;
+  const index = Number(gripId.slice('polyline-vertex:'.length));
+  return Number.isInteger(index) && index >= 0 ? index : null;
+};
+
+const dragPolylineVertex = (
+  entity: PolylineEntity,
+  gripId: BasicGripId,
+  point: SketchPoint,
+): PolylineEntity => {
+  const index = polylineVertexIndex(gripId);
+  if (index === null || index >= entity.points.length) return entity;
+
+  return {
+    ...entity,
+    points: entity.points.map((current, currentIndex) =>
+      currentIndex === index ? { ...point } : { ...current },
+    ),
+  };
+};
+
+const dragArcGrip = (
+  entity: ArcEntity,
+  gripId: BasicGripId,
+  point: SketchPoint,
+): ArcEntity => {
+  if (gripId === 'arc-center') {
+    return { ...entity, cx: point.x, cy: point.y };
+  }
+
+  if (gripId !== 'arc-start' && gripId !== 'arc-end') {
+    return entity;
+  }
+
+  const center = { x: entity.cx, y: entity.cy };
+  const nextRadius = Math.max(distance(center, point), 1e-9);
+  const nextAngle = angleDeg(center, point);
+
+  return gripId === 'arc-start'
+    ? {
+        ...entity,
+        r: nextRadius,
+        startAngleDeg: nextAngle,
+      }
+    : {
+        ...entity,
+        r: nextRadius,
+        endAngleDeg: nextAngle,
+      };
 };
 
 export const applyBasicGripDrag = (
@@ -131,5 +204,9 @@ export const applyBasicGripDrag = (
     return circle;
   }
 
-  return entity;
+  if (entity.type === 'polyline') {
+    return dragPolylineVertex(entity, grip.id, point);
+  }
+
+  return dragArcGrip(entity, grip.id, point);
 };
