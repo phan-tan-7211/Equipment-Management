@@ -945,7 +945,6 @@ export default function FacilityFloorPlan() {
             lineWidth: annotationLineWidth,
             textSize: annotationTextSize,
             arrowSize: annotationArrowSize,
-        arrowSize: annotationArrowSize,
           },
         ],
       }));
