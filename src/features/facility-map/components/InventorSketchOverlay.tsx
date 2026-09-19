@@ -55,6 +55,9 @@ import {
   findLineLineIntersectionSnap,
 } from '@/features/facility-map/sketch/snapping/lineIntersectionSnap';
 import {
+  findPolylineIntersectionSnap,
+} from '@/features/facility-map/sketch/snapping/polylineIntersectionSnap';
+import {
   angleDeg,
   arcPoint,
   clampPositive,
@@ -270,12 +273,18 @@ export default function InventorSketchOverlay({
       store.entities,
       threshold,
     );
+    const polylineIntersection = findPolylineIntersectionSnap(
+      point,
+      store.entities,
+      threshold,
+    );
     const candidates = [
       endpoint,
       midpoint,
       circleCenter,
       arcCenter,
       lineIntersection,
+      polylineIntersection,
     ].filter(
       (candidate): candidate is NonNullable<typeof candidate> =>
         candidate !== null,
