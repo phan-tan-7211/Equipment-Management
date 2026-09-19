@@ -25,6 +25,15 @@ export type LineDraft = {
   current: SketchPoint;
 };
 
+export type LineKeyboardAction = 'confirm' | 'cancel' | 'none';
+
+export const getLineKeyboardAction = (key: string): LineKeyboardAction => {
+  if (key === 'Enter') return 'confirm';
+  if (key === 'Escape') return 'cancel';
+  return 'none';
+};
+
+
 export const startLineDraft = (point: SketchPoint): LineDraft => ({
   type: 'line',
   start: { ...point },

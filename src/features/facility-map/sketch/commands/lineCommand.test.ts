@@ -6,6 +6,7 @@ import {
   getLineDynamicAngle,
   getLineDynamicLength,
   getLineDynamicValues,
+  getLineKeyboardAction,
   resolveLinePreviewEnd,
   startLineDraft,
   updateLineDraft,
@@ -17,6 +18,12 @@ const document = {
 };
 
 describe('line command', () => {
+  it('maps keyboard input to line confirm and cancel actions', () => {
+    expect(getLineKeyboardAction('Enter')).toBe('confirm');
+    expect(getLineKeyboardAction('Escape')).toBe('cancel');
+    expect(getLineKeyboardAction('Tab')).toBe('none');
+  });
+
   it('starts a line draft at the first click without sharing point references', () => {
     const point = { x: 12, y: 34 };
     const draft = startLineDraft(point);

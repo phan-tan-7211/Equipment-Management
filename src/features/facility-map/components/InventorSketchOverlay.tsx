@@ -53,6 +53,7 @@ import {
   commitLineDraft,
   getLineDynamicAngle,
   getLineDynamicLength,
+  getLineKeyboardAction,
   resolveLinePreviewEnd,
   startLineDraft,
   updateLineDraft,
@@ -311,6 +312,25 @@ export default function InventorSketchOverlay({
       entities: [...current.entities, line],
     }));
     finishCreateInteraction();
+  };
+
+  const handleLineInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!draft || draft.type !== 'line') return;
+    const action = getLineKeyboardAction(event.key);
+    if (action === 'none') return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (action === 'confirm') {
+      commitLine(pointer);
+      return;
+    }
+
+    setDraft(null);
+    setCommandState(cancelSketchCommand());
+    resetDynamic();
+    setMessage('');
   };
 
   const commitDraft = (currentPoint: Point) => {
@@ -865,6 +885,7 @@ export default function InventorSketchOverlay({
                       value={dynamicA}
                       onFocus={() => setDynamicLocks((value) => ({ ...value, a: true }))}
                       onChange={(event) => { setDynamicLocks((value) => ({ ...value, a: true })); setDynamicA(event.target.value); }}
+                      onKeyDown={handleLineInputKeyDown}
                       className="w-full rounded border border-white/15 bg-white/10 px-1.5 py-1 text-white"
                     />
                   </label>
@@ -874,6 +895,7 @@ export default function InventorSketchOverlay({
                       value={dynamicB}
                       onFocus={() => setDynamicLocks((value) => ({ ...value, b: true }))}
                       onChange={(event) => { setDynamicLocks((value) => ({ ...value, b: true })); setDynamicB(event.target.value); }}
+                      onKeyDown={handleLineInputKeyDown}
                       className="w-full rounded border border-white/15 bg-white/10 px-1.5 py-1 text-white"
                     />
                   </label>
