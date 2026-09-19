@@ -83,6 +83,7 @@ export type SketchDimension = {
   value?: number;
   labelOffset?: SketchPoint;
   hidden?: boolean;
+  parameterId?: SketchId;
 };
 
 export type SketchConstraintKind =

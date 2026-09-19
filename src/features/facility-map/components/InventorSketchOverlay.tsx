@@ -136,6 +136,16 @@ import {
 } from '@/features/facility-map/sketch/modify/breakOffset';
 import { mirrorSelectedEntities } from '@/features/facility-map/sketch/modify/mirror';
 import {
+  canDeleteParameter,
+  recalculateParameters,
+  renameParameter,
+} from '@/features/facility-map/sketch/parametric/parameterEngine';
+import {
+  bindDimensionToParameter,
+  dimensionParameterDimension,
+  recalculateParametricDocument,
+} from '@/features/facility-map/sketch/parametric/parameterBinding';
+import {
   commitLineDraft,
   getLineDynamicAngle,
   getLineDynamicLength,
@@ -1055,6 +1065,11 @@ export default function InventorSketchOverlay({
     setSelectedDimensionId(dimension.id);
   };
 
+  const calculatedParameters = useMemo(
+    () => recalculateParameters(store.parameters, store.mmPerUnit),
+    [store.mmPerUnit, store.parameters],
+  );
+
   const constraintSolve = useMemo(
     () => solveSketchConstraints(store.entities, store.constraints),
     [store.constraints, store.entities],
@@ -1545,6 +1560,119 @@ export default function InventorSketchOverlay({
               </>
             )}
 
+            <div className="mt-3 rounded-md border border-cyan-400/20 bg-cyan-500/5 p-2">
+              <div className="mb-2 flex items-center justify-between text-[10px] font-semibold text-cyan-200">
+                <span>Parameters</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const name = window.prompt('Parameter name', `p${store.parameters.length + 1}`);
+                    if (!name) return;
+                    const expression = window.prompt('Expression', '100 mm');
+                    if (!expression) return;
+                    const next = [
+                      ...store.parameters,
+                      {
+                        id: createSketchId('parameter'),
+                        name,
+                        expression,
+                      },
+                    ];
+                    setStore((current) =>
+                      recalculateParametricDocument({
+                        ...current,
+                        parameters: next,
+                      }),
+                    );
+                  }}
+                  className="rounded border border-cyan-400/30 px-2 py-1 text-[9px] text-cyan-200 hover:bg-cyan-500/10"
+                >
+                  + Add
+                </button>
+              </div>
+              <div className="grid gap-1">
+                {calculatedParameters.map((parameter) => (
+                  <div
+                    key={parameter.id}
+                    className="rounded bg-white/5 px-2 py-1 text-[9px]"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        className="truncate text-left text-cyan-100 hover:underline"
+                        onClick={() => {
+                          const nextName = window.prompt('Parameter name', parameter.name);
+                          if (!nextName) return;
+                          const nextExpression = window.prompt('Expression', parameter.expression);
+                          if (nextExpression == null) return;
+                          try {
+                            const renamed = renameParameter(
+                              store.parameters,
+                              parameter.name,
+                              nextName,
+                            ).map((item) =>
+                              item.name === nextName
+                                ? { ...item, expression: nextExpression }
+                                : item,
+                            );
+                            setStore((current) =>
+                              recalculateParametricDocument({
+                                ...current,
+                                parameters: renamed,
+                              }),
+                            );
+                          } catch (error) {
+                            setMessage(error instanceof Error ? error.message : 'Invalid parameter');
+                          }
+                        }}
+                      >
+                        {parameter.name} = {parameter.expression}
+                      </button>
+                      <button
+                        type="button"
+                        className="text-red-300 hover:text-red-200"
+                        onClick={() => {
+                          const protection = canDeleteParameter(
+                            store.parameters,
+                            parameter.name,
+                          );
+                          const bound = store.dimensions.some(
+                            (dimension) => dimension.parameterId === parameter.id,
+                          );
+                          if (!protection.ok || bound) {
+                            setMessage(
+                              bound
+                                ? 'Parameter is bound to a dimension.'
+                                : `Used by: ${protection.dependents.join(', ')}`,
+                            );
+                            return;
+                          }
+                          setStore((current) =>
+                            recalculateParametricDocument({
+                              ...current,
+                              parameters: current.parameters.filter(
+                                (item) => item.id !== parameter.id,
+                              ),
+                            }),
+                          );
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className={parameter.error ? 'text-red-300' : 'text-slate-400'}>
+                      {parameter.error
+                        ? parameter.error
+                        : `${parameter.value ?? '—'} ${parameter.dimension ?? ''}`}
+                    </div>
+                  </div>
+                ))}
+                {!calculatedParameters.length && (
+                  <div className="text-[9px] text-slate-500">No parameters</div>
+                )}
+              </div>
+            </div>
+
             {tool === 'select' && selectedIds.length === 1 && (() => {
               const selected = store.entities.find(
                 (entity) => entity.id === selectedIds[0],
@@ -1759,6 +1887,42 @@ export default function InventorSketchOverlay({
               const isReference = persisted?.reference === true;
               return (
                 <div className="mt-3 grid gap-2">
+                  {(() => {
+                    const selected = viewDimensions.find(
+                      (dimension) => dimension.id === selectedDimensionId,
+                    );
+                    if (!selected) return null;
+                    const expected = dimensionParameterDimension(selected.kind);
+                    const compatible = calculatedParameters.filter(
+                      (parameter) =>
+                        !parameter.error &&
+                        parameter.dimension === expected,
+                    );
+                    const binding = persisted?.parameterId ?? '';
+                    return (
+                      <select
+                        value={binding}
+                        onChange={(event) => {
+                          const parameterId = event.target.value || null;
+                          setStore((current) =>
+                            bindDimensionToParameter(
+                              current,
+                              selected,
+                              parameterId,
+                            ),
+                          );
+                        }}
+                        className="w-full rounded border border-cyan-400/20 bg-slate-900 px-2 py-1.5 text-xs text-cyan-100"
+                      >
+                        <option value="">No parameter binding</option>
+                        {compatible.map((parameter) => (
+                          <option key={parameter.id} value={parameter.id}>
+                            {parameter.name}
+                          </option>
+                        ))}
+                      </select>
+                    );
+                  })()}
                   <button
                     type="button"
                     onClick={() => {
