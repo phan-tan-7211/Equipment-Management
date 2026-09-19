@@ -791,6 +791,22 @@ export default function FacilityFloorPlan() {
     setDraggingAnnotationId(annotation.id);
   }, [beginGroupDrag, drawTool, editMode, plan, setSingleSelection, toPercentRaw]);
 
+  const beginAnnotationGrip = useCallback((
+    event: React.MouseEvent<SVGCircleElement>,
+    annotation: Annotation,
+    handle: NonNullable<AnnotationGrip>['handle'],
+  ) => {
+    if (!editMode || drawTool !== 'select') return;
+    event.stopPropagation();
+    const point = toPercentRaw(event.clientX, event.clientY);
+    if (!point) return;
+    const objectId = `annotation:${annotation.id}`;
+    setSingleSelection(objectId);
+    dragStartPlanRef.current = clonePlan(plan);
+    annotationDragRef.current = { startX: point.x, startY: point.y, snapshot: { ...annotation } };
+    setAnnotationGrip({ id: annotation.id, handle });
+  }, [drawTool, editMode, plan, setSingleSelection, toPercentRaw]);
+
   const placeAt = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!editMode || draggingEquipmentId || draggingOverlayId || isPanning || zoneStart) return;
     const point = toPercent(event.clientX, event.clientY);
@@ -1900,7 +1916,7 @@ export default function FacilityFloorPlan() {
                       ))}
                     </select>
                   </label>
-                  {drawTool === 'text' && (
+                  {(drawTool === 'text' || drawTool === 'ruler') && (
                     <label className="col-span-2 flex items-center justify-between gap-2 text-[11px]">
                       <span>{t('facilityMap.textSize')}</span>
                       <select
@@ -2290,7 +2306,7 @@ export default function FacilityFloorPlan() {
               {selectedAnnotation && (
                 <div className="space-y-3">
                   <div className="text-xs text-slate-300">{t('facilityMap.annotation')} · {t(annotationToolTranslationKey(selectedAnnotation.type))}</div>
-                  {selectedAnnotation.type === 'text' && (
+                  {(selectedAnnotation.type === 'text' || selectedAnnotation.type === 'ruler') && (
                     <input
                       value={selectedAnnotation.text ?? ''}
                       onChange={(event) => commitPlan((current) => ({
@@ -2327,7 +2343,7 @@ export default function FacilityFloorPlan() {
                       ))}
                     </select>
                   </label>
-                  {selectedAnnotation.type === 'text' && (
+                  {(selectedAnnotation.type === 'text' || selectedAnnotation.type === 'ruler') && (
                     <label className="flex items-center justify-between gap-2 text-xs text-slate-300">
                       <span>{t('facilityMap.textSize')}</span>
                       <select
@@ -2500,26 +2516,28 @@ export default function FacilityFloorPlan() {
               >
                 {[...plan.annotations, ...(draftAnnotation ? [draftAnnotation] : [])].map((annotation) => {
                   const isDraft = annotation.id === 'draft-annotation';
-                  const annotationColor = annotation.color ?? (annotation.type === 'ruler' ? '#22d3ee' : '#f43f5e');
-                  const annotationSelected = selectedMarkerId === `annotation:${annotation.id}`;
+                  const objectId = `annotation:${annotation.id}`;
+                  const annotationColorValue = annotation.color ?? (annotation.type === 'ruler' ? '#22d3ee' : '#f43f5e');
+                  const annotationSelected = selectedObjectIds.has(objectId) || selectedMarkerId === objectId;
+                  const baseWidth = annotation.lineWidth ?? 0.28;
                   const common = {
-                    stroke: annotationColor,
-                    strokeWidth: annotationSelected ? 0.42 : isDraft ? 0.35 : 0.28,
+                    stroke: annotationColorValue,
+                    strokeWidth: annotationSelected ? baseWidth + 0.12 : baseWidth,
                     vectorEffect: 'non-scaling-stroke' as const,
                     opacity: isDraft ? 0.7 : 1,
                     pointerEvents: ((drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'stroke' : 'none') as React.CSSProperties['pointerEvents'],
+                    cursor: drawTool === 'erase' ? 'crosshair' : drawTool === 'select' ? 'move' : 'default',
+                    onMouseDown: (event: React.MouseEvent<SVGElement>) => {
+                      if (!isDraft && drawTool === 'select') beginAnnotationDrag(event, annotation);
+                    },
                     onClick: (event: React.MouseEvent<SVGElement>) => {
                       if (isDraft) return;
                       event.stopPropagation();
                       if (drawTool === 'erase') {
-                        commitPlan((current) => ({
-                          ...current,
-                          annotations: current.annotations.filter((item) => item.id !== annotation.id),
-                        }));
-                        setSelectedMarkerId('');
+                        deleteObjectsByIds(new Set([objectId]));
                         return;
                       }
-                      if (drawTool === 'select') setSelectedMarkerId(`annotation:${annotation.id}`);
+                      if (drawTool === 'select') setSingleSelection(objectId, event.shiftKey);
                     },
                   };
 
@@ -2537,7 +2555,7 @@ export default function FacilityFloorPlan() {
                               refY="3"
                               orient="auto"
                             >
-                              <path d="M0,0 L6,3 L0,6 z" fill={annotationColor} />
+                              <path d="M0,0 L6,3 L0,6 z" fill={annotationColorValue} />
                             </marker>
                           </defs>
                         )}
@@ -2554,9 +2572,10 @@ export default function FacilityFloorPlan() {
                           <text
                             x={(annotation.x1 + annotation.x2) / 2}
                             y={(annotation.y1 + annotation.y2) / 2 - 1}
-                            fill={annotationColor}
-                            fontSize="2.2"
+                            fill={annotationColorValue}
+                            fontSize={annotation.textSize ?? 2.2}
                             textAnchor="middle"
+                            pointerEvents="none"
                           >
                             {distance.toFixed(1)}%
                           </text>
@@ -2573,8 +2592,9 @@ export default function FacilityFloorPlan() {
                         y={Math.min(annotation.y1, annotation.y2)}
                         width={Math.abs(annotation.x2 - annotation.x1)}
                         height={Math.abs(annotation.y2 - annotation.y1)}
-                        fill={`${annotationColor}18`}
+                        fill={`${annotationColorValue}18`}
                         {...common}
+                        pointerEvents={(drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'all' : 'none'}
                       />
                     );
                   }
@@ -2589,8 +2609,9 @@ export default function FacilityFloorPlan() {
                         cy={(annotation.y1 + annotation.y2) / 2}
                         rx={rx}
                         ry={ry}
-                        fill={`${annotationColor}18`}
+                        fill={`${annotationColorValue}18`}
                         {...common}
+                        pointerEvents={(drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'all' : 'none'}
                       />
                     );
                   }
@@ -2600,30 +2621,84 @@ export default function FacilityFloorPlan() {
                       key={annotation.id}
                       x={annotation.x1}
                       y={annotation.y1}
-                      fill={annotationColor}
-                      fontSize="2.5"
+                      fill={annotationColorValue}
+                      fontSize={annotation.textSize ?? 2.5}
                       fontWeight="700"
                       stroke={annotationSelected ? '#ffffff' : 'none'}
                       strokeWidth={annotationSelected ? 0.08 : 0}
-                      style={{ pointerEvents: (drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'auto' : 'none', cursor: 'pointer' }}
+                      style={{ pointerEvents: (drawTool === 'erase' || drawTool === 'select') && !isDraft ? 'auto' : 'none', cursor: drawTool === 'erase' ? 'crosshair' : 'move' }}
+                      onMouseDown={(event) => {
+                        if (!isDraft && drawTool === 'select') beginAnnotationDrag(event, annotation);
+                      }}
                       onClick={(event) => {
                         if (isDraft) return;
                         event.stopPropagation();
                         if (drawTool === 'erase') {
-                          commitPlan((current) => ({
-                            ...current,
-                            annotations: current.annotations.filter((item) => item.id !== annotation.id),
-                          }));
-                          setSelectedMarkerId('');
+                          deleteObjectsByIds(new Set([objectId]));
                           return;
                         }
-                        if (drawTool === 'select') setSelectedMarkerId(`annotation:${annotation.id}`);
+                        if (drawTool === 'select') setSingleSelection(objectId, event.shiftKey);
                       }}
                     >
                       {annotation.text}
                     </text>
                   );
                 })}
+
+                {selectedAnnotation && selectedObjectIds.size <= 1 && drawTool === 'select' && (() => {
+                  const color = selectedAnnotation.color ?? '#0ea5e9';
+                  const gripProps = {
+                    r: 0.75,
+                    fill: '#ffffff',
+                    stroke: color,
+                    strokeWidth: 0.28,
+                    vectorEffect: 'non-scaling-stroke' as const,
+                    style: { pointerEvents: 'all' as const, cursor: 'pointer' },
+                  };
+
+                  if (selectedAnnotation.type === 'line' || selectedAnnotation.type === 'arrow' || selectedAnnotation.type === 'ruler') {
+                    return (
+                      <>
+                        <circle
+                          cx={selectedAnnotation.x1}
+                          cy={selectedAnnotation.y1}
+                          {...gripProps}
+                          onMouseDown={(event) => beginAnnotationGrip(event, selectedAnnotation, 'start')}
+                        />
+                        <circle
+                          cx={selectedAnnotation.x2}
+                          cy={selectedAnnotation.y2}
+                          {...gripProps}
+                          onMouseDown={(event) => beginAnnotationGrip(event, selectedAnnotation, 'end')}
+                        />
+                      </>
+                    );
+                  }
+
+                  if (selectedAnnotation.type === 'rect' || selectedAnnotation.type === 'circle') {
+                    const left = Math.min(selectedAnnotation.x1, selectedAnnotation.x2);
+                    const right = Math.max(selectedAnnotation.x1, selectedAnnotation.x2);
+                    const top = Math.min(selectedAnnotation.y1, selectedAnnotation.y2);
+                    const bottom = Math.max(selectedAnnotation.y1, selectedAnnotation.y2);
+                    return (
+                      <>
+                        <circle cx={left} cy={top} {...gripProps} onMouseDown={(event) => beginAnnotationGrip(event, selectedAnnotation, 'nw')} />
+                        <circle cx={right} cy={top} {...gripProps} onMouseDown={(event) => beginAnnotationGrip(event, selectedAnnotation, 'ne')} />
+                        <circle cx={right} cy={bottom} {...gripProps} onMouseDown={(event) => beginAnnotationGrip(event, selectedAnnotation, 'se')} />
+                        <circle cx={left} cy={bottom} {...gripProps} onMouseDown={(event) => beginAnnotationGrip(event, selectedAnnotation, 'sw')} />
+                      </>
+                    );
+                  }
+
+                  return (
+                    <circle
+                      cx={selectedAnnotation.x1}
+                      cy={selectedAnnotation.y1}
+                      {...gripProps}
+                      onMouseDown={(event) => beginAnnotationGrip(event, selectedAnnotation, 'start')}
+                    />
+                  );
+                })()}
               </svg>
 
               {plan.zones.map((zone) => {
