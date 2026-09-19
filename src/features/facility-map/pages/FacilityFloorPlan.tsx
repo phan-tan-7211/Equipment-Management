@@ -105,6 +105,7 @@ type Annotation = {
   color?: string;
   lineWidth?: number;
   textSize?: number;
+  arrowSize?: number;
 };
 
 type ZoneResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
@@ -434,6 +435,7 @@ export default function FacilityFloorPlan() {
   const [annotationColor, setAnnotationColor] = useState('#f43f5e');
   const [annotationLineWidth, setAnnotationLineWidth] = useState(0.28);
   const [annotationTextSize, setAnnotationTextSize] = useState(2.5);
+  const [annotationArrowSize, setAnnotationArrowSize] = useState(6);
   const [selectedObjectIds, setSelectedObjectIds] = useState<Set<string>>(new Set());
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
   const [draggingAnnotationId, setDraggingAnnotationId] = useState('');
@@ -916,6 +918,7 @@ export default function FacilityFloorPlan() {
         color: annotationColor,
         lineWidth: annotationLineWidth,
         textSize: annotationTextSize,
+        arrowSize: annotationArrowSize,
       });
       return;
     }
@@ -938,6 +941,8 @@ export default function FacilityFloorPlan() {
             color: annotationColor,
             lineWidth: annotationLineWidth,
             textSize: annotationTextSize,
+            arrowSize: annotationArrowSize,
+        arrowSize: annotationArrowSize,
           },
         ],
       }));
@@ -1567,7 +1572,7 @@ export default function FacilityFloorPlan() {
 
   const visibleAssetPins = !hiddenLayers.has('assets');
   const visibleOverlayPins = emergencyMode
-    ? plan.overlayPins.filter((pin) => pin.layer === 'fire' || pin.layer === 'emergency')
+    ? plan.overlayPins.filter((pin) => !hiddenLayers.has(pin.layer) && (pin.layer === 'fire' || pin.layer === 'emergency'))
     : plan.overlayPins.filter((pin) => !hiddenLayers.has(pin.layer));
 
   const placementHint = selectedEquipmentId
@@ -1944,6 +1949,20 @@ export default function FacilityFloorPlan() {
                       ))}
                     </select>
                   </label>
+                  {drawTool === 'arrow' && (
+                    <label className="col-span-2 flex items-center justify-between gap-2 text-[11px]">
+                      <span>{t('facilityMap.arrowSize')}</span>
+                      <select
+                        value={annotationArrowSize}
+                        onChange={(event) => setAnnotationArrowSize(Number(event.target.value))}
+                        className="rounded border bg-background px-1.5 py-1 text-xs text-foreground"
+                      >
+                        {[4, 5, 6, 8, 10, 12].map((size) => (
+                          <option key={size} value={size}>{size}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   {(drawTool === 'text' || drawTool === 'ruler') && (
                     <label className="col-span-2 flex items-center justify-between gap-2 text-[11px]">
                       <span>{t('facilityMap.textSize')}</span>
@@ -2387,6 +2406,23 @@ export default function FacilityFloorPlan() {
                       ))}
                     </select>
                   </label>
+                  {selectedAnnotation.type === 'arrow' && (
+                    <label className="flex items-center justify-between gap-2 text-xs text-slate-300">
+                      <span>{t('facilityMap.arrowSize')}</span>
+                      <select
+                        value={selectedAnnotation.arrowSize ?? 6}
+                        onChange={(event) => commitPlan((current) => ({
+                          ...current,
+                          annotations: current.annotations.map((annotation) => annotation.id === selectedAnnotation.id ? { ...annotation, arrowSize: Number(event.target.value) } : annotation),
+                        }))}
+                        className="rounded border border-white/10 bg-slate-900 px-2 py-1 text-xs"
+                      >
+                        {[4, 5, 6, 8, 10, 12].map((size) => (
+                          <option key={size} value={size}>{size}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   {(selectedAnnotation.type === 'text' || selectedAnnotation.type === 'ruler') && (
                     <label className="flex items-center justify-between gap-2 text-xs text-slate-300">
                       <span>{t('facilityMap.textSize')}</span>
@@ -2606,13 +2642,17 @@ export default function FacilityFloorPlan() {
                           <defs>
                             <marker
                               id={`facility-arrow-head-${annotation.id}`}
-                              markerWidth="6"
-                              markerHeight="6"
-                              refX="5"
-                              refY="3"
+                              markerWidth={annotation.arrowSize ?? 6}
+                              markerHeight={annotation.arrowSize ?? 6}
+                              refX={(annotation.arrowSize ?? 6) - 1}
+                              refY={(annotation.arrowSize ?? 6) / 2}
                               orient="auto"
+                              viewBox={`0 0 ${annotation.arrowSize ?? 6} ${annotation.arrowSize ?? 6}`}
                             >
-                              <path d="M0,0 L6,3 L0,6 z" fill={annotationColorValue} />
+                              <path
+                                d={`M0,0 L${annotation.arrowSize ?? 6},${(annotation.arrowSize ?? 6) / 2} L0,${annotation.arrowSize ?? 6} z`}
+                                fill={annotationColorValue}
+                              />
                             </marker>
                           </defs>
                         )}
