@@ -386,6 +386,7 @@ export default function FacilityFloorPlan() {
   const [drawTool, setDrawTool] = useState<DrawTool>('select');
   const [annotationText, setAnnotationText] = useState('NOTE');
   const [editMode, setEditMode] = useState(true);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -996,6 +997,7 @@ export default function FacilityFloorPlan() {
 
   const switchMode = (nextEditMode: boolean) => {
     setEditMode(nextEditMode);
+    if (!nextEditMode) setMobilePanelOpen(false);
     setSelectedEquipmentId('');
     setPlaceLayer(null);
     setZoneTool(null);
@@ -1096,7 +1098,10 @@ export default function FacilityFloorPlan() {
             </button>
             <button
               type="button"
-              onClick={() => switchMode(true)}
+              onClick={() => {
+                switchMode(true);
+                setMobilePanelOpen(true);
+              }}
               className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 text-xs ${editMode ? 'bg-foreground text-background' : 'hover:bg-accent'}`}
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -1223,9 +1228,21 @@ export default function FacilityFloorPlan() {
         </div>
       </div>
 
-      <div className={`grid min-h-0 flex-1 overflow-hidden grid-cols-1 ${editMode ? 'lg:grid-cols-[300px_minmax(0,1fr)]' : 'lg:grid-cols-1'}`}>
+      <div className={`relative grid min-h-0 flex-1 overflow-hidden grid-cols-1 ${editMode ? 'lg:grid-cols-[300px_minmax(0,1fr)]' : 'lg:grid-cols-1'}`}>
         {editMode && (
-          <aside className="min-h-0 overflow-y-auto overscroll-contain border-r bg-card p-3">
+          <aside className={`absolute inset-y-0 left-0 z-40 w-[min(86vw,320px)] min-h-0 overflow-y-auto overscroll-contain border-r bg-card p-3 shadow-2xl transition-transform lg:static lg:z-auto lg:w-auto lg:translate-x-0 lg:shadow-none ${
+            mobilePanelOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}>
+            <div className="mb-3 flex items-center justify-between lg:hidden">
+              <div className="text-xs font-semibold">{t('facilityMap.editMode')}</div>
+              <button
+                type="button"
+                onClick={() => setMobilePanelOpen(false)}
+                className="rounded-md border px-2 py-1 text-xs"
+              >
+                ×
+              </button>
+            </div>
             <div className="mb-2 text-xs font-semibold">{t('facilityMap.location')}</div>
             <div className="mb-4 grid grid-cols-2 gap-2">
               <select
@@ -1472,6 +1489,15 @@ export default function FacilityFloorPlan() {
         )}
 
         <section className="relative h-full min-h-0 min-w-0 overflow-hidden bg-slate-950">
+          {editMode && (
+            <button
+              type="button"
+              onClick={() => setMobilePanelOpen(true)}
+              className="absolute left-3 top-3 z-30 rounded-md border border-white/15 bg-black/70 px-3 py-2 text-xs text-white backdrop-blur lg:hidden"
+            >
+              {t('facilityMap.editMode')}
+            </button>
+          )}
           <div className="absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 items-center gap-1 rounded-lg border border-white/10 bg-black/65 p-1 backdrop-blur md:flex">
             {DEMO_FLOORS.map((floor) => (
               <button
@@ -1800,11 +1826,6 @@ export default function FacilityFloorPlan() {
                 preserveAspectRatio="none"
                 style={{ pointerEvents: 'none' }}
               >
-                <defs>
-                  <marker id="facility-arrow-head" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <path d="M0,0 L6,3 L0,6 z" fill="#f43f5e" />
-                  </marker>
-                </defs>
                 {[...plan.annotations, ...(draftAnnotation ? [draftAnnotation] : [])].map((annotation) => {
                   const isDraft = annotation.id === 'draft-annotation';
                   const annotationColor = annotation.color ?? (annotation.type === 'ruler' ? '#22d3ee' : '#f43f5e');
@@ -1834,13 +1855,27 @@ export default function FacilityFloorPlan() {
                     const distance = Math.hypot(annotation.x2 - annotation.x1, annotation.y2 - annotation.y1);
                     return (
                       <g key={annotation.id}>
+                        {annotation.type === 'arrow' && (
+                          <defs>
+                            <marker
+                              id={`facility-arrow-head-${annotation.id}`}
+                              markerWidth="6"
+                              markerHeight="6"
+                              refX="5"
+                              refY="3"
+                              orient="auto"
+                            >
+                              <path d="M0,0 L6,3 L0,6 z" fill={annotationColor} />
+                            </marker>
+                          </defs>
+                        )}
                         <line
                           x1={annotation.x1}
                           y1={annotation.y1}
                           x2={annotation.x2}
                           y2={annotation.y2}
                           {...common}
-                          markerEnd={annotation.type === 'arrow' ? 'url(#facility-arrow-head)' : undefined}
+                          markerEnd={annotation.type === 'arrow' ? `url(#facility-arrow-head-${annotation.id})` : undefined}
                           strokeDasharray={annotation.type === 'ruler' ? '1 0.7' : undefined}
                         />
                         {annotation.type === 'ruler' && (
@@ -1882,7 +1917,7 @@ export default function FacilityFloorPlan() {
                         cy={(annotation.y1 + annotation.y2) / 2}
                         rx={rx}
                         ry={ry}
-                        fill="#f43f5e18"
+                        fill={`${annotationColor}18`}
                         {...common}
                       />
                     );
