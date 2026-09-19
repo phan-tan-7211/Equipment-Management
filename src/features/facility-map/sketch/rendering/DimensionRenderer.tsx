@@ -2,13 +2,18 @@ import { formatSketchDistance } from '../core/units';
 import type { SketchDocument } from '../core/types';
 import type { ViewDimension } from '../dimensions/viewDimensions';
 
+type RenderDimension = ViewDimension & {
+  reference?: boolean;
+  driving?: boolean;
+};
+
 type Props = {
-  dimensions: ViewDimension[];
+  dimensions: RenderDimension[];
   document: SketchDocument;
   enabled: boolean;
   selectedId: string;
   onSelect: (dimensionId: string) => void;
-  onEdit: (dimension: ViewDimension) => void;
+  onEdit: (dimension: RenderDimension) => void;
 };
 
 const formatValue = (
@@ -39,7 +44,13 @@ export const DimensionRenderer = ({
           x={dimension.anchor.x}
           y={dimension.anchor.y}
           textAnchor="middle"
-          fill={selected ? '#f59e0b' : '#0ea5e9'}
+          fill={
+            selected
+              ? '#f59e0b'
+              : dimension.reference
+                ? '#94a3b8'
+                : '#0ea5e9'
+          }
           fontSize={dimension.kind === 'angle' ? 12 : 14}
           fontWeight="600"
           pointerEvents={enabled ? 'auto' : 'none'}
@@ -56,7 +67,7 @@ export const DimensionRenderer = ({
             onSelect(dimension.id);
           }}
           onDoubleClick={(event) => {
-            if (!enabled) return;
+            if (!enabled || dimension.reference) return;
             event.preventDefault();
             event.stopPropagation();
             onEdit(dimension);

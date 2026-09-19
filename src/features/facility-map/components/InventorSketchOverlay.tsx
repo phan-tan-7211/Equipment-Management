@@ -74,6 +74,10 @@ import {
   upsertDrivingDimension,
 } from '@/features/facility-map/sketch/dimensions/drivingDimensions';
 import {
+  deleteDimensionById,
+  setDimensionReference,
+} from '@/features/facility-map/sketch/dimensions/dimensionState';
+import {
   toggleSelection,
 } from '@/features/facility-map/sketch/selection/selectionState';
 import {
@@ -285,6 +289,21 @@ export default function InventorSketchOverlay({
         setSelectedIds(duplicated.ids);
         return;
       }
+      if (
+        (event.key === 'Delete' || event.key === 'Backspace') &&
+        selectedDimensionId
+      ) {
+        event.preventDefault();
+        setStore((current) => ({
+          ...current,
+          dimensions: deleteDimensionById(
+            current.dimensions,
+            selectedDimensionId,
+          ),
+        }));
+        setSelectedDimensionId('');
+        return;
+      }
       if ((event.key === 'Delete' || event.key === 'Backspace') && selectedIds.length) {
         event.preventDefault();
         const selected = new Set(selectedIds);
@@ -297,7 +316,14 @@ export default function InventorSketchOverlay({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [enabled, selectedIds, sketchHistory, setStore, store.entities]);
+  }, [
+    enabled,
+    selectedDimensionId,
+    selectedIds,
+    sketchHistory,
+    setStore,
+    store.entities,
+  ]);
 
   const currentStyle = useMemo(() => {
     if (
@@ -1015,10 +1041,20 @@ export default function InventorSketchOverlay({
     setSelectedDimensionId(dimension.id);
   };
 
-  const viewDimensions = useMemo(
-    () => getSketchViewDimensions(store.entities),
-    [store.entities],
-  );
+  const viewDimensions = useMemo(() => {
+    const persistedById = new Map(
+      store.dimensions.map((dimension) => [dimension.id, dimension]),
+    );
+
+    return getSketchViewDimensions(store.entities).map((dimension) => {
+      const persisted = persistedById.get(dimension.id);
+      return {
+        ...dimension,
+        reference: persisted?.reference ?? false,
+        driving: persisted?.driving ?? false,
+      };
+    });
+  }, [store.dimensions, store.entities]);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[18]">
@@ -1442,6 +1478,54 @@ export default function InventorSketchOverlay({
                 </label>
               </>
             )}
+
+            {selectedDimensionId && (() => {
+              const persisted = store.dimensions.find(
+                (dimension) => dimension.id === selectedDimensionId,
+              );
+              const isReference = persisted?.reference === true;
+              return (
+                <div className="mt-3 grid gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const selected = viewDimensions.find(
+                        (dimension) => dimension.id === selectedDimensionId,
+                      );
+                      if (!selected) return;
+                      setStore((current) => ({
+                        ...current,
+                        dimensions: setDimensionReference(
+                          current.dimensions,
+                          selected,
+                          !isReference,
+                        ),
+                      }));
+                    }}
+                    className="inline-flex w-full items-center justify-center rounded-md border border-amber-400/30 px-3 py-2 text-xs text-amber-300 hover:bg-amber-500/10"
+                  >
+                    {isReference ? 'Set driving' : 'Set reference'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStore((current) => ({
+                        ...current,
+                        dimensions: deleteDimensionById(
+                          current.dimensions,
+                          selectedDimensionId,
+                        ),
+                      }));
+                      setSelectedDimensionId('');
+                    }}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-red-400/30 px-3 py-2 text-xs text-red-300 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete dimension
+                  </button>
+                </div>
+              );
+            })()}
 
             {selectedIds.length > 0 && (
               <button
