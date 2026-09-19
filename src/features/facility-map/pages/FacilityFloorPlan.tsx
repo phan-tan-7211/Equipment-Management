@@ -2419,7 +2419,6 @@ export default function FacilityFloorPlan() {
               );
             })}
           </svg>
-          <SketchPrintLayer document={plan.sketchDocument} />
           {plan.zones.map((zone) => (
                 <div
                   key={zone.id}
@@ -2998,7 +2997,7 @@ export default function FacilityFloorPlan() {
                   <button
                     key={zone.id}
                     type="button"
-                    className={`absolute rounded-md border-2 text-left ${
+                    className={`absolute z-[20] rounded-md border-2 text-left ${
                       selected ? 'ring-2 ring-white' : ''
                     }`}
                     style={{
@@ -3389,12 +3388,20 @@ export default function FacilityFloorPlan() {
           <div className="text-2xl font-bold">{t('facilityMap.title')}</div>
           <div className="text-sm">{plan.name} · {plan.building} · {plan.floor}</div>
         </div>
-        <div className="relative aspect-[1200/760] w-full overflow-hidden border bg-white">
+        <div
+          className="relative w-full overflow-hidden border bg-white"
+          style={{ aspectRatio: `${plan.canvasWidth} / ${plan.canvasHeight}` }}
+        >
           {plan.imageDataUrl ? (
             <img src={plan.imageDataUrl} alt={plan.name} className="h-full w-full object-fill" />
           ) : (
             <DemoBlueprint t={t} />
           )}
+          <SketchPrintLayer
+            document={plan.sketchDocument}
+            canvasWidth={plan.canvasWidth}
+            canvasHeight={plan.canvasHeight}
+          />
           {plan.zones.map((zone) => (
             <div
               key={zone.id}

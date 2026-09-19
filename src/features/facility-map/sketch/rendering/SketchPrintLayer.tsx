@@ -5,6 +5,8 @@ import type {
 
 type Props = {
   document?: SketchDocument;
+  canvasWidth: number;
+  canvasHeight: number;
 };
 
 const renderEntity = (entity: SketchEntity) => {
@@ -90,13 +92,17 @@ const renderEntity = (entity: SketchEntity) => {
   );
 };
 
-export const SketchPrintLayer = ({ document }: Props) => {
+export const SketchPrintLayer = ({
+  document,
+  canvasWidth,
+  canvasHeight,
+}: Props) => {
   if (!document?.entities.length) return null;
 
   return (
     <svg
       className="pointer-events-none absolute inset-0 h-full w-full"
-      viewBox="0 0 1200 760"
+      viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
       preserveAspectRatio="none"
       aria-label="facility-sketch-print-layer"
     >
