@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   Circle as CircleIcon,
+  Copy,
   ArrowUpRight,
   Minus,
   MousePointer2,
@@ -80,6 +81,10 @@ import {
   type BasicGrip,
 } from '@/features/facility-map/sketch/selection/basicGrips';
 import {
+  duplicateSelectedEntities,
+  moveSelectedEntities,
+} from '@/features/facility-map/sketch/selection/selectionTransform';
+import {
   applyHorizontalInference,
   isHorizontalInferenceCandidate,
 } from '@/features/facility-map/sketch/snapping/horizontalInference';
@@ -95,7 +100,6 @@ import {
   distance,
   rectEdges,
   segmentIntersection,
-  translateSketchEntity,
 } from '@/features/facility-map/sketch/core/geometry';
 import {
   commitLineDraft,
@@ -200,7 +204,7 @@ export default function InventorSketchOverlay({
   const [message, setMessage] = useState('');
   const [draggingId, setDraggingId] = useState('');
   const [activeGrip, setActiveGrip] = useState<BasicGrip | null>(null);
-  const dragRef = useRef<{ start: Point; entity: SketchEntity } | null>(null);
+  const dragRef = useRef<{ start: Point; entities: SketchEntity[] } | null>(null);
   const gripRef = useRef<{ entity: SketchEntity; grip: BasicGrip } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -254,6 +258,25 @@ export default function InventorSketchOverlay({
         sketchHistory.redo();
         return;
       }
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key.toLowerCase() === 'd' &&
+        selectedIds.length
+      ) {
+        event.preventDefault();
+        const duplicated = duplicateSelectedEntities(
+          store.entities,
+          selectedIds,
+          { x: 10, y: 10 },
+          (entity) => createSketchId(`sketch-${entity.type}`),
+        );
+        setStore((current) => ({
+          ...current,
+          entities: [...current.entities, ...duplicated.entities],
+        }));
+        setSelectedIds(duplicated.ids);
+        return;
+      }
       if ((event.key === 'Delete' || event.key === 'Backspace') && selectedIds.length) {
         event.preventDefault();
         const selected = new Set(selectedIds);
@@ -266,7 +289,7 @@ export default function InventorSketchOverlay({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [enabled, selectedIds, sketchHistory]);
+  }, [enabled, selectedIds, sketchHistory, setStore, store.entities]);
 
   const currentStyle = useMemo(() => {
     if (
@@ -845,11 +868,17 @@ export default function InventorSketchOverlay({
     if (draggingId && dragRef.current) {
       const dx = next.x - dragRef.current.start.x;
       const dy = next.y - dragRef.current.start.y;
-      const source = dragRef.current.entity;
+      const moved = moveSelectedEntities(
+        dragRef.current.entities,
+        dragRef.current.entities.map((entity) => entity.id),
+        dx,
+        dy,
+      );
+      const movedById = new Map(moved.map((entity) => [entity.id, entity]));
       sketchHistory.updateTransient((current) => ({
         ...current,
-        entities: current.entities.map((entity) =>
-          entity.id === draggingId ? translateSketchEntity(source, dx, dy) : entity,
+        entities: current.entities.map(
+          (entity) => movedById.get(entity.id) ?? entity,
         ),
       }));
       return;
@@ -892,8 +921,16 @@ export default function InventorSketchOverlay({
       return;
     }
 
-    setSelectedIds([entity.id]);
-    dragRef.current = { start: point, entity: structuredClone(entity) };
+    const dragIds = selectedIds.includes(entity.id)
+      ? selectedIds
+      : [entity.id];
+    setSelectedIds(dragIds);
+    dragRef.current = {
+      start: point,
+      entities: store.entities
+        .filter((item) => dragIds.includes(item.id))
+        .map((item) => structuredClone(item)),
+    };
     sketchHistory.beginTransaction();
     setCommandState((current) => beginSketchInteraction(current, 'dragging'));
     setDraggingId(entity.id);
@@ -1444,6 +1481,30 @@ export default function InventorSketchOverlay({
                   </select>
                 </label>
               </>
+            )}
+
+            {selectedIds.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const duplicated = duplicateSelectedEntities(
+                    store.entities,
+                    selectedIds,
+                    { x: 10, y: 10 },
+                    (entity) => createSketchId(`sketch-${entity.type}`),
+                  );
+                  setStore((current) => ({
+                    ...current,
+                    entities: [...current.entities, ...duplicated.entities],
+                  }));
+                  setSelectedIds(duplicated.ids);
+                }}
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-sky-400/30 px-3 py-2 text-xs text-sky-300 hover:bg-sky-500/10"
+                title="Ctrl/Cmd+D"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                Copy selected
+              </button>
             )}
 
             {selectedIds.length > 0 && (
