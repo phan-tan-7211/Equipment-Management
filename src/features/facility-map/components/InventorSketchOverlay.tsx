@@ -75,6 +75,11 @@ import {
   selectEntitiesInDrag,
 } from '@/features/facility-map/sketch/selection/windowSelection';
 import {
+  applyBasicGripDrag,
+  getBasicEntityGrips,
+  type BasicGrip,
+} from '@/features/facility-map/sketch/selection/basicGrips';
+import {
   applyHorizontalInference,
   isHorizontalInferenceCandidate,
 } from '@/features/facility-map/sketch/snapping/horizontalInference';
@@ -194,7 +199,9 @@ export default function InventorSketchOverlay({
   const [dynamicLocks, setDynamicLocks] = useState<DynamicLocks>({ a: false, b: false });
   const [message, setMessage] = useState('');
   const [draggingId, setDraggingId] = useState('');
+  const [activeGrip, setActiveGrip] = useState<BasicGrip | null>(null);
   const dragRef = useRef<{ start: Point; entity: SketchEntity } | null>(null);
+  const gripRef = useRef<{ entity: SketchEntity; grip: BasicGrip } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
@@ -214,6 +221,8 @@ export default function InventorSketchOverlay({
       setSelectedIds([]);
       setSelectionBox(null);
       setDraggingId('');
+      setActiveGrip(null);
+      gripRef.current = null;
       setCommandState(createSketchCommandState());
     }
   }, [enabled]);
@@ -227,6 +236,8 @@ export default function InventorSketchOverlay({
         setDraft(null);
         setSelectedIds([]);
         setSelectionBox(null);
+        setActiveGrip(null);
+        gripRef.current = null;
         sketchHistory.cancelTransaction();
         setCommandState(cancelSketchCommand());
         setMessage('');
@@ -819,6 +830,18 @@ export default function InventorSketchOverlay({
     const next = draft?.type === 'line' ? inferLineEnd(draft.start, raw) : endpointSnap(raw);
     setPointer(next);
 
+    if (activeGrip && gripRef.current) {
+      const source = gripRef.current.entity;
+      const updated = applyBasicGripDrag(source, gripRef.current.grip, next);
+      sketchHistory.updateTransient((current) => ({
+        ...current,
+        entities: current.entities.map((entity) =>
+          entity.id === source.id ? updated : entity,
+        ),
+      }));
+      return;
+    }
+
     if (draggingId && dragRef.current) {
       const dx = next.x - dragRef.current.start.x;
       const dy = next.y - dragRef.current.start.y;
@@ -877,10 +900,27 @@ export default function InventorSketchOverlay({
   };
 
   const handleEntityMouseUp = () => {
-    if (draggingId) sketchHistory.commitTransaction();
+    if (draggingId || activeGrip) sketchHistory.commitTransaction();
     setDraggingId('');
+    setActiveGrip(null);
     dragRef.current = null;
+    gripRef.current = null;
     setCommandState((current) => endSketchInteraction(current));
+  };
+
+  const handleGripMouseDown = (
+    event: React.MouseEvent<SVGCircleElement>,
+    entity: SketchEntity,
+    grip: BasicGrip,
+  ) => {
+    if (!enabled || tool !== 'select') return;
+    event.preventDefault();
+    event.stopPropagation();
+    setSelectedIds([entity.id]);
+    gripRef.current = { entity: structuredClone(entity), grip };
+    sketchHistory.beginTransaction();
+    setCommandState((current) => beginSketchInteraction(current, 'dragging'));
+    setActiveGrip(grip);
   };
 
   const handleCanvasMouseUp = () => {
@@ -1180,6 +1220,25 @@ export default function InventorSketchOverlay({
             vectorEffect="non-scaling-stroke"
           />
         )}
+
+        {enabled && tool === 'select' && store.entities.flatMap((entity) => {
+          if (!selectedIds.includes(entity.id)) return [];
+          return getBasicEntityGrips(entity).map((grip) => (
+            <circle
+              key={`${entity.id}:${grip.id}`}
+              cx={grip.point.x}
+              cy={grip.point.y}
+              r={5}
+              fill="#ffffff"
+              stroke="#0ea5e9"
+              strokeWidth={1.5}
+              vectorEffect="non-scaling-stroke"
+              pointerEvents="all"
+              style={{ cursor: 'crosshair' }}
+              onMouseDown={(event) => handleGripMouseDown(event, entity, grip)}
+            />
+          ));
+        })}
 
         {enabled && selectionBox && (() => {
           const x = Math.min(selectionBox.start.x, selectionBox.current.x);
