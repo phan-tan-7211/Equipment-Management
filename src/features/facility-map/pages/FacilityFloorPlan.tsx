@@ -1989,7 +1989,7 @@ export default function FacilityFloorPlan() {
                     <input
                       type="color"
                       value={currentDrawingPreset.color}
-                      onChange={(event) => setAnnotationColor(event.target.value)}
+                      onChange={(event) => updateCurrentDrawingPreset({ color: event.target.value })}
                       className="h-7 w-10 rounded border bg-background"
                     />
                   </label>
@@ -1997,7 +1997,7 @@ export default function FacilityFloorPlan() {
                     <span>{t('facilityMap.lineWeight')}</span>
                     <select
                       value={currentDrawingPreset.lineWidth}
-                      onChange={(event) => setAnnotationLineWidth(Number(event.target.value))}
+                      onChange={(event) => updateCurrentDrawingPreset({ lineWidth: Number(event.target.value) })}
                       className="rounded border bg-background px-1.5 py-1 text-xs text-foreground"
                     >
                       {[0.15, 0.2, 0.28, 0.35, 0.5, 0.75, 1].map((width) => (
@@ -2010,7 +2010,7 @@ export default function FacilityFloorPlan() {
                       <span>{t('facilityMap.arrowSize')}</span>
                       <select
                         value={currentDrawingPreset.arrowSize}
-                        onChange={(event) => setAnnotationArrowSize(Number(event.target.value))}
+                        onChange={(event) => updateCurrentDrawingPreset({ arrowSize: Number(event.target.value) })}
                         className="rounded border bg-background px-1.5 py-1 text-xs text-foreground"
                       >
                         {[4, 5, 6, 8, 10, 12].map((size) => (
@@ -2024,7 +2024,7 @@ export default function FacilityFloorPlan() {
                       <span>{t('facilityMap.textSize')}</span>
                       <select
                         value={currentDrawingPreset.textSize}
-                        onChange={(event) => setAnnotationTextSize(Number(event.target.value))}
+                        onChange={(event) => updateCurrentDrawingPreset({ textSize: Number(event.target.value) })}
                         className="rounded border bg-background px-1.5 py-1 text-xs text-foreground"
                       >
                         {[1.5, 2, 2.5, 3, 4, 5, 6, 8].map((size) => (
@@ -2038,7 +2038,7 @@ export default function FacilityFloorPlan() {
               {drawTool === 'text' && (
                 <input
                   value={currentDrawingPreset.text}
-                  onChange={(event) => setAnnotationText(event.target.value)}
+                  onChange={(event) => updateCurrentDrawingPreset({ text: event.target.value })}
                   className="mt-2 w-full rounded-md border bg-background px-2 py-2 text-xs"
                   placeholder={t('facilityMap.textPlaceholder')}
                 />
