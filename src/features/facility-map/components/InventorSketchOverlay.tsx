@@ -18,9 +18,12 @@ import {
   cancelSketchCommand,
   createSketchCommandState,
   createSketchId,
+  displayToModelUnits,
   endSketchInteraction,
+  modelUnitsToDisplay,
   normalizeMmPerUnit,
   selectSketchTool,
+  unitPrecision,
   useSketchDocumentHistory,
   type ArcEntity,
   type CircleEntity,
@@ -66,7 +69,14 @@ import {
 } from '@/features/facility-map/sketch/snapping/snapPriority';
 import { SnapIndicator } from '@/features/facility-map/sketch/rendering/SnapIndicator';
 import { DimensionRenderer } from '@/features/facility-map/sketch/rendering/DimensionRenderer';
-import { getSketchViewDimensions } from '@/features/facility-map/sketch/dimensions/viewDimensions';
+import {
+  getSketchViewDimensions,
+  type ViewDimension,
+} from '@/features/facility-map/sketch/dimensions/viewDimensions';
+import {
+  applyDrivingDimension,
+  upsertDrivingDimension,
+} from '@/features/facility-map/sketch/dimensions/drivingDimensions';
 import {
   toggleSelection,
 } from '@/features/facility-map/sketch/selection/selectionState';
@@ -950,6 +960,65 @@ export default function InventorSketchOverlay({
     };
   }, [draft, dynamicA, dynamicB, dynamicLocks, store.displayUnit, store.mmPerUnit]);
 
+  const editDimension = (dimension: ViewDimension) => {
+    const currentDisplayValue = dimension.kind === 'angle'
+      ? dimension.value
+      : modelUnitsToDisplay(dimension.value, store);
+    const promptLabel =
+      dimension.kind === 'angle'
+        ? t('facilityMap.sketchEnterAngle')
+        : dimension.kind === 'radius'
+          ? t('facilityMap.sketchEnterRadius')
+          : dimension.kind === 'horizontal'
+            ? t('facilityMap.sketchEnterWidth')
+            : dimension.kind === 'vertical'
+              ? t('facilityMap.sketchEnterHeight')
+              : dimension.kind === 'diameter'
+                ? 'Diameter'
+                : t('facilityMap.sketchEnterLength');
+    const raw = window.prompt(
+      promptLabel,
+      currentDisplayValue.toFixed(
+        dimension.kind === 'angle'
+          ? 1
+          : unitPrecision(store.displayUnit),
+      ),
+    );
+    if (raw == null) return;
+
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) return;
+    if (dimension.kind !== 'angle' && parsed <= 0) return;
+
+    const nextValue = dimension.kind === 'angle'
+      ? parsed
+      : displayToModelUnits(parsed, store);
+    const target = store.entities.find(
+      (entity) => entity.id === dimension.entityId,
+    );
+    if (!target) return;
+
+    const nextEntity = applyDrivingDimension(
+      target,
+      dimension,
+      nextValue,
+    );
+    if (nextEntity === target) return;
+
+    setStore((current) => ({
+      ...current,
+      entities: current.entities.map((entity) =>
+        entity.id === target.id ? nextEntity : entity,
+      ),
+      dimensions: upsertDrivingDimension(
+        current.dimensions,
+        dimension,
+        nextValue,
+      ),
+    }));
+    setSelectedDimensionId(dimension.id);
+  };
+
   const viewDimensions = useMemo(
     () => getSketchViewDimensions(store.entities),
     [store.entities],
@@ -1065,6 +1134,7 @@ export default function InventorSketchOverlay({
             setSelectedDimensionId(dimensionId);
             setSelectedIds([]);
           }}
+          onEdit={editDimension}
         />
 
         {draftPreview?.type === 'line' && (

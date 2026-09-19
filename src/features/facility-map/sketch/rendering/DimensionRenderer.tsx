@@ -8,6 +8,7 @@ type Props = {
   enabled: boolean;
   selectedId: string;
   onSelect: (dimensionId: string) => void;
+  onEdit: (dimension: ViewDimension) => void;
 };
 
 const formatValue = (
@@ -27,6 +28,7 @@ export const DimensionRenderer = ({
   enabled,
   selectedId,
   onSelect,
+  onEdit,
 }: Props) => (
   <g aria-label="sketch-dimensions">
     {dimensions.map((dimension) => {
@@ -52,6 +54,12 @@ export const DimensionRenderer = ({
             event.preventDefault();
             event.stopPropagation();
             onSelect(dimension.id);
+          }}
+          onDoubleClick={(event) => {
+            if (!enabled) return;
+            event.preventDefault();
+            event.stopPropagation();
+            onEdit(dimension);
           }}
         >
           {formatValue(dimension, document)}
