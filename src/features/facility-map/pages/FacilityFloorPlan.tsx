@@ -7,6 +7,7 @@ import {
   Focus,
   ImagePlus,
   Layers3,
+  ListFilter,
   MapPin,
   Minus,
   MousePointer2,
@@ -186,6 +187,76 @@ const EMPTY_PLAN: FloorPlanState = {
   ],
 };
 
+const demoLayoutFor = (building: string, floor: string): FloorPlanState => {
+  const base = clonePlan(EMPTY_PLAN);
+  base.building = building;
+  base.floor = floor;
+  base.imageDataUrl = '';
+
+  if (building === 'Warehouse Building') {
+    base.pins = [
+      { equipmentId: 'CEV-CMP-002', x: 23, y: 28 },
+      { equipmentId: 'CEV-INJ-004', x: 70, y: 31 },
+      { equipmentId: 'CEV-OLD-009', x: 64, y: 70 },
+    ];
+    base.overlayPins = [
+      { id: 'wh-exit', layer: 'emergency', x: 90, y: 48 },
+      { id: 'wh-fire', layer: 'fire', x: 48, y: 18 },
+    ];
+    base.zones = [
+      { id: 'wh-storage', type: 'storage', x: 10, y: 12, w: 42, h: 33 },
+      { id: 'wh-qa', type: 'restricted', x: 57, y: 56, w: 31, h: 24 },
+    ];
+    base.annotations = [
+      { id: 'wh-flow', type: 'arrow', x1: 18, y1: 52, x2: 82, y2: 52 },
+      { id: 'wh-note', type: 'text', x1: 60, y1: 50, x2: 60, y2: 50, text: 'QA' },
+    ];
+    return base;
+  }
+
+  if (floor === 'Floor 2') {
+    base.pins = [
+      { equipmentId: 'CEV-CNC-001', x: 28, y: 34 },
+      { equipmentId: 'CEV-PRS-003', x: 61, y: 35 },
+      { equipmentId: 'CEV-OLD-009', x: 72, y: 69 },
+    ];
+    base.overlayPins = [
+      { id: 'f2-fire', layer: 'fire', x: 51, y: 22 },
+      { id: 'f2-exit', layer: 'emergency', x: 88, y: 50 },
+    ];
+    base.zones = [
+      { id: 'f2-production', type: 'production', x: 13, y: 15, w: 36, h: 31 },
+      { id: 'f2-office', type: 'office', x: 57, y: 14, w: 30, h: 25 },
+      { id: 'f2-restricted', type: 'restricted', x: 58, y: 58, w: 29, h: 23 },
+    ];
+    base.annotations = [
+      { id: 'f2-route', type: 'line', x1: 20, y1: 53, x2: 80, y2: 53 },
+    ];
+    return base;
+  }
+
+  if (floor === 'Roof') {
+    base.pins = [
+      { equipmentId: 'CEV-CMP-002', x: 25, y: 34 },
+      { equipmentId: 'CEV-INJ-004', x: 68, y: 34 },
+    ];
+    base.overlayPins = [
+      { id: 'roof-utility', layer: 'utility', x: 44, y: 70 },
+      { id: 'roof-flood', layer: 'flood', x: 76, y: 68 },
+    ];
+    base.zones = [
+      { id: 'roof-utility-zone', type: 'utility', x: 12, y: 17, w: 35, h: 29 },
+      { id: 'roof-hazard-zone', type: 'hazard', x: 56, y: 17, w: 31, h: 29 },
+    ];
+    base.annotations = [
+      { id: 'roof-note', type: 'text', x1: 44, y1: 52, x2: 44, y2: 52, text: 'HVAC / MEP' },
+    ];
+    return base;
+  }
+
+  return base;
+};
+
 const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
   ...EMPTY_PLAN,
   ...value,
@@ -268,6 +339,9 @@ export default function FacilityFloorPlan() {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [showLegend, setShowLegend] = useState(true);
+  const [draggingZoneId, setDraggingZoneId] = useState('');
+  const [resizingZoneId, setResizingZoneId] = useState('');
   const [draggingEquipmentId, setDraggingEquipmentId] = useState('');
   const [draggingOverlayId, setDraggingOverlayId] = useState('');
   const [zoneStart, setZoneStart] = useState<{ x: number; y: number } | null>(null);
@@ -278,6 +352,7 @@ export default function FacilityFloorPlan() {
   const pointerStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const dragStartPlanRef = useRef<FloorPlanState | null>(null);
   const annotationStartRef = useRef<{ x: number; y: number } | null>(null);
+  const zoneInteractionRef = useRef<{ startX: number; startY: number; zone: Zone } | null>(null);
   const canvasRef = useRef<HTMLDivElement | null>(null);
 
   const savePlan = useCallback((next: FloorPlanState) => {
@@ -485,6 +560,44 @@ export default function FacilityFloorPlan() {
       return;
     }
 
+    if (draggingZoneId && zoneInteractionRef.current && editMode) {
+      const start = zoneInteractionRef.current;
+      const dx = point.x - start.startX;
+      const dy = point.y - start.startY;
+      setPlan((current) => ({
+        ...current,
+        zones: current.zones.map((zone) =>
+          zone.id === draggingZoneId
+            ? {
+                ...zone,
+                x: Math.max(0, Math.min(100 - zone.w, start.zone.x + dx)),
+                y: Math.max(0, Math.min(100 - zone.h, start.zone.y + dy)),
+              }
+            : zone,
+        ),
+      }));
+      return;
+    }
+
+    if (resizingZoneId && zoneInteractionRef.current && editMode) {
+      const start = zoneInteractionRef.current;
+      const dx = point.x - start.startX;
+      const dy = point.y - start.startY;
+      setPlan((current) => ({
+        ...current,
+        zones: current.zones.map((zone) =>
+          zone.id === resizingZoneId
+            ? {
+                ...zone,
+                w: Math.max(3, Math.min(100 - zone.x, start.zone.w + dx)),
+                h: Math.max(3, Math.min(100 - zone.y, start.zone.h + dy)),
+              }
+            : zone,
+        ),
+      }));
+      return;
+    }
+
     if (draggingEquipmentId && editMode) {
       setPlan((current) => ({
         ...current,
@@ -520,7 +633,7 @@ export default function FacilityFloorPlan() {
         ...current,
         zones: [...current.zones, { ...draftZone, id: makeId('zone') }],
       }));
-    } else if ((draggingEquipmentId || draggingOverlayId) && dragStartPlanRef.current) {
+    } else if ((draggingEquipmentId || draggingOverlayId || draggingZoneId || resizingZoneId) && dragStartPlanRef.current) {
       const before = dragStartPlanRef.current;
       setUndoStack((stack) => [...stack.slice(-29), clonePlan(before)]);
       setRedoStack([]);
@@ -537,6 +650,9 @@ export default function FacilityFloorPlan() {
     setDraftZone(null);
     setDraggingEquipmentId('');
     setDraggingOverlayId('');
+    setDraggingZoneId('');
+    setResizingZoneId('');
+    zoneInteractionRef.current = null;
     setIsPanning(false);
   };
 
@@ -556,6 +672,38 @@ export default function FacilityFloorPlan() {
   const fitView = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
+  };
+
+  const switchDemoLocation = (building: string, floor: string) => {
+    const next = demoLayoutFor(building, floor);
+    setUndoStack((stack) => [...stack.slice(-29), clonePlan(plan)]);
+    setRedoStack([]);
+    setPlan(next);
+    savePlan(next);
+    setSelectedMarkerId('');
+    setSelectedEquipmentId('');
+    setPlaceLayer(null);
+    setZoneTool(null);
+    setDrawTool('select');
+    fitView();
+  };
+
+  const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const pointerX = event.clientX - rect.left;
+    const pointerY = event.clientY - rect.top;
+    const worldX = (pointerX - pan.x) / zoom;
+    const worldY = (pointerY - pan.y) / zoom;
+    const factor = event.deltaY < 0 ? 1.12 : 0.89;
+    const nextZoom = Math.max(0.5, Math.min(3, zoom * factor));
+    setZoom(nextZoom);
+    setPan({
+      x: pointerX - worldX * nextZoom,
+      y: pointerY - worldY * nextZoom,
+    });
   };
 
   const deleteSelected = () => {
@@ -756,6 +904,14 @@ export default function FacilityFloorPlan() {
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <button
             type="button"
+            onClick={() => setShowLegend((value) => !value)}
+            className="mr-1 inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-xs"
+          >
+            <ListFilter className="h-3.5 w-3.5" />
+            {t('facilityMap.legend')}
+          </button>
+          <button
+            type="button"
             onClick={() => setActiveLayer('all')}
             className={`rounded-full border px-3 py-1.5 text-xs ${activeLayer === 'all' ? 'bg-foreground text-background' : 'bg-background'}`}
           >
@@ -782,7 +938,7 @@ export default function FacilityFloorPlan() {
             <div className="mb-4 grid grid-cols-2 gap-2">
               <select
                 value={plan.building}
-                onChange={(event) => commitPlan((current) => ({ ...current, building: event.target.value }))}
+                onChange={(event) => switchDemoLocation(event.target.value, plan.floor)}
                 className="rounded-md border bg-background px-2 py-2 text-xs"
                 aria-label={t('facilityMap.building')}
               >
@@ -792,7 +948,7 @@ export default function FacilityFloorPlan() {
               </select>
               <select
                 value={plan.floor}
-                onChange={(event) => commitPlan((current) => ({ ...current, floor: event.target.value }))}
+                onChange={(event) => switchDemoLocation(plan.building, event.target.value)}
                 className="rounded-md border bg-background px-2 py-2 text-xs"
                 aria-label={t('facilityMap.floor')}
               >
@@ -937,6 +1093,71 @@ export default function FacilityFloorPlan() {
             </div>
           </div>
 
+          {showLegend && (
+            <div className="absolute bottom-20 right-3 z-25 w-56 rounded-xl border border-white/10 bg-slate-950/85 p-3 text-white shadow-xl backdrop-blur">
+              <div className="mb-2 text-xs font-semibold">{t('facilityMap.legend')}</div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px]">
+                {[
+                  ['#22c55e', t('facilityMap.statusActive')],
+                  ['#eab308', t('facilityMap.statusMaintenance')],
+                  ['#94a3b8', t('facilityMap.statusInactive')],
+                  ['#ef4444', t('facilityMap.statusRetired')],
+                ].map(([color, label]) => (
+                  <div key={String(label)} className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: String(color) }} />
+                    <span className="truncate text-slate-300">{label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-white/10 pt-2 text-[10px]">
+                {ZONES.slice(0, 6).map((zone) => (
+                  <div key={zone.id} className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: zone.color }} />
+                    <span className="truncate text-slate-300">{t(zone.labelKey)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="absolute bottom-20 left-3 z-20 h-28 w-44 overflow-hidden rounded-lg border border-white/10 bg-white shadow-xl">
+            <div className="absolute inset-0 bg-slate-100">
+              {plan.zones.map((zone) => (
+                <div
+                  key={zone.id}
+                  className="absolute rounded-[2px]"
+                  style={{
+                    left: `${zone.x}%`,
+                    top: `${zone.y}%`,
+                    width: `${zone.w}%`,
+                    height: `${zone.h}%`,
+                    backgroundColor: `${zoneById.get(zone.type)?.color ?? '#64748b'}35`,
+                    border: `1px solid ${zoneById.get(zone.type)?.color ?? '#64748b'}`,
+                  }}
+                />
+              ))}
+              {plan.pins.map((pin) => (
+                <span
+                  key={pin.equipmentId}
+                  className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-900"
+                  style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+                />
+              ))}
+              <div
+                className="absolute border-2 border-sky-500/80 bg-sky-400/10"
+                style={{
+                  left: `${Math.max(0, Math.min(82, 8 - pan.x / 80))}%`,
+                  top: `${Math.max(0, Math.min(72, 8 - pan.y / 80))}%`,
+                  width: `${Math.max(18, 84 / zoom)}%`,
+                  height: `${Math.max(22, 84 / zoom)}%`,
+                }}
+              />
+            </div>
+            <div className="absolute left-1 top-1 rounded bg-black/65 px-1.5 py-0.5 text-[9px] text-white">
+              {t('facilityMap.miniMap')}
+            </div>
+          </div>
+
           {selectedEquipment && (
             <div className="absolute right-3 top-3 z-30 w-72 rounded-xl border border-white/10 bg-slate-950/90 p-4 text-white shadow-2xl backdrop-blur">
               <div className="mb-3 flex items-start gap-3">
@@ -1019,6 +1240,7 @@ export default function FacilityFloorPlan() {
             onMouseMove={onPointerMove}
             onMouseUp={endPointerInteraction}
             onMouseLeave={endPointerInteraction}
+            onWheel={handleWheel}
           >
             <div
               className="absolute inset-0 origin-top-left"
@@ -1168,6 +1390,16 @@ export default function FacilityFloorPlan() {
                       event.stopPropagation();
                       setSelectedMarkerId(`zone:${zone.id}`);
                     }}
+                    onMouseDown={(event) => {
+                      event.stopPropagation();
+                      if (!editMode || drawTool !== 'select') return;
+                      dragStartPlanRef.current = clonePlan(plan);
+                      zoneInteractionRef.current = { startX: zone.x, startY: zone.y, zone: { ...zone } };
+                      const point = toPercent(event.clientX, event.clientY);
+                      if (point) zoneInteractionRef.current = { startX: point.x, startY: point.y, zone: { ...zone } };
+                      setDraggingZoneId(zone.id);
+                      setSelectedMarkerId(`zone:${zone.id}`);
+                    }}
                     title={meta ? t(meta.labelKey) : undefined}
                   >
                     <span
@@ -1176,6 +1408,20 @@ export default function FacilityFloorPlan() {
                     >
                       {meta?.emoji} {meta ? t(meta.labelKey) : ''}
                     </span>
+                    {editMode && selected && drawTool === 'select' && (
+                      <span
+                        className="absolute bottom-[-5px] right-[-5px] h-3 w-3 cursor-nwse-resize rounded-sm border border-white bg-slate-950"
+                        onMouseDown={(event) => {
+                          event.stopPropagation();
+                          dragStartPlanRef.current = clonePlan(plan);
+                          const point = toPercent(event.clientX, event.clientY);
+                          if (!point) return;
+                          zoneInteractionRef.current = { startX: point.x, startY: point.y, zone: { ...zone } };
+                          setResizingZoneId(zone.id);
+                        }}
+                        title={t('facilityMap.resizeZone')}
+                      />
+                    )}
                   </button>
                 );
               })}
