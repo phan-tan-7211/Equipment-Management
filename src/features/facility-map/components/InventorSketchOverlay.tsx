@@ -297,13 +297,13 @@ export default function InventorSketchOverlay({
   const updateDynamicFromPointer = (next: Point) => {
     if (!draft) return;
     if (draft.type === 'line') {
-      if (!dynamicLocks.a) setDynamicA((distance(draft.start, next) * store.mmPerUnit).toFixed(0));
+      if (!dynamicLocks.a) setDynamicA(modelUnitsToDisplay(distance(draft.start, next), store).toFixed(unitPrecision(store.displayUnit)));
       if (!dynamicLocks.b) setDynamicB(angleDeg(draft.start, next).toFixed(1));
     } else if (draft.type === 'rect') {
-      if (!dynamicLocks.a) setDynamicA((Math.abs(next.x - draft.start.x) * store.mmPerUnit).toFixed(0));
-      if (!dynamicLocks.b) setDynamicB((Math.abs(next.y - draft.start.y) * store.mmPerUnit).toFixed(0));
+      if (!dynamicLocks.a) setDynamicA(modelUnitsToDisplay(Math.abs(next.x - draft.start.x), store).toFixed(unitPrecision(store.displayUnit)));
+      if (!dynamicLocks.b) setDynamicB(modelUnitsToDisplay(Math.abs(next.y - draft.start.y), store).toFixed(unitPrecision(store.displayUnit)));
     } else if (draft.type === 'circle') {
-      if (!dynamicLocks.a) setDynamicA((distance(draft.start, next) * store.mmPerUnit).toFixed(0));
+      if (!dynamicLocks.a) setDynamicA(modelUnitsToDisplay(distance(draft.start, next), store).toFixed(unitPrecision(store.displayUnit)));
     }
   };
 
@@ -314,7 +314,7 @@ export default function InventorSketchOverlay({
     if (draft.type === 'line') {
       const fallbackLength = distance(draft.start, currentPoint);
       const fallbackAngle = angleDeg(draft.start, currentPoint);
-      const lengthUnits = clampPositive(Number(dynamicA) / store.mmPerUnit, fallbackLength);
+      const lengthUnits = clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackLength);
       const angle = Number.isFinite(Number(dynamicB)) ? Number(dynamicB) : fallbackAngle;
       const radians = degToRad(angle);
       const end = {
@@ -331,8 +331,8 @@ export default function InventorSketchOverlay({
     } else if (draft.type === 'rect') {
       const fallbackW = Math.abs(currentPoint.x - draft.start.x);
       const fallbackH = Math.abs(currentPoint.y - draft.start.y);
-      const width = clampPositive(Number(dynamicA) / store.mmPerUnit, fallbackW);
-      const height = clampPositive(Number(dynamicB) / store.mmPerUnit, fallbackH);
+      const width = clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackW);
+      const height = clampPositive(displayToModelUnits(Number(dynamicB), store), fallbackH);
       const signX = currentPoint.x >= draft.start.x ? 1 : -1;
       const signY = currentPoint.y >= draft.start.y ? 1 : -1;
       setStore((current) => ({
@@ -352,7 +352,7 @@ export default function InventorSketchOverlay({
       }));
     } else {
       const fallbackRadius = distance(draft.start, currentPoint);
-      const radius = clampPositive(Number(dynamicA) / store.mmPerUnit, fallbackRadius);
+      const radius = clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackRadius);
       setStore((current) => ({
         ...current,
         entities: [
@@ -367,13 +367,13 @@ export default function InventorSketchOverlay({
   };
 
   const editLineLength = (entity: LineEntity) => {
-    const currentMm = distance({ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 }) * store.mmPerUnit;
-    const raw = window.prompt(t('facilityMap.sketchEnterLength'), currentMm.toFixed(0));
+    const currentValue = modelUnitsToDisplay(distance({ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 }), store);
+    const raw = window.prompt(t('facilityMap.sketchEnterLength'), currentValue.toFixed(unitPrecision(store.displayUnit)));
     if (raw == null) return;
-    const nextMm = Number(raw);
-    if (!Number.isFinite(nextMm) || nextMm <= 0) return;
+    const nextValue = Number(raw);
+    if (!Number.isFinite(nextValue) || nextValue <= 0) return;
     const angle = Math.atan2(entity.y2 - entity.y1, entity.x2 - entity.x1);
-    const units = nextMm / store.mmPerUnit;
+    const units = displayToModelUnits(nextValue, store);
     setStore((current) => ({
       ...current,
       entities: current.entities.map((item) =>
@@ -403,12 +403,15 @@ export default function InventorSketchOverlay({
   };
 
   const editRectDimension = (entity: RectEntity, axis: 'w' | 'h') => {
-    const currentMm = (axis === 'w' ? entity.w : entity.h) * store.mmPerUnit;
-    const raw = window.prompt(axis === 'w' ? t('facilityMap.sketchEnterWidth') : t('facilityMap.sketchEnterHeight'), currentMm.toFixed(0));
+    const currentValue = modelUnitsToDisplay(axis === 'w' ? entity.w : entity.h, store);
+    const raw = window.prompt(
+      axis === 'w' ? t('facilityMap.sketchEnterWidth') : t('facilityMap.sketchEnterHeight'),
+      currentValue.toFixed(unitPrecision(store.displayUnit)),
+    );
     if (raw == null) return;
-    const nextMm = Number(raw);
-    if (!Number.isFinite(nextMm) || nextMm <= 0) return;
-    const units = nextMm / store.mmPerUnit;
+    const nextValue = Number(raw);
+    if (!Number.isFinite(nextValue) || nextValue <= 0) return;
+    const units = displayToModelUnits(nextValue, store);
     setStore((current) => ({
       ...current,
       entities: current.entities.map((item) =>
@@ -418,14 +421,17 @@ export default function InventorSketchOverlay({
   };
 
   const editCircleRadius = (entity: CircleEntity) => {
-    const raw = window.prompt(t('facilityMap.sketchEnterRadius'), (entity.r * store.mmPerUnit).toFixed(0));
+    const raw = window.prompt(
+      t('facilityMap.sketchEnterRadius'),
+      modelUnitsToDisplay(entity.r, store).toFixed(unitPrecision(store.displayUnit)),
+    );
     if (raw == null) return;
-    const nextMm = Number(raw);
-    if (!Number.isFinite(nextMm) || nextMm <= 0) return;
+    const nextValue = Number(raw);
+    if (!Number.isFinite(nextValue) || nextValue <= 0) return;
     setStore((current) => ({
       ...current,
       entities: current.entities.map((item) =>
-        item.id === entity.id ? { ...entity, r: nextMm / store.mmPerUnit } : item,
+        item.id === entity.id ? { ...entity, r: displayToModelUnits(nextValue, store) } : item,
       ),
     }));
   };
@@ -611,7 +617,7 @@ export default function InventorSketchOverlay({
     if (draft.type === 'line') {
       const fallbackLength = distance(draft.start, draft.current);
       const fallbackAngle = angleDeg(draft.start, draft.current);
-      const lengthUnits = dynamicLocks.a ? clampPositive(Number(dynamicA) / store.mmPerUnit, fallbackLength) : fallbackLength;
+      const lengthUnits = dynamicLocks.a ? clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackLength) : fallbackLength;
       const angle = dynamicLocks.b && Number.isFinite(Number(dynamicB)) ? Number(dynamicB) : fallbackAngle;
       const radians = degToRad(angle);
       return {
@@ -625,8 +631,8 @@ export default function InventorSketchOverlay({
     if (draft.type === 'rect') {
       const fallbackW = Math.abs(draft.current.x - draft.start.x);
       const fallbackH = Math.abs(draft.current.y - draft.start.y);
-      const width = dynamicLocks.a ? clampPositive(Number(dynamicA) / store.mmPerUnit, fallbackW) : fallbackW;
-      const height = dynamicLocks.b ? clampPositive(Number(dynamicB) / store.mmPerUnit, fallbackH) : fallbackH;
+      const width = dynamicLocks.a ? clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackW) : fallbackW;
+      const height = dynamicLocks.b ? clampPositive(displayToModelUnits(Number(dynamicB), store), fallbackH) : fallbackH;
       const signX = draft.current.x >= draft.start.x ? 1 : -1;
       const signY = draft.current.y >= draft.start.y ? 1 : -1;
       return {
@@ -635,7 +641,7 @@ export default function InventorSketchOverlay({
       };
     }
     const fallbackRadius = distance(draft.start, draft.current);
-    const radius = dynamicLocks.a ? clampPositive(Number(dynamicA) / store.mmPerUnit, fallbackRadius) : fallbackRadius;
+    const radius = dynamicLocks.a ? clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackRadius) : fallbackRadius;
     return { ...draft, current: { x: draft.start.x + radius, y: draft.start.y } };
   }, [draft, dynamicA, dynamicB, dynamicLocks, store.mmPerUnit]);
 
@@ -669,7 +675,7 @@ export default function InventorSketchOverlay({
           if (entity.type === 'line') {
             const midX = (entity.x1 + entity.x2) / 2;
             const midY = (entity.y1 + entity.y2) / 2;
-            const lengthMm = distance({ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 }) * store.mmPerUnit;
+            const lineLength = distance({ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 });
             const angle = angleDeg({ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 });
             return (
               <g key={entity.id}>
@@ -686,7 +692,7 @@ export default function InventorSketchOverlay({
                   style={{ cursor: 'pointer', paintOrder: 'stroke', stroke: 'white', strokeWidth: 3 }}
                   onDoubleClick={(event) => { event.stopPropagation(); editLineLength(entity); }}
                 >
-                  {lengthMm.toFixed(0)} mm
+                  {formatSketchDistance(lineLength, store)}
                 </text>
                 <text
                   x={entity.x1 + 12}
@@ -718,7 +724,7 @@ export default function InventorSketchOverlay({
                   style={{ cursor: 'pointer', paintOrder: 'stroke', stroke: 'white', strokeWidth: 3 }}
                   onDoubleClick={(event) => { event.stopPropagation(); editRectDimension(entity, 'w'); }}
                 >
-                  {(entity.w * store.mmPerUnit).toFixed(0)} mm
+                  {formatSketchDistance(entity.w, store)}
                 </text>
                 <text
                   x={entity.x + entity.w + 8}
@@ -730,7 +736,7 @@ export default function InventorSketchOverlay({
                   style={{ cursor: 'pointer', paintOrder: 'stroke', stroke: 'white', strokeWidth: 3 }}
                   onDoubleClick={(event) => { event.stopPropagation(); editRectDimension(entity, 'h'); }}
                 >
-                  {(entity.h * store.mmPerUnit).toFixed(0)} mm
+                  {formatSketchDistance(entity.h, store)}
                 </text>
               </g>
             );
@@ -749,7 +755,7 @@ export default function InventorSketchOverlay({
                 style={{ cursor: 'pointer', paintOrder: 'stroke', stroke: 'white', strokeWidth: 3 }}
                 onDoubleClick={(event) => { event.stopPropagation(); editCircleRadius(entity); }}
               >
-                R {(entity.r * store.mmPerUnit).toFixed(0)}
+                R {formatSketchDistance(entity.r, store)}
               </text>
             </g>
           );
@@ -803,7 +809,7 @@ export default function InventorSketchOverlay({
               {draft.type === 'line' && (
                 <div className="grid grid-cols-2 gap-1.5">
                   <label>
-                    <span className="mb-1 block text-slate-400">{t('facilityMap.sketchLength')}</span>
+                    <span className="mb-1 block text-slate-400">{t('facilityMap.sketchLength')} ({store.displayUnit})</span>
                     <input
                       value={dynamicA}
                       onFocus={() => setDynamicLocks((value) => ({ ...value, a: true }))}
@@ -825,7 +831,7 @@ export default function InventorSketchOverlay({
               {draft.type === 'rect' && (
                 <div className="grid grid-cols-2 gap-1.5">
                   <label>
-                    <span className="mb-1 block text-slate-400">{t('facilityMap.sketchWidth')}</span>
+                    <span className="mb-1 block text-slate-400">{t('facilityMap.sketchWidth')} ({store.displayUnit})</span>
                     <input
                       value={dynamicA}
                       onFocus={() => setDynamicLocks((value) => ({ ...value, a: true }))}
@@ -834,7 +840,7 @@ export default function InventorSketchOverlay({
                     />
                   </label>
                   <label>
-                    <span className="mb-1 block text-slate-400">{t('facilityMap.sketchHeight')}</span>
+                    <span className="mb-1 block text-slate-400">{t('facilityMap.sketchHeight')} ({store.displayUnit})</span>
                     <input
                       value={dynamicB}
                       onFocus={() => setDynamicLocks((value) => ({ ...value, b: true }))}
@@ -846,7 +852,7 @@ export default function InventorSketchOverlay({
               )}
               {draft.type === 'circle' && (
                 <label>
-                  <span className="mb-1 block text-slate-400">{t('facilityMap.sketchRadius')}</span>
+                  <span className="mb-1 block text-slate-400">{t('facilityMap.sketchRadius')} ({store.displayUnit})</span>
                   <input
                     value={dynamicA}
                     onFocus={() => setDynamicLocks((value) => ({ ...value, a: true }))}
@@ -902,9 +908,20 @@ export default function InventorSketchOverlay({
                 min="0.001"
                 step="0.1"
                 value={store.mmPerUnit}
-                onChange={(event) => setStore((current) => ({ ...current, mmPerUnit: clampPositive(Number(event.target.value), current.mmPerUnit) }))}
+                onChange={(event) => setStore((current) => ({ ...current, mmPerUnit: normalizeMmPerUnit(Number(event.target.value), current.mmPerUnit) }))}
                 className="w-24 rounded border border-white/10 bg-white/5 px-2 py-1 text-right"
               />
+            </label>
+            <label className="mb-2 flex items-center justify-between gap-2 text-[11px]">
+              <span>{t('facilityMap.sketchDisplayUnit')}</span>
+              <select
+                value={store.displayUnit}
+                onChange={(event) => setStore((current) => ({ ...current, displayUnit: event.target.value === 'm' ? 'm' : 'mm' }))}
+                className="rounded border border-white/10 bg-slate-900 px-2 py-1"
+              >
+                <option value="mm">mm</option>
+                <option value="m">m</option>
+              </select>
             </label>
 
             {(tool === 'line' || tool === 'rect' || tool === 'circle') && (
