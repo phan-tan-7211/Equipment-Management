@@ -822,6 +822,7 @@ export default function FacilityFloorPlan() {
                     setSelectedEquipmentId(item.id);
                     setPlaceLayer(null);
                     setZoneTool(null);
+                    setDrawTool('select');
                   }}
                   className={`w-full rounded-md border px-3 py-2 text-left transition hover:bg-accent ${
                     selectedEquipmentId === item.id ? 'border-primary bg-primary/10' : ''
@@ -887,6 +888,7 @@ export default function FacilityFloorPlan() {
                       setZoneTool(zone.id);
                       setSelectedEquipmentId('');
                       setPlaceLayer(null);
+                      setDrawTool('select');
                     }}
                     className={`rounded-md border px-2 py-2 text-xs ${
                       zoneTool === zone.id ? 'ring-2 ring-ring' : ''
@@ -1051,7 +1053,7 @@ export default function FacilityFloorPlan() {
                     strokeWidth: isDraft ? 0.35 : 0.28,
                     vectorEffect: 'non-scaling-stroke' as const,
                     opacity: isDraft ? 0.7 : 1,
-                    style: { pointerEvents: drawTool === 'erase' && !isDraft ? 'stroke' : 'none', cursor: 'pointer' },
+                    pointerEvents: drawTool === 'erase' && !isDraft ? 'stroke' : 'none',
                     onClick: (event: React.MouseEvent<SVGElement>) => {
                       if (drawTool !== 'erase' || isDraft) return;
                       event.stopPropagation();
