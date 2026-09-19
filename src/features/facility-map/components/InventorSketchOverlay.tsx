@@ -65,7 +65,12 @@ import {
 } from '@/features/facility-map/sketch/snapping/gridSnap';
 import {
   selectSnapCandidate,
+  type SnapCandidate,
 } from '@/features/facility-map/sketch/snapping/snapPriority';
+import { SnapIndicator } from '@/features/facility-map/sketch/rendering/SnapIndicator';
+import {
+  toggleSelection,
+} from '@/features/facility-map/sketch/selection/selectionState';
 import {
   applyHorizontalInference,
   isHorizontalInferenceCandidate,
@@ -176,7 +181,9 @@ export default function InventorSketchOverlay({
   const [presets, setPresets] = useState<ToolPresetMap>(() =>
     parseToolPresets(localStorage.getItem(TOOL_PRESET_STORAGE_KEY)),
   );
-  const [selectedId, setSelectedId] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const selectedId = selectedIds[0] ?? '';
+  const [activeSnap, setActiveSnap] = useState<SnapCandidate | null>(null);
   const [draft, setDraft] = useState<Draft>(null);
   const [pointer, setPointer] = useState<Point>({ x: 0, y: 0 });
   const [dynamicA, setDynamicA] = useState('');
@@ -188,7 +195,7 @@ export default function InventorSketchOverlay({
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
-    setSelectedId('');
+    setSelectedIds([]);
     setDraft(null);
     setCommandState(createSketchCommandState());
   }, [storageKey]);
@@ -200,7 +207,7 @@ export default function InventorSketchOverlay({
   useEffect(() => {
     if (!enabled) {
       setDraft(null);
-      setSelectedId('');
+      setSelectedIds([]);
       setDraggingId('');
       setCommandState(createSketchCommandState());
     }
@@ -213,7 +220,7 @@ export default function InventorSketchOverlay({
       if (target?.matches('input, textarea, select, [contenteditable="true"]')) return;
       if (event.key === 'Escape') {
         setDraft(null);
-        setSelectedId('');
+        setSelectedIds([]);
         sketchHistory.cancelTransaction();
         setCommandState(cancelSketchCommand());
         setMessage('');
@@ -230,18 +237,19 @@ export default function InventorSketchOverlay({
         sketchHistory.redo();
         return;
       }
-      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedId) {
+      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedIds.length) {
         event.preventDefault();
+        const selected = new Set(selectedIds);
         setStore((current) => ({
           ...current,
-          entities: current.entities.filter((entity) => entity.id !== selectedId),
+          entities: current.entities.filter((entity) => !selected.has(entity.id)),
         }));
-        setSelectedId('');
+        setSelectedIds([]);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [enabled, selectedId, sketchHistory]);
+  }, [enabled, selectedIds, sketchHistory]);
 
   const currentStyle = useMemo(() => {
     if (
@@ -344,6 +352,7 @@ export default function InventorSketchOverlay({
       },
     ]);
 
+    setActiveSnap(best);
     return best?.point ?? point;
   }, [canvasWidth, store.entities]);
 
@@ -784,7 +793,7 @@ export default function InventorSketchOverlay({
     }
 
     if (tool === 'select') {
-      setSelectedId('');
+      setSelectedIds([]);
     }
   };
 
@@ -839,7 +848,12 @@ export default function InventorSketchOverlay({
     }
     if (tool !== 'select') return;
 
-    setSelectedId(entity.id);
+    if (event.ctrlKey || event.metaKey) {
+      setSelectedIds((current) => toggleSelection(current, entity.id));
+      return;
+    }
+
+    setSelectedIds([entity.id]);
     dragRef.current = { start: point, entity: structuredClone(entity) };
     sketchHistory.beginTransaction();
     setCommandState((current) => beginSketchInteraction(current, 'dragging'));
@@ -913,10 +927,13 @@ export default function InventorSketchOverlay({
         }}
         onMouseMove={handleCanvasMouseMove}
         onMouseUp={handleEntityMouseUp}
-        onMouseLeave={handleEntityMouseUp}
+        onMouseLeave={() => {
+          setActiveSnap(null);
+          handleEntityMouseUp();
+        }}
       >
         {store.entities.map((entity) => {
-          const selected = selectedId === entity.id;
+          const selected = selectedIds.includes(entity.id);
           const common = {
             stroke: entity.color,
             strokeWidth: selected ? entity.lineWidth + 0.8 : entity.lineWidth,
@@ -1131,6 +1148,10 @@ export default function InventorSketchOverlay({
           />
         )}
 
+        {enabled && activeSnap && (
+          <SnapIndicator candidate={activeSnap} />
+        )}
+
         {enabled && draft && draft.type !== 'polyline' && draft.type !== 'arc' && (
           <foreignObject x={Math.min(pointer.x + 12, canvasWidth - 230)} y={Math.min(pointer.y + 12, canvasHeight - 92)} width="220" height="88" style={{ pointerEvents: 'all' }}>
             <div
@@ -1311,12 +1332,16 @@ export default function InventorSketchOverlay({
               </>
             )}
 
-            {selectedId && (
+            {selectedIds.length > 0 && (
               <button
                 type="button"
                 onClick={() => {
-                  setStore((current) => ({ ...current, entities: current.entities.filter((entity) => entity.id !== selectedId) }));
-                  setSelectedId('');
+                  const selected = new Set(selectedIds);
+                  setStore((current) => ({
+                    ...current,
+                    entities: current.entities.filter((entity) => !selected.has(entity.id)),
+                  }));
+                  setSelectedIds([]);
                 }}
                 className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-red-400/30 px-3 py-2 text-xs text-red-300 hover:bg-red-500/10"
               >
