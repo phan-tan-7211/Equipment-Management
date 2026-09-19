@@ -1,14 +1,22 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Building2,
+  Eye,
+  Focus,
   ImagePlus,
   Layers3,
   MapPin,
+  Maximize2,
+  Minimize2,
   Move,
+  Pencil,
+  Redo2,
   RotateCcw,
   Save,
   Search,
   Trash2,
+  Undo2,
+  Wrench,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
@@ -28,6 +36,9 @@ const DEMO_EQUIPMENT: EquipmentRow[] = [
   { id: 'CEV-INJ-004', name: 'Injection Machine 04', status: 'Inactive' },
   { id: 'CEV-OLD-009', name: 'Legacy Tester 09', status: 'Retired' },
 ];
+
+const DEMO_BUILDINGS = ['Main Building', 'Warehouse Building'];
+const DEMO_FLOORS = ['Floor 1', 'Floor 2', 'Roof'];
 
 type EquipmentPin = {
   equipmentId: string;
@@ -72,7 +83,7 @@ type FloorPlanState = {
   zones: Zone[];
 };
 
-const STORAGE_KEY = 'znteqr:facility-floor-plan:dryrun:v2';
+const STORAGE_KEY = 'znteqr:facility-floor-plan:dryrun:v3';
 
 const LAYERS: Array<{ id: 'assets' | LayerId; labelKey: string; color: string; emoji: string }> = [
   { id: 'assets', labelKey: 'facilityMap.assets', color: '#10b981', emoji: '🔧' },
@@ -110,6 +121,22 @@ const statusColor = (status?: string | null) => {
   }
 };
 
+const statusTranslationKey = (status?: string | null) => {
+  switch ((status ?? '').toLowerCase()) {
+    case 'active':
+      return 'facilityMap.statusActive';
+    case 'maintenance':
+    case 'maintenance needed':
+      return 'facilityMap.statusMaintenance';
+    case 'inactive':
+      return 'facilityMap.statusInactive';
+    case 'retired':
+      return 'facilityMap.statusRetired';
+    default:
+      return 'facilityMap.statusUnknown';
+  }
+};
+
 const EMPTY_PLAN: FloorPlanState = {
   name: 'Plant 1 - Main Facility',
   building: 'Main Building',
@@ -142,6 +169,9 @@ const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
   overlayPins: value.overlayPins ?? [],
   zones: value.zones ?? [],
 });
+
+const clonePlan = (plan: FloorPlanState): FloorPlanState =>
+  JSON.parse(JSON.stringify(plan)) as FloorPlanState;
 
 const makeId = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -176,7 +206,7 @@ function DemoBlueprint({ t }: { t: (key: string) => string }) {
       <g fill="#334155" fontFamily="system-ui, sans-serif" fontWeight="700">
         <text x="120" y="105" fontSize="20">{t('facilityMap.lineMachining')}</text>
         <text x="575" y="105" fontSize="20">{t('facilityMap.linePressAssembly')}</text>
-        <text x="120" y="400" fontSize="20">UTILITY</text>
+        <text x="120" y="400" fontSize="20">{t('facilityMap.utility')}</text>
         <text x="440" y="400" fontSize="20">{t('facilityMap.warehouseQa')}</text>
       </g>
       <g fill="#64748b" fontFamily="system-ui, sans-serif" fontSize="14">
@@ -206,6 +236,8 @@ export default function FacilityFloorPlan() {
   const [activeLayer, setActiveLayer] = useState<'all' | 'assets' | LayerId>('all');
   const [placeLayer, setPlaceLayer] = useState<LayerId | null>(null);
   const [zoneTool, setZoneTool] = useState<ZoneType | null>(null);
+  const [editMode, setEditMode] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -213,20 +245,51 @@ export default function FacilityFloorPlan() {
   const [draggingOverlayId, setDraggingOverlayId] = useState('');
   const [zoneStart, setZoneStart] = useState<{ x: number; y: number } | null>(null);
   const [draftZone, setDraftZone] = useState<Zone | null>(null);
+  const [undoStack, setUndoStack] = useState<FloorPlanState[]>([]);
+  const [redoStack, setRedoStack] = useState<FloorPlanState[]>([]);
   const pointerStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+  const dragStartPlanRef = useRef<FloorPlanState | null>(null);
   const canvasRef = useRef<HTMLDivElement | null>(null);
 
   const savePlan = useCallback((next: FloorPlanState) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   }, []);
 
-  const updatePlan = useCallback((updater: (current: FloorPlanState) => FloorPlanState) => {
+  const commitPlan = useCallback((updater: (current: FloorPlanState) => FloorPlanState) => {
     setPlan((current) => {
       const next = updater(current);
+      setUndoStack((stack) => [...stack.slice(-29), clonePlan(current)]);
+      setRedoStack([]);
       savePlan(next);
       return next;
     });
   }, [savePlan]);
+
+  const undo = () => {
+    setUndoStack((stack) => {
+      const previous = stack[stack.length - 1];
+      if (!previous) return stack;
+      setPlan((current) => {
+        setRedoStack((redo) => [...redo.slice(-29), clonePlan(current)]);
+        savePlan(previous);
+        return clonePlan(previous);
+      });
+      return stack.slice(0, -1);
+    });
+  };
+
+  const redo = () => {
+    setRedoStack((stack) => {
+      const next = stack[stack.length - 1];
+      if (!next) return stack;
+      setPlan((current) => {
+        setUndoStack((undoHistory) => [...undoHistory.slice(-29), clonePlan(current)]);
+        savePlan(next);
+        return clonePlan(next);
+      });
+      return stack.slice(0, -1);
+    });
+  };
 
   const filteredEquipment = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -240,6 +303,11 @@ export default function FacilityFloorPlan() {
     () => new Map(equipment.map((item) => [item.id, item])),
     [equipment],
   );
+
+  const selectedEquipment = useMemo(() => {
+    if (!selectedMarkerId.startsWith('asset:')) return null;
+    return equipmentById.get(selectedMarkerId.slice('asset:'.length)) ?? null;
+  }, [equipmentById, selectedMarkerId]);
 
   const unplacedEquipment = useMemo(
     () => filteredEquipment.filter((item) => !plan.pins.some((pin) => pin.equipmentId === item.id)),
@@ -262,12 +330,12 @@ export default function FacilityFloorPlan() {
   }, [pan.x, pan.y, zoom]);
 
   const placeAt = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (draggingEquipmentId || draggingOverlayId || isPanning || zoneStart) return;
+    if (!editMode || draggingEquipmentId || draggingOverlayId || isPanning || zoneStart) return;
     const point = toPercent(event.clientX, event.clientY);
     if (!point) return;
 
     if (selectedEquipmentId) {
-      updatePlan((current) => ({
+      commitPlan((current) => ({
         ...current,
         pins: [
           ...current.pins.filter((pin) => pin.equipmentId !== selectedEquipmentId),
@@ -281,20 +349,21 @@ export default function FacilityFloorPlan() {
 
     if (placeLayer) {
       const id = makeId(placeLayer);
-      updatePlan((current) => ({
+      commitPlan((current) => ({
         ...current,
         overlayPins: [...current.overlayPins, { id, layer: placeLayer, ...point }],
       }));
       setSelectedMarkerId(`overlay:${id}`);
     }
   }, [
+    commitPlan,
     draggingEquipmentId,
     draggingOverlayId,
+    editMode,
     isPanning,
     placeLayer,
     selectedEquipmentId,
     toPercent,
-    updatePlan,
     zoneStart,
   ]);
 
@@ -306,7 +375,7 @@ export default function FacilityFloorPlan() {
       return;
     }
 
-    if (!zoneTool || event.button !== 0) return;
+    if (!editMode || !zoneTool || event.button !== 0) return;
     const point = toPercent(event.clientX, event.clientY);
     if (!point) return;
     event.preventDefault();
@@ -334,7 +403,7 @@ export default function FacilityFloorPlan() {
     const point = toPercent(event.clientX, event.clientY);
     if (!point) return;
 
-    if (zoneStart && zoneTool) {
+    if (zoneStart && zoneTool && editMode) {
       setDraftZone({
         id: 'draft',
         type: zoneTool,
@@ -346,7 +415,7 @@ export default function FacilityFloorPlan() {
       return;
     }
 
-    if (draggingEquipmentId) {
+    if (draggingEquipmentId && editMode) {
       setPlan((current) => ({
         ...current,
         pins: current.pins.map((pin) =>
@@ -356,7 +425,7 @@ export default function FacilityFloorPlan() {
       return;
     }
 
-    if (draggingOverlayId) {
+    if (draggingOverlayId && editMode) {
       setPlan((current) => ({
         ...current,
         overlayPins: current.overlayPins.map((pin) =>
@@ -368,17 +437,21 @@ export default function FacilityFloorPlan() {
 
   const endPointerInteraction = () => {
     if (draftZone && draftZone.w > 0.5 && draftZone.h > 0.5) {
-      updatePlan((current) => ({
+      commitPlan((current) => ({
         ...current,
         zones: [...current.zones, { ...draftZone, id: makeId('zone') }],
       }));
-    } else if (draggingEquipmentId || draggingOverlayId) {
+    } else if ((draggingEquipmentId || draggingOverlayId) && dragStartPlanRef.current) {
+      const before = dragStartPlanRef.current;
+      setUndoStack((stack) => [...stack.slice(-29), clonePlan(before)]);
+      setRedoStack([]);
       setPlan((current) => {
         savePlan(current);
         return current;
       });
     }
 
+    dragStartPlanRef.current = null;
     setZoneStart(null);
     setDraftZone(null);
     setDraggingEquipmentId('');
@@ -387,45 +460,54 @@ export default function FacilityFloorPlan() {
   };
 
   const uploadPlan = (file?: File) => {
-    if (!file) return;
+    if (!file || !editMode) return;
     const reader = new FileReader();
     reader.onload = () => {
       const imageDataUrl = typeof reader.result === 'string' ? reader.result : '';
       if (!imageDataUrl) return;
-      updatePlan((current) => ({ ...current, imageDataUrl }));
+      commitPlan((current) => ({ ...current, imageDataUrl }));
       setZoom(1);
       setPan({ x: 0, y: 0 });
     };
     reader.readAsDataURL(file);
   };
 
-  const resetView = () => {
+  const fitView = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
   };
 
   const deleteSelected = () => {
-    if (!selectedMarkerId) return;
+    if (!selectedMarkerId || !editMode) return;
     if (selectedMarkerId.startsWith('asset:')) {
       const id = selectedMarkerId.slice('asset:'.length);
-      updatePlan((current) => ({
+      commitPlan((current) => ({
         ...current,
         pins: current.pins.filter((pin) => pin.equipmentId !== id),
       }));
     } else if (selectedMarkerId.startsWith('overlay:')) {
       const id = selectedMarkerId.slice('overlay:'.length);
-      updatePlan((current) => ({
+      commitPlan((current) => ({
         ...current,
         overlayPins: current.overlayPins.filter((pin) => pin.id !== id),
       }));
     } else if (selectedMarkerId.startsWith('zone:')) {
       const id = selectedMarkerId.slice('zone:'.length);
-      updatePlan((current) => ({
+      commitPlan((current) => ({
         ...current,
         zones: current.zones.filter((zone) => zone.id !== id),
       }));
     }
     setSelectedMarkerId('');
+  };
+
+  const switchMode = (nextEditMode: boolean) => {
+    setEditMode(nextEditMode);
+    setSelectedEquipmentId('');
+    setPlaceLayer(null);
+    setZoneTool(null);
+    setZoneStart(null);
+    setDraftZone(null);
   };
 
   const visibleAssetPins = activeLayer === 'all' || activeLayer === 'assets';
@@ -445,29 +527,70 @@ export default function FacilityFloorPlan() {
         : '';
 
   return (
-    <div className="flex min-h-full flex-col bg-background">
+    <div className={`flex min-h-full flex-col bg-background ${isFullscreen ? 'fixed inset-0 z-[100] h-screen' : ''}`}>
       <div className="border-b bg-card px-4 py-3 md:px-6">
         <div className="flex flex-wrap items-center gap-3">
           <div className="mr-auto">
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-primary" />
               <h1 className="text-lg font-semibold">{t('facilityMap.title')}</h1>
+              <span className="rounded-full border bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                {t('facilityMap.prototypeBadge')}
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {t('facilityMap.subtitle')}
-            </p>
+            <p className="text-xs text-muted-foreground">{t('facilityMap.subtitle')}</p>
           </div>
 
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-accent">
-            <ImagePlus className="h-4 w-4" />
-            {t('facilityMap.uploadPlan')}
-            <input
-              className="hidden"
-              type="file"
-              accept="image/*"
-              onChange={(event) => uploadPlan(event.target.files?.[0])}
-            />
-          </label>
+          <div className="flex items-center rounded-md border bg-background p-1">
+            <button
+              type="button"
+              onClick={() => switchMode(false)}
+              className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 text-xs ${!editMode ? 'bg-foreground text-background' : 'hover:bg-accent'}`}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              {t('facilityMap.viewMode')}
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode(true)}
+              className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 text-xs ${editMode ? 'bg-foreground text-background' : 'hover:bg-accent'}`}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              {t('facilityMap.editMode')}
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={undo}
+            disabled={!undoStack.length}
+            className="rounded-md border p-2 disabled:cursor-not-allowed disabled:opacity-40"
+            title={t('facilityMap.undo')}
+          >
+            <Undo2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={redo}
+            disabled={!redoStack.length}
+            className="rounded-md border p-2 disabled:cursor-not-allowed disabled:opacity-40"
+            title={t('facilityMap.redo')}
+          >
+            <Redo2 className="h-4 w-4" />
+          </button>
+
+          {editMode && (
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-accent">
+              <ImagePlus className="h-4 w-4" />
+              {t('facilityMap.uploadPlan')}
+              <input
+                className="hidden"
+                type="file"
+                accept="image/*"
+                onChange={(event) => uploadPlan(event.target.files?.[0])}
+              />
+            </label>
+          )}
 
           <button
             type="button"
@@ -479,13 +602,13 @@ export default function FacilityFloorPlan() {
           </button>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <button
             type="button"
             onClick={() => setActiveLayer('all')}
             className={`rounded-full border px-3 py-1.5 text-xs ${activeLayer === 'all' ? 'bg-foreground text-background' : 'bg-background'}`}
           >
-            All
+            {t('facilityMap.all')}
           </button>
           {LAYERS.map((layer) => (
             <button
@@ -501,125 +624,134 @@ export default function FacilityFloorPlan() {
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="border-r bg-card p-3">
-          <div className="mb-3 grid grid-cols-2 gap-2">
-            <input
-              value={plan.building}
-              onChange={(event) => setPlan((current) => ({ ...current, building: event.target.value }))}
-              onBlur={() => savePlan(plan)}
-              className="rounded-md border bg-background px-2 py-2 text-xs"
-              aria-label="Building"
-            />
-            <input
-              value={plan.floor}
-              onChange={(event) => setPlan((current) => ({ ...current, floor: event.target.value }))}
-              onBlur={() => savePlan(plan)}
-              className="rounded-md border bg-background px-2 py-2 text-xs"
-              aria-label="Floor"
-            />
-          </div>
-
-          <div className="mb-2 text-xs font-semibold">{t('facilityMap.placeEquipment')}</div>
-          <div className="relative mb-3">
-            <Search className="pointer-events-none absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t('facilityMap.searchEquipment')}
-              className="w-full rounded-md border bg-background py-2 pl-8 pr-2 text-sm"
-            />
-          </div>
-
-          <div className="max-h-48 space-y-1 overflow-auto pr-1">
-            {unplacedEquipment.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setSelectedEquipmentId(item.id);
-                  setPlaceLayer(null);
-                  setZoneTool(null);
-                }}
-                className={`w-full rounded-md border px-3 py-2 text-left transition hover:bg-accent ${
-                  selectedEquipmentId === item.id ? 'border-primary bg-primary/10' : ''
-                }`}
+      <div className={`grid min-h-0 flex-1 grid-cols-1 ${editMode ? 'lg:grid-cols-[300px_minmax(0,1fr)]' : 'lg:grid-cols-1'}`}>
+        {editMode && (
+          <aside className="border-r bg-card p-3">
+            <div className="mb-2 text-xs font-semibold">{t('facilityMap.location')}</div>
+            <div className="mb-4 grid grid-cols-2 gap-2">
+              <select
+                value={plan.building}
+                onChange={(event) => commitPlan((current) => ({ ...current, building: event.target.value }))}
+                className="rounded-md border bg-background px-2 py-2 text-xs"
+                aria-label={t('facilityMap.building')}
               >
-                <div className="flex items-center gap-2">
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: statusColor(item.status) }}
-                  />
-                  <span className="truncate text-sm font-medium">{item.name || item.id}</span>
-                </div>
-              </button>
-            ))}
-          </div>
+                {DEMO_BUILDINGS.map((building) => (
+                  <option key={building} value={building}>{building}</option>
+                ))}
+              </select>
+              <select
+                value={plan.floor}
+                onChange={(event) => commitPlan((current) => ({ ...current, floor: event.target.value }))}
+                className="rounded-md border bg-background px-2 py-2 text-xs"
+                aria-label={t('facilityMap.floor')}
+              >
+                {DEMO_FLOORS.map((floor) => (
+                  <option key={floor} value={floor}>{floor}</option>
+                ))}
+              </select>
+            </div>
 
-          <div className="mt-4 border-t pt-3">
-            <div className="mb-2 text-xs font-semibold">{t('facilityMap.safetyUtilityMarkers')}</div>
-            <div className="grid grid-cols-2 gap-1.5">
-              {LAYERS.filter((layer) => layer.id !== 'assets').map((layer) => (
+            <div className="mb-2 text-xs font-semibold">{t('facilityMap.placeEquipment')}</div>
+            <div className="relative mb-3">
+              <Search className="pointer-events-none absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t('facilityMap.searchEquipment')}
+                className="w-full rounded-md border bg-background py-2 pl-8 pr-2 text-sm"
+              />
+            </div>
+
+            <div className="max-h-48 space-y-1 overflow-auto pr-1">
+              {unplacedEquipment.map((item) => (
                 <button
-                  key={layer.id}
+                  key={item.id}
                   type="button"
                   onClick={() => {
-                    setPlaceLayer(layer.id as LayerId);
-                    setSelectedEquipmentId('');
+                    setSelectedEquipmentId(item.id);
+                    setPlaceLayer(null);
                     setZoneTool(null);
                   }}
-                  className={`rounded-md border px-2 py-2 text-xs ${
-                    placeLayer === layer.id ? 'ring-2 ring-ring' : ''
+                  className={`w-full rounded-md border px-3 py-2 text-left transition hover:bg-accent ${
+                    selectedEquipmentId === item.id ? 'border-primary bg-primary/10' : ''
                   }`}
-                  style={{ borderColor: layer.color, color: layer.color }}
                 >
-                  {layer.emoji} {layer.label}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: statusColor(item.status) }}
+                    />
+                    <span className="truncate text-sm font-medium">{item.name || item.id}</span>
+                  </div>
                 </button>
               ))}
             </div>
-          </div>
 
-          <div className="mt-4 border-t pt-3">
-            <div className="mb-2 text-xs font-semibold">{t('facilityMap.drawZones')}</div>
-            <div className="grid grid-cols-2 gap-1.5">
-              {ZONES.map((zone) => (
-                <button
-                  key={zone.id}
-                  type="button"
-                  onClick={() => {
-                    setZoneTool(zone.id);
-                    setSelectedEquipmentId('');
-                    setPlaceLayer(null);
-                  }}
-                  className={`rounded-md border px-2 py-2 text-xs ${
-                    zoneTool === zone.id ? 'ring-2 ring-ring' : ''
-                  }`}
-                  style={{ borderColor: zone.color, color: zone.color }}
-                >
-                  {zone.emoji} {t(zone.labelKey)}
-                </button>
-              ))}
+            <div className="mt-4 border-t pt-3">
+              <div className="mb-2 text-xs font-semibold">{t('facilityMap.safetyUtilityMarkers')}</div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {LAYERS.filter((layer) => layer.id !== 'assets').map((layer) => (
+                  <button
+                    key={layer.id}
+                    type="button"
+                    onClick={() => {
+                      setPlaceLayer(layer.id as LayerId);
+                      setSelectedEquipmentId('');
+                      setZoneTool(null);
+                    }}
+                    className={`rounded-md border px-2 py-2 text-xs ${
+                      placeLayer === layer.id ? 'ring-2 ring-ring' : ''
+                    }`}
+                    style={{ borderColor: layer.color, color: layer.color }}
+                  >
+                    {layer.emoji} {t(layer.labelKey)}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {placementHint && (
-            <div className="mt-3 rounded-md border border-primary/40 bg-primary/5 p-2 text-xs">
-              <MapPin className="mr-1 inline h-3.5 w-3.5" />
-              {placementHint}
+            <div className="mt-4 border-t pt-3">
+              <div className="mb-2 text-xs font-semibold">{t('facilityMap.drawZones')}</div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {ZONES.map((zone) => (
+                  <button
+                    key={zone.id}
+                    type="button"
+                    onClick={() => {
+                      setZoneTool(zone.id);
+                      setSelectedEquipmentId('');
+                      setPlaceLayer(null);
+                    }}
+                    className={`rounded-md border px-2 py-2 text-xs ${
+                      zoneTool === zone.id ? 'ring-2 ring-ring' : ''
+                    }`}
+                    style={{ borderColor: zone.color, color: zone.color }}
+                  >
+                    {zone.emoji} {t(zone.labelKey)}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
 
-          {selectedMarkerId && (
-            <button
-              type="button"
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-destructive/40 px-3 py-2 text-xs text-destructive hover:bg-destructive/10"
-              onClick={deleteSelected}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              {t('facilityMap.deleteSelected')}
-            </button>
-          )}
-        </aside>
+            {placementHint && (
+              <div className="mt-3 rounded-md border border-primary/40 bg-primary/5 p-2 text-xs">
+                <MapPin className="mr-1 inline h-3.5 w-3.5" />
+                {placementHint}
+              </div>
+            )}
+
+            {selectedMarkerId && (
+              <button
+                type="button"
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-destructive/40 px-3 py-2 text-xs text-destructive hover:bg-destructive/10"
+                onClick={deleteSelected}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t('facilityMap.deleteSelected')}
+              </button>
+            )}
+          </aside>
+        )}
 
         <section className="relative min-h-[640px] overflow-hidden bg-slate-950">
           <div className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2">
@@ -630,7 +762,51 @@ export default function FacilityFloorPlan() {
               <Layers3 className="mr-1 inline h-3.5 w-3.5" />
               {t('facilityMap.itemsSummary', { assets: plan.pins.length, markers: plan.overlayPins.length, zones: plan.zones.length })}
             </div>
+            <div className={`rounded-md border px-3 py-2 text-xs backdrop-blur ${
+              editMode ? 'border-amber-400/30 bg-amber-500/15 text-amber-200' : 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200'
+            }`}>
+              {editMode ? t('facilityMap.editing') : t('facilityMap.viewing')}
+            </div>
           </div>
+
+          {selectedEquipment && (
+            <div className="absolute right-3 top-3 z-30 w-72 rounded-xl border border-white/10 bg-slate-950/90 p-4 text-white shadow-2xl backdrop-blur">
+              <div className="mb-3 flex items-start gap-3">
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: statusColor(selectedEquipment.status) }}
+                >
+                  <Wrench className="h-5 w-5 text-slate-950" />
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate font-semibold">{selectedEquipment.name}</div>
+                  <div className="text-[11px] text-slate-400">{selectedEquipment.id}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-md bg-white/5 p-2">
+                  <div className="text-slate-400">{t('facilityMap.status')}</div>
+                  <div className="mt-1 font-medium">{t(statusTranslationKey(selectedEquipment.status))}</div>
+                </div>
+                <div className="rounded-md bg-white/5 p-2">
+                  <div className="text-slate-400">{t('facilityMap.openWorkOrders')}</div>
+                  <div className="mt-1 font-medium">{selectedEquipment.status === 'Maintenance' ? '2' : '0'}</div>
+                </div>
+                <div className="col-span-2 rounded-md bg-white/5 p-2">
+                  <div className="text-slate-400">{t('facilityMap.nextPm')}</div>
+                  <div className="mt-1 font-medium">{t('facilityMap.nextPmDemo')}</div>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button type="button" className="rounded-md border border-white/10 px-3 py-2 text-xs hover:bg-white/10">
+                  {t('facilityMap.viewEquipment')}
+                </button>
+                <button type="button" className="rounded-md bg-white px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-slate-200">
+                  {t('facilityMap.createWorkOrder')}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-lg border border-white/10 bg-black/70 p-1.5 text-white backdrop-blur">
             <button type="button" className="rounded p-2 hover:bg-white/10" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))} title={t('facilityMap.zoomOut')}>
@@ -640,8 +816,19 @@ export default function FacilityFloorPlan() {
             <button type="button" className="rounded p-2 hover:bg-white/10" onClick={() => setZoom((z) => Math.min(3, z + 0.1))} title={t('facilityMap.zoomIn')}>
               <ZoomIn className="h-4 w-4" />
             </button>
-            <button type="button" className="rounded p-2 hover:bg-white/10" onClick={resetView} title={t('facilityMap.resetView')}>
+            <button type="button" className="rounded p-2 hover:bg-white/10" onClick={fitView} title={t('facilityMap.fitView')}>
+              <Focus className="h-4 w-4" />
+            </button>
+            <button type="button" className="rounded p-2 hover:bg-white/10" onClick={fitView} title={t('facilityMap.resetView')}>
               <RotateCcw className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="rounded p-2 hover:bg-white/10"
+              onClick={() => setIsFullscreen((value) => !value)}
+              title={isFullscreen ? t('facilityMap.exitFullscreen') : t('facilityMap.fullscreen')}
+            >
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </button>
             <span className="mx-1 h-5 w-px bg-white/15" />
             <span className="flex items-center gap-1 px-2 text-[11px] text-white/70">
@@ -653,7 +840,7 @@ export default function FacilityFloorPlan() {
           <div
             ref={canvasRef}
             className={`absolute inset-0 select-none ${
-              selectedEquipmentId || placeLayer || zoneTool
+              editMode && (selectedEquipmentId || placeLayer || zoneTool)
                 ? 'cursor-crosshair'
                 : isPanning
                   ? 'cursor-grabbing'
@@ -746,6 +933,8 @@ export default function FacilityFloorPlan() {
                     }}
                     onMouseDown={(event) => {
                       event.stopPropagation();
+                      if (!editMode) return;
+                      dragStartPlanRef.current = clonePlan(plan);
                       setDraggingEquipmentId(pin.equipmentId);
                       setSelectedMarkerId(`asset:${pin.equipmentId}`);
                     }}
@@ -762,7 +951,7 @@ export default function FacilityFloorPlan() {
                       </div>
                       <div className="pointer-events-none absolute left-1/2 top-10 hidden -translate-x-1/2 whitespace-nowrap rounded bg-black/85 px-2 py-1 text-[10px] text-white shadow group-hover:block">
                         {item?.name ?? pin.equipmentId}
-                        {item?.status ? ` · ${item.status}` : ''}
+                        {item?.status ? ` · ${t(statusTranslationKey(item.status))}` : ''}
                       </div>
                     </div>
                   </button>
@@ -784,6 +973,8 @@ export default function FacilityFloorPlan() {
                     }}
                     onMouseDown={(event) => {
                       event.stopPropagation();
+                      if (!editMode) return;
+                      dragStartPlanRef.current = clonePlan(plan);
                       setDraggingOverlayId(pin.id);
                       setSelectedMarkerId(`overlay:${pin.id}`);
                     }}
