@@ -40,6 +40,9 @@ import {
   cssPixelsToSketchUnits,
 } from '@/features/facility-map/sketch/core/coordinates';
 import {
+  findEndpointSnap,
+} from '@/features/facility-map/sketch/snapping/endpointSnap';
+import {
   angleDeg,
   arcPoint,
   clampPositive,
@@ -120,30 +123,6 @@ type Props = {
   canvasHeight: number;
   t: (key: string, params?: Record<string, unknown>) => string;
   onExit: () => void;
-};
-
-const entitySnapPoints = (entity: SketchEntity): Point[] => {
-  switch (entity.type) {
-    case 'line':
-      return [{ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 }];
-    case 'polyline':
-      return entity.points;
-    case 'rect':
-      return [
-        { x: entity.x, y: entity.y },
-        { x: entity.x + entity.w, y: entity.y },
-        { x: entity.x + entity.w, y: entity.y + entity.h },
-        { x: entity.x, y: entity.y + entity.h },
-      ];
-    case 'circle':
-      return [{ x: entity.cx, y: entity.cy }];
-    case 'arc':
-      return [
-        { x: entity.cx, y: entity.cy },
-        arcPoint(entity, entity.startAngleDeg),
-        arcPoint(entity, entity.endAngleDeg),
-      ];
-  }
 };
 
 export default function InventorSketchOverlay({
@@ -262,20 +241,7 @@ export default function InventorSketchOverlay({
     if (!svg) return point;
     const rect = svg.getBoundingClientRect();
     const threshold = cssPixelsToSketchUnits(10, rect.width, canvasWidth);
-    let best: Point | null = null;
-    let bestDistance = Number.POSITIVE_INFINITY;
-
-    store.entities.forEach((entity) => {
-      const candidates = entitySnapPoints(entity);
-      candidates.forEach((candidate) => {
-        const d = distance(point, candidate);
-        if (d < threshold && d < bestDistance) {
-          best = candidate;
-          bestDistance = d;
-        }
-      });
-    });
-    return best ?? point;
+    return findEndpointSnap(point, store.entities, threshold)?.point ?? point;
   }, [canvasWidth, store.entities]);
 
   const inferLineEnd = useCallback((start: Point, raw: Point) => {
