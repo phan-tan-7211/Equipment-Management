@@ -93,6 +93,10 @@ import {
 } from '@/features/facility-map/sketch/constraints/advancedConstraints';
 import { solveSketchConstraints } from '@/features/facility-map/sketch/constraints/constraintSolver';
 import {
+  applySymmetryConstraint,
+  applyTangentConstraint,
+} from '@/features/facility-map/sketch/constraints/parametricConstraints';
+import {
   toggleSelection,
 } from '@/features/facility-map/sketch/selection/selectionState';
 import {
@@ -1799,6 +1803,36 @@ export default function InventorSketchOverlay({
               const pair = selectedIds
                 .map((id) => store.entities.find((entity) => entity.id === id))
                 .filter(Boolean) as SketchEntity[];
+              const tangentLine = pair.find(
+                (entity): entity is LineEntity => entity?.type === 'line',
+              );
+              const tangentRadial = pair.find(
+                (entity) => entity?.type === 'circle' || entity?.type === 'arc',
+              );
+              if (pair.length === 2 && tangentLine && tangentRadial) {
+                return (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const result = applyTangentConstraint(
+                        store.entities,
+                        tangentLine.id,
+                        tangentRadial.id,
+                        createSketchId('constraint-tangent'),
+                      );
+                      if (!result) return;
+                      setStore((current) => ({
+                        ...current,
+                        entities: result.entities,
+                        constraints: [...current.constraints, result.constraint],
+                      }));
+                    }}
+                    className="mt-3 w-full rounded-md border border-violet-400/30 px-3 py-2 text-xs text-violet-300 hover:bg-violet-500/10"
+                  >
+                    Tangent
+                  </button>
+                );
+              }
               if (
                 pair.length !== 2 ||
                 !(
@@ -1846,6 +1880,38 @@ export default function InventorSketchOverlay({
                     Concentric
                   </button>
                 </div>
+              );
+            })()}
+
+            {tool === 'select' && selectedIds.length === 3 && (() => {
+              const axis = store.entities.find(
+                (entity): entity is LineEntity =>
+                  entity.id === selectedIds[0] && entity.type === 'line',
+              );
+              if (!axis) return null;
+              return (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const result = applySymmetryConstraint(
+                      store.entities,
+                      axis.id,
+                      selectedIds[1],
+                      selectedIds[2],
+                      createSketchId('constraint-symmetry'),
+                    );
+                    if (!result) return;
+                    setStore((current) => ({
+                      ...current,
+                      entities: result.entities,
+                      constraints: [...current.constraints, result.constraint],
+                    }));
+                    setMessage('Symmetry constraint applied.');
+                  }}
+                  className="mt-3 w-full rounded-md border border-violet-400/30 px-3 py-2 text-xs text-violet-300 hover:bg-violet-500/10"
+                >
+                  Symmetry: axis / reference / target
+                </button>
               );
             })()}
 

@@ -103,6 +103,21 @@ describe('constraint solver', () => {
     expect(result.status).toBe('fully-constrained');
   });
 
+  it('detects duplicate semantic constraints as over-constrained', () => {
+    const result = solveSketchConstraints(
+      [line('a', 0, 0, 10, 0)],
+      [
+        { id: 'h-1', kind: 'horizontal', entityIds: ['a'] },
+        { id: 'h-2', kind: 'horizontal', entityIds: ['a'] },
+      ],
+    );
+
+    expect(result.status).toBe('over-constrained');
+    expect(
+      result.constraints.every((constraint) => constraint.overConstrained),
+    ).toBe(true);
+  });
+
   it('stops at max iterations when convergence cannot be reached', () => {
     const result = solveSketchConstraints(
       [line('a', 0, 0, 10, 2)],

@@ -46,7 +46,13 @@ export const ConstraintGlyphRenderer = ({
               key={constraint.id}
               x={anchor.x + 8}
               y={anchor.y + 8}
-              fill={constraint.conflict ? '#ef4444' : '#8b5cf6'}
+              fill={
+                constraint.conflict
+                  ? '#ef4444'
+                  : constraint.overConstrained
+                    ? '#f59e0b'
+                    : '#8b5cf6'
+              }
               fontSize="11"
               fontWeight="700"
               vectorEffect="non-scaling-stroke"
@@ -68,7 +74,13 @@ export const ConstraintGlyphRenderer = ({
               cx={anchor.x}
               cy={anchor.y}
               r={3}
-              fill={constraint.conflict ? '#ef4444' : '#8b5cf6'}
+              fill={
+                constraint.conflict
+                  ? '#ef4444'
+                  : constraint.overConstrained
+                    ? '#f59e0b'
+                    : '#8b5cf6'
+              }
               vectorEffect="non-scaling-stroke"
             />,
           ];
@@ -80,7 +92,9 @@ export const ConstraintGlyphRenderer = ({
           constraint.kind === 'equal' ||
           constraint.kind === 'fix' ||
           constraint.kind === 'midpoint' ||
-          constraint.kind === 'concentric'
+          constraint.kind === 'concentric' ||
+          constraint.kind === 'tangent' ||
+          constraint.kind === 'symmetry'
         ) {
           const entity = byId.get(constraint.entityIds[0]);
           if (!entity) return [];
@@ -98,13 +112,21 @@ export const ConstraintGlyphRenderer = ({
                 : constraint.kind === 'equal' ? '='
                   : constraint.kind === 'fix' ? 'F'
                     : constraint.kind === 'midpoint' ? 'M'
-                      : 'C';
+                      : constraint.kind === 'concentric' ? 'C'
+                        : constraint.kind === 'tangent' ? 'T'
+                          : 'S';
           return [
             <text
               key={constraint.id}
               x={anchor.x + 8}
               y={anchor.y - 8}
-              fill={constraint.conflict ? '#ef4444' : '#8b5cf6'}
+              fill={
+                constraint.conflict
+                  ? '#ef4444'
+                  : constraint.overConstrained
+                    ? '#f59e0b'
+                    : '#8b5cf6'
+              }
               fontSize="11"
               fontWeight="700"
               vectorEffect="non-scaling-stroke"

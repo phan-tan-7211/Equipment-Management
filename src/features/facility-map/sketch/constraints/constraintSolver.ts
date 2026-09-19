@@ -16,10 +16,15 @@ import {
   applyParallelConstraint,
   applyPerpendicularConstraint,
 } from './advancedConstraints';
+import {
+  applySymmetryConstraint,
+  applyTangentConstraint,
+} from './parametricConstraints';
 
 export type ConstraintSolveStatus =
   | 'under-constrained'
   | 'fully-constrained'
+  | 'over-constrained'
   | 'conflict';
 
 export type ConstraintSolveResult = {
@@ -131,6 +136,35 @@ const detectConflicts = (
   return conflicts;
 };
 
+const detectOverConstraints = (
+  constraints: SketchConstraint[],
+): Set<string> => {
+  const byKey = new Map<string, string[]>();
+
+  constraints
+    .filter((constraint) => constraint.enabled !== false)
+    .forEach((constraint) => {
+      const refs = [...(constraint.pointRefs ?? [])]
+        .map((ref) => `${ref.entityId}:${ref.point}`)
+        .sort()
+        .join(',');
+      const key = [
+        constraint.kind,
+        [...constraint.entityIds].sort().join(','),
+        refs,
+      ].join('|');
+      const ids = byKey.get(key) ?? [];
+      ids.push(constraint.id);
+      byKey.set(key, ids);
+    });
+
+  const duplicateIds = new Set<string>();
+  byKey.forEach((ids) => {
+    if (ids.length > 1) ids.forEach((id) => duplicateIds.add(id));
+  });
+  return duplicateIds;
+};
+
 const applyConstraint = (
   entities: SketchEntity[],
   constraint: SketchConstraint,
@@ -155,7 +189,17 @@ const applyConstraint = (
                   ? applyMidpointConstraint(entities, firstId, secondId, constraint.id)
                   : constraint.kind === 'concentric' && secondId
                     ? applyConcentricConstraint(entities, firstId, secondId, constraint.id)
-                    : null;
+                    : constraint.kind === 'tangent' && secondId
+                      ? applyTangentConstraint(entities, firstId, secondId, constraint.id)
+                      : constraint.kind === 'symmetry' && secondId && constraint.entityIds[2]
+                        ? applySymmetryConstraint(
+                            entities,
+                            firstId,
+                            secondId,
+                            constraint.entityIds[2],
+                            constraint.id,
+                          )
+                        : null;
 
   return result?.entities ?? entities;
 };
@@ -175,9 +219,11 @@ export const solveSketchConstraints = (
     constraints,
     tolerance,
   );
+  const overConstraintIds = detectOverConstraints(constraints);
   const markedConstraints = constraints.map((constraint) => ({
     ...constraint,
     conflict: conflictIds.has(constraint.id),
+    overConstrained: overConstraintIds.has(constraint.id),
   }));
 
   if (conflictIds.size) {
@@ -232,8 +278,10 @@ export const solveSketchConstraints = (
     constraints: markedConstraints,
     iterations,
     converged,
-    status: fullyConstrained
-      ? 'fully-constrained'
-      : 'under-constrained',
+    status: overConstraintIds.size
+      ? 'over-constrained'
+      : fullyConstrained
+        ? 'fully-constrained'
+        : 'under-constrained',
   };
 };

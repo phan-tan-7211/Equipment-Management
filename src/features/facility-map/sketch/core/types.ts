@@ -95,7 +95,9 @@ export type SketchConstraintKind =
   | 'equal'
   | 'fix'
   | 'midpoint'
-  | 'concentric';
+  | 'concentric'
+  | 'tangent'
+  | 'symmetry';
 
 export type SketchConstraintPointRef = {
   entityId: SketchId;
@@ -109,6 +111,7 @@ export type SketchConstraint = {
   pointRefs?: SketchConstraintPointRef[];
   enabled?: boolean;
   conflict?: boolean;
+  overConstrained?: boolean;
 };
 
 export type SketchParameterDimension = 'scalar' | 'length';
