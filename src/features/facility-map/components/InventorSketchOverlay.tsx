@@ -64,6 +64,9 @@ import {
   findGridSnap,
 } from '@/features/facility-map/sketch/snapping/gridSnap';
 import {
+  selectSnapCandidate,
+} from '@/features/facility-map/sketch/snapping/snapPriority';
+import {
   applyHorizontalInference,
   isHorizontalInferenceCandidate,
 } from '@/features/facility-map/sketch/snapping/horizontalInference';
@@ -298,24 +301,50 @@ export default function InventorSketchOverlay({
       threshold,
     );
     const grid = findGridSnap(point, threshold);
-    const candidates = [
-      endpoint,
-      midpoint,
-      circleCenter,
-      arcCenter,
-      lineIntersection,
-      polylineIntersection,
-      nearest,
-      grid,
-    ].filter(
-      (candidate): candidate is NonNullable<typeof candidate> =>
-        candidate !== null,
-    );
+    const best = selectSnapCandidate([
+      endpoint && {
+        kind: 'endpoint',
+        point: endpoint.point,
+        distance: endpoint.distance,
+      },
+      lineIntersection && {
+        kind: 'intersection',
+        point: lineIntersection.point,
+        distance: lineIntersection.distance,
+      },
+      polylineIntersection && {
+        kind: 'intersection',
+        point: polylineIntersection.point,
+        distance: polylineIntersection.distance,
+      },
+      midpoint && {
+        kind: 'midpoint',
+        point: midpoint.point,
+        distance: midpoint.distance,
+      },
+      circleCenter && {
+        kind: 'center',
+        point: circleCenter.point,
+        distance: circleCenter.distance,
+      },
+      arcCenter && {
+        kind: 'center',
+        point: arcCenter.point,
+        distance: arcCenter.distance,
+      },
+      nearest && {
+        kind: 'nearest',
+        point: nearest.point,
+        distance: nearest.distance,
+      },
+      grid && {
+        kind: 'grid',
+        point: grid.point,
+        distance: grid.distance,
+      },
+    ]);
 
-    if (!candidates.length) return point;
-    return candidates.reduce((best, candidate) =>
-      candidate.distance < best.distance ? candidate : best,
-    ).point;
+    return best?.point ?? point;
   }, [canvasWidth, store.entities]);
 
   const inferLineEnd = useCallback((start: Point, raw: Point) => {
