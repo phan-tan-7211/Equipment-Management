@@ -68,6 +68,10 @@ import {
   isHorizontalInferenceCandidate,
 } from '@/features/facility-map/sketch/snapping/horizontalInference';
 import {
+  applyVerticalInference,
+  isVerticalInferenceCandidate,
+} from '@/features/facility-map/sketch/snapping/verticalInference';
+import {
   angleDeg,
   arcPoint,
   clampPositive,
@@ -319,11 +323,9 @@ export default function InventorSketchOverlay({
     if (isHorizontalInferenceCandidate(start, snapped)) {
       return applyHorizontalInference(start, snapped);
     }
-
-    const dx = snapped.x - start.x;
-    const dy = snapped.y - start.y;
-    const angle = Math.abs((Math.atan2(dy, dx) * 180) / Math.PI);
-    if (Math.abs(90 - angle) < 4) return { x: start.x, y: snapped.y };
+    if (isVerticalInferenceCandidate(start, snapped)) {
+      return applyVerticalInference(start, snapped);
+    }
     return snapped;
   }, [endpointSnap]);
 
