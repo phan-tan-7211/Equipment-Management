@@ -49,6 +49,11 @@ import {
   segmentIntersection,
   translateSketchEntity,
 } from '@/features/facility-map/sketch/core/geometry';
+import {
+  createLineEntity,
+  getLineDynamicValues,
+  resolveLinePreviewEnd,
+} from '@/features/facility-map/sketch/commands/lineCommand';
 
 type ToolPresetMap = Record<'line' | 'rect' | 'circle', SketchStyle>;
 
@@ -269,8 +274,9 @@ export default function InventorSketchOverlay({
   const updateDynamicFromPointer = (next: Point) => {
     if (!draft) return;
     if (draft.type === 'line') {
-      if (!dynamicLocks.a) setDynamicA(modelUnitsToDisplay(distance(draft.start, next), store).toFixed(unitPrecision(store.displayUnit)));
-      if (!dynamicLocks.b) setDynamicB(angleDeg(draft.start, next).toFixed(1));
+      const values = getLineDynamicValues(draft.start, next, store);
+      if (!dynamicLocks.a) setDynamicA(values.length);
+      if (!dynamicLocks.b) setDynamicB(values.angle);
     } else if (draft.type === 'rect') {
       if (!dynamicLocks.a) setDynamicA(modelUnitsToDisplay(Math.abs(next.x - draft.start.x), store).toFixed(unitPrecision(store.displayUnit)));
       if (!dynamicLocks.b) setDynamicB(modelUnitsToDisplay(Math.abs(next.y - draft.start.y), store).toFixed(unitPrecision(store.displayUnit)));
@@ -284,21 +290,17 @@ export default function InventorSketchOverlay({
     const style = draft.type === 'rect' ? presets.rect : draft.type === 'circle' ? presets.circle : presets.line;
 
     if (draft.type === 'line') {
-      const fallbackLength = distance(draft.start, currentPoint);
-      const fallbackAngle = angleDeg(draft.start, currentPoint);
-      const lengthUnits = clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackLength);
-      const angle = Number.isFinite(Number(dynamicB)) ? Number(dynamicB) : fallbackAngle;
-      const radians = degToRad(angle);
-      const end = {
-        x: draft.start.x + Math.cos(radians) * lengthUnits,
-        y: draft.start.y + Math.sin(radians) * lengthUnits,
-      };
+      const line = createLineEntity({
+        start: draft.start,
+        current: currentPoint,
+        lengthInput: dynamicA,
+        angleInput: dynamicB,
+        document: store,
+        style,
+      });
       setStore((current) => ({
         ...current,
-        entities: [
-          ...current.entities,
-          { id: createSketchId('sketch-line'), type: 'line', x1: draft.start.x, y1: draft.start.y, x2: end.x, y2: end.y, ...style },
-        ],
+        entities: [...current.entities, line],
       }));
     } else if (draft.type === 'rect') {
       const fallbackW = Math.abs(currentPoint.x - draft.start.x);
@@ -606,17 +608,17 @@ export default function InventorSketchOverlay({
   const draftPreview = useMemo(() => {
     if (!draft) return null;
     if (draft.type === 'line') {
-      const fallbackLength = distance(draft.start, draft.current);
-      const fallbackAngle = angleDeg(draft.start, draft.current);
-      const lengthUnits = dynamicLocks.a ? clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackLength) : fallbackLength;
-      const angle = dynamicLocks.b && Number.isFinite(Number(dynamicB)) ? Number(dynamicB) : fallbackAngle;
-      const radians = degToRad(angle);
       return {
         ...draft,
-        current: {
-          x: draft.start.x + Math.cos(radians) * lengthUnits,
-          y: draft.start.y + Math.sin(radians) * lengthUnits,
-        },
+        current: resolveLinePreviewEnd({
+          start: draft.start,
+          current: draft.current,
+          lengthInput: dynamicA,
+          angleInput: dynamicB,
+          lockLength: dynamicLocks.a,
+          lockAngle: dynamicLocks.b,
+          document: store,
+        }),
       };
     }
     if (draft.type === 'rect') {
