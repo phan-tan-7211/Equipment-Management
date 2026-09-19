@@ -4,6 +4,8 @@ import {
   createLineEntity,
   getLineDynamicValues,
   resolveLinePreviewEnd,
+  startLineDraft,
+  updateLineDraft,
 } from '@/features/facility-map/sketch/commands/lineCommand';
 
 const document = {
@@ -12,6 +14,31 @@ const document = {
 };
 
 describe('line command', () => {
+  it('starts a line draft at the first click without sharing point references', () => {
+    const point = { x: 12, y: 34 };
+    const draft = startLineDraft(point);
+
+    expect(draft).toEqual({
+      type: 'line',
+      start: { x: 12, y: 34 },
+      current: { x: 12, y: 34 },
+    });
+    expect(draft.start).not.toBe(point);
+    expect(draft.current).not.toBe(point);
+  });
+
+  it('updates only the preview pointer while preserving the line start', () => {
+    const draft = startLineDraft({ x: 1, y: 2 });
+    const updated = updateLineDraft(draft, { x: 8, y: 9 });
+
+    expect(updated).toEqual({
+      type: 'line',
+      start: { x: 1, y: 2 },
+      current: { x: 8, y: 9 },
+    });
+    expect(draft.current).toEqual({ x: 1, y: 2 });
+  });
+
   it('reports dynamic length and angle from the current pointer', () => {
     expect(
       getLineDynamicValues(

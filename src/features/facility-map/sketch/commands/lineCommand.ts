@@ -19,6 +19,26 @@ import type {
 
 type LineDocumentUnits = Pick<SketchDocument, 'mmPerUnit' | 'displayUnit'>;
 
+export type LineDraft = {
+  type: 'line';
+  start: SketchPoint;
+  current: SketchPoint;
+};
+
+export const startLineDraft = (point: SketchPoint): LineDraft => ({
+  type: 'line',
+  start: { ...point },
+  current: { ...point },
+});
+
+export const updateLineDraft = (
+  draft: LineDraft,
+  current: SketchPoint,
+): LineDraft => ({
+  ...draft,
+  current: { ...current },
+});
+
 export type LineCommandInput = {
   start: SketchPoint;
   current: SketchPoint;

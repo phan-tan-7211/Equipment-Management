@@ -53,12 +53,15 @@ import {
   createLineEntity,
   getLineDynamicValues,
   resolveLinePreviewEnd,
+  startLineDraft,
+  updateLineDraft,
+  type LineDraft,
 } from '@/features/facility-map/sketch/commands/lineCommand';
 
 type ToolPresetMap = Record<'line' | 'rect' | 'circle', SketchStyle>;
 
 type Draft =
-  | { type: 'line'; start: Point; current: Point }
+  | LineDraft
   | { type: 'rect'; start: Point; current: Point }
   | { type: 'circle'; start: Point; current: Point }
   | null;
@@ -533,7 +536,19 @@ export default function InventorSketchOverlay({
     const point = endpointSnap(raw);
     setPointer(point);
 
-    if (tool === 'line' || tool === 'rect' || tool === 'circle') {
+    if (tool === 'line') {
+      event.stopPropagation();
+      if (!draft) {
+        setDraft(startLineDraft(point));
+        setCommandState((current) => beginSketchInteraction(current, 'creating'));
+        resetDynamic();
+        return;
+      }
+      commitDraft(point);
+      return;
+    }
+
+    if (tool === 'rect' || tool === 'circle') {
       event.stopPropagation();
       if (!draft) {
         setDraft({ type: tool, start: point, current: point });
@@ -570,7 +585,11 @@ export default function InventorSketchOverlay({
     }
 
     if (draft) {
-      setDraft({ ...draft, current: next } as Draft);
+      setDraft(
+        draft.type === 'line'
+          ? updateLineDraft(draft, next)
+          : ({ ...draft, current: next } as Draft),
+      );
       updateDynamicFromPointer(next);
     }
   };
