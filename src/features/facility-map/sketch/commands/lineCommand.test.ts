@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   commitLineDraft,
   createLineEntity,
+  getLineDynamicLength,
   getLineDynamicValues,
   resolveLinePreviewEnd,
   startLineDraft,
@@ -38,6 +39,24 @@ describe('line command', () => {
       current: { x: 8, y: 9 },
     });
     expect(draft.current).toEqual({ x: 1, y: 2 });
+  });
+
+  it('formats dynamic line length in the active display unit', () => {
+    expect(
+      getLineDynamicLength(
+        { x: 0, y: 0 },
+        { x: 3, y: 4 },
+        document,
+      ),
+    ).toBe('50');
+
+    expect(
+      getLineDynamicLength(
+        { x: 0, y: 0 },
+        { x: 300, y: 400 },
+        { displayUnit: 'm', mmPerUnit: 10 },
+      ),
+    ).toBe('5.000');
   });
 
   it('reports dynamic length and angle from the current pointer', () => {
