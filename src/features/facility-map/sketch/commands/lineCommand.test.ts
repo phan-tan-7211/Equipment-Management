@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  commitLineDraft,
   createLineEntity,
   getLineDynamicValues,
   resolveLinePreviewEnd,
@@ -79,6 +80,37 @@ describe('line command', () => {
 
     expect(end.x).toBeCloseTo(10);
     expect(end.y).toBeCloseTo(20);
+  });
+
+  it('commits the active line draft from the second click', () => {
+    const draft = updateLineDraft(
+      startLineDraft({ x: 2, y: 3 }),
+      { x: 5, y: 7 },
+    );
+
+    expect(
+      commitLineDraft({
+        id: 'line-commit',
+        draft,
+        current: { x: 5, y: 7 },
+        lengthInput: '50',
+        angleInput: '0',
+        document,
+        style: {
+          color: '#123456',
+          lineWidth: 2,
+        },
+      }),
+    ).toEqual({
+      id: 'line-commit',
+      type: 'line',
+      x1: 2,
+      y1: 3,
+      x2: 7,
+      y2: 3,
+      color: '#123456',
+      lineWidth: 2,
+    });
   });
 
   it('creates the committed line using the same dynamic input semantics', () => {

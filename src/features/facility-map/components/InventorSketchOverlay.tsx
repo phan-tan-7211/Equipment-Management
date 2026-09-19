@@ -50,7 +50,7 @@ import {
   translateSketchEntity,
 } from '@/features/facility-map/sketch/core/geometry';
 import {
-  createLineEntity,
+  commitLineDraft,
   getLineDynamicValues,
   resolveLinePreviewEnd,
   startLineDraft,
@@ -288,24 +288,36 @@ export default function InventorSketchOverlay({
     }
   };
 
-  const commitDraft = (currentPoint: Point) => {
-    if (!draft) return;
-    const style = draft.type === 'rect' ? presets.rect : draft.type === 'circle' ? presets.circle : presets.line;
+  const finishCreateInteraction = () => {
+    setDraft(null);
+    setCommandState((current) => endSketchInteraction(current));
+    resetDynamic();
+  };
 
-    if (draft.type === 'line') {
-      const line = createLineEntity({
-        start: draft.start,
-        current: currentPoint,
-        lengthInput: dynamicA,
-        angleInput: dynamicB,
-        document: store,
-        style,
-      });
-      setStore((current) => ({
-        ...current,
-        entities: [...current.entities, line],
-      }));
-    } else if (draft.type === 'rect') {
+  const commitLine = (currentPoint: Point) => {
+    if (!draft || draft.type !== 'line') return;
+
+    const line = commitLineDraft({
+      draft,
+      current: currentPoint,
+      lengthInput: dynamicA,
+      angleInput: dynamicB,
+      document: store,
+      style: presets.line,
+    });
+
+    setStore((current) => ({
+      ...current,
+      entities: [...current.entities, line],
+    }));
+    finishCreateInteraction();
+  };
+
+  const commitDraft = (currentPoint: Point) => {
+    if (!draft || draft.type === 'line') return;
+    const style = draft.type === 'rect' ? presets.rect : presets.circle;
+
+    if (draft.type === 'rect') {
       const fallbackW = Math.abs(currentPoint.x - draft.start.x);
       const fallbackH = Math.abs(currentPoint.y - draft.start.y);
       const width = clampPositive(displayToModelUnits(Number(dynamicA), store), fallbackW);
@@ -339,9 +351,7 @@ export default function InventorSketchOverlay({
       }));
     }
 
-    setDraft(null);
-    setCommandState((current) => endSketchInteraction(current));
-    resetDynamic();
+    finishCreateInteraction();
   };
 
   const editLineLength = (entity: LineEntity) => {
@@ -544,7 +554,7 @@ export default function InventorSketchOverlay({
         resetDynamic();
         return;
       }
-      commitDraft(point);
+      commitLine(point);
       return;
     }
 

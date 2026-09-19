@@ -95,6 +95,23 @@ export const resolveLinePreviewEnd = (
 ): SketchPoint =>
   resolveLineEnd(input, input.lockLength, input.lockAngle);
 
+export type CommitLineDraftInput = Omit<CreateLineEntityInput, 'start'> & {
+  draft: LineDraft;
+};
+
+export const commitLineDraft = (
+  input: CommitLineDraftInput,
+): LineEntity =>
+  createLineEntity({
+    current: input.current,
+    lengthInput: input.lengthInput,
+    angleInput: input.angleInput,
+    document: input.document,
+    style: input.style,
+    id: input.id,
+    start: input.draft.start,
+  });
+
 export const createLineEntity = (
   input: CreateLineEntityInput,
 ): LineEntity => {
