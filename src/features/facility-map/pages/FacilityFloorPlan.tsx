@@ -148,6 +148,25 @@ const statusColor = (status?: string | null) => {
   }
 };
 
+const annotationToolTranslationKey = (type: Annotation['type']) => {
+  switch (type) {
+    case 'line':
+      return 'facilityMap.toolLine';
+    case 'arrow':
+      return 'facilityMap.toolArrow';
+    case 'rect':
+      return 'facilityMap.toolRectangle';
+    case 'circle':
+      return 'facilityMap.toolCircle';
+    case 'text':
+      return 'facilityMap.toolText';
+    case 'ruler':
+      return 'facilityMap.toolRuler';
+    default:
+      return 'facilityMap.annotation';
+  }
+};
+
 const statusTranslationKey = (status?: string | null) => {
   switch ((status ?? '').toLowerCase()) {
     case 'active':
@@ -1413,7 +1432,7 @@ export default function FacilityFloorPlan() {
           </div>
 
           {editMode && (selectedZone || selectedOverlay || selectedAnnotation) && (
-            <div className="absolute right-3 top-3 z-30 w-72 max-h-[calc(100%-6rem)] overflow-auto rounded-xl border border-white/10 bg-slate-950/92 p-4 text-white shadow-2xl backdrop-blur">
+            <div className="absolute right-3 top-3 z-30 w-72 max-h-[calc(100%_-_6rem)] overflow-auto rounded-xl border border-white/10 bg-slate-950/92 p-4 text-white shadow-2xl backdrop-blur">
               <div className="mb-3 text-sm font-semibold">{t('facilityMap.properties')}</div>
 
               {selectedZone && (
@@ -1484,7 +1503,7 @@ export default function FacilityFloorPlan() {
 
               {selectedAnnotation && (
                 <div className="space-y-3">
-                  <div className="text-xs text-slate-300">{t('facilityMap.annotation')} · {t(`facilityMap.tool${selectedAnnotation.type.charAt(0).toUpperCase() + selectedAnnotation.type.slice(1)}`)}</div>
+                  <div className="text-xs text-slate-300">{t('facilityMap.annotation')} · {t(annotationToolTranslationKey(selectedAnnotation.type))}</div>
                   {selectedAnnotation.type === 'text' && (
                     <input
                       value={selectedAnnotation.text ?? ''}
