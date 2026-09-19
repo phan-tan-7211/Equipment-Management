@@ -103,9 +103,22 @@ type Annotation = {
   y2: number;
   text?: string;
   color?: string;
+  lineWidth?: number;
+  textSize?: number;
 };
 
 type ZoneResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
+type SelectionBox = {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  crossing: boolean;
+};
+type AnnotationGrip = {
+  id: string;
+  handle: 'start' | 'end' | 'nw' | 'ne' | 'se' | 'sw';
+} | null;
 
 type FloorPlanState = {
   name: string;
@@ -414,11 +427,17 @@ export default function FacilityFloorPlan() {
   const [query, setQuery] = useState('');
   const [selectedEquipmentId, setSelectedEquipmentId] = useState('');
   const [selectedMarkerId, setSelectedMarkerId] = useState('');
-  const [activeLayer, setActiveLayer] = useState<'all' | 'assets' | LayerId>('all');
   const [placeLayer, setPlaceLayer] = useState<LayerId | null>(null);
   const [zoneTool, setZoneTool] = useState<ZoneType | null>(null);
   const [drawTool, setDrawTool] = useState<DrawTool>('select');
   const [annotationText, setAnnotationText] = useState('NOTE');
+  const [annotationColor, setAnnotationColor] = useState('#f43f5e');
+  const [annotationLineWidth, setAnnotationLineWidth] = useState(0.28);
+  const [annotationTextSize, setAnnotationTextSize] = useState(2.5);
+  const [selectedObjectIds, setSelectedObjectIds] = useState<Set<string>>(new Set());
+  const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
+  const [draggingAnnotationId, setDraggingAnnotationId] = useState('');
+  const [annotationGrip, setAnnotationGrip] = useState<AnnotationGrip>(null);
   const [editMode, setEditMode] = useState(true);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [planManagerOpen, setPlanManagerOpen] = useState(false);
@@ -454,6 +473,8 @@ export default function FacilityFloorPlan() {
   const pointerStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const dragStartPlanRef = useRef<FloorPlanState | null>(null);
   const annotationStartRef = useRef<{ x: number; y: number } | null>(null);
+  const annotationDragRef = useRef<{ startX: number; startY: number; snapshot: Annotation } | null>(null);
+  const selectionShiftRef = useRef(false);
   const zoneInteractionRef = useRef<{ startX: number; startY: number; zone: Zone } | null>(null);
   const touchRef = useRef<{
     distance: number;
@@ -627,6 +648,86 @@ export default function FacilityFloorPlan() {
 
   const layerById = useMemo(() => new Map(LAYERS.map((layer) => [layer.id, layer])), []);
   const zoneById = useMemo(() => new Map(ZONES.map((zone) => [zone.id, zone])), []);
+
+  const setSingleSelection = useCallback((id: string, additive = false) => {
+    setSelectedMarkerId(id);
+    setSelectedObjectIds((current) => {
+      if (!additive) return new Set([id]);
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const setLayerVisible = useCallback((layerId: 'assets' | LayerId, visible: boolean) => {
+    setHiddenLayers((current) => {
+      const next = new Set(current);
+      if (visible) next.delete(layerId);
+      else next.add(layerId);
+      return next;
+    });
+    if (!visible && placeLayer === layerId) setPlaceLayer(null);
+  }, [placeLayer]);
+
+  const selectAllLayers = useCallback(() => {
+    setHiddenLayers(new Set());
+  }, []);
+
+  const deleteObjectsByIds = useCallback((ids: Set<string>) => {
+    if (!ids.size) return;
+    commitPlan((current) => ({
+      ...current,
+      pins: current.pins.filter((pin) => !ids.has(`asset:${pin.equipmentId}`)),
+      overlayPins: current.overlayPins.filter((pin) => !ids.has(`overlay:${pin.id}`)),
+      zones: current.zones.filter((zone) => !ids.has(`zone:${zone.id}`)),
+      annotations: current.annotations.filter((annotation) => !ids.has(`annotation:${annotation.id}`)),
+    }));
+    setSelectedMarkerId('');
+    setSelectedObjectIds(new Set());
+  }, [commitPlan]);
+
+  const annotationBounds = useCallback((annotation: Annotation) => {
+    if (annotation.type === 'text') {
+      const width = Math.max(3, (annotation.text?.length ?? 4) * (annotation.textSize ?? 2.5) * 0.65);
+      const height = Math.max(2, (annotation.textSize ?? 2.5) * 1.3);
+      return { x1: annotation.x1, y1: annotation.y1 - height, x2: annotation.x1 + width, y2: annotation.y1 };
+    }
+    return {
+      x1: Math.min(annotation.x1, annotation.x2),
+      y1: Math.min(annotation.y1, annotation.y2),
+      x2: Math.max(annotation.x1, annotation.x2),
+      y2: Math.max(annotation.y1, annotation.y2),
+    };
+  }, []);
+
+  const collectObjectsInSelection = useCallback((box: SelectionBox) => {
+    const left = Math.min(box.startX, box.endX);
+    const right = Math.max(box.startX, box.endX);
+    const top = Math.min(box.startY, box.endY);
+    const bottom = Math.max(box.startY, box.endY);
+    const hit = (bounds: { x1: number; y1: number; x2: number; y2: number }) =>
+      box.crossing
+        ? bounds.x2 >= left && bounds.x1 <= right && bounds.y2 >= top && bounds.y1 <= bottom
+        : bounds.x1 >= left && bounds.x2 <= right && bounds.y1 >= top && bounds.y2 <= bottom;
+
+    const ids = new Set<string>();
+    if (!hiddenLayers.has('assets')) {
+      plan.pins.forEach((pin) => {
+        if (hit({ x1: pin.x - 1.2, y1: pin.y - 1.2, x2: pin.x + 1.2, y2: pin.y + 1.2 })) ids.add(`asset:${pin.equipmentId}`);
+      });
+    }
+    plan.overlayPins.forEach((pin) => {
+      if (!hiddenLayers.has(pin.layer) && hit({ x1: pin.x - 1.2, y1: pin.y - 1.2, x2: pin.x + 1.2, y2: pin.y + 1.2 })) ids.add(`overlay:${pin.id}`);
+    });
+    plan.zones.forEach((zone) => {
+      if (hit({ x1: zone.x, y1: zone.y, x2: zone.x + zone.w, y2: zone.y + zone.h })) ids.add(`zone:${zone.id}`);
+    });
+    plan.annotations.forEach((annotation) => {
+      if (hit(annotationBounds(annotation))) ids.add(`annotation:${annotation.id}`);
+    });
+    return ids;
+  }, [annotationBounds, hiddenLayers, plan.annotations, plan.overlayPins, plan.pins, plan.zones]);
 
   const snapValue = useCallback((value: number) => {
     if (!snapToGrid) return value;
@@ -1283,17 +1384,10 @@ export default function FacilityFloorPlan() {
     return () => window.removeEventListener('keydown', onKeyDown);
   });
 
-  const visibleAssetPins =
-    !hiddenLayers.has('assets') && (activeLayer === 'all' || activeLayer === 'assets');
+  const visibleAssetPins = !hiddenLayers.has('assets');
   const visibleOverlayPins = emergencyMode
     ? plan.overlayPins.filter((pin) => pin.layer === 'fire' || pin.layer === 'emergency')
-    : activeLayer === 'all'
-      ? plan.overlayPins.filter((pin) => !hiddenLayers.has(pin.layer))
-      : activeLayer === 'assets'
-        ? []
-        : hiddenLayers.has(activeLayer)
-          ? []
-          : plan.overlayPins.filter((pin) => pin.layer === activeLayer);
+    : plan.overlayPins.filter((pin) => !hiddenLayers.has(pin.layer));
 
   const placementHint = selectedEquipmentId
     ? t('facilityMap.clickPlaceEquipment')
@@ -1482,8 +1576,8 @@ export default function FacilityFloorPlan() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveLayer('all')}
-            className={`rounded-full border px-3 py-1.5 text-xs ${activeLayer === 'all' ? 'bg-foreground text-background' : 'bg-background'}`}
+            onClick={selectAllLayers}
+            className={`rounded-full border px-3 py-1.5 text-xs ${hiddenLayers.size === 0 ? 'bg-foreground text-background' : 'bg-background'}`}
           >
             {t('facilityMap.all')}
           </button>
@@ -1491,8 +1585,8 @@ export default function FacilityFloorPlan() {
             <button
               key={layer.id}
               type="button"
-              onClick={() => setActiveLayer(layer.id)}
-              className={`rounded-full border px-3 py-1.5 text-xs ${activeLayer === layer.id ? 'ring-2 ring-ring' : ''}`}
+              onClick={() => setLayerVisible(layer.id, hiddenLayers.has(layer.id))}
+              className={`rounded-full border px-3 py-1.5 text-xs ${!hiddenLayers.has(layer.id) ? 'ring-2 ring-ring' : 'opacity-45'}`}
               style={{ borderColor: layer.color, color: layer.color }}
             >
               {layer.emoji} {t(layer.labelKey)}
@@ -1585,9 +1679,11 @@ export default function FacilityFloorPlan() {
                     key={layer.id}
                     type="button"
                     onClick={() => {
+                      setLayerVisible(layer.id as LayerId, true);
                       setPlaceLayer(layer.id as LayerId);
                       setSelectedEquipmentId('');
                       setZoneTool(null);
+                      setDrawTool('select');
                     }}
                     className={`rounded-md border px-2 py-2 text-xs ${
                       placeLayer === layer.id ? 'ring-2 ring-ring' : ''
@@ -1612,14 +1708,7 @@ export default function FacilityFloorPlan() {
                     <input
                       type="checkbox"
                       checked={!hiddenLayers.has(layer.id)}
-                      onChange={() => {
-                        setHiddenLayers((current) => {
-                          const next = new Set(current);
-                          if (next.has(layer.id)) next.delete(layer.id);
-                          else next.add(layer.id);
-                          return next;
-                        });
-                      }}
+                      onChange={() => setLayerVisible(layer.id, hiddenLayers.has(layer.id))}
                     />
                   </label>
                 ))}
