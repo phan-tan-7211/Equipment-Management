@@ -72,6 +72,9 @@ import {
   toggleSelection,
 } from '@/features/facility-map/sketch/selection/selectionState';
 import {
+  selectEntitiesInDrag,
+} from '@/features/facility-map/sketch/selection/windowSelection';
+import {
   applyHorizontalInference,
   isHorizontalInferenceCandidate,
 } from '@/features/facility-map/sketch/snapping/horizontalInference';
@@ -184,6 +187,7 @@ export default function InventorSketchOverlay({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const selectedId = selectedIds[0] ?? '';
   const [activeSnap, setActiveSnap] = useState<SnapCandidate | null>(null);
+  const [selectionBox, setSelectionBox] = useState<{ start: Point; current: Point } | null>(null);
   const [draft, setDraft] = useState<Draft>(null);
   const [pointer, setPointer] = useState<Point>({ x: 0, y: 0 });
   const [dynamicA, setDynamicA] = useState('');
@@ -196,6 +200,7 @@ export default function InventorSketchOverlay({
 
   useEffect(() => {
     setSelectedIds([]);
+    setSelectionBox(null);
     setDraft(null);
     setCommandState(createSketchCommandState());
   }, [storageKey]);
@@ -208,6 +213,7 @@ export default function InventorSketchOverlay({
     if (!enabled) {
       setDraft(null);
       setSelectedIds([]);
+      setSelectionBox(null);
       setDraggingId('');
       setCommandState(createSketchCommandState());
     }
@@ -221,6 +227,7 @@ export default function InventorSketchOverlay({
       if (event.key === 'Escape') {
         setDraft(null);
         setSelectedIds([]);
+        setSelectionBox(null);
         sketchHistory.cancelTransaction();
         setCommandState(cancelSketchCommand());
         setMessage('');
@@ -794,12 +801,22 @@ export default function InventorSketchOverlay({
 
     if (tool === 'select') {
       setSelectedIds([]);
+      setSelectionBox({ start: raw, current: raw });
+      setActiveSnap(null);
     }
   };
 
   const handleCanvasMouseMove = (event: React.MouseEvent<SVGSVGElement>) => {
     const raw = pointFromEvent(event);
     if (!raw) return;
+
+    if (selectionBox && tool === 'select' && !draggingId) {
+      setSelectionBox((current) => current ? { ...current, current: raw } : null);
+      setPointer(raw);
+      setActiveSnap(null);
+      return;
+    }
+
     const next = draft?.type === 'line' ? inferLineEnd(draft.start, raw) : endpointSnap(raw);
     setPointer(next);
 
@@ -867,6 +884,22 @@ export default function InventorSketchOverlay({
     setCommandState((current) => endSketchInteraction(current));
   };
 
+  const handleCanvasMouseUp = () => {
+    if (selectionBox && tool === 'select' && !draggingId) {
+      setSelectedIds(
+        selectEntitiesInDrag(
+          store.entities,
+          selectionBox.start,
+          selectionBox.current,
+        ),
+      );
+      setSelectionBox(null);
+      return;
+    }
+
+    handleEntityMouseUp();
+  };
+
   const draftPreview = useMemo(() => {
     if (!draft) return null;
     if (draft.type === 'line') {
@@ -926,9 +959,10 @@ export default function InventorSketchOverlay({
           finishActivePolyline();
         }}
         onMouseMove={handleCanvasMouseMove}
-        onMouseUp={handleEntityMouseUp}
+        onMouseUp={handleCanvasMouseUp}
         onMouseLeave={() => {
           setActiveSnap(null);
+          setSelectionBox(null);
           handleEntityMouseUp();
         }}
       >
@@ -1147,6 +1181,28 @@ export default function InventorSketchOverlay({
             vectorEffect="non-scaling-stroke"
           />
         )}
+
+        {enabled && selectionBox && (() => {
+          const x = Math.min(selectionBox.start.x, selectionBox.current.x);
+          const y = Math.min(selectionBox.start.y, selectionBox.current.y);
+          const width = Math.abs(selectionBox.current.x - selectionBox.start.x);
+          const height = Math.abs(selectionBox.current.y - selectionBox.start.y);
+          const crossing = selectionBox.current.x < selectionBox.start.x;
+          return (
+            <rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill={crossing ? 'rgba(34,197,94,0.10)' : 'rgba(14,165,233,0.10)'}
+              stroke={crossing ? '#22c55e' : '#0ea5e9'}
+              strokeWidth={1}
+              strokeDasharray={crossing ? '5 3' : undefined}
+              vectorEffect="non-scaling-stroke"
+              pointerEvents="none"
+            />
+          );
+        })()}
 
         {enabled && activeSnap && (
           <SnapIndicator candidate={activeSnap} />
