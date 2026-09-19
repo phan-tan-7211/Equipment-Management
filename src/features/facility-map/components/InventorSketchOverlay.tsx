@@ -39,6 +39,16 @@ import {
   clientPointToSketchPoint,
   cssPixelsToSketchUnits,
 } from '@/features/facility-map/sketch/core/coordinates';
+import {
+  angleDeg,
+  arcPoint,
+  clampPositive,
+  degToRad,
+  distance,
+  rectEdges,
+  segmentIntersection,
+  translateSketchEntity,
+} from '@/features/facility-map/sketch/core/geometry';
 
 type ToolPresetMap = Record<'line' | 'rect' | 'circle', SketchStyle>;
 
@@ -70,12 +80,6 @@ const DEFAULT_PRESETS: ToolPresetMap = {
   circle: { color: '#0891b2', lineWidth: 1.5 },
 };
 
-const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, b.y - a.y);
-const angleDeg = (a: Point, b: Point) => (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
-const degToRad = (deg: number) => (deg * Math.PI) / 180;
-const clampPositive = (value: number, fallback: number) =>
-  Number.isFinite(value) && value > 0 ? value : fallback;
-
 const readPresets = (): ToolPresetMap => {
   try {
     const raw = localStorage.getItem(PRESET_KEY);
@@ -89,14 +93,6 @@ const readPresets = (): ToolPresetMap => {
   } catch {
     return DEFAULT_PRESETS;
   }
-};
-
-const arcPoint = (entity: ArcEntity, angleDegValue: number): Point => {
-  const radians = degToRad(angleDegValue);
-  return {
-    x: entity.cx + Math.cos(radians) * entity.r,
-    y: entity.cy + Math.sin(radians) * entity.r,
-  };
 };
 
 const entitySnapPoints = (entity: SketchEntity): Point[] => {
@@ -121,63 +117,6 @@ const entitySnapPoints = (entity: SketchEntity): Point[] => {
         arcPoint(entity, entity.endAngleDeg),
       ];
   }
-};
-
-const rectEdges = (entity: RectEntity): Array<[Point, Point]> => {
-  const x2 = entity.x + entity.w;
-  const y2 = entity.y + entity.h;
-  return [
-    [{ x: entity.x, y: entity.y }, { x: x2, y: entity.y }],
-    [{ x: x2, y: entity.y }, { x: x2, y: y2 }],
-    [{ x: x2, y: y2 }, { x: entity.x, y: y2 }],
-    [{ x: entity.x, y: y2 }, { x: entity.x, y: entity.y }],
-  ];
-};
-
-const translateSketchEntity = (
-  entity: SketchEntity,
-  dx: number,
-  dy: number,
-): SketchEntity => {
-  switch (entity.type) {
-    case 'line':
-      return {
-        ...entity,
-        x1: entity.x1 + dx,
-        y1: entity.y1 + dy,
-        x2: entity.x2 + dx,
-        y2: entity.y2 + dy,
-      };
-    case 'polyline':
-      return {
-        ...entity,
-        points: entity.points.map((point) => ({ x: point.x + dx, y: point.y + dy })),
-      };
-    case 'rect':
-      return { ...entity, x: entity.x + dx, y: entity.y + dy };
-    case 'circle':
-      return { ...entity, cx: entity.cx + dx, cy: entity.cy + dy };
-    case 'arc':
-      return { ...entity, cx: entity.cx + dx, cy: entity.cy + dy };
-  }
-};
-
-const segmentIntersection = (
-  a: Point,
-  b: Point,
-  c: Point,
-  d: Point,
-  allowTargetInfinite = false,
-): { point: Point; t: number; u: number } | null => {
-  const r = { x: b.x - a.x, y: b.y - a.y };
-  const s = { x: d.x - c.x, y: d.y - c.y };
-  const cross = r.x * s.y - r.y * s.x;
-  if (Math.abs(cross) < 1e-9) return null;
-  const q = { x: c.x - a.x, y: c.y - a.y };
-  const t = (q.x * s.y - q.y * s.x) / cross;
-  const u = (q.x * r.y - q.y * r.x) / cross;
-  if ((!allowTargetInfinite && (t < 0 || t > 1)) || u < 0 || u > 1) return null;
-  return { point: { x: a.x + t * r.x, y: a.y + t * r.y }, t, u };
 };
 
 export default function InventorSketchOverlay({
