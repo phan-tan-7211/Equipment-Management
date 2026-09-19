@@ -130,6 +130,34 @@ const rectEdges = (entity: RectEntity): Array<[Point, Point]> => {
   ];
 };
 
+const translateSketchEntity = (
+  entity: SketchEntity,
+  dx: number,
+  dy: number,
+): SketchEntity => {
+  switch (entity.type) {
+    case 'line':
+      return {
+        ...entity,
+        x1: entity.x1 + dx,
+        y1: entity.y1 + dy,
+        x2: entity.x2 + dx,
+        y2: entity.y2 + dy,
+      };
+    case 'polyline':
+      return {
+        ...entity,
+        points: entity.points.map((point) => ({ x: point.x + dx, y: point.y + dy })),
+      };
+    case 'rect':
+      return { ...entity, x: entity.x + dx, y: entity.y + dy };
+    case 'circle':
+      return { ...entity, cx: entity.cx + dx, cy: entity.cy + dy };
+    case 'arc':
+      return { ...entity, cx: entity.cx + dx, cy: entity.cy + dy };
+  }
+};
+
 const segmentIntersection = (
   a: Point,
   b: Point,
@@ -363,6 +391,7 @@ export default function InventorSketchOverlay({
     }
 
     setDraft(null);
+    setCommandState((current) => endSketchInteraction(current));
     resetDynamic();
   };
 
@@ -546,6 +575,7 @@ export default function InventorSketchOverlay({
       event.stopPropagation();
       if (!draft) {
         setDraft({ type: tool, start: point, current: point });
+        setCommandState((current) => beginSketchInteraction(current, 'creating'));
         resetDynamic();
         return;
       }
@@ -568,14 +598,11 @@ export default function InventorSketchOverlay({
       const dx = next.x - dragRef.current.start.x;
       const dy = next.y - dragRef.current.start.y;
       const source = dragRef.current.entity;
-      setStore((current) => ({
+      sketchHistory.updateTransient((current) => ({
         ...current,
-        entities: current.entities.map((entity) => {
-          if (entity.id !== draggingId) return entity;
-          if (source.type === 'line') return { ...source, x1: source.x1 + dx, y1: source.y1 + dy, x2: source.x2 + dx, y2: source.y2 + dy };
-          if (source.type === 'rect') return { ...source, x: source.x + dx, y: source.y + dy };
-          return { ...source, cx: source.cx + dx, cy: source.cy + dy };
-        }),
+        entities: current.entities.map((entity) =>
+          entity.id === draggingId ? translateSketchEntity(source, dx, dy) : entity,
+        ),
       }));
       return;
     }
@@ -604,12 +631,16 @@ export default function InventorSketchOverlay({
 
     setSelectedId(entity.id);
     dragRef.current = { start: point, entity: structuredClone(entity) };
+    sketchHistory.beginTransaction();
+    setCommandState((current) => beginSketchInteraction(current, 'dragging'));
     setDraggingId(entity.id);
   };
 
   const handleEntityMouseUp = () => {
+    if (draggingId) sketchHistory.commitTransaction();
     setDraggingId('');
     dragRef.current = null;
+    setCommandState((current) => endSketchInteraction(current));
   };
 
   const draftPreview = useMemo(() => {
@@ -881,7 +912,13 @@ export default function InventorSketchOverlay({
               <button
                 key={id}
                 type="button"
-                onClick={() => { setTool(id); setDraft(null); resetDynamic(); setMessage(''); }}
+                onClick={() => {
+                  sketchHistory.cancelTransaction();
+                  setTool(id);
+                  setDraft(null);
+                  resetDynamic();
+                  setMessage('');
+                }}
                 className={`rounded-md p-2 ${tool === id ? 'bg-sky-500 text-white' : 'hover:bg-white/10'}`}
                 title={t(label)}
               >
