@@ -2158,8 +2158,6 @@ export default function FacilityFloorPlan() {
                 />
               )}
             </div>
-
-            </div>
             )}
 
             {!sketchMode && (
