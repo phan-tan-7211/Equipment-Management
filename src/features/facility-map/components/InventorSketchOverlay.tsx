@@ -74,7 +74,7 @@ import {
   upsertDrivingDimension,
 } from '@/features/facility-map/sketch/dimensions/drivingDimensions';
 import {
-  deleteDimensionById,
+  hideDimension,
   setDimensionReference,
 } from '@/features/facility-map/sketch/dimensions/dimensionState';
 import {
@@ -294,13 +294,18 @@ export default function InventorSketchOverlay({
         selectedDimensionId
       ) {
         event.preventDefault();
-        setStore((current) => ({
-          ...current,
-          dimensions: deleteDimensionById(
-            current.dimensions,
-            selectedDimensionId,
-          ),
-        }));
+        const selected = viewDimensions.find(
+          (dimension) => dimension.id === selectedDimensionId,
+        );
+        if (selected) {
+          setStore((current) => ({
+            ...current,
+            dimensions: hideDimension(
+              current.dimensions,
+              selected,
+            ),
+          }));
+        }
         setSelectedDimensionId('');
         return;
       }
@@ -1052,8 +1057,9 @@ export default function InventorSketchOverlay({
         ...dimension,
         reference: persisted?.reference ?? false,
         driving: persisted?.driving ?? false,
+        hidden: persisted?.hidden ?? false,
       };
-    });
+    }).filter((dimension) => !dimension.hidden);
   }, [store.dimensions, store.entities]);
 
   return (
@@ -1509,11 +1515,15 @@ export default function InventorSketchOverlay({
                   <button
                     type="button"
                     onClick={() => {
+                      const selected = viewDimensions.find(
+                        (dimension) => dimension.id === selectedDimensionId,
+                      );
+                      if (!selected) return;
                       setStore((current) => ({
                         ...current,
-                        dimensions: deleteDimensionById(
+                        dimensions: hideDimension(
                           current.dimensions,
-                          selectedDimensionId,
+                          selected,
                         ),
                       }));
                       setSelectedDimensionId('');

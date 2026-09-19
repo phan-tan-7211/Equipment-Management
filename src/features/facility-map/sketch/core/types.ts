@@ -82,6 +82,7 @@ export type SketchDimension = {
   reference?: boolean;
   value?: number;
   labelOffset?: SketchPoint;
+  hidden?: boolean;
 };
 
 export type SketchDocument = {

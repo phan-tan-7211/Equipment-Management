@@ -23,8 +23,25 @@ export const setDimensionReference = (
   );
 };
 
-export const deleteDimensionById = (
+export const hideDimension = (
   dimensions: SketchDimension[],
-  dimensionId: string,
-): SketchDimension[] =>
-  dimensions.filter((dimension) => dimension.id !== dimensionId);
+  dimension: ViewDimension,
+): SketchDimension[] => {
+  const existing = dimensions.find((item) => item.id === dimension.id);
+  const next: SketchDimension = {
+    ...(existing ?? {
+      id: dimension.id,
+      kind: dimension.kind,
+      entityId: dimension.entityId,
+      value: dimension.value,
+    }),
+    hidden: true,
+  };
+
+  const index = dimensions.findIndex((item) => item.id === dimension.id);
+  if (index < 0) return [...dimensions, next];
+
+  return dimensions.map((item, itemIndex) =>
+    itemIndex === index ? next : item,
+  );
+};

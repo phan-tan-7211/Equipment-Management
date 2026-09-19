@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  deleteDimensionById,
+  hideDimension,
   setDimensionReference,
 } from '@/features/facility-map/sketch/dimensions/dimensionState';
 import type { ViewDimension } from '@/features/facility-map/sketch/dimensions/viewDimensions';
@@ -39,21 +39,27 @@ describe('dimension state', () => {
     });
   });
 
-  it('deletes only the selected dimension record', () => {
-    const dimensions = [
-      ...setDimensionReference([], view, true),
-      {
-        id: 'auto:circle-1:radius',
-        kind: 'radius' as const,
-        entityId: 'circle-1',
-        driving: true,
-        reference: false,
-        value: 10,
-      },
-    ];
+  it('hides an auto dimension so it stays deleted after regeneration', () => {
+    const dimensions = setDimensionReference([], view, true);
+    const hidden = hideDimension(dimensions, view);
 
-    expect(deleteDimensionById(dimensions, view.id)).toEqual([
-      dimensions[1],
+    expect(hidden).toHaveLength(1);
+    expect(hidden[0]).toMatchObject({
+      id: view.id,
+      reference: true,
+      hidden: true,
+    });
+  });
+
+  it('creates a hidden tombstone when an auto dimension was never persisted', () => {
+    expect(hideDimension([], view)).toEqual([
+      {
+        id: view.id,
+        kind: 'length',
+        entityId: 'line-1',
+        value: 42,
+        hidden: true,
+      },
     ]);
   });
 });
