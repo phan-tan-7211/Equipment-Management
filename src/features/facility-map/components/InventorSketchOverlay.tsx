@@ -87,6 +87,38 @@ const readPresets = (): ToolPresetMap => {
   }
 };
 
+const arcPoint = (entity: ArcEntity, angleDegValue: number): Point => {
+  const radians = degToRad(angleDegValue);
+  return {
+    x: entity.cx + Math.cos(radians) * entity.r,
+    y: entity.cy + Math.sin(radians) * entity.r,
+  };
+};
+
+const entitySnapPoints = (entity: SketchEntity): Point[] => {
+  switch (entity.type) {
+    case 'line':
+      return [{ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 }];
+    case 'polyline':
+      return entity.points;
+    case 'rect':
+      return [
+        { x: entity.x, y: entity.y },
+        { x: entity.x + entity.w, y: entity.y },
+        { x: entity.x + entity.w, y: entity.y + entity.h },
+        { x: entity.x, y: entity.y + entity.h },
+      ];
+    case 'circle':
+      return [{ x: entity.cx, y: entity.cy }];
+    case 'arc':
+      return [
+        { x: entity.cx, y: entity.cy },
+        arcPoint(entity, entity.startAngleDeg),
+        arcPoint(entity, entity.endAngleDeg),
+      ];
+  }
+};
+
 const rectEdges = (entity: RectEntity): Array<[Point, Point]> => {
   const x2 = entity.x + entity.w;
   const y2 = entity.y + entity.h;
@@ -225,17 +257,7 @@ export default function InventorSketchOverlay({
     let bestDistance = Number.POSITIVE_INFINITY;
 
     store.entities.forEach((entity) => {
-      const candidates: Point[] =
-        entity.type === 'line'
-          ? [{ x: entity.x1, y: entity.y1 }, { x: entity.x2, y: entity.y2 }]
-          : entity.type === 'rect'
-            ? [
-                { x: entity.x, y: entity.y },
-                { x: entity.x + entity.w, y: entity.y },
-                { x: entity.x + entity.w, y: entity.y + entity.h },
-                { x: entity.x, y: entity.y + entity.h },
-              ]
-            : [{ x: entity.cx, y: entity.cy }];
+      const candidates = entitySnapPoints(entity);
       candidates.forEach((candidate) => {
         const d = distance(point, candidate);
         if (d < threshold && d < bestDistance) {
@@ -303,7 +325,7 @@ export default function InventorSketchOverlay({
         ...current,
         entities: [
           ...current.entities,
-          { id: makeId('sketch-line'), type: 'line', x1: draft.start.x, y1: draft.start.y, x2: end.x, y2: end.y, ...style },
+          { id: createSketchId('sketch-line'), type: 'line', x1: draft.start.x, y1: draft.start.y, x2: end.x, y2: end.y, ...style },
         ],
       }));
     } else if (draft.type === 'rect') {
@@ -318,7 +340,7 @@ export default function InventorSketchOverlay({
         entities: [
           ...current.entities,
           {
-            id: makeId('sketch-rect'),
+            id: createSketchId('sketch-rect'),
             type: 'rect',
             x: signX > 0 ? draft.start.x : draft.start.x - width,
             y: signY > 0 ? draft.start.y : draft.start.y - height,
@@ -335,7 +357,7 @@ export default function InventorSketchOverlay({
         ...current,
         entities: [
           ...current.entities,
-          { id: makeId('sketch-circle'), type: 'circle', cx: draft.start.x, cy: draft.start.y, r: radius, ...style },
+          { id: createSketchId('sketch-circle'), type: 'circle', cx: draft.start.x, cy: draft.start.y, r: radius, ...style },
         ],
       }));
     }
@@ -459,8 +481,8 @@ export default function InventorSketchOverlay({
         ...current,
         entities: [
           ...without,
-          { ...target, id: makeId('sketch-line'), x2: leftEnd.x, y2: leftEnd.y },
-          { ...target, id: makeId('sketch-line'), x1: rightStart.x, y1: rightStart.y },
+          { ...target, id: createSketchId('sketch-line'), x2: leftEnd.x, y2: leftEnd.y },
+          { ...target, id: createSketchId('sketch-line'), x1: rightStart.x, y1: rightStart.y },
         ],
       };
     });
