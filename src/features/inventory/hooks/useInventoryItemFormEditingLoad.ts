@@ -9,11 +9,12 @@ import {
   shouldIgnoreStaleInventoryItemEditingLoad,
 } from '@/features/inventory/utils/inventoryItemEditingLoadHelpers';
 import { logger } from '@/utils/logger';
+import type { ToastVariant } from '@/hooks/useAppToast';
 
 type ToastFn = (args: {
   title: string;
   description?: string;
-  variant?: 'default' | 'error' | 'warning' | 'success';
+  variant?: ToastVariant;
 }) => void;
 
 type UseInventoryItemFormEditingLoadParams = {
@@ -98,7 +99,15 @@ export function useInventoryItemFormEditingLoad({
 
           const rules = mapInventoryCompatibilityRules(rulesData);
           formRef.current.setValue('compatibleEquipmentIds', equipmentIds);
-          formRef.current.setValue('compatibilityRules', rules);
+          // `compatibilityRules[].model` uses a zod `.transform()`, so the
+          // schema's input/output shapes are structurally distinct (see the
+          // matching note in InventoryItemForm.tsx); setValue's field-path
+          // typing wants the pre-transform shape here even though this data
+          // is already normalized to PartCompatibilityRuleFormData.
+          formRef.current.setValue(
+            'compatibilityRules',
+            rules as unknown as InventoryItemFormData['compatibilityRules'],
+          );
 
           if (!abortController.signal.aborted) {
             setIsEditingDataLoaded(true);

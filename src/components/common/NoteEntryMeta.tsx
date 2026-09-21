@@ -5,7 +5,7 @@ import { PendingSyncBadge } from '@/features/offline-queue/components/PendingSyn
 import { formatNoteHoursWorked, formatNoteMachineHours } from '@/components/common/noteFormatHelpers';
 
 interface NoteEntryMetaProps {
-  authorName: string;
+  authorName?: string;
   createdAt: string;
   formatDate: (isoDate: string) => string;
   hoursWorked?: number | null;

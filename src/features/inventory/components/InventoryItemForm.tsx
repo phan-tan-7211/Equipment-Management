@@ -1,6 +1,6 @@
 import { useI18n } from '@/i18n';
 import React, { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
@@ -89,7 +89,14 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
   });
 
   const form = useForm<InventoryItemFormData>({
-    resolver: zodResolver(inventoryItemFormSchema),
+    // `compatibilityRules[].model` uses a zod `.transform()`, which makes
+    // the schema's pre-validation (input) shape and post-validation
+    // (output / InventoryItemFormData) shape structurally distinct. That
+    // makes `zodResolver`'s inferred Resolver type "unrelated" to
+    // `Resolver<InventoryItemFormData>` for `useForm` even though they
+    // describe the same validated data — a known interaction between
+    // react-hook-form and zod transforms. Runtime validation is unaffected.
+    resolver: zodResolver(inventoryItemFormSchema) as unknown as Resolver<InventoryItemFormData>,
     defaultValues: EMPTY_DEFAULTS,
   });
 
