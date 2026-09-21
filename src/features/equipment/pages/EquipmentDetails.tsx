@@ -11,6 +11,7 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { useEquipmentById } from '@/features/equipment/hooks/useEquipment';
 import { useSaveEquipmentAssignedLocation } from '@/features/equipment/hooks/useSaveEquipmentAssignedLocation';
 import type { EquipmentTeamSummary } from '@/features/equipment/services/EquipmentService';
+import type { EquipmentRecord } from '@/features/equipment/types/equipment';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUnifiedPermissions } from '@/hooks/useUnifiedPermissions';
 import { useInventoryAccess } from '@/features/inventory/hooks/useInventoryAccess';
@@ -266,7 +267,7 @@ const EquipmentDetails = () => {
               }
             />
             <EquipmentDetailsDesktopSummary
-              equipment={equipment}
+              equipment={equipment as EquipmentRecord}
               assignedTeam={assignedTeam}
               organizationId={currentOrganization.id}
               scanLocationCollectionEnabled={currentOrganization.scanLocationCollectionEnabled}

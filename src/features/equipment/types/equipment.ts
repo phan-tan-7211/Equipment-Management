@@ -153,7 +153,22 @@ export const generateEquipmentName = (manufacturer: string, model: string): stri
 
 type EquipmentRow = Tables<'equipment'>;
 
-export interface EquipmentRecord extends Omit<EquipmentRow, 'custom_attributes' | 'last_known_location'> {
+// Uses an intersection rather than `interface ... extends Omit<...>` because
+// several fields below (assigned_location_*, use_team_location) are required
+// on EquipmentRow but optional here; an interface extends would reject that
+// as an incompatible override even though the intersection is sound.
+export type EquipmentRecord = Omit<
+  EquipmentRow,
+  | 'custom_attributes'
+  | 'last_known_location'
+  | 'assigned_location_street'
+  | 'assigned_location_city'
+  | 'assigned_location_state'
+  | 'assigned_location_country'
+  | 'assigned_location_lat'
+  | 'assigned_location_lng'
+  | 'use_team_location'
+> & {
   custom_attributes?: CustomAttributes | null;
   last_known_location?: EquipmentLocation | null;
   team_name?: string;
@@ -166,7 +181,7 @@ export interface EquipmentRecord extends Omit<EquipmentRow, 'custom_attributes' 
   assigned_location_lat?: number | null;
   assigned_location_lng?: number | null;
   use_team_location?: boolean;
-}
+};
 
 export interface EquipmentWithTeam extends EquipmentRecord {
   team_name?: string;

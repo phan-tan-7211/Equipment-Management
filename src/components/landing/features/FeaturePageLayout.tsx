@@ -82,7 +82,7 @@ export const FeaturePageLayout = ({ children, howToSteps, seoOverride }: Feature
                     aria-hidden
                   />
                   <li className="text-foreground font-medium" aria-current="page">
-                    {seo.breadcrumbLabel}
+                    {breadcrumbItems[2].name}
                   </li>
                 </ol>
               </div>
