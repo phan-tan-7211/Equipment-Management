@@ -187,6 +187,7 @@ describe('UnifiedMembersList', () => {
   const baseMembers: RealOrganizationMember[] = [
     {
       id: 'u-1',
+      userId: 'u-1',
       name: 'Alice Admin',
       email: 'alice@example.com',
       role: 'admin' as const,
@@ -196,6 +197,7 @@ describe('UnifiedMembersList', () => {
     },
     {
       id: 'u-2',
+      userId: 'u-2',
       name: 'Bob Member',
       email: 'bob@example.com',
       role: 'member' as const,
@@ -243,7 +245,7 @@ describe('UnifiedMembersList', () => {
     vi.mocked(usePartsManagers).mockReturnValue({
       data: [],
       isLoading: false,
-    } as ReturnType<typeof usePartsManagers>);
+    } as unknown as ReturnType<typeof usePartsManagers>);
 
     customRender(
       <UnifiedMembersList
@@ -375,7 +377,7 @@ describe('UnifiedMembersList', () => {
         isStale: false,
         refetch: vi.fn(),
         promise: Promise.resolve(gwsClaims),
-      });
+      } as unknown as ReturnType<typeof useGoogleWorkspaceMemberClaims>);
     });
 
     afterEach(() => {
@@ -405,7 +407,7 @@ describe('UnifiedMembersList', () => {
         isStale: false,
         refetch: vi.fn(),
         promise: Promise.resolve([]),
-      });
+      } as unknown as ReturnType<typeof useGoogleWorkspaceMemberClaims>);
     });
 
     it('renders pending Google Workspace claims with name and Awaiting Sign-up status', () => {
@@ -511,7 +513,7 @@ describe('UnifiedMembersList', () => {
         isStale: false,
         refetch: vi.fn(),
         promise: Promise.resolve(claimsWithDuplicate),
-      });
+      } as unknown as ReturnType<typeof useGoogleWorkspaceMemberClaims>);
 
       customRender(
         <UnifiedMembersList
@@ -569,7 +571,7 @@ describe('UnifiedMembersList', () => {
         isStale: false,
         refetch: vi.fn(),
         promise: Promise.resolve(claimsWithInviteDuplicate),
-      });
+      } as unknown as ReturnType<typeof useGoogleWorkspaceMemberClaims>);
 
       customRender(
         <UnifiedMembersList
