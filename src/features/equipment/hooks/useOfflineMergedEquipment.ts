@@ -87,7 +87,7 @@ export function useOfflineMergedEquipment(
           team: null, // team name resolved from cache would require extra lookup
           _isPendingSync: true,
           _queueItemId: item.id,
-        } as MergedEquipment;
+        } as unknown as MergedEquipment;
       }
 
       // Full create — all fields present in payload

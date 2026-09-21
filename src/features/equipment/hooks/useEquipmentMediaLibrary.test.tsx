@@ -35,7 +35,7 @@ describe('useEquipmentMediaLibrary', () => {
         id: 'selected-media',
         file_name: 'selected-media.jpg',
         file_url: 'https://example.com/signed-selected-media',
-        description: null,
+        description: undefined,
         created_at: '2026-07-04T09:00:00.000Z',
         uploaded_by: 'user-1',
         source_type: 'equipment_note',

@@ -97,7 +97,7 @@ export const getAllEquipmentImages = async (
         ? 'equipment_display' as const
         : 'equipment_note' as const,
       source_id: ('equipment_note_id' in img ? (img as { equipment_note_id: string }).equipment_note_id : undefined)
-    }));
+    })) as unknown as EquipmentImageData[];
 
     const allImages: EquipmentImageData[] = [
       ...equipmentNotesImages,
