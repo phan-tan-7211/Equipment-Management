@@ -14,14 +14,21 @@ const mockOrganizationState = vi.hoisted(() => ({
   isLoading: false,
   error: null as string | null,
 }));
+const mockAuthState = vi.hoisted(() => ({
+  user: {
+    id: 'user-123',
+    email: 'blocked@claimed.test',
+    app_metadata: { provider: 'google', providers: ['google'] },
+  } as {
+    id: string;
+    email: string;
+    app_metadata: { provider: string; providers: string[] };
+  } | null,
+}));
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
-    user: {
-      id: 'user-123',
-      email: 'blocked@claimed.test',
-      app_metadata: { provider: 'google', providers: ['google'] },
-    },
+    user: mockAuthState.user,
   }),
 }));
 
@@ -46,6 +53,11 @@ describe('WorkspaceOnboardingGuard', () => {
     mockOrganizationState.organizations = [];
     mockOrganizationState.isLoading = false;
     mockOrganizationState.error = null;
+    mockAuthState.user = {
+      id: 'user-123',
+      email: 'blocked@claimed.test',
+      app_metadata: { provider: 'google', providers: ['google'] },
+    };
   });
 
   it('blocks unclaimed-domain Google users without organization membership', () => {
@@ -84,6 +96,43 @@ describe('WorkspaceOnboardingGuard', () => {
 
     expect(screen.getByText('Workspace access required')).toBeInTheDocument();
     expect(screen.queryByText('Dashboard content')).not.toBeInTheDocument();
+    expect(screen.getByText('This authenticated account is not authorized for an organization.')).toBeInTheDocument();
+  });
+
+  it('blocks password users without an active organization membership', () => {
+    mockAuthState.user = {
+      id: 'password-user',
+      email: 'blocked@example.com',
+      app_metadata: { provider: 'email', providers: ['email'] },
+    };
+
+    customRender(
+      <WorkspaceOnboardingGuard>
+        <div>Dashboard content</div>
+      </WorkspaceOnboardingGuard>,
+    );
+
+    expect(screen.getByText('Workspace access required')).toBeInTheDocument();
+    expect(screen.getByText('This authenticated account is not authorized for an organization.')).toBeInTheDocument();
+    expect(screen.queryByText('Dashboard content')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /create organization|create workspace|become owner/i })).not.toBeInTheDocument();
+  });
+
+  it('preserves dashboard access for password users with an active membership', () => {
+    mockAuthState.user = {
+      id: 'password-owner',
+      email: 'owner@example.com',
+      app_metadata: { provider: 'email', providers: ['email'] },
+    };
+    mockOrganizationState.organizations = [{ id: 'existing-org' }];
+
+    customRender(
+      <WorkspaceOnboardingGuard>
+        <div>Dashboard content</div>
+      </WorkspaceOnboardingGuard>,
+    );
+
+    expect(screen.getByText('Dashboard content')).toBeInTheDocument();
   });
 
   it('blocks claimed-domain users without authorization', () => {

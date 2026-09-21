@@ -2,7 +2,7 @@ export const invitationAcceptResources = {
   en: { invitationAccept: {
     invalidLink: 'Invalid invitation link', notFound: 'Invitation not found or you do not have permission to access it',
     unknownOrganization: 'Unknown Organization', unknownUser: 'Unknown User', loadFailed: 'Failed to load invitation',
-    acceptFailed: 'Failed to accept invitation', welcome: 'Welcome to {{organization}}!', declined: 'Invitation declined',
+    acceptFailed: 'Failed to accept invitation', claimEmailMismatch: 'The signed-in Google account does not match the invited email. Sign out and continue with the invited account.', claimExpired: 'This invitation has expired. Ask the organization administrator for a new invitation.', claimInvalid: 'This invitation is invalid or has already been processed.', claimAlreadyMember: 'Your account already has access to this organization. No duplicate membership was created.', claimAuthenticationFailed: 'Your authenticated identity could not be verified. Sign in again and retry this invitation.', welcome: 'Welcome to {{organization}}!', declined: 'Invitation declined',
     declineFailed: 'Failed to decline invitation', loading: 'Loading invitation...', invalid: 'Invalid Invitation',
     invalidOrExpired: 'This invitation link is invalid or has expired.', dashboard: 'Go to Dashboard',
     expired: 'Invitation Expired', processed: 'Invitation Already Processed',
@@ -18,7 +18,7 @@ export const invitationAcceptResources = {
   vi: { invitationAccept: {
     invalidLink: 'Liên kết lời mời không hợp lệ', notFound: 'Không tìm thấy lời mời hoặc bạn không có quyền xem lời mời này',
     unknownOrganization: 'Tổ chức không xác định', unknownUser: 'Người dùng không xác định', loadFailed: 'Không thể tải lời mời',
-    acceptFailed: 'Không thể chấp nhận lời mời', welcome: 'Chào mừng bạn đến với {{organization}}!', declined: 'Đã từ chối lời mời',
+    acceptFailed: 'Không thể chấp nhận lời mời', claimEmailMismatch: 'Tài khoản Google đang đăng nhập không khớp với email được mời. Hãy đăng xuất và tiếp tục bằng tài khoản được mời.', claimExpired: 'Lời mời này đã hết hạn. Hãy yêu cầu quản trị viên tổ chức gửi lời mời mới.', claimInvalid: 'Lời mời này không hợp lệ hoặc đã được xử lý.', claimAlreadyMember: 'Tài khoản của bạn đã có quyền truy cập tổ chức này. Không có thành viên trùng lặp nào được tạo.', claimAuthenticationFailed: 'Không thể xác minh danh tính đã đăng nhập. Hãy đăng nhập lại và thử lại lời mời này.', welcome: 'Chào mừng bạn đến với {{organization}}!', declined: 'Đã từ chối lời mời',
     declineFailed: 'Không thể từ chối lời mời', loading: 'Đang tải lời mời...', invalid: 'Lời mời không hợp lệ',
     invalidOrExpired: 'Liên kết lời mời không hợp lệ hoặc đã hết hạn.', dashboard: 'Đến bảng điều khiển',
     expired: 'Lời mời đã hết hạn', processed: 'Lời mời đã được xử lý',
@@ -34,7 +34,7 @@ export const invitationAcceptResources = {
   ko: { invitationAccept: {
     invalidLink: '유효하지 않은 초대 링크', notFound: '초대를 찾을 수 없거나 접근 권한이 없습니다',
     unknownOrganization: '알 수 없는 조직', unknownUser: '알 수 없는 사용자', loadFailed: '초대를 불러오지 못했습니다',
-    acceptFailed: '초대를 수락하지 못했습니다', welcome: '{{organization}}에 오신 것을 환영합니다!', declined: '초대를 거절했습니다',
+    acceptFailed: '초대를 수락하지 못했습니다', claimEmailMismatch: '로그인한 Google 계정이 초대받은 이메일과 일치하지 않습니다. 로그아웃한 후 초대받은 계정으로 계속하세요.', claimExpired: '이 초대는 만료되었습니다. 조직 관리자에게 새 초대를 요청하세요.', claimInvalid: '이 초대는 유효하지 않거나 이미 처리되었습니다.', claimAlreadyMember: '계정에 이미 이 조직의 접근 권한이 있습니다. 중복 멤버십은 생성되지 않았습니다.', claimAuthenticationFailed: '인증된 신원을 확인할 수 없습니다. 다시 로그인한 후 이 초대를 재시도하세요.', welcome: '{{organization}}에 오신 것을 환영합니다!', declined: '초대를 거절했습니다',
     declineFailed: '초대를 거절하지 못했습니다', loading: '초대를 불러오는 중...', invalid: '유효하지 않은 초대',
     invalidOrExpired: '초대 링크가 유효하지 않거나 만료되었습니다.', dashboard: '대시보드로 이동',
     expired: '초대 만료', processed: '이미 처리된 초대',

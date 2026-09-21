@@ -20,7 +20,8 @@ vi.mock('react-router-dom', async () => {
 // Mock hooks
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: vi.fn(() => ({
-    user: { id: 'user-1', email: 'test@test.com' }
+    user: { id: 'user-1', email: 'test@test.com' },
+    signOut: vi.fn(),
   }))
 }));
 
@@ -76,6 +77,7 @@ describe('InvitationAccept Page', () => {
     mockUpdate.mockClear();
     vi.mocked(useAuthModule.useAuth).mockReturnValue({
       user: { id: 'user-1', email: 'test@test.com' },
+      signOut: vi.fn(),
     } as ReturnType<typeof useAuthModule.useAuth>);
     sessionStorage.clear();
     localStorage.clear();
@@ -301,6 +303,74 @@ describe('InvitationAccept Page', () => {
           p_invitation_token: 'valid-token',
         });
       });
+      expect(await screen.findByText(/signed-in Google account does not match the invited email/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument();
+      expect(screen.queryByText('test@test.com')).not.toBeInTheDocument();
+      expect(mockNavigate).not.toHaveBeenCalledWith('/dashboard', { replace: true });
+    });
+
+    it('treats an idempotent accepted response as success without duplicating access', async () => {
+      startPendingGoogleInvitationClaim('valid-token');
+      mockRpc.mockImplementation((fnName: string) => {
+        if (fnName === 'get_invitation_by_token_secure') {
+          return Promise.resolve({ data: [mockInvitation], error: null });
+        }
+        if (fnName === 'accept_invitation_atomic') {
+          return Promise.resolve({
+            data: {
+              success: true,
+              already_accepted: true,
+              organization_id: 'org-1',
+              organization_name: 'Test Organization',
+              role: 'member',
+            },
+            error: null,
+          });
+        }
+        return Promise.resolve({ data: null, error: null });
+      });
+
+      render(<InvitationAccept />);
+
+      await waitFor(() => {
+        expect(mockRpc).toHaveBeenCalledTimes(2);
+        expect(mockNavigate).toHaveBeenCalledWith('/dashboard', { replace: true });
+      });
+    });
+
+    it('shows a safe persistent outcome when an invitation expires during claim', async () => {
+      mockRpc.mockImplementation((fnName: string) => {
+        if (fnName === 'get_invitation_by_token_secure') {
+          return Promise.resolve({ data: [mockInvitation], error: null });
+        }
+        return Promise.resolve({
+          data: { success: false, error: 'Invitation has expired' },
+          error: null,
+        });
+      });
+
+      render(<InvitationAccept />);
+      fireEvent.click(await screen.findByRole('button', { name: /accept invitation/i }));
+
+      expect(await screen.findByText(/invitation has expired/i)).toBeInTheDocument();
+      expect(mockNavigate).not.toHaveBeenCalledWith('/dashboard', { replace: true });
+    });
+
+    it('shows a safe persistent outcome for a revoked or invalid invitation', async () => {
+      mockRpc.mockImplementation((fnName: string) => {
+        if (fnName === 'get_invitation_by_token_secure') {
+          return Promise.resolve({ data: [mockInvitation], error: null });
+        }
+        return Promise.resolve({
+          data: { success: false, error: 'Invitation has already been processed' },
+          error: null,
+        });
+      });
+
+      render(<InvitationAccept />);
+      fireEvent.click(await screen.findByRole('button', { name: /accept invitation/i }));
+
+      expect(await screen.findByText(/invitation is invalid or has already been processed/i)).toBeInTheDocument();
       expect(mockNavigate).not.toHaveBeenCalledWith('/dashboard', { replace: true });
     });
   });

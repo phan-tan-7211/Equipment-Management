@@ -70,6 +70,7 @@ const en = {
     signIn: 'Sign in',
     success: 'Success',
     somethingWentWrong: 'Something went wrong',
+    googleSignInFailed: 'Google sign-in failed. Please try again.',
     loginWithGoogle: 'Login with Google',
     loginWithEmailPassword: 'Login with Email & Password',
     or: 'or',

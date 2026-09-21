@@ -30,7 +30,7 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
   } = useOrganization();
   const { data: onboardingState, isLoading, isError, refetch } = useWorkspaceOnboardingState();
 
-  if (!user || !isGoogleUser(user)) {
+  if (!user) {
     return <>{children}</>;
   }
 
@@ -47,6 +47,10 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
 
   if (organizations.length > 0) {
     return <>{children}</>;
+  }
+
+  if (!isGoogleUser(user)) {
+    return <WorkspaceAccessGate mode="blocked" domain={null} />;
   }
 
   if (isLoading) {
@@ -68,7 +72,12 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
     return <WorkspaceAccessGate mode="pending" domain={onboardingState.domain} />;
   }
 
-  return <WorkspaceAccessGate mode="blocked" domain={onboardingState?.domain ?? null} />;
+  return (
+    <WorkspaceAccessGate
+      mode="blocked"
+      domain={onboardingState?.domain_status === 'claimed' ? onboardingState.domain : null}
+    />
+  );
 };
 
 export default WorkspaceOnboardingGuard;

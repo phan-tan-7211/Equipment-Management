@@ -11,6 +11,7 @@ import {
 } from '@/utils/redirectValidation';
 import { schedulePendingTermsAcceptanceFlush } from '@/lib/termsAcceptanceRecording';
 import { clearOfflineBlobsForUser } from '@/services/offlineBlobStore';
+import { clearPendingGoogleInvitationClaim } from '@/services/pendingGoogleInvitationClaim';
 
 /**
  * Throttle duration for applying pending admin grants.
@@ -202,6 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
+    clearPendingGoogleInvitationClaim();
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -246,6 +248,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clear application-specific storage
       try {
         clearPendingRedirect();
+        clearPendingGoogleInvitationClaim();
         // Clear admin grants cache keys from localStorage (they start with equipqr_admin_grants_)
         Object.keys(localStorage)
           .filter(key => key.startsWith('equipqr_admin_grants_'))

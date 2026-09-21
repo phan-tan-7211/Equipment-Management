@@ -17,11 +17,11 @@ describe('pendingGoogleInvitationClaim', () => {
     expect(consumePendingGoogleInvitationClaim('invite-token')).toBe(false);
   });
 
-  it('does not consume a marker for a different invitation', () => {
+  it('clears a marker that does not match the returned invitation', () => {
     startPendingGoogleInvitationClaim('invite-a');
 
     expect(consumePendingGoogleInvitationClaim('invite-b')).toBe(false);
-    expect(consumePendingGoogleInvitationClaim('invite-a')).toBe(true);
+    expect(consumePendingGoogleInvitationClaim('invite-a')).toBe(false);
   });
 
   it('rejects an expired marker', () => {

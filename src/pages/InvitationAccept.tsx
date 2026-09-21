@@ -6,7 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, Building2, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { persistDashboardOrganizationSelection } from '@/utils/organizationSelection';
@@ -39,12 +40,13 @@ const InvitationAccept = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { isLoading: sessionLoading, refreshSession, switchOrganization } = useSession();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { t, language } = useI18n();
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [claimError, setClaimError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchInvitation = async () => {
@@ -98,6 +100,29 @@ const InvitationAccept = () => {
     if (!invitation || !user || !token) return;
 
     setAccepting(true);
+    setClaimError(null);
+
+    const getSafeClaimError = (message?: string) => {
+      const normalizedMessage = message?.toLowerCase() ?? '';
+
+      if (normalizedMessage.includes('verified user email does not match')) {
+        return t('invitationAccept.claimEmailMismatch');
+      }
+      if (normalizedMessage.includes('expired')) {
+        return t('invitationAccept.claimExpired');
+      }
+      if (normalizedMessage.includes('already a member')) {
+        return t('invitationAccept.claimAlreadyMember');
+      }
+      if (normalizedMessage.includes('not authenticated') || normalizedMessage.includes('unauthorized')) {
+        return t('invitationAccept.claimAuthenticationFailed');
+      }
+      if (normalizedMessage.includes('not found') || normalizedMessage.includes('already been processed')) {
+        return t('invitationAccept.claimInvalid');
+      }
+
+      return t('invitationAccept.acceptFailed');
+    };
     
     try {
       // Use the atomic function to accept the invitation
@@ -110,7 +135,9 @@ const InvitationAccept = () => {
       const result = data as unknown as AcceptInvitationResponse;
       
       if (!result?.success) {
-        toast.error(result?.error || t('invitationAccept.acceptFailed'));
+        const safeError = getSafeClaimError(result?.error);
+        setClaimError(safeError);
+        toast.error(safeError);
         return;
       }
 
@@ -136,7 +163,14 @@ const InvitationAccept = () => {
 
     } catch (err: unknown) {
       logger.error('Error accepting invitation', err);
-      toast.error(err instanceof Error ? err.message : t('invitationAccept.acceptFailed'));
+      const errorMessage = err instanceof Error
+        ? err.message
+        : typeof err === 'object' && err !== null && 'message' in err
+          ? String(err.message)
+          : undefined;
+      const safeError = getSafeClaimError(errorMessage);
+      setClaimError(safeError);
+      toast.error(safeError);
     } finally {
       setAccepting(false);
     }
@@ -301,6 +335,18 @@ const InvitationAccept = () => {
               <li>• {t('invitationAccept.qr')}</li>
             </ul>
           </div>
+
+          {claimError ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="space-y-3">
+                <p>{claimError}</p>
+                <Button type="button" variant="outline" size="sm" onClick={() => { void signOut(); }}>
+                  {t('profileMenu.signOut')}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
           <div className="flex gap-3">
             <Button 

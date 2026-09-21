@@ -331,6 +331,7 @@ describe('AuthContext', () => {
       email: 'test@example.com',
       password: 'password'
     });
+    expect(window.sessionStorage.removeItem).toHaveBeenCalledWith('pendingGoogleInvitationClaim');
     expect(signInResult).toEqual({ error: null });
   });
 
@@ -412,6 +413,7 @@ describe('AuthContext', () => {
 
     expect(vi.mocked(supabase.auth.signOut)).toHaveBeenCalled();
     expect(window.sessionStorage.removeItem).toHaveBeenCalledWith('pendingRedirect');
+    expect(window.sessionStorage.removeItem).toHaveBeenCalledWith('pendingGoogleInvitationClaim');
     expect(result.current?.user).toBe(null);
     expect(result.current?.session).toBe(null);
   });

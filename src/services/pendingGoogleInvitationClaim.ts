@@ -35,7 +35,10 @@ export function consumePendingGoogleInvitationClaim(token: string): boolean {
     const claim = JSON.parse(rawClaim) as Partial<PendingGoogleInvitationClaim>;
     const age = Date.now() - Number(claim.startedAt);
 
-    if (claim.token !== token) return false;
+    if (claim.token !== token) {
+      sessionStorage.removeItem(STORAGE_KEY);
+      return false;
+    }
 
     sessionStorage.removeItem(STORAGE_KEY);
     return Number.isFinite(age) && age >= 0 && age <= MAX_AGE_MS;

@@ -70,6 +70,7 @@ const ko = {
     signIn: '로그인',
     success: '성공',
     somethingWentWrong: '문제가 발생했습니다',
+    googleSignInFailed: 'Google 로그인에 실패했습니다. 다시 시도하세요.',
     loginWithGoogle: 'Google로 로그인',
     loginWithEmailPassword: '이메일과 비밀번호로 로그인',
     or: '또는',

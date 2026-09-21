@@ -93,6 +93,7 @@ const Auth = () => {
   const [pendingQRScan, setPendingQRScan] = useState(false);
   const [showMFAVerification, setShowMFAVerification] = useState(false);
   const suppressAuthRedirectRef = useRef(false);
+  const oauthErrorHandledRef = useRef(false);
   const { error: showErrorToast, success: showSuccessToast } = useAppToast();
 
   const { parsedMode, prefillEmail, invitedOrgId, invitedOrgName, inviteToken } = useMemo(() => {
@@ -128,6 +129,23 @@ const Auth = () => {
   useEffect(() => {
     setMode(parsedMode);
   }, [parsedMode]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const hasOAuthError = params.has('error') || params.has('error_code') || params.has('error_description');
+
+    if (!hasOAuthError) {
+      oauthErrorHandledRef.current = false;
+      return;
+    }
+    if (oauthErrorHandledRef.current) return;
+
+    oauthErrorHandledRef.current = true;
+    clearPendingGoogleInvitationClaim();
+    setIsLoading(false);
+    setSuccess(null);
+    setError(t('auth.googleSignInFailed'));
+  }, [location.search, t]);
 
   useEffect(() => {
     const pendingRedirect =
@@ -286,7 +304,10 @@ const Auth = () => {
                   />
                 ) : (
                   <SignUpForm
-                    onBeforeSignupSubmit={() => { suppressAuthRedirectRef.current = true; }}
+                    onBeforeSignupSubmit={() => {
+                      suppressAuthRedirectRef.current = true;
+                      clearPendingGoogleInvitationClaim();
+                    }}
                     onSuccess={handleSuccess}
                     onError={handleError}
                     onGoogleSignUp={() => void handleGoogleSignIn()}
