@@ -32,8 +32,8 @@ vi.mock('@/features/work-orders/hooks/useWorkOrderStatusChangeHandlers', () => (
 vi.mock('@/features/work-orders/hooks/useWorkOrderContextualAssignment', () => ({
   useWorkOrderContextualAssignment: vi.fn(() => ({
     assignmentOptions: [
-      { id: 'user-1', name: 'Nicholas King', role: 'Owner' },
-      { id: 'user-2', name: 'Jane Smith', role: 'Technician' },
+      { id: 'user-1', name: 'Nicholas King', role: 'Owner', type: 'user' as const },
+      { id: 'user-2', name: 'Jane Smith', role: 'Technician', type: 'user' as const },
     ],
     isLoading: false,
     equipmentHasNoTeam: false,
@@ -82,13 +82,14 @@ describe('WorkOrderStatusManager', () => {
       canCompleteWorkOrder: () => true,
       handleStatusChange: mockHandleStatusChange,
       handleAcceptanceComplete: mockHandleAcceptanceComplete,
-    });
+    } as unknown as ReturnType<typeof useWorkOrderStatusChangeHandlers>);
     vi.mocked(useWorkOrderContextualAssignment).mockReturnValue({
       assignmentOptions: [
-        { id: 'user-1', name: 'Nicholas King', role: 'Owner' },
-        { id: 'user-2', name: 'Jane Smith', role: 'Technician' },
+        { id: 'user-1', name: 'Nicholas King', role: 'Owner', type: 'user' as const },
+        { id: 'user-2', name: 'Jane Smith', role: 'Technician', type: 'user' as const },
       ],
       isLoading: false,
+      error: null,
       equipmentHasNoTeam: false,
     });
   });

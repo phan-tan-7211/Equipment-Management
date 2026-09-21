@@ -104,7 +104,7 @@ describe('GoogleWorkspaceMemberImportSheet', () => {
       isStale: false,
       refetch: vi.fn(),
       promise: Promise.resolve([]),
-    } as ReturnType<typeof useOrganizationMembersQuery>);
+    } as unknown as ReturnType<typeof useOrganizationMembersQuery>);
     
     vi.mocked(useGoogleWorkspaceMemberClaims).mockReturnValue({
       data: [],
@@ -132,7 +132,7 @@ describe('GoogleWorkspaceMemberImportSheet', () => {
       isStale: false,
       refetch: vi.fn(),
       promise: Promise.resolve([]),
-    });
+    } as unknown as ReturnType<typeof useGoogleWorkspaceMemberClaims>);
   });
 
   it('renders the sheet with title and description', async () => {
@@ -177,7 +177,7 @@ describe('GoogleWorkspaceMemberImportSheet', () => {
         isStale: false,
         refetch: vi.fn(),
         promise: Promise.resolve([]),
-      } as ReturnType<typeof useOrganizationMembersQuery>);
+      } as unknown as ReturnType<typeof useOrganizationMembersQuery>);
 
       customRender(<GoogleWorkspaceMemberImportSheet {...defaultProps} />);
 
@@ -220,7 +220,7 @@ describe('GoogleWorkspaceMemberImportSheet', () => {
         isStale: false,
         refetch: vi.fn(),
         promise: Promise.resolve([]),
-      });
+      } as unknown as ReturnType<typeof useGoogleWorkspaceMemberClaims>);
 
       customRender(<GoogleWorkspaceMemberImportSheet {...defaultProps} />);
 
