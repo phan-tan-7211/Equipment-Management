@@ -29,13 +29,26 @@ type SketchDocumentHistoryOptions = {
   initialDocument?: SketchDocument;
   sessionKey?: number | string;
   onChange?: (document: SketchDocument) => void;
+  /**
+   * Runs on every document that becomes `present` — committed, transient
+   * (live drag), or transaction-finalized. This is the single choke point
+   * all sketch edits pass through, so it's where constraint solving is
+   * wired in: entities always reflect the solved geometry rather than the
+   * raw, possibly constraint-violating edit.
+   */
+  postProcess?: (document: SketchDocument) => SketchDocument;
 };
 
 export function useSketchDocumentHistory(
   storageKey: string,
   options: SketchDocumentHistoryOptions = {},
 ) {
-  const { initialDocument, sessionKey, onChange } = options;
+  const { initialDocument, sessionKey, onChange, postProcess } = options;
+  const applyPostProcess = useCallback(
+    (document: SketchDocument): SketchDocument =>
+      postProcess ? postProcess(document) : document,
+    [postProcess],
+  );
   const resolveInitialDocument = useCallback(
     () => initialDocument
       ? cloneSketchDocument(initialDocument)
@@ -65,10 +78,12 @@ export function useSketchDocumentHistory(
 
   const commit = useCallback((updater: DocumentUpdater) => {
     setHistory((current) => {
-      const next = touchSketchDocument(resolveUpdater(current.present, updater));
+      const next = touchSketchDocument(
+        applyPostProcess(resolveUpdater(current.present, updater)),
+      );
       return commitSketchHistory(current, next, cloneSketchDocument);
     });
-  }, []);
+  }, [applyPostProcess]);
 
   const beginTransaction = useCallback(() => {
     setHistory((current) =>
@@ -78,19 +93,22 @@ export function useSketchDocumentHistory(
 
   const updateTransient = useCallback((updater: DocumentUpdater) => {
     setHistory((current) => {
-      const next = resolveUpdater(current.present, updater);
+      const next = applyPostProcess(resolveUpdater(current.present, updater));
       return updateSketchHistoryTransient(current, next, cloneSketchDocument);
     });
-  }, []);
+  }, [applyPostProcess]);
 
   const commitTransaction = useCallback(() => {
     setHistory((current) =>
       commitSketchHistoryTransaction(
-        { ...current, present: touchSketchDocument(current.present) },
+        {
+          ...current,
+          present: touchSketchDocument(applyPostProcess(current.present)),
+        },
         cloneSketchDocument,
       ),
     );
-  }, []);
+  }, [applyPostProcess]);
 
   const cancelTransaction = useCallback(() => {
     setHistory((current) =>

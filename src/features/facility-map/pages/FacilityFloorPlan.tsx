@@ -30,6 +30,8 @@ import {
   Square,
   Trash2,
   Type,
+  Lock,
+  Unlock,
   Undo2,
   Ruler,
   Eraser,
@@ -41,11 +43,17 @@ import { useI18n } from '@/i18n';
 import InventorSketchOverlay from '@/features/facility-map/components/InventorSketchOverlay';
 import {
   cloneSketchDocument,
+  createSketchDocument,
+  createSketchId,
   loadSketchDocument,
   saveSketchDocument,
   type SketchDocument,
 } from '@/features/facility-map/sketch';
 import { SketchPrintLayer } from '@/features/facility-map/sketch/rendering/SketchPrintLayer';
+import {
+  getSketchEntitiesBounds,
+  translateSketchEntity,
+} from '@/features/facility-map/sketch/core/geometry';
 
 type EquipmentRow = {
   id: string;
@@ -138,6 +146,25 @@ type DrawingPreset = {
   text: string;
 };
 
+// A named, independently visible/editable sketch — think Inventor's
+// Sketch1/Sketch2/Sketch3 under one part. `sketchDocument` below remains
+// the original single "default" sketch (unchanged, for backward
+// compatibility with existing saved plans); `sketches` holds every
+// additional one the user creates via "+ New Sketch".
+type SketchLayer = {
+  id: string;
+  name: string;
+  visible: boolean;
+  /**
+   * Layer-lock, the CorelDRAW/Illustrator sense: a locked sketch is excluded
+   * from window/crossing marquee-select and can't be click-selected or
+   * dragged as a group on the main canvas. Editing it (Enter/Edit Sketch)
+   * still requires unlocking first, same as those tools.
+   */
+  locked?: boolean;
+  document: SketchDocument;
+};
+
 type FloorPlanState = {
   name: string;
   building: string;
@@ -150,6 +177,7 @@ type FloorPlanState = {
   zones: Zone[];
   annotations: Annotation[];
   sketchDocument?: SketchDocument;
+  sketches: SketchLayer[];
 };
 
 const STORAGE_KEY = 'znteqr:facility-floor-plan:dryrun:v3';
@@ -158,6 +186,11 @@ const HISTORY_KEY = 'znteqr:facility-floor-plan:dryrun:history:v1';
 const DRAWING_PRESET_KEY = 'znteqr:facility-floor-plan:drawing-presets:v1';
 
 const planKey = (building: string, floor: string) => `${building}::${floor}`;
+
+// The original, single always-present sketch (backward compatible with
+// plans saved before multi-sketch support existed). Additional sketches
+// the user creates live in `plan.sketches` and are addressed by their own id.
+const DEFAULT_SKETCH_ID = 'default';
 
 type PlanHistoryEntry = {
   id: string;
@@ -316,6 +349,7 @@ const EMPTY_PLAN: FloorPlanState = {
     { id: 'route-demo', type: 'arrow', x1: 18, y1: 50, x2: 46, y2: 50 },
     { id: 'note-demo', type: 'text', x1: 71, y1: 50, x2: 71, y2: 50, text: 'QA HOLD' },
   ],
+  sketches: [],
 };
 
 const demoLayoutFor = (building: string, floor: string): FloorPlanState => {
@@ -398,6 +432,10 @@ const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
   sketchDocument: value.sketchDocument
     ? cloneSketchDocument(value.sketchDocument)
     : undefined,
+  sketches: (value.sketches ?? []).map((layer) => ({
+    ...layer,
+    document: cloneSketchDocument(layer.document),
+  })),
   canvasWidth: value.canvasWidth ?? 1200,
   canvasHeight: value.canvasHeight ?? 760,
 });
@@ -478,7 +516,17 @@ export default function FacilityFloorPlan() {
   const [drawTool, setDrawTool] = useState<DrawTool>('select');
   const [sketchMode, setSketchMode] = useState(false);
   const [sketchVisible, setSketchVisible] = useState(true);
+  const [sketchLocked, setSketchLocked] = useState(false);
+  const [activeSketchId, setActiveSketchId] = useState<string>(DEFAULT_SKETCH_ID);
   const [sketchSessionKey, setSketchSessionKey] = useState(0);
+  const [draggingSketchLayerId, setDraggingSketchLayerId] = useState('');
+  const sketchLayerDragRef = useRef<{ startX: number; startY: number; snapshot: FloorPlanState } | null>(null);
+  // Live (dx, dy) in the sketch's own model units, for InventorSketchOverlay's
+  // `translateOffset` — it owns its own internal document/history and only
+  // re-syncs from `plan` when `sketchSessionKey` bumps (once, at drag end),
+  // so this is what makes a whole-sketch group move visually track the
+  // cursor in real time instead of jumping only when the drag finishes.
+  const [sketchDragOffset, setSketchDragOffset] = useState<{ dx: number; dy: number } | null>(null);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const sketchSessionSnapshotRef = useRef<SketchDocument | null>(null);
   const sketchLatestDocumentRef = useRef<SketchDocument | null>(null);
@@ -847,8 +895,29 @@ export default function FacilityFloorPlan() {
           : hit(annotationBounds(annotation));
       if (selected) ids.add(`annotation:${annotation.id}`);
     });
+
+    // Locked sketches (CorelDRAW/Illustrator-style layer lock) are skipped
+    // entirely — a marquee drag must never catch and drag them along.
+    const sketchLayers: Array<{ id: string; visible: boolean; locked?: boolean; document: SketchDocument | undefined }> = [
+      { id: DEFAULT_SKETCH_ID, visible: sketchVisible, locked: sketchLocked, document: plan.sketchDocument },
+      ...plan.sketches.map((layer) => ({ id: layer.id, visible: layer.visible, locked: layer.locked, document: layer.document })),
+    ];
+    sketchLayers.forEach((layer) => {
+      if (!layer.visible || layer.locked || !layer.document) return;
+      const bounds = getSketchEntitiesBounds(layer.document.entities);
+      if (!bounds) return;
+      if (hit({
+        x1: (bounds.minX / plan.canvasWidth) * 100,
+        y1: (bounds.minY / plan.canvasHeight) * 100,
+        x2: (bounds.maxX / plan.canvasWidth) * 100,
+        y2: (bounds.maxY / plan.canvasHeight) * 100,
+      })) {
+        ids.add(`sketch:${layer.id}`);
+      }
+    });
+
     return ids;
-  }, [annotationBounds, hiddenLayers, plan.annotations, plan.overlayPins, plan.pins, plan.zones]);
+  }, [annotationBounds, hiddenLayers, plan.annotations, plan.canvasHeight, plan.canvasWidth, plan.overlayPins, plan.pins, plan.sketchDocument, plan.sketches, plan.zones, sketchLocked, sketchVisible]);
 
   const snapValue = useCallback((value: number) => {
     if (!snapToGrid) return value;
@@ -911,6 +980,22 @@ export default function FacilityFloorPlan() {
     annotationDragRef.current = { startX: point.x, startY: point.y, snapshot: { ...annotation } };
     setAnnotationGrip({ id: annotation.id, handle });
   }, [drawTool, editMode, plan, setSingleSelection, toPercentRaw]);
+
+  // Clicking any entity in a finished sketch (outside Sketch Mode) selects
+  // and drags the WHOLE sketch as one rigid block — editing individual
+  // points/lines is reserved for Enter/Edit Sketch. Mirrors beginAnnotationDrag.
+  const beginSketchLayerDrag = useCallback((event: React.MouseEvent, layerId: string, locked?: boolean) => {
+    if (!editMode || drawTool !== 'select' || locked) return;
+    event.stopPropagation();
+    const objectId = `sketch:${layerId}`;
+    if (beginGroupDrag(event, objectId)) return;
+    const point = toPercentRaw(event.clientX, event.clientY);
+    if (!point) return;
+    setSingleSelection(objectId, event.shiftKey);
+    dragStartPlanRef.current = clonePlan(plan);
+    sketchLayerDragRef.current = { startX: point.x, startY: point.y, snapshot: clonePlan(plan) };
+    setDraggingSketchLayerId(layerId);
+  }, [beginGroupDrag, drawTool, editMode, plan, setSingleSelection, toPercentRaw]);
 
   const placeAt = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!editMode || draggingEquipmentId || draggingOverlayId || isPanning || zoneStart) return;
@@ -1066,6 +1151,13 @@ export default function FacilityFloorPlan() {
       const dx = rawPoint.x - drag.startX;
       const dy = rawPoint.y - drag.startY;
       const snapshot = drag.snapshot;
+      const dxModel = (dx / 100) * snapshot.canvasWidth;
+      const dyModel = (dy / 100) * snapshot.canvasHeight;
+      const translateSketch = (document: SketchDocument): SketchDocument => ({
+        ...document,
+        entities: document.entities.map((entity) => translateSketchEntity(entity, dxModel, dyModel)),
+      });
+      setSketchDragOffset({ dx: dxModel, dy: dyModel });
       setPlan({
         ...snapshot,
         pins: snapshot.pins.map((pin) =>
@@ -1081,6 +1173,14 @@ export default function FacilityFloorPlan() {
           selectedObjectIds.has(`annotation:${annotation.id}`)
             ? { ...annotation, x1: annotation.x1 + dx, y1: annotation.y1 + dy, x2: annotation.x2 + dx, y2: annotation.y2 + dy }
             : annotation,
+        ),
+        sketchDocument: snapshot.sketchDocument && selectedObjectIds.has(`sketch:${DEFAULT_SKETCH_ID}`)
+          ? translateSketch(snapshot.sketchDocument)
+          : snapshot.sketchDocument,
+        sketches: snapshot.sketches.map((layer) =>
+          selectedObjectIds.has(`sketch:${layer.id}`)
+            ? { ...layer, document: translateSketch(layer.document) }
+            : layer,
         ),
       });
       return;
@@ -1119,6 +1219,30 @@ export default function FacilityFloorPlan() {
             : annotation,
         ),
       }));
+      return;
+    }
+
+    if (draggingSketchLayerId && sketchLayerDragRef.current && editMode) {
+      const drag = sketchLayerDragRef.current;
+      const dx = rawPoint.x - drag.startX;
+      const dy = rawPoint.y - drag.startY;
+      const snapshot = drag.snapshot;
+      const dxModel = (dx / 100) * snapshot.canvasWidth;
+      const dyModel = (dy / 100) * snapshot.canvasHeight;
+      const translateSketch = (document: SketchDocument): SketchDocument => ({
+        ...document,
+        entities: document.entities.map((entity) => translateSketchEntity(entity, dxModel, dyModel)),
+      });
+      setSketchDragOffset({ dx: dxModel, dy: dyModel });
+      setPlan({
+        ...snapshot,
+        sketchDocument: draggingSketchLayerId === DEFAULT_SKETCH_ID && snapshot.sketchDocument
+          ? translateSketch(snapshot.sketchDocument)
+          : snapshot.sketchDocument,
+        sketches: snapshot.sketches.map((layer) =>
+          layer.id === draggingSketchLayerId ? { ...layer, document: translateSketch(layer.document) } : layer,
+        ),
+      });
       return;
     }
 
@@ -1250,7 +1374,7 @@ export default function FacilityFloorPlan() {
         ...current,
         zones: [...current.zones, { ...draftZone, id: makeId('zone') }],
       }));
-    } else if ((groupDragging || draggingAnnotationId || annotationGrip || draggingEquipmentId || draggingOverlayId || draggingZoneId || resizingZoneId) && dragStartPlanRef.current) {
+    } else if ((groupDragging || draggingAnnotationId || annotationGrip || draggingEquipmentId || draggingOverlayId || draggingZoneId || resizingZoneId || draggingSketchLayerId) && dragStartPlanRef.current) {
       const before = dragStartPlanRef.current;
       setUndoStack((stack) => [...stack.slice(-29), clonePlan(before)]);
       setRedoStack([]);
@@ -1258,16 +1382,27 @@ export default function FacilityFloorPlan() {
         savePlan(current);
         return current;
       });
+      // A whole-sketch group move happened purely at the plan level —
+      // InventorSketchOverlay keeps its own internal document/history, so
+      // bump its session key to make it re-seed from the moved geometry
+      // that just landed in `plan`, instead of silently drifting back to
+      // its own stale copy on the next render.
+      if (draggingSketchLayerId || (groupDragging && [...selectedObjectIds].some((id) => id.startsWith('sketch:')))) {
+        setSketchSessionKey((value) => value + 1);
+      }
     }
 
     dragStartPlanRef.current = null;
     annotationStartRef.current = null;
     annotationDragRef.current = null;
     groupDragRef.current = null;
+    sketchLayerDragRef.current = null;
     selectionShiftRef.current = false;
     setSelectionBox(null);
     setGroupDragging(false);
     setDraggingAnnotationId('');
+    setDraggingSketchLayerId('');
+    setSketchDragOffset(null);
     setAnnotationGrip(null);
     setDraftAnnotation(null);
     setZoneStart(null);
@@ -1536,16 +1671,26 @@ export default function FacilityFloorPlan() {
   };
 
   const sketchStorageKey = planKey(plan.building, plan.floor);
+  const sketchLayerStorageKey = (sketchId: string) =>
+    sketchId === DEFAULT_SKETCH_ID ? sketchStorageKey : `${sketchStorageKey}::sketch:${sketchId}`;
+  const activeSketchStorageKey = sketchLayerStorageKey(activeSketchId);
 
-  const enterSketch = () => {
-    const initial = plan.sketchDocument
-      ? cloneSketchDocument(plan.sketchDocument)
-      : loadSketchDocument(sketchStorageKey);
+  const enterSketch = (sketchId: string = DEFAULT_SKETCH_ID) => {
+    const storageKey = sketchLayerStorageKey(sketchId);
+    const initial = sketchId === DEFAULT_SKETCH_ID
+      ? (plan.sketchDocument
+          ? cloneSketchDocument(plan.sketchDocument)
+          : loadSketchDocument(storageKey))
+      : cloneSketchDocument(
+          plan.sketches.find((layer) => layer.id === sketchId)?.document
+            ?? loadSketchDocument(storageKey),
+        );
     sketchSessionSnapshotRef.current = cloneSketchDocument(initial);
     sketchLatestDocumentRef.current = cloneSketchDocument(initial);
-    saveSketchDocument(sketchStorageKey, initial);
+    saveSketchDocument(storageKey, initial);
+    setActiveSketchId(sketchId);
     setSketchSessionKey((value) => value + 1);
-    setSketchVisible(true);
+    if (sketchId === DEFAULT_SKETCH_ID) setSketchVisible(true);
     setSketchMode(true);
     setDrawTool('select');
     setPlaceLayer(null);
@@ -1566,11 +1711,19 @@ export default function FacilityFloorPlan() {
       return;
     }
 
-    saveSketchDocument(sketchStorageKey, nextDocument);
-    commitPlan((current) => ({
-      ...current,
-      sketchDocument: cloneSketchDocument(nextDocument),
-    }));
+    saveSketchDocument(activeSketchStorageKey, nextDocument);
+    commitPlan((current) =>
+      activeSketchId === DEFAULT_SKETCH_ID
+        ? { ...current, sketchDocument: cloneSketchDocument(nextDocument) }
+        : {
+            ...current,
+            sketches: current.sketches.map((layer) =>
+              layer.id === activeSketchId
+                ? { ...layer, document: cloneSketchDocument(nextDocument) }
+                : layer,
+            ),
+          },
+    );
     sketchSessionSnapshotRef.current = null;
     sketchLatestDocumentRef.current = cloneSketchDocument(nextDocument);
     setSketchMode(false);
@@ -1579,12 +1732,99 @@ export default function FacilityFloorPlan() {
   const cancelSketch = () => {
     const snapshot = sketchSessionSnapshotRef.current;
     if (snapshot) {
-      saveSketchDocument(sketchStorageKey, snapshot);
+      saveSketchDocument(activeSketchStorageKey, snapshot);
       sketchLatestDocumentRef.current = cloneSketchDocument(snapshot);
     }
     sketchSessionSnapshotRef.current = null;
     setSketchSessionKey((value) => value + 1);
     setSketchMode(false);
+  };
+
+  const addSketchLayer = () => {
+    const id = createSketchId('sketch-layer');
+    const name = `${t('facilityMap.sketch')} ${plan.sketches.length + 2}`;
+    const document = createSketchDocument({
+      displayUnit: plan.sketchDocument?.displayUnit,
+      mmPerUnit: plan.sketchDocument?.mmPerUnit,
+    });
+    commitPlan((current) => ({
+      ...current,
+      sketches: [...current.sketches, { id, name, visible: true, document }],
+    }));
+  };
+
+  const renameSketchLayer = (id: string) => {
+    const layer = plan.sketches.find((item) => item.id === id);
+    if (!layer) return;
+    const nextName = window.prompt(t('facilityMap.sketchRename'), layer.name);
+    if (!nextName || !nextName.trim()) return;
+    commitPlan((current) => ({
+      ...current,
+      sketches: current.sketches.map((item) =>
+        item.id === id ? { ...item, name: nextName.trim() } : item,
+      ),
+    }));
+  };
+
+  const deleteSketchLayer = (id: string) => {
+    if (!window.confirm(t('facilityMap.sketchDeleteConfirm'))) return;
+    commitPlan((current) => ({
+      ...current,
+      sketches: current.sketches.filter((item) => item.id !== id),
+    }));
+    if (activeSketchId === id) {
+      setSketchMode(false);
+      setActiveSketchId(DEFAULT_SKETCH_ID);
+    }
+  };
+
+  const toggleSketchLayerVisible = (id: string) => {
+    if (id === DEFAULT_SKETCH_ID) {
+      setSketchVisible((value) => !value);
+      return;
+    }
+    commitPlan((current) => ({
+      ...current,
+      sketches: current.sketches.map((item) =>
+        item.id === id ? { ...item, visible: !item.visible } : item,
+      ),
+    }));
+  };
+
+  const toggleSketchLayerLock = (id: string) => {
+    if (id === DEFAULT_SKETCH_ID) {
+      setSketchLocked((value) => {
+        const next = !value;
+        // A lock that just engaged can't also leave the layer selected —
+        // otherwise a still-selected-but-locked sketch could get dragged
+        // along by a leftover multi-select group-move.
+        if (next) setSelectedObjectIds((current) => {
+          if (!current.has(`sketch:${DEFAULT_SKETCH_ID}`)) return current;
+          const next2 = new Set(current);
+          next2.delete(`sketch:${DEFAULT_SKETCH_ID}`);
+          return next2;
+        });
+        return next;
+      });
+      return;
+    }
+    let nextLocked = false;
+    commitPlan((current) => ({
+      ...current,
+      sketches: current.sketches.map((item) => {
+        if (item.id !== id) return item;
+        nextLocked = !item.locked;
+        return { ...item, locked: nextLocked };
+      }),
+    }));
+    if (nextLocked) {
+      setSelectedObjectIds((current) => {
+        if (!current.has(`sketch:${id}`)) return current;
+        const next = new Set(current);
+        next.delete(`sketch:${id}`);
+        return next;
+      });
+    }
   };
 
   const switchMode = (nextEditMode: boolean) => {
@@ -2085,6 +2325,106 @@ export default function FacilityFloorPlan() {
                 </label>
               </div>
             </div>
+
+            {editMode && !sketchMode && (
+            <div className="mt-4 border-t pt-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-semibold">{t('facilityMap.sketches')}</span>
+                <button
+                  type="button"
+                  onClick={addSketchLayer}
+                  className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] hover:bg-accent"
+                >
+                  <Plus className="h-3 w-3" />
+                  {t('facilityMap.addSketch')}
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between rounded-md border px-2 py-1.5 text-xs">
+                  <label className="flex flex-1 items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={sketchVisible}
+                      onChange={() => toggleSketchLayerVisible(DEFAULT_SKETCH_ID)}
+                    />
+                    <span className="truncate">{t('facilityMap.sketchDefaultName')}</span>
+                  </label>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleSketchLayerLock(DEFAULT_SKETCH_ID)}
+                      className={`rounded-md p-1 hover:bg-accent ${sketchLocked ? 'text-amber-500' : ''}`}
+                      title={sketchLocked ? t('facilityMap.sketchUnlock') : t('facilityMap.sketchLock')}
+                    >
+                      {sketchLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => enterSketch(DEFAULT_SKETCH_ID)}
+                      disabled={isMobileViewport || sketchLocked}
+                      className="rounded-md p-1 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+                      title={t('facilityMap.sketchEdit')}
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+                {plan.sketches.map((layer) => (
+                  <div key={layer.id} className="flex items-center justify-between rounded-md border px-2 py-1.5 text-xs">
+                    <label className="flex flex-1 items-center gap-2 overflow-hidden">
+                      <input
+                        type="checkbox"
+                        checked={layer.visible}
+                        onChange={() => toggleSketchLayerVisible(layer.id)}
+                      />
+                      <span className="truncate">{layer.name}</span>
+                    </label>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => toggleSketchLayerLock(layer.id)}
+                        className={`rounded-md p-1 hover:bg-accent ${layer.locked ? 'text-amber-500' : ''}`}
+                        title={layer.locked ? t('facilityMap.sketchUnlock') : t('facilityMap.sketchLock')}
+                      >
+                        {layer.locked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => enterSketch(layer.id)}
+                        disabled={isMobileViewport || layer.locked}
+                        className="rounded-md p-1 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+                        title={t('facilityMap.sketchEdit')}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => renameSketchLayer(layer.id)}
+                        className="rounded-md p-1 hover:bg-accent"
+                        title={t('facilityMap.sketchRename')}
+                      >
+                        <Type className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteSketchLayer(layer.id)}
+                        disabled={layer.locked}
+                        className="rounded-md p-1 text-red-500 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                        title={t('facilityMap.sketchDelete')}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {!plan.sketches.length && (
+                  <div className="rounded-md border border-dashed px-2 py-2 text-center text-[10px] text-muted-foreground">
+                    {t('facilityMap.noAdditionalSketches')}
+                  </div>
+                )}
+              </div>
+            </div>
+            )}
 
             {!sketchMode && (
             <div className="mt-4 border-t pt-3">
@@ -2746,21 +3086,41 @@ export default function FacilityFloorPlan() {
                 />
               )}
 
-              <InventorSketchOverlay
-                enabled={editMode && sketchMode && !isMobileViewport}
-                visible={sketchVisible || sketchMode}
-                storageKey={sketchStorageKey}
-                sessionKey={sketchSessionKey}
-                initialDocument={plan.sketchDocument}
-                canvasWidth={plan.canvasWidth}
-                canvasHeight={plan.canvasHeight}
-                t={t}
-                onDocumentChange={(document) => {
-                  sketchLatestDocumentRef.current = cloneSketchDocument(document);
-                }}
-                onFinish={finishSketch}
-                onCancel={cancelSketch}
-              />
+              {[
+                { id: DEFAULT_SKETCH_ID, visible: sketchVisible, locked: sketchLocked, document: plan.sketchDocument },
+                ...plan.sketches.map((layer) => ({
+                  id: layer.id,
+                  visible: layer.visible,
+                  locked: layer.locked,
+                  document: layer.document as SketchDocument | undefined,
+                })),
+              ].map((layer) => {
+                const isDraggingThisLayer =
+                  draggingSketchLayerId === layer.id ||
+                  (groupDragging && selectedObjectIds.has(`sketch:${layer.id}`));
+                return (
+                  <InventorSketchOverlay
+                    key={layer.id}
+                    enabled={editMode && sketchMode && activeSketchId === layer.id && !isMobileViewport}
+                    interactive={editMode && !sketchMode && drawTool === 'select' && !isMobileViewport && !layer.locked}
+                    translateOffset={isDraggingThisLayer && sketchDragOffset ? sketchDragOffset : undefined}
+                    visible={layer.visible || (sketchMode && activeSketchId === layer.id)}
+                    storageKey={sketchLayerStorageKey(layer.id)}
+                    sessionKey={sketchSessionKey}
+                    initialDocument={layer.document}
+                    canvasWidth={plan.canvasWidth}
+                    canvasHeight={plan.canvasHeight}
+                    t={t}
+                    onDocumentChange={(document) => {
+                      if (activeSketchId !== layer.id) return;
+                      sketchLatestDocumentRef.current = cloneSketchDocument(document);
+                    }}
+                    onGroupMouseDown={(event) => beginSketchLayerDrag(event, layer.id, layer.locked)}
+                    onFinish={finishSketch}
+                    onCancel={cancelSketch}
+                  />
+                );
+              })}
 
               {selectionBox && (
                 <>

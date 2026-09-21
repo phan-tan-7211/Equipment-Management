@@ -6,6 +6,7 @@ import {
   clampPositive,
   degToRad,
   distance,
+  getSketchEntitiesBounds,
   rectEdges,
   segmentIntersection,
   translateSketchEntity,
@@ -89,6 +90,26 @@ describe('sketch geometry helpers', () => {
       y2: 2,
     });
     expect(line).toMatchObject({ x1: 1, y1: 2, x2: 3, y2: 4 });
+  });
+
+  it('computes the overall bounds across mixed entity types', () => {
+    const line: LineEntity = {
+      id: 'line-1', type: 'line', x1: 0, y1: 0, x2: 10, y2: 0, color: '#000', lineWidth: 1,
+    };
+    const rect: RectEntity = {
+      id: 'rect-1', type: 'rect', x: 5, y: 5, w: 20, h: 10, color: '#000', lineWidth: 1,
+    };
+
+    expect(getSketchEntitiesBounds([line, rect])).toEqual({
+      minX: 0,
+      minY: 0,
+      maxX: 25,
+      maxY: 15,
+    });
+  });
+
+  it('returns null bounds for an empty entity list', () => {
+    expect(getSketchEntitiesBounds([])).toBeNull();
   });
 
   it('finds segment intersections and supports an infinite target line', () => {

@@ -4,6 +4,8 @@ import {
   Circle as CircleIcon,
   Copy,
   ArrowUpRight,
+  Eye,
+  EyeOff,
   Minus,
   MousePointer2,
   Scissors,
@@ -211,6 +213,33 @@ type Draft =
   | ArcDraft
   | null;
 
+// The single choke point every sketch edit passes through (see
+// useSketchDocumentHistory's `postProcess` option). Without this, geometric
+// constraints (Horizontal/Vertical/Coincident/Parallel/Perpendicular/Equal/
+// Fix/Midpoint/Concentric/Tangent/Symmetry) only ever computed a status
+// badge — dragging a grip, editing a driving dimension, or running
+// Trim/Extend/Offset/Mirror never actually re-solved and applied the
+// constrained geometry. Running the solver here means every commit,
+// transient drag update, and finished transaction reflects solved geometry.
+const SHOW_DIMENSIONS_STORAGE_KEY = 'znteqr.facilityMap.sketch.showDimensions';
+
+// A comfortable, zoom-independent click/hover target for thin geometry —
+// matches the 10px radius already used for endpoint/midpoint/grid snapping
+// (see the `threshold` computed with cssPixelsToSketchUnits in this file).
+const ENTITY_HIT_TARGET_PX = 10;
+
+const applySketchConstraintSolve = (document: SketchDocument): SketchDocument => {
+  if (!document.constraints.length) return document;
+  const solved = solveSketchConstraints(document.entities, document.constraints);
+  if (solved.status === 'conflict') {
+    // Don't let a conflicting constraint pair silently rewrite geometry —
+    // keep the entities as edited and only refresh the conflict flags so
+    // the UI can surface it.
+    return { ...document, constraints: solved.constraints };
+  }
+  return { ...document, entities: solved.entities, constraints: solved.constraints };
+};
+
 type DynamicLocks = {
   a: boolean;
   b: boolean;
@@ -218,6 +247,25 @@ type DynamicLocks = {
 
 export type InventorSketchOverlayProps = {
   enabled: boolean;
+  /**
+   * Lets finished sketch geometry be *clicked* outside Sketch Mode, the way
+   * a closed Inventor sketch is still a selectable, draggable feature in
+   * the browser tree — but only as one rigid whole. Unlike `enabled`, this
+   * never shows the create/modify toolbar, never allows per-entity/grip
+   * editing, and a click is handed to `onGroupMouseDown` instead of being
+   * handled internally: moving the whole block is the parent's job (its
+   * existing pin/zone/annotation drag-and-marquee-select system), because
+   * only it knows about the *other* objects a multi-select drag might also
+   * be carrying along.
+   */
+  interactive?: boolean;
+  /**
+   * A live, render-only (dx, dy) shift — in this document's own model
+   * units — applied to every entity while the parent is mid-drag on a
+   * whole-sketch group move. Never touches the underlying document/history;
+   * the parent commits the real change itself once the drag ends.
+   */
+  translateOffset?: { dx: number; dy: number };
   visible?: boolean;
   storageKey: string;
   sessionKey?: number | string;
@@ -226,12 +274,16 @@ export type InventorSketchOverlayProps = {
   canvasHeight: number;
   t: (key: string, params?: Record<string, unknown>) => string;
   onDocumentChange?: (document: SketchDocument) => void;
+  /** Entity mousedown while `interactive` and not `enabled` — see `interactive`. */
+  onGroupMouseDown?: (event: React.MouseEvent) => void;
   onFinish: (document: SketchDocument) => void;
   onCancel: () => void;
 };
 
 export default function InventorSketchOverlay({
   enabled,
+  interactive = false,
+  translateOffset,
   visible = true,
   storageKey,
   sessionKey,
@@ -240,6 +292,7 @@ export default function InventorSketchOverlay({
   canvasHeight,
   t,
   onDocumentChange,
+  onGroupMouseDown,
   onFinish,
   onCancel,
 }: InventorSketchOverlayProps) {
@@ -247,17 +300,35 @@ export default function InventorSketchOverlay({
     initialDocument,
     sessionKey,
     onChange: onDocumentChange,
+    postProcess: applySketchConstraintSolve,
   });
   const store = sketchHistory.document;
   const setStore = sketchHistory.commit;
   const [commandState, setCommandState] = useState(() => createSketchCommandState());
   const tool = commandState.tool;
+  // `enabled` drives full Sketch Mode (toolbar, panels, every tool).
+  // `interactive` alone only allows select + drag-to-move on existing
+  // geometry — see the prop doc comment above. Both funnel through the
+  // same select/grip handlers, which is safe because the effect below
+  // already forces `tool` back to 'select' whenever `enabled` is false.
+  const canInteract = enabled || interactive;
   const setTool = useCallback((nextTool: SketchTool) => {
     setCommandState((current) => selectSketchTool(current, nextTool));
   }, []);
   const [presets, setPresets] = useState<ToolPresetMap>(() =>
     parseToolPresets(localStorage.getItem(TOOL_PRESET_STORAGE_KEY)),
   );
+  // A view-only preference (not sketch document data): whether the
+  // auto-generated length/angle/radius labels render at all. With many
+  // entities on screen these stack up and become unreadable, so users need
+  // a bulk on/off switch in addition to hiding individual dimensions.
+  const [showDimensions, setShowDimensions] = useState(() => {
+    try {
+      return localStorage.getItem(SHOW_DIMENSIONS_STORAGE_KEY) !== 'false';
+    } catch {
+      return true;
+    }
+  });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedDimensionId, setSelectedDimensionId] = useState('');
   const [activeSnap, setActiveSnap] = useState<SnapCandidate | null>(null);
@@ -274,6 +345,12 @@ export default function InventorSketchOverlay({
   const dragRef = useRef<{ start: Point; entities: SketchEntity[] } | null>(null);
   const gripRef = useRef<{ entity: SketchEntity; grip: BasicGrip } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // Live rendered width of the SVG in CSS pixels, kept in sync via
+  // ResizeObserver so entity hit-areas stay a constant on-screen size
+  // (ENTITY_HIT_TARGET_PX) across zoom levels and window resizes — mirrors
+  // the on-demand `rect.width` reads already used for snap thresholds, but
+  // as state so it's available synchronously during render.
+  const [viewportWidthPx, setViewportWidthPx] = useState(0);
 
   useEffect(() => {
     setSelectedIds([]);
@@ -288,6 +365,29 @@ export default function InventorSketchOverlay({
   }, [presets]);
 
   useEffect(() => {
+    try {
+      localStorage.setItem(SHOW_DIMENSIONS_STORAGE_KEY, String(showDimensions));
+    } catch {
+      // Ignore storage failures (private browsing, quota, etc.) — the
+      // toggle still works for the current session.
+    }
+  }, [showDimensions]);
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || typeof ResizeObserver === 'undefined') return;
+    const updateWidth = () => setViewportWidthPx(svg.getBoundingClientRect().width);
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(svg);
+    return () => observer.disconnect();
+  }, [enabled]);
+
+  useEffect(() => {
+    // Per-entity/grip editing (selection, drafts, drag state, tool) only
+    // ever exists while fully `enabled` — `interactive` alone never sets
+    // any of it (see `onGroupMouseDown`), so it's safe to key this purely
+    // on `enabled` again.
     if (!enabled) {
       setDraft(null);
       setSelectedIds([]);
@@ -828,7 +928,16 @@ export default function InventorSketchOverlay({
   };
 
   const handleEntityMouseDown = (event: React.MouseEvent<SVGElement>, entity: SketchEntity) => {
-    if (!enabled) return;
+    if (!enabled) {
+      // Outside Sketch Mode, a click on any entity selects/drags the whole
+      // sketch as one block — that's the parent's existing pin/zone/
+      // annotation select+drag system, not per-entity editing here.
+      if (interactive) {
+        event.stopPropagation();
+        onGroupMouseDown?.(event);
+      }
+      return;
+    }
     const point = pointFromEvent(event);
     if (!point) return;
     event.stopPropagation();
@@ -1118,6 +1227,13 @@ export default function InventorSketchOverlay({
     <div className="pointer-events-none absolute inset-0 z-[10]" data-facility-layer="sketch">
       <svg
         ref={svgRef}
+        // Only `enabled` makes the SVG itself a hit target — otherwise an
+        // empty-space click inside its bounds would be swallowed here and
+        // never reach the floor plan's own canvas beneath it, breaking its
+        // marquee-select. Individual entities re-enable their own hit
+        // testing below regardless (`canInteract`), which is how a click
+        // lands on a *sketch line* without the SVG background eating clicks
+        // on the empty space around it.
         className={`absolute inset-0 h-full w-full ${enabled ? 'pointer-events-auto' : 'pointer-events-none'}`}
         viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
         preserveAspectRatio="none"
@@ -1136,26 +1252,50 @@ export default function InventorSketchOverlay({
           handleEntityMouseUp();
         }}
       >
+        <g
+          transform={
+            translateOffset
+              ? `translate(${translateOffset.dx} ${translateOffset.dy})`
+              : undefined
+          }
+        >
         {store.entities.map((entity) => {
           const selected = selectedIds.includes(entity.id);
-          const common = {
-            stroke: entity.color,
-            strokeWidth: selected ? entity.lineWidth + 0.8 : entity.lineWidth,
+          const visualStrokeWidth = selected ? entity.lineWidth + 0.8 : entity.lineWidth;
+          // Thin lines (0.15–1 model units, often sub-pixel on screen) are
+          // nearly impossible to click precisely. Give every entity an
+          // invisible, generously-wide "hit" twin sized to a constant
+          // on-screen target (ENTITY_HIT_TARGET_PX) — the same idea as the
+          // endpoint/midpoint snap threshold below — while the visible
+          // stroke keeps rendering at its real width.
+          const hitStrokeWidth = viewportWidthPx > 0
+            ? Math.max(
+                visualStrokeWidth,
+                cssPixelsToSketchUnits(ENTITY_HIT_TARGET_PX, viewportWidthPx, canvasWidth),
+              )
+            : visualStrokeWidth;
+          const cursor =
+            canInteract && tool === 'select'
+              ? 'move'
+              : enabled &&
+                  (tool === 'trim' ||
+                    tool === 'extend' ||
+                    tool === 'break' ||
+                    tool === 'offset')
+                ? 'crosshair'
+                : 'default';
+          const interaction = {
+            stroke: 'transparent',
+            strokeWidth: hitStrokeWidth,
             vectorEffect: 'non-scaling-stroke' as const,
             fill: 'none',
-            style: {
-              cursor:
-                enabled && tool === 'select'
-                  ? 'move'
-                  : enabled &&
-                      (tool === 'trim' ||
-                        tool === 'extend' ||
-                        tool === 'break' ||
-                        tool === 'offset')
-                    ? 'crosshair'
-                    : 'default',
-            },
-            pointerEvents: enabled ? ('all' as const) : ('none' as const),
+            style: { cursor },
+            // 'all' (not 'stroke') keeps the original behavior of closed
+            // shapes (rect/circle/polyline) being clickable anywhere in
+            // their interior, not just near the edge — the wider
+            // hitStrokeWidth above only adds a more forgiving edge band on
+            // top of that, it doesn't take anything away.
+            pointerEvents: canInteract ? ('all' as const) : ('none' as const),
             onMouseDown: (event: React.MouseEvent<SVGElement>) => handleEntityMouseDown(event, entity),
             onMouseMove: (event: React.MouseEvent<SVGElement>) => {
               if (tool !== 'trim' && tool !== 'extend') return;
@@ -1172,53 +1312,48 @@ export default function InventorSketchOverlay({
             },
             onMouseUp: handleEntityMouseUp,
           };
+          const visual = {
+            stroke: entity.color,
+            strokeWidth: visualStrokeWidth,
+            vectorEffect: 'non-scaling-stroke' as const,
+            fill: 'none',
+            pointerEvents: 'none' as const,
+          };
 
           if (entity.type === 'line') {
             return (
-              <line
-                key={entity.id}
-                x1={entity.x1}
-                y1={entity.y1}
-                x2={entity.x2}
-                y2={entity.y2}
-                {...common}
-              />
+              <g key={entity.id}>
+                <line x1={entity.x1} y1={entity.y1} x2={entity.x2} y2={entity.y2} {...interaction} />
+                <line x1={entity.x1} y1={entity.y1} x2={entity.x2} y2={entity.y2} {...visual} />
+              </g>
             );
           }
 
           if (entity.type === 'rect') {
             return (
-              <rect
-                key={entity.id}
-                x={entity.x}
-                y={entity.y}
-                width={entity.w}
-                height={entity.h}
-                {...common}
-              />
+              <g key={entity.id}>
+                <rect x={entity.x} y={entity.y} width={entity.w} height={entity.h} {...interaction} />
+                <rect x={entity.x} y={entity.y} width={entity.w} height={entity.h} {...visual} />
+              </g>
             );
           }
 
           if (entity.type === 'circle') {
             return (
-              <circle
-                key={entity.id}
-                cx={entity.cx}
-                cy={entity.cy}
-                r={entity.r}
-                {...common}
-              />
+              <g key={entity.id}>
+                <circle cx={entity.cx} cy={entity.cy} r={entity.r} {...interaction} />
+                <circle cx={entity.cx} cy={entity.cy} r={entity.r} {...visual} />
+              </g>
             );
           }
 
           if (entity.type === 'polyline') {
+            const points = entity.points.map((point) => `${point.x},${point.y}`).join(' ');
             return (
-              <polyline
-                key={entity.id}
-                points={entity.points.map((point) => `${point.x},${point.y}`).join(' ')}
-                {...common}
-                fill="none"
-              />
+              <g key={entity.id}>
+                <polyline points={points} {...interaction} />
+                <polyline points={points} {...visual} />
+              </g>
             );
           }
 
@@ -1230,12 +1365,12 @@ export default function InventorSketchOverlay({
           const normalizedDelta = ((rawDelta % 360) + 360) % 360;
           const largeArcFlag = normalizedDelta > 180 ? 1 : 0;
           const sweepFlag = entity.clockwise ? 0 : 1;
+          const arcPath = `M ${start.x} ${start.y} A ${entity.r} ${entity.r} 0 ${largeArcFlag} ${sweepFlag} ${end.x} ${end.y}`;
           return (
-            <path
-              key={entity.id}
-              d={`M ${start.x} ${start.y} A ${entity.r} ${entity.r} 0 ${largeArcFlag} ${sweepFlag} ${end.x} ${end.y}`}
-              {...common}
-            />
+            <g key={entity.id}>
+              <path d={arcPath} {...interaction} />
+              <path d={arcPath} {...visual} />
+            </g>
           );
         })}
 
@@ -1245,7 +1380,7 @@ export default function InventorSketchOverlay({
         />
 
         <DimensionRenderer
-          dimensions={viewDimensions}
+          dimensions={showDimensions ? viewDimensions : []}
           document={store}
           enabled={enabled}
           selectedId={selectedDimensionId}
@@ -1255,6 +1390,7 @@ export default function InventorSketchOverlay({
           }}
           onEdit={editDimension}
         />
+        </g>
 
         {draftPreview?.type === 'line' && (
           <line
@@ -1520,6 +1656,15 @@ export default function InventorSketchOverlay({
               title={t('facilityMap.redo')}
             >
               <Redo2 className="h-4 w-4" />
+            </button>
+            <span className="mx-1 h-5 w-px bg-white/15" />
+            <button
+              type="button"
+              onClick={() => setShowDimensions((current) => !current)}
+              className={`rounded-md p-2 ${showDimensions ? 'hover:bg-white/10' : 'bg-sky-500/20 text-sky-300'}`}
+              title={showDimensions ? t('facilityMap.sketchHideDimensions') : t('facilityMap.sketchShowDimensions')}
+            >
+              {showDimensions ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </button>
             <span className="mx-1 h-5 w-px bg-white/15" />
             <button

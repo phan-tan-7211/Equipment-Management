@@ -118,6 +118,65 @@ describe('constraint solver', () => {
     ).toBe(true);
   });
 
+  it('keeps a fixed entity pinned even when another constraint tries to move it', () => {
+    const constraints: SketchConstraint[] = [
+      { id: 'fix-a', kind: 'fix', entityIds: ['a'], enabled: true },
+      {
+        id: 'coincident',
+        kind: 'coincident',
+        entityIds: ['b', 'a'],
+        enabled: true,
+      },
+    ];
+
+    const result = solveSketchConstraints(
+      [
+        line('a', 0, 0, 10, 0),
+        line('b', 3, 3, 13, 3),
+      ],
+      constraints,
+    );
+
+    // "a" is fixed: it must stay exactly where it started even though the
+    // coincident constraint (b's start -> a's start) would otherwise pull it.
+    expect(result.entities[0]).toMatchObject({
+      x1: 0,
+      y1: 0,
+      x2: 10,
+      y2: 0,
+    });
+  });
+
+  it('flags parallel and perpendicular constraints on the same pair as a conflict', () => {
+    const constraints: SketchConstraint[] = [
+      {
+        id: 'parallel',
+        kind: 'parallel',
+        entityIds: ['a', 'b'],
+        enabled: true,
+      },
+      {
+        id: 'perpendicular',
+        kind: 'perpendicular',
+        entityIds: ['a', 'b'],
+        enabled: true,
+      },
+    ];
+
+    const result = solveSketchConstraints(
+      [
+        line('a', 0, 0, 10, 0),
+        line('b', 0, 5, 10, 6),
+      ],
+      constraints,
+    );
+
+    expect(result.status).toBe('conflict');
+    expect(
+      result.constraints.filter((constraint) => constraint.conflict),
+    ).toHaveLength(2);
+  });
+
   it('stops at max iterations when convergence cannot be reached', () => {
     const result = solveSketchConstraints(
       [line('a', 0, 0, 10, 2)],

@@ -5,6 +5,57 @@ import type {
   SketchPoint,
 } from './types';
 
+/** Tight axis-aligned bounds of an entire sketch, in its own model units. */
+export function getSketchEntitiesBounds(
+  entities: SketchEntity[],
+): { minX: number; minY: number; maxX: number; maxY: number } | null {
+  if (!entities.length) return null;
+  const boxes = entities.map((entity) => {
+    if (entity.type === 'line') {
+      return {
+        minX: Math.min(entity.x1, entity.x2),
+        minY: Math.min(entity.y1, entity.y2),
+        maxX: Math.max(entity.x1, entity.x2),
+        maxY: Math.max(entity.y1, entity.y2),
+      };
+    }
+    if (entity.type === 'rect') {
+      return {
+        minX: Math.min(entity.x, entity.x + entity.w),
+        minY: Math.min(entity.y, entity.y + entity.h),
+        maxX: Math.max(entity.x, entity.x + entity.w),
+        maxY: Math.max(entity.y, entity.y + entity.h),
+      };
+    }
+    if (entity.type === 'circle') {
+      return {
+        minX: entity.cx - entity.r,
+        minY: entity.cy - entity.r,
+        maxX: entity.cx + entity.r,
+        maxY: entity.cy + entity.r,
+      };
+    }
+    if (entity.type === 'arc') {
+      return getArcBounds(entity);
+    }
+    const xs = entity.points.map((point) => point.x);
+    const ys = entity.points.map((point) => point.y);
+    return {
+      minX: Math.min(...xs),
+      minY: Math.min(...ys),
+      maxX: Math.max(...xs),
+      maxY: Math.max(...ys),
+    };
+  });
+
+  return {
+    minX: Math.min(...boxes.map((box) => box.minX)),
+    minY: Math.min(...boxes.map((box) => box.minY)),
+    maxX: Math.max(...boxes.map((box) => box.maxX)),
+    maxY: Math.max(...boxes.map((box) => box.maxY)),
+  };
+}
+
 export type SegmentIntersection = {
   point: SketchPoint;
   t: number;
@@ -31,6 +82,42 @@ export const arcPoint = (
   return {
     x: entity.cx + Math.cos(radians) * entity.r,
     y: entity.cy + Math.sin(radians) * entity.r,
+  };
+};
+
+const normalizeAngle360 = (deg: number): number => ((deg % 360) + 360) % 360;
+
+/**
+ * Tight axis-aligned bounds of the swept arc — not the full circle. Used for
+ * selection/hit-testing, where treating a short arc as a full circle would
+ * select it from empty space nowhere near the visible curve.
+ */
+export const getArcBounds = (
+  entity: ArcEntity,
+): { minX: number; minY: number; maxX: number; maxY: number } => {
+  const sweepDeg = entity.clockwise
+    ? normalizeAngle360(entity.startAngleDeg - entity.endAngleDeg)
+    : normalizeAngle360(entity.endAngleDeg - entity.startAngleDeg);
+
+  const points = [
+    arcPoint(entity, entity.startAngleDeg),
+    arcPoint(entity, entity.endAngleDeg),
+  ];
+
+  [0, 90, 180, 270].forEach((axisDeg) => {
+    const offset = entity.clockwise
+      ? normalizeAngle360(entity.startAngleDeg - axisDeg)
+      : normalizeAngle360(axisDeg - entity.startAngleDeg);
+    if (offset <= sweepDeg) {
+      points.push(arcPoint(entity, axisDeg));
+    }
+  });
+
+  return {
+    minX: Math.min(...points.map((point) => point.x)),
+    minY: Math.min(...points.map((point) => point.y)),
+    maxX: Math.max(...points.map((point) => point.x)),
+    maxY: Math.max(...points.map((point) => point.y)),
   };
 };
 

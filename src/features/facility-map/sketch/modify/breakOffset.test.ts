@@ -97,6 +97,41 @@ describe('break/offset modify', () => {
     expect(offset.id).toBe('offset-polyline');
     expect(offset.points).toHaveLength(3);
     expect(offset.points[0]).toEqual({ x: 0, y: 2 });
+    // The 90° corner at (10, 0) is the miter join: the offset edges are the
+    // lines y = 2 and x = 8, so the corner vertex must land exactly at
+    // their intersection (8, 2) — not merely `distance` away from (10, 0)
+    // along the un-scaled bisector, which would under-shoot to (8.59, 1.41).
+    expect(offset.points[1].x).toBeCloseTo(8, 9);
+    expect(offset.points[1].y).toBeCloseTo(2, 9);
+  });
+
+  it('miters a closed rectangle so every offset edge stays a uniform distance away', () => {
+    const rectangle: PolylineEntity = {
+      ...style,
+      id: 'rectangle',
+      type: 'polyline',
+      closed: true,
+      points: [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+        { x: 0, y: 10 },
+      ],
+    };
+
+    const offset = offsetPolyline(
+      rectangle,
+      2,
+      { x: 5, y: 5 },
+      'offset-rect',
+    )!;
+
+    expect(offset.points).toEqual([
+      { x: 2, y: 2 },
+      { x: 8, y: 2 },
+      { x: 8, y: 8 },
+      { x: 2, y: 8 },
+    ]);
   });
 
   it('returns null for unsupported offset entities', () => {

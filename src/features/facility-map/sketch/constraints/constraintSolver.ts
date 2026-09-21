@@ -101,6 +101,7 @@ const detectConflicts = (
 ): Set<string> => {
   const conflicts = new Set<string>();
   const byEntity = new Map<string, SketchConstraint[]>();
+  const byPair = new Map<string, SketchConstraint[]>();
 
   constraints
     .filter((constraint) => constraint.enabled !== false)
@@ -110,6 +111,17 @@ const detectConflicts = (
         list.push(constraint);
         byEntity.set(entityId, list);
       });
+
+      const [first, second] = constraint.entityIds;
+      if (
+        second &&
+        (constraint.kind === 'parallel' || constraint.kind === 'perpendicular')
+      ) {
+        const pairKey = [first, second].sort().join('|');
+        const list = byPair.get(pairKey) ?? [];
+        list.push(constraint);
+        byPair.set(pairKey, list);
+      }
     });
 
   byEntity.forEach((entityConstraints, entityId) => {
@@ -130,6 +142,16 @@ const detectConflicts = (
     ) {
       conflicts.add(horizontal.id);
       conflicts.add(vertical.id);
+    }
+  });
+
+  // A pair of lines cannot be both parallel and perpendicular at once —
+  // flag every parallel/perpendicular constraint sharing that pair as conflicting
+  // instead of letting the later one in array order silently win.
+  byPair.forEach((pairConstraints) => {
+    const kinds = new Set(pairConstraints.map((constraint) => constraint.kind));
+    if (kinds.has('parallel') && kinds.has('perpendicular')) {
+      pairConstraints.forEach((constraint) => conflicts.add(constraint.id));
     }
   });
 
@@ -236,7 +258,30 @@ export const solveSketchConstraints = (
     };
   }
 
-  let current = structuredClone(entities);
+  const fixedIds = new Set(
+    markedConstraints
+      .filter(
+        (constraint) =>
+          constraint.enabled !== false &&
+          constraint.kind === 'fix',
+      )
+      .flatMap((constraint) => constraint.entityIds),
+  );
+  // Fix pins an entity to its pre-solve geometry. Other constraints may still
+  // reference it as an anchor, but nothing in this solve pass is allowed to
+  // move it — restore it after every iteration instead of special-casing
+  // every constraint's apply function.
+  const original = new Map(entities.map((entity) => [entity.id, entity]));
+  const restoreFixed = (list: SketchEntity[]): SketchEntity[] =>
+    fixedIds.size === 0
+      ? list
+      : list.map((entity) =>
+          fixedIds.has(entity.id)
+            ? structuredClone(original.get(entity.id) ?? entity)
+            : entity,
+        );
+
+  let current = restoreFixed(structuredClone(entities));
   let converged = false;
   let iterations = 0;
 
@@ -245,6 +290,7 @@ export const solveSketchConstraints = (
     markedConstraints.forEach((constraint) => {
       current = applyConstraint(current, constraint);
     });
+    current = restoreFixed(current);
     iterations = index + 1;
 
     const maxDelta = current.reduce((max, entity, entityIndex) => {
@@ -260,15 +306,6 @@ export const solveSketchConstraints = (
     }
   }
 
-  const fixedIds = new Set(
-    markedConstraints
-      .filter(
-        (constraint) =>
-          constraint.enabled !== false &&
-          constraint.kind === 'fix',
-      )
-      .flatMap((constraint) => constraint.entityIds),
-  );
   const fullyConstrained =
     current.length > 0 &&
     current.every((entity) => fixedIds.has(entity.id));

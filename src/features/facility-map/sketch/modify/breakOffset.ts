@@ -188,8 +188,17 @@ export const offsetPolyline = (
     polyline.points[(selectedIndex + 1) % polyline.points.length];
   const side = lineSideFromClick(selectedA, selectedB, click);
 
+  // A corner's offset vertex sits on the bisector of its two adjacent edge
+  // normals, but it must travel *further* than `distance` along that
+  // bisector — by a factor of 1 / cos(half the angle between the edges) —
+  // so the offset edges stay exactly `distance` away from the originals
+  // (the standard CAD/SVG "miter join"). Moving by `distance` directly (the
+  // previous behavior) under-shoots on every non-collinear corner.
+  const MITER_LIMIT = 8;
+
   const points = polyline.points.map((point, index) => {
     let normal: Normal;
+    let scale = distance;
 
     if (!polyline.closed && index === 0) {
       normal = normals[0];
@@ -199,18 +208,27 @@ export const offsetPolyline = (
       const previousIndex =
         (index - 1 + normals.length) % normals.length;
       const nextIndex = index % normals.length;
-      normal = normalize(
+      const previousNormal = normals[previousIndex];
+      const nextNormal = normals[nextIndex];
+      const bisector = normalize(
         {
-          x: normals[previousIndex].x + normals[nextIndex].x,
-          y: normals[previousIndex].y + normals[nextIndex].y,
+          x: previousNormal.x + nextNormal.x,
+          y: previousNormal.y + nextNormal.y,
         },
-        normals[nextIndex],
+        nextNormal,
       );
+      const alignment = Math.abs(
+        bisector.x * previousNormal.x + bisector.y * previousNormal.y,
+      );
+      scale = alignment > 1e-6
+        ? Math.min(distance / alignment, distance * MITER_LIMIT)
+        : distance;
+      normal = bisector;
     }
 
     return {
-      x: point.x + normal.x * distance * side,
-      y: point.y + normal.y * distance * side,
+      x: point.x + normal.x * scale * side,
+      y: point.y + normal.y * scale * side,
     };
   });
 

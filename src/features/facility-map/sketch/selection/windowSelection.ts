@@ -1,3 +1,4 @@
+import { getArcBounds } from '../core/geometry';
 import type { SketchEntity, SketchPoint } from '../core/types';
 
 type Bounds = {
@@ -35,6 +36,10 @@ export const getEntityBounds = (entity: SketchEntity): Bounds => {
       maxX: Math.max(entity.x, entity.x + entity.w),
       maxY: Math.max(entity.y, entity.y + entity.h),
     };
+  }
+
+  if (entity.type === 'arc') {
+    return getArcBounds(entity);
   }
 
   return {

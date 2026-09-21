@@ -56,4 +56,39 @@ describe('window selection', () => {
       ),
     ).toEqual([]);
   });
+
+  it('uses the arc\'s swept bounds, not its full circle, for hit-testing', () => {
+    // Quarter arc living entirely in the first quadrant (x, y in [0, 10]).
+    const arc: SketchEntity = {
+      id: 'arc',
+      type: 'arc',
+      cx: 0,
+      cy: 0,
+      r: 10,
+      startAngleDeg: 0,
+      endAngleDeg: 90,
+      color: '#000000',
+      lineWidth: 1,
+    };
+
+    // A crossing-select box in the third quadrant overlaps the full circle's
+    // bounding square [-10,10]x[-10,10], but never touches the visible
+    // quarter-arc curve itself.
+    expect(
+      selectEntitiesInDrag(
+        [arc],
+        { x: -15, y: -15 },
+        { x: -5, y: -5 },
+      ),
+    ).toEqual([]);
+
+    // A box actually covering the quarter arc's quadrant does select it.
+    expect(
+      selectEntitiesInDrag(
+        [arc],
+        { x: 10, y: 10 },
+        { x: -1, y: -1 },
+      ),
+    ).toEqual(['arc']);
+  });
 });
