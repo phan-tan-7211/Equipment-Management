@@ -88,14 +88,21 @@ describe('advanced constraints', () => {
     expect(result.entities[1]).toMatchObject({ r: 12 });
   });
 
-  it('records fix without moving geometry', () => {
+  it('records fix without moving geometry, snapshotting the entity as fixedGeometry', () => {
     const entities = [line('a', 1, 2, 3, 4)];
     const result = applyFixConstraint(entities, 'a', 'fix')!;
     expect(result.entities).toBe(entities);
     expect(result.constraint).toMatchObject({
       kind: 'fix',
       entityIds: ['a'],
+      fixedGeometry: { id: 'a', x1: 1, y1: 2, x2: 3, y2: 4 },
     });
+
+    // The snapshot must be independent of the source entity — later
+    // mutating (or replacing) "a" can't retroactively change what Fix
+    // anchors to.
+    (entities[0] as { x1: number }).x1 = 999;
+    expect(result.constraint.fixedGeometry).toMatchObject({ x1: 1 });
   });
 
   it('moves the nearest target endpoint to reference midpoint', () => {

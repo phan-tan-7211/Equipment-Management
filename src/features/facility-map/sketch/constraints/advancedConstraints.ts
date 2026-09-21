@@ -149,6 +149,10 @@ export const applyFixConstraint = (
       kind: 'fix',
       entityIds: [target.id],
       enabled: true,
+      // Snapshot the geometry at the moment Fix is applied — this, not
+      // whatever position the entity happens to be at when the solver next
+      // runs, is what the solver pins it back to (see constraintSolver.ts).
+      fixedGeometry: structuredClone(target),
     },
   };
 };

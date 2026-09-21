@@ -112,6 +112,15 @@ export type SketchConstraint = {
   enabled?: boolean;
   conflict?: boolean;
   overConstrained?: boolean;
+  /**
+   * For `kind: 'fix'` only — the entity's exact geometry at the moment Fix
+   * was applied. The solver restores to THIS snapshot, not to whatever the
+   * entity looks like when solve happens to run, so a direct user
+   * drag/edit on a fixed entity can't stick either (only removing the Fix
+   * constraint can move it). Absent on constraints created before this
+   * field existed — the solver falls back to its pre-solve behavior then.
+   */
+  fixedGeometry?: SketchEntity;
 };
 
 export type SketchParameterDimension = 'scalar' | 'length';

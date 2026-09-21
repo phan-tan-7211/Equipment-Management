@@ -50,6 +50,7 @@ import {
   type SketchDocument,
 } from '@/features/facility-map/sketch';
 import { SketchPrintLayer } from '@/features/facility-map/sketch/rendering/SketchPrintLayer';
+import { deleteSelectedSketchLayers } from '@/features/facility-map/pages/sketchLayerOperations';
 import {
   getSketchEntitiesBounds,
   translateSketchEntity,
@@ -165,7 +166,7 @@ type SketchLayer = {
   document: SketchDocument;
 };
 
-type FloorPlanState = {
+export type FloorPlanState = {
   name: string;
   building: string;
   floor: string;
@@ -177,6 +178,12 @@ type FloorPlanState = {
   zones: Zone[];
   annotations: Annotation[];
   sketchDocument?: SketchDocument;
+  /**
+   * Lock state for the default sketch — mirrors SketchLayer.locked for
+   * additional sketches. Optional so plans saved before this field existed
+   * (undefined -> unlocked) keep loading unchanged.
+   */
+  sketchLocked?: boolean;
   sketches: SketchLayer[];
 };
 
@@ -185,12 +192,12 @@ const PLAN_CACHE_KEY = 'znteqr:facility-floor-plan:dryrun:plans:v1';
 const HISTORY_KEY = 'znteqr:facility-floor-plan:dryrun:history:v1';
 const DRAWING_PRESET_KEY = 'znteqr:facility-floor-plan:drawing-presets:v1';
 
-const planKey = (building: string, floor: string) => `${building}::${floor}`;
+export const planKey = (building: string, floor: string) => `${building}::${floor}`;
 
 // The original, single always-present sketch (backward compatible with
 // plans saved before multi-sketch support existed). Additional sketches
 // the user creates live in `plan.sketches` and are addressed by their own id.
-const DEFAULT_SKETCH_ID = 'default';
+export const DEFAULT_SKETCH_ID = 'default';
 
 type PlanHistoryEntry = {
   id: string;
@@ -320,7 +327,7 @@ const statusTranslationKey = (status?: string | null) => {
   }
 };
 
-const EMPTY_PLAN: FloorPlanState = {
+export const EMPTY_PLAN: FloorPlanState = {
   name: 'Plant 1 - Main Facility',
   building: 'Main Building',
   floor: 'Floor 1',
@@ -422,7 +429,7 @@ const demoLayoutFor = (building: string, floor: string): FloorPlanState => {
   return base;
 };
 
-const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
+export const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
   ...EMPTY_PLAN,
   ...value,
   pins: value.pins ?? [],
@@ -432,6 +439,9 @@ const ensurePlanShape = (value: Partial<FloorPlanState>): FloorPlanState => ({
   sketchDocument: value.sketchDocument
     ? cloneSketchDocument(value.sketchDocument)
     : undefined,
+  // Absent on plans saved before this field existed — defaults to
+  // unlocked, same as every sketch already behaved.
+  sketchLocked: value.sketchLocked ?? false,
   sketches: (value.sketches ?? []).map((layer) => ({
     ...layer,
     document: cloneSketchDocument(layer.document),
@@ -516,7 +526,10 @@ export default function FacilityFloorPlan() {
   const [drawTool, setDrawTool] = useState<DrawTool>('select');
   const [sketchMode, setSketchMode] = useState(false);
   const [sketchVisible, setSketchVisible] = useState(true);
-  const [sketchLocked, setSketchLocked] = useState(false);
+  // Persisted on the plan (see FloorPlanState.sketchLocked) — unlike
+  // sketchVisible, which stays local view-only state on purpose, lock is a
+  // durable property of the sketch itself and must survive reload/remount.
+  const sketchLocked = plan.sketchLocked ?? false;
   const [activeSketchId, setActiveSketchId] = useState<string>(DEFAULT_SKETCH_ID);
   const [sketchSessionKey, setSketchSessionKey] = useState(0);
   const [draggingSketchLayerId, setDraggingSketchLayerId] = useState('');
@@ -672,6 +685,12 @@ export default function FacilityFloorPlan() {
       });
       return stack.slice(0, -1);
     });
+    // The default sketch's InventorSketchOverlay instance persists across
+    // plan-level undo/redo (it never unmounts the way a restored/removed
+    // entry in `sketches` naturally does) — bump its session key so it
+    // re-seeds from whatever `plan.sketchDocument` undo just restored,
+    // instead of keeping its own stale internal copy.
+    setSketchSessionKey((value) => value + 1);
   };
 
   const redo = () => {
@@ -685,6 +704,7 @@ export default function FacilityFloorPlan() {
       });
       return stack.slice(0, -1);
     });
+    setSketchSessionKey((value) => value + 1);
   };
 
   const filteredEquipment = useMemo(() => {
@@ -817,16 +837,62 @@ export default function FacilityFloorPlan() {
 
   const deleteObjectsByIds = useCallback((ids: Set<string>) => {
     if (!ids.size) return;
-    commitPlan((current) => ({
-      ...current,
-      pins: current.pins.filter((pin) => !ids.has(`asset:${pin.equipmentId}`)),
-      overlayPins: current.overlayPins.filter((pin) => !ids.has(`overlay:${pin.id}`)),
-      zones: current.zones.filter((zone) => !ids.has(`zone:${zone.id}`)),
-      annotations: current.annotations.filter((annotation) => !ids.has(`annotation:${annotation.id}`)),
-    }));
+    // A locked sketch is never deletable by the generic Delete key, even if
+    // its `sketch:<id>` somehow ended up in the selection — defense in
+    // depth alongside lock already excluding it from click/marquee-select.
+    // Computed from the outer (already up to date) `plan`/`sketchLocked`,
+    // same as every other decision in this handler and its siblings
+    // (toggleSketchLayerLock, deleteSketchLayer, ...) — commitPlan's own
+    // updater still re-derives the actual filtered data from `current` so
+    // the write itself is never stale.
+    const deletesDefaultSketch = ids.has(`sketch:${DEFAULT_SKETCH_ID}`) && !sketchLocked;
+    commitPlan((current) => {
+      const sketchResult = deleteSelectedSketchLayers(
+        {
+          defaultSketchId: DEFAULT_SKETCH_ID,
+          defaultSketchDocument: current.sketchDocument,
+          defaultSketchLocked: sketchLocked,
+          sketches: current.sketches,
+        },
+        ids,
+      );
+      return {
+        ...current,
+        pins: current.pins.filter((pin) => !ids.has(`asset:${pin.equipmentId}`)),
+        overlayPins: current.overlayPins.filter((pin) => !ids.has(`overlay:${pin.id}`)),
+        zones: current.zones.filter((zone) => !ids.has(`zone:${zone.id}`)),
+        annotations: current.annotations.filter((annotation) => !ids.has(`annotation:${annotation.id}`)),
+        sketchDocument: sketchResult.sketchDocument,
+        sketches: sketchResult.sketches,
+      };
+    });
+    if (deletesDefaultSketch) {
+      // The default sketch's InventorSketchOverlay instance never unmounts
+      // (unlike an additional sketch removed from `sketches`, which
+      // naturally remounts fresh on undo), so it needs an explicit nudge
+      // to re-seed from the now-empty plan instead of keeping whatever it
+      // already had loaded internally.
+      // planKey(...) is the default sketch's storage key — same formula as
+      // sketchLayerStorageKey(DEFAULT_SKETCH_ID), computed inline so this
+      // callback doesn't depend on a `const` declared further down the
+      // component body (and so its dependency array can name the actual
+      // primitives it closes over, plan.building/plan.floor).
+      saveSketchDocument(planKey(plan.building, plan.floor), createSketchDocument({
+        displayUnit: plan.sketchDocument?.displayUnit,
+        mmPerUnit: plan.sketchDocument?.mmPerUnit,
+      }));
+      setSketchSessionKey((value) => value + 1);
+      if (activeSketchId === DEFAULT_SKETCH_ID) {
+        setSketchMode(false);
+      }
+    }
+    if ([...ids].some((id) => id.startsWith('sketch:') && id !== `sketch:${DEFAULT_SKETCH_ID}` && activeSketchId === id.slice('sketch:'.length))) {
+      setSketchMode(false);
+      setActiveSketchId(DEFAULT_SKETCH_ID);
+    }
     setSelectedMarkerId('');
     setSelectedObjectIds(new Set());
-  }, [commitPlan]);
+  }, [activeSketchId, commitPlan, plan.building, plan.floor, plan.sketchDocument, sketchLocked]);
 
   const annotationBounds = useCallback((annotation: Annotation) => {
     if (annotation.type === 'text') {
@@ -1791,40 +1857,35 @@ export default function FacilityFloorPlan() {
     }));
   };
 
+  const deselectSketch = (id: string) => {
+    setSelectedObjectIds((current) => {
+      if (!current.has(`sketch:${id}`)) return current;
+      const next = new Set(current);
+      next.delete(`sketch:${id}`);
+      return next;
+    });
+  };
+
   const toggleSketchLayerLock = (id: string) => {
     if (id === DEFAULT_SKETCH_ID) {
-      setSketchLocked((value) => {
-        const next = !value;
-        // A lock that just engaged can't also leave the layer selected —
-        // otherwise a still-selected-but-locked sketch could get dragged
-        // along by a leftover multi-select group-move.
-        if (next) setSelectedObjectIds((current) => {
-          if (!current.has(`sketch:${DEFAULT_SKETCH_ID}`)) return current;
-          const next2 = new Set(current);
-          next2.delete(`sketch:${DEFAULT_SKETCH_ID}`);
-          return next2;
-        });
-        return next;
-      });
+      const next = !sketchLocked;
+      commitPlan((current) => ({ ...current, sketchLocked: next }));
+      // A lock that just engaged can't also leave the layer selected —
+      // otherwise a still-selected-but-locked sketch could get dragged
+      // along by a leftover multi-select group-move.
+      if (next) deselectSketch(DEFAULT_SKETCH_ID);
       return;
     }
-    let nextLocked = false;
+    const target = plan.sketches.find((item) => item.id === id);
+    if (!target) return;
+    const next = !target.locked;
     commitPlan((current) => ({
       ...current,
-      sketches: current.sketches.map((item) => {
-        if (item.id !== id) return item;
-        nextLocked = !item.locked;
-        return { ...item, locked: nextLocked };
-      }),
+      sketches: current.sketches.map((item) =>
+        item.id === id ? { ...item, locked: next } : item,
+      ),
     }));
-    if (nextLocked) {
-      setSelectedObjectIds((current) => {
-        if (!current.has(`sketch:${id}`)) return current;
-        const next = new Set(current);
-        next.delete(`sketch:${id}`);
-        return next;
-      });
-    }
+    if (next) deselectSketch(id);
   };
 
   const switchMode = (nextEditMode: boolean) => {

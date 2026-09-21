@@ -258,26 +258,32 @@ export const solveSketchConstraints = (
     };
   }
 
-  const fixedIds = new Set(
-    markedConstraints
-      .filter(
-        (constraint) =>
-          constraint.enabled !== false &&
-          constraint.kind === 'fix',
-      )
-      .flatMap((constraint) => constraint.entityIds),
+  const fixConstraints = markedConstraints.filter(
+    (constraint) => constraint.enabled !== false && constraint.kind === 'fix',
   );
-  // Fix pins an entity to its pre-solve geometry. Other constraints may still
-  // reference it as an anchor, but nothing in this solve pass is allowed to
-  // move it — restore it after every iteration instead of special-casing
-  // every constraint's apply function.
-  const original = new Map(entities.map((entity) => [entity.id, entity]));
+  const fixedIds = new Set(fixConstraints.flatMap((constraint) => constraint.entityIds));
+  // Fix pins an entity to its geometry AT THE MOMENT Fix was applied
+  // (`constraint.fixedGeometry`) — not to whatever the entity looks like
+  // when solve happens to run. The production pipeline is
+  // "user edit/drag -> postProcess -> solve", so by the time solve runs the
+  // passed-in `entities` already reflect the edit; anchoring to that would
+  // let a direct drag on a fixed entity stick, which defeats Fix entirely.
+  // Constraints created before this snapshot existed fall back to the old
+  // pre-solve-entities behavior so older saved sketches don't break.
+  const preSolveEntities = new Map(entities.map((entity) => [entity.id, entity]));
+  const fixedSnapshots = new Map<string, SketchEntity>();
+  fixConstraints.forEach((constraint) => {
+    const entityId = constraint.entityIds[0];
+    if (!entityId) return;
+    const snapshot = constraint.fixedGeometry ?? preSolveEntities.get(entityId);
+    if (snapshot) fixedSnapshots.set(entityId, snapshot);
+  });
   const restoreFixed = (list: SketchEntity[]): SketchEntity[] =>
-    fixedIds.size === 0
+    fixedSnapshots.size === 0
       ? list
       : list.map((entity) =>
-          fixedIds.has(entity.id)
-            ? structuredClone(original.get(entity.id) ?? entity)
+          fixedSnapshots.has(entity.id)
+            ? structuredClone(fixedSnapshots.get(entity.id)!)
             : entity,
         );
 

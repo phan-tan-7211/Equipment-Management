@@ -147,6 +147,52 @@ describe('constraint solver', () => {
     });
   });
 
+  it('blocks a direct user edit/drag on a fixed entity from sticking (production edit -> postProcess -> solve sequence)', () => {
+    // Entity starts at A. Fix captures A as the anchor at the moment it was
+    // applied — exactly what applyFixConstraint() does.
+    const atA = line('a', 0, 0, 10, 0);
+    const fixConstraint: SketchConstraint = {
+      id: 'fix-a',
+      kind: 'fix',
+      entityIds: ['a'],
+      enabled: true,
+      fixedGeometry: atA,
+    };
+
+    // Production pipeline is "user edit/drag -> postProcess -> solve": by
+    // the time solve runs, the entity it receives has ALREADY been dragged
+    // to B. A solver that anchors to "whatever solve was handed" (the old
+    // bug) would treat B as the new fixed position; it must instead ignore
+    // this edit entirely and restore A.
+    const userDraggedToB = line('a', 50, 40, 60, 40);
+
+    const result = solveSketchConstraints([userDraggedToB], [fixConstraint]);
+
+    expect(result.entities[0]).toMatchObject({ x1: 0, y1: 0, x2: 10, y2: 0 });
+    expect(result.status).toBe('fully-constrained');
+  });
+
+  it('older fix constraints saved without a fixedGeometry snapshot still pin (backward compatible)', () => {
+    // Simulates a sketch document saved before the fixedGeometry field
+    // existed: the constraint has no snapshot, so the solver must fall
+    // back to treating whatever it's handed as the anchor — same as the
+    // pre-fix behavior — rather than crashing or silently un-fixing it.
+    const legacyFixConstraint: SketchConstraint = {
+      id: 'fix-a',
+      kind: 'fix',
+      entityIds: ['a'],
+      enabled: true,
+    };
+
+    const result = solveSketchConstraints(
+      [line('a', 0, 0, 10, 0)],
+      [legacyFixConstraint],
+    );
+
+    expect(result.entities[0]).toMatchObject({ x1: 0, y1: 0, x2: 10, y2: 0 });
+    expect(result.status).toBe('fully-constrained');
+  });
+
   it('flags parallel and perpendicular constraints on the same pair as a conflict', () => {
     const constraints: SketchConstraint[] = [
       {
