@@ -16,6 +16,7 @@ import { useBulkEditEquipment } from '@/features/equipment/hooks/useBulkEditEqui
 import EquipmentLoadingState from '@/features/equipment/components/EquipmentLoadingState';
 import { BulkEquipmentGrid } from '../components/BulkEquipmentGrid';
 import { useI18n } from '@/i18n';
+import type { EquipmentRecord } from '@/features/equipment/types/equipment';
 
 const BulkEquipment: React.FC = () => {
   const { currentOrganization } = useOrganization();
@@ -42,7 +43,11 @@ const BulkEquipment: React.FC = () => {
     selectAll,
     clearSelection,
     commit,
-  } = useBulkEditEquipment(filteredAndSortedEquipment);
+  // filteredAndSortedEquipment is EquipmentWithTeam[] from
+  // EquipmentService.ts (the paginated list query), a differently-declared
+  // type from EquipmentRecord that happens to share the same field names
+  // useBulkEditEquipment/BulkEquipmentGrid actually read.
+  } = useBulkEditEquipment(filteredAndSortedEquipment as unknown as EquipmentRecord[]);
 
   if (isMobile) {
     return <Navigate to="/dashboard/equipment" replace />;
@@ -107,7 +112,7 @@ const BulkEquipment: React.FC = () => {
         />
 
         <BulkEquipmentGrid
-          rows={filteredAndSortedEquipment}
+          rows={filteredAndSortedEquipment as unknown as EquipmentRecord[]}
           dirtyRows={dirtyRows}
           selectedRowIds={selectedRowIds}
           onSetCellValue={setCellValue}

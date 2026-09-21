@@ -49,7 +49,7 @@ export const WorkOrderDetailsStatusLockWarning: React.FC<WorkOrderDetailsStatusL
       if (result.success) {
         toast({
           title: t('workOrderActivity.workOrderReopened'),
-          description: t('workOrderActivity.statusChanged', { from: localizeWorkOrderStatus(result.old_status, t), to: localizeWorkOrderStatus(result.new_status, t) }),
+          description: t('workOrderActivity.statusChanged', { from: localizeWorkOrderStatus(result.old_status ?? '', t), to: localizeWorkOrderStatus(result.new_status ?? '', t) }),
         });
         onStatusUpdate?.('accepted');
       } else {

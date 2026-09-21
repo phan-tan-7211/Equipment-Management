@@ -33,7 +33,7 @@ export const EquipmentIdentityFields: React.FC<EquipmentIdentityFieldsProps> = (
         <div className="mt-1 w-full">
           <InlineEditField
             value={equipment.manufacturer || ''}
-            onSave={(value) => onFieldUpdate('manufacturer', value)}
+            onSave={async (value) => { await onFieldUpdate('manufacturer', value); }}
             canEdit={canEdit}
             fieldId={manufacturerFieldId}
             placeholder={t('equipmentDetails.manufacturerPlaceholder')}
@@ -50,7 +50,7 @@ export const EquipmentIdentityFields: React.FC<EquipmentIdentityFieldsProps> = (
         <div className="mt-1 w-full">
           <InlineEditField
             value={equipment.model || ''}
-            onSave={(value) => onFieldUpdate('model', value)}
+            onSave={async (value) => { await onFieldUpdate('model', value); }}
             canEdit={canEdit}
             fieldId={modelFieldId}
             placeholder={t('equipmentDetails.modelPlaceholder')}
@@ -67,7 +67,7 @@ export const EquipmentIdentityFields: React.FC<EquipmentIdentityFieldsProps> = (
         <div className="mt-1 w-full">
           <InlineEditField
             value={equipment.serial_number || ''}
-            onSave={(value) => onFieldUpdate('serial_number', value)}
+            onSave={async (value) => { await onFieldUpdate('serial_number', value); }}
             canEdit={canEdit}
             fieldId={serialNumberFieldId}
             placeholder={t('equipmentDetails.serialNumberPlaceholder')}

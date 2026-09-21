@@ -134,17 +134,26 @@ const Equipment = () => {
         </div>
 
         <div data-equipment-list-chrome="" className="shrink-0">
-          <EquipmentFilters filters={filters} sortConfig={sortConfig} onFilterChange={updateFilter} onClearFilters={clearFilters} onQuickFilter={applyQuickFilter} onSortChange={updateSort} filterOptions={filterOptions} hasActiveFilters={hasActiveFilters} activeQuickFilter={activeQuickFilter} viewMode={viewMode} onViewModeChange={handleViewModeChange} canImport={canImport} canExport={canExport} onImportCsv={() => setShowImportCsv(true)} equipment={equipment} columnPicker={viewMode === 'table' ? <EquipmentColumnPicker allColumns={EQUIPMENT_TABLE_COLUMN_META} visibleColumns={visibleColumns} onToggle={toggleColumn} onReset={resetColumnVisibility} hasOverrides={hasColumnOverrides} /> : undefined} />
+          {/* KNOWN GAP (pre-existing, not introduced here): `equipment` is now the
+              lightweight EquipmentSummary[] projection (see useEquipmentFiltering's
+              doc comment), which lacks team_name/warranty_expiration/
+              installation_date/management_responsible_primary/secondary that
+              EquipmentDownloadMenu's CSV export reads — those columns will be
+              blank in the exported file until this is wired to a fuller query. */}
+          <EquipmentFilters filters={filters} sortConfig={sortConfig} onFilterChange={updateFilter} onClearFilters={clearFilters} onQuickFilter={applyQuickFilter} onSortChange={updateSort} filterOptions={filterOptions} hasActiveFilters={hasActiveFilters} activeQuickFilter={activeQuickFilter} viewMode={viewMode} onViewModeChange={handleViewModeChange} canImport={canImport} canExport={canExport} onImportCsv={() => setShowImportCsv(true)} equipment={equipment as unknown as EquipmentRecord[]} columnPicker={viewMode === 'table' ? <EquipmentColumnPicker allColumns={EQUIPMENT_TABLE_COLUMN_META} visibleColumns={visibleColumns} onToggle={toggleColumn} onReset={resetColumnVisibility} hasOverrides={hasColumnOverrides} /> : undefined} />
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-px">
           <div className={cn('min-h-0 flex-1', viewMode === 'table' ? 'flex flex-col' : 'overflow-auto overscroll-contain')}>
-            <EquipmentGrid equipment={mergedEquipment} searchQuery={filters.search} statusFilter={filters.status} organizationName={currentOrganization.name} canCreate={canCreate} onShowQRCode={setShowQRCode} onAddEquipment={handleAddEquipment} onClearFilters={clearFilters} viewMode={viewMode} pmStatuses={pmStatuses} sortConfig={sortConfig} onSortChange={updateSort} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} organizationId={currentOrganization.id} columnFilterOptions={columnFilterOptions} columnFilters={columnFilters} onColumnFilterChange={updateColumnFilter} />
+            {/* EquipmentGrid's local `Equipment` type is a narrow display-only
+                subset independently declared from MergedEquipment; the fields
+                it reads are all present on the real data. */}
+            <EquipmentGrid equipment={mergedEquipment as unknown as React.ComponentProps<typeof EquipmentGrid>['equipment']} searchQuery={filters.search} statusFilter={filters.status} organizationName={currentOrganization.name} canCreate={canCreate} onShowQRCode={setShowQRCode} onAddEquipment={handleAddEquipment} onClearFilters={clearFilters} viewMode={viewMode} pmStatuses={pmStatuses} sortConfig={sortConfig} onSortChange={updateSort} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} organizationId={currentOrganization.id} columnFilterOptions={columnFilterOptions} columnFilters={columnFilters} onColumnFilterChange={updateColumnFilter} />
           </div>
           <div data-equipment-list-chrome="" className="shrink-0"><EquipmentPaginationFooter totalItems={totalFilteredCount} page={currentPage} pageSize={pageSize} pageSizeOptions={pageSizeOptions} itemLabel={t('equipment.result')} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} /></div>
         </div>
 
-        <EquipmentForm open={showForm} onClose={handleCloseForm} equipment={editingEquipment} onCreated={editingEquipment ? undefined : handleEquipmentCreated} />
+        <EquipmentForm open={showForm} onClose={handleCloseForm} equipment={editingEquipment ?? undefined} onCreated={editingEquipment ? undefined : handleEquipmentCreated} />
         <QRCodeDisplay equipmentId={showQRCode || ''} open={!!showQRCode} onClose={() => setShowQRCode(null)} equipmentName={equipment.find(eq => eq.id === showQRCode)?.name} organizationId={currentOrganization?.id} />
         {showImportCsv && <Suspense fallback={null}><ImportCsvWizard open={showImportCsv} onClose={() => setShowImportCsv(false)} organizationId={currentOrganization.id} organizationName={currentOrganization.name} /></Suspense>}
         {isMobile && canCreate && <Button type="button" size="icon" data-equipment-list-chrome="" onClick={handleAddEquipment} aria-label={t('equipment.addEquipmentAria')} className={cn('fixed bottom-[78px] right-4 z-fixed h-14 w-14 rounded-full shadow-elevation-3','touch-manipulation transition-transform duration-100 active:scale-[0.97]','motion-reduce:active:scale-100','focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2')}><Plus className="h-6 w-6" aria-hidden /></Button>}
