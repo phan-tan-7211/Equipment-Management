@@ -3,7 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { AuthProvider, AuthContext } from './AuthContext';
-import type { User, Session, AuthError } from '@supabase/supabase-js';
+import type { User, Session, AuthError, AuthChangeEvent } from '@supabase/supabase-js';
 import { PENDING_SIGNUP_ORGANIZATION_STORAGE_KEY } from '@/services/pendingSignupOrganization';
 
 // Mock Supabase
@@ -54,7 +54,7 @@ const mockSession: Session = {
 
 describe('AuthContext', () => {
   let mockSubscription: { unsubscribe: () => void; id: string; callback: () => void };
-  let authStateChangeCallback: (event: string, session: Session | null) => void;
+  let authStateChangeCallback: (event: AuthChangeEvent, session: Session | null) => void | Promise<void>;
   /** Session emitted on INITIAL_SESSION (mirrors SDK bootstrap after storage init). */
   let initialSession: Session | null;
 
@@ -91,17 +91,17 @@ describe('AuthContext', () => {
         error: null 
       })
     );
-    vi.mocked(supabase.auth.signInWithPassword).mockImplementation(() => 
-      Promise.resolve({ 
+    vi.mocked(supabase.auth.signInWithPassword).mockImplementation(() =>
+      Promise.resolve({
         data: { user: null, session: null },
-        error: null 
-      })
+        error: null
+      } as unknown as Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>)
     );
-    vi.mocked(supabase.auth.signInWithOAuth).mockImplementation(() => 
-      Promise.resolve({ 
+    vi.mocked(supabase.auth.signInWithOAuth).mockImplementation(() =>
+      Promise.resolve({
         data: { provider: 'google' as const, url: null },
-        error: null 
-      })
+        error: null
+      } as unknown as Awaited<ReturnType<typeof supabase.auth.signInWithOAuth>>)
     );
     vi.mocked(supabase.auth.signOut).mockImplementation(() => 
       Promise.resolve({ error: null })
