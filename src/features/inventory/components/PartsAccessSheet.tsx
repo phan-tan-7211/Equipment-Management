@@ -136,7 +136,7 @@ function PartsRoleSection({
                 variant="ghost"
                 size="icon"
                 className="ml-2 shrink-0"
-                aria-label={t('inventoryListAux.removeFromRole', { name: assignee.userName, role: roleLabel })}
+                aria-label={t('inventoryListAux.removeFromRole', { name: assignee.userName ?? '', role: roleLabel })}
                 onClick={() => onRequestRemove(assignee)}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
