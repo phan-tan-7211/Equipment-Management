@@ -26,7 +26,7 @@ export function WorkOrderCostMobileReadOnlyRow({ cost, formatDate }: WorkOrderCo
             {cost.description}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            {t('workOrderResidual.addedBy', { name: cost.created_by_name })} • {formatDate(cost.created_at)}
+            {t('workOrderResidual.addedBy', { name: cost.created_by_name ?? '' })} • {formatDate(cost.created_at)}
             {cost.inventory_item_id && <span className="ml-1 text-info">{t('workOrderResidual.inventoryTag')}</span>}
           </div>
         </div>
@@ -61,7 +61,7 @@ export function WorkOrderCostDesktopReadOnlyRow({ cost, formatDate }: WorkOrderC
             {cost.description}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            {t('workOrderResidual.addedByOn', { name: cost.created_by_name, date: formatDate(cost.created_at) })}
+            {t('workOrderResidual.addedByOn', { name: cost.created_by_name ?? '', date: formatDate(cost.created_at) })}
             {cost.inventory_item_id && <span className="ml-1 text-info">{t('workOrderResidual.inventoryTag')}</span>}
           </div>
         </div>

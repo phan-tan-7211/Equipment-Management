@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { requireAuthUserIdFromClaims } from '@/lib/authClaims';
+import type { TablesUpdate, Json } from '@/integrations/supabase/types';
 import { nanoid } from 'nanoid';
 import {
   parseTemplateData,
@@ -69,7 +70,7 @@ export async function createOperatorChecklistTemplate(input: {
       organization_id: input.organizationId,
       name: input.name.trim(),
       description: input.description?.trim() ?? null,
-      template_data: input.templateData ?? createDefaultTemplateData(),
+      template_data: (input.templateData ?? createDefaultTemplateData()) as unknown as Json,
       created_by: userId,
       updated_by: userId,
     })
@@ -91,11 +92,11 @@ export async function updateOperatorChecklistTemplate(
   },
 ): Promise<OperatorChecklistTemplate> {
   const userId = await requireAuthUserIdFromClaims();
-  const payload: Record<string, unknown> = { updated_by: userId, updated_at: new Date().toISOString() };
+  const payload: TablesUpdate<'operator_checklist_templates'> = { updated_by: userId, updated_at: new Date().toISOString() };
   if (updates.name !== undefined) payload.name = updates.name.trim();
   if (updates.description !== undefined) payload.description = updates.description;
   if (updates.isActive !== undefined) payload.is_active = updates.isActive;
-  if (updates.templateData !== undefined) payload.template_data = updates.templateData;
+  if (updates.templateData !== undefined) payload.template_data = updates.templateData as unknown as Json;
 
   const { data, error } = await supabase
     .from('operator_checklist_templates')

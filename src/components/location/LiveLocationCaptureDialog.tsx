@@ -19,7 +19,7 @@ import {
   type LatLng,
 } from '@/components/location/liveLocationCapture';
 import { useGoogleMapsKey } from '@/hooks/useGoogleMapsKey';
-import { useIsDarkTheme } from '@/hooks/useThemeVersion';
+import { useIsDarkTheme, useThemeVersion } from '@/hooks/useThemeVersion';
 import { useI18n } from '@/i18n';
 
 type LiveLocationCaptureDialogProps = {
@@ -50,7 +50,8 @@ export function LiveLocationCaptureDialog({
   initialPosition = null,
 }: LiveLocationCaptureDialogProps) {
   const { t } = useI18n();
-  const isDark = useIsDarkTheme();
+  const themeVersion = useThemeVersion();
+  const isDark = useIsDarkTheme(themeVersion);
   const {
     googleMapsKey,
     mapId,

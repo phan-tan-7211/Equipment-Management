@@ -476,7 +476,7 @@ const PMChecklistComponent: React.FC<PMChecklistComponentProps> = ({
             t('workOrderResidual.revertedReopened', { status: t(`workOrderOperations.pm${result.new_status === 'in_progress' ? 'InProgress' : result.new_status === 'completed' ? 'Completed' : 'Pending'}`), workOrderStatus: t(`workOrders.list.${result.work_order_new_status ?? 'accepted'}`) }),
           );
         } else {
-          toast.success(t('workOrderResidual.revertedStatus', { oldStatus: result.old_status, newStatus: result.new_status }));
+          toast.success(t('workOrderResidual.revertedStatus', { oldStatus: result.old_status ?? '', newStatus: result.new_status ?? '' }));
         }
         onUpdate();
       } else {
