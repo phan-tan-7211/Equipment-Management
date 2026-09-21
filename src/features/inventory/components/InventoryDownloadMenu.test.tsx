@@ -1,4 +1,5 @@
-import { render, screen, createSettingsTestWrapper, SYDNEY_USER_SETTINGS } from '@vitest-harness/utils/test-utils';
+import { render, screen } from '@testing-library/react';
+import { createSettingsTestWrapper, SYDNEY_USER_SETTINGS } from '@vitest-harness/utils/test-utils';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { formatDate } from '@/utils/dateFormatter';
@@ -27,9 +28,16 @@ const mockItem: InventoryItem = {
   quantity_on_hand: 5,
   low_stock_threshold: 1,
   location: 'Shelf A',
+  location_address: null,
+  location_city: null,
+  location_state: null,
+  location_country: null,
+  location_lat: null,
+  location_lng: null,
   default_unit_cost: 1.5,
   image_url: null,
   created_by: 'user-1',
+  created_by_name: null,
   created_at: UTC_CROSS_CALENDAR,
   updated_at: UTC_CROSS_CALENDAR,
   isLowStock: false,

@@ -74,7 +74,11 @@ export function useOfflineMergedNotes<T extends { id: string }>(
             ? (payload as { imageRefs: unknown[] }).imageRefs.length
             : undefined,
         _isPendingSync: true,
-      } as T & { _isPendingSync?: boolean };
+        // T is a generic note shape (work order / equipment notes); the
+        // synthetic offline note above only guarantees the fields both
+        // shapes share, so this cast reflects that this is a constructed
+        // stand-in note, not a real T, bridged for the merged notes list.
+      } as unknown as T & { _isPendingSync?: boolean };
     });
 
     // Offline notes first (newest at top)
