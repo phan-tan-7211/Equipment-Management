@@ -1,8 +1,13 @@
 import { vi } from 'vitest';
 import type * as useWorkOrderDetailsDataModule from '@/features/work-orders/components/hooks/useWorkOrderDetailsData';
 import type * as useWorkOrderDetailsActionsModule from '@/features/work-orders/hooks/useWorkOrderDetailsActions';
+import type { EquipmentWithTeam } from '@/features/equipment/services/EquipmentService';
+import type { WorkOrder } from '@/features/work-orders/types/workOrder';
 
 export const defaultWorkOrderDetailsDataMock = {
+  // Only the fields the components under test actually read are set; the rest
+  // of the real `work_orders` row shape (acceptance/completion timestamps,
+  // cost fields, etc.) is irrelevant to these tests.
   workOrder: {
     id: 'wo-1',
     title: 'Replace hydraulic line',
@@ -10,35 +15,45 @@ export const defaultWorkOrderDetailsDataMock = {
     status: 'submitted',
     priority: 'medium',
     created_date: '2024-01-01T00:00:00Z',
-    createdDate: '2024-01-01T00:00:00Z',
     due_date: null,
     equipment_id: 'eq-1',
     has_pm: false,
-    teamName: null,
-    assigneeName: null,
+    teamName: undefined,
+    assigneeName: undefined,
     effectiveLocation: null,
-  },
+  } as WorkOrder,
+  // Only the fields the components under test actually read are set; the rest
+  // of the real `equipment` row shape (timestamps, location coordinates, etc.)
+  // is irrelevant to these tests.
   equipment: {
     id: 'eq-1',
     name: 'Excavator 1',
     manufacturer: 'Caterpillar',
     model: '320',
-    serial_number: null,
+    serial_number: 'SN-0001',
     status: 'active',
-    location: null,
+    location: 'Warehouse A',
     team_id: 'team-1',
     custom_attributes: null,
     image_url: null,
     default_pm_template_id: null,
-  },
-  pmData: null,
+  } as EquipmentWithTeam,
+  pmData: undefined,
   workOrderLoading: false,
   pmLoading: false,
-  pmError: null,
+  pmError: false,
   permissionLevels: {
     isManager: false,
     isTechnician: false,
     isRequestor: true,
+    canEdit: false,
+    canDelete: false,
+    canAssign: false,
+    canChangeStatus: false,
+    canAddNotes: false,
+    canAddImages: false,
+    exportAudience: 'none',
+    getFormMode: () => 'requestor',
   },
   formMode: 'requestor' as const,
   isWorkOrderLocked: false,
@@ -53,6 +68,13 @@ export const defaultWorkOrderDetailsDataMock = {
   currentOrganization: {
     id: 'org-1',
     name: 'Test Org',
+    plan: 'free',
+    memberCount: 1,
+    maxMembers: 5,
+    features: [],
+    scanLocationCollectionEnabled: false,
+    userRole: 'owner',
+    userStatus: 'active',
   },
 } satisfies Partial<ReturnType<typeof useWorkOrderDetailsDataModule.useWorkOrderDetailsData>>;
 
@@ -67,16 +89,34 @@ export const defaultWorkOrderDetailsActionsMock = {
   handlePMUpdate: vi.fn(),
   showPMWarning: false,
   setShowPMWarning: vi.fn(),
-  pmChangeType: null,
+  pmChangeType: undefined,
   handleConfirmPMChange: vi.fn(),
   handleCancelPMChange: vi.fn(),
   getPMDataDetails: () => ({ hasNotes: false, hasCompletedItems: false }),
   isUpdating: false,
 } satisfies Partial<ReturnType<typeof useWorkOrderDetailsActionsModule.useWorkOrderDetailsActions>>;
 
+type WorkOrderDetailsDataResult = ReturnType<typeof useWorkOrderDetailsDataModule.useWorkOrderDetailsData>;
+
+// The hook's real return type has fully-shaped nested objects (workOrder,
+// equipment, pmData, permissionLevels). `Partial<WorkOrderDetailsDataResult>`
+// only makes the top-level keys optional, so a test fixture that supplies a
+// deliberately partial nested object (the common case here) would still be
+// checked against the full nested interface. These per-field partials let
+// call sites override just the fields a given test cares about; the merge
+// logic below (unchanged) fills in the rest from the defaults.
+type WorkOrderDetailsDataOverrides = Partial<
+  Omit<WorkOrderDetailsDataResult, 'workOrder' | 'equipment' | 'pmData' | 'permissionLevels'>
+> & {
+  workOrder?: Partial<NonNullable<WorkOrderDetailsDataResult['workOrder']>>;
+  equipment?: Partial<NonNullable<WorkOrderDetailsDataResult['equipment']>>;
+  pmData?: Partial<NonNullable<WorkOrderDetailsDataResult['pmData']>> | null;
+  permissionLevels?: Partial<WorkOrderDetailsDataResult['permissionLevels']>;
+};
+
 export function createWorkOrderDetailsDataMock(
-  overrides: Partial<ReturnType<typeof useWorkOrderDetailsDataModule.useWorkOrderDetailsData>> = {},
-): ReturnType<typeof useWorkOrderDetailsDataModule.useWorkOrderDetailsData> {
+  overrides: WorkOrderDetailsDataOverrides = {},
+): WorkOrderDetailsDataResult {
   return {
     ...defaultWorkOrderDetailsDataMock,
     ...overrides,
@@ -94,17 +134,25 @@ export function createWorkOrderDetailsDataMock(
       ...defaultWorkOrderDetailsDataMock.permissionLevels,
       ...(overrides.permissionLevels ?? {}),
     },
-  } as ReturnType<typeof useWorkOrderDetailsDataModule.useWorkOrderDetailsData>;
+  } as WorkOrderDetailsDataResult;
 }
 
 export function createManagerWorkOrderDetailsDataMock(
-  overrides: Partial<ReturnType<typeof useWorkOrderDetailsDataModule.useWorkOrderDetailsData>> = {},
-): ReturnType<typeof useWorkOrderDetailsDataModule.useWorkOrderDetailsData> {
+  overrides: WorkOrderDetailsDataOverrides = {},
+): WorkOrderDetailsDataResult {
   return createWorkOrderDetailsDataMock({
     permissionLevels: {
       isManager: true,
       isTechnician: true,
       isRequestor: false,
+      canEdit: true,
+      canDelete: true,
+      canAssign: true,
+      canChangeStatus: true,
+      canAddNotes: true,
+      canAddImages: true,
+      exportAudience: 'admin',
+      getFormMode: () => 'manager',
     },
     formMode: 'manager',
     isWorkOrderLocked: false,
@@ -119,6 +167,13 @@ export function createManagerWorkOrderDetailsDataMock(
     currentOrganization: {
       id: 'org-1',
       name: 'Test Org',
+      plan: 'free',
+      memberCount: 1,
+      maxMembers: 5,
+      features: [],
+      scanLocationCollectionEnabled: false,
+      userRole: 'owner',
+      userStatus: 'active',
     },
     ...overrides,
   });

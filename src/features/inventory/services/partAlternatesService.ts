@@ -1,6 +1,7 @@
 import { logger } from '@/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { requireAuthUserIdFromClaims } from '@/lib/authClaims';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import type { 
   AlternateGroupMemberDetail,
   AlternatePartResult, 
@@ -85,10 +86,15 @@ export const getAlternatesForPartNumber = async (
       return [];
     }
 
+    // The generated Supabase RPC options type doesn't include `signal` (the
+    // client has no per-call abort option — see `isCancellation`/the
+    // aborted-signal checks above and below, which are the actual
+    // cancellation mechanism here). Kept as a documented, narrow cast rather
+    // than dropping the option, since callers/tests assert this exact shape.
     const { data, error } = await supabase.rpc('get_alternates_for_part_number', {
       p_organization_id: organizationId,
       p_part_number: partNumber.trim()
-    }, { signal });
+    }, { signal } as never);
 
     // If request was aborted, return empty result silently
     if (signal?.aborted) {
@@ -149,7 +155,7 @@ export const getAlternatesForInventoryItem = async (
       throw error;
     }
 
-    return (data || []) as AlternatePartResult[];
+    return (data || []) as unknown as AlternatePartResult[];
   } catch (error) {
     logger.error('Error looking up alternates for inventory item:', error);
     throw error;
@@ -182,7 +188,11 @@ export const getCompatiblePartsForMakeModel = async (
     const { data, error } = await supabase.rpc('get_compatible_parts_for_make_model', {
       p_organization_id: organizationId,
       p_manufacturer: manufacturer.trim(),
-      p_model: model?.trim() || null
+      // The generated RPC arg type only allows `string | undefined`, but the
+      // SQL function distinguishes an explicit NULL from an omitted
+      // argument, so `null` is sent deliberately here (see the call
+      // assertions in partAlternatesService.test.ts).
+      p_model: (model?.trim() || null) as unknown as string | undefined
     });
 
     if (error) {
@@ -447,7 +457,7 @@ export const updateAlternateGroup = async (
 ): Promise<PartAlternateGroup> => {
   try {
     const userId = data.status === 'verified' ? await requireAuthUserIdFromClaims() : null;
-    const updateData: Record<string, unknown> = {};
+    const updateData: TablesUpdate<'part_alternate_groups'> = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description || null;
     if (data.status !== undefined) {
