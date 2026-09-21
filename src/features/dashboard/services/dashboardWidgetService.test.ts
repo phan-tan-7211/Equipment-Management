@@ -4,14 +4,12 @@ import { UNASSIGNED_TEAM_ID } from '@/contexts/selected-team-context';
 import { supabase } from '@/integrations/supabase/client';
 
 function createQueryChain(resolved: { data: unknown; error: null }) {
-  const chain: Record<string, ReturnType<typeof vi.fn>> & {
-    then: Promise<{ data: unknown; error: null }>['then'];
-  } = {
+  const chain = {
     select: vi.fn(),
     eq: vi.fn(),
     is: vi.fn(),
     in: vi.fn(),
-    then(onFulfilled, onRejected) {
+    then(onFulfilled: (value: { data: unknown; error: null }) => unknown, onRejected?: (reason: unknown) => unknown) {
       return Promise.resolve(resolved).then(onFulfilled, onRejected);
     },
   };

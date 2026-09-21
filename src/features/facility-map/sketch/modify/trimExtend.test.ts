@@ -7,7 +7,7 @@ import {
   getExtendPreview,
   getTrimPreview,
 } from '@/features/facility-map/sketch/modify/trimExtend';
-import type { SketchEntity } from '@/features/facility-map/sketch/core/types';
+import type { LineEntity, SketchEntity } from '@/features/facility-map/sketch/core/types';
 
 const style = { color: '#000000', lineWidth: 1 };
 let id = 0;
@@ -19,7 +19,7 @@ const line = (
   y1: number,
   x2: number,
   y2: number,
-): SketchEntity => ({
+): LineEntity => ({
   ...style,
   id: entityId,
   type: 'line',

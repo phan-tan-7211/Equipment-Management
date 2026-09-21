@@ -15,6 +15,6 @@ const HighPriorityWOWidget: React.FC = () => {
 
   if (isLoading) return <div className="space-y-3">{[...Array(2)].map((_, i) => <div key={i} className="h-16 animate-pulse rounded bg-muted" />)}</div>;
   if (highPriorityWorkOrders.length === 0) return <EmptyState icon={CheckCircle2} title={t('dashboard.allCaughtUp')} description={t('dashboard.noHighPriority')} className="py-6" />;
-  return <DashboardHighPriorityWorkOrdersCard workOrders={highPriorityWorkOrders} />;
+  return <DashboardHighPriorityWorkOrdersCard workOrders={highPriorityWorkOrders as unknown as Parameters<typeof DashboardHighPriorityWorkOrdersCard>[0]['workOrders']} />;
 };
 export default HighPriorityWOWidget;

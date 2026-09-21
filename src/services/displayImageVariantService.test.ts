@@ -55,7 +55,7 @@ describe('displayImageVariantService', () => {
     await createDisplayImageVariants(source);
 
     const options = mockImageCompression.mock.calls.map(
-      (call: [File, Record<string, unknown>]) => call[1],
+      (call) => (call as unknown as [File, Record<string, unknown>])[1],
     );
 
     expect(options).toEqual(

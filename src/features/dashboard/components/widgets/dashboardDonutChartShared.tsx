@@ -31,8 +31,8 @@ export function buildDonutChartSummaryItems(
 export function createDonutTooltipContent(
   totalCount: number,
   formatCountLine: (count: number, percentage: number) => string
-) {
-  return ({
+): React.ComponentProps<typeof Tooltip>['content'] {
+  const TooltipContent = ({
     active,
     payload,
   }: {
@@ -50,6 +50,10 @@ export function createDonutTooltipContent(
       </div>
     );
   };
+  // recharts' Tooltip `content` type is a broad generic; this custom
+  // renderer only reads `active`/`payload[0].payload.{label,count}`,
+  // which recharts always provides for this chart's pie data.
+  return TooltipContent as unknown as React.ComponentProps<typeof Tooltip>['content'];
 }
 
 export const DonutWidgetChartSkeleton: React.FC = () => (
@@ -173,7 +177,7 @@ export const DonutWidgetDesktopChart: React.FC<DonutWidgetDesktopChartProps> = (
             innerRadius={48}
             outerRadius={70}
             paddingAngle={2}
-            onClick={(entry) => onSliceClick(entry.status)}
+            onClick={(entry) => onSliceClick((entry as unknown as DonutChartDatum).status)}
           >
             {data.map((entry, index) => (
               <Cell

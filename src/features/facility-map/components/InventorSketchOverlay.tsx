@@ -1539,7 +1539,10 @@ export default function InventorSketchOverlay({
         {enabled && draft && draft.type !== 'polyline' && draft.type !== 'arc' && (
           <foreignObject x={Math.min(pointer.x + 12, canvasWidth - 230)} y={Math.min(pointer.y + 12, canvasHeight - 92)} width="220" height="88" style={{ pointerEvents: 'all' }}>
             <div
-              xmlns="http://www.w3.org/1999/xhtml"
+              // `xmlns` on the foreignObject's root element is required for
+              // cross-browser rendering inside an SVG document, but React's
+              // HTMLAttributes type doesn't include it for a <div>.
+              {...({ xmlns: 'http://www.w3.org/1999/xhtml' } as React.HTMLAttributes<HTMLDivElement>)}
               className="rounded-lg border border-sky-400/40 bg-slate-950/95 p-2 text-[11px] text-white shadow-xl"
               onMouseDown={(event) => event.stopPropagation()}
             >
@@ -1840,12 +1843,12 @@ export default function InventorSketchOverlay({
                           const bound = store.dimensions.some(
                             (dimension) => dimension.parameterId === parameter.id,
                           );
-                          if (!protection.ok || bound) {
-                            setMessage(
-                              bound
-                                ? 'Parameter is bound to a dimension.'
-                                : `Used by: ${protection.dependents.join(', ')}`,
-                            );
+                          if (bound) {
+                            setMessage('Parameter is bound to a dimension.');
+                            return;
+                          }
+                          if (!protection.ok) {
+                            setMessage(`Used by: ${protection.dependents.join(', ')}`);
                             return;
                           }
                           setStore((current) =>

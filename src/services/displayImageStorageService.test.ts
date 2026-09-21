@@ -234,7 +234,7 @@ describe('displayImageStorageService', () => {
     const randomUUID = vi.fn(() => 'generated-set');
     vi.stubGlobal('crypto', { randomUUID });
     vi.mocked(imageCompression).mockImplementation(async () =>
-      new Blob(['webp'], { type: 'image/webp' }),
+      new Blob(['webp'], { type: 'image/webp' }) as unknown as File,
     );
 
     const source = {

@@ -31,13 +31,13 @@ const { getWorkOrderImages } = await import(
 );
 
 function createThenableWorkOrdersQuery(rows: Array<{ id: string }>): Record<string, unknown> & {
-  then: typeof Promise.prototype.then;
+  then: (onfulfilled: (value: unknown) => unknown, onrejected?: (reason: unknown) => unknown) => Promise<unknown>;
 } {
   const builder: Record<string, unknown> = {};
   builder.select = vi.fn(() => builder);
   builder.eq = vi.fn(() => builder);
   const thenable = builder as Record<string, unknown> & {
-    then: typeof Promise.prototype.then;
+    then: (onfulfilled: (value: unknown) => unknown, onrejected?: (reason: unknown) => unknown) => Promise<unknown>;
   };
   thenable.then = (onfulfilled: (value: unknown) => unknown) =>
     Promise.resolve({ data: rows, error: null }).then(onfulfilled);
