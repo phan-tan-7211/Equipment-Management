@@ -5884,6 +5884,10 @@ export type Database = {
           workspace_org_id: string
         }[]
       }
+      grant_platform_admin: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       handle_invitation_account_creation: {
         Args: { p_invitation_id: string; p_user_id: string }
         Returns: Json
@@ -5919,6 +5923,10 @@ export type Database = {
       }
       is_org_member: {
         Args: { org_id: string; user_uuid: string }
+        Returns: boolean
+      }
+      is_platform_admin: {
+        Args: { p_user_id: string }
         Returns: boolean
       }
       is_organization_admin: {
@@ -6213,6 +6221,10 @@ export type Database = {
       revert_work_order_status: {
         Args: { p_reason?: string; p_work_order_id: string }
         Returns: Json
+      }
+      revoke_platform_admin: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       rotate_operator_checkin_token: {
         Args: { p_settings_id: string }

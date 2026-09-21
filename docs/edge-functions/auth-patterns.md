@@ -78,11 +78,11 @@ The following functions are explicitly authorized to use `createAdminSupabaseCli
 |----------|--------|--------|
 | `quickbooks-refresh-tokens` | System cron job; requires service role to enumerate credentials | `verify_jwt = true` (requires service role JWT) |
 
-### Super Admin Endpoints
+### Platform Admin Endpoints
 
 | Function | Reason | Config |
 |----------|--------|--------|
-| `list-organizations-admin` | Cross-org admin access; validated via `verifySuperAdminAccess()` | `verify_jwt = true` |
+| `list-organizations-admin` | Cross-org listing; user identity is validated against `private.platform_admins` via the service-only `is_platform_admin` predicate | `verify_jwt = true` |
 
 ### Special Cases (Hybrid)
 

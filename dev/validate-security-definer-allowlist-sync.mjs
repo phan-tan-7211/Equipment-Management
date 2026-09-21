@@ -3,6 +3,7 @@
  * Ensures SECURITY DEFINER RPC allowlists stay aligned across:
  * - dev/security-definer-rpc-allowlists.json
  * - the latest bulk lockdown / re-lockdown migration
+ * - reviewed grant markers in later forward migrations
  *
  * Usage: node dev/validate-security-definer-allowlist-sync.mjs
  */
@@ -50,6 +51,28 @@ function extractArray(content, varName) {
   return [...match[1].matchAll(/'([^']+)'/g)].map((m) => m[1]).sort();
 }
 
+function extractForwardGrantMarkers(lockdownPath, markerName) {
+  const lockdownName = path.basename(lockdownPath);
+  const markerPattern = new RegExp(
+    `^\\s*--\\s*${markerName}:\\s*(.+)$`,
+    'gmi',
+  );
+
+  return fs
+    .readdirSync(migrationsDir)
+    .filter((name) => name.endsWith('.sql') && name > lockdownName)
+    .sort()
+    .flatMap((name) => {
+      const content = fs.readFileSync(path.join(migrationsDir, name), 'utf8');
+      return [...content.matchAll(markerPattern)].flatMap((match) =>
+        match[1]
+          .split(',')
+          .map((entry) => entry.trim())
+          .filter((entry) => entry && entry !== 'bulk-relockdown'),
+      );
+    });
+}
+
 function main() {
   const allowlists = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
   const migrationPath = resolveLockdownMigrationPath();
@@ -59,12 +82,34 @@ function main() {
   const migrationAnon = extractArray(migration, 'anon_allowlist');
   const migrationRls = extractArray(migration, 'rls_helper_allowlist');
   const migrationInvoker = extractArray(migration, 'invoker_client_allowlist');
+  const forwardAuth = extractForwardGrantMarkers(
+    migrationPath,
+    'rpc-authenticated-grant-allowed',
+  );
+  const forwardAnon = extractForwardGrantMarkers(
+    migrationPath,
+    'rpc-anon-grant-allowed',
+  );
 
   const jsonAuth = [...allowlists.authenticatedPublicRpc].sort();
   const jsonAnon = [...allowlists.anonPublicRpc].sort();
   const jsonRls = [...allowlists.rlsPredicateHelpers].sort();
   const jsonInvoker = [...(allowlists.invokerClientRpc ?? [])].sort();
 
+  const migrationCallable = [
+    ...new Set([
+      ...migrationAuth,
+      ...migrationRls,
+      ...migrationInvoker,
+      ...forwardAuth,
+    ]),
+  ].sort();
+  const jsonCallable = [
+    ...new Set([...jsonAuth, ...jsonRls, ...jsonInvoker]),
+  ].sort();
+  const migrationAnonCurrent = [
+    ...new Set([...migrationAnon, ...forwardAnon]),
+  ].sort();
   const diffs = [];
 
   function compare(label, a, b) {
@@ -75,10 +120,8 @@ function main() {
     }
   }
 
-  compare('authenticatedPublicRpc', migrationAuth, jsonAuth);
-  compare('anonPublicRpc', migrationAnon, jsonAnon);
-  compare('rlsPredicateHelpers', migrationRls, jsonRls);
-  compare('invokerClientRpc', migrationInvoker, jsonInvoker);
+  compare('authenticated callable RPCs', migrationCallable, jsonCallable);
+  compare('anonPublicRpc', migrationAnonCurrent, jsonAnon);
 
   if (diffs.length) {
     console.error(`Allowlist drift detected (vs ${path.basename(migrationPath)}):\n`);

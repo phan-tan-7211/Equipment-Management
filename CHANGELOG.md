@@ -11,6 +11,10 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+### Security
+
+- Replaced organization-based cross-tenant administrator authority with a private, audited Platform Admin registry and guarded grant/revoke operations.
+
 ## [3.34.22] - 2026-09-19
 
 ### Fixed
