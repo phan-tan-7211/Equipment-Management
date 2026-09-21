@@ -85,7 +85,7 @@ export const useInventoryItems = (
   const gcTime = resolveListQueryGcTime(staleTime, options?.gcTime);
 
   return useQuery({
-    queryKey: inventoryKeys.list(organizationId ?? '', filters),
+    queryKey: inventoryKeys.list(organizationId ?? '', filters as Record<string, unknown>),
     queryFn: async () => {
       if (!organizationId) return [];
       return await getInventoryItems(organizationId, filters);
@@ -458,7 +458,7 @@ export const useBulkLinkEquipmentToItem = () => {
       
       // Show summary toast with counts
       const { added, removed } = result;
-      const messages = [];
+      const messages: string[] = [];
       if (added > 0) messages.push(t('inventoryMutation.equipmentAdded', { count: added }));
       if (removed > 0) messages.push(t('inventoryMutation.equipmentRemoved', { count: removed }));
       
