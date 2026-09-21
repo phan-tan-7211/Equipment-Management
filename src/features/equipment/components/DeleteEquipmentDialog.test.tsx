@@ -42,7 +42,7 @@ describe('DeleteEquipmentDialog', () => {
     vi.mocked(useDeleteEquipmentModule.useDeleteEquipment).mockReturnValue({
       mutateAsync: vi.fn().mockResolvedValue(undefined),
       isPending: false
-    });
+    } as unknown as ReturnType<typeof useDeleteEquipmentModule.useDeleteEquipment>);
   });
 
   async function waitForEnabledContinueAndClick() {
@@ -192,7 +192,7 @@ describe('DeleteEquipmentDialog', () => {
       vi.mocked(useDeleteEquipmentModule.useDeleteEquipment).mockReturnValue({
         mutateAsync: mockMutateAsync,
         isPending: false
-      });
+      } as unknown as ReturnType<typeof useDeleteEquipmentModule.useDeleteEquipment>);
       
       render(<DeleteEquipmentDialog {...defaultProps} />);
       await advanceToDeleteConfirmation();
@@ -213,7 +213,7 @@ describe('DeleteEquipmentDialog', () => {
       vi.mocked(useDeleteEquipmentModule.useDeleteEquipment).mockReturnValue({
         mutateAsync: mockMutateAsync,
         isPending: false
-      });
+      } as unknown as ReturnType<typeof useDeleteEquipmentModule.useDeleteEquipment>);
       
       render(<DeleteEquipmentDialog {...defaultProps} />);
       await advanceToDeleteConfirmation();
@@ -233,7 +233,7 @@ describe('DeleteEquipmentDialog', () => {
       vi.mocked(useDeleteEquipmentModule.useDeleteEquipment).mockReturnValue({
         mutateAsync: mockMutateAsync,
         isPending: false
-      });
+      } as unknown as ReturnType<typeof useDeleteEquipmentModule.useDeleteEquipment>);
       
       render(<DeleteEquipmentDialog {...defaultProps} />);
       await advanceToDeleteConfirmation();
@@ -253,7 +253,7 @@ describe('DeleteEquipmentDialog', () => {
       vi.mocked(useDeleteEquipmentModule.useDeleteEquipment).mockReturnValue({
         mutateAsync: mockMutateAsync,
         isPending: true
-      });
+      } as unknown as ReturnType<typeof useDeleteEquipmentModule.useDeleteEquipment>);
       
       render(<DeleteEquipmentDialog {...defaultProps} />);
       await waitForEnabledContinueAndClick();

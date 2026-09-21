@@ -206,7 +206,10 @@ const forkliftEquipment: Tables<'equipment'> = {
   assigned_location_state: null,
   assigned_location_country: null,
   assigned_location_lat: 40.7128,
-  assigned_location_lng: -74.006
+  assigned_location_lng: -74.006,
+  management_responsible_primary: null,
+  management_responsible_secondary: null,
+  use_team_location: false
 };
 
 // ============================================
@@ -218,7 +221,7 @@ function setupPermissions(canEdit: boolean, canDelete: boolean) {
     equipment: {
       getPermissions: vi.fn(() => ({ canEdit, canDelete }))
     }
-  });
+  } as unknown as ReturnType<typeof useUnifiedPermissionsModule.useUnifiedPermissions>);
 }
 
 // ============================================
@@ -231,7 +234,7 @@ describe('EquipmentDetailsTab', () => {
     vi.mocked(useEquipmentModule.useUpdateEquipment).mockReturnValue({
       mutateAsync: vi.fn().mockResolvedValue(forkliftEquipment),
       isPending: false
-    });
+    } as unknown as ReturnType<typeof useEquipmentModule.useUpdateEquipment>);
   });
 
   // --------------------------------------------------------
@@ -271,7 +274,7 @@ describe('EquipmentDetailsTab', () => {
       vi.mocked(useEquipmentModule.useUpdateEquipment).mockReturnValue({
         mutateAsync: mockMutateAsync,
         isPending: false
-      });
+      } as unknown as ReturnType<typeof useEquipmentModule.useUpdateEquipment>);
 
       render(<EquipmentDetailsTab equipment={forkliftEquipment} />);
 
@@ -295,7 +298,7 @@ describe('EquipmentDetailsTab', () => {
       vi.mocked(useEquipmentModule.useUpdateEquipment).mockReturnValue({
         mutateAsync: mockMutateAsync,
         isPending: false
-      });
+      } as unknown as ReturnType<typeof useEquipmentModule.useUpdateEquipment>);
 
       render(<EquipmentDetailsTab equipment={forkliftEquipment} />);
       fireEvent.click(screen.getByText('Save Attributes'));
