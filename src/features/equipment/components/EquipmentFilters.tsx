@@ -50,7 +50,12 @@ export const EquipmentFilters: React.FC<EquipmentFiltersProps> = ({
         activeFilterCount={activeFilterCount}
         showMobileFilters={showMobileFilters}
         onShowMobileFiltersChange={setShowMobileFilters}
-        onFilterChange={onFilterChange}
+        // EquipmentListToolbarProps declares the looser
+        // (key, value: string) => void signature; every EquipmentFilters
+        // value is a string, so this is sound, but MobileEquipmentFilters'
+        // generic <K>(key: K, value: EquipmentFilters[K]) signature isn't
+        // structurally assignable from it.
+        onFilterChange={onFilterChange as <K extends keyof typeof filters>(key: K, value: typeof filters[K]) => void}
         onClearFilters={onClearFilters}
         onQuickFilter={onQuickFilter}
         filterOptions={filterOptions}

@@ -39,7 +39,7 @@ function toCardProps(
   if (!trend) return { sparkline: undefined, trend: undefined, trendNote: undefined };
 
   const hasSeries = trend.sparkline.length > 1;
-  const hasDelta = trend.delta !== null && trend.delta !== undefined;
+  const { delta } = trend;
   const invertDirection = options?.invertDirection === true;
   const direction =
     invertDirection && trend.direction !== 'flat'
@@ -50,7 +50,7 @@ function toCardProps(
 
   return {
     sparkline: hasSeries ? trend.sparkline : undefined,
-    trend: hasDelta ? { direction, delta: Math.abs(trend.delta) } : undefined,
+    trend: delta !== null && delta !== undefined ? { direction, delta: Math.abs(delta) } : undefined,
     trendNote: undefined,
   };
 }
