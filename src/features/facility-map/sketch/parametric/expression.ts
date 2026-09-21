@@ -188,29 +188,33 @@ export const evaluateExpression = (
 
     const parseMultiplicative = (): ExpressionValue => {
       let left = parsePrimary();
+      let current = tokens[index];
       while (
-        tokens[index]?.type === 'operator' &&
-        (tokens[index].value === '*' || tokens[index].value === '/')
+        current?.type === 'operator' &&
+        (current.value === '*' || current.value === '/')
       ) {
-        const operator = tokens[index].value;
+        const operator = current.value;
         index += 1;
         const right = parsePrimary();
         left = operator === '*'
           ? multiply(left, right)
           : divide(left, right);
+        current = tokens[index];
       }
       return left;
     };
 
     const parseAdditive = (): ExpressionValue => {
       let left = parseMultiplicative();
+      let current = tokens[index];
       while (
-        tokens[index]?.type === 'operator' &&
-        (tokens[index].value === '+' || tokens[index].value === '-')
+        current?.type === 'operator' &&
+        (current.value === '+' || current.value === '-')
       ) {
-        const operator = tokens[index].value;
+        const operator = current.value;
         index += 1;
         left = addOrSubtract(left, parseMultiplicative(), operator);
+        current = tokens[index];
       }
       return left;
     };
