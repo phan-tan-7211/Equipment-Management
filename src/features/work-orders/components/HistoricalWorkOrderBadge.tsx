@@ -6,8 +6,8 @@ import { format } from "date-fns";
 interface HistoricalWorkOrderBadgeProps {
   workOrder: {
     is_historical?: boolean;
-    historical_start_date?: string;
-    historical_notes?: string;
+    historical_start_date?: string | null;
+    historical_notes?: string | null;
   };
 }
 
