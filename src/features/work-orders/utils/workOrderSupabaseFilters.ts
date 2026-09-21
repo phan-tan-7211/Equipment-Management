@@ -191,7 +191,11 @@ export function applyWorkOrderListContract<T>(
       break;
     case 'unpaid':
       next = next
-        .not('quickbooks_invoice_id', 'is', null)
+        // `.not(column, 'is', null)` is documented postgrest-js usage, but
+        // this schema-typed overload narrows `value` to the column's own
+        // (non-null) type instead of allowing `unknown` like the base
+        // PostgrestFilterBuilder signature does.
+        .not('quickbooks_invoice_id', 'is', null as unknown as string)
         .or(
           `invoice_status.is.null,invoice_status.in.(${[...COLLECTIBLE_UNPAID_INVOICE_STATUSES].join(',')})`,
         );

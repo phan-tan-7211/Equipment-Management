@@ -237,7 +237,7 @@ const InvitationAccept = () => {
     // and can return to this invitation after email verification.
     const authParams = new URLSearchParams();
     authParams.set('mode', 'invite');
-    authParams.set('token', token);
+    authParams.set('token', token ?? '');
     if (invitation.email) authParams.set('email', invitation.email);
     if (invitation.organization_id) authParams.set('invitedOrgId', invitation.organization_id);
     if (invitation.organization_name) authParams.set('invitedOrgName', invitation.organization_name);
