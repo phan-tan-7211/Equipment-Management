@@ -135,7 +135,7 @@ describe('useAlternateGroups', () => {
           { id: 'member-1', inventory_item_id: inventoryItems.oilFilter.id },
         ],
         identifiers: [],
-      };
+      } as unknown as Awaited<ReturnType<typeof getAlternateGroupById>>;
       vi.mocked(getAlternateGroupById).mockResolvedValue(mockGroup);
 
       const { result } = renderHook(
@@ -313,12 +313,7 @@ describe('useAlternateGroups', () => {
 
   describe('useAddInventoryItemToGroup mutation', () => {
     it('adds an inventory item to a group', async () => {
-      vi.mocked(addInventoryItemToGroup).mockResolvedValue({
-        id: 'member-1',
-        group_id: partAlternateGroups.oilFilterGroup.id,
-        inventory_item_id: inventoryItems.oilFilter.id,
-        is_primary: false,
-      });
+      vi.mocked(addInventoryItemToGroup).mockResolvedValue(undefined);
 
       const { result } = renderHook(
         () => useAddInventoryItemToGroup(),
@@ -344,12 +339,7 @@ describe('useAlternateGroups', () => {
     });
 
     it('can mark item as primary', async () => {
-      vi.mocked(addInventoryItemToGroup).mockResolvedValue({
-        id: 'member-1',
-        group_id: partAlternateGroups.oilFilterGroup.id,
-        inventory_item_id: inventoryItems.oilFilter.id,
-        is_primary: true,
-      });
+      vi.mocked(addInventoryItemToGroup).mockResolvedValue(undefined);
 
       const { result } = renderHook(
         () => useAddInventoryItemToGroup(),
@@ -531,18 +521,8 @@ describe('Alternate Groups User Journeys', () => {
   describe('Parts Manager adds items to group', () => {
     it('adds multiple inventory items as alternates', async () => {
       vi.mocked(addInventoryItemToGroup)
-        .mockResolvedValueOnce({
-          id: 'member-1',
-          group_id: partAlternateGroups.oilFilterGroup.id,
-          inventory_item_id: inventoryItems.oilFilter.id,
-          is_primary: true,
-        })
-        .mockResolvedValueOnce({
-          id: 'member-2',
-          group_id: partAlternateGroups.oilFilterGroup.id,
-          inventory_item_id: inventoryItems.airFilter.id,
-          is_primary: false,
-        });
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined);
 
       const { result } = renderHook(
         () => useAddInventoryItemToGroup(),

@@ -70,7 +70,7 @@ export const bulkSetCompatibilityRules = async (
     const rulesJsonb = mapCompatibilityRulesToJsonb(
       validRules.map((rule) => ({
         manufacturer: rule.manufacturer,
-        model: rule.model,
+        model: rule.model ?? null,
         match_type: rule.match_type || 'exact',
         status: rule.status || 'unverified',
         notes: rule.notes ?? null,
