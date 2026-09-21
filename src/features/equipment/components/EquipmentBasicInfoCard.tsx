@@ -35,7 +35,7 @@ function EquipmentDescriptionField({
       <div className="mt-1 w-full">
         <InlineEditField
           value={value}
-          onSave={onSave}
+          onSave={async (nextValue) => { await onSave(nextValue); }}
           canEdit={canEdit}
           fieldId={descriptionFieldId}
           type="textarea"
@@ -117,7 +117,7 @@ export function EquipmentBasicInfoCard({
             <div className="mt-1 w-full">
               <InlineEditField
                 value={equipment.name || ''}
-                onSave={(value) => onFieldUpdate('name', value)}
+                onSave={async (value) => { await onFieldUpdate('name', value); }}
                 canEdit={canEdit}
                 fieldId={nameFieldId}
                 placeholder={t('equipmentDetails.namePlaceholder')}
@@ -140,7 +140,7 @@ export function EquipmentBasicInfoCard({
               {canEdit ? (
                 <InlineEditField
                   value={equipment.status || 'active'}
-                  onSave={(value) => onFieldUpdate('status', value)}
+                  onSave={async (value) => { await onFieldUpdate('status', value); }}
                   canEdit={canEdit}
                   fieldId={statusFieldId}
                   type="select"
@@ -178,7 +178,7 @@ export function EquipmentBasicInfoCard({
               {canAssignTeams ? (
                 <InlineEditField
                   value={equipment.team_id || 'unassigned'}
-                  onSave={onTeamAssignment}
+                  onSave={async (value) => { await onTeamAssignment(value); }}
                   canEdit={canAssignTeams}
                   fieldId={assignedTeamFieldId}
                   type="select"

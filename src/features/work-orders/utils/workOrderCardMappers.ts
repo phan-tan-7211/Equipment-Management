@@ -5,7 +5,7 @@ import type { AssignmentWorkOrderContext } from '@/features/work-orders/hooks/us
 // but some callers historically passed camelCase-shaped objects. The `??`
 // fallbacks below tolerate both; this type just lets TS see the optional
 // camelCase side of that tolerance without changing runtime behavior.
-type WorkOrderWithLegacyAliases = WorkOrder & {
+export type WorkOrderWithLegacyAliases = WorkOrder & {
   equipmentId?: string;
   organizationId?: string;
   assigneeId?: string | null;

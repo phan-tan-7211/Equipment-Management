@@ -201,7 +201,7 @@ export function OperatorChecklistDataFieldsEditor({
                         <SelectContent>
                           {OPERATOR_INPUT_TYPE_OPTIONS.map((option) => (
                             <SelectItem key={option.key} value={option.key}>
-                              {t(`operatorCheckinDetail.${option.key === 'name' ? 'equipment_name' : option.key === 'status' ? 'equipment_status' : option.key}`)}
+                              {t(`operatorCheckinDetail.${option.key}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -222,7 +222,7 @@ export function OperatorChecklistDataFieldsEditor({
                         <SelectContent>
                           {CLIENT_CONTEXT_FIELD_OPTIONS.map((option) => (
                             <SelectItem key={option.key} value={option.key}>
-                              {t(`operatorCheckinDetail.${option.key === 'name' ? 'equipment_name' : option.key === 'status' ? 'equipment_status' : option.key}`)}
+                              {t(`operatorCheckinDetail.${option.key}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
