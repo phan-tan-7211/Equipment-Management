@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@vitest-harness/utils/test-u
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import InvitationAccept from './InvitationAccept';
 import * as useAuthModule from '@/hooks/useAuth';
+import { startPendingGoogleInvitationClaim } from '@/services/pendingGoogleInvitationClaim';
 
 // Mock router hooks
 const mockNavigate = vi.fn();
@@ -242,6 +243,66 @@ describe('InvitationAccept Page', () => {
         });
       });
     });
+
+    it('automatically claims the invitation after matching Google OAuth returns', async () => {
+      startPendingGoogleInvitationClaim('valid-token');
+      mockRpc.mockImplementation((fnName: string) => {
+        if (fnName === 'get_invitation_by_token_secure') {
+          return Promise.resolve({ data: [mockInvitation], error: null });
+        }
+        if (fnName === 'accept_invitation_atomic') {
+          return Promise.resolve({
+            data: {
+              success: true,
+              organization_id: 'org-1',
+              organization_name: 'Test Organization',
+              role: 'member',
+            },
+            error: null,
+          });
+        }
+        return Promise.resolve({ data: null, error: null });
+      });
+
+      render(<InvitationAccept />);
+
+      await waitFor(() => {
+        expect(mockRpc).toHaveBeenCalledWith('accept_invitation_atomic', {
+          p_invitation_token: 'valid-token',
+        });
+      });
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/dashboard', { replace: true });
+      });
+    });
+
+    it('does not enter the organization when the verified identity is rejected', async () => {
+      startPendingGoogleInvitationClaim('valid-token');
+      mockRpc.mockImplementation((fnName: string) => {
+        if (fnName === 'get_invitation_by_token_secure') {
+          return Promise.resolve({ data: [mockInvitation], error: null });
+        }
+        if (fnName === 'accept_invitation_atomic') {
+          return Promise.resolve({
+            data: {
+              success: false,
+              error: 'Verified user email does not match invitation email',
+            },
+            error: null,
+          });
+        }
+        return Promise.resolve({ data: null, error: null });
+      });
+
+      render(<InvitationAccept />);
+
+      await waitFor(() => {
+        expect(mockRpc).toHaveBeenCalledWith('accept_invitation_atomic', {
+          p_invitation_token: 'valid-token',
+        });
+      });
+      expect(mockNavigate).not.toHaveBeenCalledWith('/dashboard', { replace: true });
+    });
   });
 
   describe('Decline Invitation Flow', () => {
@@ -298,4 +359,3 @@ describe('InvitationAccept Page', () => {
     });
   });
 });
-

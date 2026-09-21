@@ -36,7 +36,7 @@ import { useI18n } from '@/i18n';
 interface SignUpFormProps {
   onSuccess: (message: string, email?: string) => void;
   onBeforeSignupSubmit?: () => void;
-  onGoogleSignUp: (organizationName: string) => void;
+  onGoogleSignUp: (organizationName?: string) => void;
   onError: (error: string) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
@@ -301,6 +301,11 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   const googleSignupReady = canStartGoogleSignup(formData.organizationName, orgNameError);
 
   const handleGoogleSignUp = () => {
+    if (isInvitationSignup) {
+      onGoogleSignUp();
+      return;
+    }
+
     setTouched(prev => ({ ...prev, organizationName: true }));
     const conflict = invitedOrgName
       ? getInvitedOrgNameConflict(formData.organizationName, invitedOrgName, t)
@@ -320,6 +325,17 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         <SignUpInviteBanner invitedOrgName={invitedOrgName} invitationOnly={isInvitationSignup} />
       )}
       <SignUpPrivacyNotice />
+
+      {isInvitationSignup && (
+        <>
+          <AuthGoogleSignInButton
+            onClick={handleGoogleSignUp}
+            disabled={isLoading}
+            label={t('auth.loginWithGoogle')}
+          />
+          <p className="text-center text-xs text-muted-foreground">{t('auth.or')}</p>
+        </>
+      )}
 
       {!isInvitationSignup && (
         <div className="space-y-2">

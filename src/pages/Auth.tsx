@@ -23,6 +23,10 @@ import LegalFooter from '@/components/layout/LegalFooter';
 import { useAppToast } from '@/hooks/useAppToast';
 import { useI18n } from '@/i18n';
 import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
+import {
+  clearPendingGoogleInvitationClaim,
+  startPendingGoogleInvitationClaim,
+} from '@/services/pendingGoogleInvitationClaim';
 
 type AuthMode = 'signin' | 'signup' | 'invite';
 
@@ -186,8 +190,18 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError(null);
+
+    if (inviteToken) {
+      startPendingGoogleInvitationClaim(inviteToken);
+    } else {
+      clearPendingGoogleInvitationClaim();
+    }
+
     const { error } = await signInWithGoogle();
-    if (error) handleError(error.message);
+    if (error) {
+      clearPendingGoogleInvitationClaim();
+      handleError(error.message);
+    }
     setIsLoading(false);
   };
 

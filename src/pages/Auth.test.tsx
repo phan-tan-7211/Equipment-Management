@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { User } from '@supabase/supabase-js';
 import Auth from './Auth';
 import * as useAuthModule from '@/hooks/useAuth';
+import { consumePendingGoogleInvitationClaim } from '@/services/pendingGoogleInvitationClaim';
 
 const mockAuthenticatedUser: User = {
   id: 'user-1',
@@ -434,6 +435,48 @@ describe('Auth Page', () => {
       await waitFor(() => {
         expect(mockSignInWithGoogle).toHaveBeenCalledWith();
       });
+    });
+
+    it('records invitation intent before starting Google OAuth', async () => {
+      const mockSignInWithGoogle = vi.fn(() => Promise.resolve({ error: null }));
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: null,
+        signInWithGoogle: mockSignInWithGoogle,
+        isLoading: false,
+        session: null,
+        signUp: vi.fn(),
+        signIn: vi.fn(),
+        signOut: vi.fn(),
+      });
+      mockLocation.search = '?mode=invite&token=invite-google-token&email=invitee%40example.com';
+
+      render(<Auth />);
+      fireEvent.click(screen.getByRole('button', { name: /sign up with google/i }));
+
+      await waitFor(() => expect(mockSignInWithGoogle).toHaveBeenCalledWith());
+      expect(consumePendingGoogleInvitationClaim('invite-google-token')).toBe(true);
+    });
+
+    it('clears invitation intent when Google OAuth fails to start', async () => {
+      const mockSignInWithGoogle = vi.fn(() =>
+        Promise.resolve({ error: new Error('Google auth failed') }),
+      );
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: null,
+        signInWithGoogle: mockSignInWithGoogle,
+        isLoading: false,
+        session: null,
+        signUp: vi.fn(),
+        signIn: vi.fn(),
+        signOut: vi.fn(),
+      });
+      mockLocation.search = '?mode=invite&token=failed-google-token';
+
+      render(<Auth />);
+      fireEvent.click(screen.getByRole('button', { name: /sign up with google/i }));
+
+      await waitFor(() => expect(screen.getByText('Google auth failed')).toBeInTheDocument());
+      expect(consumePendingGoogleInvitationClaim('failed-google-token')).toBe(false);
     });
   });
 });

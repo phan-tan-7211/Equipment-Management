@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '@/hooks/useSession';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,11 +11,14 @@ import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { persistDashboardOrganizationSelection } from '@/utils/organizationSelection';
 import { useI18n } from '@/i18n';
+import { consumePendingGoogleInvitationClaim } from '@/services/pendingGoogleInvitationClaim';
+
+type InvitationRole = 'owner' | 'admin' | 'member' | 'viewer' | 'requestor';
 
 interface InvitationData {
   id: string;
   email: string;
-  role: 'admin' | 'member';
+  role: InvitationRole;
   status: string;
   organization_id: string;
   organization_name: string;
@@ -71,7 +74,7 @@ const InvitationAccept = () => {
         setInvitation({
           id: invitation.id,
           email: invitation.email,
-          role: invitation.role as 'admin' | 'member',
+          role: invitation.role as InvitationRole,
           status: invitation.status,
           organization_id: invitation.organization_id,
           organization_name: invitation.organization_name || t('invitationAccept.unknownOrganization'),
@@ -91,7 +94,7 @@ const InvitationAccept = () => {
     fetchInvitation();
   }, [token, t]);
 
-  const handleAcceptInvitation = async () => {
+  const handleAcceptInvitation = useCallback(async () => {
     if (!invitation || !user || !token) return;
 
     setAccepting(true);
@@ -137,7 +140,14 @@ const InvitationAccept = () => {
     } finally {
       setAccepting(false);
     }
-  };
+  }, [invitation, navigate, refreshSession, switchOrganization, t, token, user]);
+
+  useEffect(() => {
+    if (!invitation || !user || !token) return;
+    if (!consumePendingGoogleInvitationClaim(token)) return;
+
+    void handleAcceptInvitation();
+  }, [handleAcceptInvitation, invitation, token, user]);
 
   const handleDeclineInvitation = async () => {
     if (!invitation || !token) return;
