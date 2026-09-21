@@ -183,10 +183,10 @@ const Auth = () => {
     showErrorToast({ title: t('auth.somethingWentWrong'), description: errorMessage, duration: 6000 });
   };
 
-  const handleGoogleSignIn = async (organizationName?: string) => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError(null);
-    const { error } = await signInWithGoogle(organizationName ? { organizationName } : undefined);
+    const { error } = await signInWithGoogle();
     if (error) handleError(error.message);
     setIsLoading(false);
   };
@@ -275,7 +275,7 @@ const Auth = () => {
                     onBeforeSignupSubmit={() => { suppressAuthRedirectRef.current = true; }}
                     onSuccess={handleSuccess}
                     onError={handleError}
-                    onGoogleSignUp={(organizationName) => void handleGoogleSignIn(organizationName)}
+                    onGoogleSignUp={() => void handleGoogleSignIn()}
                     isLoading={isLoading}
                     setIsLoading={setIsLoading}
                     prefillEmail={prefillEmail}

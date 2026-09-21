@@ -1,8 +1,9 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrganization } from '@/contexts/OrganizationContext';
 import { useWorkspaceOnboardingState } from '@/hooks/useWorkspaceOnboarding';
-import { isConsumerGoogleDomain, isGoogleUser } from '@/utils/google-workspace';
+import { isGoogleUser } from '@/utils/google-workspace';
 import WorkspaceAccessGate from '@/components/auth/WorkspaceAccessGate';
 import { useAuthFlowCopy } from './useAuthFlowCopy';
 
@@ -12,9 +13,9 @@ interface WorkspaceOnboardingGuardProps {
 }
 
 /**
- * Blocks dashboard access for Google users on claimed Workspace domains who lack
- * explicit authorization via workspace membership, invitation, import claim, or
- * active membership in another organization.
+ * Keeps Google authentication separate from organization authorization.
+ * Existing active memberships grant access; invitations and import claims remain
+ * pending until their established server-side flows complete.
  */
 const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
   children,
@@ -22,9 +23,29 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
 }) => {
   const t = useAuthFlowCopy();
   const { user } = useAuth();
+  const {
+    organizations,
+    isLoading: organizationsLoading,
+    error: organizationsError,
+  } = useOrganization();
   const { data: onboardingState, isLoading, isError, refetch } = useWorkspaceOnboardingState();
 
   if (!user || !isGoogleUser(user)) {
+    return <>{children}</>;
+  }
+
+  if (organizationsLoading) {
+    if (loadingFallback) {
+      return <>{loadingFallback}</>;
+    }
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-label={t('authFlow.checkingWorkspace')} />
+      </div>
+    );
+  }
+
+  if (organizations.length > 0) {
     return <>{children}</>;
   }
 
@@ -39,27 +60,15 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
     );
   }
 
-  if (isError) {
+  if (organizationsError || isError) {
     return <WorkspaceAccessGate mode="error" domain={null} onRetry={() => { void refetch(); }} />;
   }
 
-  if (!onboardingState || onboardingState.domain_status !== 'claimed') {
-    return <>{children}</>;
-  }
-
-  if (isConsumerGoogleDomain(onboardingState.domain)) {
-    return <>{children}</>;
-  }
-
-  if (onboardingState.has_workspace_membership || onboardingState.has_other_organization_membership) {
-    return <>{children}</>;
-  }
-
-  if (onboardingState.has_pending_invitation || onboardingState.has_pending_claim) {
+  if (onboardingState?.has_pending_invitation || onboardingState?.has_pending_claim) {
     return <WorkspaceAccessGate mode="pending" domain={onboardingState.domain} />;
   }
 
-  return <WorkspaceAccessGate mode="blocked" domain={onboardingState.domain} />;
+  return <WorkspaceAccessGate mode="blocked" domain={onboardingState?.domain ?? null} />;
 };
 
 export default WorkspaceOnboardingGuard;

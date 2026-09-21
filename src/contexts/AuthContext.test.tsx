@@ -4,7 +4,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { AuthProvider, AuthContext } from './AuthContext';
 import type { User, Session, AuthError } from '@supabase/supabase-js';
-import { PENDING_SIGNUP_ORGANIZATION_STORAGE_KEY } from '@/services/pendingSignupOrganization';
 
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => ({
@@ -357,31 +356,6 @@ describe('AuthContext', () => {
       },
     });
     expect(signInResult).toEqual({ error: null });
-  });
-
-  it('stores a pending organization name before Google OAuth signup', async () => {
-    const setItem = vi.spyOn(sessionStorage, 'setItem');
-
-    const { result } = renderAuthHook();
-    await flushAuthTimers();
-
-    await act(async () => {
-      await result.current!.signInWithGoogle({ organizationName: '  Fleet Co  ' });
-    });
-
-    expect(setItem).toHaveBeenCalledWith(
-      PENDING_SIGNUP_ORGANIZATION_STORAGE_KEY,
-      expect.any(String),
-    );
-    const stored = setItem.mock.calls.find(
-      ([key]) => key === PENDING_SIGNUP_ORGANIZATION_STORAGE_KEY,
-    )?.[1];
-    expect(typeof stored).toBe('string');
-    expect(JSON.parse(stored as string)).toEqual({
-      name: 'Fleet Co',
-      startedAt: expect.any(Number),
-    });
-    setItem.mockRestore();
   });
 
   it('should pass pendingRedirect as next on Google OAuth redirectTo', async () => {

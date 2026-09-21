@@ -414,7 +414,7 @@ describe('Auth Page', () => {
       });
     });
 
-    it('passes the signup organization name into Google OAuth', async () => {
+    it('does not pass organization-creation intent into Google OAuth', async () => {
       const mockSignInWithGoogle = vi.fn(() => Promise.resolve({ error: null }));
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: null,
@@ -432,7 +432,7 @@ describe('Auth Page', () => {
       fireEvent.click(screen.getByRole('button', { name: /sign up with google/i }));
 
       await waitFor(() => {
-        expect(mockSignInWithGoogle).toHaveBeenCalledWith({ organizationName: 'Fleet Co' });
+        expect(mockSignInWithGoogle).toHaveBeenCalledWith();
       });
     });
   });

@@ -9,6 +9,11 @@ const mockQueryState = vi.hoisted(() => ({
   isLoading: false,
   isError: false,
 }));
+const mockOrganizationState = vi.hoisted(() => ({
+  organizations: [] as Array<{ id: string }>,
+  isLoading: false,
+  error: null as string | null,
+}));
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
@@ -29,14 +34,21 @@ vi.mock('@/hooks/useWorkspaceOnboarding', () => ({
   }),
 }));
 
+vi.mock('@/contexts/OrganizationContext', () => ({
+  useOrganization: () => mockOrganizationState,
+}));
+
 describe('WorkspaceOnboardingGuard', () => {
   beforeEach(() => {
     mockOnboardingState.mockReset();
     mockQueryState.isLoading = false;
     mockQueryState.isError = false;
+    mockOrganizationState.organizations = [];
+    mockOrganizationState.isLoading = false;
+    mockOrganizationState.error = null;
   });
 
-  it('renders children for unclaimed domains', () => {
+  it('blocks unclaimed-domain Google users without organization membership', () => {
     mockOnboardingState.mockReturnValue({
       domain_status: 'unclaimed',
       domain: 'example.com',
@@ -51,7 +63,27 @@ describe('WorkspaceOnboardingGuard', () => {
       </WorkspaceOnboardingGuard>,
     );
 
-    expect(screen.getByText('Dashboard content')).toBeInTheDocument();
+    expect(screen.getByText('Workspace access required')).toBeInTheDocument();
+    expect(screen.queryByText('Dashboard content')).not.toBeInTheDocument();
+  });
+
+  it('blocks consumer Google users without organization membership', () => {
+    mockOnboardingState.mockReturnValue({
+      domain_status: 'unclaimed',
+      domain: 'gmail.com',
+      has_workspace_membership: false,
+      has_pending_invitation: false,
+      has_pending_claim: false,
+    });
+
+    customRender(
+      <WorkspaceOnboardingGuard>
+        <div>Dashboard content</div>
+      </WorkspaceOnboardingGuard>,
+    );
+
+    expect(screen.getByText('Workspace access required')).toBeInTheDocument();
+    expect(screen.queryByText('Dashboard content')).not.toBeInTheDocument();
   });
 
   it('blocks claimed-domain users without authorization', () => {
@@ -87,12 +119,13 @@ describe('WorkspaceOnboardingGuard', () => {
     expect(screen.queryByText('Dashboard content')).not.toBeInTheDocument();
   });
 
-  it('renders children for claimed-domain users with membership in another organization', () => {
+  it('renders children when the linked Supabase user has an active organization membership', () => {
+    mockOrganizationState.organizations = [{ id: 'existing-org' }];
     mockOnboardingState.mockReturnValue({
-      domain_status: 'claimed',
-      domain: 'claimed.test',
+      domain_status: 'unclaimed',
+      domain: 'example.com',
       has_workspace_membership: false,
-      has_other_organization_membership: true,
+      has_other_organization_membership: false,
       has_pending_invitation: false,
       has_pending_claim: false,
     });
