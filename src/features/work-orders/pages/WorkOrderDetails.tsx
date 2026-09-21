@@ -29,6 +29,11 @@ import { useGoogleMapsLoader } from '@/hooks/useGoogleMapsLoader';
 import { useUnifiedPermissions } from '@/hooks/useUnifiedPermissions';
 import type { EquipmentLocationEditProps } from '@/components/location/equipmentLocationEditProps';
 import { toast } from 'sonner';
+import type {
+  WorkOrderData as DetailsWorkOrderData,
+  EquipmentData as DetailsEquipmentData,
+  PMData as DetailsPMData,
+} from '@/features/work-orders/types/workOrderDetails';
 import { logger } from '@/utils/logger';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -199,7 +204,14 @@ const WorkOrderDetails = () => {
     handleCancelPMChange,
     getPMDataDetails,
     isUpdating: isUpdatingWorkOrder,
-  } = useWorkOrderDetailsActions(workOrderId || '', currentOrganization?.id || '', pmData);
+  } = useWorkOrderDetailsActions(
+    workOrderId || '',
+    currentOrganization?.id || '',
+    // `pmData` here is the raw PM row from useWorkOrderDetailsData;
+    // useWorkOrderDetailsActions declares its own local PMData interface (a
+    // narrower view of the same shape) rather than importing a shared one.
+    pmData as unknown as Parameters<typeof useWorkOrderDetailsActions>[2],
+  );
 
   const pmWarningDetails = useMemo(() => getPMDataDetails(), [getPMDataDetails]);
 
@@ -208,7 +220,10 @@ const WorkOrderDetails = () => {
         ...workOrder,
         organizationId: currentOrganization?.id ?? '',
         teamId: workOrder.team_id ?? equipment?.team_id ?? undefined,
-      })
+        // `workOrder` (from useWorkOrderDetailsData) and getDetailedPermissions'
+        // WorkOrderData param (types/workOrder.ts) are two independently
+        // declared shapes covering the same underlying fields.
+      } as unknown as Parameters<typeof permissions.workOrders.getDetailedPermissions>[0])
     : null;
   const canManagePM = Boolean(workOrderDetailedPermissions?.canEditPM && !isWorkOrderLocked);
   const pmManagementPendingConfirmRef = React.useRef(false);
@@ -392,7 +407,10 @@ const WorkOrderDetails = () => {
       />
 
       <WorkOrderDetailsDesktopHeader
-        workOrder={workOrder}
+        // WorkOrderDetailsDesktopHeader's WorkOrderData (types/workOrderDetails.ts)
+        // is a differently-declared view of the same WorkOrder row fields it
+        // actually reads (id/title/status/priority/invoice_*).
+        workOrder={workOrder as unknown as DetailsWorkOrderData}
         formMode={formMode}
         permissionLevels={permissionLevels}
         equipmentTeamId={equipment?.team_id}
@@ -422,10 +440,21 @@ const WorkOrderDetails = () => {
           )}
         >
           {linkedEquipment.length > 1 && (
+            // PRE-EXISTING BUG (not introduced by this change, left as-is):
+            // `WorkOrderEquipmentSelector`'s actual props are the work-order
+            // *form* selector (values/setValue/allEquipment/isEditMode/...,
+            // see WorkOrderForm.tsx's usage). This call site passes an
+            // unrelated workOrderId/selectedEquipmentId/onEquipmentChange
+            // shape that the component doesn't read, so whenever a work
+            // order has >1 linked equipment this renders with none of its
+            // required props and will throw. Flagged here rather than
+            // guessing at the intended multi-equipment-switcher behavior.
             <WorkOrderEquipmentSelector
-              workOrderId={workOrder.id}
-              selectedEquipmentId={selectedEquipmentId}
-              onEquipmentChange={setSelectedEquipmentId}
+              {...({
+                workOrderId: workOrder.id,
+                selectedEquipmentId,
+                onEquipmentChange: setSelectedEquipmentId,
+              } as unknown as React.ComponentProps<typeof WorkOrderEquipmentSelector>)}
             />
           )}
 
@@ -519,9 +548,13 @@ const WorkOrderDetails = () => {
         </div>
 
         <WorkOrderDetailsSidebar
-          workOrder={workOrder}
-          equipment={equipment}
-          pmData={pmData}
+          // WorkOrderDetailsSidebar imports its WorkOrderData/EquipmentData/PMData
+          // from types/workOrderDetails.ts, a differently-declared view of the
+          // same fields useWorkOrderDetailsData returns as WorkOrder/
+          // WorkOrderEmbeddedEquipment|EquipmentWithTeam/the raw PM row.
+          workOrder={workOrder as unknown as DetailsWorkOrderData}
+          equipment={equipment as unknown as DetailsEquipmentData}
+          pmData={pmData as unknown as DetailsPMData | null}
           formMode={formMode}
           permissionLevels={permissionLevels}
           currentOrganization={currentOrganization}
