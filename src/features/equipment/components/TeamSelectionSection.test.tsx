@@ -123,10 +123,13 @@ const TestWrapper = ({ defaultValues, isAdmin = false, creatableTeamIds = ['team
     canManageOrganization: vi.fn(() => isAdmin),
     canInviteMembers: vi.fn(() => isAdmin),
     isOrganizationAdmin: vi.fn(() => isAdmin),
-    hasRole: vi.fn((roles: string[]) => isAdmin && (roles.includes('owner') || roles.includes('admin'))),
+    hasRole: vi.fn((roles: string | string[]) => {
+      const roleList = Array.isArray(roles) ? roles : [roles];
+      return isAdmin && (roleList.includes('owner') || roleList.includes('admin'));
+    }),
     isTeamMember: vi.fn(() => true),
     isTeamManager: vi.fn(() => isAdmin)
-  });
+  } as unknown as ReturnType<typeof usePermissionsModule.usePermissions>);
 
   return (
     <Form {...form}>
@@ -140,9 +143,9 @@ describe('TeamSelectionSection', () => {
     vi.clearAllMocks();
     vi.mocked(useTeamsModule.useTeams).mockReturnValue({
       teams: [
-        { 
-          id: 'team-1', 
-          name: 'Team 1', 
+        {
+          id: 'team-1',
+          name: 'Team 1',
           description: 'Description 1',
           organization_id: 'org-1',
           created_at: '2024-01-01T00:00:00Z',
@@ -150,9 +153,9 @@ describe('TeamSelectionSection', () => {
           members: [],
           member_count: 0
         },
-        { 
-          id: 'team-2', 
-          name: 'Team 2', 
+        {
+          id: 'team-2',
+          name: 'Team 2',
           description: null,
           organization_id: 'org-1',
           created_at: '2024-01-01T00:00:00Z',
@@ -162,9 +165,9 @@ describe('TeamSelectionSection', () => {
         }
       ],
       managedTeams: [
-        { 
-          id: 'team-1', 
-          name: 'Team 1', 
+        {
+          id: 'team-1',
+          name: 'Team 1',
           description: 'Description 1',
           organization_id: 'org-1',
           created_at: '2024-01-01T00:00:00Z',
@@ -175,7 +178,7 @@ describe('TeamSelectionSection', () => {
       ],
       isLoading: false,
       error: null
-    });
+    } as unknown as ReturnType<typeof useTeamsModule.useTeams>);
     vi.mocked(usePermissionsModule.usePermissions).mockReturnValue({
       canManageTeam: vi.fn(() => false),
       canViewTeam: vi.fn(() => true),
@@ -197,7 +200,7 @@ describe('TeamSelectionSection', () => {
       hasRole: vi.fn(() => false),
       isTeamMember: vi.fn(() => true),
       isTeamManager: vi.fn(() => false)
-    });
+    } as unknown as ReturnType<typeof usePermissionsModule.usePermissions>);
   });
 
   describe('Core Rendering', () => {
@@ -221,7 +224,7 @@ describe('TeamSelectionSection', () => {
         managedTeams: [],
         isLoading: true,
         error: null
-      });
+      } as unknown as ReturnType<typeof useTeamsModule.useTeams>);
 
       render(<TestWrapper />);
       
