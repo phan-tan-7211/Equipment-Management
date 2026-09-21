@@ -15,6 +15,7 @@
 import { resolvePublicSiteUrl } from "../_shared/public-site-url.ts";
 import { sendResendEmail } from "../_shared/resend-send-email.ts";
 import {
+  createAdminSupabaseClient,
   requireAuthenticatedPost,
   verifyOrgAdmin,
   createErrorResponse,
@@ -23,6 +24,7 @@ import {
   withCorrelationId,
   type RequestContext,
 } from "../_shared/supabase-clients.ts";
+import { verifyPlatformAdminAccess } from "../_shared/admin-validation.ts";
 import { MissingSecretError, requireSecret } from "../_shared/require-secret.ts";
 
 const FUNCTION_NAME = "send-invitation-email";
@@ -39,6 +41,21 @@ interface InvitationEmailRequest {
   organizationName: string;
   inviterName: string;
   message?: string;
+}
+
+interface InitialOwnerInvitationAuthorization {
+  role: string;
+  status: string;
+  invited_by: string;
+}
+
+export function canPlatformAdminDeliverInitialOwnerInvitation(
+  invitation: InitialOwnerInvitationAuthorization,
+  userId: string,
+): boolean {
+  return invitation.role === "owner" &&
+    invitation.status === "pending" &&
+    invitation.invited_by === userId;
 }
 
 // HTML escape function to prevent XSS in email templates
@@ -124,26 +141,29 @@ async function handle(req: Request, _ctx: RequestContext): Promise<Response> {
     const { supabase, user } = authContext;
     logStep("User authenticated", { userId: user.id });
 
-    const {
-      invitationId,
-      email,
-      role,
-      organizationName,
-      inviterName,
-      message,
-    }: InvitationEmailRequest = await req.json();
+    const requestBody: InvitationEmailRequest = await req.json();
+    const { invitationId, inviterName } = requestBody;
 
-    logStep("Request received", { invitationId, role, organizationName });
+    logStep("Request received", { invitationId });
+
+    const adminClient = createAdminSupabaseClient();
+    const isPlatformAdmin = await verifyPlatformAdminAccess(adminClient, user.id);
+    const invitationClient = isPlatformAdmin ? adminClient : supabase;
 
     // First, get the invitation to determine the organization
     // RLS will ensure user can only see invitations for orgs they have access to
-    const { data: invitation, error: invitationError } = await supabase
+    const { data: invitation, error: invitationError } = await invitationClient
       .from("organization_invitations")
       .select(
         `
         id,
         invitation_token,
         organization_id,
+        email,
+        role,
+        status,
+        message,
+        invited_by,
         organizations!inner(name, logo)
       `
       )
@@ -166,12 +186,13 @@ async function handle(req: Request, _ctx: RequestContext): Promise<Response> {
     // the caller actually has admin privileges, not just read access via RLS.
     // Without this check, a non-admin member could potentially trigger invitation
     // emails for invitations they can read but shouldn't be able to act on.
-    const isAdmin = await verifyOrgAdmin(
-      supabase,
-      user.id,
-      invitation.organization_id
-    );
-    if (!isAdmin) {
+    const mayDeliverAsPlatformAdmin = isPlatformAdmin &&
+      canPlatformAdminDeliverInitialOwnerInvitation(invitation, user.id);
+    const isAdmin = mayDeliverAsPlatformAdmin
+      ? false
+      : await verifyOrgAdmin(supabase, user.id, invitation.organization_id);
+
+    if (!mayDeliverAsPlatformAdmin && !isAdmin) {
       logStep("User is not admin of organization", {
         userId: user.id,
         orgId: invitation.organization_id,
@@ -187,16 +208,10 @@ async function handle(req: Request, _ctx: RequestContext): Promise<Response> {
       token: invitation.invitation_token,
     });
 
-    // Sanitize user inputs to prevent XSS
-    const safeOrganizationName = escapeHtml(organizationName);
-    const safeInviterName = escapeHtml(inviterName);
-    const safeRole = escapeHtml(role);
-    const safeMessage = message ? escapeHtml(message) : undefined;
-
+    const rawOrg = invitation.organizations;
     // Extract organization logo from the joined data with runtime type validation.
     // The database join returns organizations as an object, but we validate the
     // shape at runtime to guard against schema changes that could cause failures.
-    const rawOrg = invitation.organizations;
     const isValidOrgShape = (
       obj: unknown
     ): obj is { name: string; logo?: string | null } => {
@@ -219,6 +234,16 @@ async function handle(req: Request, _ctx: RequestContext): Promise<Response> {
     }
 
     const organizationLogo = isValidOrgShape(rawOrg) ? rawOrg.logo : undefined;
+    const organizationName = isValidOrgShape(rawOrg) ? rawOrg.name : "your organization";
+
+    // Authorization-bearing invitation fields come from the database. The
+    // display-only inviter label remains escaped and has a server fallback.
+    const safeOrganizationName = escapeHtml(organizationName);
+    const safeInviterName = escapeHtml(
+      inviterName || "ZNTEQR Platform Administration",
+    );
+    const safeRole = escapeHtml(invitation.role);
+    const safeMessage = invitation.message ? escapeHtml(invitation.message) : undefined;
 
     const baseUrl = resolvePublicSiteUrl();
     const invitationUrl = `${baseUrl}/invitation/${invitation.invitation_token}`;
@@ -306,7 +331,7 @@ async function handle(req: Request, _ctx: RequestContext): Promise<Response> {
     return await deliverInvitationEmail({
       req,
       resendApiKey,
-      email,
+      email: invitation.email,
       organizationName,
       emailHtml,
       invitationId,
@@ -330,6 +355,7 @@ export const __testables = {
   deliverInvitationEmail,
   buildInvitationEmailSubject,
   sanitizeSubjectOrganizationName,
+  canPlatformAdminDeliverInitialOwnerInvitation,
 };
 
 Deno.serve(withCorrelationId(handle));

@@ -436,6 +436,7 @@ export type Database = {
           custom_attributes: Json | null
           customer_id: string | null
           default_pm_template_id: string | null
+          equipment_group_id: string | null
           id: string
           image_url: string | null
           import_id: string | null
@@ -444,6 +445,7 @@ export type Database = {
           last_maintenance: string | null
           last_maintenance_work_order_id: string | null
           location: string
+          management_code: string | null
           management_responsible_primary: string | null
           management_responsible_secondary: string | null
           manufacturer: string
@@ -451,7 +453,7 @@ export type Database = {
           name: string
           notes: string | null
           organization_id: string
-          serial_number: string
+          serial_number: string | null
           status: Database["public"]["Enums"]["equipment_status"]
           team_id: string | null
           updated_at: string
@@ -470,6 +472,7 @@ export type Database = {
           custom_attributes?: Json | null
           customer_id?: string | null
           default_pm_template_id?: string | null
+          equipment_group_id?: string | null
           id?: string
           image_url?: string | null
           import_id?: string | null
@@ -478,6 +481,7 @@ export type Database = {
           last_maintenance?: string | null
           last_maintenance_work_order_id?: string | null
           location: string
+          management_code?: string | null
           management_responsible_primary?: string | null
           management_responsible_secondary?: string | null
           manufacturer: string
@@ -485,7 +489,7 @@ export type Database = {
           name: string
           notes?: string | null
           organization_id: string
-          serial_number: string
+          serial_number?: string | null
           status?: Database["public"]["Enums"]["equipment_status"]
           team_id?: string | null
           updated_at?: string
@@ -504,6 +508,7 @@ export type Database = {
           custom_attributes?: Json | null
           customer_id?: string | null
           default_pm_template_id?: string | null
+          equipment_group_id?: string | null
           id?: string
           image_url?: string | null
           import_id?: string | null
@@ -512,6 +517,7 @@ export type Database = {
           last_maintenance?: string | null
           last_maintenance_work_order_id?: string | null
           location?: string
+          management_code?: string | null
           management_responsible_primary?: string | null
           management_responsible_secondary?: string | null
           manufacturer?: string
@@ -519,7 +525,7 @@ export type Database = {
           name?: string
           notes?: string | null
           organization_id?: string
-          serial_number?: string
+          serial_number?: string | null
           status?: Database["public"]["Enums"]["equipment_status"]
           team_id?: string | null
           updated_at?: string
@@ -550,6 +556,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "equipment_equipment_group_id_fkey"
+            columns: ["equipment_group_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_groups"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "equipment_last_maintenance_work_order_id_fkey"
             columns: ["last_maintenance_work_order_id"]
             isOneToOne: false
@@ -568,6 +581,56 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      equipment_groups: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          examples: string | null
+          id: string
+          is_active: boolean
+          management_focus: string | null
+          name: string
+          next_sequence: number
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          examples?: string | null
+          id?: string
+          is_active?: boolean
+          management_focus?: string | null
+          name: string
+          next_sequence?: number
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          examples?: string | null
+          id?: string
+          is_active?: boolean
+          management_focus?: string | null
+          name?: string
+          next_sequence?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_groups_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -1256,7 +1319,7 @@ export type Database = {
           expires_at: string
           id: string
           nonce: string
-          organization_id: string | null
+          organization_id: string
           origin_url: string | null
           redirect_url: string | null
           session_token: string
@@ -1268,7 +1331,7 @@ export type Database = {
           expires_at: string
           id?: string
           nonce: string
-          organization_id?: string | null
+          organization_id: string
           origin_url?: string | null
           redirect_url?: string | null
           session_token: string
@@ -1280,7 +1343,7 @@ export type Database = {
           expires_at?: string
           id?: string
           nonce?: string
-          organization_id?: string | null
+          organization_id?: string
           origin_url?: string | null
           redirect_url?: string | null
           session_token?: string
@@ -2279,6 +2342,7 @@ export type Database = {
           billing_cycle: string | null
           created_at: string
           customers_feature_enabled: boolean | null
+          equipment_code_prefix: string
           features: string[]
           fleet_map_enabled: boolean | null
           id: string
@@ -2307,6 +2371,7 @@ export type Database = {
           billing_cycle?: string | null
           created_at?: string
           customers_feature_enabled?: boolean | null
+          equipment_code_prefix?: string
           features?: string[]
           fleet_map_enabled?: boolean | null
           id?: string
@@ -2335,6 +2400,7 @@ export type Database = {
           billing_cycle?: string | null
           created_at?: string
           customers_feature_enabled?: boolean | null
+          equipment_code_prefix?: string
           features?: string[]
           fleet_map_enabled?: boolean | null
           id?: string
@@ -5884,10 +5950,7 @@ export type Database = {
           workspace_org_id: string
         }[]
       }
-      grant_platform_admin: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
+      grant_platform_admin: { Args: { p_user_id: string }; Returns: boolean }
       handle_invitation_account_creation: {
         Args: { p_invitation_id: string; p_user_id: string }
         Returns: Json
@@ -5925,10 +5988,6 @@ export type Database = {
         Args: { org_id: string; user_uuid: string }
         Returns: boolean
       }
-      is_platform_admin: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
       is_organization_admin: {
         Args: { org_id: string; user_uuid: string }
         Returns: boolean
@@ -5945,6 +6004,7 @@ export type Database = {
         Args: { p_organization_id: string; p_user_id?: string }
         Returns: boolean
       }
+      is_platform_admin: { Args: { p_user_id: string }; Returns: boolean }
       is_team_viewer_or_requestor: {
         Args: { p_team_id: string; p_user_id: string }
         Returns: boolean
@@ -6109,6 +6169,18 @@ export type Database = {
           redirect_url: string
         }[]
       }
+      platform_create_organization_and_invite_owner: {
+        Args: {
+          p_message?: string
+          p_organization_name: string
+          p_owner_email: string
+        }
+        Returns: {
+          invitation_id: string
+          organization_id: string
+          owner_email: string
+        }[]
+      }
       prepare_account_deletion: {
         Args: {
           p_actor_id?: string
@@ -6222,10 +6294,7 @@ export type Database = {
         Args: { p_reason?: string; p_work_order_id: string }
         Returns: Json
       }
-      revoke_platform_admin: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
+      revoke_platform_admin: { Args: { p_user_id: string }; Returns: boolean }
       rotate_operator_checkin_token: {
         Args: { p_settings_id: string }
         Returns: {

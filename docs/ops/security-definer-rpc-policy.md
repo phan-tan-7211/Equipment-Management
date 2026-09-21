@@ -23,6 +23,8 @@ Issue [#762](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/issues/762) locke
 4. **Trigger-only helpers:** Revoke `PUBLIC`, `anon`, and `authenticated`; rely on definer owner + trigger/cron invocation.
 5. **Never expose identity probes to browsers:** Helpers like `is_user_google_oauth_verified` stay `service_role` only (see migration `20260525000000_restrict_google_oauth_verified_to_service_role.sql`).
 
+Checkpoint C2 adds the authenticated RPC `platform_create_organization_and_invite_owner`. Its definer body authorizes the caller with the private Platform Admin registry before atomically creating the organization and pending OWNER invitation. The legacy `create_workspace_organization_for_domain` and `auto_provision_workspace_organization` functions are retained only as fail-closed compatibility stubs with all client and service-role execution revoked.
+
 ## Allowlists (source of truth)
 
 - `dev/security-definer-rpc-allowlists.json` — names granted to `authenticated` / `anon`. It must match the latest bulk re-lockdown migration plus reviewed grant markers in later forward migrations.

@@ -37,7 +37,7 @@ const WorkspaceOnboarding = () => {
   const { t } = useI18n();
   const { user } = useAuth();
   const { refreshSession } = useSession();
-  const { switchOrganization } = useOrganization();
+  const { currentOrganization, switchOrganization } = useOrganization();
   const { toast } = useAppToast();
   const { formatDate } = useFormatTimestamp();
   const queryClient = useQueryClient();
@@ -96,9 +96,10 @@ const WorkspaceOnboarding = () => {
   const isConsumerDomain = isConsumerGoogleDomain(domain);
 
   const workspaceOrgId = onboardingState?.workspace_org_id || null;
+  const targetOrganizationId = workspaceOrgId ?? currentOrganization?.id ?? null;
 
-  const { canManage: canManageWorkspaceDisconnect } = useGoogleWorkspaceManageAccess(workspaceOrgId);
-  const disconnectMutation = useGoogleWorkspaceDisconnect(workspaceOrgId ?? undefined);
+  const { canManage: canManageWorkspaceDisconnect } = useGoogleWorkspaceManageAccess(targetOrganizationId);
+  const disconnectMutation = useGoogleWorkspaceDisconnect(targetOrganizationId ?? undefined);
 
   const { data: connectionStatus } = useQuery({
     queryKey: googleWorkspace.connection(workspaceOrgId ?? ''),
@@ -126,9 +127,11 @@ const WorkspaceOnboarding = () => {
   const handleConnectWorkspace = async () => {
     setIsConnecting(true);
     try {
-      // For first-time setup, don't pass organization_id - the callback will create one
+      if (!targetOrganizationId) {
+        throw new Error('An existing organization is required to connect Google Workspace.');
+      }
       const authUrl = await generateGoogleWorkspaceAuthUrl({
-        ...(workspaceOrgId ? { organizationId: workspaceOrgId } : {}),
+        organizationId: targetOrganizationId,
         redirectUrl: '/dashboard/onboarding/workspace',
         consentMode: 'directory',
       });
@@ -236,7 +239,9 @@ const WorkspaceOnboarding = () => {
     <Page maxWidth="full" padding="workspace">
       <PageHeader
         title={t('workspaceOnboarding.title')}
-        description={t('workspaceOnboarding.setupFor', { domain: onboardingState.domain })}
+        description={t('workspaceOnboarding.setupFor', {
+          domain: onboardingState.domain ?? t('workspaceOnboarding.unknown'),
+        })}
       />
 
       <div className="space-y-6">
@@ -303,7 +308,9 @@ const WorkspaceOnboarding = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2 text-sm text-muted-foreground">
-                  <div>{t('workspaceOnboarding.connectedDomain', { domain: connectionStatus.domain })}</div>
+                  <div>{t('workspaceOnboarding.connectedDomain', {
+                    domain: connectionStatus.domain ?? t('workspaceOnboarding.unknown'),
+                  })}</div>
                   <div>{t('workspaceOnboarding.connectedOn', { date: connectionStatus.connected_at ? formatDate(connectionStatus.connected_at) : t('workspaceOnboarding.unknown') })}</div>
                 </div>
                 

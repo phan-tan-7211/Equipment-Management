@@ -194,7 +194,11 @@ describe('WorkspaceOnboarding', () => {
       fireEvent.click(button);
 
       await waitFor(() => {
-        expect(mockGenerateAuthUrl).toHaveBeenCalled();
+        expect(mockGenerateAuthUrl).toHaveBeenCalledWith({
+          organizationId: 'current-org-123',
+          redirectUrl: '/dashboard/onboarding/workspace',
+          consentMode: 'directory',
+        });
       });
     } finally {
       Object.defineProperty(window, 'location', {

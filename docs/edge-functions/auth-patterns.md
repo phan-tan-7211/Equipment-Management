@@ -92,6 +92,8 @@ The following functions are explicitly authorized to use `createAdminSupabaseCli
 | `create-ticket` | Uses `requireUser()` for auth with a user-scoped client, and an admin client for ticket insert (to atomically set `github_issue_number`) | `verify_jwt = false` |
 | `operator-check-in` | Public QR token load via user-scoped anon RPC; `submit_operator_checkin_public` via service role after CAPTCHA + validation | `verify_jwt = false` |
 | `quick-form` | Public QR token load via user-scoped anon/authenticated RPC; `submit_quick_form_public` via service role after CAPTCHA + validation | `verify_jwt = false` |
+| `google-workspace-oauth-callback` | Revalidates active owner/admin membership and domain ownership with the admin client after OAuth redirects; never creates organizations | `verify_jwt = false` (signed OAuth state) |
+| `send-invitation-email` | Uses the user-scoped path for organization admins and the admin client only after Platform Admin validation to load a pending OWNER invitation created by that caller | `verify_jwt = true` |
 
 ## Functions Using User-Scoped Client (RLS Enforced)
 
@@ -110,7 +112,6 @@ The following functions use `createUserSupabaseClient()` and rely on RLS:
 - `quickbooks-oauth-callback` - Handles OAuth callbacks
 - `quickbooks-search-customers` - Searches QuickBooks customers
 - `resolve-inventory-scan` - Resolves scanned inventory items
-- `send-invitation-email` - Sends invitation emails
 
 ## Authenticated-User Public-Data Endpoints (`verify_jwt = true`, no role gating)
 

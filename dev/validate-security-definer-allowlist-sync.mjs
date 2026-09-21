@@ -86,6 +86,10 @@ function main() {
     migrationPath,
     'rpc-authenticated-grant-allowed',
   );
+  const forwardAuthRevoked = extractForwardGrantMarkers(
+    migrationPath,
+    'rpc-authenticated-grant-revoked',
+  );
   const forwardAnon = extractForwardGrantMarkers(
     migrationPath,
     'rpc-anon-grant-allowed',
@@ -103,7 +107,7 @@ function main() {
       ...migrationInvoker,
       ...forwardAuth,
     ]),
-  ].sort();
+  ].filter((name) => !forwardAuthRevoked.includes(name)).sort();
   const jsonCallable = [
     ...new Set([...jsonAuth, ...jsonRls, ...jsonInvoker]),
   ].sort();

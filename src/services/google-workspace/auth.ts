@@ -108,8 +108,8 @@ export function canSyncGoogleWorkspaceDirectory(
 }
 
 export interface GoogleWorkspaceAuthConfig {
-  /** Organization ID - optional for first-time setup, required for reconnecting existing orgs */
-  organizationId?: string;
+  /** Existing organization to connect. Workspace OAuth never creates organizations. */
+  organizationId: string;
   /** URL to redirect to after OAuth flow completes */
   redirectUrl?: string;
   /** OAuth scopes to request (overrides consentMode when set explicitly) */
@@ -157,6 +157,10 @@ export async function generateGoogleWorkspaceAuthUrl(
     throw new Error('Supabase URL is not configured. Missing VITE_SUPABASE_URL.');
   }
 
+  if (!config.organizationId?.trim()) {
+    throw new Error('An existing organization is required to connect Google Workspace.');
+  }
+
   assertValidOAuthRedirectBase(oauthRedirectBaseUrl);
 
   const originUrl = resolveOAuthOriginUrl(config.originUrl, {
@@ -168,7 +172,7 @@ export async function generateGoogleWorkspaceAuthUrl(
   const { data: sessionData, error: sessionError } = await supabase.rpc(
     'create_google_workspace_oauth_session',
     {
-      p_organization_id: config.organizationId || undefined,
+      p_organization_id: config.organizationId,
       p_redirect_url: config.redirectUrl || undefined,
       p_origin_url: originUrl,
     }
@@ -209,4 +213,3 @@ export function isGoogleWorkspaceConfigured(): boolean {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   return Boolean(clientId && supabaseUrl);
 }
-

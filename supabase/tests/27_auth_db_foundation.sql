@@ -385,8 +385,8 @@ SELECT is(
     'public.create_workspace_organization_for_domain(text, text)',
     'EXECUTE'
   ),
-  true,
-  'service_role retains the minimum trusted legacy RPC permission'
+  false,
+  'service_role cannot execute retired Workspace organization creation RPC'
 );
 
 SELECT is(
@@ -405,13 +405,13 @@ SELECT is(
     'public.auto_provision_workspace_organization(uuid, text, text)',
     'EXECUTE'
   ),
-  true,
-  'service_role can execute verified Workspace provisioning RPC'
+  false,
+  'service_role cannot execute retired Workspace auto-provisioning RPC'
 );
 
 SET LOCAL ROLE service_role;
 
-SELECT lives_ok(
+SELECT throws_ok(
   $$
     SELECT public.auto_provision_workspace_organization(
       '27000000-0000-0000-0000-000000000002'::uuid,
@@ -419,17 +419,19 @@ SELECT lives_ok(
       'Verified Checkpoint A Organization'
     )
   $$,
-  'trusted service-role Workspace provisioning remains executable'
+  '42501',
+  NULL,
+  'service role is denied retired Workspace auto-provisioning execution'
 );
 
 RESET ROLE;
 
 SELECT is(
-  (SELECT organization_id::text
+  (SELECT count(*)::integer
    FROM public.workspace_domains
    WHERE domain = 'verified-checkpoint-a.test'),
-  '27000000-0000-0000-0000-000000000001',
-  'trusted Workspace provisioning maps the verified domain to an owner-managed organization'
+  0,
+  'retired Workspace provisioning creates no domain mapping'
 );
 
 SET LOCAL ROLE authenticated;

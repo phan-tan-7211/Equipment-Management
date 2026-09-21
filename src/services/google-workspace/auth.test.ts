@@ -66,6 +66,13 @@ describe('generateGoogleWorkspaceAuthUrl', () => {
     expect(parsed.searchParams.get('include_granted_scopes')).toBe('true');
   });
 
+  it('rejects OAuth startup without an existing organization', async () => {
+    await expect(
+      generateGoogleWorkspaceAuthUrl({ organizationId: '' }),
+    ).rejects.toThrow('An existing organization is required');
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
   it('builds an export-consent OAuth URL with export scopes requested incrementally', async () => {
     rpcMock.mockResolvedValue({
       data: [{ session_token: 'session-token', nonce: 'nonce-token' }],

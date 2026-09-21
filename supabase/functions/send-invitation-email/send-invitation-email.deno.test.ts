@@ -3,6 +3,26 @@ import { __testables } from "./index.ts";
 
 const FAKE_CORRELATION_ID = "00000000-0000-4000-8000-000000000002";
 
+Deno.test("Platform Admin delivery is limited to its own pending OWNER invitation", () => {
+  const canDeliver = __testables.canPlatformAdminDeliverInitialOwnerInvitation;
+  assertEquals(
+    canDeliver({ role: "owner", status: "pending", invited_by: "platform-1" }, "platform-1"),
+    true,
+  );
+  assertEquals(
+    canDeliver({ role: "admin", status: "pending", invited_by: "platform-1" }, "platform-1"),
+    false,
+  );
+  assertEquals(
+    canDeliver({ role: "owner", status: "pending", invited_by: "platform-2" }, "platform-1"),
+    false,
+  );
+  assertEquals(
+    canDeliver({ role: "owner", status: "accepted", invited_by: "platform-1" }, "platform-1"),
+    false,
+  );
+});
+
 function buildTestRequest(): Request {
   return new Request("https://example.test/functions/v1/send-invitation-email", {
     method: "POST",
