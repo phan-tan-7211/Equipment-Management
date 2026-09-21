@@ -63,7 +63,7 @@ export function useMyTickets() {
       return (data || []).map((ticket) => ({
         ...ticket,
         ticket_comments: (ticket.ticket_comments || []).sort(
-          (a: TicketComment, b: TicketComment) =>
+          (a, b) =>
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         ),
       })) as Ticket[];

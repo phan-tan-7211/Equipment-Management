@@ -146,7 +146,7 @@ describe('EquipmentImagesTab', () => {
     });
 
     it('handles image upload', async () => {
-      vi.mocked(equipmentNotesServiceModule.createEquipmentNoteWithImages).mockResolvedValue({ id: 'note-1' });
+      vi.mocked(equipmentNotesServiceModule.createEquipmentNoteWithImages).mockResolvedValue({ id: 'note-1' } as unknown as Awaited<ReturnType<typeof equipmentNotesServiceModule.createEquipmentNoteWithImages>>);
 
       render(
         <EquipmentImagesTab 
@@ -184,7 +184,7 @@ describe('EquipmentImagesTab', () => {
     it('persists an uploaded display image as one reusable media item', async () => {
       vi.mocked(equipmentNotesServiceModule.createEquipmentNoteWithImages).mockResolvedValue({
         id: 'note-display-1',
-      });
+      } as unknown as Awaited<ReturnType<typeof equipmentNotesServiceModule.createEquipmentNoteWithImages>>);
 
       render(
         <EquipmentImagesTab

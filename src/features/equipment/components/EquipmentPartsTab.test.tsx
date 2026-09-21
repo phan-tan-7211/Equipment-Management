@@ -92,7 +92,7 @@ describe('EquipmentPartsTab', () => {
       error: null,
       isError: false,
       refetch: vi.fn(),
-    } as ReturnType<typeof useInventoryModule.useCompatibleInventoryItems>);
+    } as unknown as ReturnType<typeof useInventoryModule.useCompatibleInventoryItems>);
   });
 
   it('renders header, search, standard inventory thumbnails, and part cards with stock badges', () => {
@@ -119,7 +119,7 @@ describe('EquipmentPartsTab', () => {
       error: null,
       isError: false,
       refetch: vi.fn(),
-    } as ReturnType<typeof useInventoryModule.useCompatibleInventoryItems>);
+    } as unknown as ReturnType<typeof useInventoryModule.useCompatibleInventoryItems>);
 
     const { container } = render(
       <EquipmentPartsTab equipmentId="eq-1" organizationId="org-1" />,
@@ -134,7 +134,7 @@ describe('EquipmentPartsTab', () => {
       error: null,
       isError: false,
       refetch: vi.fn(),
-    } as ReturnType<typeof useInventoryModule.useCompatibleInventoryItems>);
+    } as unknown as ReturnType<typeof useInventoryModule.useCompatibleInventoryItems>);
 
     render(<EquipmentPartsTab equipmentId="eq-1" organizationId="org-1" />);
     expect(screen.getByText('No compatible parts')).toBeInTheDocument();
