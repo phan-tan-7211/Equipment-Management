@@ -135,7 +135,7 @@ export const getEquipmentNotesWithImages = async (equipmentId: string): Promise<
     machine_hours: note.machine_hours != null ? Number(note.machine_hours) : null,
     author_name: (note.profiles as { name?: string } | null | undefined)?.name || 'Unknown',
     images: imagesByNoteIdx.get(noteIdx) ?? [],
-  }));
+  })) as unknown as EquipmentNote[];
 };
 
 // Create a note with images
@@ -185,7 +185,7 @@ export const createEquipmentNoteWithImages = async (
   return {
     ...note,
     images: uploadedImages,
-  };
+  } as unknown as EquipmentNote;
 };
 
 // Get all images for equipment (for gallery view)

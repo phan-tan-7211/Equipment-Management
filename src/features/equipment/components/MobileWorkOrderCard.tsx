@@ -11,13 +11,10 @@ import { WorkOrder } from '@/services/supabaseDataService';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { useI18n } from '@/i18n';
 
-interface ExtendedWorkOrder extends WorkOrder {
-  created_date: string;
-  due_date?: string;
-  estimated_hours?: number;
-  completed_date?: string;
-  has_pm?: boolean;
-}
+// WorkOrder (Tables<'work_orders'> & extras) already declares
+// created_date/due_date/estimated_hours/completed_date/has_pm; this used to
+// re-narrow them but conflicted with the base's nullable/required shape.
+type ExtendedWorkOrder = WorkOrder;
 
 interface MobileWorkOrderCardProps {
   workOrder: ExtendedWorkOrder;
@@ -150,7 +147,14 @@ const MobileWorkOrderCard: React.FC<MobileWorkOrderCardProps> = ({ workOrder }) 
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t">
-            {permissions.workOrders.getDetailedPermissions({ ...workOrder, organizationId: '' }).canEdit && (
+            {permissions.workOrders.getDetailedPermissions({
+              ...workOrder,
+              organizationId: '',
+              // `workOrder` here is the legacy WorkOrder from
+              // @/services/supabaseDataService; getDetailedPermissions wants
+              // types/workOrder.ts's WorkOrderData, a differently-declared
+              // view of the same fields.
+            } as unknown as Parameters<typeof permissions.workOrders.getDetailedPermissions>[0]).canEdit && (
               <WorkOrderCostSubtotal workOrderId={workOrder.id} className="text-sm" />
             )}
             <Button

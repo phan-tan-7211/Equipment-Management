@@ -275,8 +275,13 @@ export async function compressImageFile(
     if (compressed instanceof File) {
       return compressed;
     }
-    return new File([compressed], file.name, {
-      type: compressed.type || file.type,
+    // browser-image-compression's types say this always returns a File, but
+    // this defensive branch guards against a Blob at runtime regardless —
+    // keeping it (rather than treating it as dead code) since the library's
+    // .d.ts isn't necessarily exhaustive of every code path.
+    const compressedBlob = compressed as Blob;
+    return new File([compressedBlob], file.name, {
+      type: compressedBlob.type || file.type,
       lastModified: file.lastModified,
     });
   } catch (error) {

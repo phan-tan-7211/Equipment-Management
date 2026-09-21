@@ -24,13 +24,16 @@ export interface UpdateWorkingHoursData {
 }
 
 export const updateEquipmentWorkingHours = async (data: UpdateWorkingHoursData) => {
+  // The generated RPC arg types only allow `| undefined` for p_work_order_id/
+  // p_notes, but the SQL function distinguishes an explicit NULL from an
+  // omitted argument, so `null` is sent deliberately here.
   const { data: result, error } = await supabase.rpc('update_equipment_working_hours', {
     p_equipment_id: data.equipmentId,
     p_new_hours: data.newHours,
     p_update_source: data.updateSource || 'manual',
     p_work_order_id: data.workOrderId || null,
     p_notes: data.notes || null
-  });
+  } as never);
 
   if (error) {
     logger.error('Error updating equipment working hours:', error);
