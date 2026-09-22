@@ -85,7 +85,7 @@ export const useInventoryItems = (
   const gcTime = resolveListQueryGcTime(staleTime, options?.gcTime);
 
   return useQuery({
-    queryKey: inventoryKeys.list(organizationId ?? '', filters as Record<string, unknown>),
+    queryKey: inventoryKeys.list(organizationId ?? '', filters),
     queryFn: async () => {
       if (!organizationId) return [];
       return await getInventoryItems(organizationId, filters);

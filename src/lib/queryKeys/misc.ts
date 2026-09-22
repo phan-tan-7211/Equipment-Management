@@ -1,3 +1,5 @@
+import type { InventoryFilters } from '@/features/inventory/types/inventory';
+
 // Notification keys
 export const notifications = {
   root: ['notifications'] as const,
@@ -14,7 +16,7 @@ export const userAvatars = {
 // Inventory keys
 export const inventory = {
   root: ['inventory'] as const,
-  list: (orgId: string, filters?: Record<string, unknown>) =>
+  list: (orgId: string, filters?: InventoryFilters) =>
     filters
       ? (['inventory', orgId, 'list', filters] as const)
       : (['inventory', orgId, 'list'] as const),

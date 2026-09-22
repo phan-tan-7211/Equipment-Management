@@ -18,6 +18,31 @@ export const OFFLINE_NOTE_ID_PREFIX = 'offline-note-';
 
 // ─── Generic note shape that covers both WO and equipment notes ─────────────
 
+/**
+ * The fields this hook can actually guarantee for a synthesized offline
+ * note, whether the caller's real note type is `EquipmentNote` or
+ * `WorkOrderNoteListItem` — both already structurally satisfy this shape
+ * (each just adds its own required `equipment_id`/`work_order_id`, which are
+ * declared optional here since only one applies per `entityType` and it's
+ * filled in below). Constraining `T` to this instead of the previous bare
+ * `{ id: string }` means the bridge cast at the bottom of this file is
+ * between two types the compiler knows are related, not an arbitrary one.
+ */
+export interface OfflineMergedNoteEntity {
+  id: string;
+  content: string;
+  hours_worked: number;
+  machine_hours?: number | null;
+  is_private: boolean;
+  created_at: string;
+  updated_at: string;
+  author_id: string;
+  author_name?: string;
+  images?: unknown[];
+  equipment_id?: string;
+  work_order_id?: string;
+}
+
 // ─── Hook ───────────────────────────────────────────────────────────────────
 
 /**
@@ -27,7 +52,7 @@ export const OFFLINE_NOTE_ID_PREFIX = 'offline-note-';
  * @param entityType - 'work_order' or 'equipment'
  * @param entityId - The work order or equipment ID to filter queue items by
  */
-export function useOfflineMergedNotes<T extends { id: string }>(
+export function useOfflineMergedNotes<T extends OfflineMergedNoteEntity>(
   serverNotes: T[],
   entityType: 'work_order' | 'equipment',
   entityId: string,
@@ -54,7 +79,7 @@ export function useOfflineMergedNotes<T extends { id: string }>(
       const payload = item.payload as Record<string, unknown>;
       const now = new Date(item.timestamp).toISOString();
 
-      return {
+      const note: OfflineMergedNoteEntity & { _isPendingSync: true; _pendingPhotoCount?: number } = {
         id: `${OFFLINE_NOTE_ID_PREFIX}${item.id}`,
         content: (payload.content as string) ?? '',
         hours_worked: (payload.hoursWorked as number) ?? 0,
@@ -68,17 +93,24 @@ export function useOfflineMergedNotes<T extends { id: string }>(
         author_id: item.userId,
         author_name: user?.user_metadata?.full_name ?? 'You',
         images: [],
+        // Only the id field for the current entityType is populated — a
+        // work-order note never carries equipment_id and vice versa.
+        ...(entityType === 'work_order'
+          ? { work_order_id: entityId }
+          : { equipment_id: entityId }),
         _pendingPhotoCount:
           Array.isArray((payload as { imageRefs?: unknown[] }).imageRefs) &&
           (payload as { imageRefs?: unknown[] }).imageRefs!.length > 0
             ? (payload as { imageRefs: unknown[] }).imageRefs.length
             : undefined,
         _isPendingSync: true,
-        // T is a generic note shape (work order / equipment notes); the
-        // synthetic offline note above only guarantees the fields both
-        // shapes share, so this cast reflects that this is a constructed
-        // stand-in note, not a real T, bridged for the merged notes list.
-      } as unknown as T & { _isPendingSync?: boolean };
+      };
+
+      // `note` is a real, fully-populated OfflineMergedNoteEntity — the
+      // bound T is constrained to that same shape, so this narrows rather
+      // than bridges two unrelated types; only needed because T may add
+      // fields beyond the base that a constructed stand-in can't supply.
+      return note as unknown as T & { _isPendingSync?: boolean };
     });
 
     // Offline notes first (newest at top)
