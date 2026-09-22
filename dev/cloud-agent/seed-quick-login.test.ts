@@ -186,7 +186,7 @@ describe('cloud-agent seed-quick-login helpers', () => {
     expect(() =>
       assertBranchSafeTarget({
         projectRef: 'abcdefghijklmnop',
-        apiUrl: 'https://supabase.equipqr.app',
+        apiUrl: 'https://wgynakhoppqkrutnslmv.supabase.co',
       }),
     ).toThrow(/supabase\.equipqr\.app/);
 

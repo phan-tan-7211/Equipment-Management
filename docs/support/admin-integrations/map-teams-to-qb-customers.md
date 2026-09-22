@@ -19,7 +19,7 @@ In ZNTEQR, an external customer you service is represented as a **team of type C
 
 Go to **Teams** and open the team for your customer. Teams that are already linked show a green **QuickBooks synced** badge on the Teams list.
 
-![Teams list with a QuickBooks synced badge on 3-A Equipment](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/admin-integrations/desktop/qb-02-teams-list-sync-badge.png)
+![Teams list with a QuickBooks synced badge on 3-A Equipment](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/admin-integrations/desktop/qb-02-teams-list-sync-badge.png)
 
 ## 2. Find the Customer account card
 
@@ -35,11 +35,11 @@ Use the buttons under **QuickBooks invoice export**:
 
 When linked, the card shows a green **Linked for invoice export** badge with the QuickBooks customer ID and last sync date.
 
-![Customer account card linked for invoice export](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/admin-integrations/desktop/qb-03-team-customer-account-linked.png)
+![Customer account card linked for invoice export](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/admin-integrations/desktop/qb-03-team-customer-account-linked.png)
 
 On mobile the same card appears at the top of the team page:
 
-![Mobile customer account card with QuickBooks link](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/admin-integrations/mobile/qb-02-team-customer-card.png)
+![Mobile customer account card with QuickBooks link](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/admin-integrations/mobile/qb-02-team-customer-card.png)
 
 ## 4. Contacts sync automatically
 

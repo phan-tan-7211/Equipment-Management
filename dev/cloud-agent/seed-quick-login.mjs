@@ -6,7 +6,7 @@
  * Dev Quick Login personas via Auth Admin API, then upgrades the trigger-created
  * personal org for the primary smoke persona with a team + equipment row.
  *
- * Safety: refuses parent/production project refs and supabase.equipqr.app.
+ * Safety: refuses parent/production project refs and wgynakhoppqkrutnslmv.supabase.co.
  *
  * service_role (approved DX exception): Auth Admin on a hosted preview branch
  * only — never parent/prod. Same class of CLI exception as upload-screenshot.ts.
@@ -169,8 +169,8 @@ export function assertBranchSafeTarget({ projectRef, apiUrl }) {
   if (parsed.protocol !== 'https:') {
     throw new Error('Hosted API URL must use https');
   }
-  if (host === 'supabase.equipqr.app') {
-    throw new Error('Refusing to seed production custom domain supabase.equipqr.app');
+  if (host === 'wgynakhoppqkrutnslmv.supabase.co') {
+    throw new Error('Refusing to seed the production Supabase project');
   }
   const expectedHost = `${ref.toLowerCase()}.supabase.co`;
   if (host !== expectedHost) {

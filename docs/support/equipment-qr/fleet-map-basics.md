@@ -18,7 +18,7 @@ From the sidebar, pick Fleet Map. The map loads with every geocoded equipment pi
 
 Use the **Location Source** legend and dropdown to filter markers by Effective location, team HQ, equipment address, or last scan GPS. This matches the source dropdown on equipment detail pages.
 
-![Fleet Map location source filter](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/01-fleet-map-source-filter.png)
+![Fleet Map location source filter](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/01-fleet-map-source-filter.png)
 
 See [Equipment location sources and maps](./location-sources-and-maps) for how ZNTEQR picks the effective pin.
 

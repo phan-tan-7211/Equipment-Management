@@ -38,7 +38,7 @@ Completed captures a close-out date automatically, which powers reporting and ov
 
 When a work order links to equipment, the detail page embeds the same location source dropdown and mini map used on equipment records. Dispatchers can preview effective, team, equipment, and scan sources before sending a technician.
 
-![Work order location map](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/09-work-order-location-map.png)
+![Work order location map](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/09-work-order-location-map.png)
 
 On mobile, expand **Equipment Details** to reveal the map. See [Equipment location sources and maps](../equipment-qr/location-sources-and-maps).
 

@@ -26,7 +26,7 @@ On the work order details page, choose:
 - **Add PM Checklist** when the work order was created without PM, or
 - **Manage PM Template** when a PM checklist is already attached.
 
-![Manage PM checklist dialog](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/work-order-pm/desktop/01-add-pm-dialog.png)
+![Manage PM checklist dialog](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/work-order-pm/desktop/01-add-pm-dialog.png)
 
 ## 3. Add a PM checklist
 
@@ -35,7 +35,7 @@ On the work order details page, choose:
 
 ZNTEQR creates the PM checklist and sets the work order to PM-enabled.
 
-![PM checklist section after attaching a template](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/work-order-pm/desktop/02-pm-checklist-after-add.png)
+![PM checklist section after attaching a template](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/work-order-pm/desktop/02-pm-checklist-after-add.png)
 
 ## 4. Change the PM template
 

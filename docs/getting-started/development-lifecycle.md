@@ -6,7 +6,7 @@ Authoritative day-to-day workflow. See also [`docs/ops/git-and-deploy.md`](../op
 
 - **`preview`** is the integration train; branch off **`preview`** for work.
 - **`main`** is production; ship via controlled **`preview` → `main`** (or `/release`).
-- **Default QA URL:** commit-specific Vercel Preview (`*.vercel.app`) after you push a work branch; **`preview.equipqr.app`** after merge to git **`preview`**.
+- **Default QA URL:** commit-specific Vercel Preview (`*.vercel.app`) after you push a work branch; **`equip-qr-*.vercel.app`** after merge to git **`preview`**.
 - Feature PRs accumulate short CHANGELOG `[Unreleased]` bullets per `.cursor/rules/changelog.mdc` and **do not** bump `package.json`. Version bumps happen on promote to `main`.
 
 ## Lifecycle
@@ -15,7 +15,7 @@ Authoritative day-to-day workflow. See also [`docs/ops/git-and-deploy.md`](../op
 Plan → branch off preview → implement → verify locally
 → push work branch → test on *.vercel.app Preview URL
 → PR to preview → CI green → merge
-→ (later) /release or preview → main → Production Release Readiness → equipqr.app
+→ (later) /release or preview → main → Production Release Readiness → eqr.zinitek.com
 ```
 
 ## Steps
@@ -41,7 +41,7 @@ git push -u origin HEAD
 
 - Vercel creates a Preview deployment for the branch.
 - Open the deployment URL from the PR or Vercel dashboard (`equipqr-<hash>-columbia-cloudworks-llc.vercel.app`).
-- After merge to git **`preview`**, **`preview.equipqr.app`** updates via that branch’s Vercel deploy.
+- After merge to git **`preview`**, **`equip-qr-*.vercel.app`** updates via that branch’s Vercel deploy.
 
 ### 4) PR to preview
 
@@ -62,7 +62,7 @@ No manual Vercel dashboard promote step.
 
 ## Release-ready checklist
 
-- Validated on the **Preview deployment URL**, local stack, and/or **`preview.equipqr.app`** (as appropriate).
+- Validated on the **Preview deployment URL**, local stack, and/or **`equip-qr-*.vercel.app`** (as appropriate).
 - CI green on PR to **`preview`** (and on the promote PR to **`main`** when shipping).
 - Migrations/auth-sensitive paths verified locally when applicable.
 - Review threads and automated review items addressed.

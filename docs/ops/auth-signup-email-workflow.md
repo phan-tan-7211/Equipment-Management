@@ -8,15 +8,15 @@ This runbook documents the production email signup path after the Resend SMTP cu
 
 | Component | Production value |
 | --- | --- |
-| App URL | `https://equipqr.app` |
+| App URL | `https://eqr.zinitek.com` |
 | Supabase project | `wgynakhoppqkrutnslmv` |
-| Supabase Auth URL | `https://supabase.equipqr.app/auth/v1` |
+| Supabase Auth URL | `https://wgynakhoppqkrutnslmv.supabase.co/auth/v1` |
 | Supabase Auth email sender | `ZNTEQR <noreply@equipqr.app>` |
 | SMTP provider | Resend |
 | SMTP host | `smtp.resend.com` |
 | SMTP port | `587` |
 | SMTP username | `resend` |
-| Resend sending domain | `equipqr.app` |
+| Resend sending domain | `eqr.zinitek.com` |
 | Resend domain status | Verified, sending enabled |
 | Auth email rate limit | `30` emails per hour |
 | Per-recipient SMTP frequency | `60` seconds |
@@ -28,10 +28,10 @@ Secrets are not stored in this document. The SMTP password is a Resend API key c
 
 ```mermaid
 flowchart TD
-  A[Visitor opens equipqr.app] --> B[Visitor chooses Sign Up]
+  A[Visitor opens eqr.zinitek.com] --> B[Visitor chooses Sign Up]
   B --> C[React SignUpForm validates fields, password policy, terms, and hCaptcha token when enabled]
   C --> D[authSignupService calls supabase.auth.signUp]
-  D --> E[POST supabase.equipqr.app/auth/v1/signup]
+  D --> E[POST wgynakhoppqkrutnslmv.supabase.co/auth/v1/signup]
   E --> F[Supabase Auth creates pending auth.users record]
   F --> G[Auth trigger creates profile, organization, and membership records]
   F --> H[Supabase Auth sends confirmation email through custom SMTP]
@@ -47,12 +47,12 @@ flowchart TD
 
 ## Numbered Flow
 
-1. A user visits `https://equipqr.app` and opens the signup tab.
+1. A user visits `https://eqr.zinitek.com` and opens the signup tab.
 2. `SignUpForm` validates required fields, password complexity, terms acceptance, and the hCaptcha token when the site key is enabled.
 3. `SignUpForm` calls `signUpWithEmail()` in `src/services/authSignupService.ts`.
 4. `signUpWithEmail()` calls `supabase.auth.signUp()` with:
    - the submitted email and password,
-   - redirect URL `https://equipqr.app/`,
+   - redirect URL `https://eqr.zinitek.com/`,
    - user metadata including name, organization name, and legal acceptance intent.
 5. Supabase Auth receives `POST /auth/v1/signup`.
 6. Supabase creates an unconfirmed `auth.users` row.
@@ -76,7 +76,7 @@ Use this checklist after any Auth, SMTP, DNS, or signup-flow change.
    - `rate_limit_email_sent = 30`
    - `mailer_autoconfirm = false`
 2. Confirm Resend domain health:
-   - `equipqr.app` is verified.
+   - `eqr.zinitek.com` is verified.
    - Sending is enabled.
    - Open and click tracking can remain disabled.
 3. Submit one fresh production signup with a real inbox.

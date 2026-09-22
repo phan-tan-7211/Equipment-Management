@@ -20,7 +20,7 @@ support/{collection}/{desktop|mobile}/demo.mp4
 Example:
 
 ```
-https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/01-fleet-map-source-filter.png
+https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/01-fleet-map-source-filter.png
 ```
 
 The **`docs-media`** bucket is created by Supabase migration (`supabase/migrations/20260704180000_create_docs_media_bucket.sql`) during normal deploy.

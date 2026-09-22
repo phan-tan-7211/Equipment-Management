@@ -351,7 +351,7 @@ describe('imageUploadService', () => {
 
     it('drops expired ZNTEQR signed URLs instead of passing them through', () => {
       const stale =
-        'https://supabase.equipqr.app/storage/v1/object/sign/work-order-images/u/wo/n.jpg?token=expired';
+        'https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/sign/work-order-images/u/wo/n.jpg?token=expired';
       expect(displayUrlForStoredPrivateImage(null, stale)).toBeNull();
       expect(isZnteqrPrivateStorageUrl(stale)).toBe(true);
     });
@@ -366,9 +366,9 @@ describe('imageUploadService', () => {
 
     it('rejects private sign URLs with empty or missing token query param', () => {
       const emptyToken =
-        'https://supabase.equipqr.app/storage/v1/object/sign/work-order-images/u/wo/n.jpg?token=';
+        'https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/sign/work-order-images/u/wo/n.jpg?token=';
       const wrongParam =
-        'https://supabase.equipqr.app/storage/v1/object/sign/work-order-images/u/wo/n.jpg?e=900';
+        'https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/sign/work-order-images/u/wo/n.jpg?e=900';
       expect(isFetchableSignedStorageUrl(emptyToken)).toBe(false);
       expect(isFetchableSignedStorageUrl(wrongParam)).toBe(false);
     });

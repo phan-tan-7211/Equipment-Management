@@ -9,11 +9,11 @@ personas: ["all"]
 **Last reviewed:** 2026-07-06
 ZNTEQR has two role tiers. The **organization** tier decides who can manage your company account. The **team** tier decides who can act on the equipment inside that team.
 
-![Organization member roles on the Members tab](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/07-organization-member-roles.png)
+![Organization member roles on the Members tab](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/07-organization-member-roles.png)
 
-![Team role overview on the Teams page](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/08-teams-role-overview.png)
+![Team role overview on the Teams page](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/08-teams-role-overview.png)
 
-![Mobile organization roles list](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/mobile/05-mobile-organization-roles.png)
+![Mobile organization roles list](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/mobile/05-mobile-organization-roles.png)
 
 ## 1. Organization roles (your staff)
 

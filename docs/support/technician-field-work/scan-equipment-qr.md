@@ -9,9 +9,9 @@ personas: ["technician","requestor"]
 **Last reviewed:** 2026-07-06
 ZNTEQR QR codes are plain URLs — no extra app required. Your phone's camera opens the record directly in the browser or the ZNTEQR app if it is installed.
 
-![Equipment record opened from a QR scan](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/desktop/01-scan-qr-landing.png)
+![Equipment record opened from a QR scan](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/desktop/01-scan-qr-landing.png)
 
-![Mobile equipment record after scanning a QR code](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/mobile/01-mobile-scan-qr-landing.png)
+![Mobile equipment record after scanning a QR code](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/mobile/01-mobile-scan-qr-landing.png)
 
 ## 1. Open your camera app
 
@@ -20,7 +20,7 @@ Hold the phone about a hand's width from the QR code. iOS and Android automatica
 
 ## 2. Tap the notification banner
 
-The camera shows a link like `https://equipqr.app/qr/equipment/<id>`. Tap it to open the equipment record.
+The camera shows a link like `https://eqr.zinitek.com/qr/equipment/<id>`. Tap it to open the equipment record.
 
 ## 3. Sign in if prompted
 

@@ -103,7 +103,7 @@ describe('PrivacyPolicy', () => {
       expect(link.closest('a')).toHaveAttribute('rel', 'noopener noreferrer');
     });
     expect(screen.getByText(/phantan7211@gmail\.com/)).toBeInTheDocument();
-    expect(screen.getAllByText('equipqr.app').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('eqr.zinitek.com').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Contact us for business address information/)).toBeInTheDocument();
 
     expect(screen.getByText(/10A\. Your California Privacy Rights/)).toBeInTheDocument();
@@ -115,7 +115,7 @@ describe('PrivacyPolicy', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Retention Periods')).toBeInTheDocument();
     expect(screen.getAllByText(/30 days/).length).toBeGreaterThanOrEqual(1);
-    const privacyRequestLink = screen.getByText('equipqr.app/privacy-request');
+    const privacyRequestLink = screen.getByText('eqr.zinitek.com/privacy-request');
     expect(privacyRequestLink.closest('a')).toHaveAttribute('href', '/privacy-request');
   });
 

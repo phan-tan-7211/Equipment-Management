@@ -8,7 +8,7 @@ ZNTEQR™ is designed as a modern single-page application (SPA) that can be depl
 
 ### Public documentation site (`equipqr.info`)
 
-Developer and operator documentation is published from this repository’s [`docs/`](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/tree/main/docs) directory as a **standalone VitePress** static site. It is deployed as a **separate Vercel project** with **Root Directory** set to `docs` (build: `npm run docs:build`, output: `.vitepress/dist`). Production hostname: **`https://equipqr.info`**. The product app remains on **`https://equipqr.app`**.
+Developer and operator documentation is published from this repository’s [`docs/`](https://github.com/Columbia-Cloudworks-LLC/ZNTEQR/tree/main/docs) directory as a **standalone VitePress** static site. It is deployed as a **separate Vercel project** with **Root Directory** set to `docs` (build: `npm run docs:build`, output: `.vitepress/dist`). Production hostname: **`https://equipqr.info`**. The product app remains on **`https://eqr.zinitek.com`**.
 
 **Operational wiring (ZNT Vercel team):**
 
@@ -16,7 +16,7 @@ Developer and operator documentation is published from this repository’s [`doc
 |------|--------|
 | Docs project name | `equipqr-docs` |
 | Docs project ID | `prj_6QicTVywixyyAYc7sxCRDLnqwbM9` |
-| Production branch | `main` (same branch gate as `equipqr.app`) |
+| Production branch | `main` (same branch gate as `eqr.zinitek.com`) |
 | Domains on docs project | `equipqr.info` (apex), `www.equipqr.info` → apex redirect |
 | Preview deploys | Disabled — [`docs/vercel.json`](../vercel.json) `ignoreCommand` skips non-`main` builds |
 
@@ -26,11 +26,11 @@ Keep **`equipqr.info` off the SPA project (`equipqr`)** — only the docs projec
 
 **Build note:** Vercel installs dependencies from `docs/package.json` only. Because the monorepo root still has [`postcss.config.js`](../../postcss.config.js), PostCSS can walk up and load the root config unless a scoped file exists. The docs project ships [`docs/postcss.config.js`](../postcss.config.js) (same plugin list as root) and pins `@tailwindcss/postcss`, `tailwindcss`, and `postcss` under [`docs/package.json`](../package.json). Tailwind is also wired in [`docs/.vitepress/config.ts`](../.vitepress/config.ts) for local dev.
 
-**Design tokens (app ↔ docs):** The product Mission Control palette lives in [`src/index.css`](../../src/index.css). The VitePress theme under [`docs/.vitepress/theme/`](../.vitepress/theme/) mirrors those HSL values into `znteqr-tokens.css` and maps them to VitePress `--vp-*` variables in `custom.css` (default appearance is dark). When you change primary, background, border, or semantic status colors in the app, update the matching `--eqr-*` values in `znteqr-tokens.css` in the same change (or immediately after) so equipqr.info stays visually continuous with equipqr.app. There is not yet a shared compiled token package — the mirror is intentional and documented.
+**Design tokens (app ↔ docs):** The product Mission Control palette lives in [`src/index.css`](../../src/index.css). The VitePress theme under [`docs/.vitepress/theme/`](../.vitepress/theme/) mirrors those HSL values into `znteqr-tokens.css` and maps them to VitePress `--vp-*` variables in `custom.css` (default appearance is dark). When you change primary, background, border, or semantic status colors in the app, update the matching `--eqr-*` values in `znteqr-tokens.css` in the same change (or immediately after) so equipqr.info stays visually continuous with eqr.zinitek.com. There is not yet a shared compiled token package — the mirror is intentional and documented.
 
 **Local footer testing:** Run `.\dev\dev-start.bat` to start the product app and docs site together. In local Vite dev mode, the app footer’s Documentation link defaults to `http://localhost:5174`; production builds default to `https://equipqr.info`. Set `VITE_DOCUMENTATION_URL` when you need to test a different docs preview URL, such as `http://localhost:4173` after running `npm run docs:build` and then `npm run docs:preview`.
 
-**Related domains:** During domain migration, **`equipqr.support`** / **`www.equipqr.support`** on the SPA project may temporarily redirect to **`equipqr.app`** instead of **`equipqr.info`** because Vercel only allows same-project redirect targets; revisit in the dashboard if those URLs should land on the public docs site again.
+**Related domains:** During domain migration, **`equipqr.support`** / **`www.equipqr.support`** on the SPA project may temporarily redirect to **`eqr.zinitek.com`** instead of **`equipqr.info`** because Vercel only allows same-project redirect targets; revisit in the dashboard if those URLs should land on the public docs site again.
 
 ## Build Process
 
@@ -159,8 +159,8 @@ passwords, Supabase keys, or session tokens.
 
 ## Hosting Platforms
 
-ZNTEQR™ is hosted on Vercel. The `main` branch promotes to `equipqr.app` after
-**Production Release Readiness** runs **`vercel promote`**. **`preview.equipqr.app`**
+ZNTEQR™ is hosted on Vercel. The `main` branch promotes to `eqr.zinitek.com` after
+**Production Release Readiness** runs **`vercel promote`**. **`equip-qr-*.vercel.app`**
 is the stable pre-production hostname bound to git branch **`preview`** (integration
 train) — Vercel Preview deploys on merges/pushes to that branch. SSL, CDN, and custom
 domain routing are managed in the Vercel dashboard.
@@ -187,7 +187,7 @@ The project includes a complete `vercel.json` configuration file with:
 - **Performance Headers**: Long-term caching for static assets
 - **Branch Deployment**: Automatic Preview deployments for PRs; Production builds on `main` (promoted automatically by Production Release Readiness)
 
-> **Adding a new domain alias?** When you bring a new Vercel alias / custom domain online (e.g. `preview.equipqr.app`, a new branch URL, or a tenant subdomain), the upstream Google Maps API key's HTTP-referrer allowlist must also be widened or the Fleet Map will fail at runtime with `RefererNotAllowedMapError`. See [Google Maps API key — HTTP referrer allowlist](./supabase-branch-secrets.md#google-maps-api-key--http-referrer-allowlist).
+> **Adding a new domain alias?** When you bring a new Vercel alias / custom domain online (e.g. `equip-qr-*.vercel.app`, a new branch URL, or a tenant subdomain), the upstream Google Maps API key's HTTP-referrer allowlist must also be widened or the Fleet Map will fail at runtime with `RefererNotAllowedMapError`. See [Google Maps API key — HTTP referrer allowlist](./supabase-branch-secrets.md#google-maps-api-key--http-referrer-allowlist).
 
 #### Environment Variables Setup
 Configure these environment variables in your Vercel project dashboard:
@@ -208,8 +208,8 @@ Configure these environment variables in your Vercel project dashboard:
 > **Important**: Vercel env vars are build-time only (`VITE_*` prefix). Edge Function runtime secrets (e.g., `GOOGLE_MAPS_BROWSER_KEY`, OAuth secrets) must be set in the **Supabase Dashboard**, not Vercel. See [Secrets Checklist](#secrets-checklist) below.
 
 #### Branch Configuration
-- **Production**: merges to `main` trigger Vercel production-environment builds for **equipqr.app**. Traffic stays on the prior deployment until **Production Release Readiness** runs `vercel promote` after migrations and schema drift pass.
-- **Preview / integration**: merges and pushes to git **`preview`** deploy to **`preview.equipqr.app`** (branch-bound custom domain). Feature PRs also get commit-specific `*.vercel.app` URLs. There is no `preview-domain-alias.yml` fast-forward from `main`.
+- **Production**: merges to `main` trigger Vercel production-environment builds for **eqr.zinitek.com**. Traffic stays on the prior deployment until **Production Release Readiness** runs `vercel promote` after migrations and schema drift pass.
+- **Preview / integration**: merges and pushes to git **`preview`** deploy to **`equip-qr-*.vercel.app`** (branch-bound custom domain). Feature PRs also get commit-specific `*.vercel.app` URLs. There is no `preview-domain-alias.yml` fast-forward from `main`.
 
 See `docs/ops/git-and-deploy.md` and `docs/ops/preview-architecture-migration.md` (#1033 history, #1282 train restore).
 
@@ -220,7 +220,7 @@ Pushes to `main` run **Production Release Readiness** (`.github/workflows/produc
 1. Applies pending SQL migrations to the **production** Supabase project (`supabase link` + `supabase db push --include-all`).
 2. Re-runs the schema drift script in **strict** mode so `schema_migrations` matches `supabase/migrations/` by name.
 3. Polls the Vercel API until the **READY** deployment for the same `github.sha` on `main` exists for the SPA project (`prj_P9hRun4B2OdGy8ACCnb0f7jNG6UA`).
-4. Runs `vercel promote` for that deployment so **equipqr.app** serves the new build without a manual dashboard step.
+4. Runs `vercel promote` for that deployment so **eqr.zinitek.com** serves the new build without a manual dashboard step.
 5. Deploys **all** Supabase Edge Functions to production (`supabase functions deploy`), including `verify_jwt` settings from `supabase/config.toml` — runs **after** promote so an earlier workflow failure cannot leave edge functions ahead of the live frontend.
 
 When this workflow is green, production traffic should already match the merged commit.
@@ -294,10 +294,10 @@ Policy: use one shared Google OAuth Web client for both Workspace callback and P
    - Admin SDK API (existing directory sync)
 3. Create a browser API key:
    - Google Cloud Console -> APIs & Services -> Credentials -> Create Credentials -> API key
-   - Restrict to HTTP referrers (for example localhost dev URL, preview.equipqr.app, equipqr.app)
+   - Restrict to HTTP referrers (for example localhost dev URL, equip-qr-*.vercel.app, eqr.zinitek.com)
    - Restrict API usage to Google Drive API
 4. Reuse the existing **Google Workspace Web application** OAuth client ID for browser token flow:
-   - Add Authorized JavaScript origins: localhost dev URL, `https://preview.equipqr.app`, `https://equipqr.app`
+   - Add Authorized JavaScript origins: localhost dev URL, `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app`, `https://eqr.zinitek.com`
    - Keep Authorized redirect URIs for Workspace callback, including `/functions/v1/google-workspace-oauth-callback`
 5. Set the browser key as `VITE_GOOGLE_PICKER_API_KEY` in Vercel/local `.env`.
 6. Copy the project number from Project Settings and set it as `VITE_GOOGLE_PICKER_APP_ID`.
@@ -322,7 +322,7 @@ ZNTEQR uses these scopes for Google Workspace features:
 
 Production receiver URL:
 
-`https://supabase.equipqr.app/functions/v1/google-risc-receiver`
+`https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/google-risc-receiver`
 
 Register this endpoint in **Google Cloud Console → Google Auth Platform → Project Checkup → Cross-Account Protection** for the **ZNTEQR Google Workspace OAuth** client (`GOOGLE_WORKSPACE_CLIENT_ID` on edge). Google sends Security Event Tokens (`application/secevent+jwt`) without Supabase JWTs; the edge function validates signatures against Google JWKS and disconnects affected Workspace credentials on revocation events.
 
@@ -837,16 +837,16 @@ ZNTEQR™ is designed to work with Supabase for backend functionality:
 ZNTEQR uses Supabase branching for **ephemeral PR validation** and, today, a
 single production project for cloud runtime:
 
-- **Production:** `wgynakhoppqkrutnslmv` — API `https://supabase.equipqr.app`
+- **Production:** `wgynakhoppqkrutnslmv` — API `https://wgynakhoppqkrutnslmv.supabase.co`
 - **Current live preview app:** still uses the production project above
 - **Approved target preview backend:** a new persistent dataless branch for
-  `preview.equipqr.app` (not yet cut over; see
+  `equip-qr-*.vercel.app` (not yet cut over; see
   `docs/ops/preview-persistent-branch.md`)
 - **Ephemeral PR branches:** Auto-created when `supabase/**` changes on a PR
 - **Retired persistent preview branch:** `olsdirkvvfegvclbpgrg` — decommission after #1033 cutover
 
-`preview.equipqr.app` (Vercel Preview) currently uses
-**`VITE_SUPABASE_URL=https://supabase.equipqr.app`** from
+`equip-qr-*.vercel.app` (Vercel Preview) currently uses
+**`VITE_SUPABASE_URL=https://wgynakhoppqkrutnslmv.supabase.co`** from
 `app-env-preview-public`, not the retired `olsdirk` project URL. The approved
 replacement is the persistent preview branch above, once its cutover checklist
 is implemented.

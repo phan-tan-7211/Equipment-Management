@@ -1,4 +1,4 @@
-# Persistent Supabase Branch for `preview.equipqr.app`
+# Persistent Supabase Branch for `equip-qr-*.vercel.app`
 
 > Decision record for reversing the shared-production preview backend after
 > #1033. This document records the approved target only. It does **not** create
@@ -6,8 +6,8 @@
 > current live preview.
 
 **Status:** Approved target; implementation remains queued.  
-**Current live state:** `preview.equipqr.app` still points at production
-Supabase (`wgynakhoppqkrutnslmv` / `https://supabase.equipqr.app`) until the
+**Current live state:** `equip-qr-*.vercel.app` still points at production
+Supabase (`wgynakhoppqkrutnslmv` / `https://wgynakhoppqkrutnslmv.supabase.co`) until the
 cutover checklist below is executed.  
 **Related docs:** [preview-architecture-migration](./preview-architecture-migration.md),
 [supabase-branching](./supabase-branching.md),
@@ -18,8 +18,8 @@ cutover checklist below is executed.
 
 ## Context
 
-`preview.equipqr.app` currently shares production Supabase Auth and data with
-`equipqr.app`. That kept the #1033 rollback simple, but it makes preview QA
+`equip-qr-*.vercel.app` currently shares production Supabase Auth and data with
+`eqr.zinitek.com`. That kept the #1033 rollback simple, but it makes preview QA
 more expensive in operator time and risk than the fixed cost of restoring an
 isolated backend.
 
@@ -32,7 +32,7 @@ Important constraints locked by Product:
 
 - This is a **persistent Supabase Database Branch**, not an ephemeral PR branch.
 - This is **not** a second paid Supabase project.
-- Production remains `wgynakhoppqkrutnslmv` / `https://supabase.equipqr.app`.
+- Production remains `wgynakhoppqkrutnslmv` / `https://wgynakhoppqkrutnslmv.supabase.co`.
 - The branch must be created with **`with_data: false`**.
 - Production rows, including 3-A Equipment shop data, must never be cloned or
   seeded into the preview branch.
@@ -43,10 +43,10 @@ Important constraints locked by Product:
 
 | Surface | Decision | Notes |
 |---------|----------|-------|
-| `preview.equipqr.app` backend | Create a **new persistent Supabase Database Branch** on the production project | Do **not** reuse retired branch `olsdirkvvfegvclbpgrg` as-is. |
+| `equip-qr-*.vercel.app` backend | Create a **new persistent Supabase Database Branch** on the production project | Do **not** reuse retired branch `olsdirkvvfegvclbpgrg` as-is. |
 | Branch data | Create with **`with_data: false`** | Never clone production rows. Never seed production. |
-| Vercel Preview env for git `preview` | Point `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at the persistent branch | The stable hostname remains `https://preview.equipqr.app`. |
-| Edge Function secrets | Restore `edge-env-preview-secrets` onto the persistent branch | Set `PUBLIC_SITE_URL=https://preview.equipqr.app` on that branch. |
+| Vercel Preview env for git `preview` | Point `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at the persistent branch | The stable hostname remains `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app`. |
+| Edge Function secrets | Restore `edge-env-preview-secrets` onto the persistent branch | Set `PUBLIC_SITE_URL=https://equip-qr-preview-columbia-cloudworks-llc.vercel.app` on that branch. |
 | Preview Auth | Seed preview-only Quick Login and email/password personas through the **Auth Admin API** | Branch `service_role` is allowed for this seed on the persistent branch only. |
 | Production Auth | No change | Production never shows the Quick Login picker and never accepts preview-only passwords. |
 | PR schema validation | Keep existing ephemeral PR branches for `supabase/**` | This decision does **not** replace the GitHub Integration branching path. |
@@ -85,7 +85,7 @@ test org rather than introducing production-linked accounts.
 
 - Preview QA stops depending on production Auth sessions and live production
   rows.
-- `preview.equipqr.app` can use Quick Login without widening production blast
+- `equip-qr-*.vercel.app` can use Quick Login without widening production blast
   radius.
 - Reviewers get a stable preview hostname with isolated test data instead of a
   mix of production state and per-PR ephemeral URLs.
@@ -110,10 +110,10 @@ this checklist:
 2. Verify the new branch ref is **not** `wgynakhoppqkrutnslmv` and **not**
    `olsdirkvvfegvclbpgrg`.
 3. Restore `edge-env-preview-secrets` onto the new branch and confirm
-   `PUBLIC_SITE_URL=https://preview.equipqr.app`.
+   `PUBLIC_SITE_URL=https://equip-qr-preview-columbia-cloudworks-llc.vercel.app`.
 4. Point the Vercel **Preview** env for git `preview` at the branch
    `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-5. Configure branch Auth so `site_url=https://preview.equipqr.app` and the
+5. Configure branch Auth so `site_url=https://equip-qr-preview-columbia-cloudworks-llc.vercel.app` and the
    required redirect URLs stay aligned with that preview hostname.
 6. Seed preview-only Quick Login and email/password personas through the Auth
    Admin API using the branch `service_role` only. Never seed production.
@@ -123,7 +123,7 @@ this checklist:
 8. Confirm a second seeded org exists and cannot read the first org's work
    orders.
 9. Reconfirm that the Google Maps browser-key HTTP referrer allowlist already
-   includes `https://preview.equipqr.app/*`; no new preview hostname means no
+   includes `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/*`; no new preview hostname means no
    Maps referrer change is expected for this cutover.
 10. Verify the active preview backend ref is no longer
     `wgynakhoppqkrutnslmv` anywhere the ops runbook checks it.
@@ -135,9 +135,9 @@ this checklist:
 If the preview cutover fails, rollback is intentionally small:
 
 1. Point the Vercel **Preview** env for git `preview` back to production
-   `VITE_SUPABASE_URL=https://supabase.equipqr.app` and the production anon
+   `VITE_SUPABASE_URL=https://wgynakhoppqkrutnslmv.supabase.co` and the production anon
    key.
-2. Redeploy `preview.equipqr.app` and confirm preview traffic is back on
+2. Redeploy `equip-qr-*.vercel.app` and confirm preview traffic is back on
    production Supabase.
 3. Leave the persistent preview branch detached for later cleanup rather than
    improvising writes against production.

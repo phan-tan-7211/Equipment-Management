@@ -84,7 +84,7 @@ export function PrivacyCaliforniaSection() {
         <li>
           <strong>Web form:</strong>{' '}
           <Link to="/privacy-request" className="underline">
-            equipqr.app/privacy-request
+            eqr.zinitek.com/privacy-request
           </Link>
         </li>
         <li>

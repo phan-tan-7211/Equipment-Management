@@ -17,9 +17,9 @@ The work order must have a PM checklist attached. You can attach one when creati
 
 From Work Orders, pick the PM-enabled job assigned to you. The PM Checklist section renders below the work order details.
 
-![PM checklist section on a work order](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/desktop/08-pm-checklist-section.png)
+![PM checklist section on a work order](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/desktop/08-pm-checklist-section.png)
 
-![Mobile work order detail with PM checklist access](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/mobile/02-mobile-work-order-summary.png)
+![Mobile work order detail with PM checklist access](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/mobile/02-mobile-work-order-summary.png)
 
 ## 2. Tap Set All to OK for everything in good shape
 

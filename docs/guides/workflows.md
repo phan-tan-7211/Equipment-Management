@@ -4,7 +4,7 @@ This document is the canonical technical reference for ZNTEQR's work-order
 lifecycle, role capabilities, and status-transition rules. It is not the
 step-by-step walkthrough for end users — those live in the **ZNTEQR Help Center** at
 **`https://equipqr.info/support/`**. Signed-in users report issues at
-**`https://equipqr.app/dashboard/support`**.
+**`https://eqr.zinitek.com/dashboard/support`**.
 
 ## Where to find user-facing walkthroughs
 
@@ -159,8 +159,8 @@ technical contract for developers is:
 
 For user-facing troubleshooting that the support team can send to customers,
 point them to the [Help Center](https://equipqr.info/support/) or the status
-page (`status.equipqr.app`). Signed-in users can report issues at
-`https://equipqr.app/dashboard/support`.
+page (`eqr.zinitek.com/support`). Signed-in users can report issues at
+`https://eqr.zinitek.com/dashboard/support`.
 
 ## Related documentation
 

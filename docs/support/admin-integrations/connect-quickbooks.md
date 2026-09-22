@@ -31,11 +31,11 @@ Grant the requested scopes. ZNTEQR only reads customers and writes invoices — 
 
 You land back on the Integrations tab with a **Connected** badge on the QuickBooks Online card. The card offers **Disconnect** and a shortcut to manage the connection inside QuickBooks.
 
-![Integrations page with QuickBooks Online connected](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/admin-integrations/desktop/qb-01-integrations-connected.png)
+![Integrations page with QuickBooks Online connected](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/admin-integrations/desktop/qb-01-integrations-connected.png)
 
 The same card is available on mobile:
 
-![Mobile Integrations page with QuickBooks connected](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/admin-integrations/mobile/qb-01-integrations-connected.png)
+![Mobile Integrations page with QuickBooks connected](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/admin-integrations/mobile/qb-01-integrations-connected.png)
 
 Next, map your teams to QuickBooks customers so invoice export knows where to post.
 

@@ -39,7 +39,7 @@ function buildTestRequest(): Request {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Origin: "https://equipqr.app",
+      Origin: "https://eqr.zinitek.com",
     },
     body: JSON.stringify({}),
   });
@@ -50,7 +50,7 @@ function buildAnonPostRequest(): Request {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Origin: "https://equipqr.app",
+      Origin: "https://eqr.zinitek.com",
     },
     body: JSON.stringify({
       invitationId: "inv-1",

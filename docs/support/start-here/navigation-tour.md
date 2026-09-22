@@ -15,21 +15,21 @@ personas: ["all"]
 
 The **Audit Log** lives under **Organization → Audit Log** (admin-only). **DSR Cockpit** (admin-only) lives under the footer **Legal** menu and **Settings → Privacy**.
 
-![Equipment list from the sidebar](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/02-navigation-equipment.png)
+![Equipment list from the sidebar](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/02-navigation-equipment.png)
 
-![Work Orders list from the sidebar](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/03-navigation-work-orders.png)
+![Work Orders list from the sidebar](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/03-navigation-work-orders.png)
 
-![Fleet Map from the sidebar](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/04-navigation-fleet-map.png)
+![Fleet Map from the sidebar](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/04-navigation-fleet-map.png)
 
 ## 2. Mobile bottom navigation
 
 On phones, the bottom nav shows the four most-used destinations for field technicians: Dashboard, Equipment, Inventory, and Work Orders. Tap the menu icon for everything else.
 
-![Mobile dashboard home](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/mobile/01-mobile-dashboard-welcome.png)
+![Mobile dashboard home](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/mobile/01-mobile-dashboard-welcome.png)
 
-![Mobile Equipment tab](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/mobile/02-mobile-nav-equipment.png)
+![Mobile Equipment tab](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/mobile/02-mobile-nav-equipment.png)
 
-![Mobile Work Orders tab](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/mobile/03-mobile-nav-work-orders.png)
+![Mobile Work Orders tab](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/mobile/03-mobile-nav-work-orders.png)
 
 The top bar shows your current organization, notifications, and your user menu. **Help Center** (guides on equipqr.info) and **Support & tickets** (report issues) live under the **user menu (avatar top-right)**.
 

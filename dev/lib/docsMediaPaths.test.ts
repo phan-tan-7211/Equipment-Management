@@ -53,11 +53,11 @@ describe('buildDocsMediaPublicUrl', () => {
   it('builds anonymous public URLs for docs-media objects', () => {
     expect(
       buildDocsMediaPublicUrl(
-        'https://supabase.equipqr.app',
+        'https://wgynakhoppqkrutnslmv.supabase.co',
         'support/location-maps/desktop/01-equipment-location-source.png',
       ),
     ).toBe(
-      'https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/01-equipment-location-source.png',
+      'https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/01-equipment-location-source.png',
     );
   });
 });
@@ -68,10 +68,10 @@ describe('buildDocsMediaMarkdownImage', () => {
       buildDocsMediaMarkdownImage({
         alt: 'Equipment location source dropdown',
         publicUrl:
-          'https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/01-equipment-location-source.png',
+          'https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/01-equipment-location-source.png',
       }),
     ).toBe(
-      '![Equipment location source dropdown](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/01-equipment-location-source.png)',
+      '![Equipment location source dropdown](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/01-equipment-location-source.png)',
     );
   });
 });
@@ -81,10 +81,10 @@ describe('buildDocsMediaMarkdownVideo', () => {
     expect(
       buildDocsMediaMarkdownVideo({
         publicUrl:
-          'https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/demo.mp4',
+          'https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/demo.mp4',
       }),
     ).toBe(
-      'https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/demo.mp4',
+      'https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/demo.mp4',
     );
   });
 });

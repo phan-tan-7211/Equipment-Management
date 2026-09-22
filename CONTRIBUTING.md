@@ -33,8 +33,8 @@ ZNTEQR uses a **feat → preview → main** train (#1282). Authoritative policy:
 
 | Branch | Purpose | Deployment | Public URL |
 |--------|---------|------------|------------|
-| `main` | Production source of truth | Vercel Production (promote gate) | equipqr.app |
-| **`preview`** | Integration / pre-production train | Vercel **Preview** | preview.equipqr.app |
+| `main` | Production source of truth | Vercel Production (promote gate) | eqr.zinitek.com |
+| **`preview`** | Integration / pre-production train | Vercel **Preview** | equip-qr-*.vercel.app |
 | **`feat/*`** | One feature at a time | Vercel **Preview** per PR | Commit-specific `*.vercel.app` URL |
 
 > Current live preview still uses production Supabase. The approved target is a
@@ -52,7 +52,7 @@ ZNTEQR uses a **feat → preview → main** train (#1282). Authoritative policy:
 
 2. **Preview QA**
    - Vercel assigns a commit-specific URL per push/PR — use that for day-to-day validation
-   - After merge to git **`preview`**, **`preview.equipqr.app`** updates via normal Vercel deploys
+   - After merge to git **`preview`**, **`equip-qr-*.vercel.app`** updates via normal Vercel deploys
 
 3. **Production** (`main`)
    - Promote via **`preview` → `main`** (or `/release`) with version bump + empty Unreleased
@@ -459,7 +459,7 @@ In rare cases, emergency hotfixes may bypass normal PR approval:
 3. Address any failing checks
 4. Request review from maintainers
 5. Make requested changes
-6. Maintainer approves and merges to `preview` (`preview.equipqr.app` updates)
+6. Maintainer approves and merges to `preview` (`equip-qr-*.vercel.app` updates)
 7. Promote via `preview` → `main` / `/release` when shipping; **Production Release Readiness** runs migrations, schema drift, and **`vercel promote`**
 8. Version tags are created automatically when `package.json` changes on `main`
 

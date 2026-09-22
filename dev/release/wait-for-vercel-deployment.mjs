@@ -127,7 +127,7 @@ function safeDeploymentUrl(raw) {
   try {
     const parsed = new URL(String(raw).replace(/[\r\n]/g, ''));
     if (parsed.protocol !== 'https:') return null;
-    if (!parsed.hostname.endsWith('.vercel.app') && !parsed.hostname.endsWith('.equipqr.app')) return null;
+    if (!parsed.hostname.endsWith('.vercel.app') && parsed.hostname !== 'eqr.zinitek.com') return null;
     return `https://${parsed.hostname}${parsed.pathname || '/'}${parsed.search || ''}`;
   } catch {
     return null;

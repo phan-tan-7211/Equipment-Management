@@ -93,7 +93,7 @@ function LegalFooterView({ canManageDsr }: LegalFooterViewProps): JSX.Element {
 
             <span aria-hidden="true" className="text-muted-foreground/40">·</span>
             <ExternalLink
-              href="https://status.equipqr.app/"
+              href="https://eqr.zinitek.com/support/"
               className={linkClassName}
               showIcon={false}
             >

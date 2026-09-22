@@ -9,13 +9,13 @@ personas: ["technician","manager"]
 **Last reviewed:** 2026-07-06
 Work orders follow a predictable lifecycle so everyone can see what is actually happening in the shop. Only valid next statuses are shown on the action buttons, so you cannot accidentally skip a state.
 
-![Work order accepted and assigned to a technician](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/desktop/04-status-accepted-assigned.png)
+![Work order accepted and assigned to a technician](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/desktop/04-status-accepted-assigned.png)
 
-![Work order in In Progress status](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/desktop/05-status-in-progress.png)
+![Work order in In Progress status](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/desktop/05-status-in-progress.png)
 
-![Mobile work order summary](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/mobile/02-mobile-work-order-summary.png)
+![Mobile work order summary](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/mobile/02-mobile-work-order-summary.png)
 
-![Mobile Change Status sheet](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/mobile/03-mobile-status-sheet.png)
+![Mobile Change Status sheet](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/mobile/03-mobile-status-sheet.png)
 
 ## 1. Open the work order details page
 

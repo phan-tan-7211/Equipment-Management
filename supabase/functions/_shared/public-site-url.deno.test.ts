@@ -10,9 +10,9 @@ Deno.test({
     const prevPublic = Deno.env.get("PUBLIC_SITE_URL");
     const prevProduction = Deno.env.get("PRODUCTION_URL");
     try {
-      Deno.env.set("PUBLIC_SITE_URL", "https://preview.equipqr.app");
-      Deno.env.set("PRODUCTION_URL", "https://equipqr.app");
-      assertEquals(resolvePublicSiteUrl(), "https://preview.equipqr.app");
+      Deno.env.set("PUBLIC_SITE_URL", "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app");
+      Deno.env.set("PRODUCTION_URL", "https://eqr.zinitek.com");
+      assertEquals(resolvePublicSiteUrl(), "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app");
     } finally {
       if (prevPublic === undefined) {
         Deno.env.delete("PUBLIC_SITE_URL");
@@ -36,11 +36,11 @@ Deno.test({
     const prevProduction = Deno.env.get("PRODUCTION_URL");
     try {
       Deno.env.delete("PUBLIC_SITE_URL");
-      Deno.env.set("PRODUCTION_URL", "https://preview.equipqr.app");
-      assertEquals(resolvePublicSiteUrl(), "https://preview.equipqr.app");
+      Deno.env.set("PRODUCTION_URL", "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app");
+      assertEquals(resolvePublicSiteUrl(), "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app");
 
       Deno.env.delete("PRODUCTION_URL");
-      assertEquals(resolvePublicSiteUrl(), "https://equipqr.app");
+      assertEquals(resolvePublicSiteUrl(), "https://eqr.zinitek.com");
     } finally {
       if (prevPublic === undefined) {
         Deno.env.delete("PUBLIC_SITE_URL");
@@ -64,12 +64,12 @@ Deno.test({
     const prevProduction = Deno.env.get("PRODUCTION_URL");
     try {
       Deno.env.set("PUBLIC_SITE_URL", "https://preview.supabase.app");
-      Deno.env.set("PRODUCTION_URL", "https://equipqr.app");
-      assertEquals(resolvePublicSiteUrl(), "https://preview.equipqr.app");
+      Deno.env.set("PRODUCTION_URL", "https://eqr.zinitek.com");
+      assertEquals(resolvePublicSiteUrl(), "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app");
 
       Deno.env.delete("PUBLIC_SITE_URL");
       Deno.env.set("PRODUCTION_URL", "https://preview.supabase.app");
-      assertEquals(resolvePublicSiteUrl(), "https://preview.equipqr.app");
+      assertEquals(resolvePublicSiteUrl(), "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app");
     } finally {
       if (prevPublic === undefined) {
         Deno.env.delete("PUBLIC_SITE_URL");

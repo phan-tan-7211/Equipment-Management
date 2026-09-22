@@ -24,7 +24,7 @@ Inventory parts carry two different location concepts:
 
 Owners and Admins set an organization-wide default under **Organization → Settings → Inventory Default Location**. Every part inherits that address until it saves its own override.
 
-![Organization inventory default location](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/07-organization-inventory-default.png)
+![Organization inventory default location](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/07-organization-inventory-default.png)
 
 The default supports Places search, center-pin map adjustment, and **Use my current location** the same way team locations do.
 
@@ -32,13 +32,13 @@ The default supports Places search, center-pin map adjustment, and **Use my curr
 
 Open an inventory item detail page. The **Storage address** block shows whether the part inherits the organization default or uses its own structured fields. Choose **Override address** to set part-specific coordinates; **Edit part address** updates an existing override.
 
-![Inventory item effective storage location](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/06-inventory-item-effective-location.png)
+![Inventory item effective storage location](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/06-inventory-item-effective-location.png)
 
 ## Map and directions
 
 When coordinates exist, the detail page renders a read-only mini map. Tap the map or address to open Google Maps directions—useful when a technician needs the stockroom or yard cage, not just a shelf label.
 
-![Mobile inventory map and directions](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/mobile/04-inventory-item-map-directions.png)
+![Mobile inventory map and directions](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/mobile/04-inventory-item-map-directions.png)
 
 ## QR codes do not change location
 

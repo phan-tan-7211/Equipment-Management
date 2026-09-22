@@ -6,7 +6,7 @@ describe('buildSitemapXml', () => {
   const sitemap = buildSitemapXml(MARKETING_ROUTES, '2026-01-01');
 
   it('contains the canonical home URL exactly once', () => {
-    const matches = sitemap.match(/<loc>https:\/\/equipqr\.app\/<\/loc>/g);
+    const matches = sitemap.match(/<loc>https:\/\/eqr\.zinitek\.com\/<\/loc>/g);
     expect(matches?.length).toBe(1);
   });
 
@@ -15,11 +15,11 @@ describe('buildSitemapXml', () => {
   });
 
   it('includes representative canonical feature URLs', () => {
-    expect(sitemap).toContain('<loc>https://equipqr.app/features/work-order-management</loc>');
-    expect(sitemap).toContain('<loc>https://equipqr.app/features/quickbooks</loc>');
-    expect(sitemap).toContain('<loc>https://equipqr.app/features/qr-code-integration</loc>');
-    expect(sitemap).toContain('<loc>https://equipqr.app/releases</loc>');
-    expect(sitemap).toContain('<loc>https://equipqr.app/right-to-repair</loc>');
+    expect(sitemap).toContain('<loc>https://eqr.zinitek.com/features/work-order-management</loc>');
+    expect(sitemap).toContain('<loc>https://eqr.zinitek.com/features/quickbooks</loc>');
+    expect(sitemap).toContain('<loc>https://eqr.zinitek.com/features/qr-code-integration</loc>');
+    expect(sitemap).toContain('<loc>https://eqr.zinitek.com/releases</loc>');
+    expect(sitemap).toContain('<loc>https://eqr.zinitek.com/right-to-repair</loc>');
   });
 
   it('has correct XML structure', () => {
@@ -55,7 +55,7 @@ describe('buildSitemapXml', () => {
     ] as const;
 
     const xml = buildSitemapXml(testRoutes, '2026-01-01');
-    const homeMatches = xml.match(/<loc>https:\/\/equipqr\.app\/<\/loc>/g);
+    const homeMatches = xml.match(/<loc>https:\/\/eqr\.zinitek\.com\/<\/loc>/g);
     expect(homeMatches?.length).toBe(1);
     expect(xml).not.toContain('/landing');
   });

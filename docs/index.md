@@ -4,7 +4,7 @@ layout: home
 hero:
   name: ZNTEQR
   text: Docs for your fleet, work orders, and field teams
-  tagline: Step-by-step guides for technicians, managers, admins, and equipment owners — the same product family as equipqr.app.
+  tagline: Step-by-step guides for technicians, managers, admins, and equipment owners — the same product family as eqr.zinitek.com.
   image:
     src: /eqr-logo/icon.svg
     alt: ZNTEQR logo
@@ -14,7 +14,7 @@ hero:
       link: /support/
     - theme: alt
       text: Open App
-      link: https://equipqr.app
+      link: https://eqr.zinitek.com
 
 features:
   - title: Start Here
@@ -59,9 +59,9 @@ features:
 
 Signed-in users can **report issues and track tickets** on the ZNTEQR app support page:
 
-**[equipqr.app/dashboard/support](https://equipqr.app/dashboard/support)**
+**[eqr.zinitek.com/dashboard/support](https://eqr.zinitek.com/dashboard/support)**
 
-For service availability, check **[status.equipqr.app](https://status.equipqr.app)**.
+For service availability, check **[eqr.zinitek.com/support](https://eqr.zinitek.com/support)**.
 
 ## Reference guides
 

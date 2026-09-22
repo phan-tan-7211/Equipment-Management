@@ -36,7 +36,7 @@ Pick the team that services this machine. Team assignment decides who can see, e
 
 Choose an initial status (Available, Offline, etc.). After the record is created, use the **Location** map card on the equipment detail page to set an assigned address, capture live GPS, or preview team and scan sources. See [Equipment location sources and maps](./location-sources-and-maps) for the full workflow.
 
-![Equipment location source dropdown](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/02-equipment-detail-location-source.png)
+![Equipment location source dropdown](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/02-equipment-detail-location-source.png)
 
 ## 6. Save
 

@@ -21,7 +21,7 @@ Scroll to the Costs section in the work order details and tap Add Item.
 
 Type the part name, SKU, or a cross-reference number. Alternate groups surface equivalent parts in the same search.
 
-![Add part from inventory dialog](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/desktop/09-inventory-part-selector.png)
+![Add part from inventory dialog](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/desktop/09-inventory-part-selector.png)
 
 ## 3. Enter the quantity used
 
@@ -35,9 +35,9 @@ If the part drops below its low-stock threshold, Parts Managers and Admins recei
 
 The item appears on the work order cost line. The inventory item's transaction history now has an entry tied to this work order.
 
-![Part consumed on the work order cost lines](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/desktop/10-part-consumed-on-work-order.png)
+![Part consumed on the work order cost lines](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/desktop/10-part-consumed-on-work-order.png)
 
-![Mobile field costs card](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/mobile/05-mobile-field-costs-card.png)
+![Mobile field costs card](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/mobile/05-mobile-field-costs-card.png)
 
 ## Related articles
 

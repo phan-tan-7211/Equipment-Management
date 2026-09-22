@@ -1,7 +1,7 @@
 # Supabase Branch Secrets Configuration
 
-> **Current live vs target:** `preview.equipqr.app` still uses the **production**
-> Supabase project (`supabase.equipqr.app`) today. The approved target is a
+> **Current live vs target:** `equip-qr-*.vercel.app` still uses the **production**
+> Supabase project (`wgynakhoppqkrutnslmv.supabase.co`) today. The approved target is a
 > **new persistent preview branch** with secrets restored from
 > `edge-env-preview-secrets`; see `docs/ops/preview-persistent-branch.md`.
 > This guide should be read as the branch-secrets runbook for that target
@@ -44,8 +44,8 @@ once the cutover in `preview-persistent-branch.md` begins.
 
 | Secret Name | Required For | Example Value | Notes |
 |------------|--------------|---------------|-------|
-| `PUBLIC_SITE_URL` | `send-invitation-email`, OAuth callbacks | `https://preview.equipqr.app` | **Canonical public app origin for preview** |
-| `PRODUCTION_URL` | Legacy fallback for `PUBLIC_SITE_URL` | `https://preview.equipqr.app` | Deprecated — migrate to `PUBLIC_SITE_URL` |
+| `PUBLIC_SITE_URL` | `send-invitation-email`, OAuth callbacks | `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app` | **Canonical public app origin for preview** |
+| `PRODUCTION_URL` | Legacy fallback for `PUBLIC_SITE_URL` | `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app` | Deprecated — migrate to `PUBLIC_SITE_URL` |
 
 ### Email Service
 
@@ -211,7 +211,7 @@ Do **not** add Picker values to Supabase Edge Function secrets.
 
 1. Open Supabase Dashboard
 2. Use the branch dropdown in the top navigation
-3. Select the new persistent preview branch created for `preview.equipqr.app`
+3. Select the new persistent preview branch created for `equip-qr-*.vercel.app`
    (not production `wgynakhoppqkrutnslmv`, and not retired
    `olsdirkvvfegvclbpgrg`)
 
@@ -235,7 +235,7 @@ SUPABASE_SERVICE_ROLE_KEY=<preview-branch-service-role-key>
 SUPABASE_ANON_KEY=<preview-branch-anon-key>
 
 # Application Configuration
-PUBLIC_SITE_URL=https://preview.equipqr.app
+PUBLIC_SITE_URL=https://equip-qr-preview-columbia-cloudworks-llc.vercel.app
 
 # Email Service
 RESEND_API_KEY=<your-resend-api-key>
@@ -278,7 +278,7 @@ After setting secrets, verify they're working:
 - **`SUPABASE_URL`**: Must be the persistent preview branch URL
   (`https://<persistent-preview-branch-ref>.supabase.co`), **not** the
   production URL
-- **`PUBLIC_SITE_URL`**: For preview branch, this should be `https://preview.equipqr.app` (the preview deployment URL), NOT `https://equipqr.app`
+- **`PUBLIC_SITE_URL`**: For preview branch, this should be `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app` (the preview deployment URL), NOT `https://eqr.zinitek.com`
 
 ### 🔄 Secrets Are Not Synced
 
@@ -309,8 +309,8 @@ Secrets are **not automatically synced** between branches. If you add a new secr
 ### Email Invitations Use Wrong URL
 
 1. Verify `PUBLIC_SITE_URL` (or legacy `PRODUCTION_URL`) is set correctly for the branch:
-   - Production branch: `https://equipqr.app`
-   - Preview branch: `https://preview.equipqr.app`
+   - Production branch: `https://eqr.zinitek.com`
+   - Preview branch: `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app`
 
 ## Google Maps API key — HTTP referrer allowlist
 
@@ -331,9 +331,9 @@ In the ZNTEQR UI: the Fleet Map renders the in-app `MapsAuthFailureCard` diagnos
 Set the same allowlist on every Google Cloud API key referenced as `GOOGLE_MAPS_BROWSER_KEY` (Production Supabase project AND each branch project):
 
 - `http://localhost:8080/*` (local dev)
-- `https://equipqr.app/*` (Production)
-- `https://*.equipqr.app/*` (covers `preview.equipqr.app` and any future custom subdomain alias)
-- `https://preview.equipqr.app/*` (explicit Preview entry — keep alongside the wildcard for clarity)
+- `https://eqr.zinitek.com/*` (Production)
+- `https://eqr.zinitek.com/*` (covers `equip-qr-*.vercel.app` and any future custom subdomain alias)
+- `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/*` (explicit Preview entry — keep alongside the wildcard for clarity)
 
 ### Operator steps
 
@@ -342,7 +342,7 @@ Set the same allowlist on every Google Cloud API key referenced as `GOOGLE_MAPS_
 3. Under **Application restrictions** → **HTTP referrers**, ensure all the entries above exist. Add any that are missing.
 4. Under **API restrictions**, verify only `Maps JavaScript API`, `Places API`, and `Places API (New)` are enabled.
 5. Click **Save**. Propagation typically completes within ~1 minute.
-6. Reload the affected URL (e.g. `https://preview.equipqr.app/dashboard/fleet-map`) and confirm the basemap renders without `RefererNotAllowedMapError` in the console.
+6. Reload the affected URL (e.g. `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/dashboard/fleet-map`) and confirm the basemap renders without `RefererNotAllowedMapError` in the console.
 
 ### Why this lives outside Supabase
 
