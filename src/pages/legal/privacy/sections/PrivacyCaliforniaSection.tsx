@@ -89,8 +89,8 @@ export function PrivacyCaliforniaSection() {
         </li>
         <li>
           <strong>Email:</strong>{' '}
-          <ExternalLink href="mailto:privacy@equipqr.app" className="hover:text-foreground">
-            privacy@equipqr.app
+          <ExternalLink href="mailto:privacy@zinitek.com" className="hover:text-foreground">
+            privacy@zinitek.com
           </ExternalLink>
         </li>
       </ul>

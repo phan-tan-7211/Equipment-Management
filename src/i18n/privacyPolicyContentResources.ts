@@ -116,7 +116,7 @@ const viSections: readonly PrivacyPolicyLocalizedSection[] = [
       'Phần này áp dụng cho cư dân California và bổ sung các công bố theo CCPA/CPRA.',
       'Trong 12 tháng trước, chúng tôi có thể thu thập các nhóm thông tin như định danh, dữ liệu thương mại, hoạt động internet, dữ liệu địa lý chính xác khi được bật, thông tin nghề nghiệp và dữ liệu suy luận cần cho vận hành dịch vụ.',
       'Thông tin nhạy cảm gồm tọa độ GPS chỉ khi quản trị viên bật thu thập vị trí và thông tin đăng nhập do Supabase Auth quản lý. Chúng tôi không bán thông tin cá nhân và không chia sẻ cho quảng cáo hành vi theo ngữ cảnh chéo.',
-      'Bạn có thể gửi yêu cầu qua eqr.zinitek.com/privacy-request hoặc privacy@equipqr.app. Người dùng đã xác thực cũng có thể gửi từ cài đặt tài khoản. Chúng tôi xác minh danh tính trước khi xử lý và thường phản hồi trong 45 ngày; trường hợp cần thiết có thể gia hạn thêm 45 ngày.',
+      'Bạn có thể gửi yêu cầu qua eqr.zinitek.com/privacy-request hoặc privacy@zinitek.com. Người dùng đã xác thực cũng có thể gửi từ cài đặt tài khoản. Chúng tôi xác minh danh tính trước khi xử lý và thường phản hồi trong 45 ngày; trường hợp cần thiết có thể gia hạn thêm 45 ngày.',
     ],
   },
   {
@@ -256,7 +256,7 @@ const koSections: readonly PrivacyPolicyLocalizedSection[] = [
       '이 절은 캘리포니아 거주자에게 적용되며 CCPA/CPRA가 요구하는 내용을 보충합니다.',
       '지난 12개월 동안 식별자, 상업 정보, 인터넷 활동, 관리자가 켠 경우의 정확한 위치 정보, 직업 정보 및 서비스 운영에 필요한 추론 정보를 수집할 수 있습니다.',
       '민감한 정보에는 관리자가 켠 경우의 GPS 좌표와 Supabase Auth가 관리하는 로그인 정보가 포함됩니다. 개인정보를 판매하거나 교차 맥락 행동 광고를 위해 공유하지 않습니다.',
-      'eqr.zinitek.com/privacy-request 또는 privacy@equipqr.app으로 요청할 수 있습니다. 인증된 사용자는 계정 설정에서도 요청할 수 있습니다. 신원을 확인한 후 처리하며 일반적으로 45일 이내 답변하고 필요한 경우 45일을 추가할 수 있습니다.',
+      'eqr.zinitek.com/privacy-request 또는 privacy@zinitek.com으로 요청할 수 있습니다. 인증된 사용자는 계정 설정에서도 요청할 수 있습니다. 신원을 확인한 후 처리하며 일반적으로 45일 이내 답변하고 필요한 경우 45일을 추가할 수 있습니다.',
     ],
   },
   {

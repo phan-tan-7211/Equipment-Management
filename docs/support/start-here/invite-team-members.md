@@ -44,7 +44,7 @@ Go to **Teams**, open the team that services the equipment this person will work
 
 Their invitation email comes from:
 
-- **Sender:** ZNTEQR <invite@equipqr.app>
+- **Sender:** ZNTEQR <noreply@zinitek.com>
 - **Subject:** "You're invited to join [Your Organization] on ZNTEQR"
 - **Link expires:** 7 days after it is sent.
 

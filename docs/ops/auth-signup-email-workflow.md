@@ -11,7 +11,7 @@ This runbook documents the production email signup path after the Resend SMTP cu
 | App URL | `https://eqr.zinitek.com` |
 | Supabase project | `wgynakhoppqkrutnslmv` |
 | Supabase Auth URL | `https://wgynakhoppqkrutnslmv.supabase.co/auth/v1` |
-| Supabase Auth email sender | `ZNTEQR <noreply@equipqr.app>` |
+| Supabase Auth email sender | `ZNTEQR <noreply@zinitek.com>` |
 | SMTP provider | Resend |
 | SMTP host | `smtp.resend.com` |
 | SMTP port | `587` |
@@ -71,7 +71,7 @@ Use this checklist after any Auth, SMTP, DNS, or signup-flow change.
    - `external_email_enabled = true`
    - `smtp_host = smtp.resend.com`
    - `smtp_port = 587`
-   - `smtp_admin_email = noreply@equipqr.app`
+   - `smtp_admin_email = noreply@zinitek.com`
    - `smtp_sender_name = ZNTEQR`
    - `rate_limit_email_sent = 30`
    - `mailer_autoconfirm = false`

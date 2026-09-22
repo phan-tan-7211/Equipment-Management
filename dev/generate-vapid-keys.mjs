@@ -48,7 +48,7 @@ proc.on('close', (code) => {
     console.log('2. Supabase Edge Function secrets (Dashboard > Settings > Edge Functions > Secrets):');
     console.log('   VAPID_PUBLIC_KEY=' + keys.publicKey);
     console.log('   VAPID_PRIVATE_KEY=' + keys.privateKey);
-    console.log('   VAPID_SUBJECT=mailto:support@equipqr.app');
+    console.log('   VAPID_SUBJECT=mailto:support@zinitek.com');
     console.log();
     console.log('IMPORTANT: Keep VAPID_PRIVATE_KEY secret! Never expose it to clients.');
     console.log('='.repeat(70));

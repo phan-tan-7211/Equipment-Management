@@ -14,7 +14,7 @@
  * Required Supabase Secrets:
  * - VAPID_PUBLIC_KEY: VAPID public key for Web Push
  * - VAPID_PRIVATE_KEY: VAPID private key for Web Push  
- * - VAPID_SUBJECT: Contact email (e.g., mailto:support@equipqr.app)
+ * - VAPID_SUBJECT: Contact email (e.g., mailto:support@zinitek.com)
  */
 
 import {
@@ -63,7 +63,7 @@ function initializeVapid(): boolean {
   // is not flagged as MISSING_REQUIRED_SECRET.
   const publicKey = optionalSecret("VAPID_PUBLIC_KEY");
   const privateKey = optionalSecret("VAPID_PRIVATE_KEY");
-  const subject = optionalSecret("VAPID_SUBJECT") ?? "mailto:support@equipqr.app";
+  const subject = optionalSecret("VAPID_SUBJECT") ?? "mailto:support@zinitek.com";
 
   if (!publicKey || !privateKey) {
     console.log(

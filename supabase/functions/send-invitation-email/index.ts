@@ -107,7 +107,7 @@ export async function deliverInvitationEmail(
 
   const emailResponse = await sendEmail({
     apiKey: params.resendApiKey,
-    from: "ZNTEQR™ <invite@equipqr.app>",
+    from: "ZNTEQR™ <noreply@zinitek.com>",
     to: [params.email],
     subject: buildInvitationEmailSubject(params.organizationName),
     html: params.emailHtml,

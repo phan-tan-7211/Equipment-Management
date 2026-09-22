@@ -7,7 +7,7 @@ import {
 
 const SAMPLE_INPUT = {
   apiKey: "re_test_key",
-  from: "ZNTEQR <invite@equipqr.app>",
+  from: "ZNTEQR <noreply@zinitek.com>",
   to: ["invitee@example.com"],
   subject: "Test subject",
   html: "<p>Hello</p>",
