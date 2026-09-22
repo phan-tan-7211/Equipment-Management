@@ -14,6 +14,7 @@
     "user_is_org_member"
   ],
   "authenticatedPublicRpc": [
+    "current_user_is_platform_admin",
     "accept_invitation_atomic",
     "adjust_inventory_quantity",
     "apply_pending_admin_grants_for_user",
@@ -92,6 +93,8 @@
     "log_equipment_location_change",
     "log_invitation_performance",
     "platform_create_organization_and_invite_owner",
+    "platform_get_organization",
+    "platform_list_organizations",
     "platform_reactivate_organization",
     "platform_suspend_organization",
     "refresh_quickbooks_tokens_manual",

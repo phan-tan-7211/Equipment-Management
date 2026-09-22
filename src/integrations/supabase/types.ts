@@ -6181,6 +6181,48 @@ export type Database = {
           owner_email: string
         }[]
       }
+      current_user_is_platform_admin: { Args: never; Returns: boolean }
+      platform_get_organization: {
+        Args: { p_organization_id: string }
+        Returns: {
+          created_at: string
+          lifecycle_status: string
+          organization_id: string
+          organization_name: string
+          owner_email: string | null
+          owner_name: string | null
+          owner_user_id: string | null
+          pending_owner_can_resend: boolean
+          pending_owner_email: string | null
+          pending_owner_expires_at: string | null
+          pending_owner_invitation_id: string | null
+          pending_owner_status: string | null
+        }[]
+      }
+      platform_list_organizations: {
+        Args: { p_lifecycle_status?: string | null; p_search?: string | null }
+        Returns: {
+          created_at: string
+          lifecycle_status: string
+          organization_id: string
+          organization_name: string
+          owner_email: string | null
+          owner_name: string | null
+          owner_user_id: string | null
+          pending_owner_can_resend: boolean
+          pending_owner_email: string | null
+          pending_owner_expires_at: string | null
+          pending_owner_invitation_id: string | null
+        }[]
+      }
+      platform_reactivate_organization: {
+        Args: { p_organization_id: string; p_reason?: string | null }
+        Returns: Json
+      }
+      platform_suspend_organization: {
+        Args: { p_organization_id: string; p_reason?: string | null }
+        Returns: Json
+      }
       prepare_account_deletion: {
         Args: {
           p_actor_id?: string

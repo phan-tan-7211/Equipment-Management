@@ -3,6 +3,7 @@ import { renderAsPersona, screen } from '@vitest-harness/utils/test-utils';
 import { describe, it, expect, vi } from 'vitest';
 import AppSidebar from './AppSidebar';
 import { useInventoryAccess } from '@/features/inventory/hooks/useInventoryAccess';
+import { usePlatformAdminAccess } from '@/features/platform-admin/usePlatformAdminAccess';
 
 vi.mock('@/hooks/use-mobile', () => ({
   useIsMobile: () => false,
@@ -10,6 +11,10 @@ vi.mock('@/hooks/use-mobile', () => ({
 
 vi.mock('@/features/inventory/hooks/useInventoryAccess', () => ({
   useInventoryAccess: vi.fn(),
+}));
+
+vi.mock('@/features/platform-admin/usePlatformAdminAccess', () => ({
+  usePlatformAdminAccess: vi.fn(),
 }));
 
 vi.mock('@/components/ui/sidebar-context', async () => {
@@ -32,6 +37,11 @@ vi.mock('@/components/ui/sidebar-context', async () => {
 
 describe('AppSidebar', () => {
   beforeEach(() => {
+    vi.mocked(usePlatformAdminAccess).mockReturnValue({
+      isPlatformAdmin: false,
+      isLoading: false,
+      error: null,
+    });
     vi.mocked(useInventoryAccess).mockReturnValue({
       canView: true,
       canEdit: true,
@@ -40,6 +50,23 @@ describe('AppSidebar', () => {
       isLoading: false,
       currentOrganization: null,
     });
+  });
+
+  it('shows Platform Administration only to an active Platform Admin', () => {
+    renderAsPersona(<AppSidebar />, 'admin');
+    expect(screen.queryByRole('link', { name: /platform administration/i })).not.toBeInTheDocument();
+
+    vi.mocked(usePlatformAdminAccess).mockReturnValue({
+      isPlatformAdmin: true,
+      isLoading: false,
+      error: null,
+    });
+    renderAsPersona(<AppSidebar />, 'technician');
+
+    expect(screen.getByRole('link', { name: /platform administration/i })).toHaveAttribute(
+      'href',
+      '/platform-admin',
+    );
   });
 
   it('renders the three operational group labels for an admin', () => {

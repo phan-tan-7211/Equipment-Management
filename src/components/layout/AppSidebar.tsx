@@ -27,6 +27,7 @@ import {
   Warehouse,
   Search,
   Layers,
+  Shield,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -39,6 +40,7 @@ import Logo from "@/components/ui/Logo";
 import { ORGANIZATION_MEMBERS_PATH } from "@/features/organization/constants/routes";
 import { useInventoryAccess } from "@/features/inventory/hooks/useInventoryAccess";
 import { useI18n } from '@/i18n';
+import { usePlatformAdminAccess } from '@/features/platform-admin/usePlatformAdminAccess';
 
 interface NavigationItem {
   translationKey: string;
@@ -93,6 +95,7 @@ const AppSidebar = () => {
   const isMobile = useIsMobile();
   const { setOpenMobile } = useSidebar();
   const { t } = useI18n();
+  const { isPlatformAdmin } = usePlatformAdminAccess();
 
   const handleNavClick = () => {
     if (isMobile) {
@@ -194,6 +197,23 @@ const AppSidebar = () => {
               </SidebarGroup>
             </React.Fragment>
           ))}
+          {isPlatformAdmin && (
+            <>
+              <Separator className="mx-1 my-1 opacity-30" />
+              <SidebarGroup>
+                <SidebarGroupLabel className={cn("text-[10px] uppercase tracking-widest font-semibold", mutedTextColorClass || "text-sidebar-foreground/50")}>Platform</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild className={cn("text-sm transition-colors duration-fast", textColorClass, hasCustomBranding ? '' : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground', hoverBackgroundClass)}>
+                        <Link to="/platform-admin" onClick={handleNavClick}><Shield className="h-4 w-4" /><span>Platform Administration</span></Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </>
+          )}
         </SidebarContent>
       </div>
     </Sidebar>
