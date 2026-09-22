@@ -183,10 +183,6 @@ export type EquipmentRecord = Omit<
   use_team_location?: boolean;
 };
 
-export interface EquipmentWithTeam extends EquipmentRecord {
-  team_name?: string;
-}
-
 export interface EquipmentFilters {
   status?: EquipmentStatus;
   location?: string;

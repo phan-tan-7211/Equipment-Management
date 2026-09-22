@@ -13,7 +13,7 @@ import {
 } from '@/i18n/finalHardcodedAuditCopy';
 import { isEquipmentDisplayImage } from '@/features/equipment/utils/equipmentMediaFilters';
 
-interface ImageData {
+export interface ImageData {
   id: string;
   file_name: string;
   file_url: string;
@@ -26,18 +26,23 @@ interface ImageData {
   note_author_name?: string;
 }
 
-interface ImageGalleryProps {
-  images: ImageData[];
+// Generic over the concrete image record shape so callers with a richer
+// projection (e.g. EquipmentImageData, which adds source_type/source_id)
+// can pass their own `canDelete`/`onDelete` callbacks typed against that
+// richer shape instead of casting down to this component's minimal
+// `ImageData`. The only real caller today is EquipmentImagesTab.
+interface ImageGalleryProps<T extends ImageData = ImageData> {
+  images: T[];
   onDelete?: (imageId: string) => Promise<void>;
   onSetDisplayImage?: (imageUrl: string) => Promise<void>;
-  canDelete?: (image: ImageData) => boolean;
+  canDelete?: (image: T) => boolean;
   canSetDisplayImage?: boolean;
   currentDisplayImage?: string;
   title?: string;
   emptyMessage?: string;
 }
 
-const ImageGallery: React.FC<ImageGalleryProps> = ({
+const ImageGallery = <T extends ImageData = ImageData>({
   images,
   onDelete,
   onSetDisplayImage,
@@ -46,7 +51,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   currentDisplayImage,
   title,
   emptyMessage,
-}) => {
+}: ImageGalleryProps<T>) => {
   const { language } = useI18n();
   const copy = getFinalHardcodedAuditCopy(language);
   const resolvedTitle = title ?? copy.images;

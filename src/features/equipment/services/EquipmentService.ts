@@ -400,12 +400,8 @@ export class EquipmentService {
         return createServiceErrorResponse(error, 'EquipmentService error');
       }
 
-      // `flattenAndResolveEquipmentImages` returns the `EquipmentWithTeam`
-      // declared in `@/features/equipment/types/equipment`, a separate
-      // (structurally equivalent for this purpose) interface from the one
-      // this file declares under the same name above.
       const resolved = await flattenAndResolveEquipmentImages(data || []);
-      return createServiceSuccessResponse(resolved as unknown as EquipmentWithTeam[]);
+      return createServiceSuccessResponse(resolved);
     } catch (error) {
       return createServiceErrorResponse(error, 'EquipmentService error');
     }
@@ -589,7 +585,7 @@ export class EquipmentService {
 
       const resolved = await flattenAndResolveEquipmentImages(data || []);
       return createServiceSuccessResponse({
-        data: resolved as unknown as EquipmentWithTeam[],
+        data: resolved,
         count: count ?? resolved.length,
       });
     } catch (error) {

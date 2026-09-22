@@ -1,4 +1,4 @@
-import React, { useRef, useState, type ComponentProps } from 'react';
+import React, { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/contexts/OrganizationContext';
@@ -356,15 +356,13 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
         </div>
       )}
 
-      <ImageGallery
+      <ImageGallery<EquipmentImageData>
         images={media.filteredImages}
         onDelete={handleDeleteImage}
         onSetDisplayImage={async (imageUrl) => {
           await setDisplayImageMutation.mutateAsync(imageUrl);
         }}
-        // ImageGallery's canDelete is typed generically as (image: ImageData) => boolean,
-        // but this instance is always given EquipmentImageData items (see `images` above).
-        canDelete={canDeleteImage as unknown as ComponentProps<typeof ImageGallery>['canDelete']}
+        canDelete={canDeleteImage}
         canSetDisplayImage={permissions.canSetDisplayImage}
         currentDisplayImage={currentDisplayImage}
         title=""
