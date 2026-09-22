@@ -272,7 +272,9 @@ export type InventorSketchOverlayProps = {
   initialDocument?: SketchDocument;
   canvasWidth: number;
   canvasHeight: number;
-  t: (key: string, params?: Record<string, unknown>) => string;
+  // Matches useI18n()'s real `t` signature (I18nProvider's TranslationParams)
+  // so callers can pass it through directly without a cast.
+  t: (key: string, params?: Record<string, string | number>) => string;
   onDocumentChange?: (document: SketchDocument) => void;
   /** Entity mousedown while `interactive` and not `enabled` — see `interactive`. */
   onGroupMouseDown?: (event: React.MouseEvent) => void;

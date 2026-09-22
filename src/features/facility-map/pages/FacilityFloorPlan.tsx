@@ -3171,7 +3171,7 @@ export default function FacilityFloorPlan() {
                     initialDocument={layer.document}
                     canvasWidth={plan.canvasWidth}
                     canvasHeight={plan.canvasHeight}
-                    t={t as (key: string, params?: Record<string, unknown>) => string}
+                    t={t}
                     onDocumentChange={(document) => {
                       if (activeSketchId !== layer.id) return;
                       sketchLatestDocumentRef.current = cloneSketchDocument(document);
