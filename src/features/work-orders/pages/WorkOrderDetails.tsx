@@ -17,6 +17,7 @@ import { useWorkTimer } from '@/features/work-orders/hooks/useWorkTimer';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useInitializePMChecklist } from '@/features/pm-templates/hooks/useInitializePMChecklist';
 import { getPMChecklistStats } from '@/features/work-orders/utils/pmChecklistStats';
+import { mapToWorkOrderData } from '@/features/work-orders/utils/workOrderCardMappers';
 import { useWorkOrderDetailsExports } from '@/features/work-orders/hooks/useWorkOrderDetailsExports';
 import { useWorkOrderDetailsActionQuery } from '@/features/work-orders/hooks/useWorkOrderDetailsActionQuery';
 import { useWorkOrderDetailsStagger } from '@/features/work-orders/hooks/useWorkOrderDetailsStagger';
@@ -216,14 +217,13 @@ const WorkOrderDetails = () => {
   const pmWarningDetails = useMemo(() => getPMDataDetails(), [getPMDataDetails]);
 
   const workOrderDetailedPermissions = workOrder
-    ? permissions.workOrders.getDetailedPermissions({
-        ...workOrder,
-        organizationId: currentOrganization?.id ?? '',
-        teamId: workOrder.team_id ?? equipment?.team_id ?? undefined,
-        // `workOrder` (from useWorkOrderDetailsData) and getDetailedPermissions'
-        // WorkOrderData param (types/workOrder.ts) are two independently
-        // declared shapes covering the same underlying fields.
-      } as unknown as Parameters<typeof permissions.workOrders.getDetailedPermissions>[0])
+    ? permissions.workOrders.getDetailedPermissions(
+        mapToWorkOrderData({
+          ...workOrder,
+          organizationId: currentOrganization?.id ?? '',
+          teamId: workOrder.team_id ?? equipment?.team_id ?? undefined,
+        }),
+      )
     : null;
   const canManagePM = Boolean(workOrderDetailedPermissions?.canEditPM && !isWorkOrderLocked);
   const pmManagementPendingConfirmRef = React.useRef(false);

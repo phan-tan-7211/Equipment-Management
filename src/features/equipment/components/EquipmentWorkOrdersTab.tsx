@@ -144,10 +144,12 @@ const EquipmentWorkOrdersTab: React.FC<EquipmentWorkOrdersTabProps> = ({
                   <HistoricalWorkOrderBadge workOrder={workOrder} />
                 )}
                 {isMobile ? (
-                  // MobileWorkOrderCard's ExtendedWorkOrder extends the legacy
-                  // @/services/supabaseDataService WorkOrder, a differently
-                  // declared type from the one `workOrder` here comes from.
-                  <MobileWorkOrderCard workOrder={adaptedWorkOrder as unknown as React.ComponentProps<typeof MobileWorkOrderCard>['workOrder']} />
+                  // adaptedWorkOrder (EquipmentWorkOrder + camelCase aliases)
+                  // structurally satisfies MobileWorkOrderCard's WorkOrder
+                  // (@/services/supabaseDataService) — both are
+                  // Tables<'work_orders'> plus assigneeName/equipmentName —
+                  // so no cast is needed here.
+                  <MobileWorkOrderCard workOrder={adaptedWorkOrder} />
                 ) : (
                   <DesktopWorkOrderCard
                     workOrder={adaptedWorkOrder}

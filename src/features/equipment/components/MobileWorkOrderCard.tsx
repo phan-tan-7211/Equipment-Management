@@ -8,6 +8,7 @@ import { useUnifiedPermissions } from '@/hooks/useUnifiedPermissions';
 import WorkOrderCostSubtotal from '@/features/work-orders/components/WorkOrderCostSubtotal';
 import PMProgressIndicator from '@/features/work-orders/components/PMProgressIndicator';
 import { WorkOrder } from '@/services/supabaseDataService';
+import { mapToWorkOrderData } from '@/features/work-orders/utils/workOrderCardMappers';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { useI18n } from '@/i18n';
 
@@ -147,14 +148,7 @@ const MobileWorkOrderCard: React.FC<MobileWorkOrderCardProps> = ({ workOrder }) 
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t">
-            {permissions.workOrders.getDetailedPermissions({
-              ...workOrder,
-              organizationId: '',
-              // `workOrder` here is the legacy WorkOrder from
-              // @/services/supabaseDataService; getDetailedPermissions wants
-              // types/workOrder.ts's WorkOrderData, a differently-declared
-              // view of the same fields.
-            } as unknown as Parameters<typeof permissions.workOrders.getDetailedPermissions>[0]).canEdit && (
+            {permissions.workOrders.getDetailedPermissions(mapToWorkOrderData(workOrder)).canEdit && (
               <WorkOrderCostSubtotal workOrderId={workOrder.id} className="text-sm" />
             )}
             <Button
