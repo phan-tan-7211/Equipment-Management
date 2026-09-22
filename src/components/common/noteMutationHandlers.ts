@@ -80,12 +80,12 @@ export function createNoteMutationHandlers<TNote extends NoteForPermissions>(
     } catch (error) {
       if (
         error instanceof Error &&
-        [
+        ([
           messages.noteNoEditPermission,
           messages.noteNoImagePermission,
           messages.noteNoDeletePermission,
           messages.noteNoVisibilityPermission,
-        ].includes(error.message)
+        ] as string[]).includes(error.message)
       ) {
         throw error;
       }

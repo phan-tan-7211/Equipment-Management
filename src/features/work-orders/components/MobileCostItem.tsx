@@ -33,8 +33,11 @@ const MobileCostItem: React.FC<MobileCostItemProps> = React.memo(({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
+          {/* @types/react's SVGAttributes omits the native `title` attribute
+              (a known typings gap, not an invalid prop at runtime); spread
+              it in via a cast so the hover tooltip keeps working. */}
           {isFromInventory && (
-            <Package className="h-4 w-4 text-info" title={t('workOrderResidual.fromInventory')} />
+            <Package className="h-4 w-4 text-info" {...({ title: t('workOrderResidual.fromInventory') } as React.SVGAttributes<SVGSVGElement>)} />
           )}
           <span className="text-sm font-medium text-muted-foreground">
             {t('workOrderOperations.description')} {isFromInventory && <span className="text-info">{t('workOrderResidual.inventoryTag')}</span>}

@@ -18,6 +18,7 @@ import {
   ClipboardList,
   Users,
   Map,
+  MapPinned,
   Building,
   FileText,
   ClipboardCheck,
@@ -58,6 +59,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { translationKey: "navigation.items.equipment", url: "/dashboard/equipment", icon: Forklift },
       { translationKey: "navigation.items.fleetMap", url: "/dashboard/fleet-map", icon: Map },
+      { translationKey: "navigation.items.facilityMap", url: "/dashboard/facility-map", icon: MapPinned },
       { translationKey: "navigation.items.inventory", url: "/dashboard/inventory", icon: Warehouse, inventoryAccessRequired: true },
       { translationKey: "navigation.items.partLookup", url: "/dashboard/part-lookup", icon: Search, inventoryAccessRequired: true },
       { translationKey: "navigation.items.partAlternates", url: "/dashboard/alternate-groups", icon: Layers, inventoryAccessRequired: true },

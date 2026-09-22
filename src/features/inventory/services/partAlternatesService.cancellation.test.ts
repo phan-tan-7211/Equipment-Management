@@ -23,10 +23,10 @@ describe('getAlternatesForPartNumber cancellation behavior', () => {
     const abortController = new AbortController();
     const { signal } = abortController;
 
-    vi.mocked(supabase.rpc).mockImplementation(async () => {
+    vi.mocked(supabase.rpc).mockImplementation((async () => {
       queueMicrotask(() => abortController.abort());
-      return { data: [], error: null } as { data: unknown; error: null };
-    });
+      return { data: [], error: null };
+    }) as never);
 
     const result = await getAlternatesForPartNumber('org-1', 'TEST', signal);
 
@@ -41,7 +41,7 @@ describe('getAlternatesForPartNumber cancellation behavior', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: null,
       error: { message: 'request aborted' },
-    });
+    } as never);
 
     const result = await getAlternatesForPartNumber('org-1', 'TEST', signal);
 
@@ -56,7 +56,7 @@ describe('getAlternatesForPartNumber cancellation behavior', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: null,
       error: { message: 'Request Aborted' },
-    });
+    } as never);
 
     const result = await getAlternatesForPartNumber('org-1', 'TEST', signal);
 
@@ -71,7 +71,7 @@ describe('getAlternatesForPartNumber cancellation behavior', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: null,
       error: { message: 'request cancelled' },
-    });
+    } as never);
 
     const result = await getAlternatesForPartNumber('org-1', 'TEST', signal);
 
@@ -173,7 +173,7 @@ describe('getAlternatesForPartNumber cancellation behavior', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: null,
       error,
-    });
+    } as never);
 
     await expect(getAlternatesForPartNumber('org-1', 'TEST')).rejects.toEqual(error);
     expect(logger.error).toHaveBeenCalledWith('Error looking up alternates for part number:', error);
@@ -184,7 +184,7 @@ describe('getAlternatesForPartNumber cancellation behavior', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: null,
       error,
-    });
+    } as never);
 
     await expect(getAlternatesForPartNumber('org-1', 'TEST')).rejects.toEqual(error);
     expect(logger.error).toHaveBeenCalledWith('Error looking up alternates for part number:', error);

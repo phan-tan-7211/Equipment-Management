@@ -14,7 +14,7 @@ import {
 } from '@/features/inventory/utils/inventoryLocationUtils';
 import { useGoogleMapsLoader } from '@/hooks/useGoogleMapsLoader';
 import { useGoogleMapsKey } from '@/hooks/useGoogleMapsKey';
-import { useIsDarkTheme } from '@/hooks/useThemeVersion';
+import { useIsDarkTheme, useThemeVersion } from '@/hooks/useThemeVersion';
 import type { SessionOrganization } from '@/types/session';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
@@ -30,7 +30,8 @@ export function OrganizationInventoryDefaultLocationSection({
 }: OrganizationInventoryDefaultLocationSectionProps) {
   const { t } = useI18n();
   const { isLoaded: isPlacesLoaded } = useGoogleMapsLoader();
-  const isDark = useIsDarkTheme();
+  const themeVersion = useThemeVersion();
+  const isDark = useIsDarkTheme(themeVersion);
   const { googleMapsKey, mapId } = useGoogleMapsKey();
 
   const [locationName, setLocationName] = useState(
@@ -134,7 +135,7 @@ export function OrganizationInventoryDefaultLocationSection({
             recenterKey={editor.recenterKey}
             onCenterChange={editor.handleMapCenterChange}
             googleMapsKey={googleMapsKey}
-            mapId={mapId}
+            mapId={mapId ?? undefined}
             isDark={isDark}
             isLiveCaptureOpen={editor.isLiveCaptureOpen}
             onLiveCaptureOpenChange={editor.setIsLiveCaptureOpen}

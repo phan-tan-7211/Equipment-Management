@@ -59,6 +59,9 @@ export async function logEquipmentLocationChange(params: LocationChangeParams): 
       });
     }
 
+    // The generated RPC arg types only allow `| undefined` for these optional
+    // params, but the SQL function distinguishes an explicit NULL from an
+    // omitted argument, so `null` is sent deliberately for "not provided".
     const { error } = await supabase.rpc('log_equipment_location_change', {
       p_equipment_id: params.equipmentId,
       p_source: params.source,
@@ -70,7 +73,7 @@ export async function logEquipmentLocationChange(params: LocationChangeParams): 
       p_address_country: params.addressCountry ?? null,
       p_formatted_address: formattedAddress ?? null,
       p_metadata: params.metadata ?? {},
-    });
+    } as never);
 
     if (error) {
       logger.error('Failed to log equipment location change', error);

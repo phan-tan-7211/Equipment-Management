@@ -356,7 +356,7 @@ const EquipmentImagesTab: React.FC<EquipmentImagesTabProps> = ({
         </div>
       )}
 
-      <ImageGallery
+      <ImageGallery<EquipmentImageData>
         images={media.filteredImages}
         onDelete={handleDeleteImage}
         onSetDisplayImage={async (imageUrl) => {

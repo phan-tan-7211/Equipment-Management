@@ -60,7 +60,7 @@ const CostTrendWidget: React.FC = () => {
             <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
             <XAxis dataKey="period" stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} tickFormatter={(v: string) => period === 'monthly' ? `${v.split('-')[1]}/${v.split('-')[0].slice(2)}` : v.slice(5)} />
             <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} tickFormatter={(v: number) => formatCurrency(v)} />
-            <Tooltip formatter={(value: number) => [formatCurrency(value), t('dashboardWidget.totalCost')]} contentStyle={{ backgroundColor:'hsl(var(--popover))', borderColor:'hsl(var(--border))', borderRadius:'6px', color:'hsl(var(--popover-foreground))', fontSize:'12px' }} />
+            <Tooltip formatter={((value: number) => [formatCurrency(value), t('dashboardWidget.totalCost')]) as unknown as (...args: unknown[]) => React.ReactNode} contentStyle={{ backgroundColor:'hsl(var(--popover))', borderColor:'hsl(var(--border))', borderRadius:'6px', color:'hsl(var(--popover-foreground))', fontSize:'12px' }} />
             <Line type="monotone" dataKey="totalCents" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill:'hsl(var(--primary))', r:3 }} activeDot={{ r:5 }} />
           </LineChart></ResponsiveContainer></div>
         ) : <EmptyState icon={DollarSign} title={t('dashboardWidget.noCostData')} description={t('dashboardWidget.noCostDataDescription')} className="py-6" />}

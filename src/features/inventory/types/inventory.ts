@@ -105,7 +105,7 @@ export interface PartCompatibilityRule {
  */
 export interface PartCompatibilityRuleFormData {
   manufacturer: string;
-  model: string | null;  // null or empty string = "Any Model" for 'any' match_type
+  model?: string | null;  // null, undefined, or empty string = "Any Model" for 'any' match_type
   match_type?: ModelMatchType;  // Defaults to 'exact' if not specified
   status?: VerificationStatus;  // Defaults to 'unverified'
   notes?: string | null;

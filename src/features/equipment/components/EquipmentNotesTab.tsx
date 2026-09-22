@@ -23,6 +23,7 @@ import {
   createNoteCreateMutationCallbacks,
   runOfflineAwareNoteCreate,
   showQueuedNoteCreateToasts,
+  type NoteCreateMutationInput,
 } from '@/components/common/noteCreateHelpers';
 import { NotesTabAddNoteSection } from '@/components/common/NotesTabAddNoteSection';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
@@ -97,7 +98,7 @@ const EquipmentNotesTab: React.FC<EquipmentNotesTabProps> = ({
   };
 
   const createNoteMutation = useMutation({
-    mutationFn: (input) =>
+    mutationFn: (input: NoteCreateMutationInput) =>
       runOfflineAwareNoteCreate({
         input,
         organizationId: activeOrganizationId,
@@ -175,8 +176,9 @@ const EquipmentNotesTab: React.FC<EquipmentNotesTabProps> = ({
     deleteNote: (note) => deleteEquipmentNote(activeOrganizationId!, equipmentId, note.id),
     deleteNoteImage: (imageId) =>
       deleteEquipmentNoteImage(imageId, activeOrganizationId!, equipmentId),
-    addNoteImages: (note, files) =>
-      addImagesToEquipmentNote(equipmentId, note.id, files, activeOrganizationId!),
+    addNoteImages: async (note, files) => {
+      await addImagesToEquipmentNote(equipmentId, note.id, files, activeOrganizationId!);
+    },
   });
 
   const userDisplayName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
@@ -214,7 +216,7 @@ const EquipmentNotesTab: React.FC<EquipmentNotesTabProps> = ({
         </div>
       ) : null}
 
-      <NoteCardList
+      <NoteCardList<EquipmentNote & { _isPendingSync?: boolean }>
         notes={visibleNotes as (EquipmentNote & { _isPendingSync?: boolean })[]}
         formatDate={formatNoteDate}
         currentUserId={user?.id}

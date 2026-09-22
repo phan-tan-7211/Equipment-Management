@@ -94,12 +94,12 @@ function renderMobileContent(
   render(
     <WorkOrderDetailsMobileContent
       workOrder={workOrder}
-      equipment={equipment as WorkOrderDetailsMobileContentProps['equipment']}
+      equipment={equipment as unknown as WorkOrderDetailsMobileContentProps['equipment']}
       pmData={{
         id: 'pm-1',
         status: 'in_progress',
         checklist_data: [],
-      } as WorkOrderDetailsMobileContentProps['pmData']}
+      } as unknown as WorkOrderDetailsMobileContentProps['pmData']}
       currentOrganization={{ id: 'org-1', name: 'Test Org' }}
       permissionLevels={{ isManager: true, isTechnician: true }}
       pmChecklist={{ progress: 1, total: 3 }}
@@ -138,6 +138,7 @@ function renderMobileContent(
       onAddPhoto={noop}
       onComplete={noop}
       baseCanAddNotes={false}
+      onRetrySync={noop}
       {...overrides}
     />,
   );

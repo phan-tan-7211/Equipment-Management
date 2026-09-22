@@ -152,7 +152,21 @@ export interface EquipmentListResult {
  */
 const MAX_LIST_PAGE_SIZE = 200;
 
-type EquipmentListQuery = ReturnType<ReturnType<typeof supabase.from>['select']>;
+// Kept as a named constant (rather than inlined at each `.select(...)` call)
+// so the type alias below and the real query stay structurally identical —
+// `EquipmentListQuery` needs to be derived from an actual `.from().select()`
+// call because `supabase.from<'equipment'>` alone no longer type-checks (the
+// client now infers the row type together with the table name instead of
+// accepting it as an explicit type argument), and because this projection's
+// shape (a specific column list, not `select('*')`) can only be inferred by
+// having TypeScript parse the literal select string itself.
+const EQUIPMENT_LIST_SELECT =
+  'id, organization_id, name, manufacturer, model, serial_number, status, team_id, location, image_url, working_hours, last_maintenance, installation_date, warranty_expiration, created_at, updated_at, management_responsible_primary, management_responsible_secondary, team:team_id(id, name)';
+
+function equipmentListQueryBuilder() {
+  return supabase.from('equipment').select(EQUIPMENT_LIST_SELECT, { count: 'exact' as const });
+}
+type EquipmentListQuery = ReturnType<typeof equipmentListQueryBuilder>;
 type EquipmentListPagination = {
   page?: number;
   pageSize?: number;
@@ -479,10 +493,7 @@ export class EquipmentService {
 
       let query = supabase
         .from('equipment')
-        .select(
-          'id, organization_id, name, manufacturer, model, serial_number, status, team_id, location, image_url, working_hours, last_maintenance, installation_date, warranty_expiration, created_at, updated_at, management_responsible_primary, management_responsible_secondary, team:team_id(id, name)',
-          { count: 'exact' },
-        )
+        .select(EQUIPMENT_LIST_SELECT, { count: 'exact' })
         .eq('organization_id', organizationId);
 
       if (hasNoEquipmentListAccess(filters)) {
@@ -573,7 +584,10 @@ export class EquipmentService {
       }
 
       const resolved = await flattenAndResolveEquipmentImages(data || []);
-      return createServiceSuccessResponse({ data: resolved, count: count ?? resolved.length });
+      return createServiceSuccessResponse({
+        data: resolved,
+        count: count ?? resolved.length,
+      });
     } catch (error) {
       return createServiceErrorResponse(error, 'EquipmentService error');
     }

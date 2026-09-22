@@ -153,7 +153,7 @@ function makeEquipmentCreatePayload(
     warranty_expiration: null,
     working_hours: 0,
     ...overrides,
-  };
+  } as unknown as EquipmentCreateData;
 }
 
 describe('OfflineQueueProcessor', () => {

@@ -14,7 +14,7 @@ export interface NoteTimelineImage {
 
 export interface NoteTimelineEntryData {
   id: string;
-  author_name: string;
+  author_name?: string;
   created_at: string;
   content: string;
   hours_worked?: number | null;

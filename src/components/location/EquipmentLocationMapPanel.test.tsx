@@ -133,7 +133,7 @@ describe('EquipmentLocationMapPanel', () => {
       isLoading: false,
       error: null,
       latestScan: undefined,
-    });
+    } as unknown as ReturnType<typeof useLatestScanCoordinateFromHistory>);
   });
 
   it('renders a visible map and location source header selector when assigned coords exist', () => {
@@ -221,7 +221,7 @@ describe('EquipmentLocationMapPanel', () => {
         updatedAt: '2026-04-15T08:30:00Z',
         formattedAddress: 'Scan point',
       },
-    });
+    } as unknown as ReturnType<typeof useLatestScanCoordinateFromHistory>);
 
     render(
       <EquipmentLocationMapPanel

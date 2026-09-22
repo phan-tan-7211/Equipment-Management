@@ -9,9 +9,12 @@ export async function listOperatorCheckinTemplateIdsWithSubmissions(
     return new Set();
   }
 
+  // The generated RPC arg type only allows `string[] | undefined`, but the
+  // SQL function distinguishes an explicit NULL from an omitted argument,
+  // so `null` is sent deliberately here.
   const { data, error } = await supabase.rpc('list_operator_checkin_restorable_template_ids', {
     p_organization_id: organizationId,
-    p_template_ids: templateIds && templateIds.length > 0 ? templateIds : null,
+    p_template_ids: (templateIds && templateIds.length > 0 ? templateIds : null) as unknown as string[] | undefined,
   });
 
   if (error) throw error;
@@ -81,5 +84,5 @@ export async function listOperatorCheckinSubmissions(
 
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []) as OperatorCheckinSubmission[];
+  return (data ?? []) as unknown as OperatorCheckinSubmission[];
 }

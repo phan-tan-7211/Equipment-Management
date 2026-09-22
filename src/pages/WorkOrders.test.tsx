@@ -249,13 +249,13 @@ function renderAt(path: string) {
 
 function setWorkOrders(workOrders: WorkOrderData[], extra?: { totalFilteredCount?: number }) {
   vi.mocked(useWorkOrderFilteringModule.useWorkOrderFiltering).mockReturnValue(
-    createWorkOrderFilteringMock(workOrders),
+    createWorkOrderFilteringMock(workOrders) as unknown as ReturnType<typeof useWorkOrderFilteringModule.useWorkOrderFiltering>,
   );
   if (extra?.totalFilteredCount !== undefined) {
     vi.mocked(useWorkOrderFilteringModule.useWorkOrderFiltering).mockReturnValue({
       ...createWorkOrderFilteringMock(workOrders),
       totalFilteredCount: extra.totalFilteredCount,
-    });
+    } as unknown as ReturnType<typeof useWorkOrderFilteringModule.useWorkOrderFiltering>);
   }
 }
 
@@ -391,7 +391,7 @@ describe('WorkOrders Page', () => {
     it('responds to search input', () => {
       const mockUpdateFilter = vi.fn();
       vi.mocked(useWorkOrderFilteringModule.useWorkOrderFiltering).mockReturnValue(
-        createWorkOrderFilteringMock([], mockUpdateFilter),
+        createWorkOrderFilteringMock([], mockUpdateFilter) as unknown as ReturnType<typeof useWorkOrderFilteringModule.useWorkOrderFiltering>,
       );
 
       render(<WorkOrders />);

@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@vitest-harness/utils/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import MobileWorkOrderCard from './MobileWorkOrderCard';
+import type { WorkOrder } from '@/services/supabaseDataService';
 
 // Mock navigate
 const mockNavigate = vi.fn();
@@ -40,7 +41,7 @@ const mockWorkOrder = {
   estimated_hours: null,
   historical_notes: null,
   historical_start_date: null
-};
+} as unknown as WorkOrder;
 
 describe('MobileWorkOrderCard', () => {
   beforeEach(() => {

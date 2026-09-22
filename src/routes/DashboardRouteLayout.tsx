@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { Routes } from 'react-router-dom';
+import { Routes, useLocation } from 'react-router-dom';
 import { TeamProvider } from '@/contexts/TeamContext';
 import { SelectedTeamProvider } from '@/contexts/SelectedTeamContext';
 import { SimpleOrganizationProvider } from '@/contexts/SimpleOrganizationProvider';
@@ -24,6 +24,8 @@ const BrandedTopBar = () => <TopBar />;
 
 export const DashboardRouteLayout = () => {
   const { t } = useI18n();
+  const location = useLocation();
+  const isFacilityMap = location.pathname === '/dashboard/facility-map';
 
   const authLoadingFallback = (
     <DashboardLoadingShell
@@ -76,30 +78,36 @@ export const DashboardRouteLayout = () => {
                             <AppSidebar />
                           </Suspense>
                           <SidebarInset className="flex h-svh min-h-0 min-w-0 flex-1" data-dashboard-workspace="">
-                            <Suspense
-                              fallback={
-                                <div className="h-10 border-b">
-                                  <div className="animate-pulse h-full bg-muted/20" />
-                                </div>
-                              }
-                            >
-                              <BrandedTopBar />
-                            </Suspense>
+                            {!isFacilityMap && (
+                              <Suspense
+                                fallback={
+                                  <div className="h-10 border-b">
+                                    <div className="animate-pulse h-full bg-muted/20" />
+                                  </div>
+                                }
+                              >
+                                <BrandedTopBar />
+                              </Suspense>
+                            )}
                             {OFFLINE_QUEUE_ENABLED && <PendingSyncBanner />}
                             <main
                               id="main-content"
                               tabIndex={-1}
-                              className="flex-1 min-h-0 min-w-0 overflow-auto pb-16 md:pb-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                              className={`flex-1 min-h-0 min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                                isFacilityMap ? 'overflow-hidden p-0' : 'overflow-auto pb-16 md:pb-0'
+                              }`}
                             >
                               <Suspense fallback={<PageSkeleton />}>
                                 <Routes>{dashboardRouteElements}</Routes>
                               </Suspense>
                             </main>
-                            <LegalFooter />
+                            {!isFacilityMap && <LegalFooter />}
                           </SidebarInset>
-                          <Suspense fallback={null}>
-                            <BottomNav />
-                          </Suspense>
+                          {!isFacilityMap && (
+                            <Suspense fallback={null}>
+                              <BottomNav />
+                            </Suspense>
+                          )}
                         </div>
                       </BugReportProvider>
                     </SidebarProvider>

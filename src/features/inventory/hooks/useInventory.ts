@@ -458,7 +458,7 @@ export const useBulkLinkEquipmentToItem = () => {
       
       // Show summary toast with counts
       const { added, removed } = result;
-      const messages = [];
+      const messages: string[] = [];
       if (added > 0) messages.push(t('inventoryMutation.equipmentAdded', { count: added }));
       if (removed > 0) messages.push(t('inventoryMutation.equipmentRemoved', { count: removed }));
       

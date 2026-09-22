@@ -236,7 +236,7 @@ const WorkspaceOnboarding = () => {
     <Page maxWidth="full" padding="workspace">
       <PageHeader
         title={t('workspaceOnboarding.title')}
-        description={t('workspaceOnboarding.setupFor', { domain: onboardingState.domain })}
+        description={t('workspaceOnboarding.setupFor', { domain: onboardingState.domain ?? '' })}
       />
 
       <div className="space-y-6">
@@ -303,7 +303,7 @@ const WorkspaceOnboarding = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2 text-sm text-muted-foreground">
-                  <div>{t('workspaceOnboarding.connectedDomain', { domain: connectionStatus.domain })}</div>
+                  <div>{t('workspaceOnboarding.connectedDomain', { domain: connectionStatus.domain ?? '' })}</div>
                   <div>{t('workspaceOnboarding.connectedOn', { date: connectionStatus.connected_at ? formatDate(connectionStatus.connected_at) : t('workspaceOnboarding.unknown') })}</div>
                 </div>
                 

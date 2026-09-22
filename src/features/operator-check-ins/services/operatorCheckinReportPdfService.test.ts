@@ -33,7 +33,7 @@ describe('operatorCheckinReportPdfService', () => {
       equipment: { id: 'eq', name: language === 'vi' ? 'Máy xúc số 1' : '굴착기 1', serial_number: 'SN-1' },
     } as OperatorCheckinSubmission;
     await downloadOperatorCheckinDailyPdf([submission], { startDate: '2026-07-04', endDate: '2026-07-04' },
-      submission.template_snapshot.name, submission.equipment!.name, undefined, language);
+      submission.template_snapshot.name as string, submission.equipment!.name, undefined, language);
     const blob = downloadBlob.mock.lastCall?.[0] as Blob;
     const bytes = new Uint8Array(await blob.arrayBuffer());
     expect(new TextDecoder().decode(bytes.slice(0, 8))).toContain('%PDF');

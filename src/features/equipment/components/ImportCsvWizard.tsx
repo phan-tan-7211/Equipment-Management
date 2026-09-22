@@ -182,7 +182,7 @@ const ImportCsvWizard: React.FC<ImportCsvWizardProps> = ({
     }));
 
     const chunkSize = 500;
-    const chunks = [];
+    const chunks: NonNullable<typeof state.parsedData>[] = [];
     for (let i = 0; i < state.parsedData.length; i += chunkSize) chunks.push(state.parsedData.slice(i, i + chunkSize));
 
     let totalCreated = 0;

@@ -3,14 +3,28 @@ import { render, RenderOptions } from '@testing-library/react';
 import { TestProviders } from './TestProviders';
 import { personas, type PersonaKey } from '@vitest-harness/fixtures/personas';
 
+export interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+  /** Initial route entries for MemoryRouter */
+  initialEntries?: string[];
+}
+
 /**
  * Custom render that wraps components in all necessary providers.
  * Use this for standard component testing.
  */
 export const customRender = (
   ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: TestProviders, ...options });
+  options?: CustomRenderOptions
+) => {
+  const { initialEntries, ...renderOptions } = options || {};
+
+  return render(ui, {
+    wrapper: ({ children }) => (
+      <TestProviders initialEntries={initialEntries}>{children}</TestProviders>
+    ),
+    ...renderOptions,
+  });
+};
 
 /**
  * Render options for persona-based rendering

@@ -38,7 +38,7 @@ export function EquipmentMaintenanceNotesCard({
           <div className="mt-1 w-full">
             <InlineEditField
               value={equipment.notes || ''}
-              onSave={(value) => onFieldUpdate('notes', value)}
+              onSave={(value) => Promise.resolve(onFieldUpdate('notes', value))}
               canEdit={canEdit}
               fieldId={notesFieldId}
               type="textarea"

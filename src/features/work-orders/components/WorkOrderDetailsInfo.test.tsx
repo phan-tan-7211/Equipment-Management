@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@vitest-harness/utils/test-utils';
 import WorkOrderDetailsInfo from '@/features/work-orders/components/WorkOrderDetailsInfo';
+import type { WorkOrder as EnhancedWorkOrder } from '@/features/work-orders/types/workOrder';
 
 vi.mock('@/hooks/use-mobile', () => ({
   useIsMobile: () => false,
@@ -20,7 +21,7 @@ const workOrder = {
   created_date: '2026-01-01T00:00:00Z',
   equipment_id: 'eq-1',
   organization_id: 'org-1',
-};
+} as unknown as EnhancedWorkOrder;
 
 describe('WorkOrderDetailsInfo', () => {
   it('shows a description lock reason on completed work orders', () => {

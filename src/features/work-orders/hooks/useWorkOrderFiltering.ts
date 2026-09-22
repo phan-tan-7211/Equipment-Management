@@ -178,7 +178,7 @@ export function useWorkOrderFiltering() {
       })
     })
     return filterWorkOrders(
-      rows,
+      rows as unknown as Parameters<typeof filterWorkOrders>[0],
       { ...filters, teamFilter: selectedTeamFilterValue(selectedTeamId) },
       currentUser?.id,
     ) as TeamBasedWorkOrder[]

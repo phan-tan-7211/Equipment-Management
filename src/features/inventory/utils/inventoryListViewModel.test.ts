@@ -16,12 +16,19 @@ const baseItem = (overrides: Partial<InventoryItem> = {}): InventoryItem => ({
   quantity_on_hand: 10,
   low_stock_threshold: 5,
   location: 'Warehouse',
-  default_unit_cost: '2.00',
+  location_address: null,
+  location_city: null,
+  location_state: null,
+  location_country: null,
+  location_lat: null,
+  location_lng: null,
+  default_unit_cost: 2.00,
   image_url: null,
   isLowStock: false,
   created_at: '2024-01-01',
   updated_at: '2024-01-01',
   created_by: 'user-1',
+  created_by_name: null,
   ...overrides,
 });
 
@@ -89,11 +96,11 @@ describe('inventoryListViewModel', () => {
   it('sortInventoryViewModels sorts by inventory_value', () => {
     const rows = [
       buildInventoryTableRowViewModel(
-        baseItem({ id: 'cheap', name: 'Cheap', quantity_on_hand: 1, default_unit_cost: '1' }),
+        baseItem({ id: 'cheap', name: 'Cheap', quantity_on_hand: 1, default_unit_cost: 1 }),
         {},
       ),
       buildInventoryTableRowViewModel(
-        baseItem({ id: 'pricey', name: 'Pricey', quantity_on_hand: 10, default_unit_cost: '5' }),
+        baseItem({ id: 'pricey', name: 'Pricey', quantity_on_hand: 10, default_unit_cost: 5 }),
         {},
       ),
     ];

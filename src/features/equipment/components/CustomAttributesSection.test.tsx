@@ -15,16 +15,20 @@ describe('CustomAttributesSection', () => {
   const mockRemoveAttribute = vi.fn();
   const mockUpdateAttribute = vi.fn();
   const mockGetCleanAttributes = vi.fn(() => []);
+  const mockValidateAttributes = vi.fn(() => true);
+  const mockSetAttributes = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     vi.mocked(useCustomAttributesModule.useCustomAttributes).mockReturnValue({
       attributes: [],
       addAttribute: mockAddAttribute,
       removeAttribute: mockRemoveAttribute,
       updateAttribute: mockUpdateAttribute,
-      getCleanAttributes: mockGetCleanAttributes
+      validateAttributes: mockValidateAttributes,
+      getCleanAttributes: mockGetCleanAttributes,
+      setAttributes: mockSetAttributes
     });
   });
 
@@ -68,7 +72,9 @@ describe('CustomAttributesSection', () => {
         addAttribute: mockAddAttribute,
         removeAttribute: mockRemoveAttribute,
         updateAttribute: mockUpdateAttribute,
-        getCleanAttributes: mockGetCleanAttributes
+        validateAttributes: mockValidateAttributes,
+        getCleanAttributes: mockGetCleanAttributes,
+        setAttributes: mockSetAttributes
       });
 
       render(<CustomAttributesSection onChange={mockOnChange} />);
@@ -87,7 +93,9 @@ describe('CustomAttributesSection', () => {
         addAttribute: mockAddAttribute,
         removeAttribute: mockRemoveAttribute,
         updateAttribute: mockUpdateAttribute,
-        getCleanAttributes: mockGetCleanAttributes
+        validateAttributes: mockValidateAttributes,
+        getCleanAttributes: mockGetCleanAttributes,
+        setAttributes: mockSetAttributes
       });
 
       render(<CustomAttributesSection onChange={mockOnChange} />);
@@ -106,7 +114,9 @@ describe('CustomAttributesSection', () => {
         addAttribute: mockAddAttribute,
         removeAttribute: mockRemoveAttribute,
         updateAttribute: mockUpdateAttribute,
-        getCleanAttributes: mockGetCleanAttributes
+        validateAttributes: mockValidateAttributes,
+        getCleanAttributes: mockGetCleanAttributes,
+        setAttributes: mockSetAttributes
       });
 
       render(<CustomAttributesSection onChange={mockOnChange} />);
@@ -127,7 +137,9 @@ describe('CustomAttributesSection', () => {
         addAttribute: mockAddAttribute,
         removeAttribute: mockRemoveAttribute,
         updateAttribute: mockUpdateAttribute,
-        getCleanAttributes: mockGetCleanAttributes
+        validateAttributes: mockValidateAttributes,
+        getCleanAttributes: mockGetCleanAttributes,
+        setAttributes: mockSetAttributes
       });
 
       render(<CustomAttributesSection onChange={mockOnChange} />);
@@ -151,7 +163,9 @@ describe('CustomAttributesSection', () => {
         addAttribute: mockAddAttribute,
         removeAttribute: mockRemoveAttribute,
         updateAttribute: mockUpdateAttribute,
-        getCleanAttributes: () => [{ key: 'Key1', value: 'Value1' }]
+        validateAttributes: mockValidateAttributes,
+        getCleanAttributes: () => [{ id: 'attr-1', key: 'Key1', value: 'Value1' }],
+        setAttributes: mockSetAttributes
       });
 
       render(<CustomAttributesSection initialAttributes={initialAttributes} onChange={mockOnChange} />);
@@ -171,7 +185,12 @@ describe('CustomAttributesSection', () => {
         addAttribute: mockAddAttribute,
         removeAttribute: mockRemoveAttribute,
         updateAttribute: mockUpdateAttribute,
-        getCleanAttributes: () => [{ key: 'Key1', value: 'Value1' }, { key: 'Key2', value: 'Value2' }]
+        validateAttributes: mockValidateAttributes,
+        getCleanAttributes: () => [
+          { id: 'attr-1', key: 'Key1', value: 'Value1' },
+          { id: 'attr-2', key: 'Key2', value: 'Value2' }
+        ],
+        setAttributes: mockSetAttributes
       });
 
       const initialAttributes = {
@@ -210,7 +229,9 @@ describe('CustomAttributesSection', () => {
         addAttribute: mockAddAttribute,
         removeAttribute: mockRemoveAttribute,
         updateAttribute: mockUpdateAttribute,
-        getCleanAttributes: () => [{ key: 'Color', value: 'Red' }]
+        validateAttributes: mockValidateAttributes,
+        getCleanAttributes: () => [{ id: 'attr-1', key: 'Color', value: 'Red' }],
+        setAttributes: mockSetAttributes
       });
 
       render(<CustomAttributesSection onChange={mockOnChange} />);

@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCreateScan } from '@/features/equipment/hooks/useEquipment';
-import type { Equipment } from '@/features/equipment/types/equipment';
 import { useI18n } from '@/i18n';
 
 type UseEquipmentScanLoggerParams = {
@@ -12,7 +11,8 @@ type UseEquipmentScanLoggerParams = {
   organizationId: string | undefined;
   scanLocationCollectionEnabled: boolean | undefined;
   isQRScan: boolean;
-  equipment: Equipment | null | undefined;
+  // Only checked for truthiness (see below), so any equipment record shape works.
+  equipment: unknown;
   equipmentName: string | undefined;
   organizationName: string | undefined;
 };

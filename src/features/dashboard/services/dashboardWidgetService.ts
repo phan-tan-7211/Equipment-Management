@@ -243,7 +243,7 @@ export async function fetchDashboardTrends(
     const { data, error } = await supabase.rpc('get_dashboard_trends', {
       p_org_id: organizationId,
       p_days: days,
-      p_team_id,
+      p_team_id: p_team_id ?? undefined,
       p_unassigned,
     });
 

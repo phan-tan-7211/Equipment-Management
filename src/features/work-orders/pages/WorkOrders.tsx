@@ -83,7 +83,7 @@ const WorkOrders = () => {
   const permissions = useUnifiedPermissions();
   const canDeleteWorkOrders = permissions.hasRole(['owner', 'admin']);
   const deleteWorkOrderMutation = useDeleteWorkOrder();
-  const { data: deleteTargetImageData } = useWorkOrderImageCount(deleteTarget?.id);
+  const { data: deleteTargetImageData } = useWorkOrderImageCount(deleteTarget?.id ?? '');
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -153,7 +153,7 @@ const WorkOrders = () => {
   const calendarRows = useMemo(() => {
     if (chrome.surface !== 'calendar') return [];
     return filterWorkOrders(
-      calendarMerged as WorkOrderData[],
+      calendarMerged as unknown as WorkOrderData[],
       { ...filters, dueDateFilter: 'all' },
       currentUser?.id,
     );
@@ -184,7 +184,7 @@ const WorkOrders = () => {
 
   const persistCalendarDue = useCallback((workOrder: MergedWorkOrder, write: Parameters<typeof applyCalendarDrag>[2]) => {
     const editability = calendarEditability({
-      engineCanEdit: permissions.workOrders.getPermissions(workOrder as WorkOrderData).canEdit,
+      engineCanEdit: permissions.workOrders.getPermissions(workOrder as unknown as WorkOrderData).canEdit,
       status: workOrder.status,
       isOfflinePending: Boolean(workOrder._isPendingSync) || workOrder.id.startsWith('offline-'),
     });
@@ -286,7 +286,7 @@ const WorkOrders = () => {
     }
   };
 
-  const handleAcceptClick = (workOrder: WorkOrderData) => {
+  const handleAcceptClick = (workOrder: WorkOrder) => {
     setAcceptanceModal({ open: true, workOrder });
   };
 
@@ -524,7 +524,7 @@ const WorkOrders = () => {
                   }
                   const wo = calendarRows.find((row) => row.id === intent.workOrderId);
                   if (!wo) return;
-                  persistCalendarDue(wo as MergedWorkOrder, intent.write);
+                  persistCalendarDue(wo as unknown as MergedWorkOrder, intent.write);
                 }}
                 onChromeChange={(next) => writeChrome(next)}
               />
@@ -560,7 +560,7 @@ const WorkOrders = () => {
         <WorkOrderCalendarPanel
           workOrder={selectedCalendarWorkOrder}
           editability={calendarEditability({
-            engineCanEdit: permissions.workOrders.getPermissions(selectedCalendarWorkOrder as WorkOrderData).canEdit,
+            engineCanEdit: permissions.workOrders.getPermissions(selectedCalendarWorkOrder as unknown as WorkOrderData).canEdit,
             status: selectedCalendarWorkOrder.status,
             isOfflinePending:
               Boolean(selectedCalendarWorkOrder._isPendingSync)
@@ -592,7 +592,9 @@ const WorkOrders = () => {
         <WorkOrderAcceptanceModal
           open={acceptanceModal.open}
           onClose={() => setAcceptanceModal({ open: false, workOrder: null })}
-          workOrder={acceptanceModal.workOrder}
+          // `open` and `workOrder` are always set together (handleAcceptClick,
+          // the close handler above), so workOrder is never null while open.
+          workOrder={acceptanceModal.workOrder!}
           organizationId={currentOrganization.id}
           onAccept={handleAcceptance}
         />

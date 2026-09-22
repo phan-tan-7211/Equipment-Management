@@ -86,7 +86,7 @@ const GettingStartedOnboarding = () => {
   const shouldPreloadEquipment =
     step === 3 && !equipmentId && (status?.equipment_count ?? 0) > 0;
   const { data: equipmentListResult } = useEquipmentList(
-    organizationId,
+    organizationId ?? undefined,
     {},
     { pageSize: 1, sortField: 'created_at', sortDirection: 'desc' },
     { enabled: shouldPreloadEquipment },
@@ -114,7 +114,7 @@ const GettingStartedOnboarding = () => {
       toast({
         title: t('productOnboarding.finishFailed'),
         description: t('productOnboarding.tryAgain'),
-        variant: 'destructive',
+        variant: 'error',
       });
     }
   }, [completeOnboarding, navigate, toast, t]);

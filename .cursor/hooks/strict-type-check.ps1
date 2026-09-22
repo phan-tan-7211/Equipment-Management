@@ -1,6 +1,6 @@
 # strict-type-check.ps1 — afterFileEdit hook for .ts/.tsx files
 # 1. Greps for explicit `: any` usage (fast check first).
-# 2. Runs tsc --noEmit and reports errors relevant to the edited file.
+# 2. Runs the canonical `npm run type-check` and reports errors relevant to the edited file.
 
 $inputJson = [Console]::In.ReadToEnd()
 $data = $inputJson | ConvertFrom-Json
@@ -32,11 +32,14 @@ if ($anyMatches) {
     exit 1
 }
 
-# ── Check 2: Run tsc --noEmit and surface errors for this file ──────────
+# ── Check 2: Run the canonical application type-check and surface errors
+#    for this file. A bare `tsc --noEmit` does not reliably scope to
+#    tsconfig.app.json because the root tsconfig uses project references, so
+#    this must go through `npm run type-check` (tsc --noEmit -p tsconfig.app.json).
 Write-Host "Type-checking $filePath..."
-# Invoke npx.cmd directly (& operator) instead of `cmd /c` so we don't spawn
+# Invoke npm.cmd directly (& operator) instead of `cmd /c` so we don't spawn
 # an extra cmd.exe console window on Windows GUI parents.
-$tscOutput = (& npx.cmd tsc --noEmit --pretty false 2>&1) | Out-String
+$tscOutput = (& npm.cmd run type-check -- --pretty false 2>&1) | Out-String
 $tscExitCode = $LASTEXITCODE
 
 if ($tscExitCode -ne 0) {

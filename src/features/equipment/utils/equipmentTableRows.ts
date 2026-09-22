@@ -4,6 +4,7 @@ import {
   safeFormatDate,
 } from '@/features/equipment/utils/equipmentHelpers';
 import type { UserSettings } from '@/types/settings';
+import { defaultUserSettings } from '@/types/settings';
 
 export interface EquipmentTableRow {
   id: string;
@@ -49,7 +50,7 @@ export function getEquipmentTableCellDisplayValue(
       return row.team_name || '—';
     case 'last_maintenance':
       if (!row.last_maintenance) return '—';
-      return safeFormatDate(row.last_maintenance, settings) ?? '—';
+      return safeFormatDate(row.last_maintenance, settings ?? defaultUserSettings) ?? '—';
     case 'management_responsible_primary':
       return row.management_responsible_primary || '—';
     case 'management_responsible_secondary':

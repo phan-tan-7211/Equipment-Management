@@ -12,6 +12,7 @@ import {
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useAuth } from '@/hooks/useAuth';
 import { OfflineAwareWorkOrderService } from '@/services/offlineAwareService';
+import type { EquipmentCreateData } from '@/features/equipment/services/EquipmentService';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import TeamPickerWithCreate from '@/features/teams/components/TeamPickerWithCreate';
@@ -76,7 +77,11 @@ export const CreateFirstEquipmentStep: React.FC<CreateFirstEquipmentStepProps> =
         installation_date: today,
         notes: '',
         team_id: teamId,
-      });
+        // EquipmentCreateData mirrors the equipment table's Row shape (minus
+        // id/timestamps/org_id), so it lists every column as required even
+        // though the remaining ones have DB-side defaults. The insert only
+        // needs the fields collected in this onboarding step.
+      } as unknown as EquipmentCreateData);
 
       if (result.queuedOffline) {
         toast({

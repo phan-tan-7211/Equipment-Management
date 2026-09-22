@@ -30,29 +30,29 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket }) => {
       </div>
 
       {/* Session diagnostics summary (if available) */}
-      {metadata && (metadata.appVersion || metadata.currentUrl) && (
+      {metadata && Boolean(metadata.appVersion || metadata.currentUrl) && (
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase mb-1">{t('tickets.sessionInfo')}</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground bg-muted/30 rounded-md p-3">
-            {metadata.appVersion && (
+            {Boolean(metadata.appVersion) && (
               <>
                 <span className="font-medium">{t('tickets.version')}</span>
                 <span>{String(metadata.appVersion)}</span>
               </>
             )}
-            {metadata.currentUrl && (
+            {Boolean(metadata.currentUrl) && (
               <>
                 <span className="font-medium">{t('tickets.route')}</span>
                 <span className="truncate">{String(metadata.currentUrl)}</span>
               </>
             )}
-            {metadata.organizationPlan && (
+            {Boolean(metadata.organizationPlan) && (
               <>
                 <span className="font-medium">{t('tickets.plan')}</span>
                 <span>{String(metadata.organizationPlan)}</span>
               </>
             )}
-            {metadata.userRole && (
+            {Boolean(metadata.userRole) && (
               <>
                 <span className="font-medium">{t('tickets.role')}</span>
                 <span>{String(metadata.userRole)}</span>

@@ -56,7 +56,15 @@ describe('AuditLogTimeRangePicker', () => {
     const [, fromIso, toIso] = onChange.mock.calls[0];
     expect(typeof fromIso).toBe('string');
     expect(typeof toIso).toBe('string');
-    expect(fromIso).toMatch(/2026-04-10/);
+    // dateInputToLocalStartIso/dateInputToExclusiveEndIso (src/utils/localDateInputIso.ts)
+    // deliberately compute calendar-day boundaries in the runner's local
+    // time zone (a custom audit date range should follow the viewer's own
+    // calendar day, not UTC), so the expected instants must be derived the
+    // same way rather than asserted against a literal UTC date substring —
+    // otherwise the test only passes when the runner happens to be UTC.
+    const fromMs = new Date(fromIso as string).getTime();
+    const expectedFrom = new Date(2026, 3, 10, 0, 0, 0, 0).getTime();
+    expect(fromMs).toBe(expectedFrom);
     const toMs = new Date(toIso as string).getTime();
     const expectedExclusive = new Date(2026, 3, 21, 0, 0, 0, 0).getTime();
     expect(toMs).toBe(expectedExclusive);

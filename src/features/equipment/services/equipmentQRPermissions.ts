@@ -415,6 +415,8 @@ export async function fetchQRActionTeamMemberships(
 
   return (data ?? []).map(membership => ({
     teamId: membership.team_id,
-    role: membership.role,
+    // The RPC returns the team_members.role column as a plain string;
+    // it's always one of TeamRole's values at the DB level.
+    role: membership.role as TeamRole,
   }));
 }

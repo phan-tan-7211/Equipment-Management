@@ -94,9 +94,9 @@ const setupMocks = (options: {
   vi.mocked(useInventoryPartsManagerAccess).mockReturnValue({
     currentOrganization: hasOrganization
       ? { id: organizations.acme.id, name: organizations.acme.name }
-      : undefined,
+      : null,
     canEdit,
-  });
+  } as unknown as ReturnType<typeof useInventoryPartsManagerAccess>);
 
   vi.mocked(usePermissions).mockReturnValue({
     canCreateEquipment: () => canEdit,

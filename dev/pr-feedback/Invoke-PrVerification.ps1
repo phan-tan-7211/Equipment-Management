@@ -14,7 +14,9 @@
   Skip `npm run build`.
 
 .PARAMETER TypeCheck
-  How to typecheck: `Tsc` (default, `npx tsc --noEmit`) or `NpmScript` (`npm run type-check`).
+  How to typecheck: both `Tsc` and `NpmScript` (default) invoke the canonical
+  `npm run type-check` (`tsc --noEmit -p tsconfig.app.json`). `Tsc` is kept only
+  for command-line compatibility with existing callers.
 
 .PARAMETER ContinueOnFailure
   Run all steps even if one fails (exit code is non-zero if any failed).
@@ -31,7 +33,7 @@ param(
     [switch]$SkipTest,
     [switch]$SkipBuild,
     [ValidateSet('Tsc', 'NpmScript')]
-    [string]$TypeCheck = 'Tsc',
+    [string]$TypeCheck = 'NpmScript',
     [switch]$ContinueOnFailure,
     [switch]$Json
 )
@@ -68,12 +70,10 @@ try {
     $repoRoot = $top.Trim()
     Set-Location -LiteralPath $repoRoot
 
-    $typeCheckCmd = if ($TypeCheck -eq 'NpmScript') {
-        @{ Name = 'npm run type-check'; Args = @('run', 'type-check') }
-    }
-    else {
-        @{ Name = 'npm exec -- tsc --noEmit'; Args = @('exec', '--', 'tsc', '--noEmit') }
-    }
+    # Both ValidateSet values invoke the same canonical application type-check;
+    # a bare `tsc --noEmit` does not reliably scope to tsconfig.app.json here
+    # because the root tsconfig uses TypeScript project references.
+    $typeCheckCmd = @{ Name = 'npm run type-check'; Args = @('run', 'type-check') }
 
     $steps = [System.Collections.Generic.List[object]]::new()
     $steps.Add([pscustomobject]@{ Name = 'npm ci --prefer-offline --no-audit'; Args = @('ci', '--prefer-offline', '--no-audit') })

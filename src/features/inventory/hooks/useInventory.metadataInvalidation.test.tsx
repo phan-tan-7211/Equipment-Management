@@ -11,6 +11,12 @@ import {
 const invalidateQueries = vi.fn();
 const toast = vi.fn();
 
+// `useMutation` is mocked to return its config object verbatim (see below),
+// so `result.current` is actually the mutation config, not a real
+// UseMutationResult. Cast to reach the `onSuccess` callback under test.
+type MutationConfigWithOnSuccess = { onSuccess: (data: unknown, variables: unknown) => void };
+const asMutationConfig = (value: unknown) => value as MutationConfigWithOnSuccess;
+
 vi.mock('@tanstack/react-query', async () => {
   const actual = await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query');
 
@@ -43,7 +49,7 @@ describe('inventory metadata invalidation', () => {
   it('invalidates list metadata after creating an inventory item', () => {
     const { result } = renderHook(() => useCreateInventoryItem());
 
-    result.current.onSuccess(
+    asMutationConfig(result.current).onSuccess(
       { name: 'New Part' },
       { organizationId: 'org-1', formData: {} }
     );
@@ -59,7 +65,7 @@ describe('inventory metadata invalidation', () => {
   it('invalidates list metadata after updating an inventory item', () => {
     const { result } = renderHook(() => useUpdateInventoryItem());
 
-    result.current.onSuccess(
+    asMutationConfig(result.current).onSuccess(
       { name: 'Updated Part' },
       { organizationId: 'org-1', itemId: 'item-1', formData: {} }
     );
@@ -75,7 +81,7 @@ describe('inventory metadata invalidation', () => {
   it('invalidates list metadata after deleting an inventory item', () => {
     const { result } = renderHook(() => useDeleteInventoryItem());
 
-    result.current.onSuccess(undefined, {
+    asMutationConfig(result.current).onSuccess(undefined, {
       organizationId: 'org-1',
       itemId: 'item-1',
     });
@@ -91,7 +97,7 @@ describe('inventory metadata invalidation', () => {
   it('invalidates list metadata after adjusting inventory quantity', () => {
     const { result } = renderHook(() => useAdjustInventoryQuantity());
 
-    result.current.onSuccess(6, {
+    asMutationConfig(result.current).onSuccess(6, {
       organizationId: 'org-1',
       adjustment: {
         itemId: 'item-1',

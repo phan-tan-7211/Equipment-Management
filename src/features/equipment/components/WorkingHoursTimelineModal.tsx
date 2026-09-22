@@ -403,8 +403,13 @@ export const WorkingHoursTimelineModal: React.FC<WorkingHoursTimelineModalProps>
             </div>
           ) : (
             <DataTable
-              data={historyResult?.data || []}
-              columns={columns}
+              // WorkingHoursHistoryEntry has no index signature, so it isn't
+              // structurally assignable to DataTable's `T extends
+              // Record<string, unknown>` constraint even though it's
+              // otherwise compatible — a known TS limitation, not a real
+              // type mismatch.
+              data={(historyResult?.data || []) as unknown as Record<string, unknown>[]}
+              columns={columns as unknown as Column<Record<string, unknown>>[]}
               isLoading={isLoadingHistory}
               pagination={pagination}
               emptyMessage={t('equipmentDetails.noWorkingHoursHistory')}

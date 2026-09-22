@@ -38,7 +38,8 @@ import type {
 import type { UpdateWorkingHoursData } from '@/features/equipment/services/equipmentWorkingHoursService';
 import { OfflineQueueService, OfflineQueuePayloadError } from './offlineQueueService';
 import type { WorkOrderServerSnapshot, OfflineQueueImageRef } from './offlineQueueService';
-import { stageQueueImageRefs } from './offlineQueueImageRefs';
+import { stageQueueImageRefs, collectImageRefIds } from './offlineQueueImageRefs';
+import { deleteOfflineImageRefs } from './offlineBlobStore';
 import type {
   PMChecklistItem,
   PreventativeMaintenance,
@@ -78,6 +79,31 @@ export class OfflineAwareWorkOrderService {
   ) {
     this.service = new WorkOrderService(orgId);
     this.queueService = new OfflineQueueService(userId, orgId);
+  }
+
+  /**
+   * Removes IndexedDB blobs staged by `stageQueueImageRefs` when the
+   * subsequent `queueService.enqueue()` call fails, so a failed enqueue
+   * doesn't leave orphaned blobs with no queue item to ever clean them up.
+   *
+   * Only called with the imageRefs staged by the attempt that just failed
+   * (never with refs belonging to an already-enqueued item), so this never
+   * touches blobs another queue item still needs for retry.
+   *
+   * Cleanup failures are logged but never thrown — the original enqueue
+   * error is always what the caller sees.
+   */
+  private async rollbackStagedImageRefs(
+    imageRefs: OfflineQueueImageRef[] | undefined,
+    context: string,
+  ): Promise<void> {
+    const refIds = collectImageRefIds(imageRefs);
+    if (refIds.length === 0) return;
+    try {
+      await deleteOfflineImageRefs(this.userId, this.orgId, refIds);
+    } catch (cleanupError) {
+      logger.error(`Failed to roll back staged offline image blobs after failed ${context}`, cleanupError);
+    }
   }
 
   // ── Create ─────────────────────────────────────────────────────────────
@@ -209,9 +235,9 @@ export class OfflineAwareWorkOrderService {
     data: CreateWorkOrderData,
     resolvedAssigneeId?: string,
   ): Promise<OfflineAwareResult<WorkOrder>> {
+    let imageRefs: OfflineQueueImageRef[] | undefined;
     try {
       const { images, ...payloadWithoutImages } = data;
-      let imageRefs: OfflineQueueImageRef[] | undefined;
       if (images?.length) {
         imageRefs = await stageQueueImageRefs(this.userId, this.orgId, images);
       }
@@ -229,6 +255,7 @@ export class OfflineAwareWorkOrderService {
       logger.info('Work order create queued offline', { queueItemId: item.id });
       return { data: null, queuedOffline: true, queueItemId: item.id };
     } catch (err) {
+      await this.rollbackStagedImageRefs(imageRefs, 'work order create enqueue');
       if (err instanceof OfflineQueuePayloadError) {
         // Payload validation failed — can't save offline either
         throw err;
@@ -540,8 +567,8 @@ export class OfflineAwareWorkOrderService {
     machineHours?: number,
     images: File[] = [],
   ): Promise<OfflineAwareResult<EquipmentNote>> {
+    let imageRefs: OfflineQueueImageRef[] | undefined;
     try {
-      let imageRefs: OfflineQueueImageRef[] | undefined;
       if (images.length) {
         imageRefs = await stageQueueImageRefs(this.userId, this.orgId, images);
       }
@@ -562,6 +589,7 @@ export class OfflineAwareWorkOrderService {
       logger.info('Equipment note queued offline', { queueItemId: item.id, equipmentId });
       return { data: null, queuedOffline: true, queueItemId: item.id };
     } catch (err) {
+      await this.rollbackStagedImageRefs(imageRefs, 'equipment note enqueue');
       if (err instanceof OfflineQueuePayloadError) throw err;
       logger.error('Failed to enqueue offline equipment note', err);
       throw Object.assign(new Error('Cannot save offline — please try again when connected.'), { cause: err });
@@ -576,8 +604,8 @@ export class OfflineAwareWorkOrderService {
     machineHours?: number,
     images: File[] = [],
   ): Promise<OfflineAwareResult<WorkOrderNote>> {
+    let imageRefs: OfflineQueueImageRef[] | undefined;
     try {
-      let imageRefs: OfflineQueueImageRef[] | undefined;
       if (images.length) {
         imageRefs = await stageQueueImageRefs(this.userId, this.orgId, images);
       }
@@ -598,6 +626,7 @@ export class OfflineAwareWorkOrderService {
       logger.info('Work order note queued offline', { queueItemId: item.id, workOrderId });
       return { data: null, queuedOffline: true, queueItemId: item.id };
     } catch (err) {
+      await this.rollbackStagedImageRefs(imageRefs, 'work order note enqueue');
       if (err instanceof OfflineQueuePayloadError) throw err;
       logger.error('Failed to enqueue offline work order note', err);
       throw Object.assign(new Error('Cannot save offline — please try again when connected.'), { cause: err });

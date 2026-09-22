@@ -69,7 +69,8 @@ describe('useEquipment', () => {
     beforeEach(() => {
       vi.mocked(EquipmentService.getAll).mockResolvedValue({
         success: true,
-        data: Object.values(equipment)
+        error: null,
+        data: Object.values(equipment) as unknown as Awaited<ReturnType<typeof EquipmentService.getAll>>['data']
       });
     });
 
@@ -136,6 +137,7 @@ describe('useEquipment', () => {
     it('handles API errors', async () => {
       vi.mocked(EquipmentService.getAll).mockResolvedValueOnce({
         success: false,
+        data: null,
         error: 'Failed to fetch equipment'
       });
 
@@ -169,7 +171,8 @@ describe('useEquipment', () => {
     beforeEach(() => {
       vi.mocked(EquipmentService.getById).mockResolvedValue({
         success: true,
-        data: equipment.forklift1
+        error: null,
+        data: equipment.forklift1 as unknown as Awaited<ReturnType<typeof EquipmentService.getById>>['data']
       });
     });
 
@@ -243,6 +246,7 @@ describe('useEquipment', () => {
     it('handles not found error', async () => {
       vi.mocked(EquipmentService.getById).mockResolvedValueOnce({
         success: false,
+        data: null,
         error: 'Equipment not found'
       });
 
@@ -268,7 +272,8 @@ describe('useEquipment', () => {
     beforeEach(() => {
       vi.mocked(EquipmentService.getNotesByEquipmentId).mockResolvedValue({
         success: true,
-        data: mockNotes
+        error: null,
+        data: mockNotes as unknown as Awaited<ReturnType<typeof EquipmentService.getNotesByEquipmentId>>['data']
       });
     });
 
@@ -305,7 +310,8 @@ describe('useEquipment', () => {
     beforeEach(() => {
       vi.mocked(EquipmentService.getScansByEquipmentId).mockResolvedValue({
         success: true,
-        data: mockScans
+        error: null,
+        data: mockScans as unknown as Awaited<ReturnType<typeof EquipmentService.getScansByEquipmentId>>['data']
       });
     });
 
@@ -340,6 +346,7 @@ describe('useEquipment', () => {
     beforeEach(() => {
       vi.mocked(EquipmentService.getStatusCounts).mockResolvedValue({
         success: true,
+        error: null,
         data: mockCounts
       });
     });
@@ -368,6 +375,7 @@ describe('useEquipment', () => {
     it('returns zero counts on error', async () => {
       vi.mocked(EquipmentService.getStatusCounts).mockResolvedValueOnce({
         success: false,
+        data: null,
         error: 'Failed to fetch counts'
       });
 
@@ -388,6 +396,7 @@ describe('useEquipment', () => {
       // `getAll`. The summary projection includes manufacturer/model directly.
       vi.mocked(EquipmentService.getSummaries).mockResolvedValue({
         success: true,
+        error: null,
         data: Object.values(equipment) as unknown as Awaited<ReturnType<typeof EquipmentService.getSummaries>>['data']
       });
     });
@@ -422,6 +431,7 @@ describe('useEquipment', () => {
     it('returns empty array on error', async () => {
       vi.mocked(EquipmentService.getSummaries).mockResolvedValueOnce({
         success: false,
+        data: null,
         error: 'Failed to fetch'
       });
 
@@ -444,6 +454,7 @@ describe('useEquipment', () => {
 
       vi.mocked(EquipmentService.getSummaries).mockResolvedValueOnce({
         success: true,
+        error: null,
         data: mixedEquipment as unknown as Awaited<ReturnType<typeof EquipmentService.getSummaries>>['data']
       });
 
@@ -471,6 +482,7 @@ describe('useEquipment', () => {
 
       vi.mocked(EquipmentService.getSummaries).mockResolvedValueOnce({
         success: true,
+        error: null,
         data: equipmentWithoutManufacturer as unknown as Awaited<ReturnType<typeof EquipmentService.getSummaries>>['data']
       });
 
@@ -510,7 +522,8 @@ describe('useEquipment', () => {
     it('uses correct query key for equipment by id', async () => {
       vi.mocked(EquipmentService.getById).mockResolvedValue({
         success: true,
-        data: equipment.forklift1
+        error: null,
+        data: equipment.forklift1 as unknown as Awaited<ReturnType<typeof EquipmentService.getById>>['data']
       });
 
       const { result } = renderHook(
@@ -544,7 +557,9 @@ describe('useEquipment', () => {
 
     it('handles service returning success false without error message', async () => {
       vi.mocked(EquipmentService.getAll).mockResolvedValueOnce({
-        success: false
+        success: false,
+        data: null,
+        error: null
       });
 
       const { result } = renderHook(

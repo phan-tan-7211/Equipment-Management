@@ -74,7 +74,7 @@ const EquipmentDetailsTab: React.FC<EquipmentDetailsTabProps> = ({
   const notesPermissions = useEquipmentNotesPermissions(equipment.team_id || undefined);
   const media = useEquipmentMediaLibrary({
     equipmentId: equipment.id,
-    organizationId,
+    organizationId: organizationId ?? '',
     currentDisplayImage: equipment.image_url,
     enabled: Boolean(organizationId),
   });

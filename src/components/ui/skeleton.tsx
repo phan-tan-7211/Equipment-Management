@@ -19,9 +19,9 @@ function Skeleton({
   )
 }
 
-function SkeletonCard({ className }: { className?: string }) {
+function SkeletonCard({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={cn("rounded-lg border bg-card p-4 space-y-3", className)}>
+    <div className={cn("rounded-lg border bg-card p-4 space-y-3", className)} style={style}>
       <div className="flex items-start justify-between">
         <div className="space-y-2 flex-1">
           <Skeleton className="h-5 w-3/4" />
@@ -41,9 +41,9 @@ function SkeletonCard({ className }: { className?: string }) {
   )
 }
 
-function SkeletonWorkOrderCard({ className }: { className?: string }) {
+function SkeletonWorkOrderCard({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={cn("rounded-lg border-l-4 border-l-muted border bg-card", className)}>
+    <div className={cn("rounded-lg border-l-4 border-l-muted border bg-card", className)} style={style}>
       <div className="p-4 space-y-3">
         <div className="flex items-start gap-4">
           <Skeleton className="h-20 w-20 rounded-xl flex-shrink-0" />
@@ -75,9 +75,9 @@ function SkeletonWorkOrderCard({ className }: { className?: string }) {
   )
 }
 
-function SkeletonEquipmentCard({ className }: { className?: string }) {
+function SkeletonEquipmentCard({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={cn("rounded-lg border-l-4 border-l-muted border bg-card", className)}>
+    <div className={cn("rounded-lg border-l-4 border-l-muted border bg-card", className)} style={style}>
       <div className="md:hidden flex">
         <Skeleton className="h-24 w-24 flex-shrink-0 rounded-l-md" />
         <div className="flex-1 p-3 space-y-2">

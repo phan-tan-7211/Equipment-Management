@@ -416,7 +416,6 @@ describe('WorkOrderDetails', () => {
           teamName: 'Field Team',
           assigneeName: 'Matt Technician',
           team: null,
-          assignee: null,
           primary_image_id: 'primary-img-1',
         },
         pmData: {
@@ -500,7 +499,6 @@ describe('WorkOrderDetails', () => {
           teamName: 'Field Team',
           assigneeName: 'Matt Technician',
           team: null,
-          assignee: null,
           primary_image_id: 'primary-desktop-1',
         },
         pmData: null,
@@ -643,8 +641,8 @@ describe('WorkOrderDetails', () => {
           updated_at: '2024-01-02T00:00:00Z',
           due_date: null,
           has_pm: true,
-          teamName: null,
-          assigneeName: null,
+          teamName: undefined,
+          assigneeName: undefined,
           primary_image_id: null,
         },
         equipment: {
@@ -693,8 +691,8 @@ describe('WorkOrderDetails', () => {
           updated_at: '2024-01-02T00:00:00Z',
           due_date: null,
           has_pm: true,
-          teamName: null,
-          assigneeName: null,
+          teamName: undefined,
+          assigneeName: undefined,
           primary_image_id: null,
         },
         equipment: {

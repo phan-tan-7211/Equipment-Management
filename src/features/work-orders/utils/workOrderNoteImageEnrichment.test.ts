@@ -40,10 +40,10 @@ beforeEach(() => {
 describe('fetchWorkOrderImagesWithUploaderProfiles', () => {
   it('queries work_order_images with inner join on work_orders and org scope', async () => {
     const imageQuery = makeImageQuery([]);
-    fromMock.mockImplementation((table: string) => {
-      if (table === 'work_order_images') return imageQuery as ReturnType<typeof makeImageQuery>;
-      return makeProfileQuery() as ReturnType<typeof makeProfileQuery>;
-    });
+    fromMock.mockImplementation(((table: string) => {
+      if (table === 'work_order_images') return imageQuery;
+      return makeProfileQuery();
+    }) as unknown as typeof supabase.from);
 
     await fetchWorkOrderImagesWithUploaderProfiles('wo-123', 'org-456');
 
@@ -56,7 +56,7 @@ describe('fetchWorkOrderImagesWithUploaderProfiles', () => {
 
   it('returns empty imagesList when no images match', async () => {
     const imageQuery = makeImageQuery([]);
-    fromMock.mockImplementation(() => imageQuery as ReturnType<typeof makeImageQuery>);
+    fromMock.mockImplementation((() => imageQuery) as unknown as typeof supabase.from);
 
     const result = await fetchWorkOrderImagesWithUploaderProfiles('wo-abc', 'org-xyz');
 

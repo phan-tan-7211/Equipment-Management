@@ -69,7 +69,7 @@ export function toEquipmentCreateData(data: EquipmentFormData): EquipmentCreateD
     customer_id: null,
     working_hours: 0,
     import_id: null,
-  } as EquipmentCreateData;
+  } as unknown as EquipmentCreateData;
 }
 
 export function toEquipmentUpdateData(data: EquipmentFormData): EquipmentUpdateData {

@@ -9,8 +9,8 @@ import type { CustomAttribute } from '@/hooks/useCustomAttributes';
 import { useI18n } from '@/i18n';
 
 interface InlineEditCustomAttributesProps {
-  attributes?: Record<string, string>;
-  value?: Record<string, string>;
+  attributes?: Record<string, unknown>;
+  value?: Record<string, unknown>;
   onSave: (newValue: Record<string, string>) => Promise<void>;
   canEdit: boolean;
 }

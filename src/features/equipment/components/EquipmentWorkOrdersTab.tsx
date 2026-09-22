@@ -131,9 +131,11 @@ const EquipmentWorkOrdersTab: React.FC<EquipmentWorkOrdersTabProps> = ({
               completedDate: workOrder.completed_date,
               assigneeId: workOrder.assignee_id,
               teamId: undefined,
-              equipmentManufacturer: workOrder.equipmentManufacturer ?? equipmentManufacturer,
-              equipmentModel: workOrder.equipmentModel ?? equipmentModel,
-              equipmentSerialNumber: workOrder.equipmentSerialNumber ?? equipmentSerialNumber,
+              // getWorkOrdersByEquipmentId's join only selects equipment(id, name),
+              // so per-work-order manufacturer/model/serial are never present here.
+              equipmentManufacturer,
+              equipmentModel,
+              equipmentSerialNumber,
             };
 
             return (
@@ -142,6 +144,11 @@ const EquipmentWorkOrdersTab: React.FC<EquipmentWorkOrdersTabProps> = ({
                   <HistoricalWorkOrderBadge workOrder={workOrder} />
                 )}
                 {isMobile ? (
+                  // adaptedWorkOrder (EquipmentWorkOrder + camelCase aliases)
+                  // structurally satisfies MobileWorkOrderCard's WorkOrder
+                  // (@/services/supabaseDataService) — both are
+                  // Tables<'work_orders'> plus assigneeName/equipmentName —
+                  // so no cast is needed here.
                   <MobileWorkOrderCard workOrder={adaptedWorkOrder} />
                 ) : (
                   <DesktopWorkOrderCard

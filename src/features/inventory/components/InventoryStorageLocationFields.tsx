@@ -14,7 +14,7 @@ import {
 import type { InventoryStructuredLocationFields } from '@/features/inventory/utils/inventoryLocationUtils';
 import { useGoogleMapsLoader } from '@/hooks/useGoogleMapsLoader';
 import { useGoogleMapsKey } from '@/hooks/useGoogleMapsKey';
-import { useIsDarkTheme } from '@/hooks/useThemeVersion';
+import { useIsDarkTheme, useThemeVersion } from '@/hooks/useThemeVersion';
 
 type InventoryStorageLocationFieldsProps = {
   structuredLocation: InventoryStructuredLocationFields;
@@ -31,7 +31,8 @@ export function InventoryStorageLocationFields({
 }: InventoryStorageLocationFieldsProps) {
   const { t } = useI18n();
   const { isLoaded: isPlacesLoaded } = useGoogleMapsLoader();
-  const isDark = useIsDarkTheme();
+  const themeVersion = useThemeVersion();
+  const isDark = useIsDarkTheme(themeVersion);
   const { googleMapsKey, mapId } = useGoogleMapsKey();
 
   const initialPlace = useMemo(
@@ -100,7 +101,7 @@ export function InventoryStorageLocationFields({
       recenterKey={editor.recenterKey}
       onCenterChange={handleMapCenterChange}
       googleMapsKey={googleMapsKey}
-      mapId={mapId}
+      mapId={mapId ?? undefined}
       isDark={isDark}
       isLiveCaptureOpen={editor.isLiveCaptureOpen}
       onLiveCaptureOpenChange={editor.setIsLiveCaptureOpen}

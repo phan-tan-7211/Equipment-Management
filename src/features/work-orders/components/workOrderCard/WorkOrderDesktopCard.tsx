@@ -12,6 +12,7 @@ import { WorkOrderPrimaryActionButton } from '../WorkOrderPrimaryActionButton';
 import {
   getAssignmentContext,
   mapToWorkOrderData,
+  type WorkOrderWithLegacyAliases,
 } from '@/features/work-orders/utils/workOrderCardMappers';
 import { WorkOrderDesktopMetadataStrip } from './WorkOrderDesktopMetadataStrip';
 import { WorkOrderDesktopIdentityStrip } from './WorkOrderDesktopIdentityStrip';
@@ -37,7 +38,7 @@ export const WorkOrderDesktopCard: React.FC<WorkOrderCardProps> = memo(({
   const detailedPermissions = permissions.workOrders.getDetailedPermissions(workOrderData);
   const assignmentContext = getAssignmentContext(workOrder);
 
-  const dueDateValue = workOrder.due_date ?? workOrder.dueDate;
+  const dueDateValue = workOrder.due_date ?? (workOrder as WorkOrderWithLegacyAliases).dueDate;
   const isTerminal = isTerminalStatus(workOrder.status);
   const isWorkOrderOverdue = isOverdue(dueDateValue, workOrder.status);
   const statusBorderClass = getWorkOrderStatusBorderWithOverdue(workOrder.status, isWorkOrderOverdue);
@@ -107,10 +108,10 @@ export const WorkOrderDesktopCard: React.FC<WorkOrderCardProps> = memo(({
                   id: workOrder.id,
                   status: workOrder.status,
                   has_pm: workOrder.has_pm,
-                  assignee_id: workOrder.assignee_id ?? workOrder.assigneeId,
+                  assignee_id: workOrder.assignee_id ?? (workOrder as WorkOrderWithLegacyAliases).assigneeId ?? undefined,
                   created_by: workOrder.created_by,
                 }}
-                organizationId={workOrder.organization_id ?? workOrder.organizationId}
+                organizationId={workOrder.organization_id ?? (workOrder as WorkOrderWithLegacyAliases).organizationId ?? undefined}
               />
             ) : null}
           </div>

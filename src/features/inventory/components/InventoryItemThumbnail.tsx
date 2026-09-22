@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Package } from 'lucide-react';
 import type { InventoryItem } from '@/features/inventory/types/inventory';
 import {
+  clearInventoryItemThumbnailCache,
   getInventoryThumbnailCacheVersion,
   getPrimaryInventoryItemImageRefs,
 } from '@/features/inventory/services/inventoryListThumbnailService';

@@ -31,7 +31,7 @@ describe('partAlternatesService', () => {
     });
 
     it('calls RPC with normalized part number', async () => {
-      vi.mocked(supabase.rpc).mockResolvedValue({ data: [], error: null });
+      vi.mocked(supabase.rpc).mockResolvedValue({ data: [], error: null } as never);
 
       await getAlternatesForPartNumber('org-1', '  CAT-1R-0750  ');
 
@@ -46,7 +46,7 @@ describe('partAlternatesService', () => {
     });
 
     it('returns alternate parts from RPC', async () => {
-      vi.mocked(supabase.rpc).mockResolvedValue({ data: [...sampleAlternateParts], error: null });
+      vi.mocked(supabase.rpc).mockResolvedValue({ data: [...sampleAlternateParts], error: null } as never);
 
       const result = await getAlternatesForPartNumber('org-1', 'CAT-1R-0750');
 
@@ -59,7 +59,7 @@ describe('partAlternatesService', () => {
       vi.mocked(supabase.rpc).mockResolvedValue({
         data: null,
         error: { code: '42501', message: 'Access denied' },
-      });
+      } as never);
 
       await expect(getAlternatesForPartNumber('org-1', 'TEST')).rejects.toThrow('Access denied');
     });
@@ -67,7 +67,7 @@ describe('partAlternatesService', () => {
 
   describe('getAlternatesForInventoryItem', () => {
     it('calls RPC with correct parameters', async () => {
-      vi.mocked(supabase.rpc).mockResolvedValue({ data: [], error: null });
+      vi.mocked(supabase.rpc).mockResolvedValue({ data: [], error: null } as never);
 
       await getAlternatesForInventoryItem('org-1', 'inv-123');
 
@@ -83,7 +83,7 @@ describe('partAlternatesService', () => {
         { group_id: 'g1', group_name: 'Group 1', inventory_item_id: 'inv-2' },
       ];
 
-      vi.mocked(supabase.rpc).mockResolvedValue({ data: mockData, error: null });
+      vi.mocked(supabase.rpc).mockResolvedValue({ data: mockData, error: null } as never);
 
       const result = await getAlternatesForInventoryItem('org-1', 'inv-123');
       expect(result.length).toBe(2);
@@ -99,7 +99,7 @@ describe('partAlternatesService', () => {
     });
 
     it('calls RPC with manufacturer only', async () => {
-      vi.mocked(supabase.rpc).mockResolvedValue({ data: [], error: null });
+      vi.mocked(supabase.rpc).mockResolvedValue({ data: [], error: null } as never);
 
       await getCompatiblePartsForMakeModel('org-1', 'Caterpillar');
 
@@ -111,7 +111,7 @@ describe('partAlternatesService', () => {
     });
 
     it('calls RPC with manufacturer and model', async () => {
-      vi.mocked(supabase.rpc).mockResolvedValue({ data: [], error: null });
+      vi.mocked(supabase.rpc).mockResolvedValue({ data: [], error: null } as never);
 
       await getCompatiblePartsForMakeModel('org-1', 'Caterpillar', 'D6T');
 
@@ -123,7 +123,7 @@ describe('partAlternatesService', () => {
     });
 
     it('returns compatible parts with verification status', async () => {
-      vi.mocked(supabase.rpc).mockResolvedValue({ data: [...sampleCompatibleParts], error: null });
+      vi.mocked(supabase.rpc).mockResolvedValue({ data: [...sampleCompatibleParts], error: null } as never);
 
       const result = await getCompatiblePartsForMakeModel('org-1', 'CAT', 'D6T');
 
@@ -143,7 +143,7 @@ describe('Error Handling', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: null,
       error: { code: 'other', message: 'Some error' },
-    });
+    } as never);
 
     await expect(getAlternatesForPartNumber('org-1', 'TEST')).rejects.toEqual({
       code: 'other',
@@ -155,7 +155,7 @@ describe('Error Handling', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: null,
       error: { code: '42501', message: 'Access denied' },
-    });
+    } as never);
 
     await expect(getAlternatesForInventoryItem('org-1', 'item-1')).rejects.toThrow('Access denied');
   });
@@ -164,7 +164,7 @@ describe('Error Handling', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: null,
       error: { code: 'other', message: 'Some error' },
-    });
+    } as never);
 
     await expect(getAlternatesForInventoryItem('org-1', 'item-1')).rejects.toEqual({
       code: 'other',
@@ -176,7 +176,7 @@ describe('Error Handling', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: null,
       error: { code: '42501', message: 'Access denied' },
-    });
+    } as never);
 
     await expect(getCompatiblePartsForMakeModel('org-1', 'CAT')).rejects.toThrow('Access denied');
   });
@@ -185,7 +185,7 @@ describe('Error Handling', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: null,
       error: { code: 'other', message: 'Some error' },
-    });
+    } as never);
 
     await expect(getCompatiblePartsForMakeModel('org-1', 'CAT')).rejects.toEqual({
       code: 'other',
@@ -194,7 +194,7 @@ describe('Error Handling', () => {
   });
 
   it('getCompatiblePartsForMakeModel normalizes whitespace in inputs', async () => {
-    vi.mocked(supabase.rpc).mockResolvedValue({ data: [], error: null });
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: [], error: null } as never);
 
     await getCompatiblePartsForMakeModel('org-1', '  Caterpillar  ', '  D6T  ');
 

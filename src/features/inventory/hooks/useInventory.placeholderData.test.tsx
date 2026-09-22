@@ -47,7 +47,7 @@ function getPlaceholderDataFromLastCall(): PlaceholderDataFn {
 function makePreviousQuery(orgId: string): Query {
   return {
     queryKey: inventory.list(orgId, {}),
-  } as Query;
+  } as unknown as Query;
 }
 
 describe('useInventoryItems placeholderData', () => {

@@ -78,7 +78,7 @@ export function WorkOrderNoteTimelineEntry({
               size="sm"
               className="h-8"
               onClick={openEditor}
-              aria-label={t('workOrderActivity.editNoteTimeAria', { name: note.author_name })}
+              aria-label={t('workOrderActivity.editNoteTimeAria', { name: note.author_name ?? '' })}
             >
               <CalendarClock className="mr-2 h-4 w-4" />
               {t('workOrderActivity.editTime')}

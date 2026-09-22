@@ -99,7 +99,7 @@ export function useWorkOrderContextualAssignment(workOrder?: AssignmentWorkOrder
         assignees.push(...orgAdmins.map(member => ({
           id: member.user_id,
           name: member.profiles.name,
-          email: member.profiles.email,
+          email: member.profiles.email ?? undefined,
           role: member.role,
           type: 'user' as const,
         })));
@@ -130,7 +130,7 @@ export function useWorkOrderContextualAssignment(workOrder?: AssignmentWorkOrder
           assignees.push(...teamMembers.map(member => ({
             id: member.user_id,
             name: member.profiles.name,
-            email: member.profiles.email,
+            email: member.profiles.email ?? undefined,
             role: member.role,
             type: 'user' as const,
           })));
