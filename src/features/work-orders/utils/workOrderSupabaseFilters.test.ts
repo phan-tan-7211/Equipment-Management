@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { endOfWeek, startOfWeek } from 'date-fns';
 import { applyWorkOrderListContract, applyWorkOrderSupabaseFilters } from './workOrderSupabaseFilters';
 import { parseWorkOrderListContract } from '@/features/work-orders/utils/workOrderListContract';
 import { LIST_CONTRACT_NOW, parseInput } from '@/features/work-orders/utils/workOrderListContract.fixtures';
@@ -112,14 +113,18 @@ describe('applyWorkOrderListContract', () => {
       LIST_CONTRACT_NOW,
     );
 
-    expect(query.gte).toHaveBeenCalledWith('due_date', expect.stringContaining('2026-08-30'));
+    // dueDateBounds computes this_week via date-fns' startOfWeek/endOfWeek,
+    // which operate on the runner's local time zone (deliberately — "this
+    // week" should follow the viewer's own week, not UTC). Deriving the
+    // expected bounds the same way keeps this assertion correct regardless
+    // of which time zone the test runs in, instead of a literal string that
+    // only matched when the runner happened to be UTC.
+    const expectedStartIso = startOfWeek(LIST_CONTRACT_NOW, { weekStartsOn: 0 }).toISOString();
+    const expectedEndIso = endOfWeek(LIST_CONTRACT_NOW, { weekStartsOn: 0 }).toISOString();
+
+    expect(query.gte).toHaveBeenCalledWith('due_date', expectedStartIso);
     const endIso = query.lte.mock.calls[0]?.[1] as string;
-    expect(new Date(endIso).getTime()).toBeGreaterThan(
-      new Date('2026-09-05T00:00:00.000Z').getTime(),
-    );
-    expect(new Date(endIso).getTime()).toBeLessThan(
-      new Date('2026-09-07T00:00:00.000Z').getTime(),
-    );
+    expect(endIso).toBe(expectedEndIso);
   });
 
   it('applies unpaid invoices as exported plus null or collectible status', () => {

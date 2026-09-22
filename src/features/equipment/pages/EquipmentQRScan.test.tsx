@@ -1,10 +1,8 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import EquipmentQRScan from '@/features/equipment/pages/EquipmentQRScan';
-
-const replaceMock = vi.fn();
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: vi.fn(() => ({ user: null, isLoading: false })),
@@ -46,11 +44,6 @@ describe('EquipmentQRScan (#1074)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
-    replaceMock.mockReset();
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      value: { ...window.location, replace: replaceMock },
-    });
   });
 
   afterEach(() => {
@@ -58,10 +51,19 @@ describe('EquipmentQRScan (#1074)', () => {
   });
 
   it('does not throw outside SimpleOrganizationProvider and stores pendingRedirect when signed out', async () => {
+    // EquipmentQRScan signs out via react-router's `navigate('/auth?tab=signin',
+    // { replace: true })` (see EquipmentQRScan.tsx), not a full-page
+    // window.location.replace — that was changed intentionally in
+    // 18dd60b6 "fix(nav): prevent prerendered marketing flash on
+    // authenticated transitions" to keep the transition inside the SPA.
+    // Registering the real /auth destination route lets this test observe
+    // that actual client-side navigation, rather than asserting against the
+    // now-unused window.location.replace mechanism.
     render(
       <MemoryRouter initialEntries={['/qr/equipment/aa0e8400-e29b-41d4-a716-446655440000']}>
         <Routes>
           <Route path="/qr/equipment/:equipmentId" element={<EquipmentQRScan />} />
+          <Route path="/auth" element={<div>Auth page</div>} />
         </Routes>
       </MemoryRouter>,
     );
@@ -71,6 +73,8 @@ describe('EquipmentQRScan (#1074)', () => {
         '/qr/equipment/aa0e8400-e29b-41d4-a716-446655440000?qr=true',
       );
     });
-    expect(replaceMock).toHaveBeenCalledWith('/auth?tab=signin');
+    await waitFor(() => {
+      expect(screen.getByText('Auth page')).toBeInTheDocument();
+    });
   });
 });

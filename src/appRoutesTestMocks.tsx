@@ -247,6 +247,7 @@ vi.mock('@/routes/lazyDashboardPages', () => ({
   DSRCasePage: () => <div data-testid="dsr-case-page">DSR Case</div>,
   OperatorCheckInsPage: () => null,
   QuickFormsPage: () => null,
+  FacilityFloorPlan: () => <div data-testid="facility-floor-plan-page">Facility Floor Plan</div>,
 }));
 
 export const createTestQueryClient = () =>
