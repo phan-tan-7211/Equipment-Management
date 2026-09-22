@@ -5,20 +5,31 @@ const FAKE_CORRELATION_ID = "00000000-0000-4000-8000-000000000002";
 
 Deno.test("Platform Admin delivery is limited to its own pending OWNER invitation", () => {
   const canDeliver = __testables.canPlatformAdminDeliverInitialOwnerInvitation;
+  const future = "2030-01-01T00:00:00.000Z";
+  const past = "2020-01-01T00:00:00.000Z";
+  const now = new Date("2026-01-01T00:00:00.000Z");
   assertEquals(
-    canDeliver({ role: "owner", status: "pending", invited_by: "platform-1" }, "platform-1"),
+    canDeliver({ role: "owner", status: "pending", invited_by: "platform-1", organization_id: "org-1", expires_at: future }, "platform-1", "org-1", now),
     true,
   );
   assertEquals(
-    canDeliver({ role: "admin", status: "pending", invited_by: "platform-1" }, "platform-1"),
+    canDeliver({ role: "admin", status: "pending", invited_by: "platform-1", organization_id: "org-1", expires_at: future }, "platform-1", "org-1", now),
     false,
   );
   assertEquals(
-    canDeliver({ role: "owner", status: "pending", invited_by: "platform-2" }, "platform-1"),
+    canDeliver({ role: "owner", status: "pending", invited_by: "platform-2", organization_id: "org-1", expires_at: future }, "platform-1", "org-1", now),
     false,
   );
   assertEquals(
-    canDeliver({ role: "owner", status: "accepted", invited_by: "platform-1" }, "platform-1"),
+    canDeliver({ role: "owner", status: "accepted", invited_by: "platform-1", organization_id: "org-1", expires_at: future }, "platform-1", "org-1", now),
+    false,
+  );
+  assertEquals(
+    canDeliver({ role: "owner", status: "pending", invited_by: "platform-1", organization_id: "org-2", expires_at: future }, "platform-1", "org-1", now),
+    false,
+  );
+  assertEquals(
+    canDeliver({ role: "owner", status: "pending", invited_by: "platform-1", organization_id: "org-1", expires_at: past }, "platform-1", "org-1", now),
     false,
   );
 });

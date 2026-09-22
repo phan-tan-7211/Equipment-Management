@@ -125,9 +125,9 @@ SELECT is((SELECT role FROM public.organization_invitations WHERE invitation_tok
 
 SELECT set_config('request.jwt.claims', json_build_object('sub', (SELECT id::text FROM google_invitation_ids WHERE label = 'owner'), 'role', 'authenticated')::text, true);
 SET LOCAL ROLE authenticated;
-SELECT is((public.accept_invitation_atomic('29100000-0000-0000-0000-000000000002')->>'role')::text, 'owner', 'matching Google user claims OWNER invitation');
+SELECT is((public.accept_invitation_atomic('29100000-0000-0000-0000-000000000002')->>'success')::boolean, false, 'second OWNER invitation is rejected for an established organization');
 RESET ROLE;
-SELECT is((SELECT role FROM public.organization_members WHERE user_id = (SELECT id FROM google_invitation_ids WHERE label = 'owner')), 'owner', 'OWNER role is stored exactly');
+SELECT is((SELECT count(*)::integer FROM public.organization_members WHERE user_id = (SELECT id FROM google_invitation_ids WHERE label = 'owner')), 0, 'rejected second OWNER invitation grants no membership');
 
 SELECT set_config('request.jwt.claims', json_build_object('sub', (SELECT id::text FROM google_invitation_ids WHERE label = 'admin'), 'role', 'authenticated')::text, true);
 SET LOCAL ROLE authenticated;

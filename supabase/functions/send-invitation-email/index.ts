@@ -36,6 +36,7 @@ const logStep = (step: string, details?: unknown) => {
 
 interface InvitationEmailRequest {
   invitationId: string;
+  organizationId?: string;
   email: string;
   role: string;
   organizationName: string;
@@ -47,15 +48,21 @@ interface InitialOwnerInvitationAuthorization {
   role: string;
   status: string;
   invited_by: string;
+  organization_id: string;
+  expires_at: string;
 }
 
 export function canPlatformAdminDeliverInitialOwnerInvitation(
   invitation: InitialOwnerInvitationAuthorization,
   userId: string,
+  requestedOrganizationId: string | undefined,
+  now = new Date(),
 ): boolean {
   return invitation.role === "owner" &&
     invitation.status === "pending" &&
-    invitation.invited_by === userId;
+    invitation.invited_by === userId &&
+    requestedOrganizationId === invitation.organization_id &&
+    new Date(invitation.expires_at).getTime() > now.getTime();
 }
 
 // HTML escape function to prevent XSS in email templates
@@ -142,7 +149,7 @@ async function handle(req: Request, _ctx: RequestContext): Promise<Response> {
     logStep("User authenticated", { userId: user.id });
 
     const requestBody: InvitationEmailRequest = await req.json();
-    const { invitationId, inviterName } = requestBody;
+    const { invitationId, organizationId, inviterName } = requestBody;
 
     logStep("Request received", { invitationId });
 
@@ -162,6 +169,7 @@ async function handle(req: Request, _ctx: RequestContext): Promise<Response> {
         email,
         role,
         status,
+        expires_at,
         message,
         invited_by,
         organizations!inner(name, logo)
@@ -186,9 +194,14 @@ async function handle(req: Request, _ctx: RequestContext): Promise<Response> {
     // the caller actually has admin privileges, not just read access via RLS.
     // Without this check, a non-admin member could potentially trigger invitation
     // emails for invitations they can read but shouldn't be able to act on.
+    const isOwnerInvitation = invitation.role === "owner";
     const mayDeliverAsPlatformAdmin = isPlatformAdmin &&
-      canPlatformAdminDeliverInitialOwnerInvitation(invitation, user.id);
-    const isAdmin = mayDeliverAsPlatformAdmin
+      canPlatformAdminDeliverInitialOwnerInvitation(
+        invitation,
+        user.id,
+        organizationId,
+      );
+    const isAdmin = isOwnerInvitation
       ? false
       : await verifyOrgAdmin(supabase, user.id, invitation.organization_id);
 

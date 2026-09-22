@@ -18,6 +18,7 @@ import {
   formatReconcileErrorForLog,
   type ReconcileResult,
 } from "./gw-sync-reconcile.ts";
+import { isActiveOrganizationStatus } from "./lifecycle.ts";
 
 interface SyncRequest {
   organizationId: string;
@@ -104,6 +105,18 @@ Deno.serve(withCorrelationId(async (req, _ctx) => {
     // Defense-in-depth: We still filter by organizationId to ensure the admin client
     // only accesses data for the verified organization.
     const adminClient = createAdminSupabaseClient();
+
+    const { data: organization, error: organizationError } = await adminClient
+      .from("organizations")
+      .select("lifecycle_status")
+      .eq("id", organizationId)
+      .single();
+    if (
+      organizationError ||
+      !isActiveOrganizationStatus(organization?.lifecycle_status)
+    ) {
+      return createErrorResponse("Organization is suspended", 403, { req });
+    }
 
     // Get a valid Google Workspace access token using the shared helper.
     // This handles credential lookup, decryption, token refresh, and expiry updates.
@@ -278,4 +291,3 @@ Deno.serve(withCorrelationId(async (req, _ctx) => {
     return createErrorResponse("Unexpected error while syncing Google Workspace users", 500, { req });
   }
 }));
-
