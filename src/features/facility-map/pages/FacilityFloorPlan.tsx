@@ -3761,7 +3761,7 @@ export default function FacilityFloorPlan() {
                 <div key={entry.id} className="rounded-lg border p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-sm font-medium">{formatDateTime(entry.timestamp)}</div>
+                      <div className="text-sm font-medium">{formatDateTime(new Date(entry.timestamp))}</div>
                       <div className="mt-1 text-[11px] text-muted-foreground">
                         {t('facilityMap.itemsSummary', {
                           assets: entry.snapshot.pins.length,
