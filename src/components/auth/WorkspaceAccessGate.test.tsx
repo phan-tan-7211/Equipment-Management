@@ -24,4 +24,12 @@ describe('WorkspaceAccessGate', () => {
 
     expect(signOutMock).toHaveBeenCalledTimes(1);
   });
+
+  it('does not offer self-service organization provisioning', () => {
+    render(<WorkspaceAccessGate mode="blocked" domain={null} />);
+
+    expect(screen.getByText('This authenticated account is not authorized for an organization.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /create organization|create workspace|become owner/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /create organization|create workspace|become owner/i })).not.toBeInTheDocument();
+  });
 });

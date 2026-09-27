@@ -308,10 +308,10 @@ const EquipmentDetails = () => {
         <ResponsiveEquipmentTabs activeTab={activeTab} onTabChange={setActiveTab} showPartsTab={canViewInventory}>
           <TabsContent value="details"><EquipmentDetailsTab equipment={equipment} assignedTeam={assignedTeam} /></TabsContent>
           <TabsContent value="notes">
-            {activeTab === 'notes' && <Suspense fallback={<TabContentSkeleton />}><EquipmentNotesTab equipmentId={equipment.id} organizationId={currentOrganization.id} equipmentTeamId={equipment.team_id || undefined} currentDisplayImage={equipment.image_url} /></Suspense>}
+            {activeTab === 'notes' && <Suspense fallback={<TabContentSkeleton />}><EquipmentNotesTab equipmentId={equipment.id} organizationId={currentOrganization.id} equipmentTeamId={equipment.team_id || undefined} currentDisplayImage={equipment.image_url || undefined} /></Suspense>}
           </TabsContent>
           <TabsContent value="work-orders">
-            {activeTab === 'work-orders' && <Suspense fallback={<TabContentSkeleton />}><EquipmentWorkOrdersTab equipmentId={equipment.id} organizationId={currentOrganization.id} onCreateWorkOrder={() => setIsWorkOrderFormOpen(true)} equipmentManufacturer={equipment.manufacturer} equipmentModel={equipment.model} equipmentSerialNumber={equipment.serial_number} equipment={equipment} assignedTeamName={assignedTeam?.name ?? null} /></Suspense>}
+            {activeTab === 'work-orders' && <Suspense fallback={<TabContentSkeleton />}><EquipmentWorkOrdersTab equipmentId={equipment.id} organizationId={currentOrganization.id} onCreateWorkOrder={() => setIsWorkOrderFormOpen(true)} equipmentManufacturer={equipment.manufacturer} equipmentModel={equipment.model} equipmentSerialNumber={equipment.serial_number ?? undefined} equipment={equipment} assignedTeamName={assignedTeam?.name ?? null} /></Suspense>}
           </TabsContent>
           {canViewInventory && <TabsContent value="parts">{activeTab === 'parts' && <Suspense fallback={<TabContentSkeleton />}><EquipmentPartsTab equipmentId={equipment.id} organizationId={currentOrganization.id} canEditInventory={canEditInventory} /></Suspense>}</TabsContent>}
           <TabsContent value="images">{activeTab === 'images' && <Suspense fallback={<TabContentSkeleton />}><EquipmentImagesTab equipmentId={equipment.id} organizationId={currentOrganization.id} equipmentTeamId={equipment.team_id || undefined} currentDisplayImage={equipment.image_url || undefined} equipmentName={equipment.name} /></Suspense>}</TabsContent>

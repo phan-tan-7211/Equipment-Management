@@ -69,8 +69,8 @@ export function isProductionEnvironment(): boolean {
  * Preview environments allow additional trusted domains like Vercel preview URLs.
  */
 export function isPreviewEnvironment(): boolean {
-  const publicSiteUrl = resolvePublicSiteUrl();
-  return publicSiteUrl.includes("preview.");
+  const hostname = resolveHostname(resolvePublicSiteUrl());
+  return hostname?.endsWith(".vercel.app") ?? false;
 }
 
 function resolveHostname(urlString: string): string | null {
@@ -138,7 +138,7 @@ export function isValidRedirectUrl(urlToValidate: string | null, productionUrl: 
 
 /**
  * Validates that a URL is from a trusted domain to prevent open redirect attacks.
- * Only allows URLs from equipqr.app and its subdomains.
+ * Only allows the current production application origin.
  *
  * @param urlString - The URL string to validate
  * @returns true if the URL is from a trusted domain, false otherwise
@@ -148,13 +148,7 @@ export function isTrustedDomain(urlString: string): boolean {
     const url = new URL(urlString);
     const hostname = url.hostname.toLowerCase();
     
-    // Allow exact match for equipqr.app
-    if (hostname === "equipqr.app") {
-      return true;
-    }
-    
-    // Allow subdomains of equipqr.app (e.g., preview.equipqr.app, staging.equipqr.app)
-    if (hostname.endsWith(".equipqr.app")) {
+    if (hostname === "eqr.zinitek.com") {
       return true;
     }
     

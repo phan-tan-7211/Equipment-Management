@@ -15,7 +15,7 @@ import { resolveDocumentTitle } from './resolveDocumentTitle';
 export type { MarketingRoute };
 
 
-const BASE = 'https://equipqr.app';
+const BASE = 'https://eqr.zinitek.com';
 
 export function resolveFullDocumentTitle(route: MarketingRoute): string {
   return resolveDocumentTitle(route.title, resolveCanonicalPath(route));

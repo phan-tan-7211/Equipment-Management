@@ -41,9 +41,7 @@ export function quickFormQRPath(token: string): string {
 
 /** Origins accepted when decoding printed stickers against a different dev host. */
 const ZNTEQR_QR_ORIGINS = new Set([
-  'https://equipqr.app',
-  'https://www.equipqr.app',
-  'https://preview.equipqr.app',
+  'https://eqr.zinitek.com',
 ]);
 
 const RESERVED_QR_FIRST_SEGMENTS = new Set([

@@ -28,7 +28,7 @@ Keep exactly one Owner for billing and legal actions. Every other administrator 
 
 Teams can store a HQ address on the team detail page. When **Override equipment location** is enabled for that team, equipment that still opts into team fallback shows the team HQ on Fleet Map and in the location source dropdown.
 
-![Team location editor](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/08-team-location-editor.png)
+![Team location editor](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/08-team-location-editor.png)
 
 Saving an equipment assigned address or live GPS capture always takes precedence and turns off team fallback for that asset. See [Equipment location sources and maps](../equipment-qr/location-sources-and-maps).
 

@@ -70,6 +70,7 @@ const vi = {
     signIn: 'Đăng nhập',
     success: 'Thành công',
     somethingWentWrong: 'Đã xảy ra lỗi',
+    googleSignInFailed: 'Đăng nhập bằng Google thất bại. Vui lòng thử lại.',
     loginWithGoogle: 'Đăng nhập bằng Google',
     loginWithEmailPassword: 'Đăng nhập bằng Email & Mật khẩu',
     or: 'hoặc',

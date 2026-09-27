@@ -6,6 +6,9 @@ import { publicRouteElements } from '@/routes/PublicRoutes';
 import { legacyRedirectRouteElements } from '@/routes/LegacyRedirectRoutes';
 import { DashboardRouteLayout } from '@/routes/DashboardRouteLayout';
 import { I18nProvider, useI18n } from '@/i18n';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { PlatformAdminGuard } from '@/features/platform-admin/PlatformAdminGuard';
+import PlatformAdministration from '@/features/platform-admin/pages/PlatformAdministration';
 
 function AppContent() {
   const { t } = useI18n();
@@ -23,6 +26,14 @@ function AppContent() {
         <Routes>
           {publicRouteElements}
           {legacyRedirectRouteElements}
+          <Route
+            path="/platform-admin"
+            element={
+              <ProtectedRoute>
+                <PlatformAdminGuard><PlatformAdministration /></PlatformAdminGuard>
+              </ProtectedRoute>
+            }
+          />
           <Route path="/dashboard/*" element={<DashboardRouteLayout />} />
         </Routes>
       </ErrorBoundary>

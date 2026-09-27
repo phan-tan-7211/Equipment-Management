@@ -26,7 +26,7 @@ Scroll or tap the Work Orders tab on the equipment page to see the job history.
 
 If no work orders exist yet, the button reads "Create First Work Order". Either way, the form opens with the equipment pre-selected and locked.
 
-![Create Work Order dialog with PM checklist selected](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/desktop/02-create-work-order-dialog.png)
+![Create Work Order dialog with PM checklist selected](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/desktop/02-create-work-order-dialog.png)
 
 ## 4. Fill in title, priority, and description
 
@@ -38,9 +38,9 @@ If no work orders exist yet, the button reads "Create First Work Order". Either 
 
 Click Create Work Order. The new record appears in the team queue with Submitted status.
 
-![New work order detail page in Submitted status](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/desktop/03-work-order-created-submitted.png)
+![New work order detail page in Submitted status](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/desktop/03-work-order-created-submitted.png)
 
-![Mobile work order summary after creating from equipment](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/technician-field-work/mobile/02-mobile-work-order-summary.png)
+![Mobile work order summary after creating from equipment](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/technician-field-work/mobile/02-mobile-work-order-summary.png)
 
 If you forgot to attach a PM checklist during creation, you can add one later on any active work order — see [Manage a PM template on an active work order](../work-orders/manage-pm-template-on-work-order).
 

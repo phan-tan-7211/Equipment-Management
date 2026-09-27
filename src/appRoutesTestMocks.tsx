@@ -17,6 +17,7 @@ vi.mock('@/contexts/useUser', () => ({
 vi.mock('@/hooks/useSimpleOrganization', () => ({
   useSimpleOrganization: () => ({
     currentOrganization: { id: 'test-org' },
+    organizations: [{ id: 'test-org' }],
     organizationId: 'test-org',
     isLoading: false,
   }),

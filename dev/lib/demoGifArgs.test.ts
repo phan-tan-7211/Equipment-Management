@@ -16,8 +16,8 @@ describe('parseDemoGifArgs', () => {
   });
 
   it('parses --base-url and strips trailing slashes', () => {
-    const parsed = parseDemoGifArgs(['--smoke', '--base-url=https://equipqr.app/']);
-    expect(parsed.baseUrl).toBe('https://equipqr.app');
+    const parsed = parseDemoGifArgs(['--smoke', '--base-url=https://eqr.zinitek.com/']);
+    expect(parsed.baseUrl).toBe('https://eqr.zinitek.com');
   });
 
   it('parses --out under tmp/demos when basename only', () => {
@@ -72,6 +72,6 @@ describe('isLocalhostBaseUrl', () => {
   it('detects localhost', () => {
     expect(isLocalhostBaseUrl('http://localhost:8080')).toBe(true);
     expect(isLocalhostBaseUrl('http://127.0.0.1:3000')).toBe(true);
-    expect(isLocalhostBaseUrl('https://equipqr.app')).toBe(false);
+    expect(isLocalhostBaseUrl('https://eqr.zinitek.com')).toBe(false);
   });
 });

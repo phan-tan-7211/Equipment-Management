@@ -21,14 +21,14 @@ This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipelin
 │  ┌─────────────────────────────────────────────────────────────────────────┐│
 │  │                         External Services                               ││
 │  │  ┌──────────────────┐    ┌─────────────────────────────────────────┐   ││
-│  │  │     Vercel       │    │   preview.equipqr.app ← git preview   │   ││
+│  │  │     Vercel       │    │   equip-qr-*.vercel.app ← git preview   │   ││
 │  │  │ (auto-deploys)   │    │   (normal Preview deploys on merge)   │   ││
 │  │  └──────────────────┘    └─────────────────────────────────────────┘   ││
 │  │           │                                                              ││
 │  │           ▼                                                              ││
 │  │  ┌──────────────────┐    ┌─────────────────────────────────────────┐   ││
 │  │  │   Live Site      │    │   Current live: shared production       │   ││
-│  │  │ equipqr.app or   │    │   Supabase + ephemeral PR branches      │   ││
+│  │  │ eqr.zinitek.com or   │    │   Supabase + ephemeral PR branches      │   ││
 │  │  │ preview.equipqr  │    │   Target: persistent preview branch     │   ││
 │  │  └──────────────────┘    └─────────────────────────────────────────┘   ││
 │  └─────────────────────────────────────────────────────────────────────────┘│
@@ -39,15 +39,15 @@ This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipelin
 
 | Environment | Git trigger | Frontend URL | Supabase API |
 |-------------|-------------|--------------|--------------|
-| **Production** | Push to `main` (auto-promote via Production Release Readiness) | `<https://equipqr.app>` | `https://supabase.equipqr.app` (`wgynakhoppqkrutnslmv`) |
-| **Integration preview** | Push/merge to git **`preview`** | `<https://preview.equipqr.app>` | **Current live:** production API (`supabase.equipqr.app`). **Approved target:** persistent dataless branch per `docs/ops/preview-persistent-branch.md` |
+| **Production** | Push to `main` (auto-promote via Production Release Readiness) | `<https://eqr.zinitek.com>` | `https://wgynakhoppqkrutnslmv.supabase.co` (`wgynakhoppqkrutnslmv`) |
+| **Integration preview** | Push/merge to git **`preview`** | `<https://equip-qr-preview-columbia-cloudworks-llc.vercel.app>` | **Current live:** production API (`wgynakhoppqkrutnslmv.supabase.co`). **Approved target:** persistent dataless branch per `docs/ops/preview-persistent-branch.md` |
 | **PR Preview** | Feature PRs / work-branch pushes | Commit-specific `*.vercel.app` | Prod API by default; ephemeral Supabase when `supabase/**` changes |
 
 > **Train (#1282):** feat → preview → main. Authoritative loop: **`docs/ops/git-and-deploy.md`**. Retired: `preview-domain-alias.yml`, Vercel custom **`staging`**, persistent Supabase **`olsdirkvvfegvclbpgrg`**. History: `docs/ops/preview-architecture-migration.md`.
 >
 > **Target decision (not yet live):** `docs/ops/preview-persistent-branch.md`
 > records the approved move away from production Supabase for
-> `preview.equipqr.app`. Do not document that cutover as complete until the
+> `equip-qr-*.vercel.app`. Do not document that cutover as complete until the
 > preview env and branch checklist have been executed.
 
 ## GitHub Actions Workflows
@@ -82,11 +82,11 @@ This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipelin
 
 **Purpose:** Notification workflow for Vercel production deployments
 
-> **Note:** Actual deployment is handled by Vercel's GitHub integration, not this workflow. Merges to git **`preview`** update **`preview.equipqr.app`** via normal Vercel Preview deploys. Feature PRs get commit-specific Preview URLs.
+> **Note:** Actual deployment is handled by Vercel's GitHub integration, not this workflow. Merges to git **`preview`** update **`equip-qr-*.vercel.app`** via normal Vercel Preview deploys. Feature PRs get commit-specific Preview URLs.
 
 ### 3. Preview Domain Alias — REMOVED
 
-**`preview-domain-alias.yml` is retired (#1282).** It previously fast-forwarded git `preview` from `main` and fired a deploy hook. Do not reference it as live. `preview.equipqr.app` tracks git **`preview`** through ordinary Vercel deploys on that branch.
+**`preview-domain-alias.yml` is retired (#1282).** It previously fast-forwarded git `preview` from `main` and fired a deploy hook. Do not reference it as live. `equip-qr-*.vercel.app` tracks git **`preview`** through ordinary Vercel deploys on that branch.
 
 ### 4. Auto Version Tag (`version-tag.yml`)
 
@@ -104,7 +104,7 @@ This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipelin
 
 **Trigger:** `deployment_status` events
 
-**Purpose:** Log deployment success/failure from the **SPA** Vercel project (`equipqr` / `equipqr.app`). Events whose environment name contains `equipqr-docs` are ignored so the separate docs project (`equipqr.info`, main-only deploys) does not fail preview PR checks.
+**Purpose:** Log deployment success/failure from the **SPA** Vercel project (`equipqr` / `eqr.zinitek.com`). Events whose environment name contains `equipqr-docs` are ignored so the separate docs project (`equipqr.info`, main-only deploys) does not fail preview PR checks.
 
 ### 6. Export Database Schema (`export-schema.yml`)
 
@@ -150,17 +150,17 @@ This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipelin
 
 | Git context | Vercel target | Stable alias |
 |-------------|---------------|--------------|
-| `main` | Production | `equipqr.app` (auto-promote after release readiness) |
-| `preview` (integration train) | Preview | `preview.equipqr.app` (branch-bound; normal deploys on push/merge) |
+| `main` | Production | `eqr.zinitek.com` (auto-promote after release readiness) |
+| `preview` (integration train) | Preview | `equip-qr-*.vercel.app` (branch-bound; normal deploys on push/merge) |
 | PR / other non-`main` push | Preview | Per-deployment URL only |
 
 **Key Settings (`vercel.json`):**
 - SPA routing (all routes → `/index.html`)
 - Security headers (HSTS, X-Frame-Options, etc.)
 - Asset caching (1 year for `/assets/*`)
-- Auto-deploy on git push: **`main`** (production build) and **`preview`** (integration → `preview.equipqr.app`). Feature-branch PRs also receive per-PR Preview URLs via the GitHub integration.
+- Auto-deploy on git push: **`main`** (production build) and **`preview`** (integration → `equip-qr-*.vercel.app`). Feature-branch PRs also receive per-PR Preview URLs via the GitHub integration.
 
-**Preview hostname:** `preview.equipqr.app` is attached to the standard **Preview** environment (not the retired custom **`staging`** environment).
+**Preview hostname:** `equip-qr-*.vercel.app` is attached to the standard **Preview** environment (not the retired custom **`staging`** environment).
 
 **Environment Variables (Vercel Dashboard):**
 - `VITE_SUPABASE_URL` - Supabase project URL
@@ -169,7 +169,7 @@ This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipelin
 
 #### Public documentation site (`equipqr.info`)
 
-Technical documentation is deployed as a **second Vercel project** (same GitHub repo, different **Root Directory**), so `equipqr.app` stays the product SPA and `equipqr.info` serves static docs.
+Technical documentation is deployed as a **second Vercel project** (same GitHub repo, different **Root Directory**), so `eqr.zinitek.com` stays the product SPA and `equipqr.info` serves static docs.
 
 | Item | Value |
 |------|--------|
@@ -195,9 +195,9 @@ Local preview: from repo root, `npm run docs:dev` or `npm run docs:preview` afte
 **Configuration File:** `supabase/config.toml`
 
 **Projects:**
-- **Production:** `wgynakhoppqkrutnslmv` — API `https://supabase.equipqr.app`
+- **Production:** `wgynakhoppqkrutnslmv` — API `https://wgynakhoppqkrutnslmv.supabase.co`
 - **Current live preview app:** still uses the production project above
-- **Approved target preview backend:** a new persistent dataless branch for `preview.equipqr.app` (not yet cut over; see `preview-persistent-branch.md`)
+- **Approved target preview backend:** a new persistent dataless branch for `equip-qr-*.vercel.app` (not yet cut over; see `preview-persistent-branch.md`)
 - **Ephemeral PR branches:** Created automatically when `supabase/**` changes on a PR (schema validation only)
 - **Retired persistent preview branch:** `olsdirkvvfegvclbpgrg` — decommission after #1033 cutover (see `preview-architecture-migration.md`)
 
@@ -206,13 +206,13 @@ Local preview: from repo root, `npm run docs:dev` or `npm run docs:preview` afte
 Current live preview uses the **same** Supabase project as production, so
 production Auth `site_url` and redirect URIs should include:
 
-- `https://preview.equipqr.app/**`
-- `https://equipqr.app/**`
+- `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/**`
+- `https://eqr.zinitek.com/**`
 - Local dev URLs (`http://localhost:8080/**`, etc.)
 
 The approved target is different: once the persistent preview branch cutover in
 `preview-persistent-branch.md` lands, branch Auth should carry
-`site_url=https://preview.equipqr.app` and the preview-specific redirect
+`site_url=https://equip-qr-preview-columbia-cloudworks-llc.vercel.app` and the preview-specific redirect
 allowlist, while production Auth remains unchanged.
 
 ---
@@ -226,7 +226,7 @@ When you open or update a PR (Preview deployment):
 | 0:00 | Push to feature branch or PR synchronize |
 | 0:01 | GitHub Actions CI starts |
 | 0:01 | Vercel receives webhook, starts Preview build |
-| ~2:00 | Vercel Preview deployment ready (commit-specific URL; `preview.equipqr.app` is **not** touched by PR builds) |
+| ~2:00 | Vercel Preview deployment ready (commit-specific URL; `equip-qr-*.vercel.app` is **not** touched by PR builds) |
 | ~3:00 | CI complete |
 
 When you merge to git **`preview`**:
@@ -236,7 +236,7 @@ When you merge to git **`preview`**:
 | 0:00 | Push/merge to `preview` |
 | 0:01 | CI on `preview` |
 | 0:01 | Vercel Preview build for branch `preview` |
-| ~2:00 | `preview.equipqr.app` points at the new Preview deployment |
+| ~2:00 | `equip-qr-*.vercel.app` points at the new Preview deployment |
 
 When you merge a promote to **`main`**:
 
@@ -244,7 +244,7 @@ When you merge a promote to **`main`**:
 |------|-------|
 | 0:00 | Push to `main` |
 | 0:01 | CI + Production Release Readiness workflows |
-| ~2:00 | Vercel Production build ready; Production Release Readiness promotes to `equipqr.app` |
+| ~2:00 | Vercel Production build ready; Production Release Readiness promotes to `eqr.zinitek.com` |
 
 ---
 
@@ -307,14 +307,14 @@ See [Deployment Guide - Self-Hosted Runner Setup](./deployment.md#self-hosted-ru
 
 ### OAuth redirects to wrong URL (preview)
 
-**Symptom:** Google OAuth redirects to a per-commit Vercel URL instead of `preview.equipqr.app`
+**Symptom:** Google OAuth redirects to a per-commit Vercel URL instead of `equip-qr-*.vercel.app`
 
 **Checks:**
-1. Confirm the latest Vercel Preview deployment for git branch **`preview`** is READY and aliased to `preview.equipqr.app`.
+1. Confirm the latest Vercel Preview deployment for git branch **`preview`** is READY and aliased to `equip-qr-*.vercel.app`.
 2. Confirm the Vercel Preview env matches the currently active design:
-   - **Today:** `VITE_SUPABASE_URL=https://supabase.equipqr.app`
+   - **Today:** `VITE_SUPABASE_URL=https://wgynakhoppqkrutnslmv.supabase.co`
    - **After the approved cutover:** the persistent preview branch URL from `preview-persistent-branch.md`
-3. Confirm Supabase Auth redirect URIs include `https://preview.equipqr.app/**` on the backend currently serving preview:
+3. Confirm Supabase Auth redirect URIs include `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/**` on the backend currently serving preview:
    - **Today:** production project `wgynakhoppqkrutnslmv`
    - **After the approved cutover:** the persistent preview branch Auth config
 
@@ -357,7 +357,7 @@ See [Deployment Guide - Self-Hosted Runner Setup](./deployment.md#self-hosted-ru
 |------|---------|
 | `.github/workflows/ci.yml` | Continuous integration (lint, test, build, security) |
 | `.github/workflows/deploy.yml` | Deployment notifications |
-| `.github/workflows/preview-domain-alias.yml` | **REMOVED (#1282)** — do not restore; `preview.equipqr.app` tracks git `preview` via normal Vercel deploys |
+| `.github/workflows/preview-domain-alias.yml` | **REMOVED (#1282)** — do not restore; `equip-qr-*.vercel.app` tracks git `preview` via normal Vercel deploys |
 | `.github/workflows/version-tag.yml` | Auto-create git tags on version bump |
 | `.github/workflows/deployment-status.yml` | Log deployment status from Vercel |
 | `.github/workflows/export-schema.yml` | Export database schema from production to `supabase/schema.sql` |

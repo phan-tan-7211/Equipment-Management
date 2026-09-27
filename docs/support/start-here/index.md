@@ -7,23 +7,23 @@ description: "New to ZNTEQR? Get oriented and set up your organization."
 
 New to ZNTEQR? Get oriented and set up your organization.
 
-![Signed-in dashboard home](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/01-dashboard-welcome.png)
+![Signed-in dashboard home](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/01-dashboard-welcome.png)
 
-![Mobile dashboard home](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/mobile/01-mobile-dashboard-welcome.png)
+![Mobile dashboard home](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/mobile/01-mobile-dashboard-welcome.png)
 
 ## Desktop walkthrough video
 
-<https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/demo.mp4>
+<https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/demo.mp4>
 
 ## Mobile walkthrough video
 
-<https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/mobile/demo.mp4>
+<https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/mobile/demo.mp4>
 
 ## Articles
 
-![Navigation tour — Equipment list](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/02-navigation-equipment.png)
+![Navigation tour — Equipment list](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/02-navigation-equipment.png)
 
-![Invite member dialog](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/05-invite-member-dialog.png)
+![Invite member dialog](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/05-invite-member-dialog.png)
 
 - [Welcome to ZNTEQR](./welcome-to-znteqr) — A 60-second overview of what ZNTEQR does and where each team role spends their time.
 - [Find your way around the app](./navigation-tour) — A fast tour of the sidebar, top bar, mobile bottom nav, and where admin-only surfaces live.

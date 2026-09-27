@@ -7,7 +7,7 @@ Opt-in Playwright project for validating connected vendor integrations on **prev
 | Role | Value |
 |------|--------|
 | ZNTEQR sign-in | `phantan7211@gmail.com` (Google OAuth) |
-| Target app | `https://preview.equipqr.app` |
+| Target app | `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app` |
 | QuickBooks | Sandbox QBO company (`app.sandbox.qbo.intuit.com`) — preview edge sets `QBO_USE_SANDBOX=true` |
 | Storage file | `tmp/playwright/auth/nicholas-google-qbo.json` (gitignored) |
 
@@ -21,7 +21,7 @@ Opt-in Playwright project for validating connected vendor integrations on **prev
 ```powershell
 New-Item -ItemType Directory -Force -Path "tmp\playwright\auth" | Out-Null
 
-npx playwright codegen "https://preview.equipqr.app/auth?tab=signin" `
+npx playwright codegen "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/auth?tab=signin" `
   --save-storage="tmp/playwright/auth/nicholas-google-qbo.json"
 ```
 
@@ -113,7 +113,7 @@ The test exports a work order to Google Docs and opens the returned `document_ur
 | Variable | Required for | Description |
 |----------|----------------|-------------|
 | `E2E_REAL_AUTH_STORAGE_STATE` | All `@real-auth` tests | Path to captured storage JSON |
-| `E2E_REAL_AUTH_BASE_URL` | Optional | Defaults to `https://preview.equipqr.app` |
+| `E2E_REAL_AUTH_BASE_URL` | Optional | Defaults to `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app` |
 | `VERCEL_AUTOMATION_BYPASS_SECRET` | Protected preview runs | Vercel Deployment Protection bypass secret from `op://ZNTEQR Agents/vercel-automation-bypass/VERCEL_AUTOMATION_BYPASS_SECRET` |
 | `E2E_QBO_WORK_ORDER_ID` | Export test only | Known-safe **completed** preview work order UUID (`1660137f-a803-4510-9a0a-96c7048d0eb4`) |
 | `E2E_ALLOW_QBO_DRAFTS` | QBO export test only | Must be `true` to opt in to **sandbox** draft invoice create/update on preview |
@@ -132,7 +132,7 @@ $env:VERCEL_AUTOMATION_BYPASS_SECRET = op read "op://ZNTEQR Agents/vercel-automa
 To reuse a Google-only storage state as a starting point for the combined ZNTEQR + QBO state:
 
 ```powershell
-npx playwright codegen "https://preview.equipqr.app/auth?tab=signin" `
+npx playwright codegen "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/auth?tab=signin" `
   --load-storage="tmp/playwright/auth/google-business.json" `
   --save-storage="tmp/playwright/auth/nicholas-google-qbo.json"
 ```
@@ -152,7 +152,7 @@ The export test work order must:
 
 ```powershell
 $env:E2E_REAL_AUTH_STORAGE_STATE = "tmp\playwright\auth\nicholas-google-qbo.json"
-$env:E2E_REAL_AUTH_BASE_URL = "https://preview.equipqr.app"
+$env:E2E_REAL_AUTH_BASE_URL = "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app"
 npx playwright test --config=playwright.user.config.ts --project=real-auth-integrations --headed -g "preflight"
 ```
 
@@ -160,7 +160,7 @@ npx playwright test --config=playwright.user.config.ts --project=real-auth-integ
 
 ```powershell
 $env:E2E_REAL_AUTH_STORAGE_STATE = "tmp\playwright\auth\nicholas-google-qbo.json"
-$env:E2E_REAL_AUTH_BASE_URL = "https://preview.equipqr.app"
+$env:E2E_REAL_AUTH_BASE_URL = "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app"
 $env:E2E_QBO_WORK_ORDER_ID = "1660137f-a803-4510-9a0a-96c7048d0eb4"
 $env:E2E_ALLOW_QBO_DRAFTS = "true"
 npx playwright test --config=playwright.user.config.ts --project=real-auth-integrations --headed
@@ -185,7 +185,7 @@ Spec file: `e2e/user/full/real-auth-integrations.spec.ts`
 | `Export failed:` toast | Intuit API / mapping / tax errors | Check edge function response in Playwright trace |
 | `QuickBooks Setup Required` | Team customer mapping missing | Map team in Team Settings |
 | Tests skipped | Missing env vars | Set variables per table above |
-| QBO OAuth sends the browser to `olsdirk` or `supabase.preview.equipqr.app` | Stale Vercel build or retired hostname | Ensure `VITE_SUPABASE_URL` is `https://supabase.equipqr.app` on Vercel Preview and Intuit redirect URI matches `https://supabase.equipqr.app/functions/v1/quickbooks-oauth-callback` |
+| QBO OAuth sends the browser to `olsdirk` or `wgynakhoppqkrutnslmv.supabase.co` | Stale Vercel build or retired hostname | Ensure `VITE_SUPABASE_URL` is `https://wgynakhoppqkrutnslmv.supabase.co` on Vercel Preview and Intuit redirect URI matches `https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/quickbooks-oauth-callback` |
 
 ## Safety rails
 

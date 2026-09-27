@@ -112,6 +112,8 @@ const createMockEquipment = (overrides: Partial<EquipmentRecord> = {}): Equipmen
   management_responsible_primary: null,
   management_responsible_secondary: null,
   ...overrides,
+  equipment_group_id: overrides.equipment_group_id ?? null,
+  management_code: overrides.management_code ?? null,
 });
 
 const baseValues: EquipmentFormData = {

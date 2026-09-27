@@ -6,12 +6,12 @@
 
 | Surface | Database |
 |---------|----------|
-| **`preview.equipqr.app`** / **`equipqr.app`** | **Current live:** production Supabase (`https://supabase.equipqr.app`). **Approved target:** move `preview.equipqr.app` to a new persistent dataless branch per [preview-persistent-branch.md](./preview-persistent-branch.md). |
+| **`equip-qr-*.vercel.app`** / **`eqr.zinitek.com`** | **Current live:** production Supabase (`https://wgynakhoppqkrutnslmv.supabase.co`). **Approved target:** move `equip-qr-*.vercel.app` to a new persistent dataless branch per [preview-persistent-branch.md](./preview-persistent-branch.md). |
 | **PR touching `supabase/**`** | **Ephemeral** Supabase branch for schema/RLS validation only; deleted when the PR closes. |
 | **Cursor Cloud Agent sessions** | **Per-session** ephemeral branch + cloud-safe Quick Login seed (not Docker-local Supabase). See [cloud-agent-ephemeral-stack.md](./cloud-agent-ephemeral-stack.md). |
 
 Do not assume the persistent preview branch cutover has already happened. Today,
-ordinary (non-schema) QA on `preview.equipqr.app` still hits production data
+ordinary (non-schema) QA on `equip-qr-*.vercel.app` still hits production data
 APIs. The approved replacement is a new long-lived dataless branch documented in
 [preview-persistent-branch.md](./preview-persistent-branch.md). Exercise risky
 OAuth/integration paths on the **local stack** before merge until that cutover
@@ -32,7 +32,7 @@ not just locally — before they land on git **`preview`** (and later promote to
 migration ordering issues that local `supabase db reset` cannot reproduce.
 
 This doc covers **ephemeral PR branches only**. The separate decision to give
-`preview.equipqr.app` its own persistent dataless backend is tracked in
+`equip-qr-*.vercel.app` its own persistent dataless backend is tracked in
 [preview-persistent-branch.md](./preview-persistent-branch.md).
 
 ## Trigger policy
@@ -117,7 +117,7 @@ To exercise the branch from a Vite preview:
 - **Branches do not clone Vault secrets.** If your migration depends on a Vault entry (e.g. the Stripe FDW pilot's `stripe_fdw_api_key`), the branch's Vault is empty unless you add the secret manually via the branch's Studio.
 - **Branches don't catch post-deploy / production data issues.** They catch migration syntax, RLS interactions, and Postgres version compatibility. Production-data-shape bugs surface only after merge to `preview`.
 - **Branches are not the same thing as the planned persistent preview backend.**
-  Keep ephemeral PR validation and the future `preview.equipqr.app` branch as
+  Keep ephemeral PR validation and the future `equip-qr-*.vercel.app` branch as
   separate operational paths.
 
 ## Cleanup if a branch is stuck

@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.45.0";
 import { logStep, normalizeDomain } from "./gw-oauth-validation.ts";
+import {
+  GoogleWorkspaceOAuthUserError,
+  GW_OAUTH_ERROR_CODES,
+} from "./gw-oauth-user-error.ts";
 
 export async function resolveEffectiveOrganizationId(
   supabaseClient: SupabaseClient,
@@ -10,57 +14,57 @@ export async function resolveEffectiveOrganizationId(
   },
 ): Promise<string> {
   const domain = normalizeDomain(params.userDomain);
-  let effectiveOrgId = params.organizationId;
+  const effectiveOrgId = params.organizationId;
 
-  // Check if this domain already has an organization
-  const { data: existingDomainData } = await supabaseClient
+  if (!effectiveOrgId) {
+    throw new Error("Existing organization is required to connect Google Workspace");
+  }
+
+  // Revalidate after the external OAuth redirect. The membership may have been
+  // removed or downgraded since the session was created.
+  const { data: membership, error: membershipError } = await supabaseClient
+    .from("organization_members")
+    .select("role, status")
+    .eq("organization_id", effectiveOrgId)
+    .eq("user_id", params.userId)
+    .eq("status", "active")
+    .in("role", ["owner", "admin"])
+    .maybeSingle();
+
+  if (membershipError) {
+    logStep("Failed to revalidate Workspace organization authorization", {
+      organizationId: effectiveOrgId,
+      error: membershipError.message,
+    });
+    throw new Error("Failed to verify organization authorization");
+  }
+
+  if (!membership) {
+    throw new Error("Only active organization owners or admins can connect Google Workspace");
+  }
+
+  const { data: existingDomainData, error: domainError } = await supabaseClient
     .from("workspace_domains")
     .select("organization_id, domain")
     .eq("domain", domain)
     .maybeSingle();
 
-  if (existingDomainData?.organization_id) {
-    // Domain already claimed - use existing organization
-    effectiveOrgId = existingDomainData.organization_id;
-    logStep("Using existing organization for domain", { 
-      domain, 
-      organizationId: effectiveOrgId,
+  if (domainError) {
+    logStep("Failed to check Workspace domain ownership", {
+      domain,
+      error: domainError.message,
     });
-  } else if (!params.organizationId) {
-    // First-time setup: auto-provision new organization
-    // Generate organization name from domain (e.g., "acme.com" -> "Acme")
-    const domainParts = domain.split(".");
-    const primaryPart = domainParts.find((part) => part.length > 0) ?? "Workspace";
-    const orgNameBase = primaryPart.charAt(0).toUpperCase() + primaryPart.slice(1);
-    const orgName = `${orgNameBase} Organization`;
-
-    logStep("Auto-provisioning new organization", { domain, orgName });
-
-    const { data: provisionData, error: provisionError } = await supabaseClient
-      .rpc("auto_provision_workspace_organization", {
-        p_user_id: params.userId,
-        p_domain: domain,
-        p_organization_name: orgName,
-      });
-
-    if (provisionError) {
-      logStep("Failed to provision organization", { error: provisionError.message });
-      throw new Error("Failed to create organization. Please try again.");
-    }
-
-    if (!provisionData || provisionData.length === 0) {
-      throw new Error("Failed to create organization. Please try again.");
-    }
-
-    effectiveOrgId = provisionData[0].organization_id;
-    logStep("Organization provisioned", {
-      organizationId: effectiveOrgId,
-      alreadyExisted: provisionData[0].already_existed,
-    });
+    throw new Error("Failed to verify Workspace domain ownership");
   }
 
-  if (!effectiveOrgId) {
-    throw new Error("No organization available for this domain. Please try again.");
+  if (
+    existingDomainData?.organization_id &&
+    existingDomainData.organization_id !== effectiveOrgId
+  ) {
+    throw new GoogleWorkspaceOAuthUserError(
+      GW_OAUTH_ERROR_CODES.DOMAIN_ALREADY_LINKED,
+      "Workspace domain is already linked to another ZNTEQR organization",
+    );
   }
 
   return effectiveOrgId;

@@ -21,7 +21,7 @@ Configure these secrets in Supabase Dashboard → Edge Functions → Secrets:
 |-------------|-------------|
 | `INTUIT_CLIENT_ID` | Your Intuit app's Client ID |
 | `INTUIT_CLIENT_SECRET` | Your Intuit app's Client Secret |
-| `PUBLIC_SITE_URL` | Public app origin for OAuth success redirects (`https://equipqr.app` prod, `https://preview.equipqr.app` preview) |
+| `PUBLIC_SITE_URL` | Public app origin for OAuth success redirects (`https://eqr.zinitek.com` prod, `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app` preview) |
 | `QBO_USE_SANDBOX` | Set to `true` on **local dev and preview** so Edge Functions call the sandbox QBO API. Omit on production. |
 
 ### Environment matrix (sandbox vs production)
@@ -34,7 +34,7 @@ Configure these secrets in Supabase Dashboard → Edge Functions → Secrets:
 
 **Why both Development keys and `QBO_USE_SANDBOX`?** Intuit OAuth with Development credentials authorizes **sandbox** companies. The API host flag ensures token refresh and invoice export hit `sandbox-quickbooks.api.intuit.com` instead of the production API (mixing them yields 403s).
 
-After switching preview to sandbox, **disconnect and reconnect** QuickBooks on preview.equipqr.app so stored tokens match the sandbox realm.
+After switching preview to sandbox, **disconnect and reconnect** QuickBooks on equip-qr-*.vercel.app so stored tokens match the sandbox realm.
 
 Client-side: align `VITE_INTUIT_CLIENT_ID` in `app-env-preview-public` with `INTUIT_CLIENT_ID` in `edge-env-preview-secrets` (same Development client ID).
 
@@ -49,8 +49,8 @@ Register the derived callback URI in the Intuit Developer Portal:
 
 | Environment | Intuit redirect URI |
 |-------------|---------------------|
-| Production | `https://supabase.equipqr.app/functions/v1/quickbooks-oauth-callback` |
-| Preview | `https://supabase.equipqr.app/functions/v1/quickbooks-oauth-callback` |
+| Production | `https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/quickbooks-oauth-callback` |
+| Preview | `https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/quickbooks-oauth-callback` |
 | Local | `http://localhost:54321/functions/v1/quickbooks-oauth-callback` |
 
 Legacy `VITE_QB_OAUTH_REDIRECT_BASE_URL` / `QB_OAUTH_REDIRECT_BASE_URL` overrides are deprecated. Remove them from Vercel and Supabase secrets if still present; OAuth callbacks are derived from the Supabase URL as described above.

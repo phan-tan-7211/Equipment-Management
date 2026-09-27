@@ -139,7 +139,7 @@ describe('EquipmentScanner', () => {
       { id: 'cam-front', label: 'Front' },
     ]);
     hoisted.MockQrScanner.scanImage.mockResolvedValue({
-      data: 'https://equipqr.app/qr/equipment/eq-upload',
+      data: 'https://eqr.zinitek.com/qr/equipment/eq-upload',
     });
   });
 

@@ -703,6 +703,26 @@ describe('SignUpForm', () => {
   });
 
   describe('Invitation-based Signup', () => {
+    it('offers Google authentication without requiring a password or organization name', () => {
+      const onGoogleSignUp = vi.fn();
+      withRouter(
+        <SignUpForm
+          {...defaultSignUpFormProps}
+          isInvitationSignup
+          inviteToken="invite-token"
+          prefillEmail="invitee@example.com"
+          invitedOrgName="Acme Corporation"
+          onGoogleSignUp={onGoogleSignUp}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /login with google/i }));
+
+      expect(onGoogleSignUp).toHaveBeenCalledWith();
+      expect(screen.getByLabelText(/email/i)).toHaveValue('invitee@example.com');
+      expect(screen.getByLabelText('Password')).toBeInTheDocument();
+    });
+
     it('should show info banner when invitedOrgName is provided', () => {
       withRouter(<SignUpForm {...defaultSignUpFormProps} invitedOrgName="Acme Corporation" />);
 

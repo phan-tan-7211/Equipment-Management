@@ -63,7 +63,7 @@ export function resolveRealAuthStorageState(): string | null {
 /** Base URL for real-auth runs (defaults to preview). */
 export function resolveRealAuthBaseUrl(): string {
   const raw = process.env.E2E_REAL_AUTH_BASE_URL?.trim();
-  return raw ? raw.replace(/\/+$/, '') : 'https://preview.equipqr.app';
+  return raw ? raw.replace(/\/+$/, '') : 'https://equip-qr-preview-columbia-cloudworks-llc.vercel.app';
 }
 
 export function resolveVercelAutomationBypassHeaders(): Record<string, string> | undefined {

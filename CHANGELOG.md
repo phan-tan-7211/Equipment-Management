@@ -11,6 +11,17 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.35.0] - 2026-09-27
+
+### Security
+
+- Replaced organization-based cross-tenant administrator authority with a private, audited Platform Admin registry and guarded grant/revoke operations.
+- Restricted Google Workspace OAuth to existing organizations with active owner/admin authorization, including callback-time and domain-ownership revalidation.
+
+### Added
+
+- Added atomic Platform Admin organization provisioning with a pending initial OWNER invitation and no implicit organization membership.
+
 ## [3.34.22] - 2026-09-19
 
 ### Fixed

@@ -35,7 +35,7 @@ describe('real-auth-config', () => {
 
   it('defaults real-auth base URL to preview', () => {
     delete process.env.E2E_REAL_AUTH_BASE_URL;
-    expect(resolveRealAuthBaseUrl()).toBe('https://preview.equipqr.app');
+    expect(resolveRealAuthBaseUrl()).toBe('https://equip-qr-preview-columbia-cloudworks-llc.vercel.app');
   });
 
   it('defaults Google Workspace capture path when env is unset', () => {
@@ -53,8 +53,8 @@ describe('real-auth-config', () => {
   });
 
   it('strips trailing slashes from base URL', () => {
-    process.env.E2E_REAL_AUTH_BASE_URL = 'https://preview.equipqr.app/';
-    expect(resolveRealAuthBaseUrl()).toBe('https://preview.equipqr.app');
+    process.env.E2E_REAL_AUTH_BASE_URL = 'https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/';
+    expect(resolveRealAuthBaseUrl()).toBe('https://equip-qr-preview-columbia-cloudworks-llc.vercel.app');
   });
 
   it('builds production QuickBooks invoice URLs', () => {

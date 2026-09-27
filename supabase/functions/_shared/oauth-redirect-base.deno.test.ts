@@ -4,53 +4,53 @@ import {
   resolveOAuthRedirectBaseUrl,
 } from "./oauth-redirect-base.ts";
 
-Deno.test("resolveOAuthRedirectBaseUrl maps legacy preview project URL to custom Supabase hostname", () => {
+Deno.test("resolveOAuthRedirectBaseUrl uses the canonical SUPABASE_URL", () => {
   assertEquals(
-    resolveOAuthRedirectBaseUrl(undefined, "https://olsdirkvvfegvclbpgrg.supabase.co"),
-    "https://supabase.equipqr.app",
+    resolveOAuthRedirectBaseUrl(undefined, "https://wgynakhoppqkrutnslmv.supabase.co"),
+    "https://wgynakhoppqkrutnslmv.supabase.co",
   );
 });
 
-Deno.test("resolveOAuthRedirectBaseUrl normalizes retired preview Supabase hostname", () => {
+Deno.test("resolveOAuthRedirectBaseUrl honors an explicit canonical override", () => {
   assertEquals(
     resolveOAuthRedirectBaseUrl(
-      "https://supabase.preview.equipqr.app",
-      "https://olsdirkvvfegvclbpgrg.supabase.co",
+      "https://wgynakhoppqkrutnslmv.supabase.co",
+      "https://wgynakhoppqkrutnslmv.supabase.co",
     ),
-    "https://supabase.equipqr.app",
+    "https://wgynakhoppqkrutnslmv.supabase.co",
   );
 });
 
 Deno.test("resolveOAuthRedirectBaseUrl falls back to SUPABASE_URL when override is whitespace-only", () => {
   assertEquals(
-    resolveOAuthRedirectBaseUrl("   ", "https://olsdirkvvfegvclbpgrg.supabase.co"),
-    "https://supabase.equipqr.app",
+    resolveOAuthRedirectBaseUrl("   ", "https://wgynakhoppqkrutnslmv.supabase.co"),
+    "https://wgynakhoppqkrutnslmv.supabase.co",
   );
 });
 
-Deno.test("resolveOAuthRedirectBaseUrl normalizes stale preview Supabase app hostname", () => {
+Deno.test("resolveOAuthRedirectBaseUrl honors a configured redirect base", () => {
   assertEquals(
     resolveOAuthRedirectBaseUrl(
-      "https://preview.supabase.app",
-      "https://olsdirkvvfegvclbpgrg.supabase.co",
+      "https://wgynakhoppqkrutnslmv.supabase.co",
+      "https://wgynakhoppqkrutnslmv.supabase.co",
     ),
-    "https://supabase.equipqr.app",
+    "https://wgynakhoppqkrutnslmv.supabase.co",
   );
 });
 
-Deno.test("resolveOAuthRedirectBaseUrl maps production project URL to custom Supabase hostname", () => {
+Deno.test("resolveOAuthRedirectBaseUrl uses the production project URL", () => {
   assertEquals(
     resolveOAuthRedirectBaseUrl(undefined, "https://wgynakhoppqkrutnslmv.supabase.co"),
-    "https://supabase.equipqr.app",
+    "https://wgynakhoppqkrutnslmv.supabase.co",
   );
 });
 
 Deno.test("buildOAuthCallbackRedirectUri appends callback path", () => {
   assertEquals(
     buildOAuthCallbackRedirectUri(
-      "https://supabase.equipqr.app/",
+      "https://wgynakhoppqkrutnslmv.supabase.co/",
       "/functions/v1/quickbooks-oauth-callback",
     ),
-    "https://supabase.equipqr.app/functions/v1/quickbooks-oauth-callback",
+    "https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/quickbooks-oauth-callback",
   );
 });

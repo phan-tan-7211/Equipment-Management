@@ -197,6 +197,8 @@ const forkliftEquipment: Tables<'equipment'> = {
   image_url: null,
   team_id: eqFixtures.forklift1.team_id,
   default_pm_template_id: eqFixtures.forklift1.default_pm_template_id ?? null,
+  equipment_group_id: null,
+  management_code: null,
   working_hours: 1000,
   last_known_location: null,
   customer_id: null,

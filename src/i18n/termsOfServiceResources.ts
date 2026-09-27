@@ -8,7 +8,7 @@ export const termsOfServiceResources = {
       privacyLink: 'Privacy Policy',
       emailLabel: 'Email',
       websiteLabel: 'Website',
-      websiteAria: 'equipqr.app (opens in new tab)',
+      websiteAria: 'eqr.zinitek.com (opens in new tab)',
       sections: {
         intro: {
           title: 'Who We Are & How These Terms Work.',
@@ -110,7 +110,7 @@ export const termsOfServiceResources = {
       privacyLink: 'Chính sách quyền riêng tư',
       emailLabel: 'Email',
       websiteLabel: 'Trang web',
-      websiteAria: 'equipqr.app (mở trong tab mới)',
+      websiteAria: 'eqr.zinitek.com (mở trong tab mới)',
       sections: {
         intro: {
           title: 'Chúng tôi là ai và Điều khoản này hoạt động như thế nào.',
@@ -212,7 +212,7 @@ export const termsOfServiceResources = {
       privacyLink: '개인정보 처리방침',
       emailLabel: '이메일',
       websiteLabel: '웹사이트',
-      websiteAria: 'equipqr.app (새 탭에서 열림)',
+      websiteAria: 'eqr.zinitek.com (새 탭에서 열림)',
       sections: {
         intro: {
           title: '회사 소개 및 약관의 적용 방식.',
