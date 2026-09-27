@@ -147,6 +147,7 @@ $$;
 REVOKE ALL ON FUNCTION public.create_invitation_atomic(uuid, text, text, text, uuid) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.create_invitation_atomic(uuid, text, text, text, uuid) FROM anon;
 REVOKE ALL ON FUNCTION public.create_invitation_atomic(uuid, text, text, text, uuid) FROM authenticated;
+-- rpc-authenticated-grant-allowed: create_invitation_atomic
 GRANT EXECUTE ON FUNCTION public.create_invitation_atomic(uuid, text, text, text, uuid)
   TO authenticated, service_role;
 
@@ -286,6 +287,7 @@ $$;
 REVOKE ALL ON FUNCTION public.accept_invitation_atomic(uuid, uuid) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.accept_invitation_atomic(uuid, uuid) FROM anon;
 REVOKE ALL ON FUNCTION public.accept_invitation_atomic(uuid, uuid) FROM authenticated;
+-- rpc-authenticated-grant-allowed: accept_invitation_atomic
 GRANT EXECUTE ON FUNCTION public.accept_invitation_atomic(uuid, uuid)
   TO authenticated, service_role;
 
