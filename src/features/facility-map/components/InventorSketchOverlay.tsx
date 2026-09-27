@@ -1545,6 +1545,7 @@ export default function InventorSketchOverlay({
               // cross-browser rendering inside an SVG document, but React's
               // HTMLAttributes type doesn't include it for a <div>.
               {...({ xmlns: 'http://www.w3.org/1999/xhtml' } as React.HTMLAttributes<HTMLDivElement>)}
+              role="presentation"
               className="rounded-lg border border-sky-400/40 bg-slate-950/95 p-2 text-[11px] text-white shadow-xl"
               onMouseDown={(event) => event.stopPropagation()}
             >

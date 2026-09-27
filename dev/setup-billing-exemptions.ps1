@@ -101,7 +101,7 @@ Write-Host "✅ Setup complete!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:"
 Write-Host "  1. Restart your dev server: npm run dev" -ForegroundColor Cyan
-Write-Host "  2. Log in as admin@equipqr.app" -ForegroundColor Cyan
+Write-Host "  2. Log in as admin@zinitek.com" -ForegroundColor Cyan
 Write-Host "  3. Switch to ZNT organization" -ForegroundColor Cyan
 Write-Host "  4. Navigate to Billing Exemptions Admin page" -ForegroundColor Cyan
 Write-Host ""

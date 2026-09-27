@@ -12,7 +12,7 @@ Create/use the GitHub Environment named `production`.
 |---|---|
 | `SUPABASE_PROJECT_REF` | Production Supabase project ref used by migrations and Edge Function deploys. |
 | `VERCEL_TEAM_ID` | Vercel team that owns the SPA project. |
-| `VERCEL_PROJECT_ID` | Vercel SPA project promoted to `equipqr.app`. |
+| `VERCEL_PROJECT_ID` | Vercel SPA project promoted to `eqr.zinitek.com`. |
 
 ### GitHub secrets
 

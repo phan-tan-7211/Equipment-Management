@@ -1,4 +1,4 @@
-const PUBLIC_SUPABASE_ORIGIN = 'https://supabase.equipqr.app';
+const PUBLIC_SUPABASE_ORIGIN = 'https://wgynakhoppqkrutnslmv.supabase.co';
 
 /**
  * Public API origin for marketing demos and other same-project Storage.

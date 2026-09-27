@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Promote a READY Vercel deployment to production traffic (equipqr.app).
+ * Promote a READY Vercel deployment to production traffic (eqr.zinitek.com).
  * Production target IDs are intentionally NOT hard-coded here; GitHub Actions
  * injects them from the `production` Environment.
  *
@@ -310,7 +310,7 @@ async function main() {
   if (!verified) process.exit(1);
 
   process.stdout.write(
-    '::notice::Vercel production promotion complete — equipqr.app should now serve this build.\n',
+    '::notice::Vercel production promotion complete — eqr.zinitek.com should now serve this build.\n',
   );
 }
 

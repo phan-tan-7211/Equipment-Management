@@ -28,16 +28,16 @@ function seedStaticShellSeo(): void {
 
   const canonical = document.createElement('link');
   canonical.rel = 'canonical';
-  canonical.href = 'https://equipqr.app';
+  canonical.href = 'https://eqr.zinitek.com';
   mark(canonical);
   document.head.appendChild(canonical);
 
   const ogPairs: Array<[string, string]> = [
     ['og:type', 'website'],
-    ['og:url', 'https://equipqr.app'],
+    ['og:url', 'https://eqr.zinitek.com'],
     ['og:title', 'Static OG title'],
     ['og:description', 'Static OG description'],
-    ['og:image', 'https://equipqr.app/og-static.png'],
+    ['og:image', 'https://eqr.zinitek.com/og-static.png'],
     ['og:image:width', '1200'],
     ['og:image:height', '630'],
     ['og:image:alt', 'Static alt'],
@@ -55,7 +55,7 @@ function seedStaticShellSeo(): void {
     ['twitter:site', '@equipqr'],
     ['twitter:title', 'Static Twitter title'],
     ['twitter:description', 'Static Twitter description'],
-    ['twitter:image', 'https://equipqr.app/og-static.png'],
+    ['twitter:image', 'https://eqr.zinitek.com/og-static.png'],
   ];
   for (const [name, content] of twitterPairs) {
     const m = document.createElement('meta');
@@ -100,7 +100,7 @@ describe('PageSEO', () => {
         title="Feature"
         description="A great feature"
         path="/features/foo"
-        ogImage="https://equipqr.app/custom.png"
+        ogImage="https://eqr.zinitek.com/custom.png"
       />
     );
 
@@ -117,7 +117,7 @@ describe('PageSEO', () => {
     expect(document.querySelector('meta[name="keywords"]')).toBeNull();
 
     const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    expect(canonical?.getAttribute('href')).toBe('https://equipqr.app/features/foo');
+    expect(canonical?.getAttribute('href')).toBe('https://eqr.zinitek.com/features/foo');
     expect(canonical?.hasAttribute('data-znteqr-page-seo')).toBe(true);
 
     expect(
@@ -129,7 +129,7 @@ describe('PageSEO', () => {
       document
         .querySelector('meta[property="og:image"][data-znteqr-page-seo]')
         ?.getAttribute('content')
-    ).toBe('https://equipqr.app/custom.png');
+    ).toBe('https://eqr.zinitek.com/custom.png');
     expect(
       document
         .querySelector('meta[name="twitter:card"][data-znteqr-page-seo]')
@@ -211,7 +211,7 @@ describe('PageSEO', () => {
     ).toBe('d2');
     expect(
       document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.getAttribute('href')
-    ).toBe('https://equipqr.app/b');
+    ).toBe('https://eqr.zinitek.com/b');
     expect(managedCount()).toBe(firstCount);
   });
 
@@ -252,7 +252,7 @@ describe('PageSEO', () => {
         title="Feature"
         description="Route description"
         path="/features/bar"
-        ogImage="https://equipqr.app/route.png"
+        ogImage="https://eqr.zinitek.com/route.png"
       />
     );
 
@@ -268,7 +268,7 @@ describe('PageSEO', () => {
     expect(document.head.querySelectorAll('link[rel="canonical"]').length).toBe(1);
     expect(
       document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.getAttribute('href')
-    ).toBe('https://equipqr.app/features/bar');
+    ).toBe('https://eqr.zinitek.com/features/bar');
 
     expect(document.head.querySelectorAll('meta[property="og:title"]').length).toBe(1);
     expect(document.head.querySelectorAll('meta[name="twitter:card"]').length).toBe(1);
@@ -288,7 +288,7 @@ describe('PageSEO', () => {
     expect(document.head.querySelectorAll('link[rel="canonical"]').length).toBe(1);
     expect(
       document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.getAttribute('href')
-    ).toBe('https://equipqr.app/features/baz');
+    ).toBe('https://eqr.zinitek.com/features/baz');
     await waitFor(() => {
       expect(document.querySelector('meta[name="keywords"]')).toBeNull();
     });
@@ -303,7 +303,7 @@ describe('PageSEO', () => {
         title="Route"
         description="Route description"
         path="/features/route"
-        ogImage="https://equipqr.app/route-og.png"
+        ogImage="https://eqr.zinitek.com/route-og.png"
       />
     );
 
@@ -316,18 +316,18 @@ describe('PageSEO', () => {
     );
     expect(
       document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.getAttribute('href')
-    ).toBe('https://equipqr.app/features/route');
+    ).toBe('https://eqr.zinitek.com/features/route');
     expect(document.querySelector('meta[property="og:title"]')?.getAttribute('content')).toBe(
       'Route | ZNTEQR'
     );
     expect(document.querySelector('meta[property="og:image"]')?.getAttribute('content')).toBe(
-      'https://equipqr.app/route-og.png'
+      'https://eqr.zinitek.com/route-og.png'
     );
     expect(document.querySelector('meta[name="twitter:title"]')?.getAttribute('content')).toBe(
       'Route | ZNTEQR'
     );
     expect(document.querySelector('meta[name="twitter:image"]')?.getAttribute('content')).toBe(
-      'https://equipqr.app/route-og.png'
+      'https://eqr.zinitek.com/route-og.png'
     );
 
     unmount();
@@ -339,18 +339,18 @@ describe('PageSEO', () => {
     );
     expect(
       document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.getAttribute('href')
-    ).toBe('https://equipqr.app');
+    ).toBe('https://eqr.zinitek.com');
     expect(document.querySelector('meta[property="og:title"]')?.getAttribute('content')).toBe(
       'Static OG title'
     );
     expect(document.querySelector('meta[property="og:image"]')?.getAttribute('content')).toBe(
-      'https://equipqr.app/og-static.png'
+      'https://eqr.zinitek.com/og-static.png'
     );
     expect(document.querySelector('meta[name="twitter:title"]')?.getAttribute('content')).toBe(
       'Static Twitter title'
     );
     expect(document.querySelector('meta[name="twitter:image"]')?.getAttribute('content')).toBe(
-      'https://equipqr.app/og-static.png'
+      'https://eqr.zinitek.com/og-static.png'
     );
   });
 });

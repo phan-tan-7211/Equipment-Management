@@ -65,10 +65,10 @@ npm run demo:record
 npm run demo:record:preflight:prod
 
 # 2) save storage once, then reuse
-npx playwright codegen https://equipqr.app --save-storage=tmp/demos/auth.json
+npx playwright codegen https://eqr.zinitek.com --save-storage=tmp/demos/auth.json
 
 # 3) run recording (finalizes canonical artifact into tmp/demos)
-$env:DEMO_BASE_URL="https://equipqr.app"
+$env:DEMO_BASE_URL="https://eqr.zinitek.com"
 $env:DEMO_STORAGE_STATE="tmp/demos/auth.json"
 npm run demo:record:prod
 

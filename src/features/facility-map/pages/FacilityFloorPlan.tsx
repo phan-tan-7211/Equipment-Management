@@ -40,6 +40,7 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { useI18n } from '@/i18n';
+import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import InventorSketchOverlay from '@/features/facility-map/components/InventorSketchOverlay';
 import {
   cloneSketchDocument,
@@ -500,6 +501,7 @@ function DemoBlueprint({ t }: { t: (key: string) => string }) {
 }
 
 export default function FacilityFloorPlan() {
+  const { formatDateTime } = useFormatTimestamp();
   const { t } = useI18n();
   const [plan, setPlan] = useState<FloorPlanState>(() => {
     try {
@@ -2352,17 +2354,18 @@ export default function FacilityFloorPlan() {
               <div className="mb-2 text-xs font-semibold">{t('facilityMap.layerVisibility')}</div>
               <div className="space-y-1.5">
                 {LAYERS.map((layer) => (
-                  <label key={layer.id} className="flex items-center justify-between rounded-md border px-2 py-1.5 text-xs">
+                  <div key={layer.id} className="flex items-center justify-between rounded-md border px-2 py-1.5 text-xs">
                     <span className="flex items-center gap-2">
                       <span>{layer.emoji}</span>
                       <span>{t(layer.labelKey)}</span>
                     </span>
                     <input
                       type="checkbox"
+                      aria-label={t(layer.labelKey)}
                       checked={!hiddenLayers.has(layer.id)}
                       onChange={() => setLayerVisible(layer.id, hiddenLayers.has(layer.id))}
                     />
-                  </label>
+                  </div>
                 ))}
               </div>
               <div className="mt-2 flex items-center gap-2">
@@ -3097,8 +3100,11 @@ export default function FacilityFloorPlan() {
             </span>
           </div>
 
+          {/* The floor-plan canvas is a pointer-driven application surface with global keyboard controls. */}
+          {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
           <div
             ref={canvasRef}
+            role="application"
             className={`absolute inset-0 select-none ${
               editMode && !sketchMode && (selectedEquipmentId || placeLayer || zoneTool || !['select', 'pan'].includes(drawTool))
                 ? 'cursor-crosshair'
@@ -3107,6 +3113,9 @@ export default function FacilityFloorPlan() {
                   : 'cursor-default'
             }`}
             onClick={placeAt}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') event.preventDefault();
+            }}
             onMouseDown={startPointer}
             onMouseMove={onPointerMove}
             onMouseUp={endPointerInteraction}
@@ -3468,8 +3477,10 @@ export default function FacilityFloorPlan() {
                           ['sw', '-5px', 'calc(100% - 5px)', 'nesw-resize'],
                           ['w', '-5px', '50%', 'ew-resize'],
                         ] as const).map(([handle, left, top, cursor]) => (
-                          <span
+                          <button
+                            type="button"
                             key={handle}
+                            aria-label={t('facilityMap.resizeZone')}
                             className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-sm border border-white bg-slate-950 shadow"
                             style={{ left, top, cursor }}
                             onMouseDown={(event) => {
@@ -3750,7 +3761,7 @@ export default function FacilityFloorPlan() {
                 <div key={entry.id} className="rounded-lg border p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-sm font-medium">{new Date(entry.timestamp).toLocaleString()}</div>
+                      <div className="text-sm font-medium">{formatDateTime(entry.timestamp)}</div>
                       <div className="mt-1 text-[11px] text-muted-foreground">
                         {t('facilityMap.itemsSummary', {
                           assets: entry.snapshot.pins.length,

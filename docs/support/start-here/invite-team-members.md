@@ -24,11 +24,11 @@ From the sidebar go to **Organization**, then select the **Members** tab.
 
 Enter the person's work email address. Double-check the address — invitations are valid for 7 days and bounces are common on personal inboxes.
 
-![Invite Member dialog](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/05-invite-member-dialog.png)
+![Invite Member dialog](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/05-invite-member-dialog.png)
 
-![Members list after sending an invitation](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/06-invite-sent-members-list.png)
+![Members list after sending an invitation](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/06-invite-sent-members-list.png)
 
-![Mobile Invite Member dialog](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/mobile/04-mobile-invite-member-dialog.png)
+![Mobile Invite Member dialog](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/mobile/04-mobile-invite-member-dialog.png)
 
 ## 3. Pick the organization role
 
@@ -44,7 +44,7 @@ Go to **Teams**, open the team that services the equipment this person will work
 
 Their invitation email comes from:
 
-- **Sender:** ZNTEQR <invite@equipqr.app>
+- **Sender:** ZNTEQR <noreply@zinitek.com>
 - **Subject:** "You're invited to join [Your Organization] on ZNTEQR"
 - **Link expires:** 7 days after it is sent.
 

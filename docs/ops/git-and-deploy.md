@@ -7,7 +7,7 @@ Solo-developer workflow for ZNTEQR after #1282 restored the feat → preview →
 | Git | Role |
 |-----|------|
 | **`main`** | Production source of truth. Receives controlled promotes from `preview`. |
-| **`preview`** | Integration / pre-production train. Default merge target for feature work. Deploys to **`preview.equipqr.app`**. |
+| **`preview`** | Integration / pre-production train. Default merge target for feature work. Deploys to **`equip-qr-*.vercel.app`**. |
 | **`feat/*`, `fix/*`, etc.** | Short-lived work branches. Branch off `preview`. |
 
 ```powershell
@@ -21,9 +21,9 @@ Open day-to-day PRs with `--base preview`. Production ships via **`preview` → 
 
 | URL | Meaning |
 |-----|---------|
-| **<https://equipqr.app>** | Production (after Production Release Readiness + `vercel promote`) |
+| **<https://eqr.zinitek.com>** | Production (after Production Release Readiness + `vercel promote`) |
 | **`https://<project>-<hash>-columbia-cloudworks-llc.vercel.app`** | Commit-specific Vercel Preview URL for every work-branch / PR deploy |
-| **<https://preview.equipqr.app>** | Stable hostname for the **integration** git branch **`preview`** — Vercel Preview deploys on merges/pushes to that branch (branch-bound custom domain). Not fast-forwarded from `main`. |
+| **<https://equip-qr-preview-columbia-cloudworks-llc.vercel.app>** | Stable hostname for the **integration** git branch **`preview`** — Vercel Preview deploys on merges/pushes to that branch (branch-bound custom domain). Not fast-forwarded from `main`. |
 
 Do **not** confuse git branch **`preview`** (integration train) with Vercel environment **Preview** (all non-production deploys).
 
@@ -34,24 +34,24 @@ Do **not** confuse git branch **`preview`** (integration train) with Vercel envi
 3. Push your work branch → Vercel builds a **Preview** deployment.
 4. Test on the **commit-specific `*.vercel.app` URL** and/or local stack.
 5. Open PR **`feat/*` → `preview`**. CI + Supabase ephemeral branch (when `supabase/**` changes) must pass. Accumulate short customer-facing CHANGELOG `[Unreleased]` bullets per `.cursor/rules/changelog.mdc`. **Do not** bump `package.json`.
-6. Merge to `preview` → Vercel updates **`preview.equipqr.app`**.
-7. When ready to ship: **`/release`** or open **`preview` → `main`** with version bump + empty Unreleased → **Production Release Readiness** → **`vercel promote`** → **equipqr.app**.
+6. Merge to `preview` → Vercel updates **`equip-qr-*.vercel.app`**.
+7. When ready to ship: **`/release`** or open **`preview` → `main`** with version bump + empty Unreleased → **Production Release Readiness** → **`vercel promote`** → **eqr.zinitek.com**.
 
 ## Vercel configuration
 
 | Setting | Value |
 |---------|--------|
 | **Production** env | Branch tracking: **`main`**. Auto-assign production domains after promote. |
-| **Preview** env | Branch tracking: enabled for work branches. Custom domain **`preview.equipqr.app`** assigned to git branch **`preview`** (normal deploys on push/merge to that branch). |
+| **Preview** env | Branch tracking: enabled for work branches. Custom domain **`equip-qr-*.vercel.app`** assigned to git branch **`preview`** (normal deploys on push/merge to that branch). |
 | **`vercel.json`** | `github.deploymentEnabled: true`; allow **`main`** and **`preview`** git deployments. |
 
 Retired: `preview-domain-alias.yml` (fast-forward `preview` from `main` + deploy hook). Do not reintroduce it.
 
 ## Supabase
 
-- **Cloud app (`preview.equipqr.app` and `equipqr.app`):** current live state is a
-  single production project (`https://supabase.equipqr.app`). The approved
-  target is to move `preview.equipqr.app` to a new persistent dataless branch
+- **Cloud app (`equip-qr-*.vercel.app` and `eqr.zinitek.com`):** current live state is a
+  single production project (`https://wgynakhoppqkrutnslmv.supabase.co`). The approved
+  target is to move `equip-qr-*.vercel.app` to a new persistent dataless branch
   per `docs/ops/preview-persistent-branch.md`; do not assume that cutover is
   live yet.
 - **PR branches:** ephemeral Supabase branches when `supabase/**` changes (schema/RLS validation only).

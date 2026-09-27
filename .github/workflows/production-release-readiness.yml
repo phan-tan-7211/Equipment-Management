@@ -145,7 +145,7 @@ jobs:
             echo "## Production release readiness"
             echo ""
             echo "- **Supabase:** migrations applied; strict schema drift check passed; Edge Functions deployed."
-            echo "- **Vercel:** main deployment READY and **promoted to production** (\`equipqr.app\`)."
+            echo "- **Vercel:** main deployment READY and **promoted to production** (\`eqr.zinitek.com\`)."
             echo "- **Deployment:** ${{ steps.wait_vercel.outputs.deployment_url }}"
             echo ""
             echo "Deployment targets came from versioned config-as-code; authentication came from GitHub Secrets."

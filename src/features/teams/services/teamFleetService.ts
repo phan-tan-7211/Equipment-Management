@@ -286,7 +286,7 @@ export const getTeamEquipmentWithLocations = async (
           name: item.name,
           manufacturer: item.manufacturer,
           model: item.model,
-          serial_number: item.serial_number,
+          serial_number: item.serial_number ?? '',
           lat: coords.lat,
           lng: coords.lng,
           source,
@@ -295,7 +295,7 @@ export const getTeamEquipmentWithLocations = async (
           last_maintenance: item.last_maintenance ?? undefined,
           image_url: item.image_url ?? undefined,
           location_updated_at,
-          team_id: item.team_id,
+          team_id: teamId,
           team_name: teamName
         });
       }

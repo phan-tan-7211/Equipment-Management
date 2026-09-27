@@ -56,16 +56,16 @@ describe('landingVideo', () => {
   });
 
   it('uses VITE_SUPABASE_URL when it is already the production host', () => {
-    vi.stubEnv('VITE_SUPABASE_URL', 'https://supabase.equipqr.app/');
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://wgynakhoppqkrutnslmv.supabase.co/');
     expect(landingVideo('demo.mp4')).toBe(
-      expectedVideoUrl('demo.mp4', 'https://supabase.equipqr.app/'),
+      expectedVideoUrl('demo.mp4', 'https://wgynakhoppqkrutnslmv.supabase.co/'),
     );
   });
 
   it('ignores lookalike hosts and extra path segments on VITE_SUPABASE_URL', () => {
-    vi.stubEnv('VITE_SUPABASE_URL', 'https://supabase.equipqr.app.evil.com/storage/v1');
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://wgynakhoppqkrutnslmv.supabase.co.evil.com/storage/v1');
     expect(landingVideo('demo.mp4')).toBe(
-      expectedVideoUrl('demo.mp4', 'https://supabase.equipqr.app.evil.com/storage/v1'),
+      expectedVideoUrl('demo.mp4', 'https://wgynakhoppqkrutnslmv.supabase.co.evil.com/storage/v1'),
     );
   });
 });

@@ -102,7 +102,7 @@ Google Workspace OAuth requires **matching client ID** in:
 After vault edit:
 
 1. `.\dev\sync-vercel-from-1password.ps1 -Environment preview`
-2. Redeploy the latest Vercel Preview deployment for git **`preview`** (or merge/push to `preview` so `preview.equipqr.app` rebuilds)
+2. Redeploy the latest Vercel Preview deployment for git **`preview`** (or merge/push to `preview` so `equip-qr-*.vercel.app` rebuilds)
 3. Confirm edge secrets via `sync-supabase-secrets-from-1password.ps1 -Check -OpItem edge-env-prod-secrets`
 
 ### Rotate-and-verify playbook (preview + production)
@@ -132,7 +132,7 @@ For `TOKEN_ENCRYPTION_KEY` on production: generate a **new** key; do not copy th
 **3. Apply to targets**
 
 ```powershell
-# Production edge (serves preview.equipqr.app and equipqr.app) — apply only when maintainer authorizes
+# Production edge (serves equip-qr-*.vercel.app and eqr.zinitek.com) — apply only when maintainer authorizes
 .\dev\sync-supabase-secrets-from-1password.ps1 -OpItem edge-env-prod-secrets
 
 # Vercel public env
@@ -151,7 +151,7 @@ For `TOKEN_ENCRYPTION_KEY` on production: generate a **new** key; do not copy th
 |---------|--------|
 | Preview GW | `/dashboard/organization/integrations` — Connect / sync users |
 | Preview QB | Connect sandbox company; `quickbooks_credentials` row present |
-| Production GW/QB | Repeat on `equipqr.app` after prod apply only |
+| Production GW/QB | Repeat on `eqr.zinitek.com` after prod apply only |
 | Drift CI | `secrets-drift-check.yml` daily run green on both edge items |
 
 **6. Re-run `-Check`** — all four commands must exit 0 before closing a rotation task.

@@ -20,7 +20,7 @@ Name, time zone, branding color, and display preferences live on the Settings ta
 
 Scroll to **Inventory Default Location** to set the organization-wide storage address that inventory parts inherit until they save a part-specific override. The section supports Places search, map pin adjustment, and live GPS capture.
 
-![Organization inventory default location](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/location-maps/desktop/07-organization-inventory-default.png)
+![Organization inventory default location](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/location-maps/desktop/07-organization-inventory-default.png)
 
 See [Inventory storage locations](../inventory-parts/inventory-storage-locations) for how inheritance and overrides work on individual parts.
 

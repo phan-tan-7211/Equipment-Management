@@ -1,4 +1,4 @@
-const BASE_URL = 'https://equipqr.app';
+const BASE_URL = 'https://eqr.zinitek.com';
 
 export interface HowToStepSchema {
   name: string;

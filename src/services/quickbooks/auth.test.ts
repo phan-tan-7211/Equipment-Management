@@ -194,7 +194,7 @@ describe('QuickBooks Auth Utilities', () => {
 
     it('derives redirect_uri from VITE_SUPABASE_URL when override is unset', async () => {
       vi.stubEnv('VITE_INTUIT_CLIENT_ID', 'test-client-id');
-      vi.stubEnv('VITE_SUPABASE_URL', 'https://olsdirkvvfegvclbpgrg.supabase.co');
+      vi.stubEnv('VITE_SUPABASE_URL', 'https://wgynakhoppqkrutnslmv.supabase.co');
       vi.stubEnv('VITE_QB_OAUTH_REDIRECT_BASE_URL', '');
 
       const mockRpc = vi.fn().mockResolvedValue({
@@ -207,14 +207,14 @@ describe('QuickBooks Auth Utilities', () => {
       const parsed = new URL(url);
 
       expect(parsed.searchParams.get('redirect_uri')).toBe(
-        'https://supabase.equipqr.app/functions/v1/quickbooks-oauth-callback',
+        'https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/quickbooks-oauth-callback',
       );
     });
 
-    it('normalizes the retired preview Supabase redirect host', async () => {
+    it('uses an explicit canonical Supabase redirect host', async () => {
       vi.stubEnv('VITE_INTUIT_CLIENT_ID', 'test-client-id');
-      vi.stubEnv('VITE_SUPABASE_URL', 'https://olsdirkvvfegvclbpgrg.supabase.co');
-      vi.stubEnv('VITE_QB_OAUTH_REDIRECT_BASE_URL', 'https://supabase.preview.equipqr.app');
+      vi.stubEnv('VITE_SUPABASE_URL', 'https://wgynakhoppqkrutnslmv.supabase.co');
+      vi.stubEnv('VITE_QB_OAUTH_REDIRECT_BASE_URL', 'https://wgynakhoppqkrutnslmv.supabase.co');
 
       const mockRpc = vi.fn().mockResolvedValue({
         data: [{ session_token: 'session-token', nonce: 'nonce-token' }],
@@ -226,7 +226,7 @@ describe('QuickBooks Auth Utilities', () => {
       const parsed = new URL(url);
 
       expect(parsed.searchParams.get('redirect_uri')).toBe(
-        'https://supabase.equipqr.app/functions/v1/quickbooks-oauth-callback',
+        'https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/quickbooks-oauth-callback',
       );
     });
   });

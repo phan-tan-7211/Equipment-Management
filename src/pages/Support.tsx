@@ -57,7 +57,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-muted-foreground" />
             <span>{t('support.checkOur')} </span>
-            <ExternalLink href="https://status.equipqr.app" className="text-primary">
+            <ExternalLink href="https://eqr.zinitek.com/support" className="text-primary">
               {t('support.statusPage')}
             </ExternalLink>
             <span> {t('support.statusPageHelp')}</span>

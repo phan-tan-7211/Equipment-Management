@@ -17,8 +17,8 @@ describe('Security page translation', () => {
       render(<I18nProvider><Security /></I18nProvider>);
       expect(screen.getByRole('heading', { name: heading, level: 1 })).toBeInTheDocument();
       expect(screen.getByText(section)).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'security@equipqr.app' })).toHaveAttribute(
-        'href', 'mailto:security@equipqr.app',
+      expect(screen.getByRole('link', { name: 'security@zinitek.com' })).toHaveAttribute(
+        'href', 'mailto:security@zinitek.com',
       );
     } finally {
       window.localStorage.removeItem('znteqr-language');

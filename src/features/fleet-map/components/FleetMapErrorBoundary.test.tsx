@@ -129,7 +129,7 @@ describe('FleetMapErrorBoundary', () => {
         const error = new Error("Cannot read properties of undefined (reading 'keys')");
         error.stack =
           "TypeError: Cannot read properties of undefined (reading 'keys')\n" +
-          '    at somethingElse (https://preview.equipqr.app/assets/app.js:1:1)';
+          '    at somethingElse (https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/assets/app.js:1:1)';
         throw error;
       };
 

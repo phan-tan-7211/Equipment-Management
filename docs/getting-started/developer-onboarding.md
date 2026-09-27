@@ -187,13 +187,13 @@ See **[Git and Deploy](../ops/git-and-deploy.md)** and **[Development Lifecycle]
 
 2. **Implement, verify locally, commit**
 
-3. **Push work branch** — Vercel Preview builds; test on the commit-specific **`*.vercel.app`** URL. After merge to git **`preview`**, **`preview.equipqr.app`** updates.
+3. **Push work branch** — Vercel Preview builds; test on the commit-specific **`*.vercel.app`** URL. After merge to git **`preview`**, **`equip-qr-*.vercel.app`** updates.
 
    ```powershell
    git push -u origin HEAD
    ```
 
-4. **Open PR to `preview`**, CI green, merge → integration hostname updates. Ship production later via **`preview` → `main`** / `/release` → **Production Release Readiness** promotes **equipqr.app**.
+4. **Open PR to `preview`**, CI green, merge → integration hostname updates. Ship production later via **`preview` → `main`** / `/release` → **Production Release Readiness** promotes **eqr.zinitek.com**.
 
 ## Project Structure Deep Dive
 

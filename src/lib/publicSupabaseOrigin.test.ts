@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { resolvePublicSupabaseOrigin } from '@/lib/publicSupabaseOrigin';
 
-const PUBLIC_ORIGIN = 'https://supabase.equipqr.app';
+const PUBLIC_ORIGIN = 'https://wgynakhoppqkrutnslmv.supabase.co';
 
 describe('resolvePublicSupabaseOrigin', () => {
   it('uses VITE_SUPABASE_URL when it is already the production origin', () => {
-    expect(resolvePublicSupabaseOrigin('https://supabase.equipqr.app/')).toBe(PUBLIC_ORIGIN);
+    expect(resolvePublicSupabaseOrigin('https://wgynakhoppqkrutnslmv.supabase.co/')).toBe(PUBLIC_ORIGIN);
   });
 
   it('pins local Force-reset stacks to the production origin', () => {
@@ -15,7 +15,7 @@ describe('resolvePublicSupabaseOrigin', () => {
 
   it('ignores lookalike hosts and extra path segments', () => {
     expect(
-      resolvePublicSupabaseOrigin('https://supabase.equipqr.app.evil.com/storage/v1'),
+      resolvePublicSupabaseOrigin('https://wgynakhoppqkrutnslmv.supabase.co.evil.com/storage/v1'),
     ).toBe(PUBLIC_ORIGIN);
   });
 
