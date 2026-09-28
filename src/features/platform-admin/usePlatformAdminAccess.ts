@@ -21,3 +21,27 @@ export function usePlatformAdminAccess() {
     error: query.error,
   };
 }
+
+export function usePlatformAdminPendingAccessRequests() {
+  const { user } = useAuth();
+  const { isPlatformAdmin } = usePlatformAdminAccess();
+  const query = useQuery({
+    queryKey: ['platform-access-requests', 'pending'],
+    enabled: Boolean(user?.id && isPlatformAdmin),
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('platform_list_access_requests', {
+        p_status: 'pending',
+      });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  return {
+    pendingCount: query.data?.length ?? 0,
+    isLoading: query.isLoading,
+    error: query.error,
+  };
+}

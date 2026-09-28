@@ -16,6 +16,7 @@ export interface WorkspaceAccessRequest {
   assigned_role: string | null;
   reviewed_at: string | null;
   rejection_reason: string | null;
+  reviewed_by_name: string | null;
 }
 
 export async function ensureWorkspaceAccessRequest(): Promise<WorkspaceAccessRequest> {
@@ -25,4 +26,9 @@ export async function ensureWorkspaceAccessRequest(): Promise<WorkspaceAccessReq
     throw new Error('Workspace access request state was not returned');
   }
   return data[0] as WorkspaceAccessRequest;
+}
+
+export async function resubmitWorkspaceAccessRequest(): Promise<void> {
+  const { error } = await supabase.rpc('resubmit_workspace_access_request');
+  if (error) throw new Error(error.message);
 }

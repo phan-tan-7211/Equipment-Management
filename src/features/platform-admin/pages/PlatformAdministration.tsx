@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -43,6 +44,7 @@ type AccessRequest = {
   organization_name: string | null;
   assigned_role: string | null;
   reviewed_at: string | null;
+  reviewed_by_name: string | null;
   rejection_reason: string | null;
 };
 
@@ -58,6 +60,8 @@ export default function PlatformAdministration() {
   const [lifecycleAction, setLifecycleAction] = useState<'suspend' | 'reactivate' | null>(null);
   const [name, setName] = useState('');
   const [ownerEmail, setOwnerEmail] = useState('');
+  const [rejectRequestId, setRejectRequestId] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
   const [approvalOrganizations, setApprovalOrganizations] = useState<Record<string, string>>({});
   const [approvalRoles, setApprovalRoles] = useState<Record<string, string>>({});
 
@@ -84,9 +88,9 @@ export default function PlatformAdministration() {
   });
 
   const accessRequestsQuery = useQuery({
-    queryKey: ['platform-access-requests', 'pending'],
+    queryKey: ['platform-access-requests', 'all'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('platform_list_access_requests', { p_status: 'pending' });
+      const { data, error } = await supabase.rpc('platform_list_access_requests', { p_status: null });
       if (error) throw error;
       return (data ?? []) as AccessRequest[];
     },
@@ -171,28 +175,51 @@ export default function PlatformAdministration() {
     mutationFn: async (requestId: string) => {
       const { error } = await supabase.rpc('platform_reject_access_request', {
         p_request_id: requestId,
-        p_reason: copy.accessRequestRejectedReason,
+        p_reason: rejectionReason.trim(),
       });
       if (error) throw error;
     },
-    onSuccess: async () => { await refresh(); toast.success(copy.accessRequestRejected); },
+    onSuccess: async () => { setRejectRequestId(null); setRejectionReason(''); await refresh(); toast.success(copy.accessRequestRejected); },
     onError: (error) => { logger.error('Access request rejection failed', error); toast.error(copy.accessRequestRejectionFailed); },
   });
 
   const detail = detailQuery.data;
   const organizations = useMemo(() => listQuery.data ?? [], [listQuery.data]);
-  const accessRequests = useMemo(() => accessRequestsQuery.data ?? [], [accessRequestsQuery.data]);
+  const accessRequests = useMemo(
+    () => (accessRequestsQuery.data ?? []).filter((request) => request.request_status === 'pending'),
+    [accessRequestsQuery.data],
+  );
+  const accessRequestHistory = useMemo(
+    () => (accessRequestsQuery.data ?? []).filter((request) => request.request_status !== 'pending').slice(0, 20),
+    [accessRequestsQuery.data],
+  );
   const activeOrganizations = organizations.filter((organization) => organization.lifecycle_status === 'active');
   const validCreate = name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail.trim());
+  const roleLabel = (role: string | null) => role === 'owner' ? copy.roleOwner : role === 'admin' ? copy.roleAdmin : role === 'viewer' ? copy.roleViewer : role === 'requestor' ? copy.roleRequestor : copy.roleMember;
+  const requestStatusLabel = (requestStatus: AccessRequest['request_status']) => requestStatus === 'approved' ? copy.statusApproved : requestStatus === 'rejected' ? copy.statusRejected : requestStatus === 'cancelled' ? copy.statusCancelled : copy.pending;
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6"><div className="flex min-w-0 items-center gap-3"><Shield className="h-6 w-6 shrink-0 text-primary" /><div><h1 className="font-semibold">{copy.title}</h1><p className="text-xs text-muted-foreground">{copy.subtitle}</p></div></div><div className="ml-auto flex items-center gap-3"><LanguageSwitcher /><Button variant="outline" asChild><Link to="/dashboard">{copy.tenantDashboard}</Link></Button></div></div></header>
       <main className="mx-auto max-w-7xl space-y-5 p-4 sm:p-6">
+        <Dialog open={Boolean(rejectRequestId)} onOpenChange={(open) => { if (!open) setRejectRequestId(null); }}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>{copy.reject}</DialogTitle><DialogDescription>{copy.rejectionReasonHelp}</DialogDescription></DialogHeader>
+            <Label htmlFor="access-rejection-reason">{copy.rejectionReasonLabel}</Label>
+            <Textarea id="access-rejection-reason" value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)} maxLength={1000} />
+            <DialogFooter><Button variant="outline" onClick={() => setRejectRequestId(null)}>{copy.cancel}</Button><Button variant="destructive" disabled={!rejectionReason.trim() || rejectAccessMutation.isPending} onClick={() => rejectRequestId && rejectAccessMutation.mutate(rejectRequestId)}>{copy.reject}</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
         <Card>
           <CardHeader><CardTitle>{copy.accessRequests}</CardTitle><p className="text-sm text-muted-foreground">{copy.accessRequestsDescription}</p></CardHeader>
           <CardContent>
-            {accessRequestsQuery.isLoading ? <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div> : accessRequestsQuery.isError ? <p className="py-4 text-sm text-destructive">{copy.accessRequestsLoadFailed}</p> : accessRequests.length === 0 ? <p className="py-4 text-sm text-muted-foreground">{copy.noAccessRequests}</p> : <div className="space-y-3">{accessRequests.map((request) => <div key={request.request_id} className="grid gap-3 rounded-md border p-3 lg:grid-cols-[1fr_220px_150px_auto] lg:items-center"><div><p className="font-medium">{request.display_name || request.email}</p><p className="text-sm text-muted-foreground">{request.email}</p><p className="text-xs text-muted-foreground">{formatPlatformAdminCopy(copy.accessRequestSubmitted, { date: formatDateTime(request.requested_at) })}</p></div><Select value={approvalOrganizations[request.request_id] ?? ''} onValueChange={(value) => setApprovalOrganizations((current) => ({ ...current, [request.request_id]: value }))}><SelectTrigger aria-label={copy.accessRequestOrganization}><SelectValue placeholder={copy.accessRequestOrganization} /></SelectTrigger><SelectContent>{activeOrganizations.map((organization) => <SelectItem key={organization.organization_id} value={organization.organization_id}>{organization.organization_name}</SelectItem>)}</SelectContent></Select><Select value={approvalRoles[request.request_id] ?? 'member'} onValueChange={(value) => setApprovalRoles((current) => ({ ...current, [request.request_id]: value }))}><SelectTrigger aria-label={copy.accessRequestRole}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="owner">{copy.roleOwner}</SelectItem><SelectItem value="admin">{copy.roleAdmin}</SelectItem><SelectItem value="member">{copy.roleMember}</SelectItem><SelectItem value="viewer">{copy.roleViewer}</SelectItem><SelectItem value="requestor">{copy.roleRequestor}</SelectItem></SelectContent></Select><div className="flex gap-2 lg:justify-end"><Button size="sm" disabled={!approvalOrganizations[request.request_id] || approveAccessMutation.isPending} onClick={() => approveAccessMutation.mutate(request)}><Check className="mr-2 h-4 w-4" />{copy.approve}</Button><Button size="sm" variant="outline" disabled={rejectAccessMutation.isPending} onClick={() => rejectAccessMutation.mutate(request.request_id)}><X className="mr-2 h-4 w-4" />{copy.reject}</Button></div></div>)}</div>}
+{accessRequestsQuery.isLoading ? <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div> : accessRequestsQuery.isError ? <p className="py-4 text-sm text-destructive">{copy.accessRequestsLoadFailed}</p> : accessRequests.length === 0 ? <p className="py-4 text-sm text-muted-foreground">{copy.noAccessRequests}</p> : <div className="space-y-3">{accessRequests.map((request) => <div key={request.request_id} className="grid gap-3 rounded-md border p-3 lg:grid-cols-[1fr_220px_150px_auto] lg:items-center"><div><p className="font-medium">{request.display_name || request.email}</p><p className="text-sm text-muted-foreground">{request.email}</p><p className="text-xs text-muted-foreground">{formatPlatformAdminCopy(copy.accessRequestSubmitted, { date: formatDateTime(request.requested_at) })}</p></div><Select value={approvalOrganizations[request.request_id] ?? ''} onValueChange={(value) => setApprovalOrganizations((current) => ({ ...current, [request.request_id]: value }))}><SelectTrigger aria-label={copy.accessRequestOrganization}><SelectValue placeholder={copy.accessRequestOrganization} /></SelectTrigger><SelectContent>{activeOrganizations.map((organization) => <SelectItem key={organization.organization_id} value={organization.organization_id}>{organization.organization_name}</SelectItem>)}</SelectContent></Select><Select value={approvalRoles[request.request_id] ?? 'member'} onValueChange={(value) => setApprovalRoles((current) => ({ ...current, [request.request_id]: value }))}><SelectTrigger aria-label={copy.accessRequestRole}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="owner">{copy.roleOwner}</SelectItem><SelectItem value="admin">{copy.roleAdmin}</SelectItem><SelectItem value="member">{copy.roleMember}</SelectItem><SelectItem value="viewer">{copy.roleViewer}</SelectItem><SelectItem value="requestor">{copy.roleRequestor}</SelectItem></SelectContent></Select><div className="flex gap-2 lg:justify-end"><Button size="sm" disabled={!approvalOrganizations[request.request_id] || approveAccessMutation.isPending} onClick={() => approveAccessMutation.mutate(request)}><Check className="mr-2 h-4 w-4" />{copy.approve}</Button><Button size="sm" variant="outline" disabled={rejectAccessMutation.isPending} onClick={() => { setRejectionReason(''); setRejectRequestId(request.request_id); }}><X className="mr-2 h-4 w-4" />{copy.reject}</Button></div></div>)}</div>}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>{copy.accessRequestHistory}</CardTitle><p className="text-sm text-muted-foreground">{copy.accessRequestHistoryDescription}</p></CardHeader>
+          <CardContent>
+            {accessRequestsQuery.isLoading ? <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div> : accessRequestsQuery.isError ? <p className="py-4 text-sm text-destructive">{copy.accessRequestsLoadFailed}</p> : accessRequestHistory.length === 0 ? <p className="py-4 text-sm text-muted-foreground">{copy.noAccessRequestHistory}</p> : <div className="space-y-3">{accessRequestHistory.map((request) => <div key={request.request_id} className="grid gap-2 rounded-md border p-3 sm:grid-cols-[1fr_auto] sm:items-start"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="font-medium">{request.display_name || request.email}</p><Badge variant={request.request_status === 'approved' ? 'default' : request.request_status === 'rejected' ? 'destructive' : 'outline'}>{requestStatusLabel(request.request_status)}</Badge></div><p className="text-sm text-muted-foreground">{request.email}</p>{request.reviewed_at ? <p className="text-xs text-muted-foreground">{formatPlatformAdminCopy(copy.accessRequestReviewed, { date: formatDateTime(request.reviewed_at), name: request.reviewed_by_name || copy.reviewerFallback })}</p> : null}{request.rejection_reason ? <p className="mt-1 text-sm text-destructive">{request.rejection_reason}</p> : null}</div>{request.organization_name && request.assigned_role ? <p className="text-sm text-muted-foreground sm:text-right">{formatPlatformAdminCopy(copy.accessRequestDecision, { organization: request.organization_name, role: roleLabel(request.assigned_role) })}</p> : null}</div>)}</div>}
           </CardContent>
         </Card>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-2xl font-semibold">{copy.organizations}</h2><p className="text-sm text-muted-foreground">{copy.organizationsDescription}</p></div><Button onClick={() => setCreateOpen(true)}><Plus className="mr-2 h-4 w-4" />{copy.createOrganization}</Button></div>

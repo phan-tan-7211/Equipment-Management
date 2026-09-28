@@ -25269,7 +25269,8 @@ ALTER TABLE "private"."workspace_access_requests" FORCE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE "private"."workspace_access_requests" FROM PUBLIC, anon, authenticated, service_role;
 
 COMMENT ON TABLE "private"."workspace_access_requests" IS 'Backend-owned requests from authenticated users without organization access; direct client table access is prohibited.';
-COMMENT ON FUNCTION public.ensure_workspace_access_request() IS 'Idempotently records self-registration access requests without granting organization membership.';
+COMMENT ON FUNCTION public.ensure_workspace_access_request() IS 'Returns the latest self-registration request without recreating a rejected request.';
+COMMENT ON FUNCTION public.resubmit_workspace_access_request() IS 'Allows an authenticated requester to explicitly resubmit only their latest rejected access request.';
 COMMENT ON FUNCTION public.platform_approve_access_request(uuid, uuid, text) IS 'Platform Admin-only approval that atomically assigns an organization role and creates membership.';
 
 

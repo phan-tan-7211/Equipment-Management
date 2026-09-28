@@ -5960,6 +5960,7 @@ export type Database = {
           request_id: string | null
           request_status: string
           reviewed_at: string | null
+          reviewed_by_name: string | null
         }[]
       }
       grant_platform_admin: { Args: { p_user_id: string }; Returns: boolean }
@@ -6240,6 +6241,7 @@ export type Database = {
           request_status: string
           requested_at: string
           reviewed_at: string | null
+          reviewed_by_name: string | null
           user_id: string
         }[]
       }
@@ -6326,6 +6328,14 @@ export type Database = {
           p_workspace_org_id: string
         }
         Returns: Json
+      }
+      resubmit_workspace_access_request: {
+        Args: never
+        Returns: {
+          request_id: string
+          request_status: string
+          requested_at: string
+        }[]
       }
       reserve_slot_for_invitation: {
         Args: { invitation_id: string; org_id: string }

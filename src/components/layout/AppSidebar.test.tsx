@@ -3,7 +3,7 @@ import { renderAsPersona, screen } from '@vitest-harness/utils/test-utils';
 import { describe, it, expect, vi } from 'vitest';
 import AppSidebar from './AppSidebar';
 import { useInventoryAccess } from '@/features/inventory/hooks/useInventoryAccess';
-import { usePlatformAdminAccess } from '@/features/platform-admin/usePlatformAdminAccess';
+import { usePlatformAdminAccess, usePlatformAdminPendingAccessRequests } from '@/features/platform-admin/usePlatformAdminAccess';
 
 vi.mock('@/hooks/use-mobile', () => ({
   useIsMobile: () => false,
@@ -15,6 +15,7 @@ vi.mock('@/features/inventory/hooks/useInventoryAccess', () => ({
 
 vi.mock('@/features/platform-admin/usePlatformAdminAccess', () => ({
   usePlatformAdminAccess: vi.fn(),
+  usePlatformAdminPendingAccessRequests: vi.fn(),
 }));
 
 vi.mock('@/components/ui/sidebar-context', async () => {
@@ -39,6 +40,11 @@ describe('AppSidebar', () => {
   beforeEach(() => {
     vi.mocked(usePlatformAdminAccess).mockReturnValue({
       isPlatformAdmin: false,
+      isLoading: false,
+      error: null,
+    });
+    vi.mocked(usePlatformAdminPendingAccessRequests).mockReturnValue({
+      pendingCount: 0,
       isLoading: false,
       error: null,
     });
@@ -67,6 +73,23 @@ describe('AppSidebar', () => {
       'href',
       '/platform-admin',
     );
+  });
+
+  it('shows a pending access request badge to a Platform Admin', () => {
+    vi.mocked(usePlatformAdminAccess).mockReturnValue({
+      isPlatformAdmin: true,
+      isLoading: false,
+      error: null,
+    });
+    vi.mocked(usePlatformAdminPendingAccessRequests).mockReturnValue({
+      pendingCount: 2,
+      isLoading: false,
+      error: null,
+    });
+
+    renderAsPersona(<AppSidebar />, 'admin');
+
+    expect(screen.getByLabelText('2 pending access requests')).toHaveTextContent('2');
   });
 
   it('renders the three operational group labels for an admin', () => {

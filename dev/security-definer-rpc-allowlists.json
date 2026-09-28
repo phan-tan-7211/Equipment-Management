@@ -104,6 +104,7 @@
     "refresh_quickbooks_tokens_manual",
     "replace_historical_work_order_timeline",
     "request_workspace_personal_org_merge",
+    "resubmit_workspace_access_request",
     "reserve_slot_for_invitation",
     "resolve_operator_checkin_by_token",
     "resolve_quick_form_by_token",
