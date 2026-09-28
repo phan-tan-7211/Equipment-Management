@@ -5950,6 +5950,19 @@ export type Database = {
           workspace_org_id: string
         }[]
       }
+      ensure_workspace_access_request: {
+        Args: never
+        Returns: {
+          assigned_role: string | null
+          organization_id: string | null
+          organization_name: string | null
+          rejection_reason: string | null
+          request_id: string | null
+          request_status: string
+          reviewed_at: string | null
+          reviewed_by_name: string | null
+        }[]
+      }
       grant_platform_admin: { Args: { p_user_id: string }; Returns: boolean }
       handle_invitation_account_creation: {
         Args: { p_invitation_id: string; p_user_id: string }
@@ -6215,6 +6228,36 @@ export type Database = {
           pending_owner_invitation_id: string | null
         }[]
       }
+      platform_list_access_requests: {
+        Args: { p_status?: string | null }
+        Returns: {
+          assigned_role: string | null
+          display_name: string | null
+          email: string
+          organization_id: string | null
+          organization_name: string | null
+          rejection_reason: string | null
+          request_id: string
+          request_status: string
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by_name: string | null
+          user_id: string
+        }[]
+      }
+      platform_approve_access_request: {
+        Args: { p_organization_id: string; p_request_id: string; p_role: string }
+        Returns: {
+          assigned_role: string
+          organization_id: string
+          request_id: string
+          user_id: string
+        }[]
+      }
+      platform_reject_access_request: {
+        Args: { p_reason?: string | null; p_request_id: string }
+        Returns: { request_id: string; request_status: string }[]
+      }
       platform_reactivate_organization: {
         Args: { p_organization_id: string; p_reason?: string | null }
         Returns: Json
@@ -6285,6 +6328,14 @@ export type Database = {
           p_workspace_org_id: string
         }
         Returns: Json
+      }
+      resubmit_workspace_access_request: {
+        Args: never
+        Returns: {
+          request_id: string
+          request_status: string
+          requested_at: string
+        }[]
       }
       reserve_slot_for_invitation: {
         Args: { invitation_id: string; org_id: string }

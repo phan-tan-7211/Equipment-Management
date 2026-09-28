@@ -11,6 +11,16 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.36.0] - 2026-09-28
+
+### Added
+
+- **Access approval** - Platform administrators can review self-registration requests, assign organization access, and see pending-request counts and decision history.
+
+### Changed
+
+- **Rejected requests** - Users can see the rejection reason and reviewer, and explicitly resubmit instead of sending another request automatically on sign-in.
+
 ## [3.35.1] - 2026-09-28
 
 ### Changed

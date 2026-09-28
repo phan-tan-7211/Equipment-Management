@@ -25233,6 +25233,47 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
+-- Added by migration 20260928100000_self_registration_access_requests.sql.
+CREATE TABLE "private"."workspace_access_requests" (
+    "id" uuid DEFAULT extensions.gen_random_uuid() NOT NULL,
+    "user_id" uuid NOT NULL,
+    "email" text NOT NULL,
+    "display_name" text,
+    "status" text DEFAULT 'pending'::text NOT NULL,
+    "organization_id" uuid,
+    "assigned_role" text,
+    "requested_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "reviewed_at" timestamp with time zone,
+    "reviewed_by" uuid,
+    "rejection_reason" text,
+    CONSTRAINT "workspace_access_requests_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "workspace_access_requests_status_check" CHECK (("status" = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'cancelled'::text]))),
+    CONSTRAINT "workspace_access_requests_role_check" CHECK (("assigned_role" IS NULL) OR ("assigned_role" = ANY (ARRAY['owner'::text, 'admin'::text, 'member'::text, 'viewer'::text, 'requestor'::text]))),
+    CONSTRAINT "workspace_access_requests_review_check" CHECK ((("status" = 'pending'::text) AND ("reviewed_at" IS NULL) AND ("reviewed_by" IS NULL)) OR (("status" <> 'pending'::text) AND ("reviewed_at" IS NOT NULL)))
+);
+
+ALTER TABLE ONLY "private"."workspace_access_requests"
+    ADD CONSTRAINT "workspace_access_requests_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY "private"."workspace_access_requests"
+    ADD CONSTRAINT "workspace_access_requests_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES public.organizations(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY "private"."workspace_access_requests"
+    ADD CONSTRAINT "workspace_access_requests_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES auth.users(id) ON DELETE SET NULL;
+
+CREATE UNIQUE INDEX "workspace_access_requests_one_pending_per_user_idx" ON "private"."workspace_access_requests" USING btree ("user_id") WHERE ("status" = 'pending'::text);
+CREATE INDEX "workspace_access_requests_status_requested_idx" ON "private"."workspace_access_requests" USING btree ("status", "requested_at" DESC);
+
+ALTER TABLE "private"."workspace_access_requests" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "private"."workspace_access_requests" FORCE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE "private"."workspace_access_requests" FROM PUBLIC, anon, authenticated, service_role;
+
+COMMENT ON TABLE "private"."workspace_access_requests" IS 'Backend-owned requests from authenticated users without organization access; direct client table access is prohibited.';
+COMMENT ON FUNCTION public.ensure_workspace_access_request() IS 'Returns the latest self-registration request without recreating a rejected request.';
+COMMENT ON FUNCTION public.resubmit_workspace_access_request() IS 'Allows an authenticated requester to explicitly resubmit only their latest rejected access request.';
+COMMENT ON FUNCTION public.platform_approve_access_request(uuid, uuid, text) IS 'Platform Admin-only approval that atomically assigns an organization role and creates membership.';
+
+
 
 
 

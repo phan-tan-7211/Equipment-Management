@@ -11,6 +11,11 @@ vi.mock('@/hooks/useAuth', () => ({
 }));
 
 describe('WorkspaceAccessGate', () => {
+  it('shows a retryable resubmission failure without clearing the rejection', () => {
+    render(<WorkspaceAccessGate mode="rejected" domain={null} resubmitFailed onResubmit={vi.fn()} />);
+    expect(screen.getByText('Could not resubmit your request. Please try again.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /resubmit request/i })).toBeEnabled();
+  });
   beforeEach(() => {
     signOutMock.mockReset();
   });
@@ -31,5 +36,29 @@ describe('WorkspaceAccessGate', () => {
     expect(screen.getByText('This authenticated account is not authorized for an organization.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /create organization|create workspace|become owner/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /create organization|create workspace|become owner/i })).not.toBeInTheDocument();
+  });
+
+  it('shows rejection details and resubmits only when the user chooses to', async () => {
+    const user = userEvent.setup();
+    const onResubmit = vi.fn();
+
+    render(
+      <WorkspaceAccessGate
+        mode="rejected"
+        domain={null}
+        rejectionReason="Organization could not be verified"
+        reviewedByName="Platform Reviewer"
+        reviewedAt="2026-09-28T08:00:00.000Z"
+        onResubmit={onResubmit}
+      />,
+    );
+
+    expect(screen.getByText('Workspace access request rejected')).toBeInTheDocument();
+    expect(screen.getByText(/Organization could not be verified/)).toBeInTheDocument();
+    expect(screen.getByText(/Platform Reviewer/)).toBeInTheDocument();
+    expect(onResubmit).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: /resubmit request/i }));
+    expect(onResubmit).toHaveBeenCalledTimes(1);
   });
 });

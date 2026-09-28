@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import {
   Home,
   Forklift,
@@ -40,7 +41,7 @@ import Logo from "@/components/ui/Logo";
 import { ORGANIZATION_MEMBERS_PATH } from "@/features/organization/constants/routes";
 import { useInventoryAccess } from "@/features/inventory/hooks/useInventoryAccess";
 import { useI18n } from '@/i18n';
-import { usePlatformAdminAccess } from '@/features/platform-admin/usePlatformAdminAccess';
+import { usePlatformAdminAccess, usePlatformAdminPendingAccessRequests } from '@/features/platform-admin/usePlatformAdminAccess';
 import { platformAdminCopy } from '@/features/platform-admin/platformAdminCopy';
 
 interface NavigationItem {
@@ -98,6 +99,7 @@ const AppSidebar = () => {
   const { language, t } = useI18n();
   const platformCopy = platformAdminCopy[language];
   const { isPlatformAdmin } = usePlatformAdminAccess();
+  const { pendingCount } = usePlatformAdminPendingAccessRequests();
 
   const handleNavClick = () => {
     if (isMobile) {
@@ -208,7 +210,19 @@ const AppSidebar = () => {
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild className={cn("text-sm transition-colors duration-fast", textColorClass, hasCustomBranding ? '' : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground', hoverBackgroundClass)}>
-                        <Link to="/platform-admin" onClick={handleNavClick}><Shield className="h-4 w-4" /><span>{platformCopy.title}</span></Link>
+                        <Link to="/platform-admin" onClick={handleNavClick}>
+                          <Shield className="h-4 w-4" />
+                          <span>{platformCopy.title}</span>
+                          {pendingCount > 0 && (
+                            <Badge
+                              variant="destructive"
+                              className="ml-auto min-w-5 justify-center px-1 py-0 text-[10px]"
+                              aria-label={`${pendingCount} pending access requests`}
+                            >
+                              {pendingCount}
+                            </Badge>
+                          )}
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   </SidebarMenu>

@@ -33,7 +33,7 @@ flowchart TD
   C --> D[authSignupService calls supabase.auth.signUp]
   D --> E[POST wgynakhoppqkrutnslmv.supabase.co/auth/v1/signup]
   E --> F[Supabase Auth creates pending auth.users record]
-  F --> G[Auth trigger creates profile, organization, and membership records]
+  F --> G[Auth trigger creates profile only; no organization or membership]
   F --> H[Supabase Auth sends confirmation email through custom SMTP]
   H --> I[Resend accepts SMTP handoff]
   I --> J{Recipient mailbox result}
@@ -42,7 +42,12 @@ flowchart TD
   K --> M[Supabase Auth verifies signup token]
   M --> N[email_confirmed_at is set]
   N --> O[User signs in]
-  O --> P[App loads dashboard with organization context]
+  O --> P{Invitation or access request?}
+  P -->|Invitation| Q[Claim invited organization role]
+  P -->|No invitation| R[Create private pending access request]
+  Q --> S[App loads dashboard with organization context]
+  R --> T[Platform Admin assigns organization and role]
+  T --> S
 ```
 
 ## Numbered Flow
@@ -56,12 +61,14 @@ flowchart TD
    - user metadata including name, organization name, and legal acceptance intent.
 5. Supabase Auth receives `POST /auth/v1/signup`.
 6. Supabase creates an unconfirmed `auth.users` row.
-7. The new-user database trigger creates the application-side profile, personal organization, and organization membership records.
+7. The new-user database trigger creates the application-side profile only. It does not create an organization or membership.
 8. Supabase Auth sends the confirmation email through the configured Resend SMTP server.
 9. Resend accepts the SMTP handoff and records the message under transactional emails.
 10. The recipient mailbox either accepts or rejects the email.
 11. When the user clicks the confirmation link, Supabase verifies the signup token and sets `auth.users.email_confirmed_at`.
-12. The user signs in normally and the app loads the dashboard with organization context.
+12. The user signs in normally. An invited user claims the invitation; an uninvited user receives a private pending access request and remains blocked until a Platform Admin assigns an organization and role.
+
+13. Platform Administration reviews pending access requests. Approval atomically creates the selected organization membership; rejection creates no membership.
 
 ## Verification Checklist
 
@@ -84,7 +91,7 @@ Use this checklist after any Auth, SMTP, DNS, or signup-flow change.
 5. In Resend, confirm a new email with subject `Confirm Your Signup` appears.
 6. Confirm Resend status becomes `delivered`.
 7. Click the confirmation link from the inbox.
-8. Confirm the user can sign in and reaches the dashboard.
+8. Confirm an uninvited user can sign in but remains on the access-pending gate until approved.
 9. Confirm `auth.users.email_confirmed_at` is no longer `NULL` for that email.
 
 ## Known Failure Modes
