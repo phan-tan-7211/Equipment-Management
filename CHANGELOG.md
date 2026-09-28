@@ -23,6 +23,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 - **Google sign-in** - Signing in with Google always shows the account chooser, so users can switch accounts after signing out.
 - **Pending access message** - Personal email domains are no longer described as claimed while an access request is pending.
 
+## [3.37.1] - 2026-09-29
+
+### Fixed
+
+- **Cookie consent banner** - Dashboard pages no longer fall into the error screen when the cookie consent banner reloads during development.
+
 ## [3.37.0] - 2026-09-28
 
 ### Added
