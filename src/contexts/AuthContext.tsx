@@ -228,6 +228,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       provider: 'google',
       options: {
         redirectTo,
+        // Always show Google's account chooser so users can switch accounts after signing out.
+        queryParams: { prompt: 'select_account' },
       },
     });
 

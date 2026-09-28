@@ -354,6 +354,7 @@ describe('AuthContext', () => {
       provider: 'google',
       options: {
         redirectTo: 'http://localhost:3000/auth',
+        queryParams: { prompt: 'select_account' },
       },
     });
     expect(signInResult).toEqual({ error: null });
@@ -375,6 +376,7 @@ describe('AuthContext', () => {
       provider: 'google',
       options: {
         redirectTo: `http://localhost:3000/auth?next=${encodeURIComponent(pending)}`,
+        queryParams: { prompt: 'select_account' },
       },
     });
   });
@@ -393,6 +395,7 @@ describe('AuthContext', () => {
       provider: 'google',
       options: {
         redirectTo: 'http://localhost:3000/auth',
+        queryParams: { prompt: 'select_account' },
       },
     });
   });

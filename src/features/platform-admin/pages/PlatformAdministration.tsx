@@ -48,6 +48,8 @@ type AccessRequest = {
   rejection_reason: string | null;
 };
 
+const HISTORY_PAGE_SIZE = 20;
+
 export default function PlatformAdministration() {
   const { language } = useI18n();
   const { formatDate, formatDateTime } = useFormatTimestamp();
@@ -64,6 +66,9 @@ export default function PlatformAdministration() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [approvalOrganizations, setApprovalOrganizations] = useState<Record<string, string>>({});
   const [approvalRoles, setApprovalRoles] = useState<Record<string, string>>({});
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyStatus, setHistoryStatus] = useState<'all' | 'approved' | 'rejected' | 'cancelled'>('all');
+  const [historyPage, setHistoryPage] = useState(0);
 
   const listQuery = useQuery({
     queryKey: ['platform-organizations', search.trim(), status],
@@ -189,9 +194,22 @@ export default function PlatformAdministration() {
     () => (accessRequestsQuery.data ?? []).filter((request) => request.request_status === 'pending'),
     [accessRequestsQuery.data],
   );
-  const accessRequestHistory = useMemo(
-    () => (accessRequestsQuery.data ?? []).filter((request) => request.request_status !== 'pending').slice(0, 20),
+  const reviewedAccessRequests = useMemo(
+    () => (accessRequestsQuery.data ?? []).filter((request) => request.request_status !== 'pending'),
     [accessRequestsQuery.data],
+  );
+  const filteredAccessRequestHistory = useMemo(() => {
+    const term = historySearch.trim().toLowerCase();
+    return reviewedAccessRequests.filter((request) =>
+      (historyStatus === 'all' || request.request_status === historyStatus)
+      && (!term || [request.display_name, request.email, request.organization_name, request.reviewed_by_name]
+        .some((value) => value?.toLowerCase().includes(term))));
+  }, [reviewedAccessRequests, historySearch, historyStatus]);
+  const historyPageCount = Math.max(1, Math.ceil(filteredAccessRequestHistory.length / HISTORY_PAGE_SIZE));
+  const currentHistoryPage = Math.min(historyPage, historyPageCount - 1);
+  const accessRequestHistory = filteredAccessRequestHistory.slice(
+    currentHistoryPage * HISTORY_PAGE_SIZE,
+    (currentHistoryPage + 1) * HISTORY_PAGE_SIZE,
   );
   const activeOrganizations = organizations.filter((organization) => organization.lifecycle_status === 'active');
   const validCreate = name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail.trim());
@@ -219,7 +237,8 @@ export default function PlatformAdministration() {
         <Card>
           <CardHeader><CardTitle>{copy.accessRequestHistory}</CardTitle><p className="text-sm text-muted-foreground">{copy.accessRequestHistoryDescription}</p></CardHeader>
           <CardContent>
-            {accessRequestsQuery.isLoading ? <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div> : accessRequestsQuery.isError ? <p className="py-4 text-sm text-destructive">{copy.accessRequestsLoadFailed}</p> : accessRequestHistory.length === 0 ? <p className="py-4 text-sm text-muted-foreground">{copy.noAccessRequestHistory}</p> : <div className="space-y-3">{accessRequestHistory.map((request) => <div key={request.request_id} className="grid gap-2 rounded-md border p-3 sm:grid-cols-[1fr_auto] sm:items-start"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="font-medium">{request.display_name || request.email}</p><Badge variant={request.request_status === 'approved' ? 'default' : request.request_status === 'rejected' ? 'destructive' : 'outline'}>{requestStatusLabel(request.request_status)}</Badge></div><p className="text-sm text-muted-foreground">{request.email}</p>{request.reviewed_at ? <p className="text-xs text-muted-foreground">{formatPlatformAdminCopy(copy.accessRequestReviewed, { date: formatDateTime(request.reviewed_at), name: request.reviewed_by_name || copy.reviewerFallback })}</p> : null}{request.rejection_reason ? <p className="mt-1 text-sm text-destructive">{request.rejection_reason}</p> : null}</div>{request.organization_name && request.assigned_role ? <p className="text-sm text-muted-foreground sm:text-right">{formatPlatformAdminCopy(copy.accessRequestDecision, { organization: request.organization_name, role: roleLabel(request.assigned_role) })}</p> : null}</div>)}</div>}
+            {reviewedAccessRequests.length > 0 ? <div className="mb-3 grid gap-3 sm:grid-cols-[1fr_180px]"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input aria-label={copy.historySearchAria} value={historySearch} onChange={(e) => { setHistorySearch(e.target.value); setHistoryPage(0); }} placeholder={copy.historySearchPlaceholder} className="pl-9" /></div><Select value={historyStatus} onValueChange={(value) => { setHistoryStatus(value as typeof historyStatus); setHistoryPage(0); }}><SelectTrigger aria-label={copy.historyFilterStatus}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{copy.allStatuses}</SelectItem><SelectItem value="approved">{copy.statusApproved}</SelectItem><SelectItem value="rejected">{copy.statusRejected}</SelectItem><SelectItem value="cancelled">{copy.statusCancelled}</SelectItem></SelectContent></Select></div> : null}
+            {accessRequestsQuery.isLoading ? <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div> : accessRequestsQuery.isError ? <p className="py-4 text-sm text-destructive">{copy.accessRequestsLoadFailed}</p> : reviewedAccessRequests.length === 0 ? <p className="py-4 text-sm text-muted-foreground">{copy.noAccessRequestHistory}</p> : accessRequestHistory.length === 0 ? <p className="py-4 text-sm text-muted-foreground">{copy.noAccessRequestHistoryMatches}</p> : <><div className="space-y-3">{accessRequestHistory.map((request) => <div key={request.request_id} className="grid gap-2 rounded-md border p-3 sm:grid-cols-[1fr_auto] sm:items-start"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="font-medium">{request.display_name || request.email}</p><Badge variant={request.request_status === 'approved' ? 'default' : request.request_status === 'rejected' ? 'destructive' : 'outline'}>{requestStatusLabel(request.request_status)}</Badge></div><p className="text-sm text-muted-foreground">{request.email}</p>{request.reviewed_at ? <p className="text-xs text-muted-foreground">{formatPlatformAdminCopy(copy.accessRequestReviewed, { date: formatDateTime(request.reviewed_at), name: request.reviewed_by_name || copy.reviewerFallback })}</p> : null}{request.rejection_reason ? <p className="mt-1 text-sm text-destructive">{request.rejection_reason}</p> : null}</div>{request.organization_name && request.assigned_role ? <p className="text-sm text-muted-foreground sm:text-right">{formatPlatformAdminCopy(copy.accessRequestDecision, { organization: request.organization_name, role: roleLabel(request.assigned_role) })}</p> : null}</div>)}</div>{historyPageCount > 1 ? <div className="mt-3 flex items-center justify-between gap-2"><p className="text-sm text-muted-foreground">{formatPlatformAdminCopy(copy.historyPageSummary, { from: String(currentHistoryPage * HISTORY_PAGE_SIZE + 1), to: String(currentHistoryPage * HISTORY_PAGE_SIZE + accessRequestHistory.length), total: String(filteredAccessRequestHistory.length) })}</p><div className="flex gap-2"><Button size="sm" variant="outline" disabled={currentHistoryPage === 0} onClick={() => setHistoryPage(currentHistoryPage - 1)}>{copy.previousPage}</Button><Button size="sm" variant="outline" disabled={currentHistoryPage >= historyPageCount - 1} onClick={() => setHistoryPage(currentHistoryPage + 1)}>{copy.nextPage}</Button></div></div> : null}</>}
           </CardContent>
         </Card>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-2xl font-semibold">{copy.organizations}</h2><p className="text-sm text-muted-foreground">{copy.organizationsDescription}</p></div><Button onClick={() => setCreateOpen(true)}><Plus className="mr-2 h-4 w-4" />{copy.createOrganization}</Button></div>
