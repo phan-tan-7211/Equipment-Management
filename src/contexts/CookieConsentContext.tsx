@@ -1,5 +1,4 @@
 import React, {
-  createContext,
   useCallback,
   useContext,
   useEffect,
@@ -19,16 +18,7 @@ import {
 } from '@/lib/cookieConsent';
 import { useI18n } from '@/i18n';
 import { getFinalHardcodedAuditCopy } from '@/i18n/finalHardcodedAuditCopy';
-
-interface CookieConsentContextValue {
-  decision: CookieConsentDecision | null;
-  needsConsent: boolean;
-  canUsePreferences: boolean;
-  accept: () => void;
-  reject: () => void;
-}
-
-const CookieConsentContext = createContext<CookieConsentContextValue | undefined>(undefined);
+import { CookieConsentContext, type CookieConsentContextValue } from './cookie-consent-context';
 
 export const CookieConsentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { language } = useI18n();
@@ -86,6 +76,9 @@ export const CookieConsentProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
+// Hooks stay co-located with the provider; the context object itself lives in
+// `cookie-consent-context.ts` so hot reloads of this file keep one identity.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCookieConsent(): CookieConsentContextValue {
   const ctx = useContext(CookieConsentContext);
   if (!ctx) {
@@ -94,6 +87,7 @@ export function useCookieConsent(): CookieConsentContextValue {
   return ctx;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useWhenPreferenceStorageAllowed(onAllowed: () => void): void {
   const ctx = useContext(CookieConsentContext);
   const allowed = ctx?.canUsePreferences ?? isPreferenceStorageAllowed();
