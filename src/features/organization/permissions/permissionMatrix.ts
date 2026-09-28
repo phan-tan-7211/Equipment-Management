@@ -3,9 +3,8 @@ import type { Language } from '@/i18n';
 /**
  * Read-only organization permission matrix (step 1).
  *
- * Mirrors the enforced rules documented in docs/guides/permissions.md. Keep
- * both in sync: this table describes current behavior, it does not grant or
- * restrict anything by itself.
+ * Describes what the app currently allows each role to do. Keep in sync with
+ * docs/guides/permissions.md. This table does not grant or restrict anything.
  */
 
 export const PERMISSION_MATRIX_ROLES = ['owner', 'admin', 'member', 'manager', 'technician', 'requestor', 'viewer'] as const;
@@ -14,7 +13,9 @@ export const ORGANIZATION_LEVEL_ROLES: readonly PermissionMatrixRole[] = ['owner
 
 /** yes = allowed, no = denied, limited = allowed with a scope restriction (see note). */
 export type PermissionCell = 'yes' | 'no' | 'limited';
-export type PermissionNoteId = 'adminNotOwner' | 'managedTeamsOnly' | 'teamScopedCreate' | 'statusAndMaintenance' | 'assignedOnly' | 'relevantOnly';
+export type PermissionNoteId =
+  | 'platformAdminOnly' | 'ownerTransferOnly' | 'ownTeamsOnly' | 'teamScopedCreate' | 'managedTeamsOnly'
+  | 'assignedOnly' | 'managedTeamsListOnly' | 'assignedOrOwnRequest' | 'teamWorkOrdersOnly' | 'costsTeamOrAssigned';
 
 type Cells = Record<PermissionMatrixRole, PermissionCell>;
 
@@ -38,11 +39,13 @@ const row = (id: PermissionActionId, values: string, note?: PermissionNoteId): P
 };
 
 // Column order: owner admin member manager technician requestor viewer
+// Values describe what the app currently lets each role do (verified against
+// the UI gating and database functions, not just the docs).
 export const PERMISSION_MATRIX: PermissionMatrixSection[] = [
   {
     id: 'organization',
     rows: [
-      row('createOrganization', 'y n n n n n n'),
+      row('createOrganization', 'n n n n n n n', 'platformAdminOnly'),
       row('updateOrganizationSettings', 'y y n n n n n'),
       row('deleteOrganization', 'y n n n n n n'),
       row('viewOrganization', 'y y y y y y y'),
@@ -53,7 +56,7 @@ export const PERMISSION_MATRIX: PermissionMatrixSection[] = [
     rows: [
       row('inviteMembers', 'y y n n n n n'),
       row('removeMembers', 'y y n n n n n'),
-      row('changeMemberRoles', 'y l n n n n n', 'adminNotOwner'),
+      row('changeMemberRoles', 'y y n n n n n', 'ownerTransferOnly'),
       row('viewMemberList', 'y y y y y y y'),
     ],
   },
@@ -61,33 +64,33 @@ export const PERMISSION_MATRIX: PermissionMatrixSection[] = [
     id: 'teams',
     rows: [
       row('createTeams', 'y y n n n n n'),
-      row('updateTeams', 'y y n l n n n', 'managedTeamsOnly'),
-      row('manageTeamMembers', 'y y n l n n n', 'managedTeamsOnly'),
-      row('viewTeams', 'y y y y y y y'),
+      row('updateTeams', 'y y n n n n n'),
+      row('manageTeamMembers', 'y y n n n n n'),
+      row('viewTeams', 'y y n l l l l', 'ownTeamsOnly'),
     ],
   },
   {
     id: 'equipment',
     rows: [
       row('createEquipment', 'y y n l l n n', 'teamScopedCreate'),
-      row('updateEquipment', 'y y n y l n n', 'statusAndMaintenance'),
-      row('deleteEquipment', 'y y n y n n n'),
-      row('viewEquipment', 'y y y y y y y'),
-      row('generateQrCodes', 'y y n y y n n'),
+      row('updateEquipment', 'y y n l n n n', 'managedTeamsOnly'),
+      row('deleteEquipment', 'y y n n n n n'),
+      row('viewEquipment', 'y y n l l l l', 'ownTeamsOnly'),
+      row('generateQrCodes', 'y y n l l l l', 'ownTeamsOnly'),
       row('scanQrCodes', 'y y y y y y y'),
     ],
   },
   {
     id: 'workOrders',
     rows: [
-      row('createWorkOrders', 'y y y y y y n'),
-      row('updateWorkOrderStatus', 'y y n y l n n', 'assignedOnly'),
-      row('assignWorkOrders', 'y y n y n n n'),
-      row('completeWorkOrders', 'y y n y l n n', 'assignedOnly'),
-      row('cancelWorkOrders', 'y y n y n n n'),
-      row('deleteWorkOrders', 'y y n y n n n'),
+      row('createWorkOrders', 'y y y y y y y'),
+      row('updateWorkOrderStatus', 'y y n l l n n', 'assignedOnly'),
+      row('assignWorkOrders', 'y y n l n n n', 'managedTeamsListOnly'),
+      row('completeWorkOrders', 'y y n l l n n', 'assignedOnly'),
+      row('cancelWorkOrders', 'y y l l l l l', 'assignedOrOwnRequest'),
+      row('deleteWorkOrders', 'y y n n n n n'),
       row('reopenWorkOrders', 'y y n n n n n'),
-      row('viewWorkOrders', 'y y l y l l l', 'relevantOnly'),
+      row('viewWorkOrders', 'y y n l l l l', 'teamWorkOrdersOnly'),
     ],
   },
   {
@@ -95,7 +98,7 @@ export const PERMISSION_MATRIX: PermissionMatrixSection[] = [
     rows: [
       row('viewInventory', 'y y n n n n n'),
       row('manageInventory', 'y y n n n n n'),
-      row('viewWorkOrderCosts', 'y y n y y n n'),
+      row('viewWorkOrderCosts', 'y y l l l l l', 'costsTeamOrAssigned'),
     ],
   },
   {
@@ -140,7 +143,7 @@ type PermissionMatrixCopy = {
 const en: PermissionMatrixCopy = {
   title: 'Permission matrix',
   description: 'What each organization and team role can do in this workspace.',
-  readOnlyNotice: 'This matrix shows the permissions currently enforced. Custom permissions are not available yet.',
+  readOnlyNotice: 'This matrix shows what each role can currently do. Organization viewers and requestors have the same organization-level permissions as members; their access to equipment and work orders comes from their team role. Custom permissions are not available yet.',
   accessDenied: 'Access denied',
   adminOnly: 'Only organization owners and admins can view the permission matrix.',
   noOrganization: 'Choose an organization to view its permission matrix.',
@@ -166,19 +169,23 @@ const en: PermissionMatrixCopy = {
     viewAuditLog: 'View audit log',
   },
   notes: {
-    adminNotOwner: 'Admins cannot change the owner role or promote someone to owner.',
-    managedTeamsOnly: 'Only for teams where the person is a manager.',
+    platformAdminOnly: 'New organizations are created by platform administrators.',
+    ownerTransferOnly: 'Owners and admins can change other roles. The owner role changes only through an ownership transfer.',
+    ownTeamsOnly: 'Only for teams the person belongs to.',
     teamScopedCreate: 'Only for teams where the person is a manager or technician.',
-    statusAndMaintenance: 'Limited to status updates and maintenance records.',
+    managedTeamsOnly: 'Only for teams where the person is a manager.',
     assignedOnly: 'Only work orders assigned to the person.',
-    relevantOnly: 'Only relevant work orders: assigned, created by the person, or related to their teams.',
+    managedTeamsListOnly: 'Only from the work order list, for teams where the person is a manager.',
+    assignedOrOwnRequest: 'Only work orders assigned to the person, or requests they submitted that are still waiting.',
+    teamWorkOrdersOnly: "Only work orders for the person's teams and their equipment.",
+    costsTeamOrAssigned: "Team managers and technicians see costs on their team's work orders. Anyone sees costs on work orders assigned to them.",
   },
 };
 
 const vi: PermissionMatrixCopy = {
   title: 'Ma trận quyền',
   description: 'Những gì mỗi vai trò tổ chức và vai trò nhóm được làm trong không gian làm việc này.',
-  readOnlyNotice: 'Bảng này hiển thị các quyền đang được áp dụng. Chưa hỗ trợ tùy chỉnh quyền.',
+  readOnlyNotice: 'Bảng này cho biết mỗi vai trò hiện được làm gì. Người xem và người yêu cầu ở cấp tổ chức có quyền cấp tổ chức giống thành viên; quyền với thiết bị và lệnh công việc đến từ vai trò trong nhóm. Chưa hỗ trợ tùy chỉnh quyền.',
   accessDenied: 'Không có quyền truy cập',
   adminOnly: 'Chỉ chủ sở hữu và quản trị viên tổ chức mới xem được ma trận quyền.',
   noOrganization: 'Hãy chọn một tổ chức để xem ma trận quyền.',
@@ -204,19 +211,23 @@ const vi: PermissionMatrixCopy = {
     viewAuditLog: 'Xem nhật ký kiểm toán',
   },
   notes: {
-    adminNotOwner: 'Quản trị viên không thể đổi vai trò chủ sở hữu hoặc nâng ai đó lên chủ sở hữu.',
-    managedTeamsOnly: 'Chỉ với nhóm mà người đó là quản lý.',
+    platformAdminOnly: 'Tổ chức mới do quản trị nền tảng tạo.',
+    ownerTransferOnly: 'Chủ sở hữu và quản trị viên đổi được vai trò khác. Vai trò chủ sở hữu chỉ đổi qua chuyển quyền sở hữu.',
+    ownTeamsOnly: 'Chỉ với nhóm mà người đó thuộc về.',
     teamScopedCreate: 'Chỉ với nhóm mà người đó là quản lý hoặc kỹ thuật viên.',
-    statusAndMaintenance: 'Chỉ cập nhật trạng thái và hồ sơ bảo trì.',
+    managedTeamsOnly: 'Chỉ với nhóm mà người đó là quản lý.',
     assignedOnly: 'Chỉ lệnh công việc được giao cho người đó.',
-    relevantOnly: 'Chỉ lệnh liên quan: được giao, do người đó tạo, hoặc thuộc nhóm của họ.',
+    managedTeamsListOnly: 'Chỉ từ danh sách lệnh công việc, với nhóm mà người đó là quản lý.',
+    assignedOrOwnRequest: 'Chỉ lệnh được giao cho người đó, hoặc yêu cầu do họ gửi còn đang chờ.',
+    teamWorkOrdersOnly: 'Chỉ lệnh công việc của nhóm mình và thiết bị của nhóm đó.',
+    costsTeamOrAssigned: 'Quản lý và kỹ thuật viên thấy chi phí lệnh của nhóm mình. Ai cũng thấy chi phí của lệnh được giao cho mình.',
   },
 };
 
 const ko: PermissionMatrixCopy = {
   title: '권한 매트릭스',
   description: '이 워크스페이스에서 각 조직 역할과 팀 역할이 할 수 있는 작업입니다.',
-  readOnlyNotice: '현재 적용 중인 권한을 보여줍니다. 권한 사용자 지정은 아직 지원되지 않습니다.',
+  readOnlyNotice: '각 역할이 현재 할 수 있는 작업을 보여줍니다. 조직 조회자와 요청자는 조직 수준에서 구성원과 같은 권한을 가지며, 설비와 작업 지시 접근 권한은 팀 역할에 따라 정해집니다. 권한 사용자 지정은 아직 지원되지 않습니다.',
   accessDenied: '접근 거부',
   adminOnly: '조직 소유자와 관리자만 권한 매트릭스를 볼 수 있습니다.',
   noOrganization: '권한 매트릭스를 보려면 조직을 선택하세요.',
@@ -242,12 +253,16 @@ const ko: PermissionMatrixCopy = {
     viewAuditLog: '감사 로그 보기',
   },
   notes: {
-    adminNotOwner: '관리자는 소유자 역할을 변경하거나 소유자로 승격할 수 없습니다.',
-    managedTeamsOnly: '본인이 매니저인 팀에만 해당합니다.',
+    platformAdminOnly: '새 조직은 플랫폼 관리자가 생성합니다.',
+    ownerTransferOnly: '소유자와 관리자는 다른 역할을 변경할 수 있습니다. 소유자 역할은 소유권 이전으로만 변경됩니다.',
+    ownTeamsOnly: '본인이 속한 팀에만 해당합니다.',
     teamScopedCreate: '본인이 매니저 또는 기술자인 팀에만 해당합니다.',
-    statusAndMaintenance: '상태 변경과 정비 기록으로 제한됩니다.',
+    managedTeamsOnly: '본인이 매니저인 팀에만 해당합니다.',
     assignedOnly: '본인에게 배정된 작업 지시만 해당합니다.',
-    relevantOnly: '관련 작업 지시만 해당합니다: 배정됨, 본인이 생성함, 또는 본인 팀 관련.',
+    managedTeamsListOnly: '작업 지시 목록에서만, 본인이 매니저인 팀에 해당합니다.',
+    assignedOrOwnRequest: '본인에게 배정된 작업 지시 또는 본인이 제출해 대기 중인 요청만 해당합니다.',
+    teamWorkOrdersOnly: '본인 팀과 해당 팀 설비의 작업 지시만 해당합니다.',
+    costsTeamOrAssigned: '팀 매니저와 기술자는 팀 작업 지시의 비용을 봅니다. 누구나 본인에게 배정된 작업 지시의 비용을 봅니다.',
   },
 };
 

@@ -62,7 +62,7 @@ describe('PermissionMatrix', () => {
     render(<PermissionMatrix />);
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Search permissions' }), { target: { value: 'qr' } });
-    expect(screen.getByRole('rowheader', { name: 'Generate QR codes' })).toBeInTheDocument();
+    expect(screen.getByRole('rowheader', { name: /^Generate QR codes/ })).toBeInTheDocument();
     expect(screen.queryByRole('rowheader', { name: 'Delete organization' })).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Search permissions' }), { target: { value: 'audit log' } });
