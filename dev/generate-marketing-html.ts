@@ -25,7 +25,7 @@ export function getAppShellDistPath(distDir: string = resolveDistDir()): string 
   return join(distDir, APP_SHELL_HTML_BASENAME);
 }
 
-/** Persists the pre-prerender Vite template so Vercel can rewrite app routes to an empty `#root`. */
+/** Persists the pre-prerender Vite template so static hosts can serve app routes with an empty `#root`. */
 export function writeAppShellHtml(distDir: string, template: string): string {
   const outPath = getAppShellDistPath(distDir);
   writeFileSync(outPath, template, 'utf-8');

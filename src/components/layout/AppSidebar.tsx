@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import {
   Home,
   Forklift,
@@ -27,6 +28,7 @@ import {
   Warehouse,
   Search,
   Layers,
+  Shield,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -39,6 +41,8 @@ import Logo from "@/components/ui/Logo";
 import { ORGANIZATION_MEMBERS_PATH } from "@/features/organization/constants/routes";
 import { useInventoryAccess } from "@/features/inventory/hooks/useInventoryAccess";
 import { useI18n } from '@/i18n';
+import { usePlatformAdminAccess, usePlatformAdminPendingAccessRequests } from '@/features/platform-admin/usePlatformAdminAccess';
+import { platformAdminCopy } from '@/features/platform-admin/platformAdminCopy';
 
 interface NavigationItem {
   translationKey: string;
@@ -92,7 +96,10 @@ const AppSidebar = () => {
   const { currentOrganization } = useOrganization();
   const isMobile = useIsMobile();
   const { setOpenMobile } = useSidebar();
-  const { t } = useI18n();
+  const { language, t } = useI18n();
+  const platformCopy = platformAdminCopy[language];
+  const { isPlatformAdmin } = usePlatformAdminAccess();
+  const { pendingCount } = usePlatformAdminPendingAccessRequests();
 
   const handleNavClick = () => {
     if (isMobile) {
@@ -194,6 +201,35 @@ const AppSidebar = () => {
               </SidebarGroup>
             </React.Fragment>
           ))}
+          {isPlatformAdmin && (
+            <>
+              <Separator className="mx-1 my-1 opacity-30" />
+              <SidebarGroup>
+                <SidebarGroupLabel className={cn("text-[10px] uppercase tracking-widest font-semibold", mutedTextColorClass || "text-sidebar-foreground/50")}>{platformCopy.navigationGroup}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild className={cn("text-sm transition-colors duration-fast", textColorClass, hasCustomBranding ? '' : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground', hoverBackgroundClass)}>
+                        <Link to="/platform-admin" onClick={handleNavClick}>
+                          <Shield className="h-4 w-4" />
+                          <span>{platformCopy.title}</span>
+                          {pendingCount > 0 && (
+                            <Badge
+                              variant="destructive"
+                              className="ml-auto min-w-5 justify-center px-1 py-0 text-[10px]"
+                              aria-label={`${pendingCount} pending access requests`}
+                            >
+                              {pendingCount}
+                            </Badge>
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </>
+          )}
         </SidebarContent>
       </div>
     </Sidebar>

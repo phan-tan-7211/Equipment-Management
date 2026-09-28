@@ -63,19 +63,6 @@ function expectRuleAheadOfCatchAll(rules: RedirectRule[], expected: RedirectRule
 
 describe('legacy public image redirects', () => {
   it('pins source, destination, and 301 status ahead of the SPA fallback', () => {
-    const vercel = JSON.parse(readFileSync('vercel.json', 'utf8')) as {
-      redirects?: Array<{ source?: string; destination?: string; permanent?: boolean }>;
-    };
-    const vercelBySource = new Map(
-      (vercel.redirects ?? []).map((rule) => [rule.source ?? '', rule]),
-    );
-    for (const expected of EXPECTED_RULES) {
-      const actual = vercelBySource.get(expected.from);
-      expect(actual, `${expected.from} missing from vercel.json`).toBeDefined();
-      expect(actual?.destination).toBe(expected.to);
-      expect(actual?.permanent, `${expected.from} must be permanent`).toBe(true);
-    }
-
     const netlifyRules = parseNetlifyRedirects(readFileSync('netlify.toml', 'utf8'));
     const publishedRules = parsePublishedRedirects(readFileSync('public/_redirects', 'utf8'));
 

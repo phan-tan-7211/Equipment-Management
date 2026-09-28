@@ -128,32 +128,32 @@ export const subprocessorProviders: SubprocessorProvider[] = [
               ],
   },
   {
-    title: "4.5 Vercel (Vercel Inc.)",
+    title: "4.5 Cloudflare (Cloudflare, Inc.)",
     items: [
                 {
                   label: 'Purpose:',
                   content: 'Hosting and content delivery network (CDN) for the ZNTEQR frontend web application.',
                 },
                 {
-                  label: 'Data sent to Vercel:',
+                  label: 'Data sent to Cloudflare:',
                   content:
                     'Standard HTTP requests from your browser when you access ZNTEQR (URL, headers, IP address).',
                 },
                 {
-                  label: 'Data received from Vercel:',
+                  label: 'Data received from Cloudflare:',
                   content: 'The application assets (HTML, CSS, JavaScript) that power the ZNTEQR interface.',
                 },
                 {
                   label: 'Data stored in ZNTEQR:',
-                  content: 'None. Vercel is a hosting platform only.',
+                  content: 'None. Cloudflare is a hosting platform only.',
                 },
                 {
                   label: 'Note:',
                   content: (
                     <>
-                      Vercel may collect standard web server access logs (IP address, user agent, timestamps)
+                      Cloudflare may collect standard web server access logs (IP address, user agent, timestamps)
                       under its own{' '}
-                      <ExternalLink href="https://vercel.com/legal/privacy-policy" className="hover:text-foreground">
+                      <ExternalLink href="https://www.cloudflare.com/privacypolicy/" className="hover:text-foreground">
                         privacy policy
                       </ExternalLink>
                       .

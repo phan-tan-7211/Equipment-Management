@@ -1,7 +1,7 @@
 {
   "name": "znteqr",
   "private": true,
-  "version": "3.34.22",
+  "version": "3.36.0",
   "type": "module",
   "engines": {
     "node": "24.x"
@@ -80,7 +80,6 @@
     "size-check": "npx size-limit",
     "type-check": "tsc --noEmit -p tsconfig.app.json",
     "ci:install": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File dev/Invoke-SafeNpmCi.ps1",
-    "deploy:vercel": "npx --yes vercel@51.6.1 --prod",
     "docs:dev": "npm --prefix docs run docs:dev",
     "docs:build": "npm --prefix docs run docs:build",
     "docs:preview": "npm --prefix docs run docs:preview",

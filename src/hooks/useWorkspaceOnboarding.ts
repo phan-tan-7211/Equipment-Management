@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { getWorkspaceOnboardingState } from '@/services/google-workspace';
 import { googleWorkspace } from '@/lib/queryKeys';
 import { isGoogleUser } from '@/utils/google-workspace';
+import { ensureWorkspaceAccessRequest, resubmitWorkspaceAccessRequest } from '@/services/workspace-access';
 
 /**
  * Hook to fetch workspace onboarding state.
@@ -18,6 +19,30 @@ export const useWorkspaceOnboardingState = () => {
     enabled: shouldQuery,
     staleTime: 60 * 1000,
     retry: 1,
+  });
+};
+
+export const useWorkspaceAccessRequest = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['workspace-access-request', user?.id],
+    queryFn: ensureWorkspaceAccessRequest,
+    enabled: Boolean(user?.id),
+    staleTime: 60 * 1000,
+    retry: 1,
+  });
+};
+
+export const useWorkspaceAccessRequestResubmission = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: resubmitWorkspaceAccessRequest,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['workspace-access-request', user?.id] });
+    },
   });
 };
 

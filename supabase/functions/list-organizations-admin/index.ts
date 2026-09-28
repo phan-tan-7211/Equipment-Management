@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { getCorsHeaders } from "../_shared/cors.ts";
-import { verifySuperAdminAccess } from "../_shared/admin-validation.ts";
+import { verifyPlatformAdminAccess } from "../_shared/admin-validation.ts";
 import { withCorrelationId } from "../_shared/supabase-clients.ts";
 
 const logStep = (step: string, details?: any) => {
@@ -35,7 +35,7 @@ Deno.serve(withCorrelationId(async (req, _ctx) => {
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    
+
     if (userError || !userData.user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -46,17 +46,25 @@ Deno.serve(withCorrelationId(async (req, _ctx) => {
     const userId = userData.user.id;
     logStep("User authenticated", { userId });
 
-    // Verify super admin access
-    const isSuperAdmin = await verifySuperAdminAccess(supabaseClient, userId);
-    if (!isSuperAdmin) {
-      logStep("Access denied - not a super admin", { userId });
-      return new Response(JSON.stringify({ error: "Access denied. Super admin privileges required." }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Verify backend-owned Platform Admin authority.
+    const isPlatformAdmin = await verifyPlatformAdminAccess(
+      supabaseClient,
+      userId,
+    );
+    if (!isPlatformAdmin) {
+      logStep("Access denied - not a Platform Admin", { userId });
+      return new Response(
+        JSON.stringify({
+          error: "Access denied. Platform Admin privileges required.",
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
-    logStep("Super admin access verified");
+    logStep("Platform Admin access verified");
 
     // Fetch all organizations with member count
     const { data, error } = await supabaseClient
@@ -68,7 +76,7 @@ Deno.serve(withCorrelationId(async (req, _ctx) => {
         organization_members(count)
       `)
       .order('name', { ascending: true });
-    
+
     if (error) {
       logStep("Error fetching organizations", { error });
       throw error;
@@ -81,18 +89,17 @@ Deno.serve(withCorrelationId(async (req, _ctx) => {
       created_at: org.created_at,
       member_count: org.organization_members?.[0]?.count || 0,
     })) || [];
-    
+
     logStep("Organizations fetched", { count: organizations.length });
-    
+
     return new Response(JSON.stringify({ organizations }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
     logStep("ERROR", { message: errorMessage, stack: errorStack });
-    
+
     // Return generic error to user, don't expose internal details
     return new Response(
       JSON.stringify({ error: "An error occurred while fetching organizations. Please try again later." }), 
@@ -103,4 +110,3 @@ Deno.serve(withCorrelationId(async (req, _ctx) => {
     );
   }
 }));
-

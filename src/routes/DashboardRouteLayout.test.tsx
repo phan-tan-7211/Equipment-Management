@@ -63,6 +63,7 @@ vi.mock('@/hooks/useMFA', () => ({
 vi.mock('@/hooks/useSimpleOrganization', () => ({
   useSimpleOrganizationSafe: () => ({
     currentOrganization: mockOrgState.currentOrganization,
+    organizations: mockOrgState.currentOrganization ? [mockOrgState.currentOrganization] : [],
     isLoading: mockOrgState.isLoading,
   }),
 }));
@@ -70,11 +71,14 @@ vi.mock('@/hooks/useSimpleOrganization', () => ({
 vi.mock('@/contexts/OrganizationContext', () => ({
   useOrganization: () => ({
     organizationId: mockOrgState.organizationId,
+    organizations: mockOrgState.currentOrganization ? [mockOrgState.currentOrganization] : [],
     isLoading: mockOrgState.isLoading,
   }),
 }));
 
 vi.mock('@/hooks/useWorkspaceOnboarding', () => ({
+  useWorkspaceAccessRequest: () => ({ data: null, isLoading: false, isError: false }),
+  useWorkspaceAccessRequestResubmission: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
   useWorkspaceOnboardingState: () => mockWorkspaceState,
 }));
 
@@ -245,6 +249,8 @@ describe('DashboardRouteLayout loading shell', () => {
       email: 'owner@claimed.test',
       app_metadata: { provider: 'google', providers: ['google'] },
     };
+    mockOrgState.currentOrganization = null;
+    mockOrgState.organizationId = null;
     mockWorkspaceState.isLoading = true;
 
     renderLayout('/dashboard/notifications');

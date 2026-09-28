@@ -1,14 +1,13 @@
 /**
- * Content-Security-Policy directives shared by Vite dev headers and vercel.json.
+ * Content-Security-Policy directives shared by Vite dev and Cloudflare Pages headers.
  *
  * Production CSP is `buildCsp()`. The Vite dev server uses `buildCsp({ dev: true })`
  * to append localhost allowances for HMR and local Supabase.
  *
- * `vercel.json` cannot import TypeScript at deploy time — keep its CSP header value
- * in sync via `dev/csp.test.ts`.
+ * Keep the static `public/_headers` value in sync via `dev/csp.test.ts`.
  */
 
-/** Production CSP directives — canonical list for vercel.json. */
+/** Production CSP directives — canonical list for Cloudflare Pages. */
 export const CSP_DIRECTIVES: readonly string[] = [
   "default-src 'self'",
   // `'wasm-unsafe-eval'` permits WebAssembly compilation only (not JS eval).
@@ -22,9 +21,9 @@ export const CSP_DIRECTIVES: readonly string[] = [
   // (shared-label-worker.js) loads inline label sprite assets via
   // fetch('data:image/png;base64,...'). Without it the map renders
   // but labels degrade and the console floods with CSP violations.
-  "connect-src 'self' data: https://hcaptcha.com https://*.hcaptcha.com https://api.pwnedpasswords.com https://*.sentry.io https://*.supabase.co https://*.equipqr.app https://*.vercel.app https://maps.googleapis.com https://accounts.google.com https://*.googleapis.com https://*.gstatic.com wss://*.supabase.co wss://*.equipqr.app wss://*.vercel.app",
+  "connect-src 'self' data: https://hcaptcha.com https://*.hcaptcha.com https://api.pwnedpasswords.com https://*.sentry.io https://*.supabase.co https://eqr.zinitek.com https://maps.googleapis.com https://accounts.google.com https://*.googleapis.com https://*.gstatic.com wss://*.supabase.co wss://eqr.zinitek.com",
   "img-src 'self' data: blob: https: https://*.googleapis.com https://*.gstatic.com",
-  "media-src 'self' blob: https://*.supabase.co https://*.equipqr.app",
+  "media-src 'self' blob: https://*.supabase.co https://eqr.zinitek.com",
   "font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com",
   "worker-src 'self' blob:",
   "frame-ancestors 'self'",
@@ -71,13 +70,13 @@ export function buildCsp(options: BuildCspOptions = {}): string {
   return directives.join('; ');
 }
 
-type VercelHeader = { key: string; value: string };
-type VercelHeadersBlock = { source: string; headers: VercelHeader[] };
-
-/** Read the global CSP header value from a parsed vercel.json object. */
-export function extractCspFromVercelConfig(config: {
-  headers?: VercelHeadersBlock[];
-}): string | undefined {
-  const globalBlock = config.headers?.find((block) => block.source === '/(.*)');
-  return globalBlock?.headers?.find((header) => header.key === 'Content-Security-Policy')?.value;
+/** Read the global CSP value from a Cloudflare Pages `_headers` file. */
+export function extractCspFromCloudflareHeaders(content: string): string | undefined {
+  const globalBlock = content.split(/\r?\n(?=\/)/).find((block) => block.trimStart().startsWith('/*'));
+  return globalBlock
+    ?.split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line.startsWith('Content-Security-Policy:'))
+    ?.slice('Content-Security-Policy:'.length)
+    .trim();
 }

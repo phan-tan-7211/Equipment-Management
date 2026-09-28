@@ -244,7 +244,7 @@ export default defineConfig({
       { text: "PM Templates", link: "/pm-templates/" },
       {
         text: "Open App",
-        link: "https://equipqr.app",
+        link: "https://eqr.zinitek.com",
         target: "_blank",
         rel: "noopener noreferrer",
       },
@@ -330,7 +330,7 @@ export default defineConfig({
 
     footer: {
       message:
-        "ZNTEQR Docs — product app at equipqr.app · status at status.equipqr.app",
+        "ZNTEQR Docs — product app at eqr.zinitek.com · status at eqr.zinitek.com/support",
       copyright: "Copyright © ZNT LLC",
     },
   },

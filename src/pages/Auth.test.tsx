@@ -4,6 +4,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { User } from '@supabase/supabase-js';
 import Auth from './Auth';
 import * as useAuthModule from '@/hooks/useAuth';
+import {
+  consumePendingGoogleInvitationClaim,
+  startPendingGoogleInvitationClaim,
+} from '@/services/pendingGoogleInvitationClaim';
 
 const mockAuthenticatedUser: User = {
   id: 'user-1',
@@ -60,14 +64,16 @@ vi.mock('@/components/auth/SignUpForm', () => ({
     onSuccess,
     onError,
     onGoogleSignUp,
+    onBeforeSignupSubmit,
   }: {
     onSuccess: (msg: string, email?: string) => void;
     onError: (msg: string) => void;
     onGoogleSignUp: (organizationName: string) => void;
+    onBeforeSignupSubmit: () => void;
   }) => (
     <form aria-label="Sign up form">
       <button type="button" onClick={() => onGoogleSignUp('Fleet Co')}>Sign up with Google</button>
-      <button type="button" onClick={() => onSuccess('Account created', 'viralarchitect@yahoo.com')}>Submit SignUp</button>
+      <button type="button" onClick={() => { onBeforeSignupSubmit(); onSuccess('Account created', 'viralarchitect@yahoo.com'); }}>Submit SignUp</button>
       <button type="button" onClick={() => onSuccess('Legal acceptance recorded successfully.')}>Retry Acceptance Success</button>
       <button type="button" onClick={() => onError('Signup failed')}>Trigger SignUp Error</button>
     </form>
@@ -414,7 +420,7 @@ describe('Auth Page', () => {
       });
     });
 
-    it('passes the signup organization name into Google OAuth', async () => {
+    it('does not pass organization-creation intent into Google OAuth', async () => {
       const mockSignInWithGoogle = vi.fn(() => Promise.resolve({ error: null }));
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: null,
@@ -432,8 +438,70 @@ describe('Auth Page', () => {
       fireEvent.click(screen.getByRole('button', { name: /sign up with google/i }));
 
       await waitFor(() => {
-        expect(mockSignInWithGoogle).toHaveBeenCalledWith({ organizationName: 'Fleet Co' });
+        expect(mockSignInWithGoogle).toHaveBeenCalledWith();
       });
+    });
+
+    it('records invitation intent before starting Google OAuth', async () => {
+      const mockSignInWithGoogle = vi.fn(() => Promise.resolve({ error: null }));
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: null,
+        signInWithGoogle: mockSignInWithGoogle,
+        isLoading: false,
+        session: null,
+        signUp: vi.fn(),
+        signIn: vi.fn(),
+        signOut: vi.fn(),
+      });
+      mockLocation.search = '?mode=invite&token=invite-google-token&email=invitee%40example.com';
+
+      render(<Auth />);
+      fireEvent.click(screen.getByRole('button', { name: /sign up with google/i }));
+
+      await waitFor(() => expect(mockSignInWithGoogle).toHaveBeenCalledWith());
+      expect(consumePendingGoogleInvitationClaim('invite-google-token')).toBe(true);
+    });
+
+    it('clears invitation intent when Google OAuth fails to start', async () => {
+      const mockSignInWithGoogle = vi.fn(() =>
+        Promise.resolve({ error: new Error('Google auth failed') }),
+      );
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: null,
+        signInWithGoogle: mockSignInWithGoogle,
+        isLoading: false,
+        session: null,
+        signUp: vi.fn(),
+        signIn: vi.fn(),
+        signOut: vi.fn(),
+      });
+      mockLocation.search = '?mode=invite&token=failed-google-token';
+
+      render(<Auth />);
+      fireEvent.click(screen.getByRole('button', { name: /sign up with google/i }));
+
+      await waitFor(() => expect(screen.getByText('Google auth failed')).toBeInTheDocument());
+      expect(consumePendingGoogleInvitationClaim('failed-google-token')).toBe(false);
+    });
+
+    it('clears invitation intent when Google returns an OAuth callback error', async () => {
+      startPendingGoogleInvitationClaim('callback-error-token');
+      mockLocation.search = '?mode=invite&token=callback-error-token&error=access_denied&error_description=OAuth+denied';
+
+      render(<Auth />);
+
+      expect(await screen.findByText('Google sign-in failed. Please try again.')).toBeInTheDocument();
+      expect(consumePendingGoogleInvitationClaim('callback-error-token')).toBe(false);
+    });
+
+    it('clears stale Google invitation intent before password invitation signup', async () => {
+      startPendingGoogleInvitationClaim('stale-google-token');
+      mockLocation.search = '?mode=invite&token=password-invite-token&email=invitee%40example.com';
+
+      render(<Auth />);
+      fireEvent.click(screen.getByText('Submit SignUp'));
+
+      expect(consumePendingGoogleInvitationClaim('stale-google-token')).toBe(false);
     });
   });
 });

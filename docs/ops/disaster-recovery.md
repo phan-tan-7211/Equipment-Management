@@ -23,7 +23,7 @@ ZNTEQR™ uses Supabase as its backend platform, which provides robust backup an
 
 | Environment | Project Ref | Purpose |
 |-------------|-------------|---------|
-| **Production** | `wgynakhoppqkrutnslmv` | Live production database (also serves cloud preview via `supabase.equipqr.app`) |
+| **Production** | `wgynakhoppqkrutnslmv` | Live production database (also serves cloud preview via `wgynakhoppqkrutnslmv.supabase.co`) |
 | **Legacy preview branch** | `olsdirkvvfegvclbpgrg` | **Retiring (#1033)** — decommission after cutover validation |
 
 ### Recovery Time Objective (RTO)
@@ -340,10 +340,10 @@ After a successful restoration, complete these verification steps:
 
 ```bash
 # Verify the deep health endpoint (Supabase Edge Function, no auth required)
-curl https://supabase.equipqr.app/functions/v1/healthcheck
+curl https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/healthcheck
 
 # Check the public status page for aggregate service health
-# https://status.equipqr.app
+# https://eqr.zinitek.com/support
 ```
 
 - [ ] **Test critical workflows**:

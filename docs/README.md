@@ -33,8 +33,8 @@ included in the public VitePress build.
 **Product shortcuts while using ZNTEQR:**
 
 - **Help Center (guides):** `https://equipqr.info/support/`
-- **Support & tickets (signed in):** `https://equipqr.app/dashboard/support`
-- **Public support contact page:** `https://equipqr.app/support`
+- **Support & tickets (signed in):** `https://eqr.zinitek.com/dashboard/support`
+- **Public support contact page:** `https://eqr.zinitek.com/support`
 
 Use **`https://equipqr.info/support/`** as the canonical URL to share, bookmark, or index for documentation.
 
@@ -86,7 +86,7 @@ Browse them on GitHub or in your local checkout:
 ### For End Users
 
 1. Start at **`https://equipqr.info/support/`** for published guides and how-tos.
-2. To report issues while signed in, use **`https://equipqr.app/dashboard/support`**.
+2. To report issues while signed in, use **`https://eqr.zinitek.com/dashboard/support`**.
 3. For field technicians, print the [Image Upload Quick Reference](./how-to/image-upload/quick-reference-card.md).
 4. For RBAC questions, see [Permissions](./guides/permissions.md).
 
@@ -171,7 +171,7 @@ Use this when authoring or reviewing documentation:
 |--------|----------|---------|
 | **`https://equipqr.info`** | Customers, technicians, partners, general public | Help Center (`/support/`), guides, how-tos, PM templates, and integrations **without** live infrastructure identifiers or privileged command sequences. |
 | **Repository `docs/ops/`** | Maintainers, security-reviewed operators | CI/CD, migrations, disaster recovery, observability, cloud admin posture, and similar runbooks. Excluded from the public VitePress build. |
-| **`equipqr.app/dashboard/support`** | Signed-in users | Report issues and track tickets only; guides live on equipqr.info. |
+| **`eqr.zinitek.com/dashboard/support`** | Signed-in users | Report issues and track tickets only; guides live on equipqr.info. |
 
 Do not add real org IDs, project IDs, tenant domains, service account emails, or copy-paste admin keys to public-facing pages. Prefer placeholders (for example `<GCP_ORG_ID>`) or point readers at internal ops docs in the repo.
 

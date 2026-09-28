@@ -17,8 +17,8 @@ export function PrivacyIntroductionSection() {
       </p>
       <p>
         This policy applies to all users of the ZNTEQR web application located at{' '}
-        <ExternalLink href="https://equipqr.app" className="hover:text-foreground">
-          equipqr.app
+        <ExternalLink href="https://eqr.zinitek.com" className="hover:text-foreground">
+          eqr.zinitek.com
         </ExternalLink>
         , including the QR-code scanning experience, all API endpoints, and any associated mobile or
         progressive web app functionality.

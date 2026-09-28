@@ -135,13 +135,13 @@ export default function TermsOfService() {
             </a>{' '}
             • {t('termsOfService.websiteLabel')}:{' '}
             <a
-              href="https://equipqr.app"
+              href="https://eqr.zinitek.com"
               target="_blank"
               rel="noopener noreferrer"
               className="underline"
               aria-label={t('termsOfService.websiteAria')}
             >
-              https://equipqr.app
+              https://eqr.zinitek.com
             </a>
           </p>
         </LegalPolicySection>

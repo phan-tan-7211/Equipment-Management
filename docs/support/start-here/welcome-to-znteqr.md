@@ -9,7 +9,7 @@ personas: ["all"]
 **Last reviewed:** 2026-07-06
 ZNTEQR is a multi-tenant fleet equipment management platform for field technicians, shop managers, and the customers who own the equipment. The platform pairs each piece of equipment with a durable QR code so anyone with permission can scan it and get straight to the record, work orders, and maintenance history.
 
-![Signed-in dashboard home](https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/01-dashboard-welcome.png)
+![Signed-in dashboard home](https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/01-dashboard-welcome.png)
 
 ## 1. Set up your organization
 
@@ -31,11 +31,11 @@ The rest of the support library walks through each of those pieces in detail. If
 
 ## Desktop walkthrough video
 
-<https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/desktop/demo.mp4>
+<https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/desktop/demo.mp4>
 
 ## Mobile walkthrough video
 
-<https://supabase.equipqr.app/storage/v1/object/public/docs-media/support/start-here/mobile/demo.mp4>
+<https://wgynakhoppqkrutnslmv.supabase.co/storage/v1/object/public/docs-media/support/start-here/mobile/demo.mp4>
 
 ## Related articles
 

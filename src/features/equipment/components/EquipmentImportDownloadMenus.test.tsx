@@ -33,6 +33,8 @@ const mockEquipment: EquipmentRecord = {
   import_id: null,
   last_maintenance_work_order_id: null,
   default_pm_template_id: null,
+  equipment_group_id: null,
+  management_code: null,
   image_url: null,
   notes: null,
   custom_attributes: null,

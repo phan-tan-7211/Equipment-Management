@@ -42,7 +42,7 @@ function marketingPrerenderPlugin(): PluginOption {
  * document and keeps the empty SPA shell in dist/app-shell.html. Vite preview
  * normally falls back to index.html for every unknown URL, which makes a hard
  * refresh of an authenticated route render the marketing document instead of
- * booting React. Serve the same shell used by Vercel/Netlify for app routes.
+ * booting React. Serve the same shell used by Cloudflare Pages/Netlify for app routes.
  */
 function appRoutePreviewFallbackPlugin(): PluginOption {
   const appRoutePrefixes = ['/dashboard', '/auth', '/invitation', '/qr', '/e', '/debug-'];

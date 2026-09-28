@@ -29,7 +29,7 @@ describe('public/robots.txt', () => {
   const robotsTxt = readFileSync(ROBOTS_PATH, 'utf-8');
 
   it('references the production sitemap', () => {
-    expect(robotsTxt).toContain('Sitemap: https://equipqr.app/sitemap.xml');
+    expect(robotsTxt).toContain('Sitemap: https://eqr.zinitek.com/sitemap.xml');
   });
 
   it('blocks authenticated and sensitive routes for search-engine and default crawlers', () => {

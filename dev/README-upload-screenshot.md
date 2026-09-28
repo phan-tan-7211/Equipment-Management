@@ -130,7 +130,7 @@ This script does not capture screenshots by itself. Use it after taking a screen
 - URL must start with `https://` and be a valid Supabase project URL
 - Examples:
   - Standard: `https://wgynakhoppqkrutnslmv.supabase.co`
-  - Custom domain: `https://supabase.equipqr.app`
+  - Custom domain: `https://wgynakhoppqkrutnslmv.supabase.co`
 
 ### File size limits
 - Supabase Storage enforces a per-bucket `file_size_limit` (configured in your Supabase project)

@@ -52,13 +52,14 @@ describe('parseZNTEQRTarget', () => {
   });
 
   it('parses absolute production equipment URL', () => {
-    const r = parseZNTEQRTarget('https://equipqr.app/qr/equipment/eq-99', LOCAL_ORIGIN);
+    const r = parseZNTEQRTarget('https://eqr.zinitek.com/qr/equipment/eq-99', LOCAL_ORIGIN);
     expect(r.ok && r.kind === 'equipment' && r.equipmentId === 'eq-99').toBe(true);
   });
 
-  it('parses preview host equipment URL', () => {
-    const r = parseZNTEQRTarget('https://preview.equipqr.app/qr/equipment/eq-p', LOCAL_ORIGIN);
-    expect(r.ok && r.kind === 'equipment' && r.equipmentId === 'eq-p').toBe(true);
+  it('rejects non-production hosted equipment URLs', () => {
+    const r = parseZNTEQRTarget('https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/qr/equipment/eq-p', LOCAL_ORIGIN);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('external');
   });
 
   it('parses legacy /qr/:equipmentId', () => {
@@ -142,13 +143,13 @@ describe('parseZNTEQRTarget', () => {
 describe('qrFullUrl', () => {
   beforeEach(() => {
     Object.defineProperty(window, 'location', {
-      value: { origin: 'https://equipqr.app' },
+      value: { origin: 'https://eqr.zinitek.com' },
       writable: true,
     });
   });
 
   it('prepends the current origin to a relative path', () => {
-    expect(qrFullUrl('/qr/work-order/abc')).toBe('https://equipqr.app/qr/work-order/abc');
+    expect(qrFullUrl('/qr/work-order/abc')).toBe('https://eqr.zinitek.com/qr/work-order/abc');
   });
 });
 

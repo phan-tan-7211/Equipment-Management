@@ -63,22 +63,22 @@ Deno.test("isValidEmail accepts well-formed addresses and rejects malformed", ()
 
 Deno.test({
   name: "isValidRedirectUrl allows relative paths and rejects protocol-relative URLs",
-  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
+  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL", "VERCEL_PROJECT_SLUG", "VERCEL_TEAM_SLUG"] },
   fn: () => {
-    withEnv({ PUBLIC_SITE_URL: "https://equipqr.app", PRODUCTION_URL: "https://equipqr.app" }, () => {
-      assertEquals(isValidRedirectUrl("/dashboard", "https://equipqr.app"), true);
-      assertEquals(isValidRedirectUrl("//evil.com/path", "https://equipqr.app"), false);
+    withEnv({ PUBLIC_SITE_URL: "https://eqr.zinitek.com", PRODUCTION_URL: "https://eqr.zinitek.com" }, () => {
+      assertEquals(isValidRedirectUrl("/dashboard", "https://eqr.zinitek.com"), true);
+      assertEquals(isValidRedirectUrl("//evil.com/path", "https://eqr.zinitek.com"), false);
     });
   },
 });
 
 Deno.test({
-  name: "isValidRedirectUrl allows preview.equipqr.app when PUBLIC_SITE_URL is production",
-  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
+  name: "isValidRedirectUrl allows equip-qr-*.vercel.app when PUBLIC_SITE_URL is production",
+  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL", "VERCEL_PROJECT_SLUG", "VERCEL_TEAM_SLUG"] },
   fn: () => {
-    withEnv({ PUBLIC_SITE_URL: "https://equipqr.app", PRODUCTION_URL: "https://equipqr.app" }, () => {
+    withEnv({ PUBLIC_SITE_URL: "https://eqr.zinitek.com", PRODUCTION_URL: "https://eqr.zinitek.com" }, () => {
       assertEquals(
-        isValidRedirectUrl("https://preview.equipqr.app/dashboard/organization/integrations", "https://equipqr.app"),
+        isValidRedirectUrl("https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/dashboard/organization/integrations", "https://eqr.zinitek.com"),
         true,
       );
     });
@@ -87,48 +87,49 @@ Deno.test({
 
 Deno.test({
   name: "buildSuccessRedirectUrl returns preview origin when shared prod edge uses production PUBLIC_SITE_URL",
-  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
+  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL", "VERCEL_PROJECT_SLUG", "VERCEL_TEAM_SLUG"] },
 }, () => {
-  withEnv({ PUBLIC_SITE_URL: "https://equipqr.app", PRODUCTION_URL: "https://equipqr.app" }, () => {
+  withEnv({ PUBLIC_SITE_URL: "https://eqr.zinitek.com", PRODUCTION_URL: "https://eqr.zinitek.com" }, () => {
     const url = buildSuccessRedirectUrl({
-      originUrl: "https://preview.equipqr.app",
+      originUrl: "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app",
       redirectUrl: "/dashboard/organization/integrations",
-      resolvedProductionUrl: "https://equipqr.app",
+      resolvedProductionUrl: "https://eqr.zinitek.com",
     });
     assertEquals(
       url,
-      "https://preview.equipqr.app/dashboard/organization/integrations?gw_connected=true",
+      "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/dashboard/organization/integrations?gw_connected=true",
     );
   });
 });
 
 Deno.test({
   name: "isValidRedirectUrl rejects loopback and broad Vercel hosts in deployed contexts",
-  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
+  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL", "VERCEL_PROJECT_SLUG", "VERCEL_TEAM_SLUG"] },
 }, () => {
-  withEnv({ PUBLIC_SITE_URL: "https://preview.equipqr.app", PRODUCTION_URL: "https://equipqr.app" }, () => {
-    assertEquals(isValidRedirectUrl("http://localhost:8080/dashboard", "https://preview.equipqr.app"), false);
-    assertEquals(isValidRedirectUrl("http://127.0.0.1:8080/dashboard", "https://preview.equipqr.app"), false);
-    assertEquals(isValidRedirectUrl("https://equip-qr-evil.vercel.app/dashboard", "https://preview.equipqr.app"), false);
+  withEnv({ PUBLIC_SITE_URL: "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app", PRODUCTION_URL: "https://eqr.zinitek.com" }, () => {
+    assertEquals(isValidRedirectUrl("http://localhost:8080/dashboard", "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app"), false);
+    assertEquals(isValidRedirectUrl("http://127.0.0.1:8080/dashboard", "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app"), false);
+    assertEquals(isValidRedirectUrl("https://equip-qr-evil.vercel.app/dashboard", "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app"), false);
   });
 });
 
 Deno.test({
   name: "isValidRedirectUrl allows loopback only when public site URL is local",
-  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
+  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL", "VERCEL_PROJECT_SLUG", "VERCEL_TEAM_SLUG"] },
 }, () => {
-  withEnv({ PUBLIC_SITE_URL: "http://localhost:8080", PRODUCTION_URL: "https://equipqr.app" }, () => {
-    assertEquals(isValidRedirectUrl("http://localhost:8080/dashboard", "https://equipqr.app"), true);
-    assertEquals(isValidRedirectUrl("http://127.0.0.1:8080/dashboard", "https://equipqr.app"), true);
+  withEnv({ PUBLIC_SITE_URL: "http://localhost:8080", PRODUCTION_URL: "https://eqr.zinitek.com" }, () => {
+    assertEquals(isValidRedirectUrl("http://localhost:8080/dashboard", "https://eqr.zinitek.com"), true);
+    assertEquals(isValidRedirectUrl("http://127.0.0.1:8080/dashboard", "https://eqr.zinitek.com"), true);
   });
 });
 
 Deno.test({
-  name: "isTrustedDomain allows equipqr.app subdomains",
-  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
+  name: "isTrustedDomain allows only the production frontend",
+  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL", "VERCEL_PROJECT_SLUG", "VERCEL_TEAM_SLUG"] },
 }, () => {
-  withEnv({ PUBLIC_SITE_URL: "https://equipqr.app", PRODUCTION_URL: "https://equipqr.app" }, () => {
-    assertEquals(isTrustedDomain("https://preview.equipqr.app/dashboard"), true);
+  withEnv({ PUBLIC_SITE_URL: "https://eqr.zinitek.com", PRODUCTION_URL: "https://eqr.zinitek.com" }, () => {
+    assertEquals(isTrustedDomain("https://eqr.zinitek.com/dashboard"), true);
+    assertEquals(isTrustedDomain("https://preview.eqr.zinitek.com/dashboard"), false);
     assertEquals(isTrustedDomain("https://evil.example.com/"), false);
   });
 });
@@ -186,10 +187,10 @@ Deno.test("buildOAuthRedirectUri appends callback path without trailing slash du
 Deno.test("resolveOAuthRedirectBaseUrl normalizes retired preview Supabase hostname", () => {
   assertEquals(
     resolveOAuthRedirectBaseUrl(
-      "https://supabase.preview.equipqr.app",
+      "https://wgynakhoppqkrutnslmv.supabase.co",
       "https://olsdirkvvfegvclbpgrg.supabase.co",
     ),
-    "https://supabase.equipqr.app",
+    "https://wgynakhoppqkrutnslmv.supabase.co",
   );
 });
 
@@ -212,45 +213,45 @@ Deno.test("extractUserDomain blocks consumer gmail domains", () => {
 
 Deno.test({
   name: "buildSuccessRedirectUrl appends gw_connected query param",
-  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
+  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL", "VERCEL_PROJECT_SLUG", "VERCEL_TEAM_SLUG"] },
 }, () => {
-  withEnv({ PUBLIC_SITE_URL: "https://equipqr.app", PRODUCTION_URL: "https://equipqr.app" }, () => {
+  withEnv({ PUBLIC_SITE_URL: "https://eqr.zinitek.com", PRODUCTION_URL: "https://eqr.zinitek.com" }, () => {
     const url = buildSuccessRedirectUrl({
       originUrl: null,
       redirectUrl: "/dashboard/onboarding/workspace",
-      resolvedProductionUrl: "https://equipqr.app",
+      resolvedProductionUrl: "https://eqr.zinitek.com",
     });
-    assertEquals(url, "https://equipqr.app/dashboard/onboarding/workspace?gw_connected=true");
+    assertEquals(url, "https://eqr.zinitek.com/dashboard/onboarding/workspace?gw_connected=true");
   });
 });
 
 Deno.test({
   name: "buildGoogleOAuthErrorRedirectUrl honors integrations redirectUrl from OAuth session",
-  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
+  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL", "VERCEL_PROJECT_SLUG", "VERCEL_TEAM_SLUG"] },
 }, () => {
-  withEnv({ PUBLIC_SITE_URL: "https://preview.equipqr.app", PRODUCTION_URL: "https://equipqr.app" }, () => {
+  withEnv({ PUBLIC_SITE_URL: "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app", PRODUCTION_URL: "https://eqr.zinitek.com" }, () => {
     const url = buildGoogleOAuthErrorRedirectUrl({
-      originUrl: "https://preview.equipqr.app",
+      originUrl: "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app",
       redirectUrl: "/dashboard/organization/integrations",
-      resolvedProductionUrl: "https://preview.equipqr.app",
+      resolvedProductionUrl: "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app",
       errorCode: "oauth_failed",
       supportRef: "corr-abc123",
     });
     assertEquals(
       url,
-      "https://preview.equipqr.app/dashboard/organization/integrations?gw_error=oauth_failed&gw_ref=corr-abc123",
+      "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/dashboard/organization/integrations?gw_error=oauth_failed&gw_ref=corr-abc123",
     );
   });
 });
 
 Deno.test({
   name: "resolveFallbackProductionUrl falls back when PRODUCTION_URL is untrusted",
-  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
+  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL", "VERCEL_PROJECT_SLUG", "VERCEL_TEAM_SLUG"] },
   fn: () => {
     const prev = Deno.env.get("PRODUCTION_URL");
     try {
       Deno.env.set("PRODUCTION_URL", "https://evil.example.com");
-      assertEquals(resolveFallbackProductionUrl(), "https://equipqr.app");
+      assertEquals(resolveFallbackProductionUrl(), "https://eqr.zinitek.com");
     } finally {
       if (prev === undefined) {
         Deno.env.delete("PRODUCTION_URL");
@@ -263,13 +264,13 @@ Deno.test({
 
 Deno.test({
   name: "isProductionEnvironment and isPreviewEnvironment prefer PUBLIC_SITE_URL",
-  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
+  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL", "VERCEL_PROJECT_SLUG", "VERCEL_TEAM_SLUG"] },
   fn: () => {
     const prevPublic = Deno.env.get("PUBLIC_SITE_URL");
     const prevProduction = Deno.env.get("PRODUCTION_URL");
     try {
-      Deno.env.set("PUBLIC_SITE_URL", "https://preview.equipqr.app");
-      Deno.env.set("PRODUCTION_URL", "https://equipqr.app");
+      Deno.env.set("PUBLIC_SITE_URL", "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app");
+      Deno.env.set("PRODUCTION_URL", "https://eqr.zinitek.com");
       assertEquals(isProductionEnvironment(), true);
       assertEquals(isPreviewEnvironment(), true);
     } finally {
@@ -289,17 +290,17 @@ Deno.test({
 
 Deno.test({
   name: "isProductionEnvironment and isPreviewEnvironment reflect PRODUCTION_URL fallback",
-  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL"] },
+  permissions: { env: ["PUBLIC_SITE_URL", "PRODUCTION_URL", "VERCEL_PROJECT_SLUG", "VERCEL_TEAM_SLUG"] },
   fn: () => {
     const prevPublic = Deno.env.get("PUBLIC_SITE_URL");
     const prev = Deno.env.get("PRODUCTION_URL");
     try {
       Deno.env.delete("PUBLIC_SITE_URL");
-      Deno.env.set("PRODUCTION_URL", "https://equipqr.app");
+      Deno.env.set("PRODUCTION_URL", "https://eqr.zinitek.com");
       assertEquals(isProductionEnvironment(), true);
       assertEquals(isPreviewEnvironment(), false);
 
-      Deno.env.set("PRODUCTION_URL", "https://preview.equipqr.app");
+      Deno.env.set("PRODUCTION_URL", "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app");
       assertEquals(isProductionEnvironment(), true);
       assertEquals(isPreviewEnvironment(), true);
 

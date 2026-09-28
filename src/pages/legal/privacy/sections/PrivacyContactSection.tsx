@@ -17,8 +17,8 @@ export function PrivacyContactSection() {
               </li>
               <li>
                 <strong>Website:</strong>{' '}
-                <ExternalLink href="https://equipqr.app" className="hover:text-foreground">
-                  equipqr.app
+                <ExternalLink href="https://eqr.zinitek.com" className="hover:text-foreground">
+                  eqr.zinitek.com
                 </ExternalLink>
               </li>
               <li>

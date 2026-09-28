@@ -8,15 +8,15 @@ This runbook documents the production email signup path after the Resend SMTP cu
 
 | Component | Production value |
 | --- | --- |
-| App URL | `https://equipqr.app` |
+| App URL | `https://eqr.zinitek.com` |
 | Supabase project | `wgynakhoppqkrutnslmv` |
-| Supabase Auth URL | `https://supabase.equipqr.app/auth/v1` |
-| Supabase Auth email sender | `ZNTEQR <noreply@equipqr.app>` |
+| Supabase Auth URL | `https://wgynakhoppqkrutnslmv.supabase.co/auth/v1` |
+| Supabase Auth email sender | `ZNTEQR <noreply@zinitek.com>` |
 | SMTP provider | Resend |
 | SMTP host | `smtp.resend.com` |
 | SMTP port | `587` |
 | SMTP username | `resend` |
-| Resend sending domain | `equipqr.app` |
+| Resend sending domain | `eqr.zinitek.com` |
 | Resend domain status | Verified, sending enabled |
 | Auth email rate limit | `30` emails per hour |
 | Per-recipient SMTP frequency | `60` seconds |
@@ -28,12 +28,12 @@ Secrets are not stored in this document. The SMTP password is a Resend API key c
 
 ```mermaid
 flowchart TD
-  A[Visitor opens equipqr.app] --> B[Visitor chooses Sign Up]
+  A[Visitor opens eqr.zinitek.com] --> B[Visitor chooses Sign Up]
   B --> C[React SignUpForm validates fields, password policy, terms, and hCaptcha token when enabled]
   C --> D[authSignupService calls supabase.auth.signUp]
-  D --> E[POST supabase.equipqr.app/auth/v1/signup]
+  D --> E[POST wgynakhoppqkrutnslmv.supabase.co/auth/v1/signup]
   E --> F[Supabase Auth creates pending auth.users record]
-  F --> G[Auth trigger creates profile, organization, and membership records]
+  F --> G[Auth trigger creates profile only; no organization or membership]
   F --> H[Supabase Auth sends confirmation email through custom SMTP]
   H --> I[Resend accepts SMTP handoff]
   I --> J{Recipient mailbox result}
@@ -42,26 +42,33 @@ flowchart TD
   K --> M[Supabase Auth verifies signup token]
   M --> N[email_confirmed_at is set]
   N --> O[User signs in]
-  O --> P[App loads dashboard with organization context]
+  O --> P{Invitation or access request?}
+  P -->|Invitation| Q[Claim invited organization role]
+  P -->|No invitation| R[Create private pending access request]
+  Q --> S[App loads dashboard with organization context]
+  R --> T[Platform Admin assigns organization and role]
+  T --> S
 ```
 
 ## Numbered Flow
 
-1. A user visits `https://equipqr.app` and opens the signup tab.
+1. A user visits `https://eqr.zinitek.com` and opens the signup tab.
 2. `SignUpForm` validates required fields, password complexity, terms acceptance, and the hCaptcha token when the site key is enabled.
 3. `SignUpForm` calls `signUpWithEmail()` in `src/services/authSignupService.ts`.
 4. `signUpWithEmail()` calls `supabase.auth.signUp()` with:
    - the submitted email and password,
-   - redirect URL `https://equipqr.app/`,
+   - redirect URL `https://eqr.zinitek.com/`,
    - user metadata including name, organization name, and legal acceptance intent.
 5. Supabase Auth receives `POST /auth/v1/signup`.
 6. Supabase creates an unconfirmed `auth.users` row.
-7. The new-user database trigger creates the application-side profile, personal organization, and organization membership records.
+7. The new-user database trigger creates the application-side profile only. It does not create an organization or membership.
 8. Supabase Auth sends the confirmation email through the configured Resend SMTP server.
 9. Resend accepts the SMTP handoff and records the message under transactional emails.
 10. The recipient mailbox either accepts or rejects the email.
 11. When the user clicks the confirmation link, Supabase verifies the signup token and sets `auth.users.email_confirmed_at`.
-12. The user signs in normally and the app loads the dashboard with organization context.
+12. The user signs in normally. An invited user claims the invitation; an uninvited user receives a private pending access request and remains blocked until a Platform Admin assigns an organization and role.
+
+13. Platform Administration reviews pending access requests. Approval atomically creates the selected organization membership; rejection creates no membership.
 
 ## Verification Checklist
 
@@ -71,12 +78,12 @@ Use this checklist after any Auth, SMTP, DNS, or signup-flow change.
    - `external_email_enabled = true`
    - `smtp_host = smtp.resend.com`
    - `smtp_port = 587`
-   - `smtp_admin_email = noreply@equipqr.app`
+   - `smtp_admin_email = noreply@zinitek.com`
    - `smtp_sender_name = ZNTEQR`
    - `rate_limit_email_sent = 30`
    - `mailer_autoconfirm = false`
 2. Confirm Resend domain health:
-   - `equipqr.app` is verified.
+   - `eqr.zinitek.com` is verified.
    - Sending is enabled.
    - Open and click tracking can remain disabled.
 3. Submit one fresh production signup with a real inbox.
@@ -84,7 +91,7 @@ Use this checklist after any Auth, SMTP, DNS, or signup-flow change.
 5. In Resend, confirm a new email with subject `Confirm Your Signup` appears.
 6. Confirm Resend status becomes `delivered`.
 7. Click the confirmation link from the inbox.
-8. Confirm the user can sign in and reaches the dashboard.
+8. Confirm an uninvited user can sign in but remains on the access-pending gate until approved.
 9. Confirm `auth.users.email_confirmed_at` is no longer `NULL` for that email.
 
 ## Known Failure Modes

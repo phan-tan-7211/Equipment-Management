@@ -1,8 +1,9 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useWorkspaceOnboardingState } from '@/hooks/useWorkspaceOnboarding';
-import { isConsumerGoogleDomain, isGoogleUser } from '@/utils/google-workspace';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { useWorkspaceAccessRequest, useWorkspaceAccessRequestResubmission, useWorkspaceOnboardingState } from '@/hooks/useWorkspaceOnboarding';
+import { isGoogleUser } from '@/utils/google-workspace';
 import WorkspaceAccessGate from '@/components/auth/WorkspaceAccessGate';
 import { useAuthFlowCopy } from './useAuthFlowCopy';
 
@@ -12,9 +13,9 @@ interface WorkspaceOnboardingGuardProps {
 }
 
 /**
- * Blocks dashboard access for Google users on claimed Workspace domains who lack
- * explicit authorization via workspace membership, invitation, import claim, or
- * active membership in another organization.
+ * Keeps Google authentication separate from organization authorization.
+ * Existing active memberships grant access; invitations and import claims remain
+ * pending until their established server-side flows complete.
  */
 const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
   children,
@@ -22,13 +23,20 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
 }) => {
   const t = useAuthFlowCopy();
   const { user } = useAuth();
-  const { data: onboardingState, isLoading, isError, refetch } = useWorkspaceOnboardingState();
+  const {
+    organizations,
+    isLoading: organizationsLoading,
+    error: organizationsError,
+  } = useOrganization();
+  const { data: accessRequest, isLoading: accessRequestLoading, isError: accessRequestError } = useWorkspaceAccessRequest();
+  const resubmitAccessRequest = useWorkspaceAccessRequestResubmission();
+  const { data: onboardingState, isLoading: onboardingLoading, isError: onboardingError, refetch } = useWorkspaceOnboardingState();
 
-  if (!user || !isGoogleUser(user)) {
+  if (!user) {
     return <>{children}</>;
   }
 
-  if (isLoading) {
+  if (organizationsLoading) {
     if (loadingFallback) {
       return <>{loadingFallback}</>;
     }
@@ -39,27 +47,56 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
     );
   }
 
-  if (isError) {
+  if (organizations.length > 0) {
+    return <>{children}</>;
+  }
+
+  const googleUser = isGoogleUser(user);
+
+  if (accessRequestLoading || (googleUser && onboardingLoading)) {
+    if (loadingFallback) {
+      return <>{loadingFallback}</>;
+    }
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-label={t('authFlow.checkingWorkspace')} />
+      </div>
+    );
+  }
+
+  if (organizationsError || accessRequestError || (googleUser && onboardingError)) {
     return <WorkspaceAccessGate mode="error" domain={null} onRetry={() => { void refetch(); }} />;
   }
 
-  if (!onboardingState || onboardingState.domain_status !== 'claimed') {
-    return <>{children}</>;
+  if (accessRequest?.request_status === 'rejected') {
+    return (
+      <WorkspaceAccessGate
+        mode="rejected"
+        domain={googleUser ? onboardingState?.domain ?? null : null}
+        rejectionReason={accessRequest.rejection_reason}
+        reviewedAt={accessRequest.reviewed_at}
+        reviewedByName={accessRequest.reviewed_by_name}
+        isResubmitting={resubmitAccessRequest.isPending}
+        resubmitFailed={resubmitAccessRequest.isError}
+        onResubmit={() => resubmitAccessRequest.mutate()}
+      />
+    );
   }
 
-  if (isConsumerGoogleDomain(onboardingState.domain)) {
-    return <>{children}</>;
+  if (accessRequest?.request_status === 'pending' || accessRequest?.request_status === 'invitation_pending' || (googleUser && (onboardingState?.has_pending_invitation || onboardingState?.has_pending_claim))) {
+    return <WorkspaceAccessGate mode="pending" domain={onboardingState?.domain ?? null} />;
   }
 
-  if (onboardingState.has_workspace_membership || onboardingState.has_other_organization_membership) {
-    return <>{children}</>;
+  if (!googleUser) {
+    return <WorkspaceAccessGate mode="blocked" domain={null} />;
   }
 
-  if (onboardingState.has_pending_invitation || onboardingState.has_pending_claim) {
-    return <WorkspaceAccessGate mode="pending" domain={onboardingState.domain} />;
-  }
-
-  return <WorkspaceAccessGate mode="blocked" domain={onboardingState.domain} />;
+  return (
+    <WorkspaceAccessGate
+      mode="blocked"
+      domain={onboardingState?.domain_status === 'claimed' ? onboardingState.domain : null}
+    />
+  );
 };
 
 export default WorkspaceOnboardingGuard;

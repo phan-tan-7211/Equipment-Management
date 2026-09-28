@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { describe, expect, it } from 'vitest';
 
-const RETIRED_HOST = 'supabase.preview.equipqr.app';
+const RETIRED_HOST = 'supabase.equipqr.app';
 
 const ALLOWLIST_SUFFIXES = [
   'src/services/oauthSessionHelpers.ts',

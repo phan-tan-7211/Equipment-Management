@@ -27,7 +27,7 @@ DOM-overlay markers still render (they project lat/lng to screen coords
 without needing tiles), but the basemap silently never fetches a single tile.
 Symptoms: map area is rendered, markers and the legend appear, but the
 basemap stays blank. This is exactly what regressed FleetMap on
-`preview.equipqr.app` (issue #617).
+`equip-qr-*.vercel.app` (issue #617).
 
 ## The rule
 

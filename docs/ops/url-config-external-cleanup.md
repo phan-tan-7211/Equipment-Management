@@ -18,8 +18,8 @@ Register these exact URIs in Intuit and Google Cloud consoles:
 | Environment | QuickBooks callback | Google Workspace callback |
 |-------------|---------------------|---------------------------|
 | Local | `http://localhost:54321/functions/v1/quickbooks-oauth-callback` | `http://localhost:54321/functions/v1/google-workspace-oauth-callback` |
-| Preview (cloud) | `https://supabase.equipqr.app/functions/v1/quickbooks-oauth-callback` | `https://supabase.equipqr.app/functions/v1/google-workspace-oauth-callback` |
-| Production | `https://supabase.equipqr.app/functions/v1/quickbooks-oauth-callback` | `https://supabase.equipqr.app/functions/v1/google-workspace-oauth-callback` |
+| Preview (cloud) | `https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/quickbooks-oauth-callback` | `https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/google-workspace-oauth-callback` |
+| Production | `https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/quickbooks-oauth-callback` | `https://wgynakhoppqkrutnslmv.supabase.co/functions/v1/google-workspace-oauth-callback` |
 
 ## Vercel (preview + production)
 
@@ -32,8 +32,8 @@ Register these exact URIs in Intuit and Google Cloud consoles:
 ## Supabase Edge secrets (preview + production branches)
 
 1. Set `PUBLIC_SITE_URL`:
-   - Preview: `https://preview.equipqr.app`
-   - Production: `https://equipqr.app`
+   - Preview: `https://equip-qr-preview-columbia-cloudworks-llc.vercel.app`
+   - Production: `https://eqr.zinitek.com`
 2. **Remove** if present:
    - `QB_OAUTH_REDIRECT_BASE_URL`
    - `GW_OAUTH_REDIRECT_BASE_URL`
@@ -66,17 +66,17 @@ Re-run:
 
 1. Open the ZNTEQR app → **Keys & OAuth**.
 2. Ensure redirect URIs include the derived preview and production callback URLs above.
-3. Remove any redirect URI using the retired host `supabase.preview.equipqr.app`.
+3. Remove any redirect URI using the retired host `wgynakhoppqkrutnslmv.supabase.co`.
 
 ## Google Cloud Console
 
 1. Open the shared OAuth web client used by ZNTEQR.
 2. Under **Authorized redirect URIs**, ensure the derived preview and production Google Workspace callback URLs above are listed.
-3. Remove any redirect URI using `supabase.preview.equipqr.app`.
+3. Remove any redirect URI using `wgynakhoppqkrutnslmv.supabase.co`.
 
 ## Validation
 
-1. Deploy to `preview` and wait for `preview.equipqr.app` to serve the new build.
+1. Deploy to `preview` and wait for `equip-qr-*.vercel.app` to serve the new build.
 2. Sign in and open `/dashboard/organization/integrations`.
 3. Verify Google Workspace remains connected.
 4. Attempt QuickBooks **Connect** and confirm `quickbooks_credentials` metadata is stored.
