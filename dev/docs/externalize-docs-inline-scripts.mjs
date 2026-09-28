@@ -4,9 +4,8 @@
  * into a content-addressed external file under assets/ and rewrite the HTML to
  * reference it. This lets the equipqr.info CSP stay a static `script-src 'self'`.
  *
- * Why not sha256 hashes in docs/vercel.json? Vercel reads headers from the
- * *committed* vercel.json when the deployment is created, so hashes regenerated
- * during the build never take effect. Any docs edit changed VitePress's inline
+ * Why not sha256 hashes in a committed headers file? Build-time hashes would
+ * drift whenever VitePress changes its inline bootstrap. Any docs edit changed
  * __VP_HASH_MAP__ bootstrap, invalidated the committed hashes, and CSP then
  * blocked hydration site-wide (issues #1147/#1158: clicks did nothing).
  *
@@ -23,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const distDir = path.join(repoRoot, 'docs', '.vitepress', 'dist');
 const assetsDir = path.join(distDir, 'assets');
-const vercelConfigPath = path.join(repoRoot, 'docs', 'vercel.json');
+const headersPath = path.join(repoRoot, 'docs', 'public', '_headers');
 
 const INLINE_SCRIPT_RE = /<script(?![^>]*\bsrc=)([^>]*)>([\s\S]*?)<\/script>/gi;
 
@@ -100,13 +99,17 @@ function assertNoInlineScriptsRemain() {
   }
 }
 
-/** Guards against someone reintroducing hash- or unsafe-inline-based script-src in vercel.json. */
+/** Guards against reintroducing hash- or unsafe-inline-based script-src. */
 function assertStaticCsp() {
-  const config = JSON.parse(fs.readFileSync(vercelConfigPath, 'utf8'));
-  const catchAll = config.headers?.find((rule) => rule.source === '/(.*)');
-  const csp = catchAll?.headers?.find((header) => header.key === 'Content-Security-Policy')?.value;
+  const headers = fs.readFileSync(headersPath, 'utf8');
+  const csp = headers
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line.startsWith('Content-Security-Policy:'))
+    ?.slice('Content-Security-Policy:'.length)
+    .trim();
   if (!csp) {
-    throw new Error(`Missing Content-Security-Policy header in ${vercelConfigPath}`);
+    throw new Error(`Missing Content-Security-Policy header in ${headersPath}`);
   }
   const scriptSrc = csp
     .split(';')
@@ -114,8 +117,8 @@ function assertStaticCsp() {
     .find((directive) => directive.startsWith('script-src'));
   if (scriptSrc !== "script-src 'self'") {
     throw new Error(
-      `Expected static "script-src 'self'" in ${vercelConfigPath} (found "${scriptSrc}"). `
-        + `Vercel serves headers from the committed file, so dynamic hashes drift and break hydration.`,
+      `Expected static "script-src 'self'" in ${headersPath} (found "${scriptSrc}"). `
+        + 'Dynamic hashes drift and break hydration.',
     );
   }
 }

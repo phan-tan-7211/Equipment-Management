@@ -33,9 +33,9 @@ ZNTEQR uses a **feat → preview → main** train (#1282). Authoritative policy:
 
 | Branch | Purpose | Deployment | Public URL |
 |--------|---------|------------|------------|
-| `main` | Production source of truth | Vercel Production (promote gate) | eqr.zinitek.com |
-| **`preview`** | Integration / pre-production train | Vercel **Preview** | equip-qr-*.vercel.app |
-| **`feat/*`** | One feature at a time | Vercel **Preview** per PR | Commit-specific `*.vercel.app` URL |
+| `main` | Production source of truth | Cloudflare Pages | eqr.zinitek.com |
+| **`preview`** | Integration / pre-production train | Cloudflare Pages preview when configured | URL from the deployment check |
+| **`feat/*`** | One feature at a time | Local and CI verification | Commit-specific preview when available |
 
 > Current live preview still uses production Supabase. The approved target is a
 > new persistent dataless preview branch documented in
@@ -51,12 +51,11 @@ ZNTEQR uses a **feat → preview → main** train (#1282). Authoritative policy:
    - Accumulate CHANGELOG `[Unreleased]`; **do not** bump `package.json`
 
 2. **Preview QA**
-   - Vercel assigns a commit-specific URL per push/PR — use that for day-to-day validation
-   - After merge to git **`preview`**, **`equip-qr-*.vercel.app`** updates via normal Vercel deploys
+   - Use local verification and the Cloudflare Pages deployment URL reported by GitHub checks
 
 3. **Production** (`main`)
    - Promote via **`preview` → `main`** (or `/release`) with version bump + empty Unreleased
-   - **Production Release Readiness** runs `vercel promote`
+   - Cloudflare Pages deploys the frontend; **Production Release Readiness** handles Supabase migrations, drift verification, and Edge Functions
 
 4. **Hotfixes**
    - Prefer `fix/*` → `preview` then promote; emergencies may PR into `main` then back-merge `preview`
@@ -459,8 +458,8 @@ In rare cases, emergency hotfixes may bypass normal PR approval:
 3. Address any failing checks
 4. Request review from maintainers
 5. Make requested changes
-6. Maintainer approves and merges to `preview` (`equip-qr-*.vercel.app` updates)
-7. Promote via `preview` → `main` / `/release` when shipping; **Production Release Readiness** runs migrations, schema drift, and **`vercel promote`**
+6. Maintainer approves and merges to `preview`
+7. Promote via `preview` → `main` / `/release` when shipping; Cloudflare Pages deploys the frontend and **Production Release Readiness** handles Supabase
 8. Version tags are created automatically when `package.json` changes on `main`
 
 ### Merge Strategy

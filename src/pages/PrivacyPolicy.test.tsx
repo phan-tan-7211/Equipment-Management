@@ -92,7 +92,7 @@ describe('PrivacyPolicy', () => {
     expect(screen.getByText(/4\.2 Google Maps Platform/)).toBeInTheDocument();
     expect(screen.getByText(/4\.3 hCaptcha/)).toBeInTheDocument();
     expect(screen.getByText(/4\.4 Resend/)).toBeInTheDocument();
-    expect(screen.getByText(/4\.5 Vercel/)).toBeInTheDocument();
+    expect(screen.getByText(/4\.5 Cloudflare/)).toBeInTheDocument();
     expect(screen.getByText(/4\.7 QuickBooks Online.*Optional Integration/)).toBeInTheDocument();
     expect(screen.getByText(/4\.8 Google Workspace.*Optional Integration/)).toBeInTheDocument();
 

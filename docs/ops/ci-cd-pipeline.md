@@ -1,5 +1,10 @@
 # CI/CD Pipeline Documentation
 
+> **Current hosting (2026-09-28):** Vercel is retired. The frontend is deployed by
+> Cloudflare Pages from Git, while Production Release Readiness handles Supabase
+> migrations, strict drift verification, and Edge Functions. Vercel instructions
+> below are retained only as migration history and must not be used operationally.
+
 This document provides a comprehensive overview of ZNTEQR's entire CI/CD pipeline, including GitHub Actions workflows, external services (Vercel, Supabase), and their interactions.
 
 ## Pipeline Overview

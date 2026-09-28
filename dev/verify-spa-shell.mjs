@@ -4,8 +4,7 @@
  * Verify SPA deep-link routing artifacts after `npm run build`.
  *
  * Ensures dist/app-shell.html exists and platform configs target the correct
- * SPA fallback: Vercel uses cleanUrls /app-shell; Netlify/_redirects use
- * /app-shell.html (literal build artifact).
+ * SPA fallback: Cloudflare Pages and Netlify use /app-shell.html.
  */
 
 import fs from 'node:fs';
@@ -124,37 +123,6 @@ export function verifySpaShellRouting() {
     fail('Missing dist/app-shell.html. Run npm run build first.');
   }
 
-  const vercelPath = path.join(repoRoot, 'vercel.json');
-  if (!fs.existsSync(vercelPath)) {
-    fail('Missing vercel.json at repo root.');
-  }
-
-  /** @type {{ rewrites?: Array<{ source?: string; destination?: string }>; cleanUrls?: boolean }} */
-  let vercel;
-  try {
-    vercel = JSON.parse(fs.readFileSync(vercelPath, 'utf8'));
-  } catch {
-    fail('vercel.json is not valid JSON.');
-  }
-
-  const CANONICAL_REWRITE_SOURCE = '/((?!.*\\.).*)';
-  const CANONICAL_REWRITE_DEST = '/app-shell';
-
-  const rewrite = (vercel.rewrites ?? []).find(
-    (entry) => entry.destination === CANONICAL_REWRITE_DEST
-  );
-  if (!rewrite) {
-    fail('vercel.json has no SPA fallback rewrite to /app-shell.');
-  }
-  if (rewrite.source !== CANONICAL_REWRITE_SOURCE) {
-    fail(
-      `vercel.json rewrite source must be ${CANONICAL_REWRITE_SOURCE} (found: ${rewrite.source ?? 'missing'}).`
-    );
-  }
-  if (vercel.cleanUrls !== true) {
-    fail('vercel.json must set cleanUrls: true so /app-shell resolves to app-shell.html.');
-  }
-
   const indexPath = path.join(repoRoot, 'index.html');
   if (!fs.existsSync(indexPath)) {
     fail('Missing index.html.');
@@ -200,7 +168,7 @@ export function verifySpaShellRouting() {
   assertExplicitNetlifyAppShellRedirects(netlifyContent);
 
   console.log(
-    '[OK] SPA routing contract: dist/app-shell.html; Vercel -> /app-shell (extensionless source, cleanUrls); public/_redirects and dist/_redirects -> /app-shell.html; netlify.toml catch-all -> /app-shell.html.'
+    '[OK] SPA routing contract: dist/app-shell.html; Cloudflare Pages public/_redirects and dist/_redirects -> /app-shell.html; netlify.toml catch-all -> /app-shell.html.'
   );
 }
 

@@ -1,82 +1,49 @@
-# Git and Deploy (authoritative)
+# Git and deploy
 
-Solo-developer workflow for ZNTEQR after #1282 restored the feat → preview → main train.
+ZNTEQR uses Cloudflare Pages for the frontend and Supabase for the backend.
+Vercel is retired and must not be added back to the release path.
 
 ## Branches
 
 | Git | Role |
-|-----|------|
-| **`main`** | Production source of truth. Receives controlled promotes from `preview`. |
-| **`preview`** | Integration / pre-production train. Default merge target for feature work. Deploys to **`equip-qr-*.vercel.app`**. |
-| **`feat/*`, `fix/*`, etc.** | Short-lived work branches. Branch off `preview`. |
+|---|---|
+| `main` | Production source of truth; Cloudflare Pages serves `https://eqr.zinitek.com`. |
+| `preview` | Integration branch for feature work. |
+| `feat/*`, `fix/*`, `codex/*` | Short-lived work branches. |
 
-```powershell
-git fetch origin preview
-git switch -c feat/<short-name> origin/preview
-```
+Day-to-day work branches from `origin/preview` and targets `preview`. Production
+ships through a controlled `preview` to `main` pull request with the required
+release metadata.
 
-Open day-to-day PRs with `--base preview`. Production ships via **`preview` → `main`** (or `/release`).
+## Frontend deployment
 
-## Hostnames
+Cloudflare Pages is connected to this repository through its Git integration.
+It builds the Vite application with `npm run build` and publishes `dist`.
+The committed `public/_redirects` and `public/_headers` files define SPA routing,
+cache policy, security headers, and route indexing policy.
 
-| URL | Meaning |
-|-----|---------|
-| **<https://eqr.zinitek.com>** | Production (after Production Release Readiness + `vercel promote`) |
-| **`https://<project>-<hash>-columbia-cloudworks-llc.vercel.app`** | Commit-specific Vercel Preview URL for every work-branch / PR deploy |
-| **<https://equip-qr-preview-columbia-cloudworks-llc.vercel.app>** | Stable hostname for the **integration** git branch **`preview`** — Vercel Preview deploys on merges/pushes to that branch (branch-bound custom domain). Not fast-forwarded from `main`. |
+Cloudflare deployment status is reported as a GitHub check. Use the deployment
+URL exposed by that check for commit-specific verification. Do not require a
+fixed preview hostname unless one is explicitly configured in Cloudflare.
 
-Do **not** confuse git branch **`preview`** (integration train) with Vercel environment **Preview** (all non-production deploys).
+## Production backend release
 
-## Day-to-day loop
+On a push to `main`, `.github/workflows/production-release-readiness.yml`:
 
-1. Branch off `origin/preview`.
-2. Implement and verify locally (`.\dev\dev-stop.bat` / `.\dev\dev-start.bat`, lint, tests, E2E).
-3. Push your work branch → Vercel builds a **Preview** deployment.
-4. Test on the **commit-specific `*.vercel.app` URL** and/or local stack.
-5. Open PR **`feat/*` → `preview`**. CI + Supabase ephemeral branch (when `supabase/**` changes) must pass. Accumulate short customer-facing CHANGELOG `[Unreleased]` bullets per `.cursor/rules/changelog.mdc`. **Do not** bump `package.json`.
-6. Merge to `preview` → Vercel updates **`equip-qr-*.vercel.app`**.
-7. When ready to ship: **`/release`** or open **`preview` → `main`** with version bump + empty Unreleased → **Production Release Readiness** → **`vercel promote`** → **eqr.zinitek.com**.
+1. Loads the production Supabase project ref from `.github/deployment-targets.json`.
+2. Applies pending migrations with `supabase db push --include-all --yes`.
+3. Runs the strict schema drift check.
+4. Deploys Supabase Edge Functions.
 
-## Vercel configuration
+The workflow requires `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD` in the
+GitHub `production` environment. Frontend build variables live in Cloudflare
+Pages; Edge Function secrets live in Supabase.
 
-| Setting | Value |
-|---------|--------|
-| **Production** env | Branch tracking: **`main`**. Auto-assign production domains after promote. |
-| **Preview** env | Branch tracking: enabled for work branches. Custom domain **`equip-qr-*.vercel.app`** assigned to git branch **`preview`** (normal deploys on push/merge to that branch). |
-| **`vercel.json`** | `github.deploymentEnabled: true`; allow **`main`** and **`preview`** git deployments. |
+## Verification
 
-Retired: `preview-domain-alias.yml` (fast-forward `preview` from `main` + deploy hook). Do not reintroduce it.
+Before publishing, run the focused tests for the changed surface, `npm run build`,
+`npm run verify:spa-routing`, and `git diff --check`. After merging to `main`,
+verify both the Cloudflare Pages check and Production Release Readiness.
 
-## Supabase
-
-- **Cloud app (`equip-qr-*.vercel.app` and `eqr.zinitek.com`):** current live state is a
-  single production project (`https://wgynakhoppqkrutnslmv.supabase.co`). The approved
-  target is to move `equip-qr-*.vercel.app` to a new persistent dataless branch
-  per `docs/ops/preview-persistent-branch.md`; do not assume that cutover is
-  live yet.
-- **PR branches:** ephemeral Supabase branches when `supabase/**` changes (schema/RLS validation only).
-- **OAuth:** vendor callbacks stay on production edge URLs; test integrations on the **local stack** before merge.
-
-## Release / version tags
-
-- PRs into **`preview`**: short `[Unreleased]` notes per `.cursor/rules/changelog.mdc` only. Forbid app version bump.
-- PRs into **`main`**: one SemVer bump for the promote, versioned CHANGELOG section, empty `[Unreleased]`.
-- Batch routine dependency maintenance into that promote. Do not cut a versioned release for one bump.
-- **`/release`** pushes release metadata onto **`preview`**, then opens **`preview` → `main`** (never a non-`preview` head into `main`).
-- `version-tag.yml` tags on push to `main` when `package.json` changes.
-
-## Retired (do not use)
-
-- Main-centric day-to-day PRs (`feat` → `main` only) from the #1033 interim model
-- `preview-domain-alias.yml` fast-forward of `preview` from `main`
-- Vercel custom **`staging`** environment
-- Persistent Supabase branch **`olsdirkvvfegvclbpgrg`**
-
-See `docs/ops/preview-architecture-migration.md` for #1033 history and the #1282 reverse-migration note.
-
-## Related docs
-
-- `.cursor/rules/branching.mdc` — agent branching rules
-- `docs/ops/ci-cd-pipeline.md` — GitHub Actions
-- `docs/ops/deployment.md` — Vercel/Supabase operations detail
-- `CONTRIBUTING.md` — contributor onboarding
+Historical Vercel migration notes may remain in archived changelog or migration
+records. They are not current deployment instructions.
