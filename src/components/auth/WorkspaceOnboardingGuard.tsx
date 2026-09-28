@@ -2,7 +2,7 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/contexts/OrganizationContext';
-import { useWorkspaceOnboardingState } from '@/hooks/useWorkspaceOnboarding';
+import { useWorkspaceAccessRequest, useWorkspaceOnboardingState } from '@/hooks/useWorkspaceOnboarding';
 import { isGoogleUser } from '@/utils/google-workspace';
 import WorkspaceAccessGate from '@/components/auth/WorkspaceAccessGate';
 import { useAuthFlowCopy } from './useAuthFlowCopy';
@@ -28,7 +28,8 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
     isLoading: organizationsLoading,
     error: organizationsError,
   } = useOrganization();
-  const { data: onboardingState, isLoading, isError, refetch } = useWorkspaceOnboardingState();
+  const { data: accessRequest, isLoading: accessRequestLoading, isError: accessRequestError } = useWorkspaceAccessRequest();
+  const { data: onboardingState, isLoading: onboardingLoading, isError: onboardingError, refetch } = useWorkspaceOnboardingState();
 
   if (!user) {
     return <>{children}</>;
@@ -53,7 +54,7 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
     return <WorkspaceAccessGate mode="blocked" domain={null} />;
   }
 
-  if (isLoading) {
+  if (accessRequestLoading || (isGoogleUser(user) && onboardingLoading)) {
     if (loadingFallback) {
       return <>{loadingFallback}</>;
     }
@@ -64,12 +65,12 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
     );
   }
 
-  if (organizationsError || isError) {
+  if (organizationsError || accessRequestError || onboardingError) {
     return <WorkspaceAccessGate mode="error" domain={null} onRetry={() => { void refetch(); }} />;
   }
 
-  if (onboardingState?.has_pending_invitation || onboardingState?.has_pending_claim) {
-    return <WorkspaceAccessGate mode="pending" domain={onboardingState.domain} />;
+  if (accessRequest?.request_status === 'pending' || accessRequest?.request_status === 'invitation_pending' || onboardingState?.has_pending_invitation || onboardingState?.has_pending_claim) {
+    return <WorkspaceAccessGate mode="pending" domain={onboardingState?.domain ?? null} />;
   }
 
   return (

@@ -5,6 +5,7 @@ import { customRender } from '@vitest-harness/utils/renderUtils';
 import WorkspaceOnboardingGuard from '@/components/auth/WorkspaceOnboardingGuard';
 
 const mockOnboardingState = vi.hoisted(() => vi.fn());
+const mockAccessRequest = vi.hoisted(() => vi.fn());
 const mockQueryState = vi.hoisted(() => ({
   isLoading: false,
   isError: false,
@@ -33,6 +34,11 @@ vi.mock('@/hooks/useAuth', () => ({
 }));
 
 vi.mock('@/hooks/useWorkspaceOnboarding', () => ({
+  useWorkspaceAccessRequest: () => ({
+    data: mockAccessRequest(),
+    isLoading: mockQueryState.isLoading,
+    isError: mockQueryState.isError,
+  }),
   useWorkspaceOnboardingState: () => ({
     data: mockOnboardingState(),
     isLoading: mockQueryState.isLoading,
@@ -48,6 +54,7 @@ vi.mock('@/contexts/OrganizationContext', () => ({
 describe('WorkspaceOnboardingGuard', () => {
   beforeEach(() => {
     mockOnboardingState.mockReset();
+    mockAccessRequest.mockReset();
     mockQueryState.isLoading = false;
     mockQueryState.isError = false;
     mockOrganizationState.organizations = [];
@@ -58,6 +65,7 @@ describe('WorkspaceOnboardingGuard', () => {
       email: 'blocked@claimed.test',
       app_metadata: { provider: 'google', providers: ['google'] },
     };
+    mockAccessRequest.mockReturnValue({ request_status: 'already_authorized' });
   });
 
   it('blocks unclaimed-domain Google users without organization membership', () => {

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Building2, ChevronRight, Loader2, Mail, Plus, RotateCcw, Search, Shield, ShieldOff } from 'lucide-react';
+import { Building2, Check, ChevronRight, Loader2, Mail, Plus, RotateCcw, Search, Shield, ShieldOff, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import { logger } from '@/utils/logger';
@@ -32,6 +32,20 @@ type OrganizationSummary = {
   pending_owner_can_resend: boolean;
 };
 
+type AccessRequest = {
+  request_id: string;
+  user_id: string;
+  email: string;
+  display_name: string | null;
+  request_status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  requested_at: string;
+  organization_id: string | null;
+  organization_name: string | null;
+  assigned_role: string | null;
+  reviewed_at: string | null;
+  rejection_reason: string | null;
+};
+
 export default function PlatformAdministration() {
   const { language } = useI18n();
   const { formatDate, formatDateTime } = useFormatTimestamp();
@@ -44,6 +58,8 @@ export default function PlatformAdministration() {
   const [lifecycleAction, setLifecycleAction] = useState<'suspend' | 'reactivate' | null>(null);
   const [name, setName] = useState('');
   const [ownerEmail, setOwnerEmail] = useState('');
+  const [approvalOrganizations, setApprovalOrganizations] = useState<Record<string, string>>({});
+  const [approvalRoles, setApprovalRoles] = useState<Record<string, string>>({});
 
   const listQuery = useQuery({
     queryKey: ['platform-organizations', search.trim(), status],
@@ -67,10 +83,20 @@ export default function PlatformAdministration() {
     },
   });
 
+  const accessRequestsQuery = useQuery({
+    queryKey: ['platform-access-requests', 'pending'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('platform_list_access_requests', { p_status: 'pending' });
+      if (error) throw error;
+      return (data ?? []) as AccessRequest[];
+    },
+  });
+
   const refresh = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['platform-organizations'] }),
       queryClient.invalidateQueries({ queryKey: ['platform-organization'] }),
+      queryClient.invalidateQueries({ queryKey: ['platform-access-requests'] }),
     ]);
   };
 
@@ -125,14 +151,50 @@ export default function PlatformAdministration() {
     onError: (error) => { logger.error('Owner invitation resend failed', error); toast.error(copy.resendFailed); },
   });
 
+  const approveAccessMutation = useMutation({
+    mutationFn: async (request: AccessRequest) => {
+      const organizationId = approvalOrganizations[request.request_id];
+      const role = approvalRoles[request.request_id] ?? 'member';
+      if (!organizationId) throw new Error(copy.accessRequestOrganizationRequired);
+      const { error } = await supabase.rpc('platform_approve_access_request', {
+        p_request_id: request.request_id,
+        p_organization_id: organizationId,
+        p_role: role,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => { await refresh(); toast.success(copy.accessRequestApproved); },
+    onError: (error) => { logger.error('Access request approval failed', error); toast.error(copy.accessRequestApprovalFailed); },
+  });
+
+  const rejectAccessMutation = useMutation({
+    mutationFn: async (requestId: string) => {
+      const { error } = await supabase.rpc('platform_reject_access_request', {
+        p_request_id: requestId,
+        p_reason: copy.accessRequestRejectedReason,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => { await refresh(); toast.success(copy.accessRequestRejected); },
+    onError: (error) => { logger.error('Access request rejection failed', error); toast.error(copy.accessRequestRejectionFailed); },
+  });
+
   const detail = detailQuery.data;
   const organizations = useMemo(() => listQuery.data ?? [], [listQuery.data]);
+  const accessRequests = useMemo(() => accessRequestsQuery.data ?? [], [accessRequestsQuery.data]);
+  const activeOrganizations = organizations.filter((organization) => organization.lifecycle_status === 'active');
   const validCreate = name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail.trim());
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6"><div className="flex min-w-0 items-center gap-3"><Shield className="h-6 w-6 shrink-0 text-primary" /><div><h1 className="font-semibold">{copy.title}</h1><p className="text-xs text-muted-foreground">{copy.subtitle}</p></div></div><div className="ml-auto flex items-center gap-3"><LanguageSwitcher /><Button variant="outline" asChild><Link to="/dashboard">{copy.tenantDashboard}</Link></Button></div></div></header>
       <main className="mx-auto max-w-7xl space-y-5 p-4 sm:p-6">
+        <Card>
+          <CardHeader><CardTitle>{copy.accessRequests}</CardTitle><p className="text-sm text-muted-foreground">{copy.accessRequestsDescription}</p></CardHeader>
+          <CardContent>
+            {accessRequestsQuery.isLoading ? <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div> : accessRequestsQuery.isError ? <p className="py-4 text-sm text-destructive">{copy.accessRequestsLoadFailed}</p> : accessRequests.length === 0 ? <p className="py-4 text-sm text-muted-foreground">{copy.noAccessRequests}</p> : <div className="space-y-3">{accessRequests.map((request) => <div key={request.request_id} className="grid gap-3 rounded-md border p-3 lg:grid-cols-[1fr_220px_150px_auto] lg:items-center"><div><p className="font-medium">{request.display_name || request.email}</p><p className="text-sm text-muted-foreground">{request.email}</p><p className="text-xs text-muted-foreground">{formatPlatformAdminCopy(copy.accessRequestSubmitted, { date: formatDateTime(request.requested_at) })}</p></div><Select value={approvalOrganizations[request.request_id] ?? ''} onValueChange={(value) => setApprovalOrganizations((current) => ({ ...current, [request.request_id]: value }))}><SelectTrigger aria-label={copy.accessRequestOrganization}><SelectValue placeholder={copy.accessRequestOrganization} /></SelectTrigger><SelectContent>{activeOrganizations.map((organization) => <SelectItem key={organization.organization_id} value={organization.organization_id}>{organization.organization_name}</SelectItem>)}</SelectContent></Select><Select value={approvalRoles[request.request_id] ?? 'member'} onValueChange={(value) => setApprovalRoles((current) => ({ ...current, [request.request_id]: value }))}><SelectTrigger aria-label={copy.accessRequestRole}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="owner">{copy.roleOwner}</SelectItem><SelectItem value="admin">{copy.roleAdmin}</SelectItem><SelectItem value="member">{copy.roleMember}</SelectItem><SelectItem value="viewer">{copy.roleViewer}</SelectItem><SelectItem value="requestor">{copy.roleRequestor}</SelectItem></SelectContent></Select><div className="flex gap-2 lg:justify-end"><Button size="sm" disabled={!approvalOrganizations[request.request_id] || approveAccessMutation.isPending} onClick={() => approveAccessMutation.mutate(request)}><Check className="mr-2 h-4 w-4" />{copy.approve}</Button><Button size="sm" variant="outline" disabled={rejectAccessMutation.isPending} onClick={() => rejectAccessMutation.mutate(request.request_id)}><X className="mr-2 h-4 w-4" />{copy.reject}</Button></div></div>)}</div>}
+          </CardContent>
+        </Card>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-2xl font-semibold">{copy.organizations}</h2><p className="text-sm text-muted-foreground">{copy.organizationsDescription}</p></div><Button onClick={() => setCreateOpen(true)}><Plus className="mr-2 h-4 w-4" />{copy.createOrganization}</Button></div>
         <div className="grid gap-3 sm:grid-cols-[1fr_180px]"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input aria-label={copy.searchAria} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={copy.searchPlaceholder} className="pl-9" /></div><Select value={status} onValueChange={(value) => setStatus(value as typeof status)}><SelectTrigger aria-label={copy.filterLifecycle}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{copy.allStatuses}</SelectItem><SelectItem value="active">{copy.active}</SelectItem><SelectItem value="suspended">{copy.suspended}</SelectItem></SelectContent></Select></div>
         {listQuery.isLoading ? <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin" /></div> : listQuery.isError ? <Card><CardContent className="py-10 text-center text-destructive">{copy.loadFailed}</CardContent></Card> : organizations.length === 0 ? <Card><CardContent className="py-12 text-center text-muted-foreground">{copy.noMatches}</CardContent></Card> : <div className="grid gap-3">{organizations.map((org) => <button key={org.organization_id} onClick={() => setSelectedId(org.organization_id)} className="grid w-full grid-cols-[1fr_auto] items-center gap-3 rounded-md border bg-card p-4 text-left hover:bg-muted/40"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-medium">{org.organization_name}</span><Badge variant={org.lifecycle_status === 'active' ? 'default' : 'destructive'}>{org.lifecycle_status === 'active' ? copy.active : copy.suspended}</Badge></div><p className="mt-1 truncate text-sm text-muted-foreground">{org.owner_email ? formatPlatformAdminCopy(copy.owner, { name: org.owner_name || org.owner_email, email: org.owner_email }) : org.pending_owner_email ? formatPlatformAdminCopy(copy.ownerPending, { email: org.pending_owner_email }) : copy.noActiveOwner}</p></div><ChevronRight className="h-5 w-5 text-muted-foreground" /></button>)}</div>}

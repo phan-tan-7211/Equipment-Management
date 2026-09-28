@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { getWorkspaceOnboardingState } from '@/services/google-workspace';
 import { googleWorkspace } from '@/lib/queryKeys';
 import { isGoogleUser } from '@/utils/google-workspace';
+import { ensureWorkspaceAccessRequest } from '@/services/workspace-access';
 
 /**
  * Hook to fetch workspace onboarding state.
@@ -16,6 +17,18 @@ export const useWorkspaceOnboardingState = () => {
     queryKey: googleWorkspace.onboardingState(user?.id ?? ''),
     queryFn: () => getWorkspaceOnboardingState(user!.id),
     enabled: shouldQuery,
+    staleTime: 60 * 1000,
+    retry: 1,
+  });
+};
+
+export const useWorkspaceAccessRequest = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['workspace-access-request', user?.id],
+    queryFn: ensureWorkspaceAccessRequest,
+    enabled: Boolean(user?.id),
     staleTime: 60 * 1000,
     retry: 1,
   });
