@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.35.1] - 2026-09-28
+
+### Changed
+
+- **Cloudflare Pages release path** — Frontend delivery now uses Cloudflare Pages, with Vercel deployment and redirect dependencies retired.
+
 ## [3.35.0] - 2026-09-27
 
 ### Security
