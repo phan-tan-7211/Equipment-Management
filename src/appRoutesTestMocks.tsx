@@ -244,6 +244,7 @@ vi.mock('@/routes/lazyDashboardPages', () => ({
   AlternateGroupsPage: () => null,
   AlternateGroupDetail: () => null,
   AuditLog: () => null,
+  PermissionMatrix: () => null,
   DSRCockpitPage: () => <div data-testid="dsr-cockpit-page">DSR Cockpit</div>,
   DSRCasePage: () => <div data-testid="dsr-case-page">DSR Case</div>,
   OperatorCheckInsPage: () => null,
