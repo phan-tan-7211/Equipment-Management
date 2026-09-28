@@ -85,7 +85,89 @@ export const arcPoint = (
   };
 };
 
-const normalizeAngle360 = (deg: number): number => ((deg % 360) + 360) % 360;
+export const normalizeAngle360 = (deg: number): number => ((deg % 360) + 360) % 360;
+
+/** Angle in degrees of `point` as seen from `center`, normalized to [0, 360). */
+export const angleAround = (center: SketchPoint, point: SketchPoint): number =>
+  normalizeAngle360((Math.atan2(point.y - center.y, point.x - center.x) * 180) / Math.PI);
+
+/** Whether `angleDegValue` falls within the arc's own swept range. */
+export const isAngleOnArc = (angleDegValue: number, entity: ArcEntity): boolean => {
+  const sweepDeg = entity.clockwise
+    ? normalizeAngle360(entity.startAngleDeg - entity.endAngleDeg)
+    : normalizeAngle360(entity.endAngleDeg - entity.startAngleDeg);
+  const offset = entity.clockwise
+    ? normalizeAngle360(entity.startAngleDeg - angleDegValue)
+    : normalizeAngle360(angleDegValue - entity.startAngleDeg);
+  return offset <= sweepDeg + 1e-6;
+};
+
+export type CircleLike = { cx: number; cy: number; r: number };
+
+/**
+ * Up to two intersections of line segment a→b (or the infinite line through
+ * it, when `infiniteLine`) with a circle — the missing piece that let Trim
+ * and Break only ever consider line/rect/polyline boundaries, never a
+ * circle or arc crossing through them.
+ */
+export const lineCircleIntersections = (
+  a: SketchPoint,
+  b: SketchPoint,
+  circle: CircleLike,
+  infiniteLine = false,
+): Array<{ point: SketchPoint; t: number }> => {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const fx = a.x - circle.cx;
+  const fy = a.y - circle.cy;
+  const coeffA = dx * dx + dy * dy;
+  if (coeffA <= 1e-12) return [];
+  const coeffB = 2 * (fx * dx + fy * dy);
+  const coeffC = fx * fx + fy * fy - circle.r * circle.r;
+  const discriminant = coeffB * coeffB - 4 * coeffA * coeffC;
+  if (discriminant < 0) return [];
+  const sqrtDisc = Math.sqrt(discriminant);
+  const candidates = discriminant < 1e-12
+    ? [-coeffB / (2 * coeffA)]
+    : [(-coeffB - sqrtDisc) / (2 * coeffA), (-coeffB + sqrtDisc) / (2 * coeffA)];
+  const results: Array<{ point: SketchPoint; t: number }> = [];
+  for (const t of candidates) {
+    if (!infiniteLine && (t < -1e-9 || t > 1 + 1e-9)) continue;
+    results.push({ point: { x: a.x + t * dx, y: a.y + t * dy }, t });
+  }
+  return results;
+};
+
+/** 0, 1 (tangent) or 2 intersection points between two circles. */
+export const circleCircleIntersections = (
+  c1: CircleLike,
+  c2: CircleLike,
+): SketchPoint[] => {
+  const dx = c2.cx - c1.cx;
+  const dy = c2.cy - c1.cy;
+  const centerDistance = Math.hypot(dx, dy);
+  if (
+    centerDistance <= 1e-9 ||
+    centerDistance > c1.r + c2.r + 1e-9 ||
+    centerDistance < Math.abs(c1.r - c2.r) - 1e-9
+  ) {
+    return [];
+  }
+  const a = (c1.r * c1.r - c2.r * c2.r + centerDistance * centerDistance) / (2 * centerDistance);
+  const heightSquared = c1.r * c1.r - a * a;
+  const height = Math.sqrt(Math.max(0, heightSquared));
+  const midX = c1.cx + (a * dx) / centerDistance;
+  const midY = c1.cy + (a * dy) / centerDistance;
+  if (height <= 1e-9) {
+    return [{ x: midX, y: midY }];
+  }
+  const offsetX = -(dy / centerDistance) * height;
+  const offsetY = (dx / centerDistance) * height;
+  return [
+    { x: midX + offsetX, y: midY + offsetY },
+    { x: midX - offsetX, y: midY - offsetY },
+  ];
+};
 
 /**
  * Tight axis-aligned bounds of the swept arc — not the full circle. Used for
@@ -193,4 +275,26 @@ export const segmentIntersection = (
     t,
     u,
   };
+};
+
+/**
+ * Where the two INFINITE lines through a→b and c→d cross — unlike
+ * `segmentIntersection`, neither side is bounded to its own segment. Used
+ * to re-join two independently offset edges at a corner: each edge's
+ * offset copy is only trustworthy as an infinite line until it's re-cut
+ * against its neighbor's offset copy at their new shared vertex.
+ */
+export const infiniteLineIntersection = (
+  a: SketchPoint,
+  b: SketchPoint,
+  c: SketchPoint,
+  d: SketchPoint,
+): SketchPoint | null => {
+  const r = { x: b.x - a.x, y: b.y - a.y };
+  const s = { x: d.x - c.x, y: d.y - c.y };
+  const cross = r.x * s.y - r.y * s.x;
+  if (Math.abs(cross) < 1e-9) return null;
+  const q = { x: c.x - a.x, y: c.y - a.y };
+  const t = (q.x * s.y - q.y * s.x) / cross;
+  return { x: a.x + t * r.x, y: a.y + t * r.y };
 };
