@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Boxes, History, Plug, Settings, Users } from 'lucide-react';
+import { Boxes, History, Plug, Settings, ShieldCheck, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import {
@@ -7,6 +7,7 @@ import {
   ORGANIZATION_EQUIPMENT_GROUPS_PATH,
   ORGANIZATION_INTEGRATIONS_PATH,
   ORGANIZATION_MEMBERS_PATH,
+  ORGANIZATION_PERMISSIONS_PATH,
   ORGANIZATION_SETTINGS_PATH,
 } from '@/features/organization/constants/routes';
 import { useI18n } from '@/i18n';
@@ -33,6 +34,12 @@ const organizationLinks = [
     to: ORGANIZATION_INTEGRATIONS_PATH,
     labelKey: 'equipmentGroups.navIntegrations',
     icon: Plug,
+  },
+  {
+    to: ORGANIZATION_PERMISSIONS_PATH,
+    labelKey: 'equipmentGroups.navPermissions',
+    icon: ShieldCheck,
+    adminOnly: true,
   },
   {
     to: ORGANIZATION_AUDIT_LOG_PATH,

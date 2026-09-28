@@ -13,6 +13,7 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ### Added
 
+- **Permission matrix** - Organization owners and admins can review what each organization and team role is allowed to do.
 - **Access request history search** - Platform administrators can search, filter by status and page through the full access request history.
 
 ## [3.37.0] - 2026-09-28

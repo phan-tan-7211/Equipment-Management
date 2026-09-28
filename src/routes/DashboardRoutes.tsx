@@ -30,6 +30,7 @@ import {
   AlternateGroupDetail,
   DashboardSupport,
   AuditLog,
+  PermissionMatrix,
   DSRCockpitPage,
   DSRCasePage,
   OperatorCheckInsPage,
@@ -57,6 +58,7 @@ export const dashboardRouteElements = (
     <Route path="/organization/integrations" element={<OrganizationIntegrations />} />
     <Route path="/organization/equipment-groups" element={<EquipmentGroups />} />
     <Route path="/organization/audit-log" element={<AuditLog />} />
+    <Route path="/organization/permissions" element={<PermissionMatrix />} />
     <Route path="/pm-templates" element={<PMTemplates />} />
     <Route path="/pm-templates/new" element={<PMTemplateEditor />} />
     <Route path="/pm-templates/:templateId/edit" element={<PMTemplateEditor />} />

@@ -60,6 +60,7 @@ export const equipmentGroupResources = {
       navEquipmentGroups: 'Equipment Groups',
       navIntegrations: 'Integrations',
       navAuditLog: 'Audit Log',
+      navPermissions: 'Permissions',
     },
   },
   vi: {
@@ -123,6 +124,7 @@ export const equipmentGroupResources = {
       navEquipmentGroups: 'Nhóm thiết bị',
       navIntegrations: 'Tích hợp',
       navAuditLog: 'Nhật ký kiểm toán',
+      navPermissions: 'Ma trận quyền',
     },
   },
   ko: {
@@ -186,6 +188,7 @@ export const equipmentGroupResources = {
       navEquipmentGroups: '설비 그룹',
       navIntegrations: '연동',
       navAuditLog: '감사 로그',
+      navPermissions: '권한',
     },
   },
 } as const;

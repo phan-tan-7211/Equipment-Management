@@ -39,6 +39,7 @@ export const PartLookup = lazyWithRetry(() => import('@/features/inventory/pages
 export const AlternateGroupsPage = lazyWithRetry(() => import('@/features/inventory/pages/AlternateGroupsPage'), 'AlternateGroupsPage');
 export const AlternateGroupDetail = lazyWithRetry(() => import('@/features/inventory/pages/AlternateGroupDetail'), 'AlternateGroupDetail');
 export const AuditLog = lazyWithRetry(() => import('@/pages/AuditLog'), 'AuditLog');
+export const PermissionMatrix = lazyWithRetry(() => import('@/features/organization/pages/PermissionMatrix'), 'PermissionMatrix');
 export const DSRCockpitPage = lazyWithRetry(() => import('@/pages/dsr/CockpitPage'), 'DSRCockpitPage');
 export const DSRCasePage = lazyWithRetry(() => import('@/pages/dsr/CasePage'), 'DSRCasePage');
 export const OperatorCheckInsPage = lazyWithRetry(
