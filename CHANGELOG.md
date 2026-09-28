@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.37.1] - 2026-09-29
+
+### Fixed
+
+- **Cookie consent banner** - Dashboard pages no longer fall into the error screen when the cookie consent banner reloads during development.
+
 ## [3.37.0] - 2026-09-28
 
 ### Added
