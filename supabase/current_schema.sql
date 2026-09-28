@@ -4356,8 +4356,6 @@ CREATE OR REPLACE FUNCTION "public"."default_team_permission"("p_team_role" "tex
   SELECT CASE p_permission_key
     WHEN 'equipment.create' THEN p_team_role IN ('manager', 'technician')
     WHEN 'equipment.update' THEN p_team_role IN ('manager', 'technician')
-    WHEN 'equipment.delete' THEN false
-    WHEN 'work_order.delete' THEN false
     ELSE false
   END;
 $$;
@@ -7343,6 +7341,27 @@ $$;
 ALTER FUNCTION "public"."get_member_profiles_secure"("org_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_my_team_permissions"("p_organization_id" "uuid") RETURNS TABLE("team_id" "uuid", "permission_key" "text")
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public', 'private'
+    AS $$
+  SELECT tm.team_id, k.permission_key
+  FROM public.team_members AS tm
+  JOIN public.teams AS t ON t.id = tm.team_id
+  CROSS JOIN (VALUES ('equipment.create'), ('equipment.update')) AS k(permission_key)
+  WHERE tm.user_id = auth.uid()
+    AND t.organization_id = p_organization_id
+    AND public.has_team_permission(auth.uid(), p_organization_id, tm.team_id, k.permission_key);
+$$;
+
+
+ALTER FUNCTION "public"."get_my_team_permissions"("p_organization_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."get_my_team_permissions"("p_organization_id" "uuid") IS 'Caller''s effective configurable permissions per team they belong to.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."get_org_equipment_pm_statuses"("p_organization_id" "uuid") RETURNS TABLE("equipment_id" "uuid", "last_pm_completed_at" timestamp with time zone, "interval_value" integer, "interval_type" "text", "is_overdue" boolean, "days_overdue" integer, "hours_overdue" numeric, "template_name" "text", "source" "text")
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -8032,7 +8051,7 @@ BEGIN
     COALESCE(o.allowed, public.default_team_permission(r.team_role, k.permission_key)),
     o.allowed IS NULL
   FROM (VALUES ('manager'), ('technician'), ('requestor'), ('viewer')) AS r(team_role)
-  CROSS JOIN (VALUES ('equipment.create'), ('equipment.update'), ('equipment.delete'), ('work_order.delete')) AS k(permission_key)
+  CROSS JOIN (VALUES ('equipment.create'), ('equipment.update')) AS k(permission_key)
   LEFT JOIN private.team_permission_overrides AS o
     ON o.organization_id = p_organization_id
    AND o.team_role = r.team_role
@@ -14552,7 +14571,7 @@ BEGIN
   IF p_team_role IS NULL OR p_team_role NOT IN ('manager', 'technician', 'requestor', 'viewer') THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid team role';
   END IF;
-  IF p_permission_key IS NULL OR p_permission_key NOT IN ('equipment.create', 'equipment.update', 'equipment.delete', 'work_order.delete') THEN
+  IF p_permission_key IS NULL OR p_permission_key NOT IN ('equipment.create', 'equipment.update') THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid permission key';
   END IF;
 
@@ -16387,7 +16406,7 @@ CREATE TABLE IF NOT EXISTS "private"."team_permission_overrides" (
     "allowed" boolean NOT NULL,
     "updated_by" "uuid",
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "team_permission_overrides_key_check" CHECK (("permission_key" = ANY (ARRAY['equipment.create'::"text", 'equipment.update'::"text", 'equipment.delete'::"text", 'work_order.delete'::"text"]))),
+    CONSTRAINT "team_permission_overrides_key_check" CHECK (("permission_key" = ANY (ARRAY['equipment.create'::"text", 'equipment.update'::"text"]))),
     CONSTRAINT "team_permission_overrides_role_check" CHECK (("team_role" = ANY (ARRAY['manager'::"text", 'technician'::"text", 'requestor'::"text", 'viewer'::"text"])))
 );
 
@@ -21767,7 +21786,7 @@ CREATE POLICY "dsr_requests_select" ON "public"."dsr_requests" FOR SELECT TO "au
 ALTER TABLE "public"."equipment" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "equipment_delete_by_permission" ON "public"."equipment" FOR DELETE TO "authenticated" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "organization_id", "team_id", 'equipment.delete'::"text")));
+CREATE POLICY "equipment_delete_by_admin" ON "public"."equipment" FOR DELETE TO "authenticated" USING ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
 
 
 
@@ -23130,7 +23149,7 @@ ALTER TABLE "public"."work_order_status_history" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."work_orders" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "work_orders_delete_by_role" ON "public"."work_orders" FOR DELETE TO "authenticated" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "organization_id", "team_id", 'work_order.delete'::"text") OR (("is_historical" = false) AND ("status" = 'submitted'::"public"."work_order_status") AND ("created_by" = ( SELECT "auth"."uid"() AS "uid")) AND "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id"))));
+CREATE POLICY "work_orders_delete_by_role" ON "public"."work_orders" FOR DELETE TO "authenticated" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR (("is_historical" = false) AND ("status" = 'submitted'::"public"."work_order_status") AND ("created_by" = ( SELECT "auth"."uid"() AS "uid")) AND "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id"))));
 
 
 
@@ -24302,6 +24321,11 @@ GRANT ALL ON FUNCTION "public"."get_matching_pm_templates"("p_organization_id" "
 
 REVOKE ALL ON FUNCTION "public"."get_member_profiles_secure"("org_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_member_profiles_secure"("org_id" "uuid") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."get_my_team_permissions"("p_organization_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_my_team_permissions"("p_organization_id" "uuid") TO "authenticated";
 
 
 

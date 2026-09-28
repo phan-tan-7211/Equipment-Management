@@ -18,6 +18,7 @@
     "current_user_is_platform_admin",
     "default_team_permission",
     "ensure_workspace_access_request",
+    "get_my_team_permissions",
     "get_team_permission_settings",
     "accept_invitation_atomic",
     "adjust_inventory_quantity",

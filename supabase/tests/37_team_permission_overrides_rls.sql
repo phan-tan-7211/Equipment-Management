@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(38);
+SELECT plan(39);
 
 -- ============================================================================
 -- Equipment and work order write permissions are enforced by RLS per role,
@@ -125,7 +125,7 @@ SELECT lives_ok(
     VALUES ('37000000-aaaa-0000-0000-000000000001', 'Manager Created', 'Acme', 'M', 'SN-37-M', 'active', 'A', CURRENT_DATE, '37000000-bbbb-0000-0000-000000000001')$$,
   'team manager can create team equipment'
 );
-SELECT is(public.test37_exec($$DELETE FROM public.equipment WHERE id = '37000000-cccc-0000-0000-000000000003'$$), 0, 'team manager cannot delete equipment by default');
+SELECT is(public.test37_exec($$DELETE FROM public.equipment WHERE id = '37000000-cccc-0000-0000-000000000003'$$), 0, 'team manager cannot delete equipment');
 
 SELECT set_config('request.jwt.claims', '{"sub":"37000000-0000-0000-0000-000000000005","role":"authenticated"}', true);
 SELECT throws_ok(
@@ -139,12 +139,12 @@ SELECT is(public.test37_exec($$DELETE FROM public.equipment WHERE id = '37000000
 
 -- ── Overrides ──────────────────────────────────────────────────────────────
 SELECT throws_ok(
-  $$SELECT public.set_team_permission_override('37000000-aaaa-0000-0000-000000000001', 'manager', 'equipment.delete', true)$$,
+  $$SELECT public.set_team_permission_override('37000000-aaaa-0000-0000-000000000001', 'requestor', 'equipment.update', true)$$,
   '42501', NULL, 'org admin cannot change permission overrides'
 );
 SELECT is(
   (SELECT count(*)::integer FROM public.get_team_permission_settings('37000000-aaaa-0000-0000-000000000001')),
-  16, 'org admin can read the 4x4 permission settings'
+  8, 'org admin can read the 4x2 permission settings'
 );
 
 SELECT set_config('request.jwt.claims', '{"sub":"37000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
@@ -155,20 +155,24 @@ SELECT throws_ok(
 
 SELECT set_config('request.jwt.claims', '{"sub":"37000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 SELECT lives_ok(
-  $$SELECT public.set_team_permission_override('37000000-aaaa-0000-0000-000000000001', 'manager', 'equipment.delete', true)$$,
-  'owner can allow managers to delete equipment'
+  $$SELECT public.set_team_permission_override('37000000-aaaa-0000-0000-000000000001', 'requestor', 'equipment.update', true)$$,
+  'owner can allow requestors to update equipment'
 );
 SELECT lives_ok(
   $$SELECT public.set_team_permission_override('37000000-aaaa-0000-0000-000000000001', 'technician', 'equipment.update', false)$$,
   'owner can stop technicians from updating equipment'
 );
 SELECT throws_ok(
-  $$SELECT public.set_team_permission_override('37000000-aaaa-0000-0000-000000000001', 'owner', 'equipment.delete', true)$$,
-  '22023', NULL, 'override rejects unknown team roles'
+  $$SELECT public.set_team_permission_override('37000000-aaaa-0000-0000-000000000001', 'manager', 'equipment.delete', true)$$,
+  '22023', NULL, 'delete permissions are not configurable'
 );
 
-SELECT set_config('request.jwt.claims', '{"sub":"37000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
-SELECT is(public.test37_exec($$DELETE FROM public.equipment WHERE id = '37000000-cccc-0000-0000-000000000003'$$), 1, 'team manager can delete equipment once allowed');
+SELECT set_config('request.jwt.claims', '{"sub":"37000000-0000-0000-0000-000000000005","role":"authenticated"}', true);
+SELECT is(public.test37_exec($$UPDATE public.equipment SET location = 'req-allowed' WHERE id = '37000000-cccc-0000-0000-000000000001'$$), 1, 'team requestor can update equipment once allowed');
+SELECT is(
+  (SELECT count(*)::integer FROM public.get_my_team_permissions('37000000-aaaa-0000-0000-000000000001')),
+  1, 'requestor sees only the permissions granted to their team role'
+);
 
 SELECT set_config('request.jwt.claims', '{"sub":"37000000-0000-0000-0000-000000000004","role":"authenticated"}', true);
 SELECT is(public.test37_exec($$UPDATE public.equipment SET location = 'tech2' WHERE id = '37000000-cccc-0000-0000-000000000001'$$), 0, 'team technician cannot update equipment once disallowed');

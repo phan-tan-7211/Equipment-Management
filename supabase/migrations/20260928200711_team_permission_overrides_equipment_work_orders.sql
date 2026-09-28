@@ -23,7 +23,7 @@ CREATE TABLE private.team_permission_overrides (
   CONSTRAINT team_permission_overrides_role_check
     CHECK (team_role IN ('manager', 'technician', 'requestor', 'viewer')),
   CONSTRAINT team_permission_overrides_key_check
-    CHECK (permission_key IN ('equipment.create', 'equipment.update', 'equipment.delete', 'work_order.delete'))
+    CHECK (permission_key IN ('equipment.create', 'equipment.update'))
 );
 
 ALTER TABLE private.team_permission_overrides ENABLE ROW LEVEL SECURITY;
@@ -39,8 +39,6 @@ AS $function$
   SELECT CASE p_permission_key
     WHEN 'equipment.create' THEN p_team_role IN ('manager', 'technician')
     WHEN 'equipment.update' THEN p_team_role IN ('manager', 'technician')
-    WHEN 'equipment.delete' THEN false
-    WHEN 'work_order.delete' THEN false
     ELSE false
   END;
 $function$;
@@ -108,7 +106,7 @@ BEGIN
     COALESCE(o.allowed, public.default_team_permission(r.team_role, k.permission_key)),
     o.allowed IS NULL
   FROM (VALUES ('manager'), ('technician'), ('requestor'), ('viewer')) AS r(team_role)
-  CROSS JOIN (VALUES ('equipment.create'), ('equipment.update'), ('equipment.delete'), ('work_order.delete')) AS k(permission_key)
+  CROSS JOIN (VALUES ('equipment.create'), ('equipment.update')) AS k(permission_key)
   LEFT JOIN private.team_permission_overrides AS o
     ON o.organization_id = p_organization_id
    AND o.team_role = r.team_role
@@ -147,7 +145,7 @@ BEGIN
   IF p_team_role IS NULL OR p_team_role NOT IN ('manager', 'technician', 'requestor', 'viewer') THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid team role';
   END IF;
-  IF p_permission_key IS NULL OR p_permission_key NOT IN ('equipment.create', 'equipment.update', 'equipment.delete', 'work_order.delete') THEN
+  IF p_permission_key IS NULL OR p_permission_key NOT IN ('equipment.create', 'equipment.update') THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid permission key';
   END IF;
 
@@ -184,6 +182,28 @@ REVOKE ALL ON FUNCTION public.set_team_permission_override(uuid, text, text, boo
 GRANT EXECUTE ON FUNCTION public.set_team_permission_override(uuid, text, text, boolean) TO authenticated;
 -- rpc-authenticated-grant-allowed: set_team_permission_override
 
+-- Effective configurable permissions for the caller's own team memberships,
+-- so the app can show the same actions the database allows.
+CREATE FUNCTION public.get_my_team_permissions(p_organization_id uuid)
+RETURNS TABLE(team_id uuid, permission_key text)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, public, private
+AS $function$
+  SELECT tm.team_id, k.permission_key
+  FROM public.team_members AS tm
+  JOIN public.teams AS t ON t.id = tm.team_id
+  CROSS JOIN (VALUES ('equipment.create'), ('equipment.update')) AS k(permission_key)
+  WHERE tm.user_id = auth.uid()
+    AND t.organization_id = p_organization_id
+    AND public.has_team_permission(auth.uid(), p_organization_id, tm.team_id, k.permission_key);
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_my_team_permissions(uuid) FROM PUBLIC, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.get_my_team_permissions(uuid) TO authenticated;
+-- rpc-authenticated-grant-allowed: get_my_team_permissions
+
 -- ---------------------------------------------------------------------------
 -- equipment: replace member-wide write policies.
 -- ---------------------------------------------------------------------------
@@ -211,12 +231,10 @@ CREATE POLICY equipment_update_by_permission ON public.equipment
     OR public.has_team_permission((SELECT auth.uid()), organization_id, team_id, 'equipment.update')
   );
 
-CREATE POLICY equipment_delete_by_permission ON public.equipment
+-- Deletes cascade through admin-only paths; kept owner/admin-only for now.
+CREATE POLICY equipment_delete_by_admin ON public.equipment
   FOR DELETE TO authenticated
-  USING (
-    public.is_org_admin((SELECT auth.uid()), organization_id)
-    OR public.has_team_permission((SELECT auth.uid()), organization_id, team_id, 'equipment.delete')
-  );
+  USING (public.is_org_admin((SELECT auth.uid()), organization_id));
 
 -- ---------------------------------------------------------------------------
 -- work_orders: replace member-wide write policies.
@@ -287,13 +305,12 @@ CREATE POLICY work_orders_update_by_role ON public.work_orders
     )
   );
 
--- Admins, team roles granted work_order.delete, or the creator of a request
--- that is still submitted (used to roll back a failed QR create).
+-- Admins, or the creator of a request that is still submitted (used to roll
+-- back a failed QR create).
 CREATE POLICY work_orders_delete_by_role ON public.work_orders
   FOR DELETE TO authenticated
   USING (
     public.is_org_admin((SELECT auth.uid()), organization_id)
-    OR public.has_team_permission((SELECT auth.uid()), organization_id, team_id, 'work_order.delete')
     OR (
       is_historical = false
       AND status = 'submitted'
@@ -308,5 +325,7 @@ COMMENT ON FUNCTION public.get_team_permission_settings(uuid) IS
   'Owner/admin view of effective configurable team-role permissions.';
 COMMENT ON FUNCTION public.set_team_permission_override(uuid, text, text, boolean) IS
   'Owner-only: set or reset a configurable team-role permission; audited.';
+COMMENT ON FUNCTION public.get_my_team_permissions(uuid) IS
+  'Caller''s effective configurable permissions per team they belong to.';
 
 COMMIT;

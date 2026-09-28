@@ -327,6 +327,7 @@ SELECT is(
           'request_workspace_personal_org_merge',
           'reserve_slot_for_invitation',
           'resolve_operator_checkin_by_token',
+          'get_my_team_permissions',
           'get_team_permission_settings',
           'has_team_permission',
           'resolve_quick_form_by_token',
