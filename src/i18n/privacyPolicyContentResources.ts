@@ -37,7 +37,7 @@ const viSections: readonly PrivacyPolicyLocalizedSection[] = [
       'Google Maps: hiển thị bản đồ, gợi ý địa chỉ và geocoding; không gửi danh tính, email hoặc thông tin tài khoản đến API bản đồ.',
       'hCaptcha: bảo vệ biểu mẫu đăng ký; token xác minh được kiểm tra rồi loại bỏ.',
       'Resend: gửi email giao dịch cho lời mời thành viên; không lưu dữ liệu Resend trong ZNTEQR.',
-      'Vercel: lưu trữ và CDN cho frontend; có thể xử lý log truy cập máy chủ theo chính sách riêng.',
+      'Cloudflare: lưu trữ và CDN cho frontend; có thể xử lý log truy cập máy chủ theo chính sách riêng.',
       'Stripe: tích hợp thanh toán hiện đã tắt; một số ID lịch sử có thể còn để phục vụ đối soát.',
       'QuickBooks Online và Google Workspace: tích hợp tùy chọn, chỉ chia sẻ dữ liệu sau khi quản trị viên kết nối OAuth.',
       'GitHub và dịch vụ Web Push: đồng bộ báo lỗi đã loại bỏ PII và gửi thông báo đẩy đến thiết bị.',
@@ -128,7 +128,7 @@ const viSections: readonly PrivacyPolicyLocalizedSection[] = [
   {
     title: '12. Chuyển dữ liệu quốc tế',
     paragraphs: [
-      'ZNTEQR được vận hành từ Hoa Kỳ. Dữ liệu được xử lý và lưu trữ tại Hoa Kỳ thông qua Supabase trên AWS và Vercel. Nếu truy cập từ ngoài Hoa Kỳ, dữ liệu của bạn có thể được chuyển, lưu trữ và xử lý tại Hoa Kỳ, nơi luật bảo vệ dữ liệu có thể khác nơi bạn sống.',
+      'ZNTEQR được vận hành từ Hoa Kỳ. Dữ liệu được xử lý và lưu trữ tại Hoa Kỳ thông qua Supabase trên AWS và Cloudflare. Nếu truy cập từ ngoài Hoa Kỳ, dữ liệu của bạn có thể được chuyển, lưu trữ và xử lý tại Hoa Kỳ, nơi luật bảo vệ dữ liệu có thể khác nơi bạn sống.',
       'Bằng việc sử dụng dịch vụ, bạn đồng ý với việc chuyển dữ liệu này. Nếu tổ chức cần cơ chế chuyển dữ liệu cụ thể như Standard Contractual Clauses, hãy liên hệ để trao đổi.',
     ],
   },
@@ -181,7 +181,7 @@ const koSections: readonly PrivacyPolicyLocalizedSection[] = [
       'Google Maps: 지도, 주소 자동완성 및 geocoding; 사용자 신원과 계정 정보는 지도 API로 보내지 않습니다.',
       'hCaptcha: 가입 양식의 봇 방지; 검증 토큰은 확인 후 폐기합니다.',
       'Resend: 조직 초대용 거래 이메일 전송; Resend 전용 데이터는 ZNTEQR에 저장하지 않습니다.',
-      'Vercel: frontend 호스팅 및 CDN; 자체 개인정보 처리방침에 따라 표준 접속 로그를 처리할 수 있습니다.',
+      'Cloudflare: frontend 호스팅 및 CDN; 자체 개인정보 처리방침에 따라 표준 접속 로그를 처리할 수 있습니다.',
       'Stripe: 결제 통합은 현재 비활성화되어 있으며 회계 연속성을 위해 과거 ID가 남을 수 있습니다.',
       'QuickBooks Online 및 Google Workspace: 관리자가 OAuth로 연결한 경우에만 선택적으로 데이터를 공유합니다.',
       'GitHub 및 Web Push 서비스: PII를 제거한 버그 신고 동기화와 기기 알림 전송에 사용합니다.',
@@ -268,7 +268,7 @@ const koSections: readonly PrivacyPolicyLocalizedSection[] = [
   {
     title: '12. 국제 데이터 이전',
     paragraphs: [
-      'ZNTEQR은 미국에서 운영됩니다. 데이터는 AWS의 Supabase와 Vercel을 통해 미국에서 처리·저장됩니다. 미국 외 지역에서 접속하면 해당 지역과 다른 데이터 보호법이 적용되는 미국으로 정보가 이전될 수 있습니다.',
+      'ZNTEQR은 미국에서 운영됩니다. 데이터는 AWS의 Supabase와 Cloudflare를 통해 미국에서 처리·저장됩니다. 미국 외 지역에서 접속하면 해당 지역과 다른 데이터 보호법이 적용되는 미국으로 정보가 이전될 수 있습니다.',
       '서비스를 이용하면 이러한 이전에 동의하는 것입니다. 조직에 Standard Contractual Clauses와 같은 특정 이전 장치가 필요하면 문의해 주세요.',
     ],
   },

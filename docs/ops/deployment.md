@@ -1,5 +1,9 @@
 # Deployment Guide
 
+> **Current hosting (2026-09-28):** Vercel is retired. Deploy the frontend through
+> the existing Cloudflare Pages Git integration. The older Vercel sections below
+> are retained as migration history only and are not valid deployment steps.
+
 This guide covers all aspects of deploying ZNTEQR™, including build processes, hosting platforms, runner management, and versioning.
 
 ## Deployment Overview

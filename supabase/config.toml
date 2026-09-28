@@ -20,12 +20,7 @@ additional_redirect_urls = [
   "http://localhost:8080/**",
   "http://127.0.0.1:5173/**",
   "http://127.0.0.1:8080/**",
-  "https://eqr.zinitek.com/**",
-  "https://equip-qr-preview-columbia-cloudworks-llc.vercel.app/**",
-  # Vercel preview deployments for this project only.
-  # The slug must match the Vercel project name ("equip-qr").
-  # Update this if the Vercel project is renamed.
-  "https://equip-qr-*.vercel.app/**"
+  "https://eqr.zinitek.com/**"
 ]
 
 [auth.external.google]

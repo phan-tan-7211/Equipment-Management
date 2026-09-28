@@ -5,7 +5,7 @@ export function PrivacyInternationalSection() {
     <LegalPolicySection title="12. International Data Transfers">
             <p>
               ZNTEQR is operated from the United States. Your data is processed and stored in the
-              United States through our infrastructure providers (Supabase on AWS and Vercel). If you
+              United States through our infrastructure providers (Supabase on AWS and Cloudflare). If you
               access ZNTEQR from outside the United States, please be aware that your information
               will be transferred to, stored, and processed in the United States, where data
               protection laws may differ from those in your jurisdiction.

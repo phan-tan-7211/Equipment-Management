@@ -41,8 +41,6 @@ on:
       - '.github/scripts/schema-drift-lib.js'
       - '.github/workflows/schema-drift-check.yml'
       - '.github/workflows/production-release-readiness.yml'
-      - 'dev/release/wait-for-vercel-deployment.mjs'
-      - 'dev/release/promote-vercel-production.mjs'
   workflow_dispatch:
 
 permissions:

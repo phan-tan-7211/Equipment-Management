@@ -1,18 +1,14 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { describe, expect, it } from 'vitest';
-import { buildCsp, extractCspFromVercelConfig } from './csp';
+import { buildCsp, extractCspFromCloudflareHeaders } from './csp';
 
 describe('csp', () => {
-  it('vercel.json Content-Security-Policy matches buildCsp() production output', () => {
-    const vercelPath = join(process.cwd(), 'vercel.json');
-    const config = JSON.parse(readFileSync(vercelPath, 'utf-8')) as {
-      headers?: { source: string; headers: { key: string; value: string }[] }[];
-    };
-
-    const vercelCsp = extractCspFromVercelConfig(config);
-    expect(vercelCsp).toBeDefined();
-    expect(vercelCsp).toBe(buildCsp());
+  it('Cloudflare Pages Content-Security-Policy matches buildCsp() production output', () => {
+    const headersPath = join(process.cwd(), 'public', '_headers');
+    const cloudflareCsp = extractCspFromCloudflareHeaders(readFileSync(headersPath, 'utf-8'));
+    expect(cloudflareCsp).toBeDefined();
+    expect(cloudflareCsp).toBe(buildCsp());
   });
 
   it('buildCsp({ dev: true }) adds localhost allowances for the Vite dev server', () => {

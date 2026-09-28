@@ -1,8 +1,8 @@
 name: Production Release Readiness
 
 # After a merge to `main`, applies pending Supabase migrations to production,
-# verifies schema_migrations alignment, waits for the matching Vercel deployment,
-# promotes it to production, then deploys Edge Functions last.
+# verifies schema_migrations alignment, then deploys Edge Functions.
+# Cloudflare Pages deploys the frontend from `main` through its Git integration.
 #
 # Source of truth:
 #   - Non-secret deployment targets: .github/deployment-targets.json
@@ -10,9 +10,7 @@ name: Production Release Readiness
 # Required secrets:
 #   - SUPABASE_ACCESS_TOKEN
 #   - SUPABASE_DB_PASSWORD
-#   - VERCEL_TOKEN
-#
-# Runtime application variables remain managed natively in Vercel and Supabase.
+# Runtime application variables remain managed natively in Cloudflare and Supabase.
 # 1Password is not part of this production release path.
 
 on:
@@ -25,14 +23,13 @@ permissions:
 
 jobs:
   production-release-readiness:
-    name: Migrate, verify schema, promote Vercel, deploy edge
+    name: Migrate, verify schema, deploy edge
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: production
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
     steps:
       - name: Checkout
@@ -54,8 +51,6 @@ jobs:
           const production = config.production || {};
           const values = {
             SUPABASE_PROJECT_REF: production.supabaseProjectRef,
-            VERCEL_TEAM_ID: production.vercelTeamId,
-            VERCEL_PROJECT_ID: production.vercelProjectId,
           };
           for (const [name, value] of Object.entries(values)) {
             if (typeof value !== 'string' || !value.trim()) {
@@ -81,11 +76,8 @@ jobs:
           fail=0
           for var in \
             SUPABASE_PROJECT_REF \
-            VERCEL_TEAM_ID \
-            VERCEL_PROJECT_ID \
             SUPABASE_ACCESS_TOKEN \
-            SUPABASE_DB_PASSWORD \
-            VERCEL_TOKEN; do
+            SUPABASE_DB_PASSWORD; do
             val="${!var:-}"
             if [[ -z "$val" ]]; then
               echo "::error title=production-release-readiness::$var is empty. Check .github/deployment-targets.json or GitHub Actions secrets."
@@ -112,23 +104,6 @@ jobs:
           SCHEMA_DRIFT_STRICT: 'true'
         run: node .github/scripts/check-schema-drift.js
 
-      - name: Wait for Vercel deployment (main, READY)
-        id: wait_vercel
-        env:
-          GITHUB_SHA: ${{ github.sha }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          node dev/release/wait-for-vercel-deployment.mjs >> "$GITHUB_OUTPUT"
-
-      - name: Promote Vercel deployment to production
-        env:
-          VERCEL_DEPLOYMENT_URL: ${{ steps.wait_vercel.outputs.deployment_url }}
-          VERCEL_DEPLOYMENT_ID: ${{ steps.wait_vercel.outputs.deployment_id }}
-          GITHUB_SHA: ${{ github.sha }}
-          VERCEL_PROMOTE_TIMEOUT: 5m
-        run: node dev/release/promote-vercel-production.mjs
-
       - name: Deploy edge functions to production
         shell: bash
         run: |
@@ -145,8 +120,7 @@ jobs:
             echo "## Production release readiness"
             echo ""
             echo "- **Supabase:** migrations applied; strict schema drift check passed; Edge Functions deployed."
-            echo "- **Vercel:** main deployment READY and **promoted to production** (\`eqr.zinitek.com\`)."
-            echo "- **Deployment:** ${{ steps.wait_vercel.outputs.deployment_url }}"
+            echo "- **Cloudflare Pages:** frontend deployment is handled independently by the repository's Git integration."
             echo ""
             echo "Deployment targets came from versioned config-as-code; authentication came from GitHub Secrets."
           } >> "$GITHUB_STEP_SUMMARY"
