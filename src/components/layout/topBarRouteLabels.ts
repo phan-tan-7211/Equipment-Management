@@ -25,6 +25,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   '/dashboard/operator-check-ins': 'Daily Check-Ins',
   '/dashboard/reports': 'Reports',
   '/dashboard/organization/audit-log': 'Audit Log',
+  '/dashboard/organization/permissions': 'Permissions',
   '/dashboard/settings': 'Settings',
   '/dashboard/support': 'Support & tickets',
 };
@@ -49,6 +50,7 @@ export const ROUTE_LABEL_KEYS: Record<string, string> = {
   '/dashboard/operator-check-ins': 'breadcrumb.dailyCheckIns',
   '/dashboard/reports': 'breadcrumb.reports',
   '/dashboard/organization/audit-log': 'breadcrumb.auditLog',
+  '/dashboard/organization/permissions': 'breadcrumb.permissions',
   '/dashboard/settings': 'breadcrumb.settings',
   '/dashboard/support': 'breadcrumb.supportTickets',
 };
@@ -65,6 +67,7 @@ export const ROUTES_WITH_PAGE_H1 = new Set([
   '/dashboard/reports',
   '/dashboard/pm-templates',
   '/dashboard/organization/audit-log',
+  '/dashboard/organization/permissions',
   '/dashboard/settings',
   '/dashboard/support',
   '/dashboard/organization',

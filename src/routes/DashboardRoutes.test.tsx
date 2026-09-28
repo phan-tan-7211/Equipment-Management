@@ -37,6 +37,7 @@ vi.mock('@/routes/lazyDashboardPages', () => {
     AlternateGroupDetail: stub('Alternate Group Detail Route'),
     DashboardSupport: stub('Dashboard Support Route'),
     AuditLog: stub('Audit Log Route'),
+    PermissionMatrix: stub('Permission Matrix Route'),
     DSRCockpitPage: stub('DSR Cockpit Route'),
     DSRCasePage: stub('DSR Case Route'),
     OperatorCheckInsPage: stub('Operator Check-Ins Route'),
@@ -66,5 +67,17 @@ describe('dashboardRouteElements', () => {
     );
 
     expect(screen.getByText('Organization Route')).toBeInTheDocument();
+  });
+
+  it('renders the permission matrix page for /dashboard/organization/permissions', () => {
+    render(
+      <MemoryRouter initialEntries={['/dashboard/organization/permissions']}>
+        <Routes>
+          <Route path="/dashboard/*" element={<DashboardRoutesHarness />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Permission Matrix Route')).toBeInTheDocument();
   });
 });

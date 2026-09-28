@@ -8,11 +8,13 @@ ZNTEQR has two role layers: organization roles (Owner, Admin, Member) and team r
 
 | Action | Owner | Admin | Member | Manager | Technician | Requestor | Viewer |
 |--------|-------|-------|--------|---------|------------|-----------|--------|
-| Create Organization | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Create Organization | ❌* | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Update Organization Settings | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Delete Organization | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | View Organization Details | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Switch Organizations | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+\*New organizations are created by platform administrators (Platform Administration), not by organization roles.
 
 > Billing capabilities were removed from ZNTEQR in Jan 2025; there is no
 > billing surface to permission against. Historical billing tables
@@ -25,58 +27,69 @@ ZNTEQR has two role layers: organization roles (Owner, Admin, Member) and team r
 |--------|-------|-------|--------|---------|------------|-----------|--------|
 | Invite Members | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Remove Members | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Change Member Roles | ✅ | ✅* | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Change Member Roles | ✅* | ✅* | ❌ | ❌ | ❌ | ❌ | ❌ |
 | View Member List | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Resend Invitations | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
-*Admin cannot change owner role or promote to owner
+\*Owners and admins can change non-owner roles. The owner role changes only through an ownership transfer.
+
+Organization-level Viewer and Requestor roles have the same organization permissions as Member; access to equipment and work orders comes from team roles.
 
 ### Team management
 
 | Action | Owner | Admin | Member | Manager | Technician | Requestor | Viewer |
 |--------|-------|-------|--------|---------|------------|-----------|--------|
 | Create Teams | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Delete Teams | ✅ | ✅ | ❌ | ✅** | ❌ | ❌ | ❌ |
-| Update Team Settings | ✅ | ✅ | ❌ | ✅** | ❌ | ❌ | ❌ |
-| Add Team Members | ✅ | ✅ | ❌ | ✅** | ❌ | ❌ | ❌ |
-| Remove Team Members | ✅ | ✅ | ❌ | ✅** | ❌ | ❌ | ❌ |
-| View Teams | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Assign Work Orders | ✅ | ✅ | ❌ | ✅** | ❌ | ❌ | ❌ |
+| Delete Teams | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Update Team Settings | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Add Team Members | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Remove Team Members | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| View Teams | ✅ | ✅ | ❌** | ✅** | ✅** | ✅** | ✅** |
+| Assign Work Orders | ✅ | ✅ | ❌ | ✅*** | ❌ | ❌ | ❌ |
 
-**Only for teams where user has Manager role**
+\*\*Non-admins see only the teams they belong to.
+
+\*\*\*Only from the work order list, for teams where the user is a manager.
 
 ### Equipment management
 
 | Action | Owner | Admin | Member | Manager | Technician | Requestor | Viewer |
 |--------|-------|-------|--------|---------|------------|-----------|--------|
 | Create Equipment | ✅ | ✅ | ❌ | ✅† | ✅† | ❌ | ❌ |
-| Update Equipment | ✅ | ✅ | ❌ | ✅ | ✅‡ | ❌ | ❌ |
-| Delete Equipment | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| View Equipment | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Generate QR Codes | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ |
+| Update Equipment | ✅ | ✅ | ❌ | ✅‡ | ❌ | ❌ | ❌ |
+| Delete Equipment | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| View Equipment | ✅ | ✅ | ❌§ | ✅§ | ✅§ | ✅§ | ✅§ |
+| Generate QR Codes | ✅ | ✅ | ❌§ | ✅§ | ✅§ | ✅§ | ✅§ |
 | Scan QR Codes | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Update Custom Attributes | ✅ | ✅ | ❌ | ✅ | ✅‡ | ❌ | ❌ |
+| Update Custom Attributes | ✅ | ✅ | ❌ | ✅‡ | ❌ | ❌ | ❌ |
 
-† Org-wide for owners/admins; team-scoped (manager or technician role on the assigned team) for team members. Equipment created without a team assignment is restricted to owners/admins (issue #650).
+† Team-scoped (manager or technician role on the assigned team). Equipment created without a team assignment is restricted to owners/admins (issue #650).
 
-‡ Limited to status updates and maintenance records
+‡ Only for equipment on teams where the user is a manager.
+
+§ Only equipment on the user's teams; unassigned equipment is visible to owners/admins only.
 
 ### Work order management
 
 | Action | Owner | Admin | Member | Manager | Technician | Requestor | Viewer |
 |--------|-------|-------|--------|---------|------------|-----------|--------|
-| Create Work Orders | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Update Work Order Status | ✅ | ✅ | ❌ | ✅ | ✅**** | ❌ | ❌ |
-| Assign Work Orders | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| Delete Work Orders | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| View Work Orders | ✅ | ✅ | ✅***** | ✅ | ✅***** | ✅***** | ✅***** |
-| Complete Work Orders | ✅ | ✅ | ❌ | ✅ | ✅**** | ❌ | ❌ |
-| Cancel Work Orders | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Create Work Orders | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Update Work Order Status | ✅ | ✅ | ❌ | ✅**** | ✅**** | ❌ | ❌ |
+| Assign Work Orders | ✅ | ✅ | ❌ | ✅*** | ❌ | ❌ | ❌ |
+| Delete Work Orders | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| View Work Orders | ✅ | ✅ | ❌***** | ✅***** | ✅***** | ✅***** | ✅***** |
+| Complete Work Orders | ✅ | ✅ | ❌ | ✅**** | ✅**** | ❌ | ❌ |
+| Cancel Work Orders | ✅ | ✅ | ✅****** | ✅****** | ✅****** | ✅****** | ✅****** |
 | Reopen Work Order (completed/cancelled) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Revert PM | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
-****Only assigned work orders
-*****Limited to relevant work orders (assigned, created by user, or team-related)
+\*\*\*Only from the work order list, for teams where the user is a manager.
+
+\*\*\*\*Only assigned work orders
+
+\*\*\*\*\*Only work orders for the user's teams and their equipment
+
+\*\*\*\*\*\*Assigned work orders, or the user's own submitted requests
 
 **Admin revert notes.** **Revert PM** (completed PM checklist) and **Reopen work order** (completed/cancelled work order) are org owner/admin only (`is_org_admin`). On a completed work order with a completed PM, **Revert PM** also reopens the work order to `accepted` in the same action so the checklist becomes editable again. **Reopen work order** remains available for work-order-only reopen without changing the PM.
 

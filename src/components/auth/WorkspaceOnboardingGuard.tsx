@@ -68,11 +68,13 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
     return <WorkspaceAccessGate mode="error" domain={null} onRetry={() => { void refetch(); }} />;
   }
 
+  const claimedDomain = onboardingState?.domain_status === 'claimed' ? onboardingState.domain : null;
+
   if (accessRequest?.request_status === 'rejected') {
     return (
       <WorkspaceAccessGate
         mode="rejected"
-        domain={googleUser ? onboardingState?.domain ?? null : null}
+        domain={googleUser ? claimedDomain : null}
         rejectionReason={accessRequest.rejection_reason}
         reviewedAt={accessRequest.reviewed_at}
         reviewedByName={accessRequest.reviewed_by_name}
@@ -84,7 +86,7 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
   }
 
   if (accessRequest?.request_status === 'pending' || accessRequest?.request_status === 'invitation_pending' || (googleUser && (onboardingState?.has_pending_invitation || onboardingState?.has_pending_claim))) {
-    return <WorkspaceAccessGate mode="pending" domain={onboardingState?.domain ?? null} />;
+    return <WorkspaceAccessGate mode="pending" domain={claimedDomain} />;
   }
 
   if (!googleUser) {
@@ -94,7 +96,7 @@ const WorkspaceOnboardingGuard: React.FC<WorkspaceOnboardingGuardProps> = ({
   return (
     <WorkspaceAccessGate
       mode="blocked"
-      domain={onboardingState?.domain_status === 'claimed' ? onboardingState.domain : null}
+      domain={claimedDomain}
     />
   );
 };

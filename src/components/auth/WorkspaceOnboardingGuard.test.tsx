@@ -113,6 +113,27 @@ describe('WorkspaceOnboardingGuard', () => {
     expect(screen.getByText('This authenticated account is not authorized for an organization.')).toBeInTheDocument();
   });
 
+  it('does not describe an unclaimed consumer domain as claimed while access is pending', () => {
+    mockOnboardingState.mockReturnValue({
+      domain_status: 'unclaimed',
+      domain: 'gmail.com',
+      has_workspace_membership: false,
+      has_pending_invitation: false,
+      has_pending_claim: false,
+    });
+    mockAccessRequest.mockReturnValue({ request_status: 'pending' });
+
+    customRender(
+      <WorkspaceOnboardingGuard>
+        <div>Dashboard content</div>
+      </WorkspaceOnboardingGuard>,
+    );
+
+    expect(screen.getByText('Workspace access pending')).toBeInTheDocument();
+    expect(screen.queryByText(/claimed domain gmail\.com/)).not.toBeInTheDocument();
+    expect(screen.getByText('This authenticated account is not authorized for an organization.')).toBeInTheDocument();
+  });
+
   it('blocks password users without an active organization membership', () => {
     mockAuthState.user = {
       id: 'password-user',
