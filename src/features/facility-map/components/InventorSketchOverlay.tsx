@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Check,
   Circle as CircleIcon,
@@ -8,11 +9,15 @@ import {
   EyeOff,
   Minus,
   MousePointer2,
+  Rows3,
   Scissors,
+  Spline,
+  Split,
   Square,
   Trash2,
   Undo2,
   Redo2,
+  Waypoints,
   X,
 } from 'lucide-react';
 
@@ -61,6 +66,7 @@ import {
   findNearestSnap,
 } from '@/features/facility-map/sketch/snapping/nearestSnap';
 import {
+  DEFAULT_GRID_STEP,
   findGridSnap,
 } from '@/features/facility-map/sketch/snapping/gridSnap';
 import {
@@ -141,6 +147,7 @@ import {
 import {
   breakLineAtPoint,
   createOffsetEntity,
+  offsetChain,
 } from '@/features/facility-map/sketch/modify/breakOffset';
 import { mirrorSelectedEntities } from '@/features/facility-map/sketch/modify/mirror';
 import {
@@ -272,6 +279,18 @@ export type InventorSketchOverlayProps = {
   initialDocument?: SketchDocument;
   canvasWidth: number;
   canvasHeight: number;
+  /**
+   * Draws a model-unit grid, spaced at `gridStep`, inside the sketch itself.
+   * Without this the only visible grid was the floor plan's own percentage-
+   * based background grid — a different coordinate space that never lined
+   * up with where `snapToGrid` actually snapped to, making "grid snap" feel
+   * broken even while it was working exactly as configured.
+   */
+  showGrid?: boolean;
+  /** Whether the grid candidate participates in snapping at all. */
+  snapToGrid?: boolean;
+  /** Grid spacing in this sketch's own model units. */
+  gridStep?: number;
   // Matches useI18n()'s real `t` signature (I18nProvider's TranslationParams)
   // so callers can pass it through directly without a cast.
   t: (key: string, params?: Record<string, string | number>) => string;
@@ -280,6 +299,13 @@ export type InventorSketchOverlayProps = {
   onGroupMouseDown?: (event: React.MouseEvent) => void;
   onFinish: (document: SketchDocument) => void;
   onCancel: () => void;
+  /**
+   * An element outside the parent's pan/zoom-transformed drawing layer.
+   * When set, the toolbar and properties panel are portaled there instead
+   * of rendering inline, so they stay pinned to the viewport frame instead
+   * of panning/scaling along with the drawing underneath them.
+   */
+  toolbarPortalTarget?: HTMLElement | null;
 };
 
 export default function InventorSketchOverlay({
@@ -292,11 +318,15 @@ export default function InventorSketchOverlay({
   initialDocument,
   canvasWidth,
   canvasHeight,
+  showGrid = false,
+  snapToGrid = true,
+  gridStep = DEFAULT_GRID_STEP,
   t,
   onDocumentChange,
   onGroupMouseDown,
   onFinish,
   onCancel,
+  toolbarPortalTarget,
 }: InventorSketchOverlayProps) {
   const sketchHistory = useSketchDocumentHistory(storageKey, {
     initialDocument,
@@ -547,7 +577,7 @@ export default function InventorSketchOverlay({
       store.entities,
       threshold,
     );
-    const grid = findGridSnap(point, threshold);
+    const grid = snapToGrid ? findGridSnap(point, threshold, gridStep) : null;
     const best = selectSnapCandidate([
       endpoint && {
         kind: 'endpoint',
@@ -593,7 +623,7 @@ export default function InventorSketchOverlay({
 
     setActiveSnap(best);
     return best?.point ?? point;
-  }, [canvasWidth, store.entities]);
+  }, [canvasWidth, store.entities, snapToGrid, gridStep]);
 
   const inferLineEnd = useCallback((start: Point, raw: Point) => {
     const snapped = endpointSnap(raw);
@@ -924,7 +954,7 @@ export default function InventorSketchOverlay({
     if (mode === 'trim') {
       return getTrimPreview(store.entities, entity, point);
     }
-    return entity.type === 'line'
+    return entity.type === 'line' || entity.type === 'arc'
       ? getExtendPreview(store.entities, entity, point)
       : null;
   };
@@ -940,6 +970,16 @@ export default function InventorSketchOverlay({
       }
       return;
     }
+    // A create tool (line/rect/circle/...) starting a new shape on top of an
+    // existing entity must fall through to the canvas's own draw-start
+    // handler — stopping propagation here (as every other tool needs, to
+    // claim the click for itself) swallowed the mousedown before it ever
+    // reached the canvas, so drawing over existing geometry silently did
+    // nothing and the only workaround was drawing beside it and dragging it
+    // into place afterward.
+    const isCreateTool = tool === 'line' || tool === 'polyline' || tool === 'rect' || tool === 'circle' || tool === 'arc';
+    if (isCreateTool) return;
+
     const point = pointFromEvent(event);
     if (!point) return;
     event.stopPropagation();
@@ -982,22 +1022,47 @@ export default function InventorSketchOverlay({
         displayDistance,
         store,
       );
-      const offset = createOffsetEntity(
-        entity,
-        modelDistance,
-        point,
-        createSketchId(`sketch-${entity.type}`),
-      );
-      if (!offset) {
-        setMessage('Offset supports Line and Polyline only.');
+      // Matches Inventor's own Offset: picking one edge of a connected
+      // chain offsets the whole chain by default, the same way it offsets
+      // a whole closed profile from one picked curve — hold Ctrl/Cmd to
+      // force just the single picked curve instead. The chain can mix
+      // Line and Arc segments (e.g. a rounded corner), unlike the
+      // single-curve fallback below.
+      const chainResult =
+        (entity.type === 'line' || entity.type === 'arc') && !event.ctrlKey && !event.metaKey
+          ? offsetChain(
+              store.entities,
+              entity,
+              modelDistance,
+              point,
+              () => createSketchId('sketch-chain'),
+            )
+          : null;
+      const newEntities = chainResult
+        ? chainResult.offsetEntities
+        : (() => {
+            const single = createOffsetEntity(
+              entity,
+              modelDistance,
+              point,
+              createSketchId(`sketch-${entity.type}`),
+            );
+            return single ? [single] : [];
+          })();
+      if (!newEntities.length) {
+        setMessage('Offset supports Line, Polyline, Circle, and Arc only.');
         return;
       }
       setStore((current) => ({
         ...current,
-        entities: [...current.entities, offset],
+        entities: [...current.entities, ...newEntities],
       }));
-      setSelectedIds([offset.id]);
-      setMessage('Offset applied.');
+      setSelectedIds(newEntities.map((created) => created.id));
+      setMessage(
+        chainResult
+          ? `Offset applied to the whole connected chain (${chainResult.chain.segments.length} edges).`
+          : 'Offset applied.',
+      );
       return;
     }
 
@@ -1011,7 +1076,7 @@ export default function InventorSketchOverlay({
               point,
               () => createSketchId('sketch-line'),
             )
-          : entity.type === 'line'
+          : entity.type === 'line' || entity.type === 'arc'
             ? commitExtend(store.entities, entity, point)
             : null;
       if (!nextEntities) {
@@ -1254,6 +1319,40 @@ export default function InventorSketchOverlay({
           handleEntityMouseUp();
         }}
       >
+        {showGrid && gridStep > 0 && canvasWidth / gridStep <= 400 && canvasHeight / gridStep <= 400 && (
+          <g className="pointer-events-none">
+            {Array.from(
+              { length: Math.floor(canvasWidth / gridStep) + 1 },
+              (_, index) => index * gridStep,
+            ).map((x) => (
+              <line
+                key={`grid-v-${x}`}
+                x1={x}
+                y1={0}
+                x2={x}
+                y2={canvasHeight}
+                stroke="rgba(15,23,42,0.16)"
+                strokeWidth={1}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+            {Array.from(
+              { length: Math.floor(canvasHeight / gridStep) + 1 },
+              (_, index) => index * gridStep,
+            ).map((y) => (
+              <line
+                key={`grid-h-${y}`}
+                x1={0}
+                y1={y}
+                x2={canvasWidth}
+                y2={y}
+                stroke="rgba(15,23,42,0.16)"
+                strokeWidth={1}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+          </g>
+        )}
         <g
           transform={
             translateOffset
@@ -1286,6 +1385,19 @@ export default function InventorSketchOverlay({
                     tool === 'offset')
                 ? 'crosshair'
                 : 'default';
+          // Trim/Extend/Break/Offset target a specific curve, the way
+          // Inventor's own equivalents do — clicking has to land ON that
+          // curve. A closed shape's full-interior hit area (below) is right
+          // for `select`, where clicking anywhere inside picks up the whole
+          // shape, but for these tools it meant an overlapping circle's
+          // interior silently stole every click meant for a rectangle's
+          // edge underneath it, no matter how close to that edge you
+          // clicked — trim would then always act on the circle.
+          const isModifyTool =
+            tool === 'trim' ||
+            tool === 'extend' ||
+            tool === 'break' ||
+            tool === 'offset';
           const interaction = {
             stroke: 'transparent',
             strokeWidth: hitStrokeWidth,
@@ -1296,8 +1408,15 @@ export default function InventorSketchOverlay({
             // shapes (rect/circle/polyline) being clickable anywhere in
             // their interior, not just near the edge — the wider
             // hitStrokeWidth above only adds a more forgiving edge band on
-            // top of that, it doesn't take anything away.
-            pointerEvents: canInteract ? ('all' as const) : ('none' as const),
+            // top of that, it doesn't take anything away. Modify tools
+            // narrow this to 'stroke' so only the edge band responds,
+            // letting a click pass through to whatever curve is actually
+            // underneath it.
+            pointerEvents: canInteract
+              ? isModifyTool
+                ? ('stroke' as const)
+                : ('all' as const)
+              : ('none' as const),
             onMouseDown: (event: React.MouseEvent<SVGElement>) => handleEntityMouseDown(event, entity),
             onMouseMove: (event: React.MouseEvent<SVGElement>) => {
               if (tool !== 'trim' && tool !== 'extend') return;
@@ -1614,18 +1733,28 @@ export default function InventorSketchOverlay({
 
       {enabled && (
         <>
-          <div className="pointer-events-auto absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-sky-400/30 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur">
+          {(() => {
+            // The toolbar/properties chrome below must stay pinned to the
+            // *viewport frame*, not to this component's own root — that root
+            // sits inside FacilityFloorPlan's pan/zoom-transformed layer, so
+            // an inline `absolute` position here would pan and scale along
+            // with the drawing instead of staying fixed and clickable. When
+            // the parent supplies `toolbarPortalTarget` (an untransformed
+            // element), portal the chrome there instead of rendering inline.
+            const chrome = (
+              <>
+          <div className="pointer-events-auto absolute left-1/2 top-0 flex -translate-x-1/2 items-center gap-1 rounded-b-xl border border-t-0 border-sky-400/30 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur">
             {([
               ['select', MousePointer2, 'facilityMap.toolSelect'],
               ['line', Minus, 'facilityMap.toolLine'],
-              ['polyline', Minus, 'Polyline'],
-              ['arc', CircleIcon, 'Arc'],
+              ['polyline', Waypoints, 'Polyline'],
+              ['arc', Spline, 'Arc'],
               ['rect', Square, 'facilityMap.toolRectangle'],
               ['circle', CircleIcon, 'facilityMap.toolCircle'],
               ['trim', Scissors, 'facilityMap.sketchTrim'],
               ['extend', ArrowUpRight, 'facilityMap.sketchExtend'],
-              ['break', Scissors, 'Break'],
-              ['offset', Minus, 'Offset'],
+              ['break', Split, 'Break'],
+              ['offset', Rows3, 'Offset'],
             ] as const).map(([id, Icon, label]) => (
               <button
                 key={id}
@@ -2297,6 +2426,12 @@ export default function InventorSketchOverlay({
             </div>
             {message && <div className="mt-2 text-[10px] text-amber-300">{message}</div>}
           </div>
+              </>
+            );
+            return toolbarPortalTarget
+              ? createPortal(chrome, toolbarPortalTarget)
+              : chrome;
+          })()}
         </>
       )}
     </div>

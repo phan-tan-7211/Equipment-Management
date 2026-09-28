@@ -11,6 +11,16 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.37.0] - 2026-09-28
+
+### Added
+
+- **Facility map sketch tools** - Trim/extend and break/offset tools make it faster to clean up and adjust floor-plan sketches.
+
+### Changed
+
+- **Sidebar layout** - The main navigation sidebar now uses the standard full-height layout.
+
 ## [3.36.0] - 2026-09-28
 
 ### Added

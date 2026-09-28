@@ -4,6 +4,7 @@ import {
   Building2,
   Circle,
   Eye,
+  EyeOff,
   Focus,
   ImagePlus,
   LayoutGrid,
@@ -40,6 +41,7 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { useI18n } from '@/i18n';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useFormatTimestamp } from '@/hooks/useFormatTimestamp';
 import InventorSketchOverlay from '@/features/facility-map/components/InventorSketchOverlay';
 import {
@@ -222,6 +224,51 @@ const readHistory = (): PlanHistoryEntry[] => {
     return raw ? JSON.parse(raw) as PlanHistoryEntry[] : [];
   } catch {
     return [];
+  }
+};
+
+const isQuotaExceeded = (error: unknown): boolean =>
+  error instanceof DOMException &&
+  (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED');
+
+/**
+ * A plan (or a plan-image-bearing history entry) can be a multi-hundred-KB
+ * data URL, and localStorage's ~5-10MB-per-origin quota doesn't grow with
+ * how many of those a user happens to accumulate. Letting `setItem` throw
+ * uncaught here doesn't just fail to save — it crashes the whole component
+ * mid-render (this write happens inside a state updater), taking the user
+ * to the generic error boundary. Every write through here degrades to a
+ * no-op on quota failure instead.
+ */
+const safeSetLocalStorage = (key: string, value: string): boolean => {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (error) {
+    if (isQuotaExceeded(error)) return false;
+    throw error;
+  }
+};
+
+/**
+ * History entries are ordered newest-first and each can carry a full plan
+ * image — if the full list doesn't fit the remaining quota, keep halving it
+ * (dropping the oldest half each time) rather than losing today's save
+ * entirely just because old history doesn't fit anymore.
+ */
+const persistHistory = (entries: PlanHistoryEntry[]): void => {
+  let candidates = entries;
+  while (candidates.length > 0) {
+    if (safeSetLocalStorage(HISTORY_KEY, JSON.stringify(candidates))) return;
+    // `floor`, not `ceil` — at length 1, `ceil(1/2)` is still 1, which
+    // would never shrink further and loop forever instead of terminating.
+    candidates = candidates.slice(0, Math.floor(candidates.length / 2));
+  }
+  try {
+    localStorage.removeItem(HISTORY_KEY);
+  } catch {
+    // Best effort — leaving a stale value behind is harmless; readHistory
+    // already tolerates unparseable/missing data.
   }
 };
 
@@ -527,7 +574,13 @@ export default function FacilityFloorPlan() {
   const [zoneTool, setZoneTool] = useState<ZoneType | null>(null);
   const [drawTool, setDrawTool] = useState<DrawTool>('select');
   const [sketchMode, setSketchMode] = useState(false);
+  // Untransformed portal target for InventorSketchOverlay's toolbar/properties
+  // chrome — see the host div's comment where it's rendered. A ref alone
+  // wouldn't re-render once the node mounts, so this uses a callback ref
+  // backed by state instead.
+  const [sketchChromeHost, setSketchChromeHost] = useState<HTMLDivElement | null>(null);
   const [sketchVisible, setSketchVisible] = useState(true);
+  const [canvasHudVisible, setCanvasHudVisible] = useState(true);
   // Persisted on the plan (see FloorPlanState.sketchLocked) — unlike
   // sketchVisible, which stays local view-only state on purpose, lock is a
   // durable property of the sketch itself and must survive reload/remount.
@@ -551,7 +604,7 @@ export default function FacilityFloorPlan() {
   const [draggingAnnotationId, setDraggingAnnotationId] = useState('');
   const [annotationGrip, setAnnotationGrip] = useState<AnnotationGrip>(null);
   const [groupDragging, setGroupDragging] = useState(false);
-  const [editMode, setEditMode] = useState(true);
+  const [editMode, setEditMode] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [planManagerOpen, setPlanManagerOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -650,10 +703,10 @@ export default function FacilityFloorPlan() {
   const effectiveScale = fitTransform.scale * zoom;
 
   const savePlan = useCallback((next: FloorPlanState) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    safeSetLocalStorage(STORAGE_KEY, JSON.stringify(next));
     const cache = readPlanCache();
     cache[planKey(next.building, next.floor)] = clonePlan(next);
-    localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify(cache));
+    safeSetLocalStorage(PLAN_CACHE_KEY, JSON.stringify(cache));
 
     const history = readHistory();
     const entry: PlanHistoryEntry = {
@@ -662,7 +715,7 @@ export default function FacilityFloorPlan() {
       timestamp: Date.now(),
       snapshot: clonePlan(next),
     };
-    localStorage.setItem(HISTORY_KEY, JSON.stringify([entry, ...history].slice(0, 40)));
+    persistHistory([entry, ...history].slice(0, 40));
     setPlanLibraryVersion((value) => value + 1);
   }, []);
 
@@ -790,7 +843,7 @@ export default function FacilityFloorPlan() {
         ...current,
         [currentDrawingTool]: { ...current[currentDrawingTool], ...patch },
       };
-      localStorage.setItem(DRAWING_PRESET_KEY, JSON.stringify(next));
+      safeSetLocalStorage(DRAWING_PRESET_KEY, JSON.stringify(next));
       return next;
     });
   }, [currentDrawingTool]);
@@ -1544,7 +1597,7 @@ export default function FacilityFloorPlan() {
   const openPlanFromLibrary = (target: FloorPlanState) => {
     savePlan(plan);
     setPlan(clonePlan(target));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(target));
+    safeSetLocalStorage(STORAGE_KEY, JSON.stringify(target));
     setPlanManagerOpen(false);
     setCompareHistoryId(null);
     fitView();
@@ -1603,9 +1656,9 @@ export default function FacilityFloorPlan() {
         };
     const cache = readPlanCache();
     cache[planKey(building, floor)] = clonePlan(next);
-    localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify(cache));
+    safeSetLocalStorage(PLAN_CACHE_KEY, JSON.stringify(cache));
     setPlan(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    safeSetLocalStorage(STORAGE_KEY, JSON.stringify(next));
     setPlanLibraryVersion((value) => value + 1);
     setNewPlanName('');
     setNewPlanImageData('');
@@ -1618,11 +1671,11 @@ export default function FacilityFloorPlan() {
     if (!window.confirm(t('facilityMap.deletePlanConfirm'))) return;
     const cache = readPlanCache();
     delete cache[planKey(plan.building, plan.floor)];
-    localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify(cache));
+    safeSetLocalStorage(PLAN_CACHE_KEY, JSON.stringify(cache));
     const remaining = Object.values(cache);
     const next = remaining[0] ? ensurePlanShape(remaining[0]) : clonePlan(EMPTY_PLAN);
     setPlan(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    safeSetLocalStorage(STORAGE_KEY, JSON.stringify(next));
     setPlanLibraryVersion((value) => value + 1);
     setPlanManagerOpen(false);
     fitView();
@@ -2020,10 +2073,12 @@ export default function FacilityFloorPlan() {
 
   return (
     <div className={`flex h-full min-h-0 flex-col overflow-hidden bg-background ${isFullscreen ? 'fixed inset-0 z-[100] h-svh' : ''}`}>
+      {!isFullscreen && (
       <div className="shrink-0 border-b bg-card px-4 py-3 md:px-6">
         <div className="flex flex-wrap items-center gap-3">
           <div className="mr-auto">
             <div className="flex items-center gap-2">
+              <SidebarTrigger className="-ml-1 shrink-0" />
               <Building2 className="h-5 w-5 text-primary" />
               <h1 className="text-lg font-semibold">{t('facilityMap.title')}</h1>
               <span className="rounded-full border bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
@@ -2103,6 +2158,18 @@ export default function FacilityFloorPlan() {
           >
             <Eye className="h-4 w-4" />
             Sketch
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCanvasHudVisible((value) => !value)}
+            className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+              canvasHudVisible ? 'border-cyan-400/40 text-cyan-300' : 'text-muted-foreground'
+            }`}
+            title="Show/hide floor tabs and info badges over the canvas"
+          >
+            {canvasHudVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            HUD
           </button>
 
           {editMode && !sketchMode && (
@@ -2187,7 +2254,7 @@ export default function FacilityFloorPlan() {
               <input
                 className="hidden"
                 type="file"
-                accept="image/*"
+                accept="image/*,.svg,image/svg+xml"
                 onChange={(event) => uploadPlan(event.target.files?.[0])}
               />
             </label>
@@ -2246,6 +2313,7 @@ export default function FacilityFloorPlan() {
           ))}
         </div>
       </div>
+      )}
 
       <div className={`relative grid min-h-0 flex-1 overflow-hidden grid-cols-1 ${editMode ? 'lg:grid-cols-[300px_minmax(0,1fr)]' : 'lg:grid-cols-1'}`}>
         {editMode && (
@@ -2696,40 +2764,44 @@ export default function FacilityFloorPlan() {
             </div>
           )}
 
-          <div className="absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 items-center gap-1 rounded-lg border border-white/10 bg-black/65 p-1 backdrop-blur md:flex">
-            {DEMO_FLOORS.map((floor) => (
-              <button
-                key={floor}
-                type="button"
-                onClick={() => switchDemoLocation(plan.building, floor)}
-                className={`rounded-md px-3 py-1.5 text-[11px] transition ${
-                  plan.floor === floor ? 'bg-white text-slate-950' : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                {t(floorTranslationKey(floor))}
-              </button>
-            ))}
-          </div>
+          {canvasHudVisible && !sketchMode && (
+            <div className="absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 items-center gap-1 rounded-lg border border-white/10 bg-black/65 p-1 backdrop-blur md:flex">
+              {DEMO_FLOORS.map((floor) => (
+                <button
+                  key={floor}
+                  type="button"
+                  onClick={() => switchDemoLocation(plan.building, floor)}
+                  className={`rounded-md px-3 py-1.5 text-[11px] transition ${
+                    plan.floor === floor ? 'bg-white text-slate-950' : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  {t(floorTranslationKey(floor))}
+                </button>
+              ))}
+            </div>
+          )}
 
-          <div className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2">
-            <div className="rounded-md border border-white/10 bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
-              {t(buildingTranslationKey(plan.building))} · {t(floorTranslationKey(plan.floor))}
-            </div>
-            <div className="rounded-md border border-white/10 bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
-              <Layers3 className="mr-1 inline h-3.5 w-3.5" />
-              {t('facilityMap.itemsSummary', { assets: plan.pins.length, markers: plan.overlayPins.length, zones: plan.zones.length })}
-            </div>
-            {selectedObjectIds.size > 1 && (
-              <div className="rounded-md border border-sky-400/40 bg-sky-500/15 px-3 py-2 text-xs text-sky-100 backdrop-blur">
-                {t('facilityMap.selectedCount', { count: selectedObjectIds.size })}
+          {canvasHudVisible && !sketchMode && (
+            <div className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2">
+              <div className="rounded-md border border-white/10 bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
+                {t(buildingTranslationKey(plan.building))} · {t(floorTranslationKey(plan.floor))}
               </div>
-            )}
-            <div className={`rounded-md border px-3 py-2 text-xs backdrop-blur ${
-              editMode ? 'border-amber-400/30 bg-amber-500/15 text-amber-200' : 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200'
-            }`}>
-              {editMode ? t('facilityMap.editing') : t('facilityMap.viewing')}
+              <div className="rounded-md border border-white/10 bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
+                <Layers3 className="mr-1 inline h-3.5 w-3.5" />
+                {t('facilityMap.itemsSummary', { assets: plan.pins.length, markers: plan.overlayPins.length, zones: plan.zones.length })}
+              </div>
+              {selectedObjectIds.size > 1 && (
+                <div className="rounded-md border border-sky-400/40 bg-sky-500/15 px-3 py-2 text-xs text-sky-100 backdrop-blur">
+                  {t('facilityMap.selectedCount', { count: selectedObjectIds.size })}
+                </div>
+              )}
+              <div className={`rounded-md border px-3 py-2 text-xs backdrop-blur ${
+                editMode ? 'border-amber-400/30 bg-amber-500/15 text-amber-200' : 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200'
+              }`}>
+                {editMode ? t('facilityMap.editing') : t('facilityMap.viewing')}
+              </div>
             </div>
-          </div>
+          )}
 
           {showLegend && (
             <div className="absolute bottom-20 right-3 z-[25] w-56 rounded-xl border border-white/10 bg-slate-950/85 p-3 text-white shadow-xl backdrop-blur">
@@ -3126,6 +3198,14 @@ export default function FacilityFloorPlan() {
             onTouchEnd={handleTouchEnd}
             style={{ touchAction: 'none' }}
           >
+            {/*
+              Sketch mode's toolbar/properties chrome portals into this node
+              instead of rendering inline inside the pan/zoom-transformed
+              plan layer below — this div sits at the untransformed viewport
+              frame, so the chrome stays fixed and usable while the plan is
+              panned or zoomed underneath it.
+            */}
+            <div ref={setSketchChromeHost} className="pointer-events-none absolute inset-0 z-30" />
             <div
               className="absolute origin-top-left"
               style={{
@@ -3180,6 +3260,8 @@ export default function FacilityFloorPlan() {
                     initialDocument={layer.document}
                     canvasWidth={plan.canvasWidth}
                     canvasHeight={plan.canvasHeight}
+                    showGrid={showGrid}
+                    snapToGrid={snapToGrid}
                     t={t}
                     onDocumentChange={(document) => {
                       if (activeSketchId !== layer.id) return;
@@ -3188,6 +3270,7 @@ export default function FacilityFloorPlan() {
                     onGroupMouseDown={(event) => beginSketchLayerDrag(event, layer.id, layer.locked)}
                     onFinish={finishSketch}
                     onCancel={cancelSketch}
+                    toolbarPortalTarget={sketchChromeHost}
                   />
                 );
               })}
@@ -3651,7 +3734,7 @@ export default function FacilityFloorPlan() {
                 {newPlanImageData ? t('facilityMap.blueprintReady') : t('facilityMap.blueprint')}
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.svg,image/svg+xml"
                   className="hidden"
                   onChange={(event) => handleNewPlanImage(event.target.files?.[0])}
                 />

@@ -171,7 +171,7 @@ const AppSidebar = () => {
     .filter((group) => group.items.length > 0);
 
   return (
-    <Sidebar variant="inset">
+    <Sidebar variant="sidebar">
       <div
         className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
         data-control-sidebar={hasCustomBranding ? undefined : ''}
