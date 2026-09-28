@@ -11,10 +11,17 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.38.0] - 2026-09-29
+
 ### Added
 
 - **Permission matrix** - Organization owners and admins can review what each organization and team role is allowed to do.
 - **Access request history search** - Platform administrators can search, filter by status and page through the full access request history.
+
+### Fixed
+
+- **Google sign-in** - Signing in with Google always shows the account chooser, so users can switch accounts after signing out.
+- **Pending access message** - Personal email domains are no longer described as claimed while an access request is pending.
 
 ## [3.37.0] - 2026-09-28
 
