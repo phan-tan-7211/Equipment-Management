@@ -45,10 +45,10 @@ SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.work_order_im
 SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.work_order_status_history'::regclass), 'RLS enabled on work_order_status_history');
 
 -- Policies
-SELECT is((SELECT count(*)::int FROM pg_policies WHERE schemaname = 'public' AND tablename = 'work_orders' AND policyname = 'work_orders_insert_consolidated'), 1, 'work_orders_insert_consolidated policy exists');
+SELECT is((SELECT count(*)::int FROM pg_policies WHERE schemaname = 'public' AND tablename = 'work_orders' AND policyname = 'work_orders_insert_by_role'), 1, 'work_orders_insert_by_role policy exists');
 SELECT is((SELECT count(*)::int FROM pg_policies WHERE schemaname = 'public' AND tablename = 'work_orders' AND policyname = 'work_orders_select_consolidated'), 1, 'work_orders_select_consolidated policy exists');
-SELECT is((SELECT count(*)::int FROM pg_policies WHERE schemaname = 'public' AND tablename = 'work_orders' AND policyname = 'work_orders_update_consolidated'), 1, 'work_orders_update_consolidated policy exists');
-SELECT is((SELECT count(*)::int FROM pg_policies WHERE schemaname = 'public' AND tablename = 'work_orders' AND policyname = 'Admins can delete work orders'), 1, 'Admins can delete work orders policy exists');
+SELECT is((SELECT count(*)::int FROM pg_policies WHERE schemaname = 'public' AND tablename = 'work_orders' AND policyname = 'work_orders_update_by_role'), 1, 'work_orders_update_by_role policy exists');
+SELECT is((SELECT count(*)::int FROM pg_policies WHERE schemaname = 'public' AND tablename = 'work_orders' AND policyname = 'work_orders_delete_by_role'), 1, 'work_orders_delete_by_role policy exists');
 
 SELECT is((SELECT count(*)::int FROM pg_policies WHERE schemaname = 'public' AND tablename = 'work_order_equipment' AND policyname = 'work_order_equipment_select_policy'), 1, 'work_order_equipment_select_policy exists');
 SELECT is((SELECT count(*)::int FROM pg_policies WHERE schemaname = 'public' AND tablename = 'work_order_equipment' AND policyname = 'work_order_equipment_insert_policy'), 1, 'work_order_equipment_insert_policy exists');

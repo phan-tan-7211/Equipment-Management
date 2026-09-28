@@ -7,6 +7,7 @@
   "rlsPredicateHelpers": [
     "can_user_manage_quickbooks",
     "check_org_access_secure",
+    "has_team_permission",
     "is_org_admin",
     "is_org_member",
     "is_organization_active",
@@ -15,7 +16,9 @@
   ],
   "authenticatedPublicRpc": [
     "current_user_is_platform_admin",
+    "default_team_permission",
     "ensure_workspace_access_request",
+    "get_team_permission_settings",
     "accept_invitation_atomic",
     "adjust_inventory_quantity",
     "apply_pending_admin_grants_for_user",
@@ -105,6 +108,7 @@
     "replace_historical_work_order_timeline",
     "request_workspace_personal_org_merge",
     "resubmit_workspace_access_request",
+    "set_team_permission_override",
     "reserve_slot_for_invitation",
     "resolve_operator_checkin_by_token",
     "resolve_quick_form_by_token",
