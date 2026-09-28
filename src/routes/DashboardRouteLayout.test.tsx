@@ -77,6 +77,8 @@ vi.mock('@/contexts/OrganizationContext', () => ({
 }));
 
 vi.mock('@/hooks/useWorkspaceOnboarding', () => ({
+  useWorkspaceAccessRequest: () => ({ data: null, isLoading: false, isError: false }),
+  useWorkspaceAccessRequestResubmission: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
   useWorkspaceOnboardingState: () => mockWorkspaceState,
 }));
 
