@@ -22,6 +22,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 - **Team management** - Team managers can now edit their team and manage its members as the app already showed; actions that were not permitted no longer report success without saving.
 - **Inventory item delete** - The delete action is shown only to owners and admins, and item images are no longer removed when the item itself could not be deleted.
 
+## [3.39.1] - 2026-09-29
+
+### Fixed
+
+- **Bug reports** - In-app bug reports are filed in the current ZNTEQR repository and assigned to the current maintainer.
+
 ## [3.39.0] - 2026-09-29
 
 ### Added
