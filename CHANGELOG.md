@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.39.1] - 2026-09-29
+
+### Fixed
+
+- **Bug reports** - In-app bug reports are filed in the current ZNTEQR repository and assigned to the current maintainer.
+
 ## [3.39.0] - 2026-09-29
 
 ### Added
