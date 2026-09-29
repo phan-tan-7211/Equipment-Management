@@ -24811,6 +24811,7 @@ GRANT ALL ON FUNCTION "public"."prevent_untrusted_invitation_scope_changes"() TO
 
 
 
+REVOKE ALL ON FUNCTION "public"."prevent_used_equipment_group_delete"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."prevent_used_equipment_group_delete"() TO "service_role";
 
 
@@ -24830,6 +24831,7 @@ GRANT ALL ON FUNCTION "public"."process_departure_batch"("p_queue_id" "uuid", "p
 
 
 
+REVOKE ALL ON FUNCTION "public"."protect_equipment_group_code"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."protect_equipment_group_code"() TO "service_role";
 
 
@@ -25044,6 +25046,7 @@ GRANT ALL ON FUNCTION "public"."synthesize_historical_timeline_events"("p_histor
 
 
 
+REVOKE ALL ON FUNCTION "public"."touch_equipment_group_updated_at"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."touch_equipment_group_updated_at"() TO "service_role";
 
 

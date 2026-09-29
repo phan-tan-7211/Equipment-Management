@@ -28,12 +28,12 @@ SELECT is(public.current_user_is_platform_admin(),false,'revoked Platform Admin 
 
 RESET ROLE; SELECT set_config('request.jwt.claims','{"sub":"34000000-0000-0000-0000-000000000001","role":"authenticated"}',true); SET LOCAL ROLE authenticated;
 SELECT is(public.current_user_is_platform_admin(),true,'active Platform Admin is reported from auth.uid');
-SELECT is((SELECT organization_name FROM public.platform_list_organizations()),'Checkpoint D Organization','active Platform Admin receives organization summary');
-SELECT is((SELECT lifecycle_status FROM public.platform_list_organizations()),'active','summary exposes ACTIVE lifecycle');
-SELECT is((SELECT owner_email FROM public.platform_list_organizations()),'owner@checkpoint-d.test','summary exposes current OWNER email');
+SELECT is((SELECT organization_name FROM public.platform_list_organizations() WHERE organization_id='34000000-0000-0000-0000-000000000010'),'Checkpoint D Organization','active Platform Admin receives organization summary');
+SELECT is((SELECT lifecycle_status FROM public.platform_list_organizations() WHERE organization_id='34000000-0000-0000-0000-000000000010'),'active','summary exposes ACTIVE lifecycle');
+SELECT is((SELECT owner_email FROM public.platform_list_organizations() WHERE organization_id='34000000-0000-0000-0000-000000000010'),'owner@checkpoint-d.test','summary exposes current OWNER email');
 SELECT is((SELECT organization_name FROM public.platform_get_organization('34000000-0000-0000-0000-000000000010')),'Checkpoint D Organization','Platform Admin receives narrow organization detail');
 SELECT lives_ok($$SELECT public.platform_suspend_organization('34000000-0000-0000-0000-000000000010','D test')$$,'Platform Admin can suspend from UI contract');
-SELECT is((SELECT lifecycle_status FROM public.platform_list_organizations(NULL,'suspended')),'suspended','summary reflects SUSPENDED lifecycle');
+SELECT is((SELECT lifecycle_status FROM public.platform_list_organizations(NULL,'suspended') WHERE organization_id='34000000-0000-0000-0000-000000000010'),'suspended','summary reflects SUSPENDED lifecycle');
 RESET ROLE;
 SELECT is((SELECT count(*)::integer FROM public.organization_members WHERE user_id='34000000-0000-0000-0000-000000000001'),0,'Platform Admin read authority creates no membership');
 SELECT is(has_function_privilege('anon','public.platform_list_organizations(text,text)','EXECUTE'),false,'anon cannot execute platform summary RPC');
