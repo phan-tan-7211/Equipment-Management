@@ -63,12 +63,41 @@ export class SessionDataService {
       throw teamError;
     }
 
+    const permissionsByTeam = await this.fetchTeamPermissions(organizationId);
+
     return (teamData || []).map(item => ({
       teamId: item.team_id,
       teamName: item.team_name,
       role: item.role as 'manager' | 'technician' | 'requestor' | 'viewer',
-      joinedDate: item.joined_date
+      joinedDate: item.joined_date,
+      ...(permissionsByTeam ? { permissions: permissionsByTeam.get(item.team_id) ?? [] } : {}),
     }));
+  }
+
+  /** Returns null when permissions cannot be loaded, so callers fall back to defaults. */
+  static async fetchTeamPermissions(
+    organizationId: string
+  ): Promise<Map<string, Array<'equipment.create' | 'equipment.update'>> | null> {
+    try {
+      const { data, error } = await supabase.rpc('get_my_team_permissions', {
+        p_organization_id: organizationId,
+      });
+      if (error || !Array.isArray(data)) {
+        if (error) logger.warn('Error fetching team permissions:', error);
+        return null;
+      }
+      const byTeam = new Map<string, Array<'equipment.create' | 'equipment.update'>>();
+      for (const row of data) {
+        if (row.permission_key !== 'equipment.create' && row.permission_key !== 'equipment.update') continue;
+        const list = byTeam.get(row.team_id) ?? [];
+        list.push(row.permission_key);
+        byTeam.set(row.team_id, list);
+      }
+      return byTeam;
+    } catch (err) {
+      logger.warn('Error fetching team permissions:', err);
+      return null;
+    }
   }
 
   static async fetchSessionData(

@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { OrganizationSubnav } from '@/features/organization/components/OrganizationSubnav';
+import { TeamPermissionSettings } from '../permissions/TeamPermissionSettings';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import {
@@ -167,6 +168,11 @@ export default function PermissionMatrix() {
         )}
 
         <p className="text-sm text-muted-foreground">{copy.inventoryGrantNote}</p>
+
+        <TeamPermissionSettings
+          organizationId={currentOrganization.id}
+          canEdit={currentOrganization.userRole === 'owner'}
+        />
       </div>
     </Page>
   );

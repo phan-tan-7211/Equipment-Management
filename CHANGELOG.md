@@ -11,6 +11,20 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.39.0] - 2026-09-29
+
+### Added
+
+- **Custom team permissions** - Organization owners can choose which team roles may create and edit equipment from the permission matrix; changes are recorded in the audit log.
+
+### Changed
+
+- **Equipment editing** - Team technicians can edit equipment on their teams by default, matching bulk editing.
+
+### Security
+
+- **Server-side permission checks** - Equipment and work order changes are now enforced by the database for each role, not only by the app. Historical work orders are limited to owners and admins.
+
 ## [3.38.1] - 2026-09-29
 
 ### Security

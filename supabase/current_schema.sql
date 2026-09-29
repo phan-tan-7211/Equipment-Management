@@ -4349,6 +4349,21 @@ COMMENT ON FUNCTION "public"."current_user_is_platform_admin"() IS 'Returns whet
 
 
 
+CREATE OR REPLACE FUNCTION "public"."default_team_permission"("p_team_role" "text", "p_permission_key" "text") RETURNS boolean
+    LANGUAGE "sql" IMMUTABLE
+    SET "search_path" TO 'pg_catalog'
+    AS $$
+  SELECT CASE p_permission_key
+    WHEN 'equipment.create' THEN p_team_role IN ('manager', 'technician')
+    WHEN 'equipment.update' THEN p_team_role IN ('manager', 'technician')
+    ELSE false
+  END;
+$$;
+
+
+ALTER FUNCTION "public"."default_team_permission"("p_team_role" "text", "p_permission_key" "text") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."delete_equipment_note"("p_organization_id" "uuid", "p_equipment_id" "uuid", "p_note_id" "uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -5357,6 +5372,83 @@ $$;
 
 
 ALTER FUNCTION "public"."ensure_operator_template_active_for_enabled_assignment"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."ensure_workspace_access_request"() RETURNS TABLE("request_id" "uuid", "request_status" "text", "organization_id" "uuid", "organization_name" "text", "assigned_role" "text", "reviewed_at" timestamp with time zone, "rejection_reason" "text", "reviewed_by_name" "text")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public', 'private', 'extensions'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_email text;
+  v_display_name text;
+  v_request private.workspace_access_requests;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'Authentication required';
+  END IF;
+
+  SELECT u.email, COALESCE(NULLIF(p.name, ''), u.email)
+  INTO v_email, v_display_name
+  FROM auth.users AS u
+  LEFT JOIN public.profiles AS p ON p.id = u.id
+  WHERE u.id = v_user_id;
+
+  IF v_email IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Authenticated user email is required';
+  END IF;
+
+  IF public.is_platform_admin(v_user_id) OR EXISTS (
+    SELECT 1 FROM public.organization_members AS om
+    WHERE om.user_id = v_user_id AND om.status = 'active'
+  ) THEN
+    RETURN QUERY SELECT NULL::uuid, 'already_authorized'::text, NULL::uuid,
+      NULL::text, NULL::text, NULL::timestamptz, NULL::text, NULL::text;
+    RETURN;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.organization_invitations AS oi
+    WHERE public.normalize_email(oi.email) = public.normalize_email(v_email)
+      AND oi.status = 'pending' AND oi.expires_at > pg_catalog.now()
+  ) THEN
+    UPDATE private.workspace_access_requests
+    SET status = 'cancelled', reviewed_at = pg_catalog.now(), reviewed_by = v_user_id,
+        rejection_reason = 'Superseded by organization invitation'
+    WHERE user_id = v_user_id AND status = 'pending';
+    RETURN QUERY SELECT NULL::uuid, 'invitation_pending'::text, NULL::uuid,
+      NULL::text, NULL::text, NULL::timestamptz, NULL::text, NULL::text;
+    RETURN;
+  END IF;
+
+  SELECT * INTO v_request
+  FROM private.workspace_access_requests AS ar
+  WHERE ar.user_id = v_user_id
+  ORDER BY ar.requested_at DESC
+  LIMIT 1;
+
+  IF v_request.id IS NULL OR v_request.status = 'cancelled' THEN
+    INSERT INTO private.workspace_access_requests (user_id, email, display_name)
+    VALUES (v_user_id, public.normalize_email(v_email), v_display_name)
+    RETURNING * INTO v_request;
+  END IF;
+
+  RETURN QUERY
+  SELECT v_request.id, v_request.status, v_request.organization_id,
+    org.name, v_request.assigned_role, v_request.reviewed_at,
+    v_request.rejection_reason, reviewer.name
+  FROM (SELECT 1) AS ignored
+  LEFT JOIN public.organizations AS org ON org.id = v_request.organization_id
+  LEFT JOIN public.profiles AS reviewer ON reviewer.id = v_request.reviewed_by;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."ensure_workspace_access_request"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."ensure_workspace_access_request"() IS 'Returns the latest self-registration request without recreating a rejected request.';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."expire_old_invitations"() RETURNS "trigger"
@@ -7249,6 +7341,27 @@ $$;
 ALTER FUNCTION "public"."get_member_profiles_secure"("org_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_my_team_permissions"("p_organization_id" "uuid") RETURNS TABLE("team_id" "uuid", "permission_key" "text")
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public', 'private'
+    AS $$
+  SELECT tm.team_id, k.permission_key
+  FROM public.team_members AS tm
+  JOIN public.teams AS t ON t.id = tm.team_id
+  CROSS JOIN (VALUES ('equipment.create'), ('equipment.update')) AS k(permission_key)
+  WHERE tm.user_id = auth.uid()
+    AND t.organization_id = p_organization_id
+    AND public.has_team_permission(auth.uid(), p_organization_id, tm.team_id, k.permission_key);
+$$;
+
+
+ALTER FUNCTION "public"."get_my_team_permissions"("p_organization_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."get_my_team_permissions"("p_organization_id" "uuid") IS 'Caller''s effective configurable permissions per team they belong to.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."get_org_equipment_pm_statuses"("p_organization_id" "uuid") RETURNS TABLE("equipment_id" "uuid", "last_pm_completed_at" timestamp with time zone, "interval_value" integer, "interval_type" "text", "is_overdue" boolean, "days_overdue" integer, "hours_overdue" numeric, "template_name" "text", "source" "text")
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -7924,6 +8037,36 @@ $$;
 ALTER FUNCTION "public"."get_system_user_id"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_team_permission_settings"("p_organization_id" "uuid") RETURNS TABLE("team_role" "text", "permission_key" "text", "allowed" boolean, "is_default" boolean)
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public', 'private'
+    AS $$
+BEGIN
+  IF auth.uid() IS NULL OR NOT public.is_org_admin(auth.uid(), p_organization_id) THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'Organization owner or admin required';
+  END IF;
+
+  RETURN QUERY
+  SELECT r.team_role, k.permission_key,
+    COALESCE(o.allowed, public.default_team_permission(r.team_role, k.permission_key)),
+    o.allowed IS NULL
+  FROM (VALUES ('manager'), ('technician'), ('requestor'), ('viewer')) AS r(team_role)
+  CROSS JOIN (VALUES ('equipment.create'), ('equipment.update')) AS k(permission_key)
+  LEFT JOIN private.team_permission_overrides AS o
+    ON o.organization_id = p_organization_id
+   AND o.team_role = r.team_role
+   AND o.permission_key = k.permission_key;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_team_permission_settings"("p_organization_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."get_team_permission_settings"("p_organization_id" "uuid") IS 'Owner/admin view of effective configurable team-role permissions.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."get_user_invitations_safe"("user_uuid" "uuid", "org_id" "uuid") RETURNS TABLE("id" "uuid", "email" "text", "role" "text", "status" "text", "message" "text", "created_at" timestamp with time zone, "expires_at" timestamp with time zone, "accepted_at" timestamp with time zone, "declined_at" timestamp with time zone, "expired_at" timestamp with time zone, "slot_reserved" boolean, "slot_purchase_id" "uuid")
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -8594,6 +8737,40 @@ $$;
 
 
 ALTER FUNCTION "public"."handle_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."has_team_permission"("p_user_id" "uuid", "p_organization_id" "uuid", "p_team_id" "uuid", "p_permission_key" "text") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public', 'private'
+    SET "row_security" TO 'off'
+    AS $$
+  SELECT p_user_id IS NOT NULL
+    AND p_team_id IS NOT NULL
+    AND public.is_org_member(p_user_id, p_organization_id)
+    AND EXISTS (
+      SELECT 1
+      FROM public.team_members AS tm
+      JOIN public.teams AS t ON t.id = tm.team_id
+      CROSS JOIN LATERAL (
+        SELECT CASE WHEN tm.role::text = 'owner' THEN 'manager' ELSE tm.role::text END AS team_role
+      ) AS r
+      LEFT JOIN private.team_permission_overrides AS o
+        ON o.organization_id = p_organization_id
+       AND o.team_role = r.team_role
+       AND o.permission_key = p_permission_key
+      WHERE tm.user_id = p_user_id
+        AND tm.team_id = p_team_id
+        AND t.organization_id = p_organization_id
+        AND COALESCE(o.allowed, public.default_team_permission(r.team_role, p_permission_key))
+    );
+$$;
+
+
+ALTER FUNCTION "public"."has_team_permission"("p_user_id" "uuid", "p_organization_id" "uuid", "p_team_id" "uuid", "p_permission_key" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."has_team_permission"("p_user_id" "uuid", "p_organization_id" "uuid", "p_team_id" "uuid", "p_permission_key" "text") IS 'RLS helper: effective team-role permission with per-organization overrides.';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."historical_timeline_allowed_next_statuses"("p_current_status" "public"."work_order_status") RETURNS "public"."work_order_status"[]
@@ -11167,6 +11344,62 @@ COMMENT ON FUNCTION "public"."peek_google_workspace_oauth_session"("p_session_to
 
 
 
+CREATE OR REPLACE FUNCTION "public"."platform_approve_access_request"("p_request_id" "uuid", "p_organization_id" "uuid", "p_role" "text") RETURNS TABLE("request_id" "uuid", "user_id" "uuid", "organization_id" "uuid", "assigned_role" "text")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public', 'private'
+    AS $$
+DECLARE
+  v_caller uuid := auth.uid();
+  v_request private.workspace_access_requests;
+BEGIN
+  IF v_caller IS NULL OR NOT public.is_platform_admin(v_caller) THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'Platform Admin authority required';
+  END IF;
+  IF p_role IS NULL OR p_role NOT IN ('owner', 'admin', 'member', 'viewer', 'requestor') THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid organization role';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.organizations AS org
+    WHERE org.id = p_organization_id AND org.lifecycle_status = 'active'
+  ) THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Active organization is required';
+  END IF;
+
+  SELECT * INTO v_request
+  FROM private.workspace_access_requests
+  WHERE id = p_request_id
+  FOR UPDATE;
+
+  IF v_request.id IS NULL OR v_request.status <> 'pending' THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Access request is no longer pending';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.organization_members AS om
+    WHERE om.user_id = v_request.user_id AND om.status = 'active'
+  ) THEN
+    RAISE EXCEPTION USING ERRCODE = '23505', MESSAGE = 'User already has active organization access';
+  END IF;
+
+  INSERT INTO public.organization_members (organization_id, user_id, role, status, access_source)
+  VALUES (p_organization_id, v_request.user_id, p_role, 'active', 'manual');
+
+  UPDATE private.workspace_access_requests
+  SET status = 'approved', organization_id = p_organization_id, assigned_role = p_role,
+      reviewed_at = pg_catalog.now(), reviewed_by = v_caller, rejection_reason = NULL
+  WHERE id = v_request.id;
+
+  RETURN QUERY SELECT v_request.id, v_request.user_id, p_organization_id, p_role;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."platform_approve_access_request"("p_request_id" "uuid", "p_organization_id" "uuid", "p_role" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."platform_approve_access_request"("p_request_id" "uuid", "p_organization_id" "uuid", "p_role" "text") IS 'Platform Admin-only approval that atomically assigns an organization role and creates membership.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."platform_create_organization_and_invite_owner"("p_organization_name" "text", "p_owner_email" "text", "p_message" "text" DEFAULT NULL::"text") RETURNS TABLE("organization_id" "uuid", "invitation_id" "uuid", "owner_email" "text")
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'pg_catalog', 'public', 'private', 'extensions'
@@ -11343,6 +11576,38 @@ COMMENT ON FUNCTION "public"."platform_get_organization"("p_organization_id" "uu
 
 
 
+CREATE OR REPLACE FUNCTION "public"."platform_list_access_requests"("p_status" "text" DEFAULT 'pending'::"text") RETURNS TABLE("request_id" "uuid", "user_id" "uuid", "email" "text", "display_name" "text", "request_status" "text", "requested_at" timestamp with time zone, "organization_id" "uuid", "organization_name" "text", "assigned_role" "text", "reviewed_at" timestamp with time zone, "reviewed_by_name" "text", "rejection_reason" "text")
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public', 'private'
+    AS $$
+BEGIN
+  IF auth.uid() IS NULL OR NOT public.is_platform_admin(auth.uid()) THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'Platform Admin authority required';
+  END IF;
+  IF p_status IS NOT NULL AND p_status NOT IN ('pending', 'approved', 'rejected', 'cancelled') THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid access request status';
+  END IF;
+
+  RETURN QUERY
+  SELECT ar.id, ar.user_id, ar.email, ar.display_name, ar.status, ar.requested_at,
+    ar.organization_id, org.name, ar.assigned_role, ar.reviewed_at,
+    reviewer.name, ar.rejection_reason
+  FROM private.workspace_access_requests AS ar
+  LEFT JOIN public.organizations AS org ON org.id = ar.organization_id
+  LEFT JOIN public.profiles AS reviewer ON reviewer.id = ar.reviewed_by
+  WHERE p_status IS NULL OR ar.status = p_status
+  ORDER BY ar.requested_at DESC;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."platform_list_access_requests"("p_status" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."platform_list_access_requests"("p_status" "text") IS 'Platform Admin-only access request history with reviewer display information.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."platform_list_organizations"("p_search" "text" DEFAULT NULL::"text", "p_lifecycle_status" "text" DEFAULT NULL::"text") RETURNS TABLE("organization_id" "uuid", "organization_name" "text", "lifecycle_status" "text", "created_at" timestamp with time zone, "owner_user_id" "uuid", "owner_name" "text", "owner_email" "text", "pending_owner_invitation_id" "uuid", "pending_owner_email" "text", "pending_owner_expires_at" timestamp with time zone, "pending_owner_can_resend" boolean)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
     SET "search_path" TO 'pg_catalog', 'public', 'private'
@@ -11448,6 +11713,34 @@ $$;
 
 
 ALTER FUNCTION "public"."platform_reactivate_organization"("p_organization_id" "uuid", "p_reason" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."platform_reject_access_request"("p_request_id" "uuid", "p_reason" "text" DEFAULT NULL::"text") RETURNS TABLE("request_id" "uuid", "request_status" "text")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public', 'private'
+    AS $$
+DECLARE
+  v_caller uuid := auth.uid();
+BEGIN
+  IF v_caller IS NULL OR NOT public.is_platform_admin(v_caller) THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'Platform Admin authority required';
+  END IF;
+
+  UPDATE private.workspace_access_requests
+  SET status = 'rejected', reviewed_at = pg_catalog.now(), reviewed_by = v_caller,
+      rejection_reason = NULLIF(pg_catalog.btrim(COALESCE(p_reason, '')), '')
+  WHERE id = p_request_id AND status = 'pending';
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Access request is no longer pending';
+  END IF;
+
+  RETURN QUERY SELECT p_request_id, 'rejected'::text;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."platform_reject_access_request"("p_request_id" "uuid", "p_reason" "text") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."platform_suspend_organization"("p_organization_id" "uuid", "p_reason" "text" DEFAULT NULL::"text") RETURNS "jsonb"
@@ -13718,6 +14011,80 @@ $$;
 ALTER FUNCTION "public"."restore_operator_checklist_template"("p_template_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."resubmit_workspace_access_request"() RETURNS TABLE("request_id" "uuid", "request_status" "text", "requested_at" timestamp with time zone)
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public', 'private', 'extensions'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_email text;
+  v_display_name text;
+  v_latest private.workspace_access_requests;
+  v_created private.workspace_access_requests;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'Authentication required';
+  END IF;
+
+  IF public.is_platform_admin(v_user_id) OR EXISTS (
+    SELECT 1 FROM public.organization_members AS om
+    WHERE om.user_id = v_user_id AND om.status = 'active'
+  ) THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'User already has workspace access';
+  END IF;
+
+  SELECT u.email, COALESCE(NULLIF(p.name, ''), u.email)
+  INTO v_email, v_display_name
+  FROM auth.users AS u
+  LEFT JOIN public.profiles AS p ON p.id = u.id
+  WHERE u.id = v_user_id;
+
+  IF v_email IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Authenticated user email is required';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.organization_invitations AS oi
+    WHERE public.normalize_email(oi.email) = public.normalize_email(v_email)
+      AND oi.status = 'pending' AND oi.expires_at > pg_catalog.now()
+  ) THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Pending invitation must be used';
+  END IF;
+
+  SELECT * INTO v_latest
+  FROM private.workspace_access_requests AS ar
+  WHERE ar.user_id = v_user_id
+  ORDER BY ar.requested_at DESC
+  LIMIT 1
+  FOR UPDATE;
+
+  IF v_latest.id IS NULL OR v_latest.status <> 'rejected' THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Only a rejected access request can be resubmitted';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM private.workspace_access_requests AS ar
+    WHERE ar.user_id = v_user_id AND ar.status = 'pending'
+  ) THEN
+    RAISE EXCEPTION USING ERRCODE = '23505', MESSAGE = 'Access request is already pending';
+  END IF;
+
+  INSERT INTO private.workspace_access_requests (user_id, email, display_name)
+  VALUES (v_user_id, public.normalize_email(v_email), v_display_name)
+  RETURNING * INTO v_created;
+
+  RETURN QUERY SELECT v_created.id, v_created.status, v_created.requested_at;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."resubmit_workspace_access_request"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."resubmit_workspace_access_request"() IS 'Allows an authenticated requester to explicitly resubmit only their latest rejected access request.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."revert_pm_completion"("p_pm_id" "uuid", "p_reason" "text" DEFAULT 'Reverted by admin'::"text") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -14183,6 +14550,66 @@ $$;
 
 
 ALTER FUNCTION "public"."set_rls_context"("context_name" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."set_team_permission_override"("p_organization_id" "uuid", "p_team_role" "text", "p_permission_key" "text", "p_allowed" boolean) RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public', 'private'
+    AS $$
+DECLARE
+  v_actor uuid := auth.uid();
+  v_previous boolean;
+BEGIN
+  IF v_actor IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.organization_members AS om
+    JOIN public.organizations AS org ON org.id = om.organization_id
+    WHERE om.organization_id = p_organization_id AND om.user_id = v_actor
+      AND om.role = 'owner' AND om.status = 'active' AND org.lifecycle_status = 'active'
+  ) THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'Organization owner required';
+  END IF;
+  IF p_team_role IS NULL OR p_team_role NOT IN ('manager', 'technician', 'requestor', 'viewer') THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid team role';
+  END IF;
+  IF p_permission_key IS NULL OR p_permission_key NOT IN ('equipment.create', 'equipment.update') THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid permission key';
+  END IF;
+
+  SELECT COALESCE(o.allowed, public.default_team_permission(p_team_role, p_permission_key))
+  INTO v_previous
+  FROM (SELECT 1) AS ignored
+  LEFT JOIN private.team_permission_overrides AS o
+    ON o.organization_id = p_organization_id AND o.team_role = p_team_role AND o.permission_key = p_permission_key;
+
+  IF p_allowed IS NULL OR p_allowed = public.default_team_permission(p_team_role, p_permission_key) THEN
+    DELETE FROM private.team_permission_overrides
+    WHERE organization_id = p_organization_id AND team_role = p_team_role AND permission_key = p_permission_key;
+  ELSE
+    INSERT INTO private.team_permission_overrides (organization_id, team_role, permission_key, allowed, updated_by)
+    VALUES (p_organization_id, p_team_role, p_permission_key, p_allowed, v_actor)
+    ON CONFLICT (organization_id, team_role, permission_key)
+    DO UPDATE SET allowed = EXCLUDED.allowed, updated_by = EXCLUDED.updated_by, updated_at = pg_catalog.now();
+  END IF;
+
+  INSERT INTO public.audit_log (organization_id, entity_type, entity_id, entity_name, action, actor_id, changes, metadata)
+  SELECT p_organization_id, 'organization', p_organization_id, org.name, 'UPDATE', v_actor,
+    jsonb_build_object('team_permission', jsonb_build_object(
+      'team_role', p_team_role,
+      'permission_key', p_permission_key,
+      'old', v_previous,
+      'new', COALESCE(p_allowed, public.default_team_permission(p_team_role, p_permission_key))
+    )),
+    jsonb_build_object('source', 'permission_matrix', 'restored_default', p_allowed IS NULL)
+  FROM public.organizations AS org WHERE org.id = p_organization_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."set_team_permission_override"("p_organization_id" "uuid", "p_team_role" "text", "p_permission_key" "text", "p_allowed" boolean) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."set_team_permission_override"("p_organization_id" "uuid", "p_team_role" "text", "p_permission_key" "text", "p_allowed" boolean) IS 'Owner-only: set or reset a configurable team-role permission; audited.';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."should_notify_user_for_work_order"("user_uuid" "uuid", "work_order_team_id" "uuid", "work_order_status" "text", "organization_uuid" "uuid") RETURNS boolean
@@ -15969,6 +16396,48 @@ COMMENT ON TABLE "private"."platform_admins" IS 'Backend-owned Platform Admin au
 
 
 COMMENT ON COLUMN "private"."platform_admins"."granted_by" IS 'Granting Platform Admin user; NULL only for controlled database-administrator bootstrap.';
+
+
+
+CREATE TABLE IF NOT EXISTS "private"."team_permission_overrides" (
+    "organization_id" "uuid" NOT NULL,
+    "team_role" "text" NOT NULL,
+    "permission_key" "text" NOT NULL,
+    "allowed" boolean NOT NULL,
+    "updated_by" "uuid",
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "team_permission_overrides_key_check" CHECK (("permission_key" = ANY (ARRAY['equipment.create'::"text", 'equipment.update'::"text"]))),
+    CONSTRAINT "team_permission_overrides_role_check" CHECK (("team_role" = ANY (ARRAY['manager'::"text", 'technician'::"text", 'requestor'::"text", 'viewer'::"text"])))
+);
+
+
+ALTER TABLE "private"."team_permission_overrides" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "private"."workspace_access_requests" (
+    "id" "uuid" DEFAULT "extensions"."gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "email" "text" NOT NULL,
+    "display_name" "text",
+    "status" "text" DEFAULT 'pending'::"text" NOT NULL,
+    "organization_id" "uuid",
+    "assigned_role" "text",
+    "requested_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "reviewed_at" timestamp with time zone,
+    "reviewed_by" "uuid",
+    "rejection_reason" "text",
+    CONSTRAINT "workspace_access_requests_review_check" CHECK (((("status" = 'pending'::"text") AND ("reviewed_at" IS NULL) AND ("reviewed_by" IS NULL)) OR (("status" <> 'pending'::"text") AND ("reviewed_at" IS NOT NULL)))),
+    CONSTRAINT "workspace_access_requests_role_check" CHECK ((("assigned_role" IS NULL) OR ("assigned_role" = ANY (ARRAY['owner'::"text", 'admin'::"text", 'member'::"text", 'viewer'::"text", 'requestor'::"text"])))),
+    CONSTRAINT "workspace_access_requests_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'approved'::"text", 'rejected'::"text", 'cancelled'::"text"])))
+);
+
+ALTER TABLE ONLY "private"."workspace_access_requests" FORCE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "private"."workspace_access_requests" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "private"."workspace_access_requests" IS 'Backend-owned requests from authenticated users without organization access; direct client table access is prohibited.';
 
 
 
@@ -18305,6 +18774,16 @@ ALTER TABLE ONLY "private"."platform_admins"
 
 
 
+ALTER TABLE ONLY "private"."team_permission_overrides"
+    ADD CONSTRAINT "team_permission_overrides_pkey" PRIMARY KEY ("organization_id", "team_role", "permission_key");
+
+
+
+ALTER TABLE ONLY "private"."workspace_access_requests"
+    ADD CONSTRAINT "workspace_access_requests_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."audit_log"
     ADD CONSTRAINT "audit_log_pkey" PRIMARY KEY ("id");
 
@@ -18812,6 +19291,14 @@ ALTER TABLE ONLY "public"."workspace_domains"
 
 ALTER TABLE ONLY "public"."workspace_personal_org_merge_requests"
     ADD CONSTRAINT "workspace_personal_org_merge_requests_pkey" PRIMARY KEY ("id");
+
+
+
+CREATE UNIQUE INDEX "workspace_access_requests_one_pending_per_user_idx" ON "private"."workspace_access_requests" USING "btree" ("user_id") WHERE ("status" = 'pending'::"text");
+
+
+
+CREATE INDEX "workspace_access_requests_status_requested_idx" ON "private"."workspace_access_requests" USING "btree" ("status", "requested_at" DESC);
 
 
 
@@ -20126,6 +20613,31 @@ ALTER TABLE ONLY "private"."platform_admins"
 
 
 
+ALTER TABLE ONLY "private"."team_permission_overrides"
+    ADD CONSTRAINT "team_permission_overrides_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "private"."team_permission_overrides"
+    ADD CONSTRAINT "team_permission_overrides_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "private"."workspace_access_requests"
+    ADD CONSTRAINT "workspace_access_requests_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "private"."workspace_access_requests"
+    ADD CONSTRAINT "workspace_access_requests_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "private"."workspace_access_requests"
+    ADD CONSTRAINT "workspace_access_requests_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."audit_log"
     ADD CONSTRAINT "audit_log_actor_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
 
@@ -21028,14 +21540,10 @@ ALTER TABLE ONLY "public"."workspace_personal_org_merge_requests"
 ALTER TABLE "private"."platform_admins" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "Admins can create historical work orders" ON "public"."work_orders" FOR INSERT WITH CHECK ((("is_historical" = true) AND "public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") AND ("created_by_admin" = ( SELECT "auth"."uid"() AS "uid"))));
+ALTER TABLE "private"."team_permission_overrides" ENABLE ROW LEVEL SECURITY;
 
 
-
-CREATE POLICY "Admins can delete work orders" ON "public"."work_orders" FOR DELETE USING (("organization_id" IN ( SELECT "organization_members"."organization_id"
-   FROM "public"."organization_members"
-  WHERE (("organization_members"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("organization_members"."role" = ANY (ARRAY['owner'::"text", 'admin'::"text"])) AND ("organization_members"."status" = 'active'::"text")))));
-
+ALTER TABLE "private"."workspace_access_requests" ENABLE ROW LEVEL SECURITY;
 
 
 CREATE POLICY "Admins can delete working hours history" ON "public"."equipment_working_hours_history" FOR DELETE USING ((EXISTS ( SELECT 1
@@ -21047,10 +21555,6 @@ CREATE POLICY "Admins can delete working hours history" ON "public"."equipment_w
 CREATE POLICY "Admins can insert work order history" ON "public"."work_order_status_history" FOR INSERT WITH CHECK (((EXISTS ( SELECT 1
    FROM "public"."work_orders" "wo"
   WHERE (("wo"."id" = "work_order_status_history"."work_order_id") AND "public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "wo"."organization_id")))) AND ("changed_by" = ( SELECT "auth"."uid"() AS "uid"))));
-
-
-
-CREATE POLICY "Admins can update historical work orders" ON "public"."work_orders" FOR UPDATE USING ((("is_historical" = true) AND "public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id")));
 
 
 
@@ -21092,10 +21596,6 @@ CREATE POLICY "System can insert audit logs" ON "public"."audit_log" FOR INSERT 
 
 
 
-CREATE POLICY "Users can create work orders in their organization" ON "public"."work_orders" FOR INSERT WITH CHECK ("public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
-
-
-
 CREATE POLICY "Users can create working hours history for accessible equipment" ON "public"."equipment_working_hours_history" FOR INSERT WITH CHECK ((("updated_by" = ( SELECT "auth"."uid"() AS "uid")) AND (EXISTS ( SELECT 1
    FROM "public"."equipment" "e"
   WHERE (("e"."id" = "equipment_working_hours_history"."equipment_id") AND ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "e"."organization_id") OR ("public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "e"."organization_id") AND ("e"."team_id" IS NOT NULL) AND ("e"."team_id" IN ( SELECT "tm"."team_id"
@@ -21113,10 +21613,6 @@ CREATE POLICY "Users can manage their own notification preferences" ON "public".
 
 
 CREATE POLICY "Users can update their own notifications" ON "public"."notifications" FOR UPDATE USING (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
-
-
-
-CREATE POLICY "Users can update work orders in their organization" ON "public"."work_orders" FOR UPDATE USING ("public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
 
 
 
@@ -21179,10 +21675,6 @@ CREATE POLICY "Users can view working hours history for accessible equipment" ON
 
 
 CREATE POLICY "admins_delete_teams" ON "public"."teams" FOR DELETE USING ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
-
-
-
-CREATE POLICY "admins_delete_work_orders" ON "public"."work_orders" FOR DELETE USING ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
 
 
 
@@ -21294,15 +21786,7 @@ CREATE POLICY "dsr_requests_select" ON "public"."dsr_requests" FOR SELECT TO "au
 ALTER TABLE "public"."equipment" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "equipment_access_consolidated" ON "public"."equipment" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id")));
-
-
-
-CREATE POLICY "equipment_admin_access" ON "public"."equipment" USING ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
-
-
-
-COMMENT ON POLICY "equipment_admin_access" ON "public"."equipment" IS 'Consolidated admin policy for all equipment operations. Uses cached auth.uid() for performance.';
+CREATE POLICY "equipment_delete_by_admin" ON "public"."equipment" FOR DELETE TO "authenticated" USING ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
 
 
 
@@ -21335,6 +21819,10 @@ CREATE POLICY "equipment_groups_members_select" ON "public"."equipment_groups" F
 
 
 
+CREATE POLICY "equipment_insert_by_permission" ON "public"."equipment" FOR INSERT TO "authenticated" WITH CHECK (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "organization_id", "team_id", 'equipment.create'::"text")));
+
+
+
 ALTER TABLE "public"."equipment_location_history" ENABLE ROW LEVEL SECURITY;
 
 
@@ -21350,10 +21838,6 @@ CREATE POLICY "equipment_location_history_service_insert" ON "public"."equipment
 
 
 CREATE POLICY "equipment_member_select" ON "public"."equipment" FOR SELECT USING ("public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
-
-
-
-CREATE POLICY "equipment_member_update" ON "public"."equipment" FOR UPDATE USING ("public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
 
 
 
@@ -21465,9 +21949,7 @@ CREATE POLICY "equipment_part_compatibility_update" ON "public"."equipment_part_
 ALTER TABLE "public"."equipment_status_history" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "equipment_team_manager_delete" ON "public"."equipment" FOR DELETE USING ((EXISTS ( SELECT 1
-   FROM "public"."team_members" "tm"
-  WHERE (("tm"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tm"."team_id" = "equipment"."team_id") AND ("tm"."role" = 'manager'::"public"."team_member_role")))));
+CREATE POLICY "equipment_update_by_permission" ON "public"."equipment" FOR UPDATE TO "authenticated" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "organization_id", "team_id", 'equipment.update'::"text"))) WITH CHECK (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "organization_id", "team_id", 'equipment.update'::"text")));
 
 
 
@@ -21679,10 +22161,6 @@ ALTER TABLE "public"."invitation_performance_logs" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."member_removal_audit" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "members_access_work_orders" ON "public"."work_orders" USING ("public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
-
 
 
 CREATE POLICY "members_view_teams" ON "public"."teams" FOR SELECT USING ("public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
@@ -22466,12 +22944,6 @@ CREATE POLICY "team_members_admin_update" ON "public"."team_members" FOR UPDATE 
 
 
 
-CREATE POLICY "team_members_create_equipment" ON "public"."equipment" FOR INSERT WITH CHECK (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR ("public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id") AND ("team_id" IS NOT NULL) AND (EXISTS ( SELECT 1
-   FROM "public"."team_members" "tm"
-  WHERE (("tm"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tm"."team_id" = "equipment"."team_id") AND ("tm"."role" = ANY (ARRAY['manager'::"public"."team_member_role", 'technician'::"public"."team_member_role"]))))))));
-
-
-
 CREATE POLICY "team_members_select" ON "public"."team_members" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."teams" "t"
   WHERE (("t"."id" = "team_members"."team_id") AND "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id")))));
@@ -22677,7 +23149,11 @@ ALTER TABLE "public"."work_order_status_history" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."work_orders" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "work_orders_insert_consolidated" ON "public"."work_orders" FOR INSERT WITH CHECK (((("is_historical" = true) AND "public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") AND ("created_by_admin" = ( SELECT "auth"."uid"() AS "uid"))) OR "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id")));
+CREATE POLICY "work_orders_delete_by_role" ON "public"."work_orders" FOR DELETE TO "authenticated" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR (("is_historical" = false) AND ("status" = 'submitted'::"public"."work_order_status") AND ("created_by" = ( SELECT "auth"."uid"() AS "uid")) AND "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id"))));
+
+
+
+CREATE POLICY "work_orders_insert_by_role" ON "public"."work_orders" FOR INSERT TO "authenticated" WITH CHECK (((("is_historical" = false) AND ("created_by" = ( SELECT "auth"."uid"() AS "uid")) AND "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id")) OR (("is_historical" = true) AND "public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") AND ("created_by_admin" = ( SELECT "auth"."uid"() AS "uid")))));
 
 
 
@@ -22685,7 +23161,11 @@ CREATE POLICY "work_orders_select_consolidated" ON "public"."work_orders" FOR SE
 
 
 
-CREATE POLICY "work_orders_update_consolidated" ON "public"."work_orders" FOR UPDATE USING (((("is_historical" = true) AND "public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id")) OR "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id")));
+CREATE POLICY "work_orders_update_by_role" ON "public"."work_orders" FOR UPDATE TO "authenticated" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR (("is_historical" = false) AND "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id") AND (("assignee_id" = ( SELECT "auth"."uid"() AS "uid")) OR (("created_by" = ( SELECT "auth"."uid"() AS "uid")) AND ("status" = 'submitted'::"public"."work_order_status")) OR (EXISTS ( SELECT 1
+   FROM "public"."team_members" "tm"
+  WHERE (("tm"."team_id" = "work_orders"."team_id") AND ("tm"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tm"."role" = ANY (ARRAY['owner'::"public"."team_member_role", 'manager'::"public"."team_member_role", 'technician'::"public"."team_member_role"]))))))))) WITH CHECK (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR (("is_historical" = false) AND "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id") AND (("assignee_id" = ( SELECT "auth"."uid"() AS "uid")) OR (("created_by" = ( SELECT "auth"."uid"() AS "uid")) AND ("status" = ANY (ARRAY['submitted'::"public"."work_order_status", 'cancelled'::"public"."work_order_status"]))) OR (EXISTS ( SELECT 1
+   FROM "public"."team_members" "tm"
+  WHERE (("tm"."team_id" = "work_orders"."team_id") AND ("tm"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tm"."role" = ANY (ARRAY['owner'::"public"."team_member_role", 'manager'::"public"."team_member_role", 'technician'::"public"."team_member_role"])))))))));
 
 
 
@@ -23586,6 +24066,11 @@ GRANT ALL ON FUNCTION "public"."current_user_is_platform_admin"() TO "authentica
 
 
 
+REVOKE ALL ON FUNCTION "public"."default_team_permission"("p_team_role" "text", "p_permission_key" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."default_team_permission"("p_team_role" "text", "p_permission_key" "text") TO "authenticated";
+
+
+
 REVOKE ALL ON FUNCTION "public"."delete_equipment_note"("p_organization_id" "uuid", "p_equipment_id" "uuid", "p_note_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."delete_equipment_note"("p_organization_id" "uuid", "p_equipment_id" "uuid", "p_note_id" "uuid") TO "service_role";
 GRANT ALL ON FUNCTION "public"."delete_equipment_note"("p_organization_id" "uuid", "p_equipment_id" "uuid", "p_note_id" "uuid") TO "authenticated";
@@ -23674,6 +24159,11 @@ GRANT ALL ON FUNCTION "public"."enqueue_export_job"("p_organization_id" "uuid", 
 
 REVOKE ALL ON FUNCTION "public"."ensure_operator_template_active_for_enabled_assignment"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."ensure_operator_template_active_for_enabled_assignment"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."ensure_workspace_access_request"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."ensure_workspace_access_request"() TO "authenticated";
 
 
 
@@ -23834,6 +24324,11 @@ GRANT ALL ON FUNCTION "public"."get_member_profiles_secure"("org_id" "uuid") TO 
 
 
 
+REVOKE ALL ON FUNCTION "public"."get_my_team_permissions"("p_organization_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_my_team_permissions"("p_organization_id" "uuid") TO "authenticated";
+
+
+
 REVOKE ALL ON FUNCTION "public"."get_org_equipment_pm_statuses"("p_organization_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_org_equipment_pm_statuses"("p_organization_id" "uuid") TO "service_role";
 GRANT ALL ON FUNCTION "public"."get_org_equipment_pm_statuses"("p_organization_id" "uuid") TO "authenticated";
@@ -23909,6 +24404,11 @@ GRANT ALL ON FUNCTION "public"."get_quickbooks_connection_status"("p_organizatio
 
 REVOKE ALL ON FUNCTION "public"."get_system_user_id"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_system_user_id"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."get_team_permission_settings"("p_organization_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_team_permission_settings"("p_organization_id" "uuid") TO "authenticated";
 
 
 
@@ -24000,6 +24500,11 @@ GRANT ALL ON FUNCTION "public"."handle_team_manager_removal"("user_uuid" "uuid",
 
 REVOKE ALL ON FUNCTION "public"."handle_updated_at"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."handle_updated_at"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."has_team_permission"("p_user_id" "uuid", "p_organization_id" "uuid", "p_team_id" "uuid", "p_permission_key" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."has_team_permission"("p_user_id" "uuid", "p_organization_id" "uuid", "p_team_id" "uuid", "p_permission_key" "text") TO "authenticated";
 
 
 
@@ -24241,6 +24746,11 @@ GRANT ALL ON FUNCTION "public"."peek_google_workspace_oauth_session"("p_session_
 
 
 
+REVOKE ALL ON FUNCTION "public"."platform_approve_access_request"("p_request_id" "uuid", "p_organization_id" "uuid", "p_role" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."platform_approve_access_request"("p_request_id" "uuid", "p_organization_id" "uuid", "p_role" "text") TO "authenticated";
+
+
+
 REVOKE ALL ON FUNCTION "public"."platform_create_organization_and_invite_owner"("p_organization_name" "text", "p_owner_email" "text", "p_message" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."platform_create_organization_and_invite_owner"("p_organization_name" "text", "p_owner_email" "text", "p_message" "text") TO "authenticated";
 
@@ -24251,6 +24761,11 @@ GRANT ALL ON FUNCTION "public"."platform_get_organization"("p_organization_id" "
 
 
 
+REVOKE ALL ON FUNCTION "public"."platform_list_access_requests"("p_status" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."platform_list_access_requests"("p_status" "text") TO "authenticated";
+
+
+
 REVOKE ALL ON FUNCTION "public"."platform_list_organizations"("p_search" "text", "p_lifecycle_status" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."platform_list_organizations"("p_search" "text", "p_lifecycle_status" "text") TO "authenticated";
 
@@ -24258,6 +24773,11 @@ GRANT ALL ON FUNCTION "public"."platform_list_organizations"("p_search" "text", 
 
 REVOKE ALL ON FUNCTION "public"."platform_reactivate_organization"("p_organization_id" "uuid", "p_reason" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."platform_reactivate_organization"("p_organization_id" "uuid", "p_reason" "text") TO "authenticated";
+
+
+
+REVOKE ALL ON FUNCTION "public"."platform_reject_access_request"("p_request_id" "uuid", "p_reason" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."platform_reject_access_request"("p_request_id" "uuid", "p_reason" "text") TO "authenticated";
 
 
 
@@ -24406,6 +24926,11 @@ GRANT ALL ON FUNCTION "public"."restore_operator_checklist_template"("p_template
 
 
 
+REVOKE ALL ON FUNCTION "public"."resubmit_workspace_access_request"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."resubmit_workspace_access_request"() TO "authenticated";
+
+
+
 REVOKE ALL ON FUNCTION "public"."revert_pm_completion"("p_pm_id" "uuid", "p_reason" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."revert_pm_completion"("p_pm_id" "uuid", "p_reason" "text") TO "service_role";
 GRANT ALL ON FUNCTION "public"."revert_pm_completion"("p_pm_id" "uuid", "p_reason" "text") TO "authenticated";
@@ -24458,6 +24983,11 @@ GRANT ALL ON FUNCTION "public"."set_geocoded_locations_updated_at"() TO "service
 
 REVOKE ALL ON FUNCTION "public"."set_rls_context"("context_name" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."set_rls_context"("context_name" "text") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."set_team_permission_override"("p_organization_id" "uuid", "p_team_role" "text", "p_permission_key" "text", "p_allowed" boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."set_team_permission_override"("p_organization_id" "uuid", "p_team_role" "text", "p_permission_key" "text", "p_allowed" boolean) TO "authenticated";
 
 
 
@@ -25234,47 +25764,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
 
 
-
-
--- Added by migration 20260928100000_self_registration_access_requests.sql.
-CREATE TABLE "private"."workspace_access_requests" (
-    "id" uuid DEFAULT extensions.gen_random_uuid() NOT NULL,
-    "user_id" uuid NOT NULL,
-    "email" text NOT NULL,
-    "display_name" text,
-    "status" text DEFAULT 'pending'::text NOT NULL,
-    "organization_id" uuid,
-    "assigned_role" text,
-    "requested_at" timestamp with time zone DEFAULT now() NOT NULL,
-    "reviewed_at" timestamp with time zone,
-    "reviewed_by" uuid,
-    "rejection_reason" text,
-    CONSTRAINT "workspace_access_requests_pkey" PRIMARY KEY ("id"),
-    CONSTRAINT "workspace_access_requests_status_check" CHECK (("status" = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'cancelled'::text]))),
-    CONSTRAINT "workspace_access_requests_role_check" CHECK (("assigned_role" IS NULL) OR ("assigned_role" = ANY (ARRAY['owner'::text, 'admin'::text, 'member'::text, 'viewer'::text, 'requestor'::text]))),
-    CONSTRAINT "workspace_access_requests_review_check" CHECK ((("status" = 'pending'::text) AND ("reviewed_at" IS NULL) AND ("reviewed_by" IS NULL)) OR (("status" <> 'pending'::text) AND ("reviewed_at" IS NOT NULL)))
-);
-
-ALTER TABLE ONLY "private"."workspace_access_requests"
-    ADD CONSTRAINT "workspace_access_requests_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES auth.users(id) ON DELETE CASCADE;
-
-ALTER TABLE ONLY "private"."workspace_access_requests"
-    ADD CONSTRAINT "workspace_access_requests_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES public.organizations(id) ON DELETE SET NULL;
-
-ALTER TABLE ONLY "private"."workspace_access_requests"
-    ADD CONSTRAINT "workspace_access_requests_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES auth.users(id) ON DELETE SET NULL;
-
-CREATE UNIQUE INDEX "workspace_access_requests_one_pending_per_user_idx" ON "private"."workspace_access_requests" USING btree ("user_id") WHERE ("status" = 'pending'::text);
-CREATE INDEX "workspace_access_requests_status_requested_idx" ON "private"."workspace_access_requests" USING btree ("status", "requested_at" DESC);
-
-ALTER TABLE "private"."workspace_access_requests" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "private"."workspace_access_requests" FORCE ROW LEVEL SECURITY;
-REVOKE ALL ON TABLE "private"."workspace_access_requests" FROM PUBLIC, anon, authenticated, service_role;
-
-COMMENT ON TABLE "private"."workspace_access_requests" IS 'Backend-owned requests from authenticated users without organization access; direct client table access is prohibited.';
-COMMENT ON FUNCTION public.ensure_workspace_access_request() IS 'Returns the latest self-registration request without recreating a rejected request.';
-COMMENT ON FUNCTION public.resubmit_workspace_access_request() IS 'Allows an authenticated requester to explicitly resubmit only their latest rejected access request.';
-COMMENT ON FUNCTION public.platform_approve_access_request(uuid, uuid, text) IS 'Platform Admin-only approval that atomically assigns an organization role and creates membership.';
 
 
 

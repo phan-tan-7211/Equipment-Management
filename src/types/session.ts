@@ -26,6 +26,12 @@ export interface SessionTeamMembership {
   teamName: string;
   role: 'manager' | 'technician' | 'requestor' | 'viewer';
   joinedDate: string;
+  /**
+   * Effective configurable permissions for this team (organization owner
+   * overrides applied). Absent when they could not be loaded; callers then use
+   * the built-in defaults, and the database still enforces the real rule.
+   */
+  permissions?: Array<'equipment.create' | 'equipment.update'>;
 }
 
 export interface SessionData {

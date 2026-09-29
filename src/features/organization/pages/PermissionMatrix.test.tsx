@@ -18,6 +18,10 @@ vi.mock('@/features/organization/components/OrganizationSubnav', () => ({
   OrganizationSubnav: () => null,
 }));
 
+vi.mock('../permissions/TeamPermissionSettings', () => ({
+  TeamPermissionSettings: ({ canEdit }: { canEdit: boolean }) => <div>{canEdit ? 'Settings editable' : 'Settings read-only'}</div>,
+}));
+
 describe('PermissionMatrix', () => {
   beforeEach(() => {
     organizationState.current = { id: 'org-1', userRole: 'owner' };
@@ -43,11 +47,18 @@ describe('PermissionMatrix', () => {
     expect(deleteRow.querySelector('[aria-label="Admin: Not allowed"]')).not.toBeNull();
   });
 
-  it('is available to admins', () => {
+  it('is available to admins with read-only custom settings', () => {
     organizationState.current = { id: 'org-1', userRole: 'admin' };
     render(<PermissionMatrix />);
 
     expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByText('Settings read-only')).toBeInTheDocument();
+  });
+
+  it('lets owners edit custom settings', () => {
+    render(<PermissionMatrix />);
+
+    expect(screen.getByText('Settings editable')).toBeInTheDocument();
   });
 
   it.each(['member', 'viewer', 'requestor'])('denies the %s role', (userRole) => {

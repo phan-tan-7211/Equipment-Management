@@ -122,9 +122,25 @@ describe('PermissionEngine', () => {
         expect(engine.hasPermission('equipment.edit', context, fieldTeamContext())).toBe(false);
       });
 
-      it('denies technician from editing equipment', () => {
+      it('allows technician to edit equipment on their team by default', () => {
         const context = createUserContext('technician');
-        expect(engine.hasPermission('equipment.edit', context, maintenanceTeamContext())).toBe(false);
+        expect(engine.hasPermission('equipment.edit', context, maintenanceTeamContext())).toBe(true);
+      });
+
+      it('denies requestor and viewer team roles from editing equipment by default', () => {
+        expect(engine.hasPermission('equipment.edit', createMemberContextWithTeamRole('requestor'), maintenanceTeamContext())).toBe(false);
+        expect(engine.hasPermission('equipment.edit', createMemberContextWithTeamRole('viewer'), maintenanceTeamContext())).toBe(false);
+      });
+
+      it('follows owner-configured grants when they are loaded', () => {
+        const technician = createUserContext('technician');
+        const revoked = { ...technician, teamPermissionGrants: { [teams.maintenance.id]: ['equipment.create' as const] } };
+        expect(engine.hasPermission('equipment.edit', revoked, maintenanceTeamContext())).toBe(false);
+
+        const requestor = createMemberContextWithTeamRole('requestor');
+        const granted = { ...requestor, teamPermissionGrants: { [teams.maintenance.id]: ['equipment.update' as const] } };
+        expect(engine.hasPermission('equipment.edit', granted, maintenanceTeamContext())).toBe(true);
+        expect(engine.hasPermission('equipment.create', granted, maintenanceTeamContext())).toBe(false);
       });
     });
 

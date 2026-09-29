@@ -73,7 +73,7 @@ export const PERMISSION_MATRIX: PermissionMatrixSection[] = [
     id: 'equipment',
     rows: [
       row('createEquipment', 'y y n l l n n', 'teamScopedCreate'),
-      row('updateEquipment', 'y y n l n n n', 'managedTeamsOnly'),
+      row('updateEquipment', 'y y n l l n n', 'teamScopedCreate'),
       row('deleteEquipment', 'y y n n n n n'),
       row('viewEquipment', 'y y n l l l l', 'ownTeamsOnly'),
       row('generateQrCodes', 'y y n l l l l', 'ownTeamsOnly'),
@@ -134,6 +134,15 @@ type PermissionMatrixCopy = {
   legendNo: string;
   legendLimited: string;
   inventoryGrantNote: string;
+  customTitle: string;
+  customDescriptionOwner: string;
+  customDescriptionAdmin: string;
+  customReset: string;
+  customChanged: string;
+  customSaved: string;
+  customSaveFailed: string;
+  customLoadFailed: string;
+  customFootnote: string;
   roles: Record<PermissionMatrixRole, string>;
   sections: Record<PermissionSectionId, string>;
   actions: Record<PermissionActionId, string>;
@@ -143,7 +152,7 @@ type PermissionMatrixCopy = {
 const en: PermissionMatrixCopy = {
   title: 'Permission matrix',
   description: 'What each organization and team role can do in this workspace.',
-  readOnlyNotice: 'This matrix shows what each role can currently do. Organization viewers and requestors have the same organization-level permissions as members; their access to equipment and work orders comes from their team role. Custom permissions are not available yet.',
+  readOnlyNotice: 'This matrix shows what each role can currently do. Organization viewers and requestors have the same organization-level permissions as members; their access to equipment and work orders comes from their team role. Some team permissions can be customized at the bottom of this page.',
   accessDenied: 'Access denied',
   adminOnly: 'Only organization owners and admins can view the permission matrix.',
   noOrganization: 'Choose an organization to view its permission matrix.',
@@ -157,6 +166,15 @@ const en: PermissionMatrixCopy = {
   legendNo: 'Not allowed',
   legendLimited: 'Allowed with limits',
   inventoryGrantNote: 'Inventory access for other people is granted separately with Parts Manager or Parts Consumer access.',
+  customTitle: 'Custom team permissions',
+  customDescriptionOwner: 'Choose which team roles can create and edit equipment on their teams. Changes apply immediately and are recorded in the audit log.',
+  customDescriptionAdmin: 'Only the organization owner can change these settings.',
+  customReset: 'Restore defaults',
+  customChanged: 'Changed',
+  customSaved: 'Permission updated.',
+  customSaveFailed: 'Permission was not updated.',
+  customLoadFailed: 'Custom permissions could not be loaded.',
+  customFootnote: 'Owners and admins always have these permissions. Deleting equipment and work orders stays limited to owners and admins. The table above shows the defaults.',
   roles: { owner: 'Owner', admin: 'Admin', member: 'Member', manager: 'Manager', technician: 'Technician', requestor: 'Requestor', viewer: 'Viewer' },
   sections: { organization: 'Organization', members: 'Members', teams: 'Teams', equipment: 'Equipment', workOrders: 'Work orders', inventory: 'Inventory and costs', audit: 'Audit log' },
   actions: {
@@ -185,7 +203,7 @@ const en: PermissionMatrixCopy = {
 const vi: PermissionMatrixCopy = {
   title: 'Ma trận quyền',
   description: 'Những gì mỗi vai trò tổ chức và vai trò nhóm được làm trong không gian làm việc này.',
-  readOnlyNotice: 'Bảng này cho biết mỗi vai trò hiện được làm gì. Người xem và người yêu cầu ở cấp tổ chức có quyền cấp tổ chức giống thành viên; quyền với thiết bị và lệnh công việc đến từ vai trò trong nhóm. Chưa hỗ trợ tùy chỉnh quyền.',
+  readOnlyNotice: 'Bảng này cho biết mỗi vai trò hiện được làm gì. Người xem và người yêu cầu ở cấp tổ chức có quyền cấp tổ chức giống thành viên; quyền với thiết bị và lệnh công việc đến từ vai trò trong nhóm. Một số quyền của vai trò nhóm có thể tùy chỉnh ở cuối trang.',
   accessDenied: 'Không có quyền truy cập',
   adminOnly: 'Chỉ chủ sở hữu và quản trị viên tổ chức mới xem được ma trận quyền.',
   noOrganization: 'Hãy chọn một tổ chức để xem ma trận quyền.',
@@ -199,6 +217,15 @@ const vi: PermissionMatrixCopy = {
   legendNo: 'Không được phép',
   legendLimited: 'Được phép có giới hạn',
   inventoryGrantNote: 'Quyền kho vật tư cho người khác được cấp riêng qua quyền Quản lý linh kiện hoặc Sử dụng linh kiện.',
+  customTitle: 'Quyền tùy chỉnh theo vai trò nhóm',
+  customDescriptionOwner: 'Chọn vai trò nhóm nào được tạo và sửa thiết bị của nhóm mình. Thay đổi có hiệu lực ngay và được ghi vào nhật ký kiểm toán.',
+  customDescriptionAdmin: 'Chỉ chủ sở hữu tổ chức mới thay đổi được các thiết lập này.',
+  customReset: 'Khôi phục mặc định',
+  customChanged: 'Đã đổi',
+  customSaved: 'Đã cập nhật quyền.',
+  customSaveFailed: 'Không cập nhật được quyền.',
+  customLoadFailed: 'Không tải được quyền tùy chỉnh.',
+  customFootnote: 'Chủ sở hữu và quản trị viên luôn có các quyền này. Xóa thiết bị và lệnh công việc vẫn chỉ dành cho chủ sở hữu và quản trị viên. Bảng phía trên hiển thị giá trị mặc định.',
   roles: { owner: 'Chủ sở hữu', admin: 'Quản trị viên', member: 'Thành viên', manager: 'Quản lý', technician: 'Kỹ thuật viên', requestor: 'Người yêu cầu', viewer: 'Người xem' },
   sections: { organization: 'Tổ chức', members: 'Thành viên', teams: 'Nhóm', equipment: 'Thiết bị', workOrders: 'Lệnh công việc', inventory: 'Kho vật tư và chi phí', audit: 'Nhật ký kiểm toán' },
   actions: {
@@ -227,7 +254,7 @@ const vi: PermissionMatrixCopy = {
 const ko: PermissionMatrixCopy = {
   title: '권한 매트릭스',
   description: '이 워크스페이스에서 각 조직 역할과 팀 역할이 할 수 있는 작업입니다.',
-  readOnlyNotice: '각 역할이 현재 할 수 있는 작업을 보여줍니다. 조직 조회자와 요청자는 조직 수준에서 구성원과 같은 권한을 가지며, 설비와 작업 지시 접근 권한은 팀 역할에 따라 정해집니다. 권한 사용자 지정은 아직 지원되지 않습니다.',
+  readOnlyNotice: '각 역할이 현재 할 수 있는 작업을 보여줍니다. 조직 조회자와 요청자는 조직 수준에서 구성원과 같은 권한을 가지며, 설비와 작업 지시 접근 권한은 팀 역할에 따라 정해집니다. 일부 팀 역할 권한은 이 페이지 하단에서 사용자 지정할 수 있습니다.',
   accessDenied: '접근 거부',
   adminOnly: '조직 소유자와 관리자만 권한 매트릭스를 볼 수 있습니다.',
   noOrganization: '권한 매트릭스를 보려면 조직을 선택하세요.',
@@ -241,6 +268,15 @@ const ko: PermissionMatrixCopy = {
   legendNo: '허용 안 됨',
   legendLimited: '제한적으로 허용',
   inventoryGrantNote: '다른 사용자의 재고 접근 권한은 부품 관리자 또는 부품 사용자 권한으로 별도 부여됩니다.',
+  customTitle: '팀 역할별 사용자 지정 권한',
+  customDescriptionOwner: '팀 설비를 생성하고 수정할 수 있는 팀 역할을 선택하세요. 변경 사항은 즉시 적용되며 감사 로그에 기록됩니다.',
+  customDescriptionAdmin: '조직 소유자만 이 설정을 변경할 수 있습니다.',
+  customReset: '기본값 복원',
+  customChanged: '변경됨',
+  customSaved: '권한이 업데이트되었습니다.',
+  customSaveFailed: '권한을 업데이트하지 못했습니다.',
+  customLoadFailed: '사용자 지정 권한을 불러오지 못했습니다.',
+  customFootnote: '소유자와 관리자는 항상 이 권한을 가집니다. 설비 및 작업 지시 삭제는 소유자와 관리자로 제한됩니다. 위 표는 기본값을 보여줍니다.',
   roles: { owner: '소유자', admin: '관리자', member: '구성원', manager: '매니저', technician: '기술자', requestor: '요청자', viewer: '조회자' },
   sections: { organization: '조직', members: '구성원', teams: '팀', equipment: '설비', workOrders: '작업 지시', inventory: '재고 및 비용', audit: '감사 로그' },
   actions: {

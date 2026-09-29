@@ -56,16 +56,18 @@ Organization-level Viewer and Requestor roles have the same organization permiss
 | Action | Owner | Admin | Member | Manager | Technician | Requestor | Viewer |
 |--------|-------|-------|--------|---------|------------|-----------|--------|
 | Create Equipment | ✅ | ✅ | ❌ | ✅† | ✅† | ❌ | ❌ |
-| Update Equipment | ✅ | ✅ | ❌ | ✅‡ | ❌ | ❌ | ❌ |
+| Update Equipment | ✅ | ✅ | ❌ | ✅‡ | ✅‡ | ❌ | ❌ |
 | Delete Equipment | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | View Equipment | ✅ | ✅ | ❌§ | ✅§ | ✅§ | ✅§ | ✅§ |
 | Generate QR Codes | ✅ | ✅ | ❌§ | ✅§ | ✅§ | ✅§ | ✅§ |
 | Scan QR Codes | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Update Custom Attributes | ✅ | ✅ | ❌ | ✅‡ | ❌ | ❌ | ❌ |
+| Update Custom Attributes | ✅ | ✅ | ❌ | ✅‡ | ✅‡ | ❌ | ❌ |
 
 † Team-scoped (manager or technician role on the assigned team). Equipment created without a team assignment is restricted to owners/admins (issue #650).
 
-‡ Only for equipment on teams where the user is a manager.
+‡ Only for equipment on the user's own teams (manager or technician by default).
+
+**Custom team permissions.** Organization owners can change which team roles may create and update equipment (Organization → Permissions). The database enforces the effective setting (`has_team_permission`); owners and admins always keep these permissions. Deleting equipment and work orders stays owner/admin-only.
 
 § Only equipment on the user's teams; unassigned equipment is visible to owners/admins only.
 

@@ -221,7 +221,7 @@ SELECT lives_ok($$
   );
 $$, 'Member can insert non-historical work order');
 
-SELECT lives_ok($$
+SELECT throws_ok($$
   INSERT INTO public.work_orders (
     id,
     organization_id,
@@ -245,7 +245,7 @@ SELECT lives_ok($$
     'medium',
     true
   );
-$$, 'Member can insert historical work order');
+$$, '42501', NULL, 'Member cannot insert historical work order (admin only)');
 
 -- Admin context
 SET LOCAL ROLE authenticated;
