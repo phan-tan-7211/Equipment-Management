@@ -1,5 +1,7 @@
+-- pgTAP: PM interval policies (structure, resolver precedence, RLS).
+-- Self-contained fixtures so the file passes on `supabase db reset --no-seed`.
 BEGIN;
-SELECT plan(23);
+SELECT plan(24);
 
 SELECT has_table('public', 'pm_interval_policies', 'pm_interval_policies table exists');
 SELECT has_column('public', 'pm_interval_policies', 'organization_id', 'organization_id exists');
@@ -38,59 +40,116 @@ SELECT has_function(
   'get_effective_pm_interval_policy_for_equipment exists'
 );
 
-DELETE FROM public.pm_interval_policies p
-WHERE p.organization_id = '660e8400-e29b-41d4-a716-446655440001'::uuid
-  AND (
-    p.equipment_id = 'aa0e8400-e29b-41d4-a716-446655440010'::uuid
-    OR p.team_id = '880e8400-e29b-41d4-a716-446655440002'::uuid
-    OR p.pm_template_id = (
-      SELECT e.default_pm_template_id
-      FROM public.equipment e
-      WHERE e.id = 'aa0e8400-e29b-41d4-a716-446655440010'::uuid
-    )
-  );
+-- ============================================
+-- Fixtures
+--   17000000-...-0001 owner of org A
+--   17000000-...-0002 plain member of org A
+--   org A: team 1 (equipment's team), team 2 (unused)
+--   org B: team 3 (cross-org target)
+-- ============================================
 
--- Service role can resolve policy for seeded equipment with template default interval
+INSERT INTO auth.users (
+  id, instance_id, email, encrypted_password, email_confirmed_at,
+  created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
+  is_super_admin, role, aud,
+  confirmation_token, recovery_token, email_change_token_new, email_change
+) VALUES
+  (
+    '17000000-0000-0000-0000-000000000001'::uuid,
+    '00000000-0000-0000-0000-000000000000'::uuid,
+    'pgtap-pm-interval-owner@equipqr.test',
+    extensions.crypt('password123', extensions.gen_salt('bf')),
+    NOW(), NOW(), NOW(),
+    '{"provider": "email", "providers": ["email"]}'::jsonb,
+    '{"name": "pgTAP PM Interval Owner"}'::jsonb,
+    false, 'authenticated', 'authenticated', '', '', '', ''
+  ),
+  (
+    '17000000-0000-0000-0000-000000000002'::uuid,
+    '00000000-0000-0000-0000-000000000000'::uuid,
+    'pgtap-pm-interval-member@equipqr.test',
+    extensions.crypt('password123', extensions.gen_salt('bf')),
+    NOW(), NOW(), NOW(),
+    '{"provider": "email", "providers": ["email"]}'::jsonb,
+    '{"name": "pgTAP PM Interval Member"}'::jsonb,
+    false, 'authenticated', 'authenticated', '', '', '', ''
+  )
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.organizations (id, name)
+VALUES
+  ('17000000-aaaa-0000-0000-000000000001'::uuid, 'pgTAP PM Interval Org A'),
+  ('17000000-aaaa-0000-0000-000000000002'::uuid, 'pgTAP PM Interval Org B')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.organization_members (organization_id, user_id, role, status)
+VALUES
+  ('17000000-aaaa-0000-0000-000000000001'::uuid, '17000000-0000-0000-0000-000000000001'::uuid, 'owner', 'active'),
+  ('17000000-aaaa-0000-0000-000000000001'::uuid, '17000000-0000-0000-0000-000000000002'::uuid, 'member', 'active')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.teams (id, organization_id, name)
+VALUES
+  ('17000000-bbbb-0000-0000-000000000001'::uuid, '17000000-aaaa-0000-0000-000000000001'::uuid, 'pgTAP PM Team 1'),
+  ('17000000-bbbb-0000-0000-000000000002'::uuid, '17000000-aaaa-0000-0000-000000000001'::uuid, 'pgTAP PM Team 2'),
+  ('17000000-bbbb-0000-0000-000000000003'::uuid, '17000000-aaaa-0000-0000-000000000002'::uuid, 'pgTAP PM Team Other Org');
+
+INSERT INTO public.pm_checklist_templates (
+  id, organization_id, name, template_data, interval_value, interval_type, created_by
+) VALUES (
+  '17000000-cccc-0000-0000-000000000001'::uuid,
+  '17000000-aaaa-0000-0000-000000000001'::uuid,
+  'pgTAP 250h Service',
+  $$[{"label":"Check oil","required":true}]$$::jsonb,
+  30,
+  'days',
+  '17000000-0000-0000-0000-000000000001'::uuid
+);
+
+INSERT INTO public.equipment (
+  id, organization_id, team_id, default_pm_template_id,
+  name, manufacturer, model, serial_number, status, location, installation_date
+) VALUES (
+  '17000000-dddd-0000-0000-000000000001'::uuid,
+  '17000000-aaaa-0000-0000-000000000001'::uuid,
+  '17000000-bbbb-0000-0000-000000000001'::uuid,
+  '17000000-cccc-0000-0000-000000000001'::uuid,
+  'pgTAP Bobcat', 'Bobcat', 'S650', 'SN-PGTAP-17', 'active', 'Yard 17', CURRENT_DATE
+);
+
+-- ============================================
+-- Resolver precedence (runs as test owner)
+-- ============================================
+
 SELECT is(
   (
     SELECT r.source
-    FROM public.resolve_effective_pm_interval_policy('aa0e8400-e29b-41d4-a716-446655440010'::uuid) r
+    FROM public.resolve_effective_pm_interval_policy('17000000-dddd-0000-0000-000000000001'::uuid) r
     LIMIT 1
   ),
   'template_default',
-  'Seeded Metro Bobcat resolves template_default interval'
+  'Equipment without policies resolves template_default interval'
 );
 
--- Team policy overrides template default
 INSERT INTO public.pm_interval_policies (
-  organization_id,
-  scope_type,
-  team_id,
-  policy_slot,
-  schedule_mode,
-  interval_value,
-  interval_type,
-  created_by,
-  updated_by
-)
-SELECT
-  '660e8400-e29b-41d4-a716-446655440001'::uuid,
+  organization_id, scope_type, team_id, policy_slot, schedule_mode,
+  interval_value, interval_type, created_by, updated_by
+) VALUES (
+  '17000000-aaaa-0000-0000-000000000001'::uuid,
   'team',
-  '880e8400-e29b-41d4-a716-446655440002'::uuid,
+  '17000000-bbbb-0000-0000-000000000001'::uuid,
   'default',
   'custom',
   45,
   'days',
-  'bb0e8400-e29b-41d4-a716-446655440004'::uuid,
-  'bb0e8400-e29b-41d4-a716-446655440004'::uuid
-WHERE EXISTS (
-  SELECT 1 FROM public.teams WHERE id = '880e8400-e29b-41d4-a716-446655440002'::uuid
+  '17000000-0000-0000-0000-000000000001'::uuid,
+  '17000000-0000-0000-0000-000000000001'::uuid
 );
 
 SELECT is(
   (
     SELECT r.interval_value
-    FROM public.resolve_effective_pm_interval_policy('aa0e8400-e29b-41d4-a716-446655440010'::uuid) r
+    FROM public.resolve_effective_pm_interval_policy('17000000-dddd-0000-0000-000000000001'::uuid) r
     LIMIT 1
   ),
   45,
@@ -100,7 +159,7 @@ SELECT is(
 SELECT is(
   (
     SELECT r.source
-    FROM public.resolve_effective_pm_interval_policy('aa0e8400-e29b-41d4-a716-446655440010'::uuid) r
+    FROM public.resolve_effective_pm_interval_policy('17000000-dddd-0000-0000-000000000001'::uuid) r
     LIMIT 1
   ),
   'team_policy',
@@ -109,172 +168,196 @@ SELECT is(
 
 -- Equipment none suppresses recurring schedule
 INSERT INTO public.pm_interval_policies (
-  organization_id,
-  scope_type,
-  equipment_id,
-  policy_slot,
-  schedule_mode,
-  interval_value,
-  interval_type,
-  created_by,
-  updated_by
+  organization_id, scope_type, equipment_id, policy_slot, schedule_mode,
+  interval_value, interval_type, created_by, updated_by
 ) VALUES (
-  '660e8400-e29b-41d4-a716-446655440001'::uuid,
+  '17000000-aaaa-0000-0000-000000000001'::uuid,
   'equipment',
-  'aa0e8400-e29b-41d4-a716-446655440010'::uuid,
+  '17000000-dddd-0000-0000-000000000001'::uuid,
   'default',
   'none',
   NULL,
   NULL,
-  'bb0e8400-e29b-41d4-a716-446655440004'::uuid,
-  'bb0e8400-e29b-41d4-a716-446655440004'::uuid
-)
-ON CONFLICT DO NOTHING;
+  '17000000-0000-0000-0000-000000000001'::uuid,
+  '17000000-0000-0000-0000-000000000001'::uuid
+);
 
 SELECT is(
   (
     SELECT count(*)::int
-    FROM public.resolve_effective_pm_interval_policy('aa0e8400-e29b-41d4-a716-446655440010'::uuid)
+    FROM public.resolve_effective_pm_interval_policy('17000000-dddd-0000-0000-000000000001'::uuid)
   ),
   0,
   'Equipment none policy suppresses recurring schedule'
 );
 
+-- ============================================
 -- RLS: members can read, only org admins can mutate
+-- ============================================
+
+CREATE TEMP TABLE pm_interval_rls_rowcounts (
+  label text PRIMARY KEY,
+  affected int NOT NULL
+);
+
+GRANT INSERT, SELECT ON TABLE pm_interval_rls_rowcounts TO authenticated;
+
 SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claim.sub', 'bb0e8400-e29b-41d4-a716-446655440005', true);
+SELECT set_config('request.jwt.claim.sub', '17000000-0000-0000-0000-000000000002', true);
 SELECT set_config(
   'request.jwt.claims',
-  json_build_object('sub', 'bb0e8400-e29b-41d4-a716-446655440005')::text,
+  json_build_object('sub', '17000000-0000-0000-0000-000000000002')::text,
   true
 );
 
-SELECT ok(
+SELECT is(
   (SELECT count(*)::int
    FROM public.pm_interval_policies
-   WHERE organization_id = '660e8400-e29b-41d4-a716-446655440001'::uuid) >= 1,
+   WHERE organization_id = '17000000-aaaa-0000-0000-000000000001'::uuid),
+  2,
   'Org member can select PM interval policies'
 );
 
 SELECT throws_ok($$
   INSERT INTO public.pm_interval_policies (
-    organization_id,
-    scope_type,
-    team_id,
-    policy_slot,
-    schedule_mode,
-    interval_value,
-    interval_type,
-    created_by,
-    updated_by
+    organization_id, scope_type, team_id, policy_slot, schedule_mode,
+    interval_value, interval_type, created_by, updated_by
   ) VALUES (
-    '660e8400-e29b-41d4-a716-446655440001'::uuid,
+    '17000000-aaaa-0000-0000-000000000001'::uuid,
     'team',
-    '880e8400-e29b-41d4-a716-446655440005'::uuid,
+    '17000000-bbbb-0000-0000-000000000002'::uuid,
     'default',
     'custom',
     30,
     'days',
-    'bb0e8400-e29b-41d4-a716-446655440005'::uuid,
-    'bb0e8400-e29b-41d4-a716-446655440005'::uuid
+    '17000000-0000-0000-0000-000000000002'::uuid,
+    '17000000-0000-0000-0000-000000000002'::uuid
   );
-$$, '42501', 'Non-admin org member cannot insert PM interval policies');
+$$, '42501', NULL, 'Non-admin org member cannot insert PM interval policies');
 
 SELECT is(
   (SELECT count(*)::int
    FROM public.pm_interval_policies
-   WHERE organization_id = '660e8400-e29b-41d4-a716-446655440001'::uuid
-     AND team_id = '880e8400-e29b-41d4-a716-446655440005'::uuid),
+   WHERE organization_id = '17000000-aaaa-0000-0000-000000000001'::uuid
+     AND team_id = '17000000-bbbb-0000-0000-000000000002'::uuid),
   0,
-  'Non-admin org member cannot insert PM interval policies'
+  'Rejected member insert leaves no PM interval policy row'
 );
 
-SELECT throws_ok($$
+-- UPDATE/DELETE policies filter rows silently for non-admins (no 42501).
+WITH u AS (
   UPDATE public.pm_interval_policies
   SET interval_value = 99
-  WHERE organization_id = '660e8400-e29b-41d4-a716-446655440001'::uuid
-    AND team_id = '880e8400-e29b-41d4-a716-446655440002'::uuid;
-$$, '42501', 'Non-admin org member cannot update PM interval policies');
+  WHERE organization_id = '17000000-aaaa-0000-0000-000000000001'::uuid
+    AND team_id = '17000000-bbbb-0000-0000-000000000001'::uuid
+  RETURNING 1
+)
+INSERT INTO pm_interval_rls_rowcounts (label, affected)
+SELECT 'member_update', count(*)::int FROM u;
+
+SELECT is(
+  (SELECT affected FROM pm_interval_rls_rowcounts WHERE label = 'member_update'),
+  0,
+  'Non-admin org member cannot update PM interval policies'
+);
 
 SELECT is(
   (SELECT interval_value
    FROM public.pm_interval_policies
-   WHERE organization_id = '660e8400-e29b-41d4-a716-446655440001'::uuid
-     AND team_id = '880e8400-e29b-41d4-a716-446655440002'::uuid),
+   WHERE organization_id = '17000000-aaaa-0000-0000-000000000001'::uuid
+     AND team_id = '17000000-bbbb-0000-0000-000000000001'::uuid),
   45,
-  'Non-admin org member cannot update PM interval policies'
+  'Team policy interval is unchanged after non-admin update attempt'
 );
 
-SELECT throws_ok($$
+WITH d AS (
   DELETE FROM public.pm_interval_policies
-  WHERE organization_id = '660e8400-e29b-41d4-a716-446655440001'::uuid
-    AND equipment_id = 'aa0e8400-e29b-41d4-a716-446655440010'::uuid;
-$$, '42501', 'Non-admin org member cannot delete PM interval policies');
+  WHERE organization_id = '17000000-aaaa-0000-0000-000000000001'::uuid
+    AND equipment_id = '17000000-dddd-0000-0000-000000000001'::uuid
+  RETURNING 1
+)
+INSERT INTO pm_interval_rls_rowcounts (label, affected)
+SELECT 'member_delete', count(*)::int FROM d;
+
+SELECT is(
+  (SELECT affected FROM pm_interval_rls_rowcounts WHERE label = 'member_delete'),
+  0,
+  'Non-admin org member cannot delete PM interval policies'
+);
 
 SELECT is(
   (SELECT count(*)::int
    FROM public.pm_interval_policies
-   WHERE organization_id = '660e8400-e29b-41d4-a716-446655440001'::uuid
-     AND equipment_id = 'aa0e8400-e29b-41d4-a716-446655440010'::uuid),
+   WHERE organization_id = '17000000-aaaa-0000-0000-000000000001'::uuid
+     AND equipment_id = '17000000-dddd-0000-0000-000000000001'::uuid),
   1,
   'Equipment PM interval policy row remains after non-admin delete attempt'
 );
 
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claim.sub', 'bb0e8400-e29b-41d4-a716-446655440004', true);
+SELECT set_config('request.jwt.claim.sub', '17000000-0000-0000-0000-000000000001', true);
 SELECT set_config(
   'request.jwt.claims',
-  json_build_object('sub', 'bb0e8400-e29b-41d4-a716-446655440004')::text,
+  json_build_object('sub', '17000000-0000-0000-0000-000000000001')::text,
   true
 );
 
 SELECT lives_ok($$
   INSERT INTO public.pm_interval_policies (
-    organization_id,
-    scope_type,
-    team_id,
-    policy_slot,
-    schedule_mode,
-    interval_value,
-    interval_type,
-    created_by,
-    updated_by
+    organization_id, scope_type, team_id, policy_slot, schedule_mode,
+    interval_value, interval_type, created_by, updated_by
   ) VALUES (
-    '660e8400-e29b-41d4-a716-446655440001'::uuid,
+    '17000000-aaaa-0000-0000-000000000001'::uuid,
     'team',
-    '880e8400-e29b-41d4-a716-446655440005'::uuid,
+    '17000000-bbbb-0000-0000-000000000002'::uuid,
     'default',
     'custom',
     30,
     'days',
-    'bb0e8400-e29b-41d4-a716-446655440004'::uuid,
-    'bb0e8400-e29b-41d4-a716-446655440004'::uuid
+    '17000000-0000-0000-0000-000000000001'::uuid,
+    '17000000-0000-0000-0000-000000000001'::uuid
   );
 $$, 'Org admin can insert PM interval policies');
 
+SELECT throws_ok($$
+  INSERT INTO public.pm_interval_policies (
+    organization_id, scope_type, team_id, policy_slot, schedule_mode,
+    interval_value, interval_type, created_by, updated_by
+  ) VALUES (
+    '17000000-aaaa-0000-0000-000000000001'::uuid,
+    'team',
+    '17000000-bbbb-0000-0000-000000000003'::uuid,
+    'default',
+    'custom',
+    30,
+    'days',
+    '17000000-0000-0000-0000-000000000001'::uuid,
+    '17000000-0000-0000-0000-000000000001'::uuid
+  );
+$$, '42501', NULL, 'Org admin cannot attach a team from another organization');
+
 UPDATE public.pm_interval_policies
 SET interval_value = 60
-WHERE organization_id = '660e8400-e29b-41d4-a716-446655440001'::uuid
-  AND team_id = '880e8400-e29b-41d4-a716-446655440002'::uuid;
+WHERE organization_id = '17000000-aaaa-0000-0000-000000000001'::uuid
+  AND team_id = '17000000-bbbb-0000-0000-000000000001'::uuid;
 
 SELECT is(
   (SELECT interval_value
    FROM public.pm_interval_policies
-   WHERE organization_id = '660e8400-e29b-41d4-a716-446655440001'::uuid
-     AND team_id = '880e8400-e29b-41d4-a716-446655440002'::uuid),
+   WHERE organization_id = '17000000-aaaa-0000-0000-000000000001'::uuid
+     AND team_id = '17000000-bbbb-0000-0000-000000000001'::uuid),
   60,
   'Org admin can update PM interval policies'
 );
 
 DELETE FROM public.pm_interval_policies
-WHERE organization_id = '660e8400-e29b-41d4-a716-446655440001'::uuid
-  AND equipment_id = 'aa0e8400-e29b-41d4-a716-446655440010'::uuid;
+WHERE organization_id = '17000000-aaaa-0000-0000-000000000001'::uuid
+  AND equipment_id = '17000000-dddd-0000-0000-000000000001'::uuid;
 
 SELECT is(
   (SELECT count(*)::int
    FROM public.pm_interval_policies
-   WHERE organization_id = '660e8400-e29b-41d4-a716-446655440001'::uuid
-     AND equipment_id = 'aa0e8400-e29b-41d4-a716-446655440010'::uuid),
+   WHERE organization_id = '17000000-aaaa-0000-0000-000000000001'::uuid
+     AND equipment_id = '17000000-dddd-0000-0000-000000000001'::uuid),
   0,
   'Org admin can delete PM interval policies'
 );

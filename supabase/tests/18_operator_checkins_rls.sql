@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(38);
+SELECT plan(39);
 
 -- ============================================
 -- Test: operator check-in domain RLS (#1091)
@@ -263,12 +263,25 @@ SELECT throws_ok(
   'purge rejects cross-org submission references without nulling template_id'
 );
 
+SELECT is(
+  (SELECT count(*)::int FROM public.operator_checkin_submissions
+    WHERE id = '31000000-eeee-0000-0000-000000000098'::uuid),
+  0,
+  'org admin cannot read another organization''s submission'
+);
+
+-- RLS hides the org-2 row from the org-1 caller, so verify integrity as owner.
+RESET role;
+
 SELECT ok(
   (SELECT template_id FROM public.operator_checkin_submissions
     WHERE id = '31000000-eeee-0000-0000-000000000098'::uuid)
     = '31000000-cccc-0000-0000-000000000004'::uuid,
   'cross-org submission template_id is preserved when purge is rejected'
 );
+
+SET LOCAL role TO authenticated;
+SET LOCAL request.jwt.claim.sub TO '31000000-0000-0000-0000-000000000001';
 
 SELECT ok(
   public.delete_operator_checklist_template('31000000-cccc-0000-0000-000000000001'::uuid) = 1,

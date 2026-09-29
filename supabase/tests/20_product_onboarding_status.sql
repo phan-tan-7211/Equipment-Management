@@ -184,6 +184,10 @@ SELECT results_eq(
 );
 
 -- Personal org owner who signed up via invitation skips onboarding checklist
+-- Fixture writes run as the test owner: personal_organizations and
+-- organization_invitations are not client-writable under RLS.
+RESET ROLE;
+
 INSERT INTO public.personal_organizations (user_id, organization_id)
 VALUES (
   '12000000-0000-0000-0000-000000000001'::uuid,

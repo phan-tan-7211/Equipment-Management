@@ -10,8 +10,8 @@ SELECT plan(9);
 SELECT has_function(
   'public',
   'get_dashboard_trends',
-  ARRAY['uuid', 'uuid[]', 'boolean', 'integer'],
-  'public.get_dashboard_trends(uuid, uuid[], boolean, integer) exists'
+  ARRAY['uuid', 'integer', 'uuid', 'boolean'],
+  'public.get_dashboard_trends(uuid, integer, uuid, boolean) exists'
 );
 
 -- 2. Function is SECURITY DEFINER (matches advisor-compliant pattern).
@@ -35,21 +35,23 @@ SELECT ok(
   'get_dashboard_trends has pinned search_path'
 );
 
--- 4. EXECUTE not granted to PUBLIC.
+-- 4. EXECUTE not granted to PUBLIC (grantee oid 0 in the ACL) or anon.
 SELECT is(
-  (SELECT has_function_privilege(
-             'PUBLIC',
-             'public.get_dashboard_trends(uuid, uuid[], boolean, integer)',
-             'EXECUTE')),
-  false,
-  'EXECUTE on get_dashboard_trends not granted to PUBLIC'
+  (SELECT count(*)::int
+     FROM pg_proc p,
+          LATERAL aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) a
+    WHERE p.oid = 'public.get_dashboard_trends(uuid, integer, uuid, boolean)'::regprocedure
+      AND a.privilege_type = 'EXECUTE'
+      AND (a.grantee = 0 OR a.grantee = 'anon'::regrole)),
+  0,
+  'EXECUTE on get_dashboard_trends not granted to PUBLIC or anon'
 );
 
 -- 5. EXECUTE granted to authenticated.
 SELECT is(
   (SELECT has_function_privilege(
              'authenticated',
-             'public.get_dashboard_trends(uuid, uuid[], boolean, integer)',
+             'public.get_dashboard_trends(uuid, integer, uuid, boolean)',
              'EXECUTE')),
   true,
   'EXECUTE on get_dashboard_trends granted to authenticated'
@@ -61,7 +63,7 @@ SELECT is(
 --    public.is_org_member(auth.uid(), p_org_id) which returns false for the
 --    anonymous/null auth.uid() context; the RAISE path must fire.
 SELECT throws_ok(
-  $$SELECT * FROM public.get_dashboard_trends('00000000-0000-0000-0000-000000000000'::uuid, ARRAY[]::uuid[], false, 7)$$,
+  $$SELECT * FROM public.get_dashboard_trends('00000000-0000-0000-0000-000000000000'::uuid, 7, NULL::uuid, false)$$,
   '42501',
   NULL,
   'get_dashboard_trends raises 42501 for non-member'

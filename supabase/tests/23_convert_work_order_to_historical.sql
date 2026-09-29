@@ -1,6 +1,6 @@
 -- pgTAP: convert_work_order_to_historical (issue #1093)
 BEGIN;
-SELECT plan(10);
+SELECT plan(11);
 
 SELECT has_function(
   'public',
@@ -152,6 +152,40 @@ INSERT INTO public.work_orders (
   '13000000-0000-0000-0000-000000000001'::uuid
 );
 
+-- synthesize_historical_timeline_events is an internal INVOKER helper (not a
+-- client RPC since the #1310 grant lockdown), so build the timelines as the
+-- test owner and hand them to the authenticated callers.
+CREATE TEMP TABLE convert_test_timelines (
+  label text PRIMARY KEY,
+  events jsonb NOT NULL
+);
+
+GRANT SELECT ON TABLE convert_test_timelines TO authenticated;
+
+INSERT INTO convert_test_timelines (label, events) VALUES
+  ('member_attempt', public.synthesize_historical_timeline_events(
+    TIMESTAMPTZ '2024-01-01T08:00:00Z',
+    TIMESTAMPTZ '2024-01-05T16:00:00Z',
+    'completed'::public.work_order_status,
+    NULL
+  )),
+  ('admin_convert', public.synthesize_historical_timeline_events(
+    TIMESTAMPTZ '2024-01-01T08:00:00Z',
+    TIMESTAMPTZ '2024-01-05T16:00:00Z',
+    'completed'::public.work_order_status,
+    '13000000-0000-0000-0000-000000000001'::uuid
+  ));
+
+SELECT is(
+  has_function_privilege(
+    'authenticated',
+    'public.synthesize_historical_timeline_events(timestamptz, timestamptz, public.work_order_status, uuid)',
+    'EXECUTE'
+  ),
+  false,
+  'authenticated cannot execute internal synthesize_historical_timeline_events'
+);
+
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '13000000-0000-0000-0000-000000000002', true);
 SELECT set_config(
@@ -164,12 +198,7 @@ SELECT is(
   (public.convert_work_order_to_historical(
     '31000000-0000-0000-0000-000000000001'::uuid,
     (SELECT id FROM convert_test_context WHERE label = 'org'),
-    public.synthesize_historical_timeline_events(
-      TIMESTAMPTZ '2024-01-01T08:00:00Z',
-      TIMESTAMPTZ '2024-01-05T16:00:00Z',
-      'completed'::public.work_order_status,
-      NULL
-    ),
+    (SELECT events FROM convert_test_timelines WHERE label = 'member_attempt'),
     false
   ) ->> 'success'),
   'false',
@@ -237,12 +266,7 @@ SELECT is(
   (public.convert_work_order_to_historical(
     '31000000-0000-0000-0000-000000000001'::uuid,
     (SELECT id FROM convert_test_context WHERE label = 'org'),
-    public.synthesize_historical_timeline_events(
-      TIMESTAMPTZ '2024-01-01T08:00:00Z',
-      TIMESTAMPTZ '2024-01-05T16:00:00Z',
-      'completed'::public.work_order_status,
-      '13000000-0000-0000-0000-000000000001'::uuid
-    ),
+    (SELECT events FROM convert_test_timelines WHERE label = 'admin_convert'),
     true
   ) ->> 'success'),
   'true',
