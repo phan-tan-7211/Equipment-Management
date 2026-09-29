@@ -20,6 +20,8 @@ interface InventoryItemOverviewTabProps {
   item: InventoryItem;
   organization: SessionOrganization | null;
   canEdit: boolean;
+  /** Deleting items is owner/admin-only (inventory_items delete policy). */
+  canDelete: boolean;
   itemImages: InventoryItemImage[];
   onFieldUpdate: (
     field: 'name' | 'description' | 'sku' | 'external_id' | 'location',
@@ -39,6 +41,7 @@ const InventoryItemOverviewTab: React.FC<InventoryItemOverviewTabProps> = ({
   item,
   organization,
   canEdit,
+  canDelete,
   itemImages,
   onFieldUpdate,
   onNumericFieldUpdate,
@@ -255,7 +258,7 @@ const InventoryItemOverviewTab: React.FC<InventoryItemOverviewTabProps> = ({
         </CardContent>
       </Card>
 
-      {canEdit && (
+      {canDelete && (
         <div className="mt-8 space-y-4">
           <Separator />
           <Card className="border-destructive/80 bg-destructive/[0.06] dark:bg-destructive/10">

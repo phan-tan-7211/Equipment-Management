@@ -439,21 +439,15 @@ export const deleteInventoryItem = async (
   itemId: string
 ): Promise<void> => {
   try {
-    // Legacy objects keep their existing best-effort cleanup before the item delete.
-    // V2 display-image sets are removed after the DB delete so all three variants
-    // remain available until the metadata cascade has succeeded.
+    // Collect image references first, delete the item, and only then remove
+    // files: if RLS rejects the delete (only owners/admins may delete items),
+    // no images are destroyed. V2 display-image sets keep all variants until the
+    // metadata cascade has succeeded.
     const { data: images, error: imagesError } = await supabase
       .from('inventory_item_images')
       .select('file_url')
       .eq('inventory_item_id', itemId)
       .eq('organization_id', organizationId);
-
-    const legacyUrls = (images ?? [])
-      .filter((image) => !isDisplayImageV2Ref(image.file_url))
-      .map((image) => image.file_url);
-    const v2Refs = (images ?? [])
-      .filter((image) => isDisplayImageV2Ref(image.file_url))
-      .map((image) => image.file_url);
 
     if (imagesError) {
       logger.error('Error fetching inventory item images for cleanup:', {
@@ -462,7 +456,27 @@ export const deleteInventoryItem = async (
         itemId,
       });
       // Continue with DB delete even if image metadata fetch fails
-    } else if (legacyUrls.length > 0) {
+    }
+
+    const legacyUrls = (images ?? [])
+      .filter((image) => !isDisplayImageV2Ref(image.file_url))
+      .map((image) => image.file_url);
+    const v2Refs = (images ?? [])
+      .filter((image) => isDisplayImageV2Ref(image.file_url))
+      .map((image) => image.file_url);
+
+    const { error, count } = await supabase
+      .from('inventory_items')
+      .delete({ count: 'exact' })
+      .eq('id', itemId)
+      .eq('organization_id', organizationId);
+
+    if (error) throw error;
+    if (count === 0) {
+      throw new Error('Inventory item could not be deleted. Only organization owners and admins can delete items.');
+    }
+
+    if (legacyUrls.length > 0) {
       try {
         await deleteImagesFromStorage('inventory-item-images', legacyUrls);
       } catch (storageError) {
@@ -471,17 +485,8 @@ export const deleteInventoryItem = async (
           organizationId,
           itemId,
         });
-        // Best-effort cleanup: log and continue to delete DB row
       }
     }
-
-    const { error } = await supabase
-      .from('inventory_items')
-      .delete()
-      .eq('id', itemId)
-      .eq('organization_id', organizationId);
-
-    if (error) throw error;
 
     for (const storedRef of v2Refs) {
       try {

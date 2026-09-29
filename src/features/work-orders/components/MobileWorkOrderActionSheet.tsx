@@ -95,7 +95,8 @@ export const MobileWorkOrderActionSheet: React.FC<MobileWorkOrderActionSheetProp
   const permissions = useUnifiedPermissions();
   const deleteWorkOrderMutation = useDeleteWorkOrder();
   const { data: imageData } = useWorkOrderImageCount(workOrderId);
-  const canDelete = permissions.hasRole(['owner', 'admin']);
+  // Work order team follows its equipment team (trg_validate_work_order_assignee).
+  const canDelete = permissions.hasPermission('workorder.delete', { teamId: equipmentTeamId ?? undefined });
 
   const handleAction = (action: () => void) => {
     action();

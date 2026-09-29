@@ -418,6 +418,7 @@ const InventoryItemDetail = () => {
                 clearInventoryItemThumbnailCache(currentOrganization.id, itemId);
                 refetchImages();
               }}
+              canDelete={isOrgAdmin}
               onDeleteItemRequest={() => setShowDeleteConfirmation(true)}
             />
           </TabsContent>

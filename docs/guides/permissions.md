@@ -40,10 +40,10 @@ Organization-level Viewer and Requestor roles have the same organization permiss
 | Action | Owner | Admin | Member | Manager | Technician | Requestor | Viewer |
 |--------|-------|-------|--------|---------|------------|-----------|--------|
 | Create Teams | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Delete Teams | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Update Team Settings | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Add Team Members | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Remove Team Members | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Delete Teams | ✅ | ✅ | ❌ | ⚙️ | ⚙️ | ⚙️ | ⚙️ |
+| Update Team Settings | ✅ | ✅ | ❌ | ✅**** | ❌ | ❌ | ❌ |
+| Add Team Members | ✅ | ✅ | ❌ | ✅**** | ❌ | ❌ | ❌ |
+| Remove Team Members | ✅ | ✅ | ❌ | ✅**** | ❌ | ❌ | ❌ |
 | View Teams | ✅ | ✅ | ❌** | ✅** | ✅** | ✅** | ✅** |
 | Assign Work Orders | ✅ | ✅ | ❌ | ✅*** | ❌ | ❌ | ❌ |
 
@@ -51,13 +51,17 @@ Organization-level Viewer and Requestor roles have the same organization permiss
 
 \*\*\*Only from the work order list, for teams where the user is a manager.
 
+\*\*\*\*Only for teams where the user is a manager (default); team managers cannot grant or change the team owner role or add people outside the organization.
+
+⚙️ Off by default; the organization owner can enable it per team role on **Organization → Permissions**.
+
 ### Equipment management
 
 | Action | Owner | Admin | Member | Manager | Technician | Requestor | Viewer |
 |--------|-------|-------|--------|---------|------------|-----------|--------|
 | Create Equipment | ✅ | ✅ | ❌ | ✅† | ✅† | ❌ | ❌ |
 | Update Equipment | ✅ | ✅ | ❌ | ✅‡ | ✅‡ | ❌ | ❌ |
-| Delete Equipment | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Delete Equipment | ✅ | ✅ | ❌ | ⚙️ | ⚙️ | ⚙️ | ⚙️ |
 | View Equipment | ✅ | ✅ | ❌§ | ✅§ | ✅§ | ✅§ | ✅§ |
 | Generate QR Codes | ✅ | ✅ | ❌§ | ✅§ | ✅§ | ✅§ | ✅§ |
 | Scan QR Codes | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -67,7 +71,7 @@ Organization-level Viewer and Requestor roles have the same organization permiss
 
 ‡ Only for equipment on the user's own teams (manager or technician by default).
 
-**Custom team permissions.** Organization owners can change which team roles may create and update equipment (Organization → Permissions). The database enforces the effective setting (`has_team_permission`); owners and admins always keep these permissions. Deleting equipment and work orders stays owner/admin-only.
+**Custom team permissions.** Organization owners can change which team roles may create and update equipment (Organization → Permissions). The database enforces the effective setting (`has_team_permission`); owners and admins always keep these permissions. Deleting equipment, work orders and teams is owner/admin-only by default and can also be enabled per team role (⚙️). Equipment and work order deletes run as server-side cascades (`delete_equipment_cascade`, `delete_work_order_cascade`).
 
 § Only equipment on the user's teams; unassigned equipment is visible to owners/admins only.
 
@@ -78,7 +82,7 @@ Organization-level Viewer and Requestor roles have the same organization permiss
 | Create Work Orders | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Update Work Order Status | ✅ | ✅ | ❌ | ✅**** | ✅**** | ❌ | ❌ |
 | Assign Work Orders | ✅ | ✅ | ❌ | ✅*** | ❌ | ❌ | ❌ |
-| Delete Work Orders | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Delete Work Orders | ✅ | ✅ | ❌ | ⚙️ | ⚙️ | ⚙️ | ⚙️ |
 | View Work Orders | ✅ | ✅ | ❌***** | ✅***** | ✅***** | ✅***** | ✅***** |
 | Complete Work Orders | ✅ | ✅ | ❌ | ✅**** | ✅**** | ❌ | ❌ |
 | Cancel Work Orders | ✅ | ✅ | ✅****** | ✅****** | ✅****** | ✅****** | ✅****** |

@@ -43,7 +43,14 @@ vi.mock('@/features/organization/hooks/useGoogleWorkspaceExportDestination', () 
 }));
 
 vi.mock('@/hooks/useUnifiedPermissions', () => ({
-  useUnifiedPermissions: (...args: unknown[]) => mockUseUnifiedPermissions(...args),
+  useUnifiedPermissions: (...args: unknown[]) => {
+    const permissions = mockUseUnifiedPermissions(...args) as { hasRole?: (roles: string[]) => boolean; hasPermission?: unknown };
+    // Delete is permission-based now; default it to the owner/admin role check.
+    return {
+      ...permissions,
+      hasPermission: permissions?.hasPermission ?? (() => permissions?.hasRole?.(['owner', 'admin']) ?? false),
+    };
+  },
 }));
 
 vi.mock('@/features/work-orders/hooks/useDeleteWorkOrder', () => ({

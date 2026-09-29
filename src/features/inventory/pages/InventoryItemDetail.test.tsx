@@ -7,6 +7,7 @@ import type { InventoryItem, PartCompatibilityRule } from '@/features/inventory/
 import * as useInventoryModule from '@/features/inventory/hooks/useInventory';
 import * as inventoryEquipmentLinkMutations from '@/features/inventory/hooks/inventoryEquipmentLinkMutations';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 const mockNavigate = vi.fn();
 let mockSearchParams = new URLSearchParams();
@@ -517,7 +518,27 @@ describe('InventoryItemDetail - Delete Functionality', () => {
     } as unknown as ReturnType<typeof useInventoryModule.useDeleteInventoryItem>);
   });
 
+  const asRole = (userRole: string) => {
+    const base = vi.mocked(useOrganization).getMockImplementation()?.() as ReturnType<typeof useOrganization>;
+    vi.mocked(useOrganization).mockReturnValue({
+      ...base,
+      currentOrganization: { ...base.currentOrganization!, userRole },
+    } as ReturnType<typeof useOrganization>);
+  };
+
+  afterEach(() => {
+    vi.mocked(useOrganization).mockReset();
+  });
+
+  it('hides the delete action from non-admins such as parts managers', () => {
+    asRole('member');
+    renderDetail();
+    expectItemHeading();
+    expect(screen.queryByRole('button', { name: /delete inventory item/i })).not.toBeInTheDocument();
+  });
+
   it('shows delete confirmation dialog when delete button is clicked', async () => {
+    asRole('admin');
     renderDetail();
     expectItemHeading();
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));

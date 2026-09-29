@@ -78,7 +78,7 @@ export const setupUnifiedPermissionsPersonaMocks = (personaKey: keyof typeof per
 
         if (permission.startsWith('team.')) {
           if (permission === 'team.view') return hasTeamAccess;
-          if (permission === 'team.manage') return isManager;
+          if (permission === 'team.manage' || permission === 'team.update' || permission === 'team.members.manage') return isManager;
         }
 
         return false;

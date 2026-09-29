@@ -13,6 +13,11 @@ const TEAM_OPERATION_ROLES: ReadonlySet<TeamRole> = new Set(['manager', 'technic
 const TEAM_PERMISSION_DEFAULT_ROLES: Record<TeamPermissionKey, ReadonlySet<TeamRole>> = {
   'equipment.create': new Set(['owner', 'manager', 'technician']),
   'equipment.update': new Set(['owner', 'manager', 'technician']),
+  'equipment.delete': new Set(),
+  'work_order.delete': new Set(),
+  'team.update': new Set(['owner', 'manager']),
+  'team.members.manage': new Set(['owner', 'manager']),
+  'team.delete': new Set(),
 };
 const TEAM_MANAGER_ONLY: ReadonlySet<TeamRole> = new Set(['manager']);
 
@@ -124,6 +129,27 @@ export class PermissionEngine {
       priority: 100
     });
 
+    this.addRule('equipment.delete', {
+      name: 'equipment-delete-team-permission',
+      check: (context, entityContext) =>
+        this.hasTeamPermission(context, entityContext?.teamId, 'equipment.delete'),
+      priority: 90
+    });
+
+    // Work order delete: owners/admins, or team roles granted work_order.delete.
+    this.addRule('workorder.delete', {
+      name: 'workorder-delete-admin',
+      check: (context) => ['owner', 'admin'].includes(context.userRole),
+      priority: 100
+    });
+
+    this.addRule('workorder.delete', {
+      name: 'workorder-delete-team-permission',
+      check: (context, entityContext) =>
+        this.hasTeamPermission(context, entityContext?.teamId, 'work_order.delete'),
+      priority: 90
+    });
+
     // Work order rules
     this.addRule('workorder.view', {
       name: 'workorder-view-members',
@@ -221,11 +247,30 @@ export class PermissionEngine {
     });
 
     this.addRule('team.manage', {
-      name: 'team-manage-manager',
+      name: 'team-manage-team-permission',
       check: (context, entityContext) =>
-        this.isTeamManager(context.teamMemberships, entityContext?.teamId),
+        this.hasTeamPermission(context, entityContext?.teamId, 'team.update'),
       priority: 90
     });
+
+    const teamPermissionRules: Array<[string, TeamPermissionKey]> = [
+      ['team.update', 'team.update'],
+      ['team.members.manage', 'team.members.manage'],
+      ['team.delete', 'team.delete'],
+    ];
+    for (const [permission, key] of teamPermissionRules) {
+      this.addRule(permission, {
+        name: `${permission}-admin`,
+        check: (context) => ['owner', 'admin'].includes(context.userRole),
+        priority: 100
+      });
+      this.addRule(permission, {
+        name: `${permission}-team-permission`,
+        check: (context, entityContext) =>
+          this.hasTeamPermission(context, entityContext?.teamId, key),
+        priority: 90
+      });
+    }
   }
 
   private addRule(permission: string, rule: PermissionRule<EntityContext>) {

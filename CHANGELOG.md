@@ -11,6 +11,17 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.40.0] - 2026-09-29
+
+### Added
+
+- **More custom team permissions** - Organization owners can let team roles delete equipment, delete work orders, edit their team, manage team members, and delete their team.
+
+### Fixed
+
+- **Team management** - Team managers can now edit their team and manage its members as the app already showed; actions that were not permitted no longer report success without saving.
+- **Inventory item delete** - The delete action is shown only to owners and admins, and item images are no longer removed when the item itself could not be deleted.
+
 ## [3.39.1] - 2026-09-29
 
 ### Fixed

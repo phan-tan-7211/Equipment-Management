@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { SessionOrganization, SessionTeamMembership } from '@/types/session';
+import { TEAM_PERMISSION_KEYS, type TeamPermissionKey } from '@/types/permissions';
 import { mapOrganizationRowsToSessionOrganizations } from '@/utils/mapOrganizationToSession';
 import {
   getPrioritizedOrganizationId,
@@ -77,7 +78,7 @@ export class SessionDataService {
   /** Returns null when permissions cannot be loaded, so callers fall back to defaults. */
   static async fetchTeamPermissions(
     organizationId: string
-  ): Promise<Map<string, Array<'equipment.create' | 'equipment.update'>> | null> {
+  ): Promise<Map<string, TeamPermissionKey[]> | null> {
     try {
       const { data, error } = await supabase.rpc('get_my_team_permissions', {
         p_organization_id: organizationId,
@@ -86,11 +87,12 @@ export class SessionDataService {
         if (error) logger.warn('Error fetching team permissions:', error);
         return null;
       }
-      const byTeam = new Map<string, Array<'equipment.create' | 'equipment.update'>>();
+      const byTeam = new Map<string, TeamPermissionKey[]>();
       for (const row of data) {
-        if (row.permission_key !== 'equipment.create' && row.permission_key !== 'equipment.update') continue;
+        const key = row.permission_key as TeamPermissionKey;
+        if (!TEAM_PERMISSION_KEYS.includes(key)) continue;
         const list = byTeam.get(row.team_id) ?? [];
-        list.push(row.permission_key);
+        list.push(key);
         byTeam.set(row.team_id, list);
       }
       return byTeam;

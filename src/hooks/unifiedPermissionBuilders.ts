@@ -119,7 +119,7 @@ export function buildWorkOrderPermissions(
         canView: hasPermission('workorder.view', entityContext),
         canCreate: hasRole(['owner', 'admin', 'member']),
         canEdit: hasPermission('workorder.edit', entityContext),
-        canDelete: hasRole(['owner', 'admin']),
+        canDelete: hasPermission('workorder.delete', entityContext),
         canAssign: hasPermission('workorder.assign', entityContext),
         canChangeStatus: hasPermission('workorder.changestatus', entityContext),
         canAddNotes: canAddWorkOrderNotes(notePermissionInput),
@@ -167,8 +167,9 @@ export function buildTeamPermissions(hasPermission: HasPermission, hasRole: HasR
       return {
         canView: hasPermission('team.view', entityContext),
         canCreate: hasRole(['owner', 'admin']),
-        canEdit: hasPermission('team.manage', entityContext),
-        canDelete: hasRole(['owner', 'admin']),
+        canEdit: hasPermission('team.update', entityContext),
+        canDelete: hasPermission('team.delete', entityContext),
+        canManageMembers: hasPermission('team.members.manage', entityContext),
         canAddNotes: false,
         canAddImages: false,
       };

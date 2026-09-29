@@ -15,6 +15,7 @@
     "user_is_org_member"
   ],
   "authenticatedPublicRpc": [
+    "configurable_team_permission_keys",
     "current_user_is_platform_admin",
     "default_team_permission",
     "ensure_workspace_access_request",
@@ -49,6 +50,7 @@
     "delete_manual_external_customer_contact",
     "delete_operator_checklist_template",
     "delete_organization",
+    "delete_equipment_cascade",
     "delete_work_order_cascade",
     "delete_work_order_note",
     "delete_work_order_note_image_audited",

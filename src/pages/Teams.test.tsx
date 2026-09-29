@@ -132,6 +132,8 @@ function setupAsPersona(persona: UserPersona, options?: { canCreate?: boolean; t
 
   mockUsePermissions.mockReturnValue({
     canManageTeam: () => isAdmin,
+    canDeleteTeam: () => isAdmin,
+    canManageTeamMembers: () => isAdmin,
     canViewTeam: () => true,
     canCreateTeam: () => canCreate,
     canManageEquipment: () => isAdmin,

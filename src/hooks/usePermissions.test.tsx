@@ -100,7 +100,7 @@ vi.mock('@/services/permissions/PermissionEngine', () => ({
       if (permission === 'team.view') {
         return ['owner', 'admin', 'member'].includes(role);
       }
-      if (permission === 'team.manage') {
+      if (['team.manage', 'team.update', 'team.members.manage', 'team.delete'].includes(permission)) {
         return ['owner', 'admin'].includes(role);
       }
       if (permission === 'team.create') {

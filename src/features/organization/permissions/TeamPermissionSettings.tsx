@@ -10,9 +10,27 @@ import { logger } from '@/utils/logger';
 import { permissionMatrixCopy } from './permissionMatrix';
 
 const CONFIGURABLE_TEAM_ROLES = ['manager', 'technician', 'requestor', 'viewer'] as const;
-const CONFIGURABLE_PERMISSION_KEYS = ['equipment.create', 'equipment.update'] as const;
+const CONFIGURABLE_PERMISSION_KEYS = [
+  'equipment.create',
+  'equipment.update',
+  'equipment.delete',
+  'work_order.delete',
+  'team.update',
+  'team.members.manage',
+  'team.delete',
+] as const;
 type ConfigurableTeamRole = (typeof CONFIGURABLE_TEAM_ROLES)[number];
 type ConfigurablePermissionKey = (typeof CONFIGURABLE_PERMISSION_KEYS)[number];
+
+const ACTION_FOR_KEY = {
+  'equipment.create': 'createEquipment',
+  'equipment.update': 'updateEquipment',
+  'equipment.delete': 'deleteEquipment',
+  'work_order.delete': 'deleteWorkOrders',
+  'team.update': 'updateTeams',
+  'team.members.manage': 'manageTeamMembers',
+  'team.delete': 'deleteTeams',
+} as const satisfies Record<ConfigurablePermissionKey, string>;
 
 type Setting = { team_role: string; permission_key: string; allowed: boolean; is_default: boolean };
 
@@ -105,11 +123,11 @@ export function TeamPermissionSettings({ organizationId, canEdit }: { organizati
                 {CONFIGURABLE_PERMISSION_KEYS.map((key) => (
                   <tr key={key} className="border-b last:border-b-0">
                     <th scope="row" className="px-3 py-2 text-left font-normal">
-                      {copy.actions[key === 'equipment.create' ? 'createEquipment' : 'updateEquipment']}
+                      {copy.actions[ACTION_FOR_KEY[key]]}
                     </th>
                     {CONFIGURABLE_TEAM_ROLES.map((role) => {
                       const setting = find(role, key);
-                      const label = `${copy.roles[role]}: ${copy.actions[key === 'equipment.create' ? 'createEquipment' : 'updateEquipment']}`;
+                      const label = `${copy.roles[role]}: ${copy.actions[ACTION_FOR_KEY[key]]}`;
                       return (
                         <td key={role} className="px-2 py-2 text-center">
                           <div className="inline-flex flex-col items-center gap-0.5">

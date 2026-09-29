@@ -197,13 +197,17 @@ export const addTeamMember = async (teamMemberData: TeamMemberInsert): Promise<T
 
 // Remove member from team
 export const removeTeamMember = async (teamId: string, userId: string): Promise<void> => {
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('team_members')
-    .delete()
+    .delete({ count: 'exact' })
     .eq('team_id', teamId)
     .eq('user_id', userId);
 
   if (error) throw error;
+  // RLS filters rows silently; treat "nothing removed" as a permission failure.
+  if (count === 0) {
+    throw new Error('Team member could not be removed. You may not have permission to manage this team.');
+  }
 };
 
 // Update team member role
@@ -473,14 +477,14 @@ export const uploadTeamImage = async (
     { upsert: true }
   );
 
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('teams')
-    .update({ image_url: storedPath, updated_at: new Date().toISOString() })
+    .update({ image_url: storedPath, updated_at: new Date().toISOString() }, { count: 'exact' })
     .eq('id', teamId)
     .eq('organization_id', organizationId);
 
-  if (error) {
-    logger.error('Error updating team image in DB:', error);
+  if (error || count === 0) {
+    logger.error('Error updating team image in DB:', error ?? 'no row updated (permission)');
     // Clean up orphaned storage file since DB update failed
     try {
       await deleteImageFromStorage('team-images', storedPath);
@@ -510,14 +514,15 @@ export const deleteTeamImage = async (
   currentImageUrl: string
 ): Promise<void> => {
   // Clear DB reference first so team never points at a missing file
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('teams')
-    .update({ image_url: null, updated_at: new Date().toISOString() })
+    .update({ image_url: null, updated_at: new Date().toISOString() }, { count: 'exact' })
     .eq('id', teamId)
     .eq('organization_id', organizationId);
 
-  if (error) {
-    logger.error('Error clearing team image:', error);
+  // Never delete the file unless the reference was actually cleared.
+  if (error || count === 0) {
+    logger.error('Error clearing team image:', error ?? 'no row updated (permission)');
     throw new Error('Failed to remove team image');
   }
 

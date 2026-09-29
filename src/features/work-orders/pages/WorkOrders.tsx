@@ -81,7 +81,11 @@ const WorkOrders = () => {
   const { currentUser } = useUser();
   const { t } = useI18n();
   const permissions = useUnifiedPermissions();
-  const canDeleteWorkOrders = permissions.hasRole(['owner', 'admin']);
+  const canDeleteWorkOrder = useCallback(
+    (workOrder: { team_id?: string | null }) =>
+      permissions.hasPermission('workorder.delete', { teamId: workOrder.team_id ?? undefined }),
+    [permissions],
+  );
   const deleteWorkOrderMutation = useDeleteWorkOrder();
   const { data: deleteTargetImageData } = useWorkOrderImageCount(deleteTarget?.id ?? '');
   const isMobile = useIsMobile();
@@ -335,7 +339,7 @@ const WorkOrders = () => {
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
-    if (!canDeleteWorkOrders) {
+    if (!canDeleteWorkOrder(deleteTarget)) {
       setDeleteTarget(null);
       return;
     }
@@ -490,7 +494,7 @@ const WorkOrders = () => {
               onAssignClick={handleAssignClick}
               onReopenClick={() => undefined}
               onShowQR={handleShowQR}
-              canDelete={canDeleteWorkOrders}
+              canDelete={canDeleteWorkOrder}
               onDeleteClick={handleDeleteClick}
             />
             <ListPaginationFooter

@@ -41,7 +41,17 @@ vi.mock('@/features/teams/hooks/useTeamManagement', () => ({
 }));
 
 // Permissions (configurable per test)
-const perms: { canManageTeam: (teamId?: string) => boolean } = { canManageTeam: () => false };
+type TeamCheck = (teamId?: string) => boolean;
+const perms: { canManageTeam: TeamCheck; canDeleteTeam: TeamCheck; canManageTeamMembers: TeamCheck } = {
+  canManageTeam: () => false,
+  canDeleteTeam: () => false,
+  canManageTeamMembers: () => false,
+};
+const setPerms = (allowed: boolean) => {
+  perms.canManageTeam = () => allowed;
+  perms.canDeleteTeam = () => allowed;
+  perms.canManageTeamMembers = () => allowed;
+};
 vi.mock('@/hooks/usePermissions', () => ({
   usePermissions: vi.fn(() => perms),
 }));
@@ -65,7 +75,7 @@ describe('TeamDetails permissions gating', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // default to cannot manage
-    perms.canManageTeam = () => false;
+    setPerms(false);
   });
 
   it('hides Add Member button for users without manage permission', () => {
@@ -76,13 +86,23 @@ describe('TeamDetails permissions gating', () => {
   });
 
   it('shows Add Member button for team managers', () => {
-    perms.canManageTeam = () => true;
+    setPerms(true);
     render(<TeamDetails />);
     expect(screen.getByText('Add Member')).toBeInTheDocument();
   });
 
+  it('shows edit and member management but not delete for default team managers', () => {
+    perms.canManageTeam = () => true;
+    perms.canManageTeamMembers = () => true;
+    perms.canDeleteTeam = () => false;
+    render(<TeamDetails />);
+    expect(screen.getByText('Add Member')).toBeInTheDocument();
+    expect(screen.getByText('Edit Team')).toBeInTheDocument();
+    expect(screen.queryByText('Delete Team')).toBeNull();
+  });
+
   it('shows Add Member button for organization admins (via permission hook)', () => {
-    perms.canManageTeam = () => true; // permission layer should return true for admins
+    setPerms(true); // permission layer should return true for admins
     render(<TeamDetails />);
     expect(screen.getByText('Add Member')).toBeInTheDocument();
   });
@@ -110,7 +130,7 @@ describe('TeamDetails permissions gating', () => {
 describe('TeamDetails dedicated views (#1132)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    perms.canManageTeam = () => false;
+    setPerms(false);
   });
 
   it('renders the view switcher with all three views', () => {
@@ -131,7 +151,7 @@ describe('TeamDetails dedicated views (#1132)', () => {
   });
 
   it('offers "Set as team default" to team managers after switching views', async () => {
-    perms.canManageTeam = () => true;
+    setPerms(true);
     const user = userEvent.setup();
     render(<TeamDetails />);
 

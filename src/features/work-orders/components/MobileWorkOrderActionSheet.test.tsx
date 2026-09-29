@@ -16,7 +16,11 @@ vi.mock('@/lib/flags', () => ({
 }));
 
 vi.mock('@/hooks/useUnifiedPermissions', () => ({
-  useUnifiedPermissions: () => ({ hasRole: (...args: unknown[]) => mockHasRole(...args as [string[]]) }),
+  useUnifiedPermissions: () => ({
+    hasRole: (...args: unknown[]) => mockHasRole(...args as [string[]]),
+    // Delete is permission-based now; in these tests it follows the owner/admin role.
+    hasPermission: () => mockHasRole(['owner', 'admin']),
+  }),
 }));
 
 vi.mock('@/features/work-orders/hooks/useDeleteWorkOrder', () => ({

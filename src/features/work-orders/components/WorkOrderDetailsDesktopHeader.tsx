@@ -71,7 +71,9 @@ export const WorkOrderDetailsDesktopHeader: React.FC<WorkOrderDetailsDesktopHead
   const permissions = useUnifiedPermissions();
   const deleteWorkOrderMutation = useDeleteWorkOrder();
   const { data: imageData } = useWorkOrderImageCount(workOrder?.id);
-  const canDelete = permissions.hasRole(['owner', 'admin']);
+  const canDelete = permissions.hasPermission('workorder.delete', {
+    teamId: workOrder.team_id ?? equipmentTeamId ?? undefined,
+  });
 
   const { data: canManageQuickBooks = false } = useQuickBooksAccess();
   const showQuickBooks = isQuickBooksEnabled() && canManageQuickBooks;
