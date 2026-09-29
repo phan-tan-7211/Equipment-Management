@@ -1,16 +1,19 @@
 import { logger } from '@/utils/logger';
-import { UserContext, PermissionRule, PermissionCache, TeamRole } from '@/types/permissions';
+import { UserContext, PermissionRule, PermissionCache, TeamRole, TeamPermissionKey } from '@/types/permissions';
 
 type EntityContext = { teamId?: string; assigneeId?: string; [key: string]: unknown };
 type TeamMembership = UserContext['teamMemberships'][number];
 
 const TEAM_VIEW_ROLES: ReadonlySet<TeamRole> = new Set(['manager', 'technician', 'requestor', 'viewer', 'owner']);
 const TEAM_OPERATION_ROLES: ReadonlySet<TeamRole> = new Set(['manager', 'technician', 'owner']);
-// Mirrors the `team_members_create_equipment` RLS policy which only permits
-// 'manager' and 'technician'.  The legacy 'owner' team role is intentionally
-// excluded here to match the database policy; org owners/admins have their own
-// higher-priority rule ('equipment-create-admin') that grants org-wide create.
-const TEAM_EQUIPMENT_CREATE_ROLES: ReadonlySet<TeamRole> = new Set(['manager', 'technician']);
+// Built-in defaults for configurable team permissions. Mirrors
+// public.default_team_permission; the team 'owner' role counts as manager.
+// Organization owners can override these per team role, in which case
+// context.teamPermissionGrants (from get_my_team_permissions) wins.
+const TEAM_PERMISSION_DEFAULT_ROLES: Record<TeamPermissionKey, ReadonlySet<TeamRole>> = {
+  'equipment.create': new Set(['owner', 'manager', 'technician']),
+  'equipment.update': new Set(['owner', 'manager', 'technician']),
+};
 const TEAM_MANAGER_ONLY: ReadonlySet<TeamRole> = new Set(['manager']);
 
 export class PermissionEngine {
@@ -36,6 +39,18 @@ export class PermissionEngine {
     teamId: string | undefined,
   ): boolean {
     return this.hasTeamMembershipWithRole(memberships, teamId, TEAM_MANAGER_ONLY);
+  }
+
+  private hasTeamPermission(
+    context: UserContext,
+    teamId: string | undefined,
+    key: TeamPermissionKey,
+  ): boolean {
+    if (!teamId) return false;
+    if (context.teamPermissionGrants) {
+      return context.teamPermissionGrants[teamId]?.includes(key) ?? false;
+    }
+    return this.hasTeamMembershipWithRole(context.teamMemberships, teamId, TEAM_PERMISSION_DEFAULT_ROLES[key]);
   }
 
   private initializeRules() {
@@ -78,9 +93,9 @@ export class PermissionEngine {
     });
 
     this.addRule('equipment.edit', {
-      name: 'equipment-edit-team-manager',
+      name: 'equipment-edit-team-permission',
       check: (context, entityContext) =>
-        this.isTeamManager(context.teamMemberships, entityContext?.teamId),
+        this.hasTeamPermission(context, entityContext?.teamId, 'equipment.update'),
       priority: 90
     });
 
@@ -96,31 +111,17 @@ export class PermissionEngine {
     });
 
     this.addRule('equipment.create', {
-      name: 'equipment-create-team-role',
-      check: (context, entityContext) => {
-        return this.hasTeamMembershipWithRole(
-          context.teamMemberships,
-          entityContext?.teamId,
-          TEAM_EQUIPMENT_CREATE_ROLES
-        );
-      },
+      name: 'equipment-create-team-permission',
+      check: (context, entityContext) =>
+        this.hasTeamPermission(context, entityContext?.teamId, 'equipment.create'),
       priority: 80
     });
 
-    // Equipment delete rules. Mirrors the `equipment_team_manager_delete` RLS
-    // policy: org owners/admins can delete any equipment; team managers can
-    // delete equipment assigned to their team.
+    // Equipment delete: org owners/admins only (equipment_delete_by_admin).
     this.addRule('equipment.delete', {
       name: 'equipment-delete-admin',
       check: (context) => ['owner', 'admin'].includes(context.userRole),
       priority: 100
-    });
-
-    this.addRule('equipment.delete', {
-      name: 'equipment-delete-team-manager',
-      check: (context, entityContext) =>
-        this.isTeamManager(context.teamMemberships, entityContext?.teamId),
-      priority: 90
     });
 
     // Work order rules
@@ -238,7 +239,8 @@ export class PermissionEngine {
 
   private getCacheKey(permission: string, context: UserContext, entityContext?: EntityContext): string {
     const entityKey = entityContext ? JSON.stringify(entityContext) : 'null';
-    return `${permission}:${context.userId}:${context.organizationId}:${entityKey}`;
+    const grantsKey = context.teamPermissionGrants ? JSON.stringify(context.teamPermissionGrants) : 'default';
+    return `${permission}:${context.userId}:${context.organizationId}:${entityKey}:${grantsKey}`;
   }
 
   private getFromCache(key: string): boolean | null {

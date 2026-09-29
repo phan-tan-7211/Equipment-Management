@@ -4,7 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { permissionEngine } from '@/services/permissions/PermissionEngine';
 import { 
   UserContext, 
-  Role
+  Role,
+  TeamPermissionKey
 } from '@/types/permissions';
 import {
   buildEquipmentNotesPermissions,
@@ -14,6 +15,14 @@ import {
   buildTeamPermissions,
   buildWorkOrderPermissions,
 } from './unifiedPermissionBuilders';
+
+// Only trust grants when every membership carries them (all loaded together).
+function buildTeamPermissionGrants(
+  memberships: ReadonlyArray<{ teamId: string; permissions?: TeamPermissionKey[] }> | undefined,
+): UserContext['teamPermissionGrants'] {
+  if (!memberships?.length || memberships.some(tm => !tm.permissions)) return undefined;
+  return Object.fromEntries(memberships.map(tm => [tm.teamId, tm.permissions ?? []]));
+}
 
 export const useUnifiedPermissions = () => {
   const { getCurrentOrganization, hasTeamAccess, canManageTeam, sessionData } = useSession();
@@ -37,7 +46,8 @@ export const useUnifiedPermissions = () => {
       teamMemberships: (teamMemberships ?? []).map(tm => ({
         teamId: tm.teamId,
         role: tm.role
-      }))
+      })),
+      teamPermissionGrants: buildTeamPermissionGrants(teamMemberships),
     };
   }, [organizationId, userRole, user, teamMemberships]);
 

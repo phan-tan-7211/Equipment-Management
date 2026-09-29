@@ -9,7 +9,15 @@ export interface UserContext {
     teamId: string;
     role: TeamRole;
   }>;
+  /**
+   * Effective configurable team permissions per team (from
+   * get_my_team_permissions). Undefined until loaded; the engine then falls
+   * back to the built-in defaults, which match the database defaults.
+   */
+  teamPermissionGrants?: Record<string, readonly TeamPermissionKey[]>;
 }
+
+export type TeamPermissionKey = 'equipment.create' | 'equipment.update';
 
 export interface EntityPermissions {
   canView: boolean;

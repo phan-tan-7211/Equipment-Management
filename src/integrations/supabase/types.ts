@@ -6329,6 +6329,40 @@ export type Database = {
         }
         Returns: Json
       }
+      get_my_team_permissions: {
+        Args: { p_organization_id: string }
+        Returns: {
+          permission_key: string
+          team_id: string
+        }[]
+      }
+      get_team_permission_settings: {
+        Args: { p_organization_id: string }
+        Returns: {
+          allowed: boolean
+          is_default: boolean
+          permission_key: string
+          team_role: string
+        }[]
+      }
+      has_team_permission: {
+        Args: {
+          p_organization_id: string
+          p_permission_key: string
+          p_team_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      set_team_permission_override: {
+        Args: {
+          p_allowed: boolean | null
+          p_organization_id: string
+          p_permission_key: string
+          p_team_role: string
+        }
+        Returns: undefined
+      }
       resubmit_workspace_access_request: {
         Args: never
         Returns: {
