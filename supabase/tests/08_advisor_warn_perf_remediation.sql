@@ -204,12 +204,17 @@ SELECT is(
   'InitPlan-wrapped tickets policy exists'
 );
 
+-- inventory_items_organization_isolation was replaced by per-command RBAC
+-- policies in 20260629220803_add_parts_consumers_inventory_rbac; none may
+-- re-introduce a per-row bare auth.uid() call.
 SELECT is(
   (SELECT count(*)::int FROM pg_policies
    WHERE schemaname = 'public' AND tablename = 'inventory_items'
-     AND policyname = 'inventory_items_organization_isolation'),
-  1,
-  'InitPlan-wrapped inventory_items policy exists'
+     AND policyname IN ('inventory_items_select', 'inventory_items_insert',
+                        'inventory_items_update', 'inventory_items_delete')
+     AND COALESCE(qual, '') || COALESCE(with_check, '') !~ '(?<!SELECT )auth\.uid\(\)'),
+  4,
+  'inventory_items RBAC policies exist without per-row auth.uid() calls'
 );
 
 -- ============================================================================
@@ -268,9 +273,11 @@ SELECT has_index(
   'FK index on user_dashboard_preferences.organization_id exists'
 );
 
+-- The composite (dsr_request_id, created_at) index was dropped as unused in
+-- 20260503120000; 20260602140000 restored single-column FK coverage instead.
 SELECT has_index(
-  'public', 'dsr_request_events', 'idx_dsr_request_events_request',
-  'Composite FK index on dsr_request_events(dsr_request_id, created_at) retained'
+  'public', 'dsr_request_events', 'idx_dsr_request_events_dsr_request_id',
+  'FK index on dsr_request_events.dsr_request_id exists'
 );
 
 -- ============================================================================

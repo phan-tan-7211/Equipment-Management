@@ -11,6 +11,12 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.38.1] - 2026-09-29
+
+### Security
+
+- **Function access** - Internal equipment group helper functions can no longer be called directly through the API.
+
 ## [3.38.0] - 2026-09-29
 
 ### Added
