@@ -273,6 +273,7 @@ SELECT is(
           'delete_manual_external_customer_contact',
           'delete_operator_checklist_template',
           'delete_organization',
+          'delete_equipment_cascade',
           'delete_work_order_cascade',
           'delete_work_order_note',
           'delete_work_order_note_image_audited',

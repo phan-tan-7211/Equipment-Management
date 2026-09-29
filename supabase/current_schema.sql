@@ -291,6 +291,39 @@ $$;
 ALTER FUNCTION "pgmq_public"."send"("queue_name" "text", "message" "jsonb", "sleep_seconds" integer) OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "private"."delete_work_order_rows"("p_work_order_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  UPDATE public.work_orders SET primary_image_id = NULL WHERE id = p_work_order_id;
+
+  BEGIN
+    DELETE FROM storage.objects o
+    USING public.work_order_images wi
+    WHERE wi.work_order_id = p_work_order_id
+      AND o.bucket_id = 'work-order-images'
+      AND o.name = wi.file_url
+      AND (storage.foldername(o.name))[2] = p_work_order_id::text;
+  EXCEPTION WHEN OTHERS THEN
+    RAISE LOG 'delete_work_order_rows storage cleanup failed for %: %', p_work_order_id, SQLERRM;
+  END;
+
+  DELETE FROM public.work_order_images WHERE work_order_id = p_work_order_id;
+  DELETE FROM public.preventative_maintenance WHERE work_order_id = p_work_order_id;
+  DELETE FROM public.work_order_notes WHERE work_order_id = p_work_order_id;
+  DELETE FROM public.work_order_costs WHERE work_order_id = p_work_order_id;
+  DELETE FROM public.work_order_status_history WHERE work_order_id = p_work_order_id;
+  DELETE FROM public.work_order_equipment WHERE work_order_id = p_work_order_id;
+  DELETE FROM public.quickbooks_export_logs WHERE work_order_id = p_work_order_id;
+  DELETE FROM public.work_orders WHERE id = p_work_order_id;
+END;
+$$;
+
+
+ALTER FUNCTION "private"."delete_work_order_rows"("p_work_order_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "private"."enforce_active_organization_write"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'pg_catalog', 'public', 'private'
@@ -3094,6 +3127,21 @@ COMMENT ON FUNCTION "public"."complete_product_onboarding"("p_organization_id" "
 
 
 
+CREATE OR REPLACE FUNCTION "public"."configurable_team_permission_keys"() RETURNS "text"[]
+    LANGUAGE "sql" IMMUTABLE
+    SET "search_path" TO 'pg_catalog'
+    AS $$
+  SELECT ARRAY[
+    'equipment.create', 'equipment.update', 'equipment.delete',
+    'work_order.delete',
+    'team.update', 'team.members.manage', 'team.delete'
+  ]::text[];
+$$;
+
+
+ALTER FUNCTION "public"."configurable_team_permission_keys"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."convert_work_order_to_historical"("p_work_order_id" "uuid", "p_organization_id" "uuid", "p_events" "jsonb", "p_skip_audit" boolean DEFAULT false) RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -4356,12 +4404,84 @@ CREATE OR REPLACE FUNCTION "public"."default_team_permission"("p_team_role" "tex
   SELECT CASE p_permission_key
     WHEN 'equipment.create' THEN p_team_role IN ('manager', 'technician')
     WHEN 'equipment.update' THEN p_team_role IN ('manager', 'technician')
+    WHEN 'team.update' THEN p_team_role = 'manager'
+    WHEN 'team.members.manage' THEN p_team_role = 'manager'
     ELSE false
   END;
 $$;
 
 
 ALTER FUNCTION "public"."default_team_permission"("p_team_role" "text", "p_permission_key" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."delete_equipment_cascade"("p_equipment_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+DECLARE
+  v_org_id uuid;
+  v_team_id uuid;
+  v_work_order_id uuid;
+  v_work_orders integer := 0;
+  v_note_image_paths text[];
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Not authenticated');
+  END IF;
+
+  SELECT organization_id, team_id INTO v_org_id, v_team_id
+  FROM public.equipment
+  WHERE id = p_equipment_id;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Equipment not found');
+  END IF;
+
+  IF NOT (
+    public.is_org_admin(auth.uid(), v_org_id)
+    OR public.has_team_permission(auth.uid(), v_org_id, v_team_id, 'equipment.delete')
+  ) THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Permission denied');
+  END IF;
+
+  FOR v_work_order_id IN
+    SELECT id FROM public.work_orders WHERE equipment_id = p_equipment_id
+  LOOP
+    PERFORM private.delete_work_order_rows(v_work_order_id);
+    v_work_orders := v_work_orders + 1;
+  END LOOP;
+
+  SELECT COALESCE(array_agg(eni.file_url), ARRAY[]::text[]) INTO v_note_image_paths
+  FROM public.equipment_note_images AS eni
+  JOIN public.equipment_notes AS en ON en.id = eni.equipment_note_id
+  WHERE en.equipment_id = p_equipment_id;
+
+  DELETE FROM public.equipment_note_images AS eni
+  USING public.equipment_notes AS en
+  WHERE en.id = eni.equipment_note_id AND en.equipment_id = p_equipment_id;
+  DELETE FROM public.equipment_notes WHERE equipment_id = p_equipment_id;
+  DELETE FROM public.scans WHERE equipment_id = p_equipment_id;
+  DELETE FROM public.equipment WHERE id = p_equipment_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'equipment_id', p_equipment_id,
+    'organization_id', v_org_id,
+    'work_orders_deleted', v_work_orders,
+    'note_image_paths', to_jsonb(v_note_image_paths)
+  );
+EXCEPTION WHEN OTHERS THEN
+  RAISE LOG 'delete_equipment_cascade failed for %: %', p_equipment_id, SQLERRM;
+  RETURN jsonb_build_object('success', false, 'error', 'Deletion failed');
+END;
+$$;
+
+
+ALTER FUNCTION "public"."delete_equipment_cascade"("p_equipment_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."delete_equipment_cascade"("p_equipment_id" "uuid") IS 'Permanently deletes equipment with its work orders, notes, note images and scans. Org owners/admins, or team roles granted equipment.delete.';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."delete_equipment_note"("p_organization_id" "uuid", "p_equipment_id" "uuid", "p_note_id" "uuid") RETURNS "jsonb"
@@ -4727,12 +4847,13 @@ CREATE OR REPLACE FUNCTION "public"."delete_work_order_cascade"("p_work_order_id
     AS $$
 DECLARE
   v_org_id uuid;
+  v_team_id uuid;
 BEGIN
   IF auth.uid() IS NULL THEN
     RETURN jsonb_build_object('success', false, 'error', 'Not authenticated');
   END IF;
 
-  SELECT organization_id INTO v_org_id
+  SELECT organization_id, team_id INTO v_org_id, v_team_id
   FROM public.work_orders
   WHERE id = p_work_order_id;
 
@@ -4740,34 +4861,14 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Work order not found');
   END IF;
 
-  IF NOT public.is_org_admin(auth.uid(), v_org_id) THEN
+  IF NOT (
+    public.is_org_admin(auth.uid(), v_org_id)
+    OR public.has_team_permission(auth.uid(), v_org_id, v_team_id, 'work_order.delete')
+  ) THEN
     RETURN jsonb_build_object('success', false, 'error', 'Permission denied');
   END IF;
 
-  UPDATE public.work_orders
-  SET primary_image_id = NULL
-  WHERE id = p_work_order_id;
-
-  BEGIN
-    DELETE FROM storage.objects o
-    USING public.work_order_images wi
-    WHERE wi.work_order_id = p_work_order_id
-      AND o.bucket_id = 'work-order-images'
-      AND o.name = wi.file_url
-      AND (storage.foldername(o.name))[2] = p_work_order_id::text;
-  EXCEPTION WHEN OTHERS THEN
-    RAISE LOG 'delete_work_order_cascade storage cleanup failed for %: %',
-      p_work_order_id, SQLERRM;
-  END;
-
-  DELETE FROM public.work_order_images WHERE work_order_id = p_work_order_id;
-  DELETE FROM public.preventative_maintenance WHERE work_order_id = p_work_order_id;
-  DELETE FROM public.work_order_notes WHERE work_order_id = p_work_order_id;
-  DELETE FROM public.work_order_costs WHERE work_order_id = p_work_order_id;
-  DELETE FROM public.work_order_status_history WHERE work_order_id = p_work_order_id;
-  DELETE FROM public.work_order_equipment WHERE work_order_id = p_work_order_id;
-  DELETE FROM public.quickbooks_export_logs WHERE work_order_id = p_work_order_id;
-  DELETE FROM public.work_orders WHERE id = p_work_order_id;
+  PERFORM private.delete_work_order_rows(p_work_order_id);
 
   RETURN jsonb_build_object(
     'success', true,
@@ -4784,7 +4885,7 @@ $$;
 ALTER FUNCTION "public"."delete_work_order_cascade"("p_work_order_id" "uuid") OWNER TO "postgres";
 
 
-COMMENT ON FUNCTION "public"."delete_work_order_cascade"("p_work_order_id" "uuid") IS 'Permanently deletes a work order, related rows, and storage objects. Org owners/admins only. Storage cleanup is best-effort and scoped to objects under the work order folder.';
+COMMENT ON FUNCTION "public"."delete_work_order_cascade"("p_work_order_id" "uuid") IS 'Permanently deletes a work order, related rows, and work order storage objects. Org owners/admins, or team roles granted work_order.delete.';
 
 
 
@@ -7348,7 +7449,7 @@ CREATE OR REPLACE FUNCTION "public"."get_my_team_permissions"("p_organization_id
   SELECT tm.team_id, k.permission_key
   FROM public.team_members AS tm
   JOIN public.teams AS t ON t.id = tm.team_id
-  CROSS JOIN (VALUES ('equipment.create'), ('equipment.update')) AS k(permission_key)
+  CROSS JOIN unnest(public.configurable_team_permission_keys()) AS k(permission_key)
   WHERE tm.user_id = auth.uid()
     AND t.organization_id = p_organization_id
     AND public.has_team_permission(auth.uid(), p_organization_id, tm.team_id, k.permission_key);
@@ -8051,7 +8152,7 @@ BEGIN
     COALESCE(o.allowed, public.default_team_permission(r.team_role, k.permission_key)),
     o.allowed IS NULL
   FROM (VALUES ('manager'), ('technician'), ('requestor'), ('viewer')) AS r(team_role)
-  CROSS JOIN (VALUES ('equipment.create'), ('equipment.update')) AS k(permission_key)
+  CROSS JOIN unnest(public.configurable_team_permission_keys()) AS k(permission_key)
   LEFT JOIN private.team_permission_overrides AS o
     ON o.organization_id = p_organization_id
    AND o.team_role = r.team_role
@@ -14571,7 +14672,7 @@ BEGIN
   IF p_team_role IS NULL OR p_team_role NOT IN ('manager', 'technician', 'requestor', 'viewer') THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid team role';
   END IF;
-  IF p_permission_key IS NULL OR p_permission_key NOT IN ('equipment.create', 'equipment.update') THEN
+  IF p_permission_key IS NULL OR NOT (p_permission_key = ANY (public.configurable_team_permission_keys())) THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid permission key';
   END IF;
 
@@ -16406,7 +16507,7 @@ CREATE TABLE IF NOT EXISTS "private"."team_permission_overrides" (
     "allowed" boolean NOT NULL,
     "updated_by" "uuid",
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "team_permission_overrides_key_check" CHECK (("permission_key" = ANY (ARRAY['equipment.create'::"text", 'equipment.update'::"text"]))),
+    CONSTRAINT "team_permission_overrides_key_check" CHECK (("permission_key" = ANY ("public"."configurable_team_permission_keys"()))),
     CONSTRAINT "team_permission_overrides_role_check" CHECK (("team_role" = ANY (ARRAY['manager'::"text", 'technician'::"text", 'requestor'::"text", 'viewer'::"text"])))
 );
 
@@ -21674,18 +21775,6 @@ CREATE POLICY "Users can view working hours history for accessible equipment" ON
 
 
 
-CREATE POLICY "admins_delete_teams" ON "public"."teams" FOR DELETE USING ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
-
-
-
-CREATE POLICY "admins_manage_teams" ON "public"."teams" USING ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
-
-
-
-CREATE POLICY "admins_update_teams" ON "public"."teams" FOR UPDATE USING ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
-
-
-
 ALTER TABLE "public"."audit_log" ENABLE ROW LEVEL SECURITY;
 
 
@@ -21786,7 +21875,7 @@ CREATE POLICY "dsr_requests_select" ON "public"."dsr_requests" FOR SELECT TO "au
 ALTER TABLE "public"."equipment" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "equipment_delete_by_admin" ON "public"."equipment" FOR DELETE TO "authenticated" USING ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
+CREATE POLICY "equipment_delete_by_permission" ON "public"."equipment" FOR DELETE TO "authenticated" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "organization_id", "team_id", 'equipment.delete'::"text")));
 
 
 
@@ -22926,21 +23015,15 @@ CREATE POLICY "service_role_update_webhook_events" ON "public"."webhook_events" 
 ALTER TABLE "public"."team_members" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "team_members_admin_delete" ON "public"."team_members" FOR DELETE USING ((EXISTS ( SELECT 1
+CREATE POLICY "team_members_delete_by_permission" ON "public"."team_members" FOR DELETE TO "authenticated" USING ((EXISTS ( SELECT 1
    FROM "public"."teams" "t"
-  WHERE (("t"."id" = "team_members"."team_id") AND "public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id")))));
+  WHERE (("t"."id" = "team_members"."team_id") AND ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id") OR ("public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id", "t"."id", 'team.members.manage'::"text") AND ("team_members"."role" <> 'owner'::"public"."team_member_role")))))));
 
 
 
-CREATE POLICY "team_members_admin_insert" ON "public"."team_members" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
+CREATE POLICY "team_members_insert_by_permission" ON "public"."team_members" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
    FROM "public"."teams" "t"
-  WHERE (("t"."id" = "team_members"."team_id") AND "public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id")))));
-
-
-
-CREATE POLICY "team_members_admin_update" ON "public"."team_members" FOR UPDATE USING ((EXISTS ( SELECT 1
-   FROM "public"."teams" "t"
-  WHERE (("t"."id" = "team_members"."team_id") AND "public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id")))));
+  WHERE (("t"."id" = "team_members"."team_id") AND ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id") OR ("public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id", "t"."id", 'team.members.manage'::"text") AND ("team_members"."role" <> 'owner'::"public"."team_member_role") AND "public"."is_org_member"("team_members"."user_id", "t"."organization_id")))))));
 
 
 
@@ -22950,22 +23033,30 @@ CREATE POLICY "team_members_select" ON "public"."team_members" FOR SELECT USING 
 
 
 
+CREATE POLICY "team_members_update_by_permission" ON "public"."team_members" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."teams" "t"
+  WHERE (("t"."id" = "team_members"."team_id") AND ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id") OR ("public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id", "t"."id", 'team.members.manage'::"text") AND ("team_members"."role" <> 'owner'::"public"."team_member_role"))))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."teams" "t"
+  WHERE (("t"."id" = "team_members"."team_id") AND ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id") OR ("public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "t"."organization_id", "t"."id", 'team.members.manage'::"text") AND ("team_members"."role" <> 'owner'::"public"."team_member_role")))))));
+
+
+
 ALTER TABLE "public"."teams" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "teams_admin_delete" ON "public"."teams" FOR DELETE USING ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
-
 
 
 CREATE POLICY "teams_admin_insert" ON "public"."teams" FOR INSERT WITH CHECK ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
 
 
 
-CREATE POLICY "teams_admin_update" ON "public"."teams" FOR UPDATE USING ("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id"));
+CREATE POLICY "teams_delete_by_permission" ON "public"."teams" FOR DELETE TO "authenticated" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "organization_id", "id", 'team.delete'::"text")));
 
 
 
 CREATE POLICY "teams_select_consolidated" ON "public"."teams" FOR SELECT USING (("public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id")));
+
+
+
+CREATE POLICY "teams_update_by_permission" ON "public"."teams" FOR UPDATE TO "authenticated" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "organization_id", "id", 'team.update'::"text"))) WITH CHECK (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "organization_id", "id", 'team.update'::"text")));
 
 
 
@@ -23149,7 +23240,7 @@ ALTER TABLE "public"."work_order_status_history" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."work_orders" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "work_orders_delete_by_role" ON "public"."work_orders" FOR DELETE TO "authenticated" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR (("is_historical" = false) AND ("status" = 'submitted'::"public"."work_order_status") AND ("created_by" = ( SELECT "auth"."uid"() AS "uid")) AND "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id"))));
+CREATE POLICY "work_orders_delete_by_role" ON "public"."work_orders" FOR DELETE TO "authenticated" USING (("public"."is_org_admin"(( SELECT "auth"."uid"() AS "uid"), "organization_id") OR "public"."has_team_permission"(( SELECT "auth"."uid"() AS "uid"), "organization_id", "team_id", 'work_order.delete'::"text") OR (("is_historical" = false) AND ("status" = 'submitted'::"public"."work_order_status") AND ("created_by" = ( SELECT "auth"."uid"() AS "uid")) AND "public"."is_org_member"(( SELECT "auth"."uid"() AS "uid"), "organization_id"))));
 
 
 
@@ -23632,6 +23723,10 @@ GRANT ALL ON FUNCTION "pgmq_public"."send"("queue_name" "text", "message" "jsonb
 
 
 
+REVOKE ALL ON FUNCTION "private"."delete_work_order_rows"("p_work_order_id" "uuid") FROM PUBLIC;
+
+
+
 REVOKE ALL ON FUNCTION "private"."enforce_active_organization_write"() FROM PUBLIC;
 
 
@@ -23966,6 +24061,11 @@ GRANT ALL ON FUNCTION "public"."complete_product_onboarding"("p_organization_id"
 
 
 
+REVOKE ALL ON FUNCTION "public"."configurable_team_permission_keys"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."configurable_team_permission_keys"() TO "authenticated";
+
+
+
 REVOKE ALL ON FUNCTION "public"."convert_work_order_to_historical"("p_work_order_id" "uuid", "p_organization_id" "uuid", "p_events" "jsonb", "p_skip_audit" boolean) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."convert_work_order_to_historical"("p_work_order_id" "uuid", "p_organization_id" "uuid", "p_events" "jsonb", "p_skip_audit" boolean) TO "service_role";
 GRANT ALL ON FUNCTION "public"."convert_work_order_to_historical"("p_work_order_id" "uuid", "p_organization_id" "uuid", "p_events" "jsonb", "p_skip_audit" boolean) TO "authenticated";
@@ -24068,6 +24168,11 @@ GRANT ALL ON FUNCTION "public"."current_user_is_platform_admin"() TO "authentica
 
 REVOKE ALL ON FUNCTION "public"."default_team_permission"("p_team_role" "text", "p_permission_key" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."default_team_permission"("p_team_role" "text", "p_permission_key" "text") TO "authenticated";
+
+
+
+REVOKE ALL ON FUNCTION "public"."delete_equipment_cascade"("p_equipment_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."delete_equipment_cascade"("p_equipment_id" "uuid") TO "authenticated";
 
 
 

@@ -144,7 +144,7 @@ SELECT throws_ok(
 );
 SELECT is(
   (SELECT count(*)::integer FROM public.get_team_permission_settings('37000000-aaaa-0000-0000-000000000001')),
-  8, 'org admin can read the 4x2 permission settings'
+  28, 'org admin can read the permission settings for every configurable key'
 );
 
 SELECT set_config('request.jwt.claims', '{"sub":"37000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
@@ -163,8 +163,8 @@ SELECT lives_ok(
   'owner can stop technicians from updating equipment'
 );
 SELECT throws_ok(
-  $$SELECT public.set_team_permission_override('37000000-aaaa-0000-0000-000000000001', 'manager', 'equipment.delete', true)$$,
-  '22023', NULL, 'delete permissions are not configurable'
+  $$SELECT public.set_team_permission_override('37000000-aaaa-0000-0000-000000000001', 'manager', 'equipment.archive', true)$$,
+  '22023', NULL, 'unknown permission keys are rejected'
 );
 
 SELECT set_config('request.jwt.claims', '{"sub":"37000000-0000-0000-0000-000000000005","role":"authenticated"}', true);
