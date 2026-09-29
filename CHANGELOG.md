@@ -11,6 +11,8 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.39.0] - 2026-09-29
+
 ### Added
 
 - **Custom team permissions** - Organization owners can choose which team roles may create and edit equipment from the permission matrix; changes are recorded in the audit log.
