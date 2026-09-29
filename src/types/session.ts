@@ -1,3 +1,4 @@
+import type { TeamPermissionKey } from './permissions';
 export interface SessionOrganization {
   id: string;
   name: string;
@@ -31,7 +32,7 @@ export interface SessionTeamMembership {
    * overrides applied). Absent when they could not be loaded; callers then use
    * the built-in defaults, and the database still enforces the real rule.
    */
-  permissions?: Array<'equipment.create' | 'equipment.update'>;
+  permissions?: TeamPermissionKey[];
 }
 
 export interface SessionData {

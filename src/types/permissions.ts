@@ -17,7 +17,17 @@ export interface UserContext {
   teamPermissionGrants?: Record<string, readonly TeamPermissionKey[]>;
 }
 
-export type TeamPermissionKey = 'equipment.create' | 'equipment.update';
+export const TEAM_PERMISSION_KEYS = [
+  'equipment.create',
+  'equipment.update',
+  'equipment.delete',
+  'work_order.delete',
+  'team.update',
+  'team.members.manage',
+  'team.delete',
+] as const;
+
+export type TeamPermissionKey = (typeof TEAM_PERMISSION_KEYS)[number];
 
 export interface EntityPermissions {
   canView: boolean;
@@ -28,6 +38,7 @@ export interface EntityPermissions {
   canChangeStatus?: boolean;
   canAddNotes?: boolean;
   canAddImages?: boolean;
+  canManageMembers?: boolean;
 }
 
 export interface WorkOrderDetailedPermissions {

@@ -1,24 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-const { mockFrom, mockRequireUserId, mockDeleteWorkOrder } = vi.hoisted(() => ({
+const { mockFrom, mockRpc, mockRemove } = vi.hoisted(() => ({
   mockFrom: vi.fn(),
-  mockRequireUserId: vi.fn(),
-  mockDeleteWorkOrder: vi.fn(),
+  mockRpc: vi.fn(),
+  mockRemove: vi.fn(),
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: (...args: unknown[]) => mockFrom(...args),
-    storage: { from: () => ({ remove: vi.fn().mockResolvedValue({ error: null }) }) },
+    rpc: (...args: unknown[]) => mockRpc(...args),
+    storage: { from: () => ({ remove: (...args: unknown[]) => mockRemove(...args) }) },
   },
-}));
-
-vi.mock('@/lib/authClaims', () => ({
-  requireAuthUserIdFromClaims: (...args: unknown[]) => mockRequireUserId(...args),
-}));
-
-vi.mock('@/features/work-orders/services/deleteWorkOrderService', () => ({
-  deleteWorkOrder: (...args: unknown[]) => mockDeleteWorkOrder(...args),
 }));
 
 vi.mock('@/services/imageUploadService', () => ({
@@ -45,61 +38,40 @@ function makeChain(result: { data: unknown; error: unknown }) {
   const ret = () => chain;
   chain.select = vi.fn(ret);
   chain.eq = vi.fn(ret);
-  chain.delete = vi.fn(ret);
-  chain.in = vi.fn(ret);
   chain.maybeSingle = vi.fn(() => Promise.resolve(result));
-  chain.then = (resolve: (v: unknown) => unknown) => resolve(result);
   return chain;
 }
 
 describe('deleteEquipmentCascade', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRequireUserId.mockResolvedValue('user-1');
+    mockFrom.mockImplementation(() => makeChain({ data: { image_url: null }, error: null }));
+    mockRemove.mockResolvedValue({ error: null });
   });
 
-  it('rejects when the caller is not an org owner/admin', async () => {
-    mockFrom.mockImplementation((table: string) => {
-      if (table === 'organization_members') {
-        return makeChain({ data: { role: 'member' }, error: null });
-      }
-      return makeChain({ data: [], error: null });
-    });
-
-    await expect(deleteEquipmentCascade(EQUIP_ID, ORG_ID)).rejects.toThrow(/admin or owner/i);
-  });
-
-  it('rejects with a verification message when the membership lookup errors', async () => {
-    mockFrom.mockImplementation((table: string) => {
-      if (table === 'organization_members') {
-        return makeChain({ data: null, error: { message: 'network' } });
-      }
-      return makeChain({ data: [], error: null });
-    });
-
-    await expect(deleteEquipmentCascade(EQUIP_ID, ORG_ID)).rejects.toThrow(/verify your permissions/i);
-  });
-
-  it('deletes the equipment row last after clearing related data (admin path)', async () => {
-    const deleteOrder: string[] = [];
-    mockFrom.mockImplementation((table: string) => {
-      if (table === 'organization_members') {
-        return makeChain({ data: { role: 'owner' }, error: null });
-      }
-      const chain = makeChain({ data: [], error: null });
-      // Record which tables had delete() invoked, in call order.
-      chain.delete = vi.fn(() => {
-        deleteOrder.push(table);
-        return chain;
-      });
-      return chain;
+  it('runs the server-side cascade and removes returned note images from storage', async () => {
+    mockRpc.mockResolvedValue({
+      data: { success: true, note_image_paths: ['u1/note/a.jpg', 'u2/note/b.jpg'] },
+      error: null,
     });
 
     await expect(deleteEquipmentCascade(EQUIP_ID, ORG_ID)).resolves.toBeUndefined();
 
-    // No work orders in this fixture, so deleteWorkOrder is never called.
-    expect(mockDeleteWorkOrder).not.toHaveBeenCalled();
-    // Equipment row must be the final delete.
-    expect(deleteOrder[deleteOrder.length - 1]).toBe('equipment');
+    expect(mockRpc).toHaveBeenCalledWith('delete_equipment_cascade', { p_equipment_id: EQUIP_ID });
+    expect(mockRemove).toHaveBeenCalledWith(['u1/note/a.jpg']);
+    expect(mockRemove).toHaveBeenCalledWith(['u2/note/b.jpg']);
+  });
+
+  it('surfaces a permission denial from the database', async () => {
+    mockRpc.mockResolvedValue({ data: { success: false, error: 'Permission denied' }, error: null });
+
+    await expect(deleteEquipmentCascade(EQUIP_ID, ORG_ID)).rejects.toThrow('Permission denied');
+    expect(mockRemove).not.toHaveBeenCalled();
+  });
+
+  it('surfaces RPC transport errors', async () => {
+    mockRpc.mockResolvedValue({ data: null, error: { message: 'network' } });
+
+    await expect(deleteEquipmentCascade(EQUIP_ID, ORG_ID)).rejects.toMatchObject({ message: 'network' });
   });
 });

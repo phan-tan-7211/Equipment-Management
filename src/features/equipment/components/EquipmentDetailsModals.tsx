@@ -18,7 +18,7 @@ type EquipmentDetailsModalsProps = {
   equipmentId: string | undefined;
   equipmentName: string;
   organizationId: string;
-  isAdmin: boolean;
+  canDelete: boolean;
   isWorkOrderFormOpen: boolean;
   isQRCodeOpen: boolean;
   qrInitialVariant?: EquipmentQRVariant;
@@ -35,7 +35,7 @@ export function EquipmentDetailsModals({
   equipmentId,
   equipmentName,
   organizationId,
-  isAdmin,
+  canDelete,
   isWorkOrderFormOpen,
   isQRCodeOpen,
   qrInitialVariant = 'equipment',
@@ -72,7 +72,7 @@ export function EquipmentDetailsModals({
         </Suspense>
       )}
 
-      {isAdmin && isDeleteDialogOpen && equipmentId && (
+      {canDelete && isDeleteDialogOpen && equipmentId && (
         <Suspense fallback={null}>
           <DeleteEquipmentDialog
             open={isDeleteDialogOpen}

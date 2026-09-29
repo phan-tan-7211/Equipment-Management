@@ -6329,6 +6329,14 @@ export type Database = {
         }
         Returns: Json
       }
+      configurable_team_permission_keys: {
+        Args: never
+        Returns: string[]
+      }
+      delete_equipment_cascade: {
+        Args: { p_equipment_id: string }
+        Returns: Json
+      }
       get_my_team_permissions: {
         Args: { p_organization_id: string }
         Returns: {

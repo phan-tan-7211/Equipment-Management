@@ -154,6 +154,9 @@ const EquipmentDetails = () => {
   const { isLoaded: isPlacesLoadedForSummary } = useGoogleMapsLoader({ enabled: isEditingSummaryLocation });
   const isLoading = orgLoading || equipmentLoading || (!isOrgAdmin && teamsLoading);
   const isAdmin = currentOrganization?.userRole === 'owner' || currentOrganization?.userRole === 'admin';
+  const canDeleteEquipment = equipment
+    ? permissions.equipment.getPermissions(equipment.team_id || undefined).canDelete
+    : false;
 
   const handleOpenQrCode = (initialVariant: EquipmentQRVariant = 'equipment') => {
     setQrInitialVariant(initialVariant);
@@ -319,7 +322,7 @@ const EquipmentDetails = () => {
           <TabsContent value="scan-history">{activeTab === 'scan-history' && <Suspense fallback={<TabContentSkeleton />}><EquipmentScanHistoryTab equipmentId={equipment.id} organizationId={currentOrganization.id} scanLocationCollectionEnabled={currentOrganization.scanLocationCollectionEnabled} /></Suspense>}</TabsContent>
         </ResponsiveEquipmentTabs>
 
-        {isAdmin && (
+        {canDeleteEquipment && (
           <div className="mt-8 space-y-4">
             <Card className="border-destructive/80 bg-destructive/[0.06] dark:bg-destructive/10">
               <CardHeader>
@@ -343,7 +346,7 @@ const EquipmentDetails = () => {
           equipmentId={equipmentId}
           equipmentName={equipment.name}
           organizationId={currentOrganization.id}
-          isAdmin={isAdmin}
+          canDelete={canDeleteEquipment}
           isWorkOrderFormOpen={isWorkOrderFormOpen}
           isQRCodeOpen={isQRCodeOpen}
           qrInitialVariant={qrInitialVariant}

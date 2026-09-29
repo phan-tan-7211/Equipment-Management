@@ -6,6 +6,8 @@ type UnifiedPermissions = ReturnType<typeof useUnifiedPermissions>;
 export function createLegacyPermissions(permissions: UnifiedPermissions) {
   return {
     canManageTeam: (teamId: string) => permissions.teams.getPermissions(teamId).canEdit,
+    canDeleteTeam: (teamId: string) => permissions.teams.getPermissions(teamId).canDelete,
+    canManageTeamMembers: (teamId: string) => permissions.teams.getPermissions(teamId).canManageMembers ?? false,
     canViewTeam: (teamId: string) => permissions.teams.getPermissions(teamId).canView,
     canCreateTeam: () => permissions.teams.canCreateAny,
     canManageEquipment: (equipmentTeamId?: string) =>

@@ -19,7 +19,8 @@ interface WorkOrdersListProps {
   onAssignClick?: () => void;
   onReopenClick?: () => void;
   onShowQR?: (workOrder: WorkOrder) => void;
-  canDelete?: boolean;
+  /** Per work order delete permission (team-scoped). */
+  canDelete?: boolean | ((workOrder: WorkOrder) => boolean);
   onDeleteClick?: (workOrder: WorkOrder) => void;
 }
 
@@ -79,7 +80,7 @@ export const WorkOrdersList: React.FC<WorkOrdersListProps> = ({
             onAssignClick={onAssignClick}
             onReopenClick={onReopenClick}
             onShowQR={isMobile ? onShowQR : undefined}
-            canDelete={canDelete}
+            canDelete={typeof canDelete === 'function' ? canDelete(order) : canDelete}
             onDeleteClick={onDeleteClick}
             isAboveTheFold={index < ABOVE_FOLD_COUNT}
           />

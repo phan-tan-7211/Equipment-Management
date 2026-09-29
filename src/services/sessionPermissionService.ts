@@ -26,9 +26,14 @@ export class SessionPermissionService {
     }
     
     const isOrgAdmin = ['owner', 'admin'].includes(currentOrg.userRole);
-    const isTeamManager = sessionData?.teamMemberships.find(tm => tm.teamId === teamId)?.role === 'manager';
-    
-    return isOrgAdmin || !!isTeamManager;
+    const membership = sessionData?.teamMemberships.find(tm => tm.teamId === teamId);
+    // Prefer the effective permission loaded with the session (owner overrides);
+    // fall back to the default rule (team managers) when it is unavailable.
+    const canUpdateTeam = membership?.permissions
+      ? membership.permissions.includes('team.update')
+      : membership?.role === 'manager';
+
+    return isOrgAdmin || !!canUpdateTeam;
   }
 
   static getUserTeamIds(sessionData: SessionData | null): string[] {

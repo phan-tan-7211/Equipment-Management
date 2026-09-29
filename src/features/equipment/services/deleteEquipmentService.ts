@@ -1,7 +1,5 @@
 import { logger } from '@/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
-import { deleteWorkOrder } from '@/features/work-orders/services/deleteWorkOrderService';
-import { requireAuthUserIdFromClaims } from '@/lib/authClaims';
 import { normalizeStoredObjectPath } from '@/services/imageUploadService';
 import {
   isDisplayImageV2Ref,
@@ -27,32 +25,6 @@ interface WorkOrderWithImages {
     file_url: string;
   }>;
 }
-
-// Check if user is admin of organization
-const checkAdminAccess = async (orgId: string): Promise<void> => {
-  const userId = await requireAuthUserIdFromClaims(
-    'Your session is still loading. Please wait a moment and try again.',
-  );
-
-  // `maybeSingle` so a missing membership row resolves to `null` instead of
-  // throwing a PostgREST "no rows" error — that distinction lets us return a
-  // precise message rather than a generic failure.
-  const { data: member, error } = await supabase
-    .from('organization_members')
-    .select('role')
-    .eq('user_id', userId)
-    .eq('organization_id', orgId)
-    .eq('status', 'active')
-    .maybeSingle();
-
-  if (error) {
-    throw new Error('Could not verify your permissions. Please check your connection and try again.');
-  }
-
-  if (!member || !['owner', 'admin'].includes(member.role)) {
-    throw new Error('Permission denied: You must be an admin or owner to delete equipment');
-  }
-};
 
 const getEquipmentDisplayImageRef = async (
   equipmentId: string,
@@ -195,9 +167,6 @@ export const getEquipmentDeletionImpact = async (equipmentId: string): Promise<E
 
 export const deleteEquipmentCascade = async (equipmentId: string, orgId: string): Promise<void> => {
   try {
-    // Check admin access first
-    await checkAdminAccess(orgId);
-
     const equipmentDisplayImageRef = await getEquipmentDisplayImageRef(
       equipmentId,
       orgId,
@@ -205,70 +174,24 @@ export const deleteEquipmentCascade = async (equipmentId: string, orgId: string)
 
     logger.info(`Starting cascade deletion for equipment ${equipmentId}`);
 
-    // NOTE: We intentionally keep this explicit cascade rather than relying on
-    // a single `DELETE FROM equipment` + DB ON DELETE CASCADE. While equipment
-    // -> work_orders is CASCADE, `work_order_notes` has NO foreign key to
-    // `work_orders` (verified in prod): deleting the equipment row would orphan
-    // work-order notes and leave their images (and storage objects) behind.
-    // Deleting each work order via `deleteWorkOrder` cleans notes, images,
-    // costs, status history, and PMs correctly.
+    // The whole database cascade (work orders and their children, note
+    // images, notes, scans, equipment) runs in one server-side transaction.
+    // The RPC authorizes owners/admins and team roles granted equipment.delete,
+    // so this no longer depends on admin-only child-table policies.
+    const { data, error } = await supabase.rpc('delete_equipment_cascade', {
+      p_equipment_id: equipmentId,
+    });
+    if (error) throw error;
 
-    // Step 1: Collect all data that needs to be deleted
-    logger.info('Collecting equipment note images...');
-    const equipmentNoteImages = await getEquipmentNoteImages(equipmentId);
-
-    logger.info('Collecting work orders with images...');
-    const workOrdersWithImages = await getWorkOrdersWithImages(equipmentId);
-
-    // Step 2: Delete work orders (this handles all WO-related data including PMs)
-    logger.info(`Deleting ${workOrdersWithImages.length} work orders...`);
-    for (const wo of workOrdersWithImages) {
-      await deleteWorkOrder(wo.id);
+    const result = (data ?? {}) as { success?: boolean; error?: string; note_image_paths?: string[] };
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to delete equipment');
     }
 
-    // Step 3: Delete equipment note images (DB rows then storage)
-    if (equipmentNoteImages.length > 0) {
-      logger.info(`Deleting ${equipmentNoteImages.length} equipment note images from database...`);
-      
-      // Delete from database first
-      const { error: dbDeleteError } = await supabase
-        .from('equipment_note_images')
-        .delete()
-        .in('id', equipmentNoteImages.map(img => img.id));
-
-      if (dbDeleteError) throw dbDeleteError;
-
-      // Then delete from storage
-      logger.info('Deleting equipment note images from storage...');
-      await deleteEquipmentNoteImagesFromStorage(equipmentNoteImages);
-    }
-
-    // Step 4: Delete equipment notes
-    logger.info('Deleting equipment notes...');
-    const { error: notesError } = await supabase
-      .from('equipment_notes')
-      .delete()
-      .eq('equipment_id', equipmentId);
-
-    if (notesError) throw notesError;
-
-    // Step 5: Delete scans (optional but tidy)
-    logger.info('Deleting equipment scans...');
-    const { error: scansError } = await supabase
-      .from('scans')
-      .delete()
-      .eq('equipment_id', equipmentId);
-
-    if (scansError) throw scansError;
-
-    // Step 6: Finally delete the equipment record
-    logger.info('Deleting equipment record...');
-    const { error: equipmentError } = await supabase
-      .from('equipment')
-      .delete()
-      .eq('id', equipmentId);
-
-    if (equipmentError) throw equipmentError;
+    // Storage cleanup stays best-effort, as before.
+    await deleteEquipmentNoteImagesFromStorage(
+      (result.note_image_paths ?? []).map((file_url) => ({ id: '', file_url })),
+    );
 
     if (isDisplayImageV2Ref(equipmentDisplayImageRef)) {
       try {
