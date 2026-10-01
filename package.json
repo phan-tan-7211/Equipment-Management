@@ -143,7 +143,7 @@
     "@radix-ui/react-toast": "1.2.19",
     "@radix-ui/react-toggle-group": "^1.1.19",
     "@radix-ui/react-tooltip": "1.2.11",
-    "@radix-ui/react-visually-hidden": "^1.2.3",
+    "@radix-ui/react-visually-hidden": "^1.2.11",
     "@supabase/supabase-js": "~2.110.2",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-query-persist-client": "5.101.2",
