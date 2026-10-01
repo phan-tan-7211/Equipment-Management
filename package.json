@@ -218,7 +218,7 @@
     "jsdom": "29.1.1",
     "markdownlint-cli2": "0.23.2",
     "postcss": "^8.5.14",
-    "size-limit": "13.0.3",
+    "size-limit": "14.1.0",
     "supabase": "2.116.0",
     "tailwindcss": "4.3.3",
     "topojson-client": "3.1.0",
