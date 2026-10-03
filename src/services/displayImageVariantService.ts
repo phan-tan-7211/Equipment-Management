@@ -1,4 +1,5 @@
 import imageCompression from 'browser-image-compression';
+import { logger } from '@/utils/logger';
 
 export const DISPLAY_IMAGE_VARIANT_NAMES = ['thumb', 'preview', 'full'] as const;
 
@@ -23,8 +24,8 @@ export type DisplayImageVariantOptions = {
  * Shared V2 settings for Equipment and Inventory display images.
  *
  * maxSizeMB values are practical byte-budget targets. The hard dimension
- * limits are enforced by maxWidthOrHeight. browser-image-compression uses a
- * worker when available and falls back to the main thread when it is not.
+ * limits are enforced by maxWidthOrHeight. Each variant prefers a worker and
+ * explicitly retries on the main thread if worker/canvas processing fails.
  */
 export const DISPLAY_IMAGE_VARIANT_CONFIGS: Readonly<
   Record<DisplayImageVariantName, DisplayImageVariantOptions>
@@ -93,22 +94,58 @@ function normalizeWebpFile(
   });
 }
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+async function compressVariant(
+  source: File,
+  variant: DisplayImageVariantName,
+): Promise<Blob> {
+  const config = DISPLAY_IMAGE_VARIANT_CONFIGS[variant];
+  const options = {
+    maxSizeMB: config.maxSizeMB,
+    maxWidthOrHeight: config.maxWidthOrHeight,
+    initialQuality: config.initialQuality,
+    fileType: config.fileType,
+    useWebWorker: config.useWebWorker,
+    preserveExif: config.preserveExif,
+  };
+
+  try {
+    return await imageCompression(source, options);
+  } catch (workerError) {
+    logger.warn('Display image worker compression failed; retrying on main thread', {
+      variant,
+      sourceType: source.type,
+      sourceSizeBytes: source.size,
+      error: errorMessage(workerError),
+    });
+
+    try {
+      return await imageCompression(source, {
+        ...options,
+        useWebWorker: false,
+      });
+    } catch (mainThreadError) {
+      logger.error('Display image compression failed after main-thread retry', {
+        variant,
+        sourceType: source.type,
+        sourceSizeBytes: source.size,
+        workerError: errorMessage(workerError),
+        error: errorMessage(mainThreadError),
+      });
+      throw mainThreadError;
+    }
+  }
+}
+
 async function createDisplayImageVariant(
   source: File,
   variant: DisplayImageVariantName,
 ): Promise<File> {
-  const config = DISPLAY_IMAGE_VARIANT_CONFIGS[variant];
-
   try {
-    const compressed = await imageCompression(source, {
-      maxSizeMB: config.maxSizeMB,
-      maxWidthOrHeight: config.maxWidthOrHeight,
-      initialQuality: config.initialQuality,
-      fileType: config.fileType,
-      useWebWorker: config.useWebWorker,
-      preserveExif: config.preserveExif,
-    });
-
+    const compressed = await compressVariant(source, variant);
     return normalizeWebpFile(compressed, variant, source);
   } catch (error) {
     if (error instanceof DisplayImageVariantError) {
@@ -122,19 +159,19 @@ async function createDisplayImageVariant(
 /**
  * Convert one source image into the three immutable display-image variants.
  *
- * The compression library normalizes EXIF orientation while drawing the
- * source image. EXIF metadata itself is not copied into the WebP outputs.
+ * Variants are intentionally created sequentially. Mobile browsers can fail
+ * when multiple canvas/WebP jobs for the same camera image run concurrently.
+ * The compression library normalizes EXIF orientation while drawing the source
+ * image; EXIF metadata itself is not copied into the WebP outputs.
  */
 export async function createDisplayImageVariants(
   source: File,
 ): Promise<DisplayImageVariants> {
   assertFileLike(source);
 
-  const [thumb, preview, full] = await Promise.all(
-    DISPLAY_IMAGE_VARIANT_NAMES.map((variant) =>
-      createDisplayImageVariant(source, variant),
-    ),
-  );
+  const thumb = await createDisplayImageVariant(source, 'thumb');
+  const preview = await createDisplayImageVariant(source, 'preview');
+  const full = await createDisplayImageVariant(source, 'full');
 
   return { thumb, preview, full };
 }
