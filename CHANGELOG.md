@@ -11,6 +11,8 @@ Entries through 3.28.0 are more verbose than the current policy. Newer notes are
 
 ## [Unreleased]
 
+## [3.40.1] - 2026-10-03
+
 ### Fixed
 
 - **Mobile image uploads** - Image processing now avoids concurrent canvas work, retries without a worker when needed, and ignores duplicate selections to prevent preview-generation failures on phones.
