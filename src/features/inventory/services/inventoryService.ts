@@ -779,7 +779,10 @@ export const uploadInventoryItemImages = async (
     // Keep the existing quota guard based on the bounded source that feeds
     // the V2 generator. The generator then writes thumb, preview, and full
     // WebP variants from that source.
-    const filesToStore = await Promise.all(files.map(f => compressImageFile(f)));
+    const filesToStore: File[] = [];
+    for (const file of files) {
+      filesToStore.push(await compressImageFile(file));
+    }
     const totalSize = filesToStore.reduce((sum, f) => sum + f.size, 0);
     await validateStorageQuota(organizationId, totalSize);
 
