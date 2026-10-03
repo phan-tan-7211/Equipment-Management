@@ -13,6 +13,23 @@ import { useI18n } from '@/i18n';
 const sanitizeForDisplay = (text: string): string =>
   text.replace(/[^\w\s.\-()[\]]/g, '_') || 'unnamed';
 
+const fileSelectionKey = (file: File): string =>
+  [file.name, file.size, file.type, file.lastModified].join('::');
+
+function mergeUniqueFiles(existing: File[], incoming: File[]): File[] {
+  const seen = new Set(existing.map(fileSelectionKey));
+  const merged = [...existing];
+
+  for (const file of incoming) {
+    const key = fileSelectionKey(file);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(file);
+  }
+
+  return merged;
+}
+
 interface ImageUploadWithNoteProps {
   onUpload?: (files: File[]) => Promise<void>;
   maxFiles?: number;
@@ -70,7 +87,7 @@ const ImageUploadWithNote: React.FC<ImageUploadWithNoteProps> = ({
       return true;
     });
 
-    const combined = [...selectedFiles, ...validFiles];
+    const combined = mergeUniqueFiles(selectedFiles, validFiles);
     if (combined.length > maxFiles) {
       toast.error(t('sharedUi.maxFiles', { count: maxFiles }));
       return;
